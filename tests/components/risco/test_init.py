@@ -4,7 +4,12 @@ import logging
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyrisco import OperationError
+from pyrisco import (
+    CannotConnectError,
+    MaxRetriesError,
+    OperationError,
+    UnauthorizedError,
+)
 import pytest
 
 from homeassistant.components.risco.const import (
@@ -13,6 +18,7 @@ from homeassistant.components.risco.const import (
     DOMAIN,
     TYPE_LOCAL,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
@@ -137,3 +143,117 @@ async def test_clock_operation_error_is_downgraded(
         f"{setup_risco_local.data.get(CONF_HOST, 'unknown')})"
     )
     assert expected_warning in caplog.text
+
+
+@pytest.fixture
+def mock_cloud_error_handler() -> MagicMock:
+    """Create a mock for add_error_handler on the cloud variant."""
+    with patch("homeassistant.components.risco.RiscoCloud.add_error_handler") as mock:
+        yield mock
+
+
+async def test_cloud_sse_max_retries_triggers_reload(
+    hass: HomeAssistant,
+    two_zone_cloud: dict[int, Any],
+    mock_cloud_error_handler: MagicMock,
+    setup_risco_cloud: MockConfigEntry,
+    mock_cloud_login: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that MaxRetriesError triggers an integration reload."""
+    assert mock_cloud_error_handler.called
+    callback = mock_cloud_error_handler.call_args.args[0]
+
+    assert mock_cloud_login.call_count == 1
+
+    caplog.set_level(logging.ERROR, logger="homeassistant.components.risco")
+    await callback(MaxRetriesError(Exception("connection failed")))
+    await hass.async_block_till_done()
+
+    assert "exhausted retries" in caplog.text
+    assert mock_cloud_login.call_count == 2
+
+
+async def test_cloud_sse_transient_error_does_not_reload(
+    hass: HomeAssistant,
+    two_zone_cloud: dict[int, Any],
+    mock_cloud_error_handler: MagicMock,
+    setup_risco_cloud: MockConfigEntry,
+    mock_cloud_login: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that transient SSE errors only log a warning and don't reload."""
+    assert mock_cloud_error_handler.called
+    callback = mock_cloud_error_handler.call_args.args[0]
+
+    assert mock_cloud_login.call_count == 1
+
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.risco")
+    await callback(Exception("transient network error"))
+    await hass.async_block_till_done()
+
+    assert "reconnecting automatically" in caplog.text
+    assert mock_cloud_login.call_count == 1  # no reload
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(CannotConnectError, id="cannot_connect"),
+        pytest.param(UnauthorizedError, id="unauthorized"),
+        pytest.param(OperationError, id="operation_error"),
+    ],
+)
+async def test_cloud_get_state_error_triggers_setup_retry(
+    hass: HomeAssistant,
+    cloud_config_entry,
+    mock_cloud_login: AsyncMock,
+    exception: type[Exception],
+) -> None:
+    """Test that errors from get_state() during cloud setup result in SETUP_RETRY."""
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_state",
+            side_effect=exception,
+        ),
+        patch("homeassistant.components.risco.RiscoCloud.close") as close_mock,
+    ):
+        await hass.config_entries.async_setup(cloud_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert cloud_config_entry.state is ConfigEntryState.SETUP_RETRY
+    close_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(CannotConnectError, id="cannot_connect"),
+        pytest.param(UnauthorizedError, id="unauthorized"),
+        pytest.param(OperationError, id="operation_error"),
+    ],
+)
+async def test_cloud_subscribe_states_error_triggers_setup_retry(
+    hass: HomeAssistant,
+    cloud_config_entry,
+    mock_cloud_login: AsyncMock,
+    exception: type[Exception],
+) -> None:
+    """Test that errors from subscribe_states() during cloud setup result in SETUP_RETRY."""
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_state",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.subscribe_states",
+            side_effect=exception,
+        ),
+        patch("homeassistant.components.risco.RiscoCloud.close") as close_mock,
+        patch("homeassistant.components.risco.RiscoCloud.add_error_handler"),
+    ):
+        await hass.config_entries.async_setup(cloud_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert cloud_config_entry.state is ConfigEntryState.SETUP_RETRY
+    close_mock.assert_called_once()

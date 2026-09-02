@@ -55,7 +55,6 @@ TEST_OPTIONS = {
 }
 
 TEST_ADVANCED_OPTIONS = {
-    "scan_interval": 10,
     "concurrency": 3,
 }
 
@@ -384,7 +383,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         **TEST_OPTIONS,
-        "scan_interval": 30,
         "concurrency": 4,
         "risco_states_to_ha": TEST_RISCO_TO_HA,
         "ha_states_to_risco": TEST_HA_TO_RISCO,

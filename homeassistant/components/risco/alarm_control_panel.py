@@ -4,6 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
+from pyrisco.cloud.alarm import Alarm
 from pyrisco.common import Partition
 from pyrisco.local.partition import Partition as LocalPartition
 
@@ -29,9 +30,8 @@ from .const import (
     RISCO_GROUPS,
     RISCO_PARTIAL_ARM,
 )
-from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudEntity
-from .models import RiscoConfigEntry
+from .models import CloudData, RiscoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,12 +66,14 @@ async def async_setup_entry(
             for partition_id, partition in local_data.system.partitions.items()
         )
     elif cloud_data := risco_data.cloud_data:
-        coordinator = cloud_data.coordinator
         async_add_entities(
             RiscoCloudAlarm(
-                coordinator, partition_id, config_entry.data[CONF_PIN], options
+                cloud_data,
+                partition_id,
+                config_entry.data[CONF_PIN],
+                options,
             )
-            for partition_id in coordinator.data.partitions
+            for partition_id in cloud_data.alarm.partitions
         )
 
 
@@ -183,16 +185,16 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
 
     def __init__(
         self,
-        coordinator: RiscoDataUpdateCoordinator,
+        cloud_data: CloudData,
         partition_id: int,
         code: str,
         options: dict[str, Any],
     ) -> None:
         """Init the partition."""
         super().__init__(
+            cloud_data=cloud_data,
             partition_id=partition_id,
-            partition=coordinator.data.partitions[partition_id],
-            coordinator=coordinator,
+            partition=cloud_data.alarm.partitions[partition_id],
             code=code,
             options=options,
         )
@@ -204,13 +206,15 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
         )
 
     @override
-    def _get_data_from_coordinator(self) -> None:
-        self._partition = self.coordinator.data.partitions[self._partition_id]
+    async def _handle_update(self, alarm: Alarm) -> None:
+        self._partition = alarm.partitions[self._partition_id]
+        self.async_write_ha_state()
 
     @override
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
         self._partition = alarm.partitions[self._partition_id]
+        self._cloud_data.alarm = alarm
         self.async_write_ha_state()
 
 
