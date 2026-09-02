@@ -10,6 +10,24 @@
       "oxygen": {
         "default": "mdi:leaf"
       },
+      "particle_count_0_3": {
+        "default": "mdi:grain"
+      },
+      "particle_count_0_5": {
+        "default": "mdi:grain"
+      },
+      "particle_count_1": {
+        "default": "mdi:grain"
+      },
+      "particle_count_10": {
+        "default": "mdi:grain"
+      },
+      "particle_count_2_5": {
+        "default": "mdi:grain"
+      },
+      "particle_count_5": {
+        "default": "mdi:grain"
+      },
       "performance_index": {
         "default": "mdi:head-check"
       },
@@ -24,6 +42,9 @@
       },
       "radon": {
         "default": "mdi:radioactive"
+      },
+      "typical_particle_size": {
+        "default": "mdi:diameter-variant"
       },
       "virus_index": {
         "default": "mdi:virus-off"

@@ -123,6 +123,24 @@
       "oxygen": {
         "name": "Oxygen"
       },
+      "particle_count_0_3": {
+        "name": "Particle count (>0.3 μm)"
+      },
+      "particle_count_0_5": {
+        "name": "Particle count (>0.5 μm)"
+      },
+      "particle_count_1": {
+        "name": "Particle count (>1 μm)"
+      },
+      "particle_count_10": {
+        "name": "Particle count (>10 μm)"
+      },
+      "particle_count_2_5": {
+        "name": "Particle count (>2.5 μm)"
+      },
+      "particle_count_5": {
+        "name": "Particle count (>5 μm)"
+      },
       "performance_index": {
         "name": "Performance index"
       },
@@ -146,6 +164,9 @@
       },
       "silicon_hydride": {
         "name": "Silicon hydride"
+      },
+      "typical_particle_size": {
+        "name": "Typical particle size"
       },
       "virus_index": {
         "name": "Virus index"
