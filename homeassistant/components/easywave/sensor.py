@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
@@ -410,6 +411,7 @@ class EasywaveNeoSensorTemperatureSensor(EasywaveNeoSensorEntity, RestoreSensor)
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "neo_sensor_temperature"
 
     def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:
@@ -452,6 +454,7 @@ class EasywaveNeoSensorHumiditySensor(EasywaveNeoSensorEntity, RestoreSensor):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "neo_sensor_humidity"
 
     def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:

@@ -144,14 +144,15 @@ async def test_disconnect_and_dispose_delegate_to_gateway(
     mock_gateway.stop.assert_awaited_once()
 
 
-async def test_reconnect_prepares_connection_before_gateway_reconnect(
+async def test_reconnect_prepares_connection_before_gateway_connect(
     transceiver: RX11Transceiver, mock_gateway: MagicMock
 ) -> None:
-    """Reconnect re-resolves the configured gateway port."""
+    """Reconnect rebuilds the gateway then connects from STOPPED state."""
     with patch.object(transceiver, "_prepare_connection", AsyncMock(return_value=True)):
         assert await transceiver.reconnect() is True
 
-    mock_gateway.reconnect.assert_awaited_once()
+    mock_gateway.connect.assert_awaited_once()
+    mock_gateway.reconnect.assert_not_called()
 
 
 async def test_reconnect_fails_when_configured_port_unresolved(
@@ -163,6 +164,7 @@ async def test_reconnect_fails_when_configured_port_unresolved(
     ):
         assert await transceiver.reconnect() is False
 
+    mock_gateway.connect.assert_not_called()
     mock_gateway.reconnect.assert_not_called()
 
 

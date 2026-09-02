@@ -195,10 +195,14 @@ class RX11Transceiver:
         await self._gateway.stop()
 
     async def reconnect(self) -> bool:
-        """Reconnect to the RX11 transceiver."""
+        """Reconnect to the RX11 transceiver.
+
+        The gateway is rebuilt in STOPPED state by `_prepare_connection()`, and
+        the library's `reconnect()` rejects that state — so call `connect()`.
+        """
         if not await self._prepare_connection():
             return False
-        return await self._gateway.reconnect()
+        return await self._gateway.connect()
 
     async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:
         """Wait for an EW/EWneo telegram."""
