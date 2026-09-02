@@ -61,13 +61,13 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: done
+  icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
