@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "could_not_register": "Could not register the device with GitHub.",
       "not_setup": "The Community store is not set up.",
       "reauth_successful": "Reauthentication was successful.",
       "single_instance_allowed": "Only a single configuration of the Community store is allowed."
