@@ -94,7 +94,12 @@ class LutronEventEntity(LutronKeypad, EventEntity):
                 action = LutronEventType.PRESS
             else:
                 action = LutronEventType.RELEASE
-        elif event == Button.Event.PRESSED:
+        elif event in (Button.Event.PRESSED, Button.Event.RELEASED):
+            # A button whose programming carries a hold or multi-tap action
+            # reports on release rather than press: at press time the system
+            # cannot yet tell a tap from a hold, so it waits for the release to
+            # decide. Such a button never sends a press, and treating only
+            # presses as a tap makes it silent.
             action = LutronEventType.SINGLE_PRESS
 
         if action:
