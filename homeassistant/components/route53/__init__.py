@@ -1,29 +1,48 @@
 """Update the IP addresses of your Route53 DNS records."""
 
-from datetime import timedelta
-from http import HTTPStatus
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
 import logging
+from typing import Any
 
-import boto3
-import requests
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+)
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    CONF_ACCESS_KEY_ID,
+    CONF_RECORDS,
+    CONF_SECRET_ACCESS_KEY,
+    DEFAULT_TTL,
+    DOMAIN,
+    INTERVAL,
+)
+from .helpers import async_update_records
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ACCESS_KEY_ID = "aws_access_key_id"
-CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
-CONF_RECORDS = "records"
 
-DOMAIN = "route53"
+@dataclass
+class Route53Data:
+    """Data for Route53 integration."""
 
-INTERVAL = timedelta(minutes=60)
-DEFAULT_TTL = 300
+    remove_interval: Callable[[], None]
+
+
+type Route53ConfigEntry = ConfigEntry[Route53Data]
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -42,86 +61,99 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def _async_import_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> None:
+    """Import YAML config and create deprecation issues."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=conf,
+    )
+    if result.get("type") is FlowResultType.ABORT and result.get("reason") not in (
+        "already_configured",
+        "single_instance_allowed",
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2027.3.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "AWS Route53",
+                "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.3.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "AWS Route53",
+        },
+    )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Route53 component."""
-    domain = config[DOMAIN][CONF_DOMAIN]
-    records = config[DOMAIN][CONF_RECORDS]
-    zone = config[DOMAIN][CONF_ZONE]
-    aws_access_key_id = config[DOMAIN][CONF_ACCESS_KEY_ID]
-    aws_secret_access_key = config[DOMAIN][CONF_SECRET_ACCESS_KEY]
-    ttl = config[DOMAIN][CONF_TTL]
 
-    def update_records_interval(now):
-        """Set up recurring update."""
-        _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
-        )
-
-    def update_records_service(call: ServiceCall) -> None:
+    async def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
-        _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
-        )
+        errors = []
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            try:
+                await async_update_records(hass, entry.data)
+            except HomeAssistantError as err:
+                errors.append(f"{entry.data[CONF_DOMAIN]}: {err}")
+        if errors:
+            raise HomeAssistantError(
+                f"Error(s) updating Route53 records: {', '.join(errors)}"
+            )
 
-    track_time_interval(hass, update_records_interval, INTERVAL)
+    hass.services.async_register(DOMAIN, "update_records", update_records_service)
 
-    hass.services.register(DOMAIN, "update_records", update_records_service)
+    if DOMAIN in config:
+        hass.async_create_task(_async_import_yaml(hass, config[DOMAIN]))
+
     return True
 
 
-def _get_fqdn(record, domain):
-    if record == ".":
-        return domain
-    return f"{record}.{domain}"
+async def async_setup_entry(hass: HomeAssistant, entry: Route53ConfigEntry) -> bool:
+    """Set up Route53 from a config entry."""
 
+    async def update_records_interval(now: datetime) -> None:
+        """Set up recurring update."""
+        try:
+            await async_update_records(hass, entry.data)
+        except HomeAssistantError as err:
+            _LOGGER.warning(err)
 
-def _update_route53(
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
-    zone: str,
-    domain: str,
-    records: list[str],
-    ttl: int,
-):
-    _LOGGER.debug("Starting update for zone %s", zone)
-
-    client = boto3.client(
-        DOMAIN,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-    )
-
-    # Get the IP Address and build an array of changes
     try:
-        ipaddress = requests.get("https://api.ipify.org/", timeout=5).text
+        await async_update_records(hass, entry.data)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
 
-    except requests.RequestException:
-        _LOGGER.warning("Unable to reach the ipify service")
-        return
+    remove_interval = async_track_time_interval(hass, update_records_interval, INTERVAL)
 
-    changes = []
-    for record in records:
-        _LOGGER.debug("Processing record: %s", record)
-
-        changes.append(
-            {
-                "Action": "UPSERT",
-                "ResourceRecordSet": {
-                    "Name": _get_fqdn(record, domain),
-                    "Type": "A",
-                    "TTL": ttl,
-                    "ResourceRecords": [{"Value": ipaddress}],
-                },
-            }
-        )
-
-    _LOGGER.debug("Submitting the following changes to Route53")
-    _LOGGER.debug(changes)
-
-    response = client.change_resource_record_sets(
-        HostedZoneId=zone, ChangeBatch={"Changes": changes}
+    entry.runtime_data = Route53Data(
+        remove_interval=remove_interval,
     )
-    _LOGGER.debug("Response is %s", response)
 
-    if response["ResponseMetadata"]["HTTPStatusCode"] != HTTPStatus.OK:
-        _LOGGER.warning(response)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: Route53ConfigEntry) -> bool:
+    """Unload a config entry."""
+    entry.runtime_data.remove_interval()
+    return True

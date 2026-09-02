@@ -1,4 +1,62 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_records": "No usable records were found in the YAML configuration.",
+      "invalid_zone": "[%key:component::route53::config::error::invalid_zone%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_zone": "Hosted Zone ID not found. Check that the ID is correct and that it exists in this AWS account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "aws_access_key_id": "AWS Access Key ID",
+          "aws_secret_access_key": "AWS Secret Access Key",
+          "domain": "Domain",
+          "records": "Records",
+          "ttl": "TTL",
+          "zone": "Zone"
+        },
+        "data_description": {
+          "aws_access_key_id": "Your AWS Access Key ID",
+          "aws_secret_access_key": "Your AWS Secret Access Key",
+          "domain": "The domain to update. Must be the hosted zone's domain or a subdomain of it",
+          "records": "The records you want to update",
+          "ttl": "The TTL for the records",
+          "zone": "The Hosted Zone ID"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed but AWS could not be reached while importing your YAML configuration.\n\nPlease ensure you have a working connection and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error trying to import your YAML configuration.\n\nPlease verify that your AWS credentials are correct and that you can access AWS Route 53, then restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_records": {
+      "description": "Configuring {integration_title} using YAML is being removed but your YAML configuration does not list any usable records.\n\nPlease add at least one record to the `{domain}` configuration and restart Home Assistant to try again, or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_zone": {
+      "description": "Configuring {integration_title} using YAML is being removed but the Hosted Zone ID in your YAML configuration could not be found while importing it.\n\nPlease verify that the Hosted Zone ID is correct and exists in your AWS account, then restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error trying to import your YAML configuration.\n\nPlease ensure you have a working connection and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    }
+  },
   "services": {
     "update_records": {
       "description": "Triggers update of records.",

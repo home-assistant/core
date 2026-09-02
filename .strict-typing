@@ -507,6 +507,7 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
+homeassistant.components.route53.*
 homeassistant.components.route_b_smart_meter.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
