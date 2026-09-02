@@ -10,6 +10,7 @@ from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -63,4 +64,23 @@ class WS90DataUpdateCoordinator(DataUpdateCoordinator[WS90]):
                 translation_key="cannot_connect",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        # The address in `entry.data` can end up pointing at a different
+        # responder than the one this entry was created for (the gateway is
+        # reconfigured, a unit ID is reused, ...). Re-check identity on every
+        # poll -- not just at setup -- so a swap mid-run stops publishing the
+        # new responder's readings under this entry's entities.
+        info = self.device.info
+        if (
+            info.model != "WS90"
+            or f"{info.device_id:08x}" != self.config_entry.unique_id
+        ):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_device",
+                translation_placeholders={
+                    "unique_id": self.config_entry.unique_id or "unknown"
+                },
+            )
+
         return self.device

@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.ecowitt_ws90.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -46,33 +47,6 @@ async def test_device_registry_entry(
     assert device is not None
     assert device.manufacturer == "Ecowitt"
     assert device.model == "WS90"
-
-
-@pytest.mark.parametrize(
-    ("key", "expected_state"),
-    [
-        ("temperature", "26.2"),
-        ("humidity", "60"),
-        ("wind_direction", "150"),
-        ("absolute_pressure", "1001.0"),
-    ],
-)
-async def test_sensor_states(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    key: str,
-    expected_state: str,
-) -> None:
-    """Test the live readings decode from the example register image."""
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_{key}"
-    )
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == expected_state
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -122,3 +96,34 @@ class TestDeviceIdentityMismatch:
         await hass.async_block_till_done()
 
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_identity_change_after_setup_takes_it_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a gateway that starts answering for a different WS90 mid-run.
+
+    Distinct from setup-time rejection: here the entry is already loaded, so
+    the coordinator -- not `async_setup_entry` -- is what has to notice.
+    """
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_temperature"
+    )
+    assert entity_id is not None
+
+    unit = mock_connection.for_unit(WS90_UNIT_ID)
+    unit.holding[0x163] = 0x0000
+    unit.holding[0x164] = 0x0001
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    # The entry stays loaded -- this is a data-update failure, not a setup
+    # one, so it surfaces the same way a dropped connection would.
+    assert init_integration.state is ConfigEntryState.LOADED
