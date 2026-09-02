@@ -65,7 +65,9 @@ rules:
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: The icons come from the device class.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
