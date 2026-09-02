@@ -102,6 +102,22 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Newer firmware (4.x) reports the cumulative counters in separate
+    # consumed/produced keys and leaves energia_activa at 0.
+    "energia_activa_cons": SensorEntityDescription(
+        key="energia_activa_cons",
+        translation_key="consumed_active_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "energia_activa_prod": SensorEntityDescription(
+        key="energia_activa_prod",
+        translation_key="produced_active_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     "energia_reactiva_ind": SensorEntityDescription(
         key="energia_reactiva_ind",
         translation_key="inductive_reactive_energy",

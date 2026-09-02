@@ -43,6 +43,9 @@
       "l1_capacitive_reactive_power": {
         "name": "L1 capacitive reactive power"
       },
+      "l1_consumed_active_energy": {
+        "name": "L1 consumed active energy"
+      },
       "l1_current": {
         "name": "L1 current"
       },
@@ -60,6 +63,9 @@
       },
       "l1_power_factor": {
         "name": "L1 power factor"
+      },
+      "l1_produced_active_energy": {
+        "name": "L1 produced active energy"
       },
       "l1_thd_current": {
         "name": "L1 THD current"
@@ -97,6 +103,9 @@
       "l2_capacitive_reactive_power": {
         "name": "L2 capacitive reactive power"
       },
+      "l2_consumed_active_energy": {
+        "name": "L2 consumed active energy"
+      },
       "l2_current": {
         "name": "L2 current"
       },
@@ -114,6 +123,9 @@
       },
       "l2_power_factor": {
         "name": "L2 power factor"
+      },
+      "l2_produced_active_energy": {
+        "name": "L2 produced active energy"
       },
       "l2_thd_current": {
         "name": "L2 THD current"
@@ -151,6 +163,9 @@
       "l3_capacitive_reactive_power": {
         "name": "L3 capacitive reactive power"
       },
+      "l3_consumed_active_energy": {
+        "name": "L3 consumed active energy"
+      },
       "l3_current": {
         "name": "L3 current"
       },
@@ -168,6 +183,9 @@
       },
       "l3_power_factor": {
         "name": "L3 power factor"
+      },
+      "l3_produced_active_energy": {
+        "name": "L3 produced active energy"
       },
       "l3_thd_current": {
         "name": "L3 THD current"
@@ -205,6 +223,9 @@
       "total_capacitive_reactive_power": {
         "name": "Total capacitive reactive power"
       },
+      "total_consumed_active_energy": {
+        "name": "Total consumed active energy"
+      },
       "total_current": {
         "name": "Total current"
       },
@@ -222,6 +243,9 @@
       },
       "total_power_factor": {
         "name": "Total power factor"
+      },
+      "total_produced_active_energy": {
+        "name": "Total produced active energy"
       },
       "total_thd_current": {
         "name": "Total THD current"

@@ -33,6 +33,44 @@ async def test_sensor_state_class(
     assert state.attributes.get("state_class") == "measurement"
 
 
+async def test_sensors_consumed_produced_energy(
+    hass: HomeAssistant, mock_wibeee_api: MagicMock
+) -> None:
+    """Newer firmware reports energy in separate consumed/produced counters."""
+    mock_wibeee_api.async_fetch_sensors_data.return_value = {
+        "fase4": {
+            "energia_activa": "0",
+            "energia_activa_cons": "1587",
+            "energia_activa_prod": "2149",
+        },
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_MAC,
+        title="Wibeee 112233",
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_MAC_ADDRESS: MOCK_MAC,
+            CONF_WIBEEE_ID: MOCK_WIBEEE_ID,
+        },
+        options={},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    consumed = hass.states.get("sensor.wibeee_112233_total_consumed_active_energy")
+    assert consumed is not None
+    assert consumed.state == "1587.0"
+    assert consumed.attributes.get("state_class") == "total_increasing"
+
+    produced = hass.states.get("sensor.wibeee_112233_total_produced_active_energy")
+    assert produced is not None
+    assert produced.state == "2149.0"
+
+
 async def test_sensor_unavailable_on_coordinator_failure(
     hass: HomeAssistant, loaded_entry: MockConfigEntry, mock_wibeee_api: MagicMock
 ) -> None:
