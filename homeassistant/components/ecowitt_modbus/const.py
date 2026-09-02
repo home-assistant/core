@@ -9,7 +9,6 @@ DOMAIN = "ecowitt_modbus"
 # config entry and shown to the user.
 MODEL_OPTIONS: dict[str, str] = {name.lower(): name for name in SUPPORTED_MODELS}
 
-CONF_MODEL = "model"
 CONF_UNIT_ID = "unit_id"
 
 DEFAULT_PORT = 502
