@@ -2031,6 +2031,7 @@ NO_QUALITY_SCALE = [
     "schedule",
     "script",
     "search",
+    "store",
     "system_health",
     "system_log",
     "unifi_discovery",

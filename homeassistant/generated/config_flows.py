@@ -770,6 +770,7 @@ FLOWS = {
         "steamist",
         "stiebel_eltron",
         "stookwijzer",
+        "store",
         "streamlabswater",
         "subaru",
         "suez_water",

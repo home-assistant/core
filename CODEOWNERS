@@ -1813,6 +1813,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/stiebel_eltron/ @fucm @ThyMYthOS
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
+/homeassistant/components/store/ @home-assistant/core
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
 /homeassistant/components/stt/ @home-assistant/core

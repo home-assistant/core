@@ -7079,6 +7079,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "store": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "streamlabswater": {
       "name": "StreamLabs",
       "integration_type": "service",
@@ -8816,6 +8822,7 @@
     "season",
     "shopping_list",
     "statistics",
+    "store",
     "sun",
     "switch_as_x",
     "threshold",
