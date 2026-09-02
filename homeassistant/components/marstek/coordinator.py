@@ -5,16 +5,16 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from aiomarstek import MarstekUDPClient
+from aiomarstek import MarstekDeviceInfo, MarstekDeviceStatus, MarstekUDPClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
-from .models import MarstekDeviceInfo
+from .const import DOMAIN, SUPPORTED_DEVICE_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +34,14 @@ class MarstekRuntimeData:
     """Runtime data for a Marstek config entry."""
 
     coordinator: MarstekDataUpdateCoordinator
-    shared_data: MarstekSharedData
 
 
 type MarstekConfigEntry = ConfigEntry[MarstekRuntimeData]
 
+MARSTEK_SHARED_DATA: HassKey[MarstekSharedData] = HassKey(DOMAIN)
 
-class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
+
+class MarstekDataUpdateCoordinator(DataUpdateCoordinator[MarstekDeviceStatus]):
     """Per-device data update coordinator."""
 
     config_entry: MarstekConfigEntry
@@ -80,45 +81,33 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
                 translation_placeholders={"host": self.device_ip},
             ) from err
 
-        if not isinstance(device_info, dict):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_device_data",
-                translation_placeholders={"host": self.device_ip},
-            )
-
-        normalized_device_info = MarstekDeviceInfo.from_response(
-            device_info, self.device_ip
-        )
-        if not normalized_device_info.stable_id:
+        if not device_info.stable_id:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="missing_stable_id",
                 translation_placeholders={"host": self.device_ip},
             )
 
-        if not normalized_device_info.is_supported:
+        if device_info.device_type not in SUPPORTED_DEVICE_TYPES:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="unsupported_device",
-                translation_placeholders={
-                    "device_type": normalized_device_info.device_type
-                },
+                translation_placeholders={"device_type": device_info.device_type},
             )
 
-        self.device_info = normalized_device_info
+        self.device_info = device_info
 
     @override
-    async def _async_update_data(self) -> dict[str, object]:
+    async def _async_update_data(self) -> MarstekDeviceStatus:
         """Fetch device data from the Marstek client library."""
         _LOGGER.debug("Start polling device: %s", self.device_ip)
-        current_data = self.data or {}
+        current_data = self.data
 
         if self.udp_client.is_polling_paused(self.device_ip):
             _LOGGER.debug(
                 "Polling paused for device: %s, skipping update", self.device_ip
             )
-            return current_data
+            return current_data or MarstekDeviceStatus(device_ip=self.device_ip)
 
         try:
             current_data = await self.udp_client.get_device_status(

@@ -1,5 +1,6 @@
 """Tests for the Marstek config flow."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -39,44 +40,21 @@ def _data_schema(result: config_entries.ConfigFlowResult) -> vol.Schema:
     return data_schema
 
 
-DISCOVERED_DEVICE = {
-    "id": 0,
-    "device_type": TEST_DEVICE_TYPE,
-    "version": TEST_VERSION,
-    "wifi_name": TEST_WIFI_NAME,
-    "ip": TEST_HOST,
-    "wifi_mac": TEST_WIFI_MAC,
-    "ble_mac": TEST_BLE_MAC,
-    "mac": TEST_MAC,
-}
+DISCOVERED_DEVICE = MOCK_DISCOVERY_RESPONSE["result"]
 
-DISCOVERED_DEVICE_DUPLICATE_NAME = {
-    **DISCOVERED_DEVICE,
-    "mac": "AA:BB:CC:DD:EE:00",
-    "wifi_mac": "AA:BB:CC:DD:EE:00",
-}
+DISCOVERED_DEVICE_DUPLICATE_NAME = replace(
+    DISCOVERED_DEVICE,
+    mac="AA:BB:CC:DD:EE:00",
+    wifi_mac="AA:BB:CC:DD:EE:00",
+)
 
-DISCOVERED_DEVICE_WITHOUT_STABLE_ID = {
-    **DISCOVERED_DEVICE,
-    "mac": "",
-    "wifi_mac": "",
-    "ble_mac": "",
-}
+DISCOVERED_DEVICE_WITHOUT_STABLE_ID = replace(
+    DISCOVERED_DEVICE, mac="", wifi_mac="", ble_mac=""
+)
 
-UNSUPPORTED_DEVICE_INFO = {
-    "id": 0,
-    "device": "VenusE 2.0",
-    "ver": TEST_VERSION,
-    "wifi_name": TEST_WIFI_NAME,
-    "ip": TEST_HOST,
-    "wifi_mac": TEST_WIFI_MAC,
-    "ble_mac": TEST_BLE_MAC,
-}
+UNSUPPORTED_DEVICE_INFO = replace(DISCOVERED_DEVICE, device_type="VenusE 2.0")
 
-UNSUPPORTED_DISCOVERED_DEVICE = {
-    **DISCOVERED_DEVICE,
-    "device_type": "VenusE 2.0",
-}
+UNSUPPORTED_DISCOVERED_DEVICE = UNSUPPORTED_DEVICE_INFO
 
 EXPECTED_ENTRY_DATA = {
     CONF_HOST: TEST_HOST,
@@ -222,15 +200,7 @@ async def test_discovery_flow_aborts_without_stable_unique_id(
         DISCOVERED_DEVICE_WITHOUT_STABLE_ID
     ]
     mock_udp_client.get_device_info.side_effect = None
-    mock_udp_client.get_device_info.return_value = {
-        "id": 0,
-        "device": TEST_DEVICE_TYPE,
-        "ver": TEST_VERSION,
-        "wifi_name": TEST_WIFI_NAME,
-        "ip": TEST_HOST,
-        "wifi_mac": "",
-        "ble_mac": "",
-    }
+    mock_udp_client.get_device_info.return_value = DISCOVERED_DEVICE_WITHOUT_STABLE_ID
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -332,28 +302,6 @@ async def test_manual_flow_aborts_if_host_configured(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_manual_flow_errors_if_device_info_is_invalid(
-    hass: HomeAssistant,
-    mock_udp_client: MagicMock,
-) -> None:
-    """Test manual setup errors when device information is invalid."""
-    mock_udp_client.get_device_info.return_value = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "manual"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
-    assert result["errors"] == {"base": "device_not_found"}
 
 
 async def test_manual_flow_errors_if_device_type_is_unsupported(

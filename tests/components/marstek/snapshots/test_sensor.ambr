@@ -118,7 +118,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'selling',
+        'charging',
+        'idle',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -137,7 +143,7 @@
     'object_id_base': 'Battery status',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:battery',
     'original_name': 'Battery status',
     'platform': 'marstek',
@@ -152,15 +158,21 @@
 # name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 Battery status',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'selling',
+        'charging',
+        'idle',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Charging',
+    'state': 'charging',
   })
 # ---
 # name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_device_mode-entry]
@@ -169,7 +181,15 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'ai',
+        'manual',
+        'passive',
+        'ups',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -188,7 +208,7 @@
     'object_id_base': 'Device mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:cog',
     'original_name': 'Device mode',
     'platform': 'marstek',
@@ -203,15 +223,23 @@
 # name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 Device mode',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'ai',
+        'manual',
+        'passive',
+        'ups',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.marstek_venuse_3_0_v1_device_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Manual',
+    'state': 'manual',
   })
 # ---
 # name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_current-entry]
@@ -338,7 +366,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'working',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -357,7 +390,7 @@
     'object_id_base': 'PV1 state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:state-machine',
     'original_name': 'PV1 state',
     'platform': 'marstek',
@@ -372,15 +405,20 @@
 # name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 PV1 state',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:state-machine',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'working',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'working',
   })
 # ---
 # name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_voltage-entry]

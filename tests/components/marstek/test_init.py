@@ -5,6 +5,7 @@ import logging
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiomarstek import MarstekDeviceInfo
 import pytest
 
 from homeassistant.components.marstek import async_create_udp_client
@@ -15,15 +16,16 @@ from homeassistant.exceptions import ConfigEntryError
 
 from tests.common import MockConfigEntry
 
-UNSUPPORTED_DEVICE_INFO = {
-    "id": 0,
-    "device": "VenusE 2.0",
-    "ver": 1,
-    "wifi_name": "TestWiFi",
-    "ip": "192.168.1.100",
-    "wifi_mac": "AA:BB:CC:DD:EE:FF",
-    "ble_mac": "11:22:33:44:55:66",
-}
+UNSUPPORTED_DEVICE_INFO = MarstekDeviceInfo(
+    id=0,
+    device_type="VenusE 2.0",
+    version=1,
+    wifi_name="TestWiFi",
+    ip="192.168.1.100",
+    wifi_mac="AA:BB:CC:DD:EE:FF",
+    ble_mac="11:22:33:44:55:66",
+    mac="AA:BB:CC:DD:EE:FF",
+)
 
 
 async def test_async_setup_entry(
@@ -194,22 +196,23 @@ async def test_async_setup_entry_not_ready(
     assert "Unexpected error fetching Marstek" not in caplog.text
 
 
-@pytest.mark.parametrize(
-    "device_info",
-    [
-        pytest.param(None, id="invalid_data"),
-        pytest.param({"ip": "192.168.1.100"}, id="missing_stable_id"),
-    ],
-)
-async def test_async_setup_entry_invalid_device_info(
+async def test_async_setup_entry_without_stable_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
-    device_info: object,
 ) -> None:
-    """Test setup retries when device information is invalid."""
+    """Test setup retries when device information has no stable identifier."""
     mock_config_entry.add_to_hass(hass)
-    mock_udp_client.get_device_info.return_value = device_info
+    mock_udp_client.get_device_info.return_value = MarstekDeviceInfo(
+        id=0,
+        device_type="VenusE 3.0",
+        version=1,
+        wifi_name="TestWiFi",
+        ip="192.168.1.100",
+        wifi_mac="",
+        ble_mac="",
+        mac="",
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

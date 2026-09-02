@@ -20,3 +20,7 @@ SUPPORTED_DEVICE_TYPES: Final[frozenset[str]] = frozenset(
         "VenusE 3.0",
     }
 )
+
+PV_STATE_OPTIONS: Final = ("standby", "working")
+DEVICE_MODE_OPTIONS: Final = ("auto", "ai", "manual", "passive", "ups")
+BATTERY_STATUS_OPTIONS: Final = ("selling", "charging", "idle")

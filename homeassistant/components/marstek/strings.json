@@ -50,10 +50,22 @@
         "name": "Battery level"
       },
       "battery_status": {
-        "name": "Battery status"
+        "name": "Battery status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "idle": "[%key:common::state::idle%]",
+          "selling": "Selling"
+        }
       },
       "device_mode": {
-        "name": "Device mode"
+        "name": "Device mode",
+        "state": {
+          "ai": "AI",
+          "auto": "Auto",
+          "manual": "Manual",
+          "passive": "Passive",
+          "ups": "UPS"
+        }
       },
       "pv1_current": {
         "name": "PV1 current"
@@ -62,7 +74,11 @@
         "name": "PV1 power"
       },
       "pv1_state": {
-        "name": "PV1 state"
+        "name": "PV1 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "Working"
+        }
       },
       "pv1_voltage": {
         "name": "PV1 voltage"
@@ -74,7 +90,11 @@
         "name": "PV2 power"
       },
       "pv2_state": {
-        "name": "PV2 state"
+        "name": "PV2 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
+        }
       },
       "pv2_voltage": {
         "name": "PV2 voltage"
@@ -86,7 +106,11 @@
         "name": "PV3 power"
       },
       "pv3_state": {
-        "name": "PV3 state"
+        "name": "PV3 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
+        }
       },
       "pv3_voltage": {
         "name": "PV3 voltage"
@@ -98,7 +122,11 @@
         "name": "PV4 power"
       },
       "pv4_state": {
-        "name": "PV4 state"
+        "name": "PV4 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
+        }
       },
       "pv4_voltage": {
         "name": "PV4 voltage"

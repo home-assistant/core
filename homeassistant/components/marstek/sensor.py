@@ -1,9 +1,8 @@
 """Sensor platform for Marstek devices."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import cast, override
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import MarstekConfigEntry, MarstekDataUpdateCoordinator
+from .const import BATTERY_STATUS_OPTIONS, DEVICE_MODE_OPTIONS, PV_STATE_OPTIONS
+from .coordinator import MarstekConfigEntry
 from .entity import MarstekEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,28 +31,11 @@ _LOGGER = logging.getLogger(__name__)
 class MarstekSensorEntityDescription(SensorEntityDescription):
     """Describe a Marstek sensor entity."""
 
-    value_fn: Callable[[object], StateType | None] | None = None
-    exists_fn: Callable[[dict[str, object]], bool] = lambda data: True
-
-
-def _int_value(value: object) -> int | None:
-    """Return an integer value or None."""
-    if isinstance(value, int | float | str):
-        return int(value)
-    return None
-
-
-def _exists_for_key(key: str) -> Callable[[dict[str, object]], bool]:
-    """Return a predicate checking whether a sensor key is present."""
-
-    def exists(data: dict[str, object]) -> bool:
-        return key in data
-
-    return exists
+    requires_value: bool = False
 
 
 def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
-    """Build PV sensor descriptions for all supported channels."""
+    """Build sensors for each of the device's four PV input channels."""
     descriptions: list[MarstekSensorEntityDescription] = []
     for pv_channel in range(1, 5):
         for metric, device_class, unit, icon in (
@@ -74,7 +57,12 @@ def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
                 UnitOfElectricCurrent.AMPERE,
                 "mdi:current-ac",
             ),
-            ("state", None, None, "mdi:state-machine"),
+            (
+                "state",
+                SensorDeviceClass.ENUM,
+                None,
+                "mdi:state-machine",
+            ),
         ):
             key = f"pv{pv_channel}_{metric}"
             descriptions.append(
@@ -87,8 +75,8 @@ def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
                     state_class=(
                         SensorStateClass.MEASUREMENT if metric != "state" else None
                     ),
-                    value_fn=_int_value if metric != "state" else None,
-                    exists_fn=_exists_for_key(key),
+                    options=list(PV_STATE_OPTIONS) if metric == "state" else None,
+                    requires_value=True,
                 )
             )
     return tuple(descriptions)
@@ -101,7 +89,6 @@ SENSOR_DESCRIPTIONS: tuple[MarstekSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_int_value,
     ),
     MarstekSensorEntityDescription(
         key="battery_power",
@@ -109,17 +96,20 @@ SENSOR_DESCRIPTIONS: tuple[MarstekSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_int_value,
     ),
     MarstekSensorEntityDescription(
         key="device_mode",
         translation_key="device_mode",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:cog",
+        options=list(DEVICE_MODE_OPTIONS),
     ),
     MarstekSensorEntityDescription(
         key="battery_status",
         translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:battery",
+        options=list(BATTERY_STATUS_OPTIONS),
     ),
     *_pv_sensor_descriptions(),
 )
@@ -138,7 +128,7 @@ async def async_setup_entry(
     sensors = [
         MarstekSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.exists_fn(coordinator.data)
+        if not description.requires_value or coordinator.data.has_value(description.key)
     ]
 
     _LOGGER.debug("Device %s sensors set up, total %d", device_ip, len(sensors))
@@ -150,26 +140,8 @@ class MarstekSensor(MarstekEntity, SensorEntity):
 
     entity_description: MarstekSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        entity_description: MarstekSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description)
-
     @property
     @override
     def native_value(self) -> StateType | None:
         """Return the state of the sensor."""
-        data = self.coordinator.data
-        if not data:
-            return None
-
-        value = data.get(self.entity_description.key)
-        if value is None:
-            return None
-
-        if self.entity_description.value_fn is not None:
-            return self.entity_description.value_fn(value)
-        return cast(StateType, value)
+        return self.coordinator.data.get_value(self.entity_description.key)
