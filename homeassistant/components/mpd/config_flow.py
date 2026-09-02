@@ -58,6 +58,7 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str
     _port: int
     _name: str
+    _discovered_hosts: tuple[str, ...]
 
     @override
     async def async_step_user(
@@ -88,6 +89,11 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def _async_abort_discovered_entries_match(self) -> None:
+        """Abort if any host the discovered server answers to is configured."""
+        for host in self._discovered_hosts:
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -101,8 +107,8 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         # Entries may be configured under any address the server advertises or
         # under its hostname, and a dual-stack server can present a different
         # one on each announcement, so match them all.
-        for host in (*discovery_info.addresses, hostname, self._name):
-            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
+        self._discovered_hosts = (*discovery_info.addresses, hostname, self._name)
+        self._async_abort_discovered_entries_match()
         # MPD exposes no identifier tied to the device, so the entry gets no
         # unique id. The hostname deduplicates flows for one server: unlike the
         # selected address it survives dual-stack reannouncements, and unlike the
@@ -131,6 +137,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
+                # The entry may have been created by hand while this form was
+                # open, and clearing the unique id drops the only other guard.
+                self._async_abort_discovered_entries_match()
                 data = {CONF_HOST: self._host, CONF_PORT: self._port}
                 if password is not None:
                     data[CONF_PASSWORD] = password

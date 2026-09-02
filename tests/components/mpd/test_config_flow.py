@@ -167,7 +167,7 @@ async def test_zeroconf_flow(
     assert result["data"] == expected_data
     # A read proves the credentials grant access, not just that MPD greeted us.
     assert mock_mpd_client.status.called
-    # The DNS-SD instance name deduplicates flows only; it is not an identity.
+    # The hostname and port deduplicate flows only; they are not an identity.
     assert result["result"].unique_id is None
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -299,6 +299,30 @@ async def test_zeroconf_flow_password_protected(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_mpd_client", "mock_setup_entry")
+async def test_zeroconf_flow_configured_while_confirming(
+    hass: HomeAssistant,
+) -> None:
+    """Test the server being configured while the confirm form is open aborts."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
