@@ -1,6 +1,5 @@
 """SAJ solar inverter interface."""
 
-from datetime import date
 from typing import override
 
 import pysaj
@@ -25,7 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -33,10 +32,10 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SAJConfigEntry, SAJRuntimeData
 from .const import CONNECTION_TYPES, DOMAIN, INTEGRATION_TITLE
+from .coordinator import SAJConfigEntry, SAJDataUpdateCoordinator
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
@@ -64,16 +63,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SAJ sensors from a config entry."""
-    runtime = entry.runtime_data
-    sensor_def = runtime.sensor_def
+    coordinator = entry.runtime_data
 
-    hass_sensors = [
-        SAJsensor(runtime, entry.unique_id, sensor, inverter_name=None)
-        for sensor in sensor_def
+    async_add_entities(
+        SAJsensor(coordinator, entry.unique_id, sensor)
+        for sensor in coordinator.sensor_def
         if sensor.enabled
-    ]
-
-    async_add_entities(hass_sensors)
+    )
 
 
 async def async_setup_platform(
@@ -123,25 +119,18 @@ async def async_setup_platform(
     )
 
 
-class SAJsensor(SensorEntity):
+class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
     """Representation of a SAJ sensor."""
-
-    _attr_should_poll = False
-    _state: StateType
 
     def __init__(
         self,
-        runtime: SAJRuntimeData,
+        coordinator: SAJDataUpdateCoordinator,
         serialnumber: str | None,
         pysaj_sensor: pysaj.Sensor,
-        inverter_name: str | None = None,
     ) -> None:
         """Initialize the SAJ sensor."""
-        self._runtime = runtime
+        super().__init__(coordinator)
         self._sensor = pysaj_sensor
-        self._inverter_name = inverter_name
-        self._serialnumber = serialnumber
-        self._state = self._sensor.value
 
         if pysaj_sensor.name in ("current_power", "temperature"):
             self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -151,10 +140,7 @@ class SAJsensor(SensorEntity):
         self._attr_unique_id = f"{serialnumber}_{pysaj_sensor.name}"
         native_uom = SAJ_UNIT_MAPPINGS[pysaj_sensor.unit]
         self._attr_native_unit_of_measurement = native_uom
-        if self._inverter_name:
-            self._attr_name = f"saj_{self._inverter_name}_{pysaj_sensor.name}"
-        else:
-            self._attr_name = f"saj_{pysaj_sensor.name}"
+        self._attr_name = f"saj_{pysaj_sensor.name}"
         if native_uom == UnitOfPower.WATT:
             self._attr_device_class = SensorDeviceClass.POWER
         if native_uom == UnitOfEnergy.KILO_WATT_HOUR:
@@ -165,53 +151,8 @@ class SAJsensor(SensorEntity):
         ):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register for inverter poll updates."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self._runtime.polling.async_add_poll_listener(self._on_poll_success)
-        )
-
     @property
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def per_day_basis(self) -> bool:
-        """Return if the sensors value is on daily basis or not."""
-        return self._sensor.per_day_basis
-
-    @property
-    def per_total_basis(self) -> bool:
-        """Return if the sensors value is cumulative or not."""
-        return self._sensor.per_total_basis
-
-    @property
-    def date_updated(self) -> date:
-        """Return the date when the sensor was last updated."""
-        return self._sensor.date
-
-    @callback
-    def _on_poll_success(self, success: bool) -> None:
-        """Update state from the inverter after a poll."""
-        state_unknown = False
-        if not success and (
-            (self.per_day_basis and dt_util.now().date() > self.date_updated)
-            or (not self.per_day_basis and not self.per_total_basis)
-        ):
-            state_unknown = True
-
-        update = False
-        if self._sensor.value != self._state:
-            update = True
-            self._state = self._sensor.value
-
-        if state_unknown and self._state is not None:
-            update = True
-            self._state = None
-
-        if update:
-            self.async_write_ha_state()
+        return self._sensor.value
