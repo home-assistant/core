@@ -1212,11 +1212,6 @@ class ESPHomeManager:
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
-        # After the restored unique id above so those entries register too:
-        # the device may open the TCP connection to us when it cannot be
-        # reached, and a dial-in for this MAC is handed to the reconnect logic
-        await self._async_register_outgoing_target(reconnect_logic)
-
         await reconnect_logic.start()
 
         # Wait for a cached BLE proxy to register its scanner before finishing setup.
@@ -1233,6 +1228,12 @@ class ESPHomeManager:
                     "%s: Timed out waiting for Bluetooth scanner to register",
                     self.host,
                 )
+
+        # Last so a failed setup cannot leak the route: the device may open
+        # the TCP connection to us when it cannot be reached, and a dial-in
+        # for this MAC is handed to the reconnect logic. After the restored
+        # unique id above so those entries register too.
+        await self._async_register_outgoing_target(reconnect_logic)
 
 
 @callback

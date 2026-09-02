@@ -33,6 +33,9 @@ _KEY_OUTGOING_CONNECTION_LISTENER: HassKey[_ListenerState] = HassKey(
 _KEY_OUTGOING_CONNECTION_STOPPING: HassKey[asyncio.Task[None]] = HassKey(
     "esphome_outgoing_connection_stopping"
 )
+_KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[bool] = HassKey(
+    "esphome_outgoing_connection_bind_failed"
+)
 
 
 @singleton(_KEY_OUTGOING_CONNECTION_LISTENER, async_=True)
@@ -43,15 +46,16 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
     """
     if (stopping := hass.data.pop(_KEY_OUTGOING_CONNECTION_STOPPING, None)) is not None:
         # Wait for the previous listener to release the port before rebinding;
-        # best effort, a still-bound port surfaces as OSError from start()
-        try:
-            await stopping
-        except Exception:
+        # wait() absorbs its failure or cancellation without re-raising here,
+        # and a still-bound port surfaces as OSError from start()
+        await asyncio.wait([stopping])
+        if not stopping.cancelled() and (exc := stopping.exception()) is not None:
             _LOGGER.debug(
-                "Previous outgoing connection listener failed to stop", exc_info=True
+                "Previous outgoing connection listener failed to stop", exc_info=exc
             )
     server = OutgoingConnectionServer()
     await server.start()
+    hass.data.pop(_KEY_OUTGOING_CONNECTION_BIND_FAILED, None)
 
     async def _async_stop(event: Event) -> None:
         # Drop the cached instance so late registrations cannot attach to it
@@ -111,7 +115,15 @@ async def async_register_outgoing_target(
         try:
             state = await _async_get_listener(hass)
         except OSError as err:
-            _LOGGER.warning(
+            # One warning per failure, not one per registered device
+            level = (
+                logging.DEBUG
+                if hass.data.get(_KEY_OUTGOING_CONNECTION_BIND_FAILED)
+                else logging.WARNING
+            )
+            hass.data[_KEY_OUTGOING_CONNECTION_BIND_FAILED] = True
+            _LOGGER.log(
+                level,
                 (
                     "Cannot listen for ESPHome outgoing connections on port %s: %s;"
                     " devices are still told to dial back and will retry"
