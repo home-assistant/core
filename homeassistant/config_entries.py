@@ -824,15 +824,16 @@ class ConfigEntry[_DataT = Any]:
                     None,
                     None,
                 )
-            else:
-                # This was not a "real" cancellation, log it and treat as a normal error.
-                logger.exception(
-                    "Error migrating entry %s for %s"
-                    if migration
-                    else "Error setting up entry %s for %s",
-                    self.title,
-                    integration.domain,
-                )
+                raise exc
+
+            # This was not a "real" cancellation, log it and treat as a normal error.
+            logger.exception(
+                "Error migrating entry %s for %s"
+                if migration
+                else "Error setting up entry %s for %s",
+                self.title,
+                integration.domain,
+            )
 
         else:
             logger.exception(
@@ -933,7 +934,7 @@ class ConfigEntry[_DataT = Any]:
             except (
                 asyncio.CancelledError,
                 SystemExit,
-                Exception,
+                Exception,  # noqa: BLE001
             ) as exc:
                 (
                     error_reason,
@@ -943,9 +944,6 @@ class ConfigEntry[_DataT = Any]:
                 ) = self.__async_handle_config_entry_setup_error(
                     hass, integration, exc, migration=True
                 )
-                if isinstance(exc, asyncio.CancelledError):
-                    if (task := asyncio.current_task()) and task.cancelling() > 0:
-                        raise
                 if isinstance(exc, ConfigEntryNotReady):
                     # Allow for retrying migration if the integration is not ready yet.
                     return
@@ -1002,7 +1000,7 @@ class ConfigEntry[_DataT = Any]:
         except (
             asyncio.CancelledError,
             SystemExit,
-            Exception,
+            Exception,  # noqa: BLE001
         ) as exc:
             (
                 error_reason,
@@ -1010,9 +1008,6 @@ class ConfigEntry[_DataT = Any]:
                 error_reason_translation_placeholders,
                 error_reason_translation_domain,
             ) = self.__async_handle_config_entry_setup_error(hass, integration, exc)
-            if isinstance(exc, asyncio.CancelledError):
-                if (task := asyncio.current_task()) and task.cancelling() > 0:
-                    raise
             if isinstance(exc, ConfigEntryNotReady):
                 return
 
