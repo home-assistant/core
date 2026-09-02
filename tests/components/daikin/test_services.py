@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.components.daikin.services import ATTR_EN_DEMAND, ATTR_MAX_POW
@@ -118,7 +119,10 @@ async def test_set_demand_control_disabled(
     device_registry: dr.DeviceRegistry,
     zone_device: ZoneDevice,
 ) -> None:
-    """Test the set_demand_control service with demand control disabled."""
+    """Test the set_demand_control service with demand control disabled.
+
+    Disabling demand control does not require a maximum power value.
+    """
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
@@ -132,14 +136,43 @@ async def test_set_demand_control_disabled(
                 device_registry, config_entry.entry_id, zone_device.mac
             ),
             ATTR_EN_DEMAND: False,
-            ATTR_MAX_POW: 40,
         },
         blocking=True,
     )
 
     zone_device.set_demand_control.assert_called_once_with(
-        en_demand="off", max_pow=40, mode=0
+        en_demand="off", max_pow=100, mode=0
     )
+
+
+@pytest.mark.parametrize("invalid_max_pow", [0, 39, 101])
+async def test_set_demand_control_invalid_max_pow(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    zone_device: ZoneDevice,
+    invalid_max_pow: int,
+) -> None:
+    """Test that an out-of-range maximum power value is rejected."""
+    zone_device.support_demand_control = True
+    zone_device.set_demand_control = AsyncMock()
+
+    config_entry = await _async_setup_daikin(hass, zone_device)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_demand_control",
+            {
+                ATTR_DEVICE_ID: _device_id(
+                    device_registry, config_entry.entry_id, zone_device.mac
+                ),
+                ATTR_EN_DEMAND: True,
+                ATTR_MAX_POW: invalid_max_pow,
+            },
+            blocking=True,
+        )
+
+    zone_device.set_demand_control.assert_not_called()
 
 
 async def test_set_demand_control_unsupported(

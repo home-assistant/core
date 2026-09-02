@@ -112,7 +112,7 @@
           "name": "Enable"
         },
         "max_pow": {
-          "description": "Maximum power as a percentage of the unit's nominal power.",
+          "description": "Maximum power as a percentage of the unit's nominal power. Only used when enabling demand control.",
           "name": "Maximum power"
         },
         "mode": {

@@ -29,7 +29,9 @@ SET_DEMAND_CONTROL_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_EN_DEMAND): bool,
-        vol.Required(ATTR_MAX_POW): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+        vol.Optional(ATTR_MAX_POW, default=100): vol.All(
+            vol.Coerce(int), vol.Range(min=40, max=100)
+        ),
         vol.Optional(ATTR_MODE, default=ATTR_MODE_MANUAL): vol.In(
             DAIKIN_DEMAND_CONTROL_MODES
         ),
