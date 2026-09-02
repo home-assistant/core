@@ -104,10 +104,11 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         for host in (*discovery_info.addresses, hostname, self._name):
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
         # MPD exposes no identifier tied to the device, so the entry gets no
-        # unique id. The DNS-SD instance name deduplicates flows for one server
-        # across reannouncements, unlike the selected address, and is cleared
-        # before the entry is created.
-        await self.async_set_unique_id(discovery_info.name)
+        # unique id. The hostname deduplicates flows for one server: unlike the
+        # selected address it survives dual-stack reannouncements, and unlike the
+        # DNS-SD instance name it survives a restart, which MPD renames by
+        # appending its pid. It is cleared before the entry is created.
+        await self.async_set_unique_id(f"{hostname}:{self._port}")
         self._abort_if_unique_id_configured()
 
         # A server that needs a password fails the unauthenticated probe, so

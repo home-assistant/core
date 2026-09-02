@@ -236,6 +236,33 @@ async def test_zeroconf_flow_already_in_progress(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("mock_mpd_client")
+async def test_zeroconf_flow_already_in_progress_after_restart(
+    hass: HomeAssistant,
+) -> None:
+    """Test a restart renaming the DNS-SD instance does not open a flow.
+
+    MPD appends its pid to the instance name, so the name differs on every
+    announcement made by a new process.
+    """
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(
+            ZEROCONF_DISCOVERY,
+            name="Music Player @ mpd-server[4242]._mpd._tcp.local.",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
+
+
 async def test_zeroconf_flow_cannot_connect(
     hass: HomeAssistant, mock_mpd_client: AsyncMock
 ) -> None:
