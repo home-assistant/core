@@ -318,3 +318,26 @@ async def test_disabled_webhook_output_is_reconfigured(
         "doorbell"
     ] == ["mydoorbird_doorbell"]
     assert hass.states.get("camera.mydoorbird_last_ring") is None
+
+
+async def test_camera_kept_once_created_when_the_event_returns(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a camera created as a fallback stays on the deprecation path."""
+    doorbird_entry = await doorbird_mocker(options={CONF_EVENTS: []})
+
+    assert hass.states.get("camera.mydoorbird_last_ring") is not None
+    assert (DOMAIN, "deprecated_camera_1234ABCD_last_ring") not in issue_registry.issues
+
+    with patch_doorbird_api_entry_points(doorbird_entry.api):
+        hass.config_entries.async_update_entry(
+            doorbird_entry.entry, options={CONF_EVENTS: ["doorbell", "motion"]}
+        )
+        await hass.async_block_till_done()
+
+    # The image can refresh again, but the camera is registered now, so it is
+    # deprecated like any other rather than removed from under the user.
+    assert hass.states.get("camera.mydoorbird_last_ring") is not None
+    assert (DOMAIN, "deprecated_camera_1234ABCD_last_ring") in issue_registry.issues
