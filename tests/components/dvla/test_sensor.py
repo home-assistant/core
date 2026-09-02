@@ -316,7 +316,12 @@ async def test_device_entry_type(
     """Test DVLA device is marked as a service."""
     await setup_dvla_entry(hass)
 
-    device = device_registry.async_get_device_by_identifier(DOMAIN, "AB12CDE")
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AB12CDE"),
+        entry.entry_id,
+    )
 
     assert device is not None
     assert device.entry_type is DeviceEntryType.SERVICE
