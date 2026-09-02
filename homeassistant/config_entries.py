@@ -836,7 +836,7 @@ class ConfigEntry[_DataT = Any]:
             )
 
         else:
-            logger.exception(
+            logger.error(
                 "Error migrating entry %s for %s"
                 if migration
                 else "Error setting up entry %s for %s",
