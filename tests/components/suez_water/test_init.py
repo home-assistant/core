@@ -303,10 +303,10 @@ async def test_migration_version_1_to_2(
 
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
-    ("duplicate_volume", "expected_log_level"),
+    ("duplicate_volume", "expected_log_level", "expected_log_message"),
     [
-        (100.0, "debug"),
-        (999.0, "warning"),
+        (100.0, "DEBUG", "Skipping duplicate date"),
+        (999.0, "WARNING", "different volume"),
     ],
 )
 async def test_statistics_with_duplicate_dates(
@@ -317,6 +317,7 @@ async def test_statistics_with_duplicate_dates(
     caplog: pytest.LogCaptureFixture,
     duplicate_volume: float,
     expected_log_level: str,
+    expected_log_message: str,
 ) -> None:
     """Test that duplicate dates in data are handled correctly."""
     start = datetime.fromisoformat("2024-12-04T02:00:00.0")
@@ -340,10 +341,9 @@ async def test_statistics_with_duplicate_dates(
             volume=0.2,
             index=0.45,
         ),
-        # Duplicate of the first day with same or different volume
         TelemetryMeasure(
             date=origin.date().strftime("%Y-%m-%d %H:%M:%S"),
-            volume=duplicate_volume / 1000,  # Convert L to m³
+            volume=duplicate_volume / 1000,
             index=0.1,
         ),
     ]
@@ -367,25 +367,15 @@ async def test_statistics_with_duplicate_dates(
         {"start", "state", "sum"},
     )
 
-    # Verify that we only have 3 entries (not 4), and the duplicate was ignored
     assert statistic_id in stats
     assert len(stats[statistic_id]) == 3
 
-    # Verify the cumulative sum is correct (100 + 150 + 200 = 450, not 550)
     assert stats[statistic_id][0]["sum"] == 100.0
     assert stats[statistic_id][1]["sum"] == 250.0
     assert stats[statistic_id][2]["sum"] == 450.0
 
-    # Verify appropriate log message based on whether values differ
-    if expected_log_level == "warning":
-        assert any(
-            "Duplicate date" in record.message and "different volume" in record.message
-            for record in caplog.records
-            if record.levelname == "WARNING"
-        )
-    else:
-        assert any(
-            "Skipping duplicate date" in record.message
-            for record in caplog.records
-            if record.levelname == "DEBUG"
-        )
+    assert any(
+        expected_log_message in record.message
+        for record in caplog.records
+        if record.levelname == expected_log_level
+    )
