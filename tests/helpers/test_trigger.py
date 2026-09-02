@@ -9,6 +9,7 @@ import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
+import attr
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
@@ -24,7 +25,9 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_ID,
     CONF_ENTITY_ID,
+    CONF_EVENT_DATA,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -54,10 +57,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
     label_registry as lr,
+    script,
     trigger,
 )
 from homeassistant.helpers.automation import (
     DomainSpec,
+    ValidationFinding,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.event import async_track_state_change_event
@@ -6275,3 +6280,131 @@ def test_entity_state_trigger_schema_behavior_invalid(behavior: str) -> None:
     }
     with pytest.raises(vol.Invalid):
         ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+
+
+COMPOSITE_ID = "composite00000000000000000000ab"
+
+
+@pytest.fixture
+def split_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> tuple[dr.DeviceEntry, dr.DeviceEntry]:
+    """Create two devices which are splits of a pre-migration composite device."""
+    entry_1 = MockConfigEntry(domain="itg1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="itg2")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        identifiers={("itg1", "1")},
+        name="Split device 1",
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("itg2", "1")},
+        name="Split device 2",
+    )
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=COMPOSITE_ID
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=COMPOSITE_ID
+    )
+    return device_registry._devices[device_1.id], device_registry._devices[device_2.id]
+
+
+def _event_trigger(device_id: Any) -> dict[str, Any]:
+    """Build an event trigger config filtering on a device id."""
+    return {
+        CONF_PLATFORM: "event",
+        "event_type": "my_event",
+        CONF_EVENT_DATA: {CONF_DEVICE_ID: device_id},
+    }
+
+
+@pytest.mark.usefixtures("split_devices")
+async def test_validate_trigger_reports_composite_device(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The event trigger validator reports a composite device id and also logs it."""
+    findings: list[ValidationFinding] = []
+    with caplog.at_level(logging.WARNING):
+        await trigger.async_validate_trigger_config(
+            hass, [_event_trigger(COMPOSITE_ID)], issue_reporter=findings.append
+        )
+    assert len(findings) == 1
+    assert findings[0].finding_type == "event_trigger_composite_device_id"
+    assert findings[0].issue_key == COMPOSITE_ID
+    assert findings[0].placeholders["device_id"] == COMPOSITE_ID
+    assert "Split device 1" in findings[0].placeholders["devices"]
+    # The warning is logged regardless of whether a reporter is provided.
+    assert any(
+        "was split into one device per integration" in message
+        for message in caplog.messages
+    )
+
+
+@pytest.mark.usefixtures("split_devices")
+async def test_validate_trigger_without_reporter(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Without a reporter the validator still validates and logs a warning."""
+    with caplog.at_level(logging.WARNING):
+        validated = await trigger.async_validate_trigger_config(
+            hass, [_event_trigger(COMPOSITE_ID)]
+        )
+    assert validated[0][CONF_EVENT_DATA][CONF_DEVICE_ID] == COMPOSITE_ID
+    assert any(
+        "was split into one device per integration" in message
+        for message in caplog.messages
+    )
+
+
+async def test_validate_trigger_ignores_live_unknown_and_non_event(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Live, unknown, templated and non-event device ids are not reported."""
+    entry = MockConfigEntry(domain="itg")
+    entry.add_to_hass(hass)
+    live_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("itg", "1")}
+    )
+    findings: list[ValidationFinding] = []
+    await trigger.async_validate_trigger_config(
+        hass,
+        [
+            _event_trigger(live_device.id),
+            _event_trigger("unknown_device_id"),
+            # A templated device id becomes a Template, not a plain string.
+            _event_trigger("{{ '" + COMPOSITE_ID + "' }}"),
+            # A non-event trigger is not inspected for event_data.device_id.
+            {CONF_PLATFORM: "event", "event_type": "my_event"},
+        ],
+        issue_reporter=findings.append,
+    )
+    assert findings == []
+
+
+@pytest.mark.usefixtures("split_devices")
+async def test_validate_actions_reports_wait_for_trigger_composite(
+    hass: HomeAssistant,
+) -> None:
+    """A composite device id in a wait_for_trigger event trigger is reported."""
+    findings: list[ValidationFinding] = []
+    actions = [
+        {
+            "choose": [
+                {
+                    "conditions": [],
+                    "sequence": [{"wait_for_trigger": [_event_trigger(COMPOSITE_ID)]}],
+                }
+            ]
+        }
+    ]
+    await script.async_validate_actions_config(
+        hass, actions, issue_reporter=findings.append
+    )
+    assert len(findings) == 1
+    assert findings[0].issue_key == COMPOSITE_ID

@@ -172,6 +172,14 @@
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
       "title": "The {integration_title} YAML configuration is being removed"
     },
+    "event_trigger_composite_device_id": {
+      "description": "The automation or script \"{name}\" (`{entity_id}`) has an event trigger that filters on device `{device_id}`. This device was split into one device per integration and no longer exists, so the trigger can no longer fire.\n\nTo fix this issue, [edit it]({edit}) to filter on one of these devices instead: {devices}. Then save and reload the configuration.",
+      "title": "Event trigger uses a device that no longer exists"
+    },
+    "event_trigger_composite_device_id_no_edit": {
+      "description": "The automation or script \"{name}\" (`{entity_id}`) has an event trigger that filters on device `{device_id}`. This device was split into one device per integration and no longer exists, so the trigger can no longer fire.\n\nTo fix this issue, edit it to filter on one of these devices instead: {devices}. Then save and reload the configuration.",
+      "title": "[%key:component::homeassistant::issues::event_trigger_composite_device_id::title%]"
+    },
     "historic_currency": {
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration.",
       "title": "The configured currency is no longer in use"

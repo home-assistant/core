@@ -19,6 +19,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     template,
 )
+from homeassistant.helpers.automation import ValidationFinding, ValidationIssueReporter
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import yaml as yaml_util
@@ -27,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
+
+COMPOSITE_DEVICE_ID_ISSUE = "event_trigger_composite_device_id"
 
 
 def _validate_event_types(value: Any) -> Any:
@@ -53,13 +56,19 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant,
+    config: ConfigType,
+    *,
+    issue_reporter: ValidationIssueReporter | None = None,
 ) -> ConfigType:
     """Validate trigger config.
 
-    Warn if the trigger filters event_data.device_id on a pre-migration composite device
-    id - a device that was split into one device per config entry.
+    Detects when the trigger filters event_data.device_id on a pre-migration composite
+    device id - a device that was split into one device per config entry.
     A templated device id is a Template (not a plain string) and is left alone.
+
+    When an ``issue_reporter`` is provided the problem is reported as a finding to be
+    materialized as a repair issue. It is always logged as a warning.
     """
     validated_config: ConfigType = TRIGGER_SCHEMA(config)
     if (
@@ -73,8 +82,29 @@ async def async_validate_trigger_config(
             ).async_get_devices_for_composite_device_id(device_id)
         )
     ):
+        # Log the original (pre-schema) config so the dumped YAML has no Template
+        # objects, which cannot be serialized.
         _log_composite_device_id_warning(hass, config, device_id, split_devices)
+        if issue_reporter is not None:
+            issue_reporter(
+                ValidationFinding(
+                    finding_type=COMPOSITE_DEVICE_ID_ISSUE,
+                    issue_key=device_id,
+                    placeholders={
+                        "device_id": device_id,
+                        "devices": _composite_device_names(split_devices),
+                    },
+                )
+            )
     return validated_config
+
+
+def _composite_device_names(split_devices: list[dr.DeviceEntry]) -> str:
+    """Return a human readable list of the devices a composite id was split into."""
+    return ", ".join(
+        f"{device.name_by_user or device.name or device.id} ({device.id})"
+        for device in split_devices
+    )
 
 
 @callback
