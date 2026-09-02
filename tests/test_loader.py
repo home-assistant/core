@@ -227,7 +227,7 @@ async def test_custom_integration_replaced_by_built_in(
             " as 'store' and is no longer loaded"
         ) in caplog.text
         assert "please report it to the author" not in caplog.text
-        assert "has not been tested by Home Assistant" not in caplog.text
+        assert "custom integration test_blocked_version which" not in caplog.text
 
 
 async def test_hacs_replaced_by_store() -> None:
