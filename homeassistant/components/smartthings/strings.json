@@ -564,6 +564,9 @@
       "dryer_mode": {
         "name": "Dryer mode"
       },
+      "dryer_progress": {
+        "name": "Progress"
+      },
       "energy_difference": {
         "name": "Energy difference"
       },
@@ -978,6 +981,9 @@
       "washer_mode": {
         "name": "Washer mode"
       },
+      "washer_progress": {
+        "name": "[%key:component::smartthings::entity::sensor::dryer_progress::name%]"
+      },
       "washer_sub_completion_time": {
         "name": "Upper washer completion time"
       },
@@ -1009,6 +1015,9 @@
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
+      },
+      "washer_sub_progress": {
+        "name": "Upper washer progress"
       },
       "water_consumption": {
         "name": "Water consumption"
