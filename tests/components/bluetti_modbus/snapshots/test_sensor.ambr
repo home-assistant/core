@@ -348,7 +348,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -456,7 +456,7 @@
     'object_id_base': 'Grid frequency',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
@@ -794,7 +794,7 @@
     'object_id_base': 'PV 1 input current',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -910,7 +910,7 @@
     'object_id_base': 'PV 1 input voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -968,7 +968,7 @@
     'object_id_base': 'PV 2 input current',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -1084,7 +1084,7 @@
     'object_id_base': 'PV 2 input voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -1142,7 +1142,7 @@
     'object_id_base': 'PV 3 input current',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -1258,7 +1258,7 @@
     'object_id_base': 'PV 3 input voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -1316,7 +1316,7 @@
     'object_id_base': 'PV 4 input current',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -1432,7 +1432,7 @@
     'object_id_base': 'PV 4 input voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -1490,7 +1490,7 @@
     'object_id_base': 'PV AC energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -1656,7 +1656,7 @@
     'object_id_base': 'Total AC output energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -1772,7 +1772,7 @@
     'object_id_base': 'Total battery current',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -1994,7 +1994,7 @@
     'object_id_base': 'Total battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -2052,7 +2052,7 @@
     'object_id_base': 'Total grid export energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -2110,7 +2110,7 @@
     'object_id_base': 'Total grid import energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -2226,7 +2226,7 @@
     'object_id_base': 'Total PV input energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,

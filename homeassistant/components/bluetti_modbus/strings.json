@@ -32,9 +32,6 @@
       "ac_o_p_total": {
         "name": "AC output power"
       },
-      "b_c": {
-        "name": "Battery current"
-      },
       "b_c_total": {
         "name": "Total battery current"
       },
