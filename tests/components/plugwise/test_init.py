@@ -167,6 +167,7 @@ async def test_device_via_device_links(
     assert child_device.via_device_id == gateway_device.id
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(
@@ -189,7 +190,6 @@ async def test_migrate_unique_id_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_anna: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -210,6 +210,7 @@ async def test_migrate_unique_id_temperature(
     assert entity_migrated.unique_id == new_unique_id
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize(
     ("entitydata", "old_unique_id", "new_unique_id"),
     [
@@ -241,7 +242,6 @@ async def test_migrate_unique_id_relay(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -285,7 +285,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 56
+        == 57
     )
     assert (
         len(
@@ -317,7 +317,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 63
+            == 64
         )
         assert (
             len(
@@ -348,7 +348,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 56
+            == 57
         )
         assert (
             len(

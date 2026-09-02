@@ -15,6 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -38,6 +39,9 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hot Spring."""
 
     VERSION = 1
+    discovered_host: str
+    discovered_spa: Spa
+    discovered_title: str
 
     @override
     async def async_step_user(
@@ -86,3 +90,37 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the Hot Spring spa."""
         return await self.async_step_user(user_input)
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        self.discovered_host = discovery_info.host
+        try:
+            self.discovered_spa = await validate_input(
+                self.hass, {CONF_HOST: discovery_info.host}
+            )
+        except HotSpringConnectionError, HotSpringError:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(self.discovered_spa.info.mac_address)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+
+        self.discovered_title = self.discovered_spa.info.hostname or "Hot Spring Spa"
+        self.context["title_placeholders"] = {"name": self.discovered_title}
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={"name": self.discovered_title},
+        )
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by zeroconf."""
+        return self.async_create_entry(
+            title=self.discovered_title,
+            data={CONF_HOST: self.discovered_host},
+        )

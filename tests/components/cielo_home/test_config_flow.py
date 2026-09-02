@@ -27,6 +27,7 @@ def _devices_payload(parsed: dict | None) -> MagicMock:
     return payload
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_config_flow_success(hass: HomeAssistant) -> None:
     """Test successful config flow with valid API key."""
     mock_client = MagicMock()
@@ -89,6 +90,7 @@ async def test_full_config_flow_abort_already_configured(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_error_mapping(
     hass: HomeAssistant, api_error: type[Exception], flow_error_key: str
 ) -> None:
@@ -127,6 +129,7 @@ async def test_form_error_mapping(
         assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_error_mapping_invalid_auth(hass: HomeAssistant) -> None:
     """Test AuthenticationError maps to invalid_auth."""
 

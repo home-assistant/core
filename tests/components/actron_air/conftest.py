@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from actron_neo_api.models.auth import ActronAirDeviceCode, ActronAirUserInfo
@@ -17,11 +16,11 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_actron_api() -> Generator[AsyncMock]:
+def mock_actron_api_class() -> Generator[MagicMock]:
     """Mock the Actron Air API class."""
     with (
         patch(
@@ -32,6 +31,14 @@ def mock_actron_api() -> Generator[AsyncMock]:
             "homeassistant.components.actron_air.config_flow.ActronAirAPI",
             new=mock_api,
         ),
+    ):
+        yield mock_api
+
+
+@pytest.fixture
+def mock_actron_api(mock_actron_api_class: MagicMock) -> Generator[AsyncMock]:
+    """Mock the Actron Air API instance."""
+    with (
         patch.object(ActronAirACSystem, "set_system_mode", new_callable=AsyncMock),
         patch.object(
             ActronAirUserAirconSettings, "set_away_mode", new_callable=AsyncMock
@@ -54,7 +61,7 @@ def mock_actron_api() -> Generator[AsyncMock]:
             ActronAirUserAirconSettings, "set_fan_mode", new_callable=AsyncMock
         ),
     ):
-        api = mock_api.return_value
+        api = mock_actron_api_class.return_value
 
         # Mock device code request
         api.request_device_code.return_value = ActronAirDeviceCode(
@@ -89,9 +96,15 @@ def mock_actron_api() -> Generator[AsyncMock]:
             return_value=[ActronAirSystemInfo(serial="123456")]
         )
 
+        # Mock realtime push
+        api.start_push = AsyncMock(return_value=True)
+        api.stop_push = AsyncMock()
+        api.subscribe_system_updates = MagicMock(return_value=MagicMock())
+        api.subscribe_connection_state = MagicMock(return_value=MagicMock())
+
         # Build status from fixture JSON
         status = ActronAirStatus.model_validate(
-            json.loads(load_fixture("status.json", DOMAIN))
+            load_json_object_fixture("status.json", DOMAIN)
         )
         status.set_api(api)
 

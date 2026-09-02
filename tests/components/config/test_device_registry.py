@@ -10,7 +10,7 @@ from pytest_unordered import unordered
 from homeassistant.components.config import DOMAIN, device_registry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -342,9 +342,12 @@ async def test_update_device_labels(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
+    label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry labels."""
+    label_registry.async_create("label1")
+    label_registry.async_create("label2")
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
@@ -386,6 +389,128 @@ async def test_update_device_labels(
     ):
         assert msg["result"][key] == value.timestamp()
         assert getattr(device, key) == value
+
+
+@pytest.mark.parametrize(
+    ("labels", "expected_labels"),
+    [
+        pytest.param(["label1", "missing"], {"label1"}, id="strip_unknown"),
+        pytest.param(["label1", "stale_label"], {"label1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
+    ],
+)
+async def test_update_device_strips_unknown_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    label_registry: lr.LabelRegistry,
+    labels: list[str],
+    expected_labels: set[str],
+) -> None:
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the device is cleaned up when the device
+    is next saved, even if the client sends it back.
+    """
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    # Seed a stale label via the helper layer, bypassing WS stripping
+    device_registry.async_update_device(device.id, labels={"stale_label"})
+    label_registry.async_create("label1")
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": device.id,
+            "labels": labels,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert set(msg["result"]["labels"]) == expected_labels
+    assert device_registry.async_get(device.id).labels == expected_labels
+
+
+async def test_update_device_unknown_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+) -> None:
+    """Test updating an unknown device returns an error."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": "does_not_exist",
+            "name_by_user": "Test Friendly Name",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert msg["error"]["message"] == "Device not found"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_update_device_composite(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test updating a pre-migration composite device id is rejected."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+
+    composite_id = "compositea000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Composite spanning two config entries; splitting it on load removes
+                # the composite device, so composite_id no longer refers to a device
+                _storage_device_v1_12(
+                    composite_id,
+                    [entry_1.entry_id, entry_2.entry_id],
+                    entry_1.entry_id,
+                    "a",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    registry = dr.async_get(hass)
+    assert registry.async_get(composite_id) is not None
+    assert registry.async_get(composite_id, include_composite_devices=False) is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": composite_id,
+            "name_by_user": "Test Friendly Name",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_allowed"
+    assert msg["error"]["message"] == "Cannot update a composite device"
+
+    # The update was not fanned out to the underlying split devices
+    for split in registry.async_get_devices_for_composite_device_id(composite_id):
+        assert split.name_by_user is None
 
 
 _DEPRECATION_WARNING = (
@@ -737,7 +862,8 @@ async def test_remove_device_composite(
     await dr.async_load(hass)
     # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = dr.async_get(hass)
-    assert registry.async_is_composite_device_id(composite_id) is True
+    assert registry.async_get(composite_id) is not None
+    assert registry.async_get(composite_id, include_composite_devices=False) is None
 
     response = await _send_remove_device(
         client, command, composite_id, entry_1.entry_id
@@ -986,6 +1112,7 @@ async def test_update_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
+    label_registry: lr.LabelRegistry,
     payload_key: str,
     payload_value: Any,
     expected_registry_value: Any,
@@ -993,6 +1120,7 @@ async def test_update_child_device(
     """Test updating a child device through the websocket API."""
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
+    label_registry.async_create("label1")
     _, _, child_device = _create_parent_and_child(hass, device_registry)
 
     await client.send_json_auto_id(
