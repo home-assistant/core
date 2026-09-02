@@ -96,6 +96,7 @@ PLATFORMS = (
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
