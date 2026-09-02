@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: This integration does not register any service actions.
   appropriate-polling: done
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -53,7 +53,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: There is no discovery to carry updated network information.
@@ -62,13 +62,13 @@ rules:
     comment: >-
       A Modbus RTU-over-TCP gateway advertises no mDNS service and sends no
       DHCP hostname identifying the device behind it.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: One fixed sensor array per config entry; nothing is discovered at runtime.
@@ -79,9 +79,18 @@ rules:
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: Entities use device_class-derived icons; no custom icons are needed.
-  reconfiguration-flow: todo
-  repair-issues: todo
+    comment: >-
+      Every entity but UV index derives its icon from a device class. UV index
+      has no matching device class, and the sensor default suits it.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: >-
+      The failures this integration can hit are a device that stops answering
+      and a device that answers as something else. The first is transient and
+      already shown by entity unavailability; the second is raised as a
+      config-entry error pointing at the reconfigure flow. Neither is a
+      condition a repair issue could add fixable detail to.
   stale-devices:
     status: exempt
     comment: One fixed sensor array per config entry; nothing to detect as stale.

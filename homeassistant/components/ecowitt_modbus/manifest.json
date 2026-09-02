@@ -1,0 +1,12 @@
+{
+  "domain": "ecowitt_modbus",
+  "name": "Ecowitt Modbus",
+  "codeowners": ["@iainchesworth"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/ecowitt_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "gold",
+  "requirements": ["ecowitt-modbus==0.2.0"]
+}

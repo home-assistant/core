@@ -188,7 +188,7 @@ homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
-homeassistant.components.ecowitt_ws90.*
+homeassistant.components.ecowitt_modbus.*
 homeassistant.components.efergy.*
 homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*

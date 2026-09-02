@@ -1,24 +1,24 @@
-"""The Ecowitt WS90 integration."""
+"""The Ecowitt Modbus integration."""
 
-from ecowitt_ws90_modbus import WS90
+from ecowitt_modbus import SUPPORTED_MODELS
 from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
 from .const import CONF_UNIT_ID, DOMAIN
-from .coordinator import WS90ConfigEntry, WS90DataUpdateCoordinator
+from .coordinator import EcowittConfigEntry, EcowittDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WS90ConfigEntry) -> bool:
-    """Set up Ecowitt WS90 from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> bool:
+    """Set up an Ecowitt sensor array from a config entry."""
     # Shared with any other integration on this gateway, and closed when the
-    # last entry holding a unit on it unloads. The WS90 only ever speaks RTU
-    # framing, whether reached directly or (the common case) through an
+    # last entry holding a unit on it unloads. These sensors only ever speak
+    # RTU framing, whether reached directly or (the common case) through an
     # RTU-over-TCP serial gateway.
     try:
         unit = async_get_unit(
@@ -39,7 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WS90ConfigEntry) -> bool
             translation_placeholders={"error": str(err)},
         ) from err
 
-    coordinator = WS90DataUpdateCoordinator(hass, entry, WS90(unit))
+    device = SUPPORTED_MODELS[entry.data[CONF_MODEL]](unit)
+    coordinator = EcowittDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -47,6 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WS90ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WS90ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

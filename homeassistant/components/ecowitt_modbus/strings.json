@@ -1,0 +1,116 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "another_device": "That address answers for a different sensor array than this entry was set up for.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_model": "That address answers Modbus, but not as the selected model."
+    },
+    "step": {
+      "connection": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Device address"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the gateway the sensor is connected to.",
+          "port": "The Modbus TCP port of the gateway. Most gateways use 502.",
+          "unit_id": "The sensor's Modbus device address. Leave this at the default unless you have changed it on the sensor."
+        },
+        "description": "Enter the address of the Modbus gateway your {model} is connected to. This is usually an RTU-over-TCP serial gateway, not the sensor speaking Modbus TCP natively.",
+        "title": "Connect to the sensor"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "[%key:component::ecowitt_modbus::config::step::connection::data::unit_id%]"
+        },
+        "data_description": {
+          "host": "[%key:component::ecowitt_modbus::config::step::connection::data_description::host%]",
+          "port": "[%key:component::ecowitt_modbus::config::step::connection::data_description::port%]",
+          "unit_id": "[%key:component::ecowitt_modbus::config::step::connection::data_description::unit_id%]"
+        },
+        "description": "Change where your {model} is reached. To add a different sensor, add another entry instead.",
+        "title": "Change the sensor's address"
+      },
+      "user": {
+        "data": {
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "The model printed on the sensor. These sensors do not report which model they are, so this cannot be detected."
+        },
+        "description": "Select the model of the sensor you want to add.",
+        "title": "Select your sensor model"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "absolute_pressure": {
+        "name": "Absolute pressure"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "gust_speed": {
+        "name": "Gust speed"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "rain_counter": {
+        "name": "Rain counter"
+      },
+      "rainfall": {
+        "name": "Rainfall"
+      },
+      "recent_rainfall": {
+        "name": "Recent rainfall"
+      },
+      "supply_voltage": {
+        "name": "Supply voltage"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to reach the sensor: {error}"
+    },
+    "unexpected_device": {
+      "message": "The device at this address does not answer as a {model}: {error}"
+    },
+    "wrong_serial_number": {
+      "message": "The sensor at this address reports serial number {found}, but this entry was set up for {expected}."
+    }
+  },
+  "selector": {
+    "model": {
+      "options": {
+        "wn69lp": "WN69LP",
+        "ws90": "WS90"
+      }
+    }
+  }
+}
