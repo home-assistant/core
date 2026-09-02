@@ -75,7 +75,7 @@
       "cooling_stop_reason": {
         "default": "mdi:snowflake-off"
       },
-      "cooling_wait_time": {
+      "cooling_wait_until": {
         "default": "mdi:timer-sand"
       },
       "cop": {

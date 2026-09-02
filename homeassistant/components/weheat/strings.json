@@ -157,8 +157,8 @@
           "thermostat_disabled": "Thermostat disabled"
         }
       },
-      "cooling_wait_time": {
-        "name": "Cooling wait time"
+      "cooling_wait_until": {
+        "name": "Cooling wait until"
       },
       "cop": {
         "name": "COP"

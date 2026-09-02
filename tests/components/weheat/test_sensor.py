@@ -177,19 +177,35 @@ async def test_last_cooling_exists_before_the_first_cooling_cycle(
     assert hass.states.get("sensor.test_model_last_cooling").state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("unmet", "expected"),
+    [
+        # only the wait after a cooling cycle puts a moment on this sensor
+        pytest.param(
+            ("exponential_backoff",), "2025-06-21T15:30:00+00:00", id="waiting"
+        ),
+        pytest.param((), STATE_UNKNOWN, id="wait_has_passed"),
+        # cooling can be held off for another reason without any wait running
+        pytest.param(
+            ("outside_air_temperature",), STATE_UNKNOWN, id="blocked_otherwise"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_weheat_discover")
-async def test_cooling_wait_time(
+async def test_cooling_wait_until(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    unmet: tuple[str, ...],
+    expected: str,
 ) -> None:
-    """Test the wait after a cooling cycle is reported as the heat pump gives it."""
-    mock_weheat_heat_pump.cooling_backoff = 360
+    """Test a moment is reported only while the heat pump is waiting to cool."""
+    mock_weheat_heat_pump.cooling_start_conditions = _start_conditions(*unmet)
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.test_model_cooling_wait_time").state == "360"
+    assert hass.states.get("sensor.test_model_cooling_wait_until").state == expected
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
@@ -201,13 +217,13 @@ async def test_a_heat_pump_without_cooling_gets_no_cooling_sensors(
     """Test a heat pump that does not cool gets no cooling sensors at all."""
     mock_weheat_heat_pump.cooling_activity = None
     mock_weheat_heat_pump.last_cooling_time = None
-    mock_weheat_heat_pump.cooling_backoff = None
+    mock_weheat_heat_pump.cooling_available_from = None
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.test_model_last_cooling") is None
-    assert hass.states.get("sensor.test_model_cooling_wait_time") is None
+    assert hass.states.get("sensor.test_model_cooling_wait_until") is None
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
