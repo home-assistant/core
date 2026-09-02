@@ -9,8 +9,6 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  # ^ bluetti-modbus is a properly published, versioned PyPI package
-  #   (bluetti-community/bluetti-modbus on GitHub) - no vendored code.
   docs-actions:
     status: exempt
     comment: This integration does not register any service actions.
@@ -83,9 +81,6 @@ rules:
       Several diagnostic entities (cell/cycle/NTC counts, pack count) are
       plausible candidates to disable by default; not yet triaged.
   entity-translations: done
-  # ^ Unlike the cloud bluetti integration, these register names are known at
-  #   dev time (bluetti-modbus's generated device classes), not supplied
-  #   dynamically by the cloud API - real translations are possible here.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:

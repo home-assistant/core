@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
-import re
 from typing import cast, override
 
 from bluetti_modbus_lib.base_devices.bluetti_device import BluettiDevice
@@ -90,7 +89,12 @@ _UNIT_DEVICE_CLASSES: dict[str, SensorDeviceClass] = {
 
 def _slug(name: str) -> str:
     """Turn an UpperCamelCase enum member name into a snake_case state slug."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+    chars: list[str] = []
+    for index, char in enumerate(name):
+        if char.isupper() and index > 0:
+            chars.append("_")
+        chars.append(char.lower())
+    return "".join(chars)
 
 
 @lru_cache
