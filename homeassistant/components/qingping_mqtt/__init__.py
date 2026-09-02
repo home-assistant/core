@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import QingpingMqttCoordinator
 
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type QingpingMqttConfigEntry = ConfigEntry[QingpingMqttCoordinator]
 
