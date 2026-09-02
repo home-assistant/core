@@ -33,6 +33,7 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -44,7 +45,10 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -246,6 +250,8 @@ class SensorFilter(SensorEntity):
         self._attr_device_class = None
         self._attr_state_class = None
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
+        self._last_source_state: State | None = None
+        self._expiry_listener: CALLBACK_TYPE | None = None
 
     @callback
     def _update_filter_sensor_state_event(
@@ -265,20 +271,24 @@ class SensorFilter(SensorEntity):
                 "While updating filter %s, the new_state is None", self.name
             )
             self._state = None
+            self._async_forget_source_state()
             self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNKNOWN:
             self._state = None
+            self._async_forget_source_state()
             self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
+            self._async_forget_source_state()
             self.async_write_ha_state()
             return
 
         self._attr_available = True
+        self._last_source_state = new_state
 
         temp_state = _State(new_state.last_updated, new_state.state)
 
@@ -324,6 +334,66 @@ class SensorFilter(SensorEntity):
 
         if update_ha:
             self.async_write_ha_state()
+
+        self._async_schedule_next_expiry()
+
+    @callback
+    def _async_cancel_expiry_listener(self) -> None:
+        """Cancel a pending re-evaluation."""
+        if self._expiry_listener is not None:
+            self._expiry_listener()
+            self._expiry_listener = None
+
+    @callback
+    def _async_forget_source_state(self) -> None:
+        """Drop the source value so no stale value is fed back in."""
+        self._last_source_state = None
+        self._async_cancel_expiry_listener()
+
+    @callback
+    def _async_schedule_next_expiry(self) -> None:
+        """Schedule a re-evaluation for when a sample leaves a time window."""
+        self._async_cancel_expiry_listener()
+
+        # An expiry in the past belongs to a filter the chain did not reach,
+        # so re-evaluating would not move it forward. Ignoring it keeps the
+        # callback from rearming itself on the same timestamp.
+        now = dt_util.utcnow()
+        expiries = [
+            expiry
+            for filt in self._filters
+            if (expiry := filt.next_expiry) is not None and expiry > now
+        ]
+        if not expiries:
+            return
+
+        expiry = min(expiries)
+        _LOGGER.debug("%s: scheduling re-evaluation at %s", self._entity, expiry)
+        self._expiry_listener = async_track_point_in_utc_time(
+            self.hass, self._async_expiry_reached, expiry
+        )
+
+    @callback
+    def _async_expiry_reached(self, now: datetime) -> None:
+        """Re-evaluate the chain when a sample leaves a time window.
+
+        The source entity only reports changes, so its last known value is
+        still the current one. Feeding that value back in with the current
+        timestamp is what the time based filters already assume between two
+        samples, and it keeps the rest of the chain in sync.
+        """
+        self._expiry_listener = None
+        if (last_state := self._last_source_state) is None:
+            return
+
+        self._update_filter_sensor_state(
+            State(
+                last_state.entity_id,
+                last_state.state,
+                last_state.attributes,
+                last_updated=now,
+            )
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -400,6 +470,7 @@ class SensorFilter(SensorEntity):
             )
 
         self.async_on_remove(async_at_started(self.hass, _async_hass_started))
+        self.async_on_remove(self._async_cancel_expiry_listener)
 
     @property
     @override
@@ -497,6 +568,18 @@ class Filter:
     def skip_processing(self) -> bool:
         """Return whether the current filter_state should be skipped."""
         return self._skip_processing
+
+    @property
+    def next_expiry(self) -> datetime | None:
+        """Return when the output changes without a new source sample.
+
+        Filters with a time based window keep producing a different result as
+        old samples fall out of the window, even when the source entity stays
+        silent. They report the next such moment here so the sensor can
+        re-evaluate the chain. Filters whose output only depends on the samples
+        themselves return None.
+        """
+        return None
 
     def reset(self) -> None:
         """Reset filter."""
@@ -694,6 +777,24 @@ class TimeSMAFilter(Filter, SensorEntity):
         self._time_window = window_size
         self.last_leak: FilterState | None = None
         self.queue = deque[FilterState]()
+
+    @property
+    @override
+    def next_expiry(self) -> datetime | None:
+        """Return when the oldest sample leaves the window."""
+        if not self.queue:
+            return None
+
+        # With a single value held across the whole window the average no
+        # longer moves, so there is nothing to wake up for until the source
+        # reports something different.
+        values = {state.state for state in self.queue}
+        if self.last_leak is not None:
+            values.add(self.last_leak.state)
+        if len(values) == 1:
+            return None
+
+        return self.queue[0].timestamp + self._time_window
 
     def _leak(self, left_boundary: datetime) -> None:
         """Remove timeouted elements."""

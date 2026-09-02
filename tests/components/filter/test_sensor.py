@@ -1,8 +1,9 @@
 """The test for the data filter sensor platform."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config as hass_config
@@ -43,10 +44,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 
 @pytest.fixture(name="values")
@@ -545,6 +552,177 @@ def test_time_sma(values: list[State]) -> None:
     for state in values:
         filtered = filt.filter_state(state)
     assert filtered.state == 21.5
+
+
+def test_time_sma_without_samples_has_no_expiry() -> None:
+    """Test a filter that has not seen a sample yet does not ask for a wake up."""
+    filt = TimeSMAFilter(
+        window_size=timedelta(minutes=2), precision=2, entity=None, type="last"
+    )
+    assert filt.next_expiry is None
+
+
+async def test_time_sma_expiring_sample(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a sample leaving the time window updates the filtered value.
+
+    The source only reports changes, so a short spike followed by silence must
+    still fall out of the window on its own.
+    """
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {
+                    "filter": "time_simple_moving_average",
+                    "window_size": "01:00:00",
+                    "precision": 2,
+                }
+            ],
+        }
+    }
+
+    async def advance(minutes: int) -> None:
+        """Advance time minute by minute so scheduled updates can chain."""
+        for _ in range(minutes):
+            freezer.tick(timedelta(minutes=1))
+            async_fire_time_changed(hass, dt_util.utcnow())
+            await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", "0")
+    await hass.async_block_till_done()
+
+    await advance(30)
+    hass.states.async_set("sensor.test_monitored", "100")
+    await hass.async_block_till_done()
+
+    await advance(1)
+    hass.states.async_set("sensor.test_monitored", "0")
+    await hass.async_block_till_done()
+
+    # One minute at 100 within a 60 minute window
+    assert hass.states.get("sensor.test").state == "1.67"
+
+    # The spike ran from minute 30 to minute 31, so it only leaves the trailing
+    # window at minute 91. One minute before that the value must be unchanged.
+    await advance(59)
+    assert hass.states.get("sensor.test").state == "1.67"
+
+    # And one minute after it, the average is back to the source value.
+    await advance(2)
+    assert hass.states.get("sensor.test").state == "0.0"
+
+
+async def test_time_sma_expiry_with_throttle(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a time filter behind a throttle is never scheduled in the past.
+
+    The throttle short circuits the chain, so the moving average never advances
+    and its expiry stays behind. Scheduling on such an expiry would fire the
+    callback again on the same timestamp, over and over.
+    """
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "time_throttle", "window_size": "02:00:00"},
+                {
+                    "filter": "time_simple_moving_average",
+                    "window_size": "01:00:00",
+                    "precision": 2,
+                },
+            ],
+        }
+    }
+
+    scheduled: list[tuple[datetime, datetime]] = []
+
+    def _track(hass_, action, point_in_time):
+        scheduled.append((dt_util.utcnow(), point_in_time))
+        return async_track_point_in_utc_time(hass_, action, point_in_time)
+
+    async def advance(minutes: int) -> None:
+        for _ in range(minutes):
+            freezer.tick(timedelta(minutes=1))
+            async_fire_time_changed(hass, dt_util.utcnow())
+            await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.filter.sensor.async_track_point_in_utc_time",
+        _track,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        hass.states.async_set("sensor.test_monitored", "20")
+        await hass.async_block_till_done()
+
+        # Far enough apart that the throttle lets both values through, so the
+        # moving average holds two different samples and arms a timer.
+        await advance(121)
+        hass.states.async_set("sensor.test_monitored", "100")
+        await hass.async_block_till_done()
+
+        # The timer now fires while the throttle is still blocking.
+        await advance(65)
+
+    assert scheduled, "expected the moving average to schedule a re-evaluation"
+    assert all(point > when for when, point in scheduled), (
+        "a re-evaluation was scheduled at a point in time that had already passed"
+    )
+
+
+async def test_time_sma_expiry_dropped_when_source_unknown(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a source going unknown is not overwritten by a scheduled update."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {
+                    "filter": "time_simple_moving_average",
+                    "window_size": "01:00:00",
+                    "precision": 2,
+                }
+            ],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", "20")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+
+    for _ in range(90):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    # The pending re-evaluation must not resurrect the last numeric value
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
 async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
