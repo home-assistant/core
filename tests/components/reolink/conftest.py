@@ -230,6 +230,10 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.day_night_state.return_value = "day"
     host_mock.baichuan.siren_state.return_value = True
     host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
+    host_mock.baichuan.get_vod_file_info = AsyncMock(
+        side_effect=ReolinkError("Test error")
+    )
+    host_mock.baichuan.download_vod = MagicMock()
     host_mock.baichuan.active_scene = "off"
     host_mock.baichuan.scene_names = ["off", "home"]
     host_mock.baichuan.abilities = {
