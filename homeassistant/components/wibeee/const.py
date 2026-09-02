@@ -9,11 +9,11 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 CONF_MAC_ADDRESS = "mac_address"
 CONF_WIBEEE_ID = "wibeee_id"
 
-PHASE_PREFIXES: dict[str, str] = {
-    "fase1": "l1",
-    "fase2": "l2",
-    "fase3": "l3",
-    "fase4": "total",
+PHASE_LABELS: dict[str, str] = {
+    "fase1": "L1",
+    "fase2": "L2",
+    "fase3": "L3",
+    "fase4": "Total",
 }
 
 KNOWN_MODELS = {

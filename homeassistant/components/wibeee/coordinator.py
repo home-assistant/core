@@ -9,10 +9,11 @@ from pywibeee import WibeeeAPI, WibeeeDeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PHASE_PREFIXES
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PHASE_LABELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +61,8 @@ class WibeeeCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         # All wibeee entries have a MAC unique_id
         expected_mac = cast(str, self.config_entry.unique_id)
         if device_info.mac_addr_formatted != expected_mac:
-            raise UpdateFailed(
+            # A different device answering here won't fix itself by retrying.
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="unexpected_device",
                 translation_placeholders={
@@ -86,9 +88,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         if data is not None:
             data = {
-                phase: values
-                for phase, values in data.items()
-                if phase in PHASE_PREFIXES
+                phase: values for phase, values in data.items() if phase in PHASE_LABELS
             }
         if not data:
             raise UpdateFailed(

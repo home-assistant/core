@@ -28,7 +28,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KNOWN_MODELS, PHASE_PREFIXES
+from .const import DOMAIN, KNOWN_MODELS, PHASE_LABELS
 from .coordinator import WibeeeConfigEntry, WibeeeCoordinator
 
 PARALLEL_UPDATES = 0
@@ -318,20 +318,19 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
             f"{device_info.mac_addr_formatted}_{phase_key}_{description.key}"
         )
         self._attr_device_info = _build_device_info(device_info)
-        self._attr_translation_key = (
-            f"{PHASE_PREFIXES[phase_key]}_{description.translation_key}"
-        )
+        self._attr_translation_placeholders = {
+            "phase": PHASE_LABELS[phase_key],
+            **(description.translation_placeholders or {}),
+        }
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the sensor value."""
-        try:
-            return float(
-                self.coordinator.data[self._phase_key][self.entity_description.key]
-            )
-        except ValueError:
+        value = self.coordinator.data[self._phase_key][self.entity_description.key]
+        if value is None:
             return None
+        return float(value)
 
     @property
     @override

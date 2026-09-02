@@ -89,15 +89,15 @@ async def test_sensor_unavailable_on_coordinator_failure(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_sensor_invalid_value(
+async def test_sensor_empty_value(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
-    """Test a sensor becomes unknown when its value is not numeric."""
+    """Test a sensor becomes unknown when the device reports an empty value."""
     coordinator = loaded_entry.runtime_data
     coordinator.async_set_updated_data(
         {
             "fase1": {"vrms": "230.5", "p_activa": "277"},
-            "fase4": {"vrms": "230.5", "p_activa": "not_a_number"},
+            "fase4": {"vrms": "230.5", "p_activa": None},
         }
     )
     await hass.async_block_till_done()

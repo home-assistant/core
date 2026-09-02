@@ -13,5 +13,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["pywibeee==0.1.7"]
+  "requirements": ["pywibeee==0.1.8"]
 }

@@ -76,7 +76,7 @@ async def test_setup_entry_unexpected_device(
     mock_config_entry: MockConfigEntry,
     mock_wibeee_api: MagicMock,
 ) -> None:
-    """Test setup retries when another device is found at the configured host."""
+    """Test setup fails permanently when another device answers at the host."""
     mock_wibeee_api.async_fetch_device_info.return_value.mac_addr_formatted = (
         "ffeeddccbbaa"
     )
@@ -85,7 +85,7 @@ async def test_setup_entry_unexpected_device(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_no_initial_data(

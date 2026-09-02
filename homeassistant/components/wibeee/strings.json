@@ -28,245 +28,65 @@
   },
   "entity": {
     "sensor": {
-      "l1_active_energy": {
-        "name": "L1 active energy"
+      "active_energy": {
+        "name": "{phase} active energy"
       },
-      "l1_active_power": {
-        "name": "L1 active power"
+      "active_power": {
+        "name": "{phase} active power"
       },
-      "l1_apparent_power": {
-        "name": "L1 apparent power"
+      "apparent_power": {
+        "name": "{phase} apparent power"
       },
-      "l1_capacitive_reactive_energy": {
-        "name": "L1 capacitive reactive energy"
+      "capacitive_reactive_energy": {
+        "name": "{phase} capacitive reactive energy"
       },
-      "l1_capacitive_reactive_power": {
-        "name": "L1 capacitive reactive power"
+      "capacitive_reactive_power": {
+        "name": "{phase} capacitive reactive power"
       },
-      "l1_consumed_active_energy": {
-        "name": "L1 consumed active energy"
+      "consumed_active_energy": {
+        "name": "{phase} consumed active energy"
       },
-      "l1_current": {
-        "name": "L1 current"
+      "current": {
+        "name": "{phase} current"
       },
-      "l1_frequency": {
-        "name": "L1 frequency"
+      "frequency": {
+        "name": "{phase} frequency"
       },
-      "l1_inductive_reactive_energy": {
-        "name": "L1 inductive reactive energy"
+      "inductive_reactive_energy": {
+        "name": "{phase} inductive reactive energy"
       },
-      "l1_inductive_reactive_power": {
-        "name": "L1 inductive reactive power"
+      "inductive_reactive_power": {
+        "name": "{phase} inductive reactive power"
       },
-      "l1_phase_angle": {
-        "name": "L1 phase angle"
+      "phase_angle": {
+        "name": "{phase} phase angle"
       },
-      "l1_power_factor": {
-        "name": "L1 power factor"
+      "power_factor": {
+        "name": "{phase} power factor"
       },
-      "l1_produced_active_energy": {
-        "name": "L1 produced active energy"
+      "produced_active_energy": {
+        "name": "{phase} produced active energy"
       },
-      "l1_thd_current": {
-        "name": "L1 THD current"
+      "thd_current": {
+        "name": "{phase} THD current"
       },
-      "l1_thd_current_fundamental": {
-        "name": "L1 THD current fundamental"
+      "thd_current_fundamental": {
+        "name": "{phase} THD current fundamental"
       },
-      "l1_thd_current_harmonic": {
-        "name": "L1 THD current harmonic {order}"
+      "thd_current_harmonic": {
+        "name": "{phase} THD current harmonic {order}"
       },
-      "l1_thd_voltage": {
-        "name": "L1 THD voltage"
+      "thd_voltage": {
+        "name": "{phase} THD voltage"
       },
-      "l1_thd_voltage_fundamental": {
-        "name": "L1 THD voltage fundamental"
+      "thd_voltage_fundamental": {
+        "name": "{phase} THD voltage fundamental"
       },
-      "l1_thd_voltage_harmonic": {
-        "name": "L1 THD voltage harmonic {order}"
+      "thd_voltage_harmonic": {
+        "name": "{phase} THD voltage harmonic {order}"
       },
-      "l1_voltage": {
-        "name": "L1 voltage"
-      },
-      "l2_active_energy": {
-        "name": "L2 active energy"
-      },
-      "l2_active_power": {
-        "name": "L2 active power"
-      },
-      "l2_apparent_power": {
-        "name": "L2 apparent power"
-      },
-      "l2_capacitive_reactive_energy": {
-        "name": "L2 capacitive reactive energy"
-      },
-      "l2_capacitive_reactive_power": {
-        "name": "L2 capacitive reactive power"
-      },
-      "l2_consumed_active_energy": {
-        "name": "L2 consumed active energy"
-      },
-      "l2_current": {
-        "name": "L2 current"
-      },
-      "l2_frequency": {
-        "name": "L2 frequency"
-      },
-      "l2_inductive_reactive_energy": {
-        "name": "L2 inductive reactive energy"
-      },
-      "l2_inductive_reactive_power": {
-        "name": "L2 inductive reactive power"
-      },
-      "l2_phase_angle": {
-        "name": "L2 phase angle"
-      },
-      "l2_power_factor": {
-        "name": "L2 power factor"
-      },
-      "l2_produced_active_energy": {
-        "name": "L2 produced active energy"
-      },
-      "l2_thd_current": {
-        "name": "L2 THD current"
-      },
-      "l2_thd_current_fundamental": {
-        "name": "L2 THD current fundamental"
-      },
-      "l2_thd_current_harmonic": {
-        "name": "L2 THD current harmonic {order}"
-      },
-      "l2_thd_voltage": {
-        "name": "L2 THD voltage"
-      },
-      "l2_thd_voltage_fundamental": {
-        "name": "L2 THD voltage fundamental"
-      },
-      "l2_thd_voltage_harmonic": {
-        "name": "L2 THD voltage harmonic {order}"
-      },
-      "l2_voltage": {
-        "name": "L2 voltage"
-      },
-      "l3_active_energy": {
-        "name": "L3 active energy"
-      },
-      "l3_active_power": {
-        "name": "L3 active power"
-      },
-      "l3_apparent_power": {
-        "name": "L3 apparent power"
-      },
-      "l3_capacitive_reactive_energy": {
-        "name": "L3 capacitive reactive energy"
-      },
-      "l3_capacitive_reactive_power": {
-        "name": "L3 capacitive reactive power"
-      },
-      "l3_consumed_active_energy": {
-        "name": "L3 consumed active energy"
-      },
-      "l3_current": {
-        "name": "L3 current"
-      },
-      "l3_frequency": {
-        "name": "L3 frequency"
-      },
-      "l3_inductive_reactive_energy": {
-        "name": "L3 inductive reactive energy"
-      },
-      "l3_inductive_reactive_power": {
-        "name": "L3 inductive reactive power"
-      },
-      "l3_phase_angle": {
-        "name": "L3 phase angle"
-      },
-      "l3_power_factor": {
-        "name": "L3 power factor"
-      },
-      "l3_produced_active_energy": {
-        "name": "L3 produced active energy"
-      },
-      "l3_thd_current": {
-        "name": "L3 THD current"
-      },
-      "l3_thd_current_fundamental": {
-        "name": "L3 THD current fundamental"
-      },
-      "l3_thd_current_harmonic": {
-        "name": "L3 THD current harmonic {order}"
-      },
-      "l3_thd_voltage": {
-        "name": "L3 THD voltage"
-      },
-      "l3_thd_voltage_fundamental": {
-        "name": "L3 THD voltage fundamental"
-      },
-      "l3_thd_voltage_harmonic": {
-        "name": "L3 THD voltage harmonic {order}"
-      },
-      "l3_voltage": {
-        "name": "L3 voltage"
-      },
-      "total_active_energy": {
-        "name": "Total active energy"
-      },
-      "total_active_power": {
-        "name": "Total active power"
-      },
-      "total_apparent_power": {
-        "name": "Total apparent power"
-      },
-      "total_capacitive_reactive_energy": {
-        "name": "Total capacitive reactive energy"
-      },
-      "total_capacitive_reactive_power": {
-        "name": "Total capacitive reactive power"
-      },
-      "total_consumed_active_energy": {
-        "name": "Total consumed active energy"
-      },
-      "total_current": {
-        "name": "Total current"
-      },
-      "total_frequency": {
-        "name": "Total frequency"
-      },
-      "total_inductive_reactive_energy": {
-        "name": "Total inductive reactive energy"
-      },
-      "total_inductive_reactive_power": {
-        "name": "Total inductive reactive power"
-      },
-      "total_phase_angle": {
-        "name": "Total phase angle"
-      },
-      "total_power_factor": {
-        "name": "Total power factor"
-      },
-      "total_produced_active_energy": {
-        "name": "Total produced active energy"
-      },
-      "total_thd_current": {
-        "name": "Total THD current"
-      },
-      "total_thd_current_fundamental": {
-        "name": "Total THD current fundamental"
-      },
-      "total_thd_current_harmonic": {
-        "name": "Total THD current harmonic {order}"
-      },
-      "total_thd_voltage": {
-        "name": "Total THD voltage"
-      },
-      "total_thd_voltage_fundamental": {
-        "name": "Total THD voltage fundamental"
-      },
-      "total_thd_voltage_harmonic": {
-        "name": "Total THD voltage harmonic {order}"
-      },
-      "total_voltage": {
-        "name": "Total voltage"
+      "voltage": {
+        "name": "{phase} voltage"
       }
     }
   },
