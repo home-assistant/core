@@ -265,3 +265,30 @@ async def test_setup_exceptions(
     mock_satel.connect.side_effect = exception
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is expected_state
+
+
+async def test_connection_state_logging(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test logging an outage and subsequent recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Retrieve the status change callback that was registered during setup.
+    assert mock_satel.add_connection_status_callback.called
+    connection_status_callback = (
+        mock_satel.add_connection_status_callback.call_args.args[0]
+    )
+
+    mock_satel.connected = False
+    connection_status_callback()
+
+    assert "Satel Integra device is unavailable" in caplog.text
+
+    caplog.clear()
+    mock_satel.connected = True
+    connection_status_callback()
+
+    assert "Satel Integra device is back online" in caplog.text
