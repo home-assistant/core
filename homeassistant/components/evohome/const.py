@@ -4,10 +4,17 @@ from datetime import timedelta
 from enum import StrEnum, unique
 from typing import TYPE_CHECKING, Final
 
+from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from . import EvoData
+
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.WATER_HEATER,
+]
 
 DOMAIN: Final = "evohome"
 EVOHOME_DATA: HassKey[EvoData] = HassKey(DOMAIN)

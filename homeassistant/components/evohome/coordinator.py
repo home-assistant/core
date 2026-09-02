@@ -65,22 +65,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._first_refresh_done = False  # get schedules only after first refresh
 
-    # our version of async_config_entry_first_refresh()...
-    async def async_first_refresh(self) -> None:
-        """Refresh data for the first time when integration is setup.
-
-        This integration does not have config flow, so it is inappropriate to
-        invoke `async_config_entry_first_refresh()`.
-        """
-
-        # can't replicate `if not await self.__wrap_async_setup():` (is mangled), so...
-        if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
-            return
-
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
-
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator.

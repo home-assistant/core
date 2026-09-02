@@ -1,4 +1,26 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "Evohome account already configured"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "location_idx": "Location",
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "location_idx": "Which location to use if your login has access to more than one location.",
+          "password": "Your Evohome account password.",
+          "username": "Your Evohome account username."
+        }
+      }
+    }
+  },
   "exceptions": {
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"

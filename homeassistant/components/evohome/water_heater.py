@@ -24,11 +24,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import EVOHOME_DATA
+from . import EvohomeConfigEntry
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild
 
@@ -40,27 +39,17 @@ HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: EvoDhwState.ON, STATE_OFF: EvoDhwSt
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    _: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EvohomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the water heater platform for Evohome."""
+    """Set up Evohome water heater platform."""
 
-    if discovery_info is None:
-        return
-
-    coordinator = hass.data[EVOHOME_DATA].coordinator
-    tcs = hass.data[EVOHOME_DATA].tcs
+    coordinator = entry.runtime_data.coordinator
+    tcs = entry.runtime_data.tcs
 
     assert tcs.hotwater is not None  # mypy check
-
-    _LOGGER.debug(
-        "Adding: DhwController (%s), id=%s",
-        tcs.hotwater.type,
-        tcs.hotwater.id,
-    )
 
     entity = EvoDHW(coordinator, tcs.hotwater)
 
