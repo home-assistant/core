@@ -9,15 +9,17 @@ from weatherflow4py.api import WeatherFlowRestAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 
-async def _validate_api_token(api_token: str) -> dict[str, Any]:
+async def _validate_api_token(hass: HomeAssistant, api_token: str) -> dict[str, Any]:
     """Validate the API token."""
     try:
-        async with WeatherFlowRestAPI(api_token) as api:
-            await api.async_get_stations()
+        api = WeatherFlowRestAPI(api_token, session=async_get_clientsession(hass))
+        await api.async_get_stations()
     except ClientResponseError as err:
         if err.status == 401:
             return {"base": "invalid_api_key"}
@@ -44,7 +46,7 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             api_token = user_input[CONF_API_TOKEN]
-            errors = await _validate_api_token(api_token)
+            errors = await _validate_api_token(self.hass, api_token)
             if not errors:
                 # Update the existing entry and abort
                 existing_entry = self._get_reauth_entry()
@@ -70,7 +72,7 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(user_input)
             api_token = user_input[CONF_API_TOKEN]
-            errors = await _validate_api_token(api_token)
+            errors = await _validate_api_token(self.hass, api_token)
             if not errors:
                 return self.async_create_entry(
                     title="Weatherflow REST",
