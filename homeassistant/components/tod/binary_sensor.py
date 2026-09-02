@@ -167,6 +167,18 @@ class TodSensor(BinarySensorEntity):
         # calculate utc datetime corresponding to local time
         return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
 
+    def _get_astral_event_previous(
+        self, event_type: SunEventType, utc_point_in_time: datetime
+    ) -> datetime:
+        """Calculate the previous specified solar event."""
+        for days_ago in range(367):
+            event_date = get_astral_event_date(
+                self.hass, event_type, utc_point_in_time - timedelta(days=days_ago)
+            )
+            if event_date is not None and event_date <= utc_point_in_time:
+                return event_date
+        raise ValueError(f"Unable to find {event_type} event before one year")
+
     def _calculate_boundary_time(self) -> None:
         """Calculate internal absolute time boundaries."""
         nowutc = dt_util.utcnow()
@@ -174,32 +186,39 @@ class TodSensor(BinarySensorEntity):
         if _is_sun_event(self._after):
             # Calculate the today's event utc time or
             # if not available take next
-            after_event_date = get_astral_event_date(
-                self.hass, self._after, nowutc
-            ) or get_astral_event_next(self.hass, self._after, nowutc)
+            after_event_date = get_astral_event_date(self.hass, self._after, nowutc)
+            after_event_is_today = after_event_date is not None
+            if after_event_date is None:
+                after_event_date = get_astral_event_next(self.hass, self._after, nowutc)
         else:
             # Convert local time provided to UTC today
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
             after_event_date = self._naive_time_to_utc_datetime(self._after)
+            after_event_is_today = False
 
         # If before value is a sun event instead of absolute time
         if _is_sun_event(self._before):
             # Calculate the today's event utc time or  if not available take
             # next
-            before_event_date = get_astral_event_date(
-                self.hass, self._before, nowutc
-            ) or get_astral_event_next(self.hass, self._before, nowutc)
+            before_event_date = get_astral_event_date(self.hass, self._before, nowutc)
+            before_event_is_today = before_event_date is not None
+            if before_event_date is None:
+                before_event_date = get_astral_event_next(
+                    self.hass, self._before, nowutc
+                )
         else:
             # Convert local time provided to UTC today, see above
             before_event_date = self._naive_time_to_utc_datetime(self._before)
+            before_event_is_today = False
+
+        after_time = after_event_date + self._after_offset
+        before_time = before_event_date + self._before_offset
 
         # Before is earlier than after once the configured offsets are applied.
-        if (
-            before_event_date + self._before_offset
-            < after_event_date + self._after_offset
-        ):
+        if before_time < after_time:
+            previous_before_time = before_time
             if _is_sun_event(self._before):
                 before_event_date = get_astral_event_next(
                     self.hass,
@@ -209,9 +228,24 @@ class TodSensor(BinarySensorEntity):
             else:
                 # It is safe to add timedelta days=1 to UTC as there is no DST
                 before_event_date += timedelta(days=1)
+            before_time = before_event_date + self._before_offset
 
-        self._time_after = after_event_date + self._after_offset
-        self._time_before = before_event_date + self._before_offset
+            if (
+                _is_sun_event(self._after)
+                and after_event_is_today
+                and before_event_is_today
+                and nowutc < previous_before_time
+            ):
+                previous_after_event_date = self._get_astral_event_previous(
+                    self._after, nowutc - self._after_offset
+                )
+                previous_after_time = previous_after_event_date + self._after_offset
+                if previous_after_time <= nowutc:
+                    after_time = previous_after_time
+                    before_time = previous_before_time
+
+        self._time_after = after_time
+        self._time_before = before_time
 
         # We are calculating the _time_after value assuming that it will happen today
         # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00

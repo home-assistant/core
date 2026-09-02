@@ -661,6 +661,80 @@ async def test_sun_offsets_cross_boundary(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    (
+        "after_event",
+        "after_offset_config",
+        "after_offset",
+        "before_event",
+        "before_offset_config",
+        "before_offset",
+    ),
+    [
+        pytest.param(
+            "sunset",
+            "0:00",
+            timedelta(0),
+            "sunrise",
+            "0:00",
+            timedelta(0),
+            id="sunset-to-sunrise",
+        ),
+        pytest.param(
+            "sunrise",
+            "13:00",
+            timedelta(hours=13),
+            "sunset",
+            "0:30",
+            timedelta(minutes=30),
+            id="offset-crossing",
+        ),
+    ],
+)
+async def test_sun_interval_restart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+    after_event: str,
+    after_offset_config: str,
+    after_offset: timedelta,
+    before_event: str,
+    before_offset_config: str,
+    before_offset: timedelta,
+) -> None:
+    """Test initialization during the previous solar interval."""
+    test_time = datetime(2019, 1, 13, tzinfo=hass_tz_info)
+    after = (
+        get_astral_event_date(hass, after_event, test_time - timedelta(days=1))
+        + after_offset
+    )
+    before = get_astral_event_date(hass, before_event, test_time) + before_offset
+    freezer.move_to(before - timedelta(minutes=1))
+
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Solar interval",
+                    "after": after_event,
+                    "after_offset": after_offset_config,
+                    "before": before_event,
+                    "before_offset": before_offset_config,
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.solar_interval")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == after.astimezone(hass_tz_info).isoformat()
+    assert state.attributes["before"] == before.astimezone(hass_tz_info).isoformat()
+
+
 async def test_dst1(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
