@@ -79,9 +79,6 @@ class SatelClient:
             integration_key=entry.data[CONF_ENCRYPTION_KEY],
         )
 
-        # Register callback for connection state changes
-        self.controller.add_connection_status_callback(self._on_connection_state_change)
-
     async def async_connect(
         self,
         zones_update_callback: Callable[[dict[int, int]], None],
@@ -107,6 +104,7 @@ class SatelClient:
                 translation_key="connection_initialization_failed",
             ) from ex
 
+        self.controller.add_connection_status_callback(self._on_connection_state_change)
         self.controller.register_callbacks(
             alarm_status_callback=partitions_update_callback,
             zone_changed_callback=zones_update_callback,
