@@ -3,7 +3,6 @@
 import socket
 from typing import Any, override
 
-from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT, HOST as DEFAULT_HOST
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -11,6 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
+from .gpsd_client import DEFAULT_HOST, DEFAULT_PORT
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
