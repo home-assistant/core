@@ -2,10 +2,12 @@
 
 from collections import Counter
 from collections.abc import Iterable
+from http import HTTPStatus
 from typing import Any, TypedDict
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.const import DOMAIN
@@ -17,8 +19,10 @@ from homeassistant.components.store.repositories.base import (
 from homeassistant.components.store.utils.logger import LOGGER
 from homeassistant.core import HomeAssistant
 
+from .const import PROXY_HEADERS
+
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 class CategoryTestData(TypedDict):
@@ -100,6 +104,24 @@ def category_test_data_parametrized(
         pytest.param(entry, id=entry["repository"])
         for entry in CATEGORY_TEST_DATA
         if categories is None or entry["category"] in categories
+    )
+
+
+def mocked_response(
+    url: str,
+    *,
+    status: HTTPStatus = HTTPStatus.OK,
+    content: bytes | None = None,
+    json_content: Any = None,
+) -> AiohttpClientMockResponse:
+    """Return a response to register with the response mocker."""
+    return AiohttpClientMockResponse(
+        "get",
+        URL(url),
+        status=status,
+        response=content,
+        json=json_content,
+        headers=PROXY_HEADERS,
     )
 
 

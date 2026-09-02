@@ -29,7 +29,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import dummy_repository_base, get_hacs, setup_integration
-from .const import FROZEN_TIME, TOKEN
+from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN
 
 from tests.common import (
     MockConfigEntry,
@@ -43,16 +43,6 @@ FIXTURE_PROXY_PATH = Path(__file__).parent / "fixtures" / "proxy"
 # GitHub and the data service answer with JSON for paths that carry no
 # extension, so the recorded files for those hosts have one appended.
 JSON_HOSTS = ("api.github.com", "data-v2.hacs.xyz")
-
-# The recorded responses all came back with a rate limit that never runs out
-# and the same etag, which is what the etag bookkeeping is checked against.
-PROXY_HEADERS = {
-    "Content-Type": "application/json",
-    "Etag": "321",
-    "X-RateLimit-Limit": "999",
-    "X-RateLimit-Remaining": "999",
-    "X-RateLimit-Reset": "999",
-}
 
 
 @lru_cache
@@ -134,6 +124,17 @@ async def response_mocker(
         aioclient_mock.request(method, re.compile(r".*"), side_effect=_serve)
 
     return responses
+
+
+@pytest.fixture(autouse=True)
+def config_dir(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Point the configuration directory at a temporary one.
+
+    The store writes downloads straight into the configuration directory, so
+    it has to be a throwaway one rather than the shared test configuration.
+    """
+    hass.config.config_dir = str(tmp_path)
+    return tmp_path
 
 
 @pytest.fixture

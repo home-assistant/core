@@ -1,0 +1,210 @@
+# serializer version: 1
+# name: test_download_repository[hacs-test-org/appdaemon-basic]
+  list([
+    'appdaemon/apps/appdaemon-basic/__init__.py',
+  ])
+# ---
+# name: test_download_repository[hacs-test-org/integration-basic]
+  list([
+    'custom_components/example/manifest.json',
+  ])
+# ---
+# name: test_download_repository[hacs-test-org/plugin-basic]
+  list([
+    'www/community/plugin-basic/plugin-basic.js',
+    'www/community/plugin-basic/plugin-basic.js.gz',
+  ])
+# ---
+# name: test_download_repository[hacs-test-org/python_script-basic]
+  list([
+    'python_scripts/example.py',
+  ])
+# ---
+# name: test_download_repository[hacs-test-org/template-basic]
+  list([
+    'custom_templates/example.jinja',
+  ])
+# ---
+# name: test_download_repository[hacs-test-org/theme-basic]
+  list([
+    'themes/example/example.yaml',
+  ])
+# ---
+# name: test_get_documentation[available]
+  '## Example readme file (2.0.0)'
+# ---
+# name: test_get_documentation[installed-with-update]
+  '''
+  ## Example readme file (1.0.0)
+  
+  <disabled width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+     <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+     Sorry, your browser does not support inline SVG.
+  </disabled>
+  '''
+# ---
+# name: test_get_documentation[installed]
+  '''
+  ## Example readme file (1.0.0)
+  
+  <disabled width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+     <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+     Sorry, your browser does not support inline SVG.
+  </disabled>
+  '''
+# ---
+# name: test_get_documentation[unknown-version]
+  None
+# ---
+# name: test_register_repository[integration]
+  dict({
+    'additional_info': '',
+    'authors': list([
+    ]),
+    'available_version': '1.0.0',
+    'beta': False,
+    'can_download': True,
+    'category': 'integration',
+    'config_flow': False,
+    'country': list([
+    ]),
+    'custom': True,
+    'default_branch': 'main',
+    'description': 'This your first repo!',
+    'domain': 'example',
+    'downloads': 42,
+    'file_name': '',
+    'full_name': 'hacs-test-org/integration-basic-custom',
+    'hide_default_branch': False,
+    'homeassistant': None,
+    'id': '91296269',
+    'installed': False,
+    'installed_version': '',
+    'issues': 0,
+    'last_updated': '2011-01-26T19:06:43Z',
+    'name': 'Proxy manifest',
+    'new': False,
+    'pending_upgrade': False,
+    'ref': '1.0.0',
+    'releases': list([
+      '1.0.0',
+    ]),
+    'selected_tag': None,
+    'stars': 80,
+    'state': None,
+    'status': 'default',
+    'topics': list([
+      'octocat',
+      'atom',
+      'electron',
+      'api',
+    ]),
+    'version_or_commit': 'version',
+  })
+# ---
+# name: test_register_repository[plugin]
+  dict({
+    'additional_info': '',
+    'authors': list([
+    ]),
+    'available_version': '1.0.0',
+    'beta': False,
+    'can_download': True,
+    'category': 'plugin',
+    'config_flow': False,
+    'country': list([
+    ]),
+    'custom': True,
+    'default_branch': 'main',
+    'description': 'This your first repo!',
+    'domain': None,
+    'downloads': 0,
+    'file_name': 'plugin-custom-dist.js',
+    'full_name': 'hacs-test-org/plugin-custom-dist',
+    'hide_default_branch': False,
+    'homeassistant': None,
+    'id': '12962674',
+    'installed': False,
+    'installed_version': '',
+    'issues': 0,
+    'last_updated': '2011-01-26T19:06:43Z',
+    'name': 'Proxy manifest',
+    'new': False,
+    'pending_upgrade': False,
+    'ref': '1.0.0',
+    'releases': list([
+      '1.0.0',
+    ]),
+    'selected_tag': None,
+    'stars': 80,
+    'state': None,
+    'status': 'default',
+    'topics': list([
+      'octocat',
+      'atom',
+      'electron',
+      'api',
+    ]),
+    'version_or_commit': 'version',
+  })
+# ---
+# name: test_repository_releases[hacs-test-org/appdaemon-basic]
+  list([
+    dict({
+      'name': '2.0.0',
+      'prerelease': False,
+      'published_at': '2019-02-26T15:02:39Z',
+      'tag': '2.0.0',
+    }),
+  ])
+# ---
+# name: test_repository_releases[hacs-test-org/integration-basic]
+  list([
+    dict({
+      'name': '2.0.0',
+      'prerelease': False,
+      'published_at': '2019-02-26T15:02:39Z',
+      'tag': '2.0.0',
+    }),
+  ])
+# ---
+# name: test_repository_releases[hacs-test-org/plugin-basic]
+  list([
+    dict({
+      'name': '2.0.0',
+      'prerelease': False,
+      'published_at': '2019-02-26T15:02:39Z',
+      'tag': '2.0.0',
+    }),
+  ])
+# ---
+# name: test_repository_releases[hacs-test-org/python_script-basic]
+  list([
+    dict({
+      'name': '2.0.0',
+      'prerelease': False,
+      'published_at': '2019-02-26T15:02:39Z',
+      'tag': '2.0.0',
+    }),
+  ])
+# ---
+# name: test_repository_releases[hacs-test-org/template-basic]
+  list([
+    dict({
+      'name': '2.0.0',
+      'prerelease': False,
+      'published_at': '2019-02-26T15:02:39Z',
+      'tag': '2.0.0',
+    }),
+  ])
+# ---
+# name: test_repository_releases[hacs-test-org/theme-basic]
+  list([
+    dict({
+      'name': '2.0.0',
+      'prerelease': False,
+      'published_at': '2019-02-26T15:02:39Z',
+      'tag': '2.0.0',
+    }),
+  ])
+# ---

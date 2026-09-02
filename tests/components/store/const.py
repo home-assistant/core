@@ -15,6 +15,16 @@ REPOSITORY_INTEGRATION = "hacs-test-org/integration-basic"
 REPOSITORY_PLUGIN_ID = "1296267"
 REPOSITORY_PLUGIN = "hacs-test-org/plugin-basic"
 
+# The recorded responses all came back with a rate limit that never runs out
+# and the same etag, which is what the etag bookkeeping is checked against.
+PROXY_HEADERS = {
+    "Content-Type": "application/json",
+    "Etag": "321",
+    "X-RateLimit-Limit": "999",
+    "X-RateLimit-Remaining": "999",
+    "X-RateLimit-Reset": "999",
+}
+
 # The categories that are always active, regardless of what is downloaded.
 DEFAULT_CATEGORIES = {
     HacsCategory.INTEGRATION,
