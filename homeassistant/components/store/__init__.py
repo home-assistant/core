@@ -11,7 +11,7 @@ from aiogithubapi.const import ACCEPT_HEADERS
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.frontend import async_panel_exists, async_remove_panel
-from homeassistant.components.lovelace.system_health import system_health_info
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
@@ -72,13 +72,7 @@ async def _async_initialize_integration(
     hacs.system.running = True
     hacs.session = clientsession
 
-    hacs.core.lovelace_mode = LovelaceMode.YAML
-    try:
-        lovelace_info = await system_health_info(hacs.hass)
-        hacs.core.lovelace_mode = LovelaceMode(lovelace_info.get("mode", "yaml"))
-    except BaseException:  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-        # If this happens, the users YAML is not valid, we assume YAML mode
-        pass
+    hacs.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)
     hacs.core.config_path = hacs.hass.config.path()
 
     if hacs.core.ha_version is None:

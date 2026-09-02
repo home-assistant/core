@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from homeassistant.components import lovelace
+
 from ..enums import HacsCategory, HacsDispatchEvent
 from ..exceptions import HacsException
 from ..utils.decorator import concurrent
@@ -13,8 +15,6 @@ from .base import HacsRepository
 HACSTAG_REPLACER = re.compile(r"\D+")
 
 if TYPE_CHECKING:
-    from homeassistant.components.lovelace.resources import ResourceStorageCollection
-
     from ..base import HacsBase
 
 
@@ -160,32 +160,23 @@ class HacsPluginRepository(HacsRepository):
             f"?hacstag={self.generate_dashboard_resource_hacstag()}"
         )
 
-    def _get_resource_handler(self) -> ResourceStorageCollection | None:
+    def _get_resource_handler(
+        self,
+    ) -> lovelace.resources.ResourceStorageCollection | None:
         """Get the resource handler."""
-        resources: ResourceStorageCollection | None
-        if not (hass_data := self.hacs.hass.data):
-            self.logger.error("%s Can not access the hass data", self.string)
-            return None
-
-        if (lovelace_data := hass_data.get("lovelace")) is None:
+        if (lovelace_data := self.hacs.hass.data.get(lovelace.LOVELACE_DATA)) is None:
             self.logger.warning(
                 "%s Can not access the lovelace integration data", self.string
             )
             return None
 
-        if self.hacs.core.ha_version > "2025.1.99":
-            # Changed to 2025.2.0
-            # Changed in https://github.com/home-assistant/core/pull/136313
-            resources = lovelace_data.resources
-        else:
-            resources = lovelace_data.get("resources")
-
-        if resources is None:
+        if (resources := lovelace_data.resources) is None:
             self.logger.warning(
                 "%s Can not access the dashboard resources", self.string
             )
             return None
 
+        # Only the storage resource mode has a store to update
         if not hasattr(resources, "store") or resources.store is None:
             self.logger.info(
                 "%s YAML mode detected, can not update resources", self.string
