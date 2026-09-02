@@ -161,15 +161,12 @@ async def test_an_unavailable_reading_is_reported_as_unknown(
     0xFFFF is how these devices say "no reading"; publishing it raw would
     put 6553.5 degrees into the recorder.
     """
-    assert model_case.model.MODEL in {"WS90", "WN69LP"}
-    address = 0x167 if model_case.name == "WS90" else 0x182
-
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{model_case.unique_id}_temperature"
     )
     assert entity_id is not None
 
-    mock_unit.holding[address] = 0xFFFF
+    mock_unit.holding[model_case.temperature_register] = 0xFFFF
     await hass.config_entries.async_reload(init_integration.entry_id)
     await hass.async_block_till_done()
 

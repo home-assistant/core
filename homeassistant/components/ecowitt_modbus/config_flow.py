@@ -90,6 +90,11 @@ async def _async_probe(
         return device
 
 
+def _title(model: str, user_input: Mapping[str, Any]) -> str:
+    """Name the entry for the model and where it is reached."""
+    return f"{model} ({user_input[CONF_HOST]})"
+
+
 def _unique_id(model: str, device: EcowittDevice, user_input: Mapping[str, Any]) -> str:
     """Identify this sensor array as durably as the model allows.
 
@@ -152,7 +157,7 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{self._model} ({user_input[CONF_HOST]})",
+                    title=_title(self._model, user_input),
                     data={CONF_MODEL: self._model, **user_input},
                 )
 
@@ -202,8 +207,12 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     # address is not one another entry already polls.
                     self._async_abort_entries_match(dict(user_input))
 
+                # The title carries the host, so it has to move with the
+                # entry; leaving it would keep showing the old address.
                 return self.async_update_reload_and_abort(
-                    entry, data={CONF_MODEL: model, **user_input}
+                    entry,
+                    title=_title(model, user_input),
+                    data={CONF_MODEL: model, **user_input},
                 )
 
         return self.async_show_form(

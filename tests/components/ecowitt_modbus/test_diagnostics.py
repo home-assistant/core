@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import ALL_MODELS, MOCK_HOST, ModelCase
+from . import ALL_MODELS, MOCK_HOST, WS90_CASE, ModelCase
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -34,36 +34,49 @@ async def test_diagnostics(
 
 
 @EVERY_MODEL
-async def test_identifying_details_are_redacted(
+async def test_the_address_is_redacted(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-    model_case: ModelCase,
 ) -> None:
-    """Test a shared diagnostics dump gives away neither address nor hardware.
+    """Test a shared diagnostics dump does not give away where the sensor is.
 
     Snapshots would catch a change to this, but only if someone reads them.
-    An explicit assertion says which fields are sensitive and, just as
-    importantly, that the same value does not survive somewhere else: a
-    WS90's serial number is also its raw ``device_id`` register and its
-    config entry's unique ID, and a WN69LP's unique ID embeds its host.
+    The unique ID matters as much as the host field: a model with no serial
+    number has its host embedded in it.
     """
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert result["entry"]["data"][CONF_HOST] == "**REDACTED**"
     assert result["entry"]["unique_id"] == "**REDACTED**"
+    assert MOCK_HOST not in json.dumps(result)
 
-    if model_case.serial_number is not None:
-        assert result["device"]["serial_number"] == "**REDACTED**"
-        assert result["configuration"]["device_id"] == "**REDACTED**"
 
-    # Belt and braces: nothing anywhere in the dump still carries either.
+@pytest.mark.parametrize("model_case", [WS90_CASE], ids=["WS90"], indirect=True)
+async def test_the_serial_number_is_redacted(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+    model_case: ModelCase,
+) -> None:
+    """Test the hardware identity does not survive anywhere in the dump.
+
+    Only the WS90 has one. It appears three times over -- as
+    ``serial_number``, as the raw ``device_id`` register it is formatted
+    from, and as the config entry's unique ID -- so redacting the obvious
+    field alone would not be enough.
+    """
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert result["device"]["serial_number"] == "**REDACTED**"
+    assert result["configuration"]["device_id"] == "**REDACTED**"
+
+    serial = model_case.serial_number
+    assert serial is not None
     dumped = json.dumps(result)
-    assert MOCK_HOST not in dumped
-    if model_case.serial_number is not None:
-        assert model_case.serial_number not in dumped
-        # The same value unformatted, as the identity register holds it.
-        assert str(int(model_case.serial_number, 16)) not in dumped
+    assert serial not in dumped
+    # The same value unformatted, as the identity register holds it.
+    assert str(int(serial, 16)) not in dumped
 
 
 @EVERY_MODEL

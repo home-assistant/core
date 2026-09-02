@@ -344,6 +344,9 @@ class TestReconfigure:
         assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
         # The model is not re-asked, so it has to survive the round trip.
         assert mock_config_entry.data[CONF_MODEL] == model_case.name
+        # The title carries the host, so a move that left it behind would
+        # keep showing the old address in the UI.
+        assert mock_config_entry.title == f"{model_case.name} (192.168.1.200)"
 
     @EVERY_MODEL
     @pytest.mark.usefixtures("mock_temporary_unit")

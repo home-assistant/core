@@ -50,7 +50,6 @@ rules:
       Local Modbus RTU/TCP; there is no authentication that can expire or be
       invalidated.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done

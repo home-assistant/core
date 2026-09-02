@@ -1,11 +1,15 @@
 """Tests for the Ecowitt Modbus integration.
 
-Every test runs against both supported models. They share a config flow,
-coordinator, and entity layer, but differ in ways that matter: only the WS90
-reports a serial number, and only the WN69LP needs a second read for its
-configuration block. A helper that hides those differences would hide the
-bugs they cause, so each model gets its own :class:`ModelCase` describing
-what it should do, and the shared tests are parametrized over them.
+The two models share a config flow, coordinator, and entity layer, but
+differ in ways that matter: only the WS90 reports a serial number, and only
+the WN69LP needs a second read for its configuration block.
+
+Behaviour that should be identical across models is parametrized over both,
+so a change that suits one and breaks the other fails here. Behaviour that
+only one model has -- serial-number revalidation, the WN69LP's diagnostic
+voltages -- gets its own test naming the model it covers. Each model is
+described by a :class:`ModelCase`, so a test can vary by model without
+branching on the model name in its body.
 """
 
 from dataclasses import dataclass, field
@@ -52,6 +56,10 @@ class ModelCase:
     #: A register the model does not answer for, used to prove that a poll
     #: reads only the blocks it should.
     unused_register: int
+
+    #: Where this model keeps its temperature reading, for tests that need to
+    #: write the invalid-reading sentinel into it.
+    temperature_register: int
 
     #: How to make the device stop looking like this model, for probe tests.
     #: Maps a register to a value no genuine device would report there.
@@ -112,6 +120,7 @@ WS90_CASE = ModelCase(
     disabled_keys=frozenset({"rain_counter"}),
     # The WS90 archives history up here, but never during a live poll.
     unused_register=0x9B14,
+    temperature_register=0x167,
     # Register 0x160 is a fixed device code on a genuine WS90.
     impostor_registers={0x160: 0x42},
 )
@@ -144,6 +153,7 @@ WN69LP_CASE = ModelCase(
     # Sits in the reserved gap between the config and live blocks, which a
     # correct implementation never reads.
     unused_register=0x170,
+    temperature_register=0x182,
     # 101% relative humidity is not something a weather sensor can report.
     impostor_registers={0x183: 101},
 )
