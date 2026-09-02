@@ -985,6 +985,9 @@ essent-dynamic-pricing==0.3.1
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.18
 
+# homeassistant.components.eufy_robovac
+eufy-robovac-client==0.1.0
+
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.10
 
