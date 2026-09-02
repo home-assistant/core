@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import override
 
-from duco_connectivity.models import DiagStatus, Node, NodeType, VentilationState
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
 from .const import BOX_NODE_ID, DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -33,8 +33,6 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-DIAGNOSTIC_STATUS_OPTIONS = [status.value for status in DiagStatus]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -51,13 +49,6 @@ class DucoBoxSensorEntityDescription(SensorEntityDescription):
 
     supported_fn: Callable[[DucoCoordinator], bool] = lambda _: True
     value_fn: Callable[[DucoCoordinator], int | float | None]
-
-
-@dataclass(frozen=True, kw_only=True)
-class DucoDiagnosticSensorEntityDescription(SensorEntityDescription):
-    """Duco sensor entity description for diagnostic subsystem data."""
-
-    component: str
 
 
 SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
@@ -232,43 +223,6 @@ BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
     ),
 )
 
-DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription] = {
-    "Filter": DucoDiagnosticSensorEntityDescription(
-        key="filter",
-        component="Filter",
-        translation_key="diagnostic_filter",
-        device_class=SensorDeviceClass.ENUM,
-        options=DIAGNOSTIC_STATUS_OPTIONS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "SunCtrl": DucoDiagnosticSensorEntityDescription(
-        key="sun_control",
-        component="SunCtrl",
-        translation_key="diagnostic_sun_control",
-        device_class=SensorDeviceClass.ENUM,
-        options=DIAGNOSTIC_STATUS_OPTIONS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "VentCool": DucoDiagnosticSensorEntityDescription(
-        key="ventilation_cooling",
-        component="VentCool",
-        translation_key="diagnostic_ventilation_cooling",
-        device_class=SensorDeviceClass.ENUM,
-        options=DIAGNOSTIC_STATUS_OPTIONS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "Ventilation": DucoDiagnosticSensorEntityDescription(
-        key="ventilation",
-        component="Ventilation",
-        translation_key="diagnostic_ventilation",
-        device_class=SensorDeviceClass.ENUM,
-        options=DIAGNOSTIC_STATUS_OPTIONS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -285,7 +239,6 @@ async def async_setup_entry(
     # Track optional box-level sensors separately so they can still be added
     # later if their capability probe transiently failed during initial setup.
     known_box_sensors: set[tuple[int, str]] = set()
-    known_diagnostic_components: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -343,14 +296,6 @@ async def async_setup_entry(
 
             if node.general.node_type != NodeType.BOX:
                 continue
-
-            for component in coordinator.data.diagnostic_subsystems:
-                if component in known_diagnostic_components:
-                    continue
-                known_diagnostic_components.add(component)
-                new_entities.append(
-                    DucoDiagnosticSensorEntity(coordinator, node, component)
-                )
 
             for description in BOX_SENSOR_DESCRIPTIONS:
                 description_key = (node.node_id, description.key)
@@ -419,39 +364,3 @@ class DucoBoxSensorEntity(DucoEntity, SensorEntity):
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator)
-
-
-class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
-    """Sensor entity for a Duco diagnostic subsystem status."""
-
-    entity_description: DucoDiagnosticSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: DucoCoordinator,
-        node: Node,
-        component: str,
-    ) -> None:
-        """Initialize the diagnostic sensor entity."""
-        if (description := DIAGNOSTIC_SENSOR_DESCRIPTIONS.get(component)) is None:
-            description = DucoDiagnosticSensorEntityDescription(
-                key=slugify(component),
-                component=component,
-                translation_key="diagnostic_status",
-                device_class=SensorDeviceClass.ENUM,
-                options=DIAGNOSTIC_STATUS_OPTIONS,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=False,
-            )
-            self._attr_translation_placeholders = {"component": component}
-        self.entity_description = description
-        super().__init__(coordinator, node)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{component}_diagnostic"
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the diagnostic status."""
-        return self.coordinator.data.diagnostic_subsystems.get(
-            self.entity_description.component
-        )

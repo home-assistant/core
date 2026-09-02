@@ -1,6 +1,6 @@
 {
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "diagnostic_filter": {
         "default": "mdi:air-filter"
       },
@@ -12,7 +12,9 @@
       },
       "diagnostic_ventilation_cooling": {
         "default": "mdi:home-thermometer-outline"
-      },
+      }
+    },
+    "sensor": {
       "filter_remaining": {
         "default": "mdi:air-filter"
       },

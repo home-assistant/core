@@ -37,6 +37,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "diagnostic_filter": {
+        "name": "Filter"
+      },
+      "diagnostic_status": {
+        "name": "{component}"
+      },
+      "diagnostic_sun_control": {
+        "name": "Sun control"
+      },
+      "diagnostic_ventilation": {
+        "name": "Ventilation"
+      },
+      "diagnostic_ventilation_cooling": {
+        "name": "Ventilation cooling"
+      }
+    },
     "fan": {
       "ventilation": {
         "state_attributes": {
@@ -78,46 +95,6 @@
       }
     },
     "sensor": {
-      "diagnostic_filter": {
-        "name": "Filter",
-        "state": {
-          "disabled": "Disabled",
-          "error": "Error",
-          "ok": "OK"
-        }
-      },
-      "diagnostic_status": {
-        "name": "{component}",
-        "state": {
-          "disabled": "[%key:component::duco::entity::sensor::diagnostic_filter::state::disabled%]",
-          "error": "[%key:component::duco::entity::sensor::diagnostic_filter::state::error%]",
-          "ok": "[%key:component::duco::entity::sensor::diagnostic_filter::state::ok%]"
-        }
-      },
-      "diagnostic_sun_control": {
-        "name": "Sun control",
-        "state": {
-          "disabled": "[%key:component::duco::entity::sensor::diagnostic_filter::state::disabled%]",
-          "error": "[%key:component::duco::entity::sensor::diagnostic_filter::state::error%]",
-          "ok": "[%key:component::duco::entity::sensor::diagnostic_filter::state::ok%]"
-        }
-      },
-      "diagnostic_ventilation": {
-        "name": "Ventilation",
-        "state": {
-          "disabled": "[%key:component::duco::entity::sensor::diagnostic_filter::state::disabled%]",
-          "error": "[%key:component::duco::entity::sensor::diagnostic_filter::state::error%]",
-          "ok": "[%key:component::duco::entity::sensor::diagnostic_filter::state::ok%]"
-        }
-      },
-      "diagnostic_ventilation_cooling": {
-        "name": "Ventilation cooling",
-        "state": {
-          "disabled": "[%key:component::duco::entity::sensor::diagnostic_filter::state::disabled%]",
-          "error": "[%key:component::duco::entity::sensor::diagnostic_filter::state::error%]",
-          "ok": "[%key:component::duco::entity::sensor::diagnostic_filter::state::ok%]"
-        }
-      },
       "exhaust_air_temperature": {
         "name": "Exhaust air temperature"
       },
