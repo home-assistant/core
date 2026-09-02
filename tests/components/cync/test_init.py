@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pycync import CyncLight
 from pycync.exceptions import CyncError
+import pytest
 
 from homeassistant.components.cync.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -16,6 +17,8 @@ from homeassistant.helpers import (
 )
 
 from tests.common import MockConfigEntry
+
+_MESH_UNIQUE_ID_MIGRATION_PREFIX = "__cync_mesh_id_migration__"
 
 
 async def test_migrate_entry_does_not_connect(
@@ -297,21 +300,56 @@ async def test_resume_partial_unique_id_migration(
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
 
 
+@pytest.mark.parametrize(
+    (
+        "mesh_device_ids",
+        "expected_first_unique_id",
+        "expected_chained_previous_id",
+        "expected_first_previous_id",
+        "expected_device_identifiers",
+    ),
+    [
+        pytest.param(
+            {1111: 1101},
+            "1000-1",
+            "1000-1111",
+            "1000-1101",
+            {(DOMAIN, "1000-1101"), (DOMAIN, "1000-1")},
+            id="acyclic-chain",
+        ),
+        pytest.param(
+            {1101: 1111, 1111: 1101},
+            "1000-1111",
+            f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}1000-1111",
+            f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}1000-1101",
+            {(DOMAIN, "1000-1101"), (DOMAIN, "1000-1111")},
+            id="cycle",
+        ),
+    ],
+)
 async def test_migrate_overlapping_unique_ids(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     cync_client: MagicMock,
+    mesh_device_ids: dict[int, int],
+    expected_first_unique_id: str,
+    expected_chained_previous_id: str,
+    expected_first_previous_id: str,
+    expected_device_identifiers: set[tuple[str, str]],
 ) -> None:
-    """Test direct migration orders overlapping IDs safely."""
+    """Test overlapping migrations finalize safely after an interrupted attempt."""
     home = cync_client.get_homes()[0]
     lights = [
         device
         for device in home.get_flattened_device_list()
         if isinstance(device, CyncLight)
     ]
-    next(light for light in lights if light.device_id == 1111).mesh_device_id = 1101
+    for device_id, mesh_device_id in mesh_device_ids.items():
+        next(
+            light for light in lights if light.device_id == device_id
+        ).mesh_device_id = mesh_device_id
 
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -362,6 +400,13 @@ async def test_migrate_overlapping_unique_ids(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.data["mesh_unique_ids_migration_pending"] is True
+    assert mock_config_entry.data["mesh_unique_ids_device_finalize_pending"] is True
+    interrupted_device = device_registry.async_get(merged_device.id)
+    assert interrupted_device is not None
+    assert interrupted_device.identifiers == {
+        (DOMAIN, f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}1000-1101"),
+        (DOMAIN, f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}1000-1111"),
+    }
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -372,18 +417,16 @@ async def test_migrate_overlapping_unique_ids(
     migrated_chained_entity = entity_registry.async_get(chained_entity.entity_id)
     assert migrated_chained_entity is not None
     assert migrated_chained_entity.unique_id == "1000-1101"
-    assert migrated_chained_entity.previous_unique_id == "1000-1111"
+    assert migrated_chained_entity.previous_unique_id == expected_chained_previous_id
     migrated_first_entity = entity_registry.async_get(first_entity.entity_id)
     assert migrated_first_entity is not None
-    assert migrated_first_entity.unique_id == "1000-1"
-    assert migrated_first_entity.previous_unique_id == "1000-1101"
+    assert migrated_first_entity.unique_id == expected_first_unique_id
+    assert migrated_first_entity.previous_unique_id == expected_first_previous_id
     migrated_device = device_registry.async_get(merged_device.id)
     assert migrated_device is not None
-    assert migrated_device.identifiers == {
-        (DOMAIN, "1000-1101"),
-        (DOMAIN, "1000-1"),
-    }
+    assert migrated_device.identifiers == expected_device_identifiers
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
+    assert "mesh_unique_ids_device_finalize_pending" not in mock_config_entry.data
 
 
 async def test_migration_failure_closes_client_and_keeps_marker(
