@@ -237,8 +237,8 @@ async def test_migration_from_v1_to_v2(
     assert migrated_entity.unique_id == subentry.subentry_id
 
     # Check device migration
-    assert not device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    assert not device_registry.async_get_devices(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
         migrated_device := device_registry.async_get_device_by_identifier(
@@ -436,11 +436,11 @@ async def test_migration_from_v1_disabled(
         assert subentry.data == options
         assert "Claude" in subentry.title
 
-    assert not device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    assert not device_registry.async_get_devices(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert not device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry_2.entry_id), mock_config_entry_2.entry_id
+    assert not device_registry.async_get_devices(
+        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
 
     for idx, subentry in enumerate(conversation_subentries):
@@ -667,12 +667,7 @@ async def test_migration_from_v2_1_to_v2_2(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1 to version 2.2.
-
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
-    """
+    """Test migration from version 2.1 to version 2.2."""
     # Create a v2.1 config entry with 2 subentries, devices and entities
     options = {
         "recommended": True,
@@ -715,10 +710,6 @@ async def test_migration_from_v2_1_to_v2_2(
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    device_1 = device_registry.async_update_device(
-        device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
-    )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {"mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -778,8 +769,8 @@ async def test_migration_from_v2_1_to_v2_2(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    assert not device_registry.async_get_devices(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
         device := device_registry.async_get_device_by_identifier(
@@ -799,8 +790,8 @@ async def test_migration_from_v2_1_to_v2_2(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    assert not device_registry.async_get_devices(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
         device := device_registry.async_get_device_by_identifier(
@@ -966,7 +957,7 @@ async def test_migrate_entry_to_v2_3(
     conversation_device = attr.evolve(
         conversation_device, disabled_by=device_disabled_by
     )
-    device_registry.devices[conversation_device.id] = conversation_device
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

@@ -527,6 +527,17 @@ async def test_trigger_methods(
     fritz_tools.fritz_call.hangup.assert_called_once()
 
 
+async def test_trigger_reconnect_reraises_unexpected_error(
+    fritz_tools,
+) -> None:
+    """Test async_trigger_reconnect re-raises errors other than DisconnectInProgress."""
+    fritz_tools.connection.call_action = MagicMock(
+        side_effect=FritzConnectionException("some other error")
+    )
+    with pytest.raises(FritzConnectionException):
+        await fritz_tools.async_trigger_reconnect()
+
+
 async def test_avmwrapper_service_call_branches(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -724,8 +735,8 @@ async def test_old_discovery_does_not_self_reference_box(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    router = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    router = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert router is not None
     assert router.via_device_id is None

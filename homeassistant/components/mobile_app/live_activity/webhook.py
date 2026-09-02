@@ -1,5 +1,4 @@
 """Live Activity webhook handlers."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any
 

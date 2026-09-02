@@ -67,9 +67,9 @@ class GardenaBluetoothSensorEntityDescription[T](SensorEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        data = {self.char.uuid}
+        data = {self.char.unique_id}
         if self.connected_state:
-            data.add(self.connected_state.uuid)
+            data.add(self.connected_state.unique_id)
         return data
 
 
@@ -214,10 +214,40 @@ DESCRIPTIONS = (
         char=EventHistory.error,
         get=lambda x: (
             x.error_code.name.lower()
-            if x and isinstance(x.error_code, EventHistory.error.enum)
+            if x is not None and isinstance(x.error_code, EventHistory.error.enum)
             else None
         ),
         options=[member.name.lower() for member in EventHistory.error.enum],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key="aqua_contour_activation_reason",
+        translation_key="activation_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        char=AquaContourWatering.activation_reason,
+        get=lambda x: (
+            x.name.lower()
+            if isinstance(x, AquaContourWatering.activation_reason.enum)
+            else None
+        ),
+        options=[
+            member.name.lower() for member in AquaContourWatering.activation_reason.enum
+        ],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key="aqua_contour_skipped_reason",
+        translation_key="skipped_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        char=AquaContourWatering.skipped_reason,
+        get=lambda x: (
+            x.name.lower()
+            if isinstance(x, AquaContourWatering.skipped_reason.enum)
+            else None
+        ),
+        options=[
+            member.name.lower() for member in AquaContourWatering.skipped_reason.enum
+        ],
     ),
     GardenaBluetoothSensorEntityDescription(
         key="aqua_contour_error_timestamp",
@@ -273,7 +303,8 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
         value = self.entity_description.get(value)
         self._attr_native_value = value
 
-        if char := self.entity_description.connected_state:
+        char = self.entity_description.connected_state
+        if char and char.unique_id in self.coordinator.characteristics:
             self._attr_available = bool(self.coordinator.get_cached(char))
         else:
             self._attr_available = True
@@ -294,7 +325,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, {char.uuid})
+        super().__init__(coordinator, {char.unique_id})
         self._attr_unique_id = f"{coordinator.address}-{key}"
         self._attr_translation_key = key
         self._char = char

@@ -76,7 +76,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 vol.Optional("pipeline"): str,
                 vol.Optional("conversation_id"): vol.Any(str, None),
                 vol.Optional("device_id"): vol.Any(str, None),
-                vol.Optional("timeout"): vol.Any(float, int),
+                vol.Optional("timeout"): vol.Any(int, float),
             },
         ),
         cv.key_value_schemas(
@@ -86,9 +86,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     {
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
-                            vol.Optional("timeout"): vol.Any(float, int),
+                            vol.Optional("timeout"): vol.Any(int, float),
                             vol.Optional("audio_seconds_to_buffer"): vol.Any(
-                                float, int
+                                int, float
                             ),
                             # Audio enhancement
                             vol.Optional("noise_suppression_level"): int,
