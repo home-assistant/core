@@ -663,6 +663,43 @@ async def test_service_calls_cool_mode(
     assert "Invalid system mode returned" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(aiosomecomfort.ConnectionError, id="somecomfort-connection"),
+        pytest.param(aiosomecomfort.APIRateLimited, id="api-rate-limited"),
+        pytest.param(aiosomecomfort.AuthError, id="auth-error"),
+        pytest.param(ClientConnectionError, id="client-connection"),
+    ],
+)
+async def test_set_preset_hold_transient_errors_raise_home_assistant_error(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MagicMock,
+    exception: type[Exception],
+) -> None:
+    """Test transient hold errors are translated to HomeAssistantError."""
+    device.system_mode = "cool"
+
+    await init_integration(hass, config_entry)
+    entity_id = f"climate.{device.name}"
+
+    device.set_hold_cool.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            blocking=True,
+        )
+
+    assert isinstance(exc_info.value.__cause__, exception)
+    device.set_hold_cool.assert_called_once_with(True)
+    device.set_hold_heat.assert_not_called()
+
+
 async def test_service_calls_heat_mode(
     hass: HomeAssistant,
     device: MagicMock,
