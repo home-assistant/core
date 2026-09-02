@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -165,3 +165,23 @@ async def test_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("mock_device_code", ["ktkzq_urzivdhumrwfakie"])
+async def test_ktkzq_child_lock_switch(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the KTKZQ (Vital+ Ice Bath) child_lock switch entity."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("switch.vital_child_lock")
+    assert state is not None, "switch.vital_child_lock entity was not created"
+    assert state.state == "on"
+
+    entry = entity_registry.async_get("switch.vital_child_lock")
+    assert entry is not None
+    assert entry.entity_category is EntityCategory.CONFIG
