@@ -15,6 +15,10 @@ from homeassistant.components.marstek.const import (
     CONF_WIFI_NAME,
     DOMAIN,
 )
+from homeassistant.components.marstek.coordinator import (
+    MARSTEK_SHARED_DATA,
+    MarstekSharedData,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -100,6 +104,25 @@ async def test_discovery_flow_creates_entry(
     assert result["result"].unique_id == TEST_MAC
     mock_udp_client.get_device_info.assert_awaited_once_with(TEST_HOST)
     mock_setup_entry.assert_called_once()
+
+
+async def test_discovery_flow_reuses_shared_udp_client(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Discovery reuses the active integration client bound to the UDP port."""
+    hass.data[MARSTEK_SHARED_DATA] = MarstekSharedData(udp_client=mock_udp_client)
+    mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
+    mock_udp_client.async_cleanup.assert_not_awaited()
 
 
 async def test_discovery_flow_duplicate_device_names(

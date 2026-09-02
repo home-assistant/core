@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-from aiomarstek import MarstekDeviceInfo, MarstekUDPClient
+from aiomarstek import MarstekDeviceInfo
 from probatio import Required as VolRequired, Schema as VolSchema
 
 from homeassistant import config_entries
@@ -25,6 +25,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_DEVICE_TYPES,
 )
+from .coordinator import MARSTEK_SHARED_DATA
 from .helpers import async_create_udp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,15 +104,18 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str]
     ) -> list[MarstekDeviceInfo] | None:
         """Return supported discovered devices or record an error."""
-        udp_client: MarstekUDPClient | None = None
+        shared_data = self.hass.data.get(MARSTEK_SHARED_DATA)
+        udp_client = shared_data.udp_client if shared_data is not None else None
         try:
-            try:
+            if udp_client is None:
                 udp_client = await async_create_udp_client(self.hass)
                 discovered_devices = await udp_client.discover_devices()
-            finally:
-                if udp_client is not None:
-                    await udp_client.async_cleanup()
+                await udp_client.async_cleanup()
+            else:
+                discovered_devices = await udp_client.discover_devices()
         except TimeoutError, OSError, TypeError:
+            if shared_data is None and udp_client is not None:
+                await udp_client.async_cleanup()
             errors["base"] = "discovery_failed"
             return None
 
@@ -194,12 +198,14 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_device_from_host(self, host: str) -> MarstekDeviceInfo:
         """Fetch device information from a specific host."""
-        udp_client: MarstekUDPClient | None = None
+        shared_data = self.hass.data.get(MARSTEK_SHARED_DATA)
+        udp_client = shared_data.udp_client if shared_data is not None else None
         try:
-            udp_client = await async_create_udp_client(self.hass)
+            if udp_client is None:
+                udp_client = await async_create_udp_client(self.hass)
             return await udp_client.get_device_info(host)
         finally:
-            if udp_client is not None:
+            if shared_data is None and udp_client is not None:
                 await udp_client.async_cleanup()
 
     async def _async_create_entry_from_device(
