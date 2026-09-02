@@ -65,10 +65,10 @@ class IseoLockEntity(LockEntity):
         """Initialize the lock entity."""
         self._entry = entry
         self._relock_task: asyncio.Task[None] | None = None
-        self._ble_lock = asyncio.Lock()
+        self._ble_lock = entry.runtime_data.ble_lock
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
-        self.client: IseoClient = entry.runtime_data
+        self.client: IseoClient = entry.runtime_data.client
 
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(

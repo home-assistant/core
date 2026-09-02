@@ -34,7 +34,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: This integration does not have any configuration parameters.
+    comment: This integration has no options flow; user management is chosen during setup.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -62,25 +62,21 @@ rules:
   dynamic-devices:
     status: exempt
     comment: This integration connects to a single device.
-  entity-category:
-    status: exempt
-    comment: The lock is the primary entity; no secondary entities exist.
+  entity-category: done
   entity-device-class:
     status: exempt
-    comment: Lock entities do not have device classes.
+    comment: Neither lock nor switch entities have device classes.
   entity-disabled-by-default:
     status: exempt
-    comment: The lock is the only entity and should be enabled by default.
-  entity-translations:
-    status: exempt
-    comment: The only entity uses the device name directly via _attr_name = None.
+    comment: The lock and the user switches are all cheap to keep enabled — they read from a user list fetched once at setup.
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
     comment: Uses default platform icons; no custom icons defined.
   reconfiguration-flow:
     status: exempt
-    comment: Configuration is a BLE address and generated identity; nothing to reconfigure.
+    comment: Configuration is a BLE address and generated identities. The identities can only be enrolled during a Master Card scan, so changing them means setting the lock up again.
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
