@@ -162,7 +162,7 @@
         "data_description": {
           "reply_to": "Email address to use for recipient replies. If not specified, the sender's email address is used.",
           "reply_to_name": "Display name shown as the Reply-To name.",
-          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted."
+          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted. Defaults to 60 seconds."
         }
       }
     }

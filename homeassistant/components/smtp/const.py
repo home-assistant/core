@@ -20,7 +20,7 @@ SECTION_OPTIONS: Final = "options"
 
 DEFAULT_HOST: Final = "localhost"
 DEFAULT_PORT: Final = 587
-DEFAULT_TIMEOUT: Final = 5
+DEFAULT_TIMEOUT: Final = 60
 DEFAULT_DEBUG: Final = False
 DEFAULT_ENCRYPTION: Final = "starttls"
 

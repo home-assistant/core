@@ -56,7 +56,6 @@ async def test_form(
         {
             **USER_INPUT,
             SECTION_OPTIONS: {
-                CONF_TIMEOUT: 60,
                 CONF_REPLY_TO: "replyto@example.com",
                 CONF_REPLY_TO_NAME: "Reply To Name",
             },
@@ -68,7 +67,6 @@ async def test_form(
     assert result["title"] == "Home Assistant"
     assert result["data"] == USER_INPUT
     assert result["options"] == {
-        CONF_TIMEOUT: 60,
         CONF_REPLY_TO: "replyto@example.com",
         CONF_REPLY_TO_NAME: "Reply To Name",
     }
