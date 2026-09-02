@@ -17,7 +17,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import mock_not_found_exception
-from .conftest import DoorbirdMockerType
+from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
 LIVE_CAMERA_ENTITY_ID = "camera.mydoorbird_live"
 LAST_RING_CAMERA_ENTITY_ID = "camera.mydoorbird_last_ring"
@@ -236,5 +236,25 @@ async def test_camera_kept_without_configured_events(
     """Test the deprecated cameras stay when no event can refresh the images."""
     await doorbird_mocker(options={CONF_EVENTS: configured_events})
 
+    assert hass.states.get("camera.mydoorbird_last_ring") is not None
+    assert hass.states.get("camera.mydoorbird_last_motion") is not None
+
+
+async def test_camera_restored_when_events_are_cleared(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test clearing the events after setup brings the cameras back."""
+    doorbird_entry = await doorbird_mocker()
+
+    assert hass.states.get("camera.mydoorbird_last_ring") is None
+
+    with patch_doorbird_api_entry_points(doorbird_entry.api):
+        hass.config_entries.async_update_entry(
+            doorbird_entry.entry, options={CONF_EVENTS: []}
+        )
+        await hass.async_block_till_done()
+
+    # Nothing can refresh the images now, so the polling cameras have to return.
     assert hass.states.get("camera.mydoorbird_last_ring") is not None
     assert hass.states.get("camera.mydoorbird_last_motion") is not None

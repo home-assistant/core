@@ -117,7 +117,13 @@ async def _async_register_events(
 async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Handle options update."""
     door_station = entry.runtime_data.door_station
+    had_events = any(door_station.events)
     door_station.update_events(entry.options[CONF_EVENTS])
+    if any(door_station.events) != had_events:
+        # Whether the deprecated cameras exist is decided when the platform is
+        # set up, and only they can refresh a device with no events left.
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     # Subscribe to doorbell or motion events
     await _async_register_events(hass, door_station, entry)
     # The entities resolve their events from the refreshed descriptions, so they
