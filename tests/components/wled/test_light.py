@@ -367,11 +367,15 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     """Test CCT support for WLED."""
     assert (state := hass.states.get("light.wled_cct_light"))
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
-    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGBWW,
+    ]
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBWW
+    assert state.attributes.get(ATTR_RGBWW_COLOR) == (0, 0, 0, 106, 255)
     assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2000
     assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
-    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 2942
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -384,6 +388,7 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     )
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
+        color_primary=(0, 0, 0, 255),
         cct=130,
         on=True,
         segment_id=0,
@@ -419,35 +424,208 @@ async def test_rgbww_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         segment_id=0,
     )
 
+    # Simulate the device reporting the commanded white color, the light
+    # stays in rgbww mode so the white channels keep being reported.
+    device = mock_wled.update.return_value
+    device.state.segments[0].color.primary = (0, 0, 0, 255)
+    device.state.segments[0].cct = 130
 
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgbww_light",
+            ATTR_COLOR_TEMP_KELVIN: 4321,
+        },
+        blocking=True,
+    )
+    assert mock_wled.segment.call_count == 2
+    mock_wled.segment.assert_called_with(
+        color_primary=(0, 0, 0, 255),
+        cct=130,
+        on=True,
+        segment_id=0,
+    )
+
+    assert (state := hass.states.get("light.wled_rgbww_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBWW
+    assert state.attributes.get(ATTR_RGBWW_COLOR) == (0, 0, 0, 255, 249)
+
+
+@pytest.mark.parametrize(
+    ("rgbww_color", "expected_color_primary", "expected_cct"),
+    [
+        pytest.param(
+            (255, 255, 255, 255, 255), (255, 255, 255, 255), 127, id="midpoint"
+        ),
+        pytest.param((255, 255, 255, 0, 255), (255, 255, 255, 255), 0, id="warm"),
+        pytest.param((255, 255, 255, 255, 0), (255, 255, 255, 255), 255, id="cold"),
+        pytest.param((255, 255, 255, 0, 0), (255, 255, 255, 0), 127, id="no_white"),
+        pytest.param((255, 255, 255, 64, 191), (255, 255, 255, 191), 43, id="warm_mix"),
+        pytest.param(
+            (255, 255, 255, 191, 64), (255, 255, 255, 191), 212, id="cold_mix"
+        ),
+    ],
+)
+@pytest.mark.parametrize("device_fixture", ["rgbww"])
+async def test_rgbww_color_conversion(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    rgbww_color: tuple[int, int, int, int, int],
+    expected_color_primary: tuple[int, int, int, int],
+    expected_cct: int,
+) -> None:
+    """Test rgbww color to WLED color primary and cct conversion."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgbww_light",
+            ATTR_RGBWW_COLOR: rgbww_color,
+        },
+        blocking=True,
+    )
+    assert mock_wled.segment.call_count == 1
+    mock_wled.segment.assert_called_with(
+        color_primary=expected_color_primary,
+        cct=expected_cct,
+        on=True,
+        segment_id=0,
+    )
+
+
+@pytest.mark.parametrize(
+    ("color_temp_kelvin", "expected_cct", "expected_rgbww_color"),
+    [
+        pytest.param(2000, 0, (0, 0, 0, 0, 255), id="warm"),
+        pytest.param(4268, 127, (0, 0, 0, 255, 255), id="midpoint"),
+        pytest.param(6535, 255, (0, 0, 0, 255, 0), id="cold"),
+    ],
+)
+@pytest.mark.parametrize("device_fixture", ["rgbww"])
+async def test_rgbww_color_temp_round_trip(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    color_temp_kelvin: int,
+    expected_cct: int,
+    expected_rgbww_color: tuple[int, int, int, int, int],
+) -> None:
+    """Test color temperature is converted to the WLED cct value."""
+    # Simulate the device reporting the commanded white color.
+    device = mock_wled.update.return_value
+    device.state.segments[0].color.primary = (0, 0, 0, 255)
+    device.state.segments[0].cct = expected_cct
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgbww_light",
+            ATTR_COLOR_TEMP_KELVIN: color_temp_kelvin,
+        },
+        blocking=True,
+    )
+    assert mock_wled.segment.call_count == 1
+    mock_wled.segment.assert_called_with(
+        color_primary=(0, 0, 0, 255),
+        cct=expected_cct,
+        on=True,
+        segment_id=0,
+    )
+
+    assert (state := hass.states.get("light.wled_rgbww_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBWW
+    assert state.attributes.get(ATTR_RGBWW_COLOR) == expected_rgbww_color
+
+
+@pytest.mark.parametrize(
+    ("cct", "expected_cold_white", "expected_warm_white"),
+    [
+        pytest.param(0, 0, 255, id="warm"),
+        pytest.param(53, 106, 255, id="warm_partial"),
+        pytest.param(127, 255, 255, id="midpoint"),
+        pytest.param(200, 255, 110, id="cold_partial"),
+        pytest.param(255, 255, 0, id="cold"),
+    ],
+)
+@pytest.mark.parametrize("device_fixture", ["rgbww"])
+async def test_rgbww_white_channel_split(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    cct: int,
+    expected_cold_white: int,
+    expected_warm_white: int,
+) -> None:
+    """Test the WLED cct value is split into cold and warm white channels."""
+    # Simulate the device reporting a mixed white with a grey tint, the grey
+    # tint keeps the light in rgbww color mode so the white split is reported.
+    device = mock_wled.update.return_value
+    device.state.segments[0].color.primary = (128, 128, 128, 255)
+    device.state.segments[0].cct = cct
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wled_rgbww_light"},
+        blocking=True,
+    )
+    assert mock_wled.segment.call_count == 1
+    mock_wled.segment.assert_called_with(on=True, segment_id=0)
+
+    assert (state := hass.states.get("light.wled_rgbww_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBWW
+    assert state.attributes.get(ATTR_RGBWW_COLOR) == (
+        128,
+        128,
+        128,
+        expected_cold_white,
+        expected_warm_white,
+    )
+
+
+@pytest.mark.parametrize(
+    ("rgb_color", "expected_color_mode", "reported_rgb_color"),
+    [
+        pytest.param((128, 128, 128), ColorMode.RGB, (128, 128, 128), id="grey"),
+        # In color temp mode HA derives the RGB white point from the kelvin value
+        pytest.param(
+            (255, 255, 255), ColorMode.COLOR_TEMP, (255, 212, 178), id="white"
+        ),
+    ],
+)
 @pytest.mark.parametrize("device_fixture", ["rgb_cct"])
-async def test_rgb_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
-    """Test RGB CCT support for WLED."""
-    assert (state := hass.states.get("light.wled_rgb_cct_light"))
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.RGB,
-    ]
-    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGB
-    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
+async def test_rgb_cct_color_mode_inference(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    rgb_color: tuple[int, int, int],
+    expected_color_mode: ColorMode,
+    reported_rgb_color: tuple[int, int, int],
+) -> None:
+    """Test only pure white and the white channel are reported as color temperature."""
+    # Simulate the device reporting the commanded color.
+    device = mock_wled.update.return_value
+    device.state.segments[0].color.primary = (*rgb_color, 0)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.wled_rgb_cct_light",
-            ATTR_COLOR_TEMP_KELVIN: 4321,
+            ATTR_RGB_COLOR: rgb_color,
         },
         blocking=True,
     )
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
-        color_primary=(255, 255, 255, 0),
-        cct=130,
+        color_primary=rgb_color,
+        cct=127,
         on=True,
         segment_id=0,
     )
+
+    assert (state := hass.states.get("light.wled_rgb_cct_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == expected_color_mode
+    assert state.attributes.get(ATTR_RGB_COLOR) == reported_rgb_color
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])

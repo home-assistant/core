@@ -69,9 +69,9 @@
       "maxpwr": 0,
       "maxseg": 32,
       "bootps": 1,
-      "seglc": [6],
-      "lc": 6,
-      "rgbw": false,
+      "seglc": [7],
+      "lc": 7,
+      "rgbw": true,
       "wv": 2,
       "cct": 4
     },

@@ -70,7 +70,7 @@
       "lc": 7,
       "rgbw": true,
       "wv": 0,
-      "cct": 0
+      "cct": 4
     },
     "str": false,
     "name": "WLED RGBWW Light",
