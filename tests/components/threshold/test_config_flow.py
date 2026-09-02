@@ -172,6 +172,24 @@ async def test_options(hass: HomeAssistant) -> None:
                 "name": "Test Sensor",
                 "entity_id": "sensor.test_monitored",
                 "hysteresis": 0.0,
+                "invert": False,
+                "lower": 20.0,
+            }
+        ),
+        (
+            {
+                "name": "Test Sensor",
+                "entity_id": "sensor.test_monitored",
+                "hysteresis": 0.0,
+                "invert": True,
+                "lower": 20.0,
+            }
+        ),
+        (
+            {
+                "name": "Test Sensor",
+                "entity_id": "sensor.test_monitored",
+                "hysteresis": 0.0,
             }
         ),
         (
@@ -191,7 +209,9 @@ async def test_options(hass: HomeAssistant) -> None:
         ),
     ],
     ids=(
-        "success",
+        "success_missing_invert",
+        "success_invert_false",
+        "success_invert_true",
         "missing_upper_lower",
         "missing_entity_id",
         "missing_hysteresis",

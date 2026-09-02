@@ -12,6 +12,7 @@
       'entity_id': 'sensor.test_monitored',
       'friendly_name': 'Test Sensor',
       'hysteresis': 0.0,
+      'invert': False,
       'lower': 20.0,
       'position': 'below',
       'sensor_value': 16.0,
@@ -29,12 +30,13 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_config_flow_preview_success[success]
+# name: test_config_flow_preview_success[success_missing_invert]
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
       'friendly_name': 'Test Sensor',
       'hysteresis': 0.0,
+      'invert': False,
       'lower': 20.0,
       'position': 'below',
       'sensor_value': 16.0,
@@ -44,12 +46,45 @@
     'state': 'on',
   })
 # ---
+# name: test_config_flow_preview_success[success_invert_false]
+  dict({
+    'attributes': dict({
+      'entity_id': 'sensor.test_monitored',
+      'friendly_name': 'Test Sensor',
+      'hysteresis': 0.0,
+      'invert': False,
+      'lower': 20.0,
+      'position': 'below',
+      'sensor_value': 16.0,
+      'type': 'lower',
+      'upper': None,
+    }),
+    'state': 'on',
+  })
+# ---
+# name: test_config_flow_preview_success[success_invert_true]
+  dict({
+    'attributes': dict({
+      'entity_id': 'sensor.test_monitored',
+      'friendly_name': 'Test Sensor',
+      'hysteresis': 0.0,
+      'invert': True,
+      'lower': 20.0,
+      'position': 'below',
+      'sensor_value': 16.0,
+      'type': 'lower',
+      'upper': None,
+    }),
+    'state': 'off',
+  })
+# ---
 # name: test_options_flow_preview
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
       'friendly_name': 'Test Sensor',
       'hysteresis': 0.0,
+      'invert': False,
       'lower': 20.0,
       'position': 'below',
       'sensor_value': 16.0,

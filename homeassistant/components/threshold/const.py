@@ -5,8 +5,10 @@ from typing import Final
 DOMAIN: Final = "threshold"
 
 DEFAULT_HYSTERESIS: Final = 0.0
+DEFAULT_INVERT: Final = False
 
 ATTR_HYSTERESIS: Final = "hysteresis"
+ATTR_INVERT: Final = "invert"
 ATTR_LOWER: Final = "lower"
 ATTR_POSITION: Final = "position"
 ATTR_SENSOR_VALUE: Final = "sensor_value"
@@ -16,6 +18,7 @@ ATTR_UPPER: Final = "upper"
 CONF_HYSTERESIS: Final = "hysteresis"
 CONF_LOWER: Final = "lower"
 CONF_UPPER: Final = "upper"
+CONF_INVERT: Final = "invert"
 
 POSITION_ABOVE: Final = "above"
 POSITION_BELOW: Final = "below"

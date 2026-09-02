@@ -8,11 +8,12 @@
         "data": {
           "entity_id": "Input sensor",
           "hysteresis": "Hysteresis",
+          "invert": "Invert",
           "lower": "Lower limit",
           "name": "[%key:common::config_flow::data::name%]",
           "upper": "Upper limit"
         },
-        "description": "Create a binary sensor that turns on and off depending on the value of a sensor\n\nOnly lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit].",
+        "description": "Create a binary sensor that turns on and off depending on the value of a sensor\n\nOnly lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit].\n\nIf invert is set to true then the binary sensor state is inverted.",
         "title": "Create Threshold Sensor"
       }
     }
@@ -26,11 +27,12 @@
         "data": {
           "entity_id": "[%key:component::threshold::config::step::user::data::entity_id%]",
           "hysteresis": "[%key:component::threshold::config::step::user::data::hysteresis%]",
+          "invert": "[%key:component::threshold::config::step::user::data::invert%]",
           "lower": "[%key:component::threshold::config::step::user::data::lower%]",
           "name": "[%key:common::config_flow::data::name%]",
           "upper": "[%key:component::threshold::config::step::user::data::upper%]"
         },
-        "description": "Only lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit]."
+        "description": "Only lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit].\n\nIf invert is set to true then the binary sensor state is inverted."
       }
     }
   },
