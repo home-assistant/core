@@ -499,36 +499,64 @@ async def test_migrate_from_higher_version_not_supported(
 
 
 @pytest.mark.parametrize(
-    ("mock_migrate_entry", "state", "log_message"),
+    (
+        "mock_migrate_entry",
+        "state",
+        "log_message",
+        "translation_key",
+        "translation_domain",
+    ),
     [
         pytest.param(
-            AsyncMock(side_effect=ConfigEntryError()),
+            AsyncMock(
+                side_effect=ConfigEntryError(
+                    translation_key="error", translation_domain="comp"
+                )
+            ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            "error",
+            "comp",
             id="ConfigEntryError",
         ),
         pytest.param(
-            AsyncMock(side_effect=ConfigEntryAuthFailed()),
+            AsyncMock(
+                side_effect=ConfigEntryAuthFailed(
+                    translation_key="error", translation_domain="comp"
+                )
+            ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Config entry 'Mock Title' for comp integration could not authenticate",
+            "error",
+            "comp",
             id="ConfigEntryAuthFailed",
         ),
         pytest.param(
-            AsyncMock(side_effect=ConfigEntryNotReady()),
+            AsyncMock(
+                side_effect=ConfigEntryNotReady(
+                    translation_key="error", translation_domain="comp"
+                )
+            ),
             config_entries.ConfigEntryState.SETUP_RETRY,
             "Config entry migration 'Mock Title' for comp integration not ready yet",
+            "error",
+            "comp",
             id="ConfigEntryNotReady",
         ),
         pytest.param(
             AsyncMock(side_effect=Exception()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            None,
+            None,
             id="Other exceptions",
         ),
         pytest.param(
             AsyncMock(return_value=False),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            None,
+            None,
             id="Returns False",
         ),
     ],
@@ -539,6 +567,8 @@ async def test_migrate_handle_exceptions(
     mock_migrate_entry: AsyncMock,
     state: config_entries.ConfigEntryState,
     log_message: str,
+    translation_key: str | None,
+    translation_domain: str | None,
 ) -> None:
     """Test migration handles exceptions correctly."""
     entry = MockConfigEntry(domain="comp", version=1, minor_version=1)
@@ -572,6 +602,8 @@ async def test_migrate_handle_exceptions(
     assert result
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state is state
+    assert entry.error_reason_translation_domain == translation_domain
+    assert entry.error_reason_translation_key == translation_key
     assert log_message in caplog.text
 
     assert hass.config_entries.flow.async_progress_by_handler("comp") == []
