@@ -18,6 +18,7 @@ from aiogithubapi import (
 import attr
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from ..const import DOMAIN
 from ..enums import HacsDispatchEvent, RepositoryFile
@@ -159,7 +160,7 @@ class RepositoryData:
     full_name_lower: str = ""
     hide: bool = False
     has_issues: bool = True
-    id: int = 0
+    id: str | int = 0
     installed_commit: str | None = None
     installed_version: str | None = None
     installed: bool = False
@@ -521,7 +522,7 @@ class HacsRepository:
             self.data.last_updated = self.repository_object.attributes.get(
                 "pushed_at", 0
             )
-            self.data.last_fetched = datetime.now(UTC)
+            self.data.last_fetched = dt_util.utcnow()
 
     @concurrent(concurrenttasks=10, backoff_time=5)
     async def common_update(
@@ -583,7 +584,7 @@ class HacsRepository:
         self.additional_info = await self.async_get_info_file_contents()
 
         # Set last fetch attribute
-        self.data.last_fetched = datetime.now(UTC)
+        self.data.last_fetched = dt_util.utcnow()
 
         return True
 
@@ -1038,8 +1039,12 @@ class HacsRepository:
             for error in self.validate.errors:
                 self.logger.error("%s %s", self.string, error)
             if self.data.installed and not self.content.single:
-                await self.hacs.hass.async_add_executor_job(backup.restore)
-                await self.hacs.hass.async_add_executor_job(backup.cleanup)
+
+                def _restore_backup() -> None:
+                    backup.restore()
+                    backup.cleanup()
+
+                await self.hacs.hass.async_add_executor_job(_restore_backup)
             raise HacsException("Could not download, see log for details")
 
         self.hacs.async_dispatch(
@@ -1051,8 +1056,12 @@ class HacsRepository:
             await self.hacs.hass.async_add_executor_job(backup.cleanup)
 
         if persistent_directory is not None:
-            await self.hacs.hass.async_add_executor_job(persistent_directory.restore)
-            await self.hacs.hass.async_add_executor_job(persistent_directory.cleanup)
+
+            def _restore_persistent_directory() -> None:
+                persistent_directory.restore()
+                persistent_directory.cleanup()
+
+            await self.hacs.hass.async_add_executor_job(_restore_persistent_directory)
 
         if self.validate.success:
             self.data.installed = True

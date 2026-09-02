@@ -15,7 +15,7 @@ from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 
@@ -73,8 +73,7 @@ async def _async_initialize_integration(
     hacs.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)
     hacs.core.config_path = hacs.hass.config.path()
 
-    if hacs.core.ha_version is None:
-        hacs.core.ha_version = AwesomeVersion(HAVERSION)
+    hacs.core.ha_version = AwesomeVersion(HAVERSION)
 
     # Legacy GitHub client
     hacs.github = GitHub(
@@ -196,7 +195,7 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     hacs: HacsBase = hass.data[DOMAIN]
@@ -218,8 +217,9 @@ async def async_remove_config_entry_device(
     if repository_id == HACS_SYSTEM_ID:
         raise HomeAssistantError("Cannot remove the service for HACS itself.")
 
-    if hacs.repositories.is_downloaded(repository_id):
-        repository = hacs.repositories.get_by_id(repository_id)
+    if hacs.repositories.is_downloaded(repository_id) and (
+        repository := hacs.repositories.get_by_id(repository_id)
+    ):
         raise HomeAssistantError(
             f"Cannot remove service for {repository.data.full_name}, it is still downloaded in HACS."
         )
