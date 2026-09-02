@@ -174,8 +174,7 @@
           "manual_setpoint": "Manual setpoint",
           "none": "None",
           "on_off_thermostat": "On/off thermostat",
-          "smart_open_therm": "Smart OpenTherm",
-          "weheat_intelligence": "Weheat Intelligence"
+          "smart_open_therm": "Smart OpenTherm"
         }
       },
       "dhw_bottom_temperature": {
