@@ -105,9 +105,15 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name = hostname.removesuffix(".local") or self._host
 
         # Entries may be configured under any address the server advertises or
-        # under its hostname, and a dual-stack server can present a different
-        # one on each announcement, so match them all.
-        self._discovered_hosts = (*discovery_info.addresses, hostname, self._name)
+        # under its hostname in any of the forms accepted by the manual step,
+        # and a dual-stack server can present a different address on each
+        # announcement, so match them all.
+        self._discovered_hosts = (
+            *discovery_info.addresses,
+            discovery_info.hostname,
+            hostname,
+            self._name,
+        )
         self._async_abort_discovered_entries_match()
         # MPD exposes no identifier tied to the device, so the entry gets no
         # unique id. The hostname deduplicates flows for one server: unlike the

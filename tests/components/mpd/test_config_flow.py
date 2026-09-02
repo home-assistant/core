@@ -193,6 +193,7 @@ async def test_zeroconf_flow_default_port(hass: HomeAssistant) -> None:
         pytest.param("192.168.0.1", id="ip_address"),
         pytest.param("2001:db8::1", id="other_advertised_address"),
         pytest.param("mpd-server.local", id="fqdn"),
+        pytest.param("mpd-server.local.", id="canonical_fqdn"),
         pytest.param("mpd-server", id="hostname"),
     ],
 )
