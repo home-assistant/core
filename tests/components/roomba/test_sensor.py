@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,7 +33,7 @@ def _dock_tank_level_entities(hass: HomeAssistant) -> list[str]:
     """Return every dock tank level entity currently set up."""
     return sorted(
         entity_id
-        for entity_id in hass.states.async_entity_ids(Platform.SENSOR)
+        for entity_id in hass.states.async_entity_ids(SENSOR_DOMAIN)
         if "dock_tank_level" in entity_id
     )
 
