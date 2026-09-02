@@ -6363,6 +6363,167 @@ async def test_async_abort_entries_match_options_flow(
     assert result["reason"] == reason
 
 
+@pytest.mark.parametrize(
+    ("matchers", "kwargs", "reason", "placeholders"),
+    [
+        pytest.param(
+            {"host": "3.4.5.6", "port": 23},
+            {},
+            "already_configured",
+            {"title": "Existing entry"},
+            id="title_of_matched_entry",
+        ),
+        pytest.param(
+            None,
+            {},
+            "already_configured",
+            {"title": "Existing entry"},
+            id="match_any_entry",
+        ),
+        pytest.param(
+            {"host": "3.4.5.6"},
+            {"error": "host_already_configured"},
+            "host_already_configured",
+            {"title": "Existing entry"},
+            id="custom_error",
+        ),
+        pytest.param(
+            {"host": "3.4.5.6"},
+            {"description_placeholders": {"host": "3.4.5.6", "extra": "value"}},
+            "already_configured",
+            {"host": "3.4.5.6", "title": "Existing entry", "extra": "value"},
+            id="caller_placeholders_merged",
+        ),
+        pytest.param(
+            {"host": "3.4.5.6"},
+            {"description_placeholders": {"title": "Override"}},
+            "already_configured",
+            {"title": "Override"},
+            id="caller_placeholders_take_precedence",
+        ),
+    ],
+)
+async def test_async_abort_entries_match_placeholders(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    matchers: dict[str, Any] | None,
+    kwargs: dict[str, Any],
+    reason: str,
+    placeholders: dict[str, str],
+) -> None:
+    """Test description placeholders provided when matching config entries exist."""
+    MockConfigEntry(
+        domain="comp",
+        title="Existing entry",
+        data={"host": "3.4.5.6", "port": 23},
+    ).add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            self._async_abort_entries_match(matchers, **kwargs)
+            return self.async_abort(reason="no_match")
+
+    with mock_config_flow("comp", TestFlow):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert result["description_placeholders"] == placeholders
+
+
+async def test_async_abort_entries_match_options_flow_placeholders(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test the options flow variant passes error and placeholders through."""
+    MockConfigEntry(
+        domain="test_abort",
+        title="Existing entry",
+        data={"host": "3.4.5.6"},
+    ).add_to_hass(hass)
+    original_entry = MockConfigEntry(domain="test_abort", data={})
+    original_entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test_abort"))
+    mock_platform(hass, "test_abort.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlow):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    self._async_abort_entries_match(
+                        user_input,
+                        error="host_already_configured",
+                        description_placeholders={"extra": "value"},
+                    )
+                    return self.async_abort(reason="no_match")
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test_abort", TestFlow):
+        result = await hass.config_entries.options.async_init(
+            original_entry.entry_id, data={"host": "3.4.5.6"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "host_already_configured"
+    assert result["description_placeholders"] == {
+        "title": "Existing entry",
+        "extra": "value",
+    }
+
+
+async def test_abort_if_unique_id_configured_provides_title(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test the conflicting entry title is provided as a description placeholder."""
+    MockConfigEntry(
+        domain="comp", unique_id="mock-unique-id", title="Existing entry"
+    ).add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            self._abort_if_unique_id_configured()
+            return self.async_abort(reason="no_match")
+
+    with mock_config_flow("comp", TestFlow):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert result["description_placeholders"] == {"title": "Existing entry"}
+
+
 async def test_loading_old_data(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:

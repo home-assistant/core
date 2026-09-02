@@ -3005,16 +3005,21 @@ class ConfigEntries:
 
 @callback
 def _async_abort_entries_match(
-    other_entries: list[ConfigEntry], match_dict: dict[str, Any] | None = None
+    other_entries: list[ConfigEntry],
+    match_dict: dict[str, Any] | None = None,
+    *,
+    error: str = "already_configured",
+    description_placeholders: Mapping[str, str] | None = None,
 ) -> None:
     """Abort if current entries match all data.
 
-    Requires `already_configured` in strings.json in user visible flows.
+    The matched entry's title is provided as a description placeholder,
+    merged with any caller provided placeholders.
+    Requires a strings.json entry corresponding to the `error` parameter
+    in user visible flows.
     """
     if match_dict is None:
-        if other_entries:
-            raise data_entry_flow.AbortFlow("already_configured")  # Match any entry
-        return
+        match_dict = {}  # Match any entry
     for entry in other_entries:
         options_items = entry.options.items()
         data_items = entry.data.items()
@@ -3022,7 +3027,13 @@ def _async_abort_entries_match(
             if kv not in options_items and kv not in data_items:
                 break
         else:
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise data_entry_flow.AbortFlow(
+                error,
+                description_placeholders={
+                    "title": entry.title,
+                    **(description_placeholders or {}),
+                },
+            )
 
 
 class ConfigEntryBaseFlow(
@@ -3098,12 +3109,19 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
     @callback
     def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None = None
+        self,
+        match_dict: dict[str, Any] | None = None,
+        *,
+        error: str = "already_configured",
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Abort if current entries match all data.
 
         Do not abort for the entry that is being updated by the current flow.
-        Requires `already_configured` in strings.json in user visible flows.
+        The matched entry's title is provided as a description placeholder,
+        merged with any caller provided placeholders.
+        Requires a strings.json entry corresponding to the `error` parameter
+        in user visible flows.
         """
         _async_abort_entries_match(
             [
@@ -3112,6 +3130,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 if entry.entry_id != self.context.get("entry_id")
             ],
             match_dict,
+            error=error,
+            description_placeholders=description_placeholders,
         )
 
     @callback
@@ -3146,6 +3166,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> None:
         """Abort if the unique ID is already configured.
 
+        The matched entry's title is provided as a description placeholder,
+        merged with any caller provided placeholders.
         Requires strings.json entry corresponding to the `error` parameter
         in user visible flows.
         """
@@ -3190,7 +3212,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
         if should_reload:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        raise data_entry_flow.AbortFlow(error, description_placeholders)
+        raise data_entry_flow.AbortFlow(
+            error,
+            description_placeholders={
+                "title": entry.title,
+                **(description_placeholders or {}),
+            },
+        )
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -3991,11 +4019,18 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     @callback
     def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None = None
+        self,
+        match_dict: dict[str, Any] | None = None,
+        *,
+        error: str = "already_configured",
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Abort if another current entry matches all data.
 
-        Requires `already_configured` in strings.json in user visible flows.
+        The matched entry's title is provided as a description placeholder,
+        merged with any caller provided placeholders.
+        Requires a strings.json entry corresponding to the `error` parameter
+        in user visible flows.
         """
         _async_abort_entries_match(
             [
@@ -4006,6 +4041,8 @@ class OptionsFlow(ConfigEntryBaseFlow):
                 if entry is not self.config_entry and entry.source != SOURCE_IGNORE
             ],
             match_dict,
+            error=error,
+            description_placeholders=description_placeholders,
         )
 
     @property
