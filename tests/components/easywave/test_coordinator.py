@@ -859,3 +859,30 @@ async def test_gateway_disconnected_event_fires_from_coordinator_callback(
     assert any(
         event.data["type"] == EVENT_TYPE_GATEWAY_DISCONNECTED for event in events
     )
+
+
+async def test_first_disconnect_after_setup_fires_gateway_event(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Successful setup baselines connected so the first disconnect can fire."""
+    device_registry.async_get_or_create(
+        config_entry_id=coordinator.config_entry.entry_id,
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    assert coordinator._gateway_last_status == "connected"
+
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+    disconnect_callback = mock_transceiver.set_disconnect_callback.call_args[0][0]
+    disconnect_callback()
+    await hass.async_block_till_done()
+
+    assert any(
+        event.data["type"] == EVENT_TYPE_GATEWAY_DISCONNECTED for event in events
+    )
+    assert coordinator._gateway_last_status == "disconnected"

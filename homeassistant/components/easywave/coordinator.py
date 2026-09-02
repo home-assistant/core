@@ -166,6 +166,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._register_transceiver_callbacks()
                 self._update_gateway_device()
                 self.ensure_telegram_listener()
+                # Baseline the live connection without firing a startup event.
+                self._gateway_last_status = self._gateway_connection_status()
             else:
                 raise UpdateFailed(
                     "RX11 device not found, setup deferred until device connects"
@@ -260,6 +262,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (OSError, TimeoutError) as err:
             _LOGGER.warning("Error updating coordinator data: %s", err)
             self.is_offline = True
+            self._stop_telegram_listener()
+            self._sync_gateway_connection_events()
             raise UpdateFailed(f"Update failed: {err}") from err
         else:
             return {
