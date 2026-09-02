@@ -33,7 +33,7 @@ async def test_turn_on_trigger_device_id(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4"), entry.entry_id
     )
-    assert device, repr(device_registry.devices)
+    assert device, repr(device_registry._devices)
 
     assert await async_setup_component(
         hass,

@@ -11,6 +11,7 @@ ATTR_ATTACHMENTS: Final = "attachments"
 ATTR_MEDIA_SOURCE: Final = "media_source"
 ATTR_FILENAME: Final = "filename"
 ATTR_CONTENT_ID: Final = "content_id"
+ATTR_PRIORITY: Final = "priority"
 
 CONF_ENCRYPTION: Final = "encryption"
 CONF_SERVER: Final = "server"
@@ -19,7 +20,7 @@ SECTION_OPTIONS: Final = "options"
 
 DEFAULT_HOST: Final = "localhost"
 DEFAULT_PORT: Final = 587
-DEFAULT_TIMEOUT: Final = 5
+DEFAULT_TIMEOUT: Final = 60
 DEFAULT_DEBUG: Final = False
 DEFAULT_ENCRYPTION: Final = "starttls"
 

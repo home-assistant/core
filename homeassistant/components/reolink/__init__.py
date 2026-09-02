@@ -348,9 +348,12 @@ async def async_remove_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ReolinkConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry, device: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a device from a config entry."""
+    if not isinstance(device, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     host: ReolinkHost = config_entry.runtime_data.host
     (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 

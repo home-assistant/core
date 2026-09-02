@@ -24,6 +24,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "filter_cleaning": {
+        "name": "Filter cleaning required"
+      }
+    },
     "select": {
       "fan_mode": {
         "name": "Fan direction mode",

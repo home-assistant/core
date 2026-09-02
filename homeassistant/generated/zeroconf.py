@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -958,6 +963,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_solaredge-modbus._tcp.local.": [
+        {
+            "domain": "solaredge_modbus",
+        },
+    ],
     "_solarman._tcp.local.": [
         {
             "domain": "solarman",
@@ -1065,6 +1075,12 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_ws._tcp.local.": [
+        {
+            "domain": "hotspring",
+            "name": "watkins_spa*",
         },
     ],
     "_wyoming._tcp.local.": [

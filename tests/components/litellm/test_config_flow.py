@@ -17,6 +17,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import llm
 
 from . import get_subentry_id, setup_integration
 from .conftest import TEST_URL, models_response
@@ -191,10 +192,10 @@ async def test_create_conversation_agent(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    assert (
-        result["data_schema"].schema["model"].config["options"]
-        == CONVERSATION_MODEL_OPTIONS
-    )
+    schema = result["data_schema"].schema
+    assert schema["model"].config["options"] == CONVERSATION_MODEL_OPTIONS
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.default() == [llm.LLM_API_ASSIST]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -241,6 +242,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: [],
     }
 
 
@@ -335,6 +337,36 @@ async def test_reconfigure_conversation_agent(
     assert subentry.data[CONF_MODEL] == "gpt-4"
     assert subentry.data[CONF_PROMPT] == "updated prompt"
     assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
+
+
+@pytest.mark.usefixtures("mock_models")
+async def test_reconfigure_conversation_agent_disable_llm_api(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unchecking all LLM APIs is remembered when reopening the form."""
+    await setup_integration(hass, mock_config_entry)
+
+    subentry_id = get_subentry_id(mock_config_entry, "conversation")
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "gpt-4",
+            CONF_PROMPT: "updated prompt",
+            CONF_LLM_HASS_API: [],
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data[CONF_LLM_HASS_API] == []
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.default() == []
 
 
 async def test_reconfigure_entry_not_loaded(
