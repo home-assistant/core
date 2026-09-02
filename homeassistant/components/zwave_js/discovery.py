@@ -53,6 +53,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
+from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
@@ -75,7 +76,10 @@ from .models import (
 )
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 
+# Button schemas are ordered before binary sensor schemas so a button can be
+# discovered from a value that a non-multi binary sensor schema then claims.
 NEW_DISCOVERY_SCHEMAS: dict[Platform, list[NewZWaveDiscoverySchema]] = {
+    Platform.BUTTON: BUTTON_SCHEMAS,
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
