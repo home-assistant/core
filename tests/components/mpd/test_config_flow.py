@@ -196,6 +196,7 @@ async def test_zeroconf_flow_default_port(hass: HomeAssistant) -> None:
         pytest.param("mpd-server.local", id="fqdn"),
         pytest.param("mpd-server.local.", id="canonical_fqdn"),
         pytest.param("mpd-server", id="hostname"),
+        pytest.param("MPD-SERVER.LOCAL", id="upper_case_fqdn"),
     ],
 )
 @pytest.mark.usefixtures("mock_mpd_client")

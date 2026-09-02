@@ -2,7 +2,7 @@
 
 from asyncio import timeout
 from contextlib import suppress
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import ip_address
 from socket import gaierror
 from typing import Any, override
 
@@ -28,11 +28,15 @@ SCHEMA = vol.Schema(
 CONFIRM_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 
 
-def _as_ip_address(host: str) -> IPv4Address | IPv6Address | None:
-    """Return the host parsed as an address, or None if it is a name."""
+def _normalize_host(host: str) -> str:
+    """Return a host in the form other spellings of it also reduce to.
+
+    Addresses are compared parsed, since the same one can be written several
+    ways, and names are compared case insensitively without a trailing dot.
+    """
     with suppress(ValueError):
-        return ip_address(host.strip("[]"))
-    return None
+        return str(ip_address(host.strip("[]")))
+    return host.rstrip(".").casefold()
 
 
 async def _async_try_connect(host: str, port: int, password: str | None) -> str | None:
@@ -67,8 +71,7 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str
     _port: int
     _name: str
-    _discovered_hosts: tuple[str, ...]
-    _discovered_addresses: frozenset[IPv4Address | IPv6Address]
+    _discovered_hosts: frozenset[str]
 
     @override
     async def async_step_user(
@@ -101,14 +104,10 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _async_abort_discovered_entries_match(self) -> None:
         """Abort if any host the discovered server answers to is configured."""
-        for host in self._discovered_hosts:
-            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
-        # The match above compares the stored strings, so an address written in
-        # another equivalent form is only caught by comparing them parsed.
         for entry in self._async_current_entries():
             if entry.data.get(CONF_PORT) != self._port:
                 continue
-            if _as_ip_address(entry.data[CONF_HOST]) in self._discovered_addresses:
+            if _normalize_host(entry.data[CONF_HOST]) in self._discovered_hosts:
                 raise AbortFlow("already_configured")
 
     @override
@@ -125,13 +124,10 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         # under its hostname in any of the forms accepted by the manual step,
         # and a dual-stack server can present a different address on each
         # announcement, so match them all.
-        self._discovered_hosts = (
-            *discovery_info.addresses,
-            discovery_info.hostname,
-            hostname,
-            self._name,
+        self._discovered_hosts = frozenset(
+            _normalize_host(host)
+            for host in (*discovery_info.addresses, hostname, self._name)
         )
-        self._discovered_addresses = frozenset(discovery_info.ip_addresses)
         self._async_abort_discovered_entries_match()
         # MPD exposes no identifier tied to the device, so the entry gets no
         # unique id. The hostname deduplicates flows for one server: unlike the
