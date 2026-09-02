@@ -48,11 +48,11 @@ HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
 )
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -267,13 +267,13 @@ async def test_adam_restore_state_climate(
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_smile_adam_heat_cool")
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_2_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam_heat_cool: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -591,13 +591,13 @@ async def test_adam_climate_off_mode_change(
     assert mock_smile_adam_jip.set_regulation_mode.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_anna_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -699,13 +699,13 @@ async def test_anna_climate_entity_climate_changes(
         assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT_COOL]
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["m_anna_heatpump_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_anna_2_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -746,10 +746,9 @@ async def test_tom_without_temperature_measurement(
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
 
 
+@pytest.mark.usefixtures("mock_smile_legacy_anna")
 async def test_legacy_anna_no_schedule(
-    hass: HomeAssistant,
-    mock_smile_legacy_anna: MagicMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, init_integration: MockConfigEntry,
 ) -> None:
     """Test failing to set a schedule with no schedule defined."""
     with pytest.raises(HomeAssistantError):
