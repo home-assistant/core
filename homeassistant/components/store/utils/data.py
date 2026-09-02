@@ -14,7 +14,7 @@ from ..enums import HacsDisabledReason, HacsDispatchEvent
 from ..repositories.base import TOPIC_FILTER, HacsManifest, HacsRepository
 from .logger import LOGGER
 from .path import is_safe
-from .store import async_load_from_store, async_save_to_store
+from .store import async_load_from_store, async_load_legacy_data, async_save_to_store
 
 EXPORTED_BASE_DATA: tuple[tuple[str, Any], ...] = (
     ("new", False),
@@ -76,17 +76,15 @@ class HacsData:
 
         self.logger.debug("<HacsData async_write> Saving data")
 
-        # Hacs
         await async_save_to_store(
             self.hacs.hass,
-            "hacs",
+            "common",
             {
                 "archived_repositories": self.hacs.common.archived_repositories,
                 "renamed_repositories": self.hacs.common.renamed_repositories,
                 "ignored_repositories": self.hacs.common.ignored_repositories,
             },
         )
-        await self._async_store_experimental_content_and_repos()
         await self._async_store_content_and_repos()
 
     async def _async_store_content_and_repos(
@@ -102,20 +100,6 @@ class HacsData:
         await async_save_to_store(self.hacs.hass, "repositories", self.content)
         for event in (HacsDispatchEvent.REPOSITORY, HacsDispatchEvent.CONFIG):
             self.hacs.async_dispatch(event, {})
-
-    async def _async_store_experimental_content_and_repos(
-        self, _: Event | None = None
-    ) -> None:
-        """Store the main repos file and each repo that is out of date."""
-        # Repositories
-        self.content = {}
-        for repository in self.hacs.repositories.list_all:
-            if repository.data.category in self.hacs.common.categories:
-                self.async_store_experimental_repository_data(repository)
-
-        await async_save_to_store(
-            self.hacs.hass, "data", {"repositories": self.content}
-        )
 
     @callback
     def async_store_repository_data(self, repository: HacsRepository) -> None:
@@ -139,46 +123,19 @@ class HacsData:
 
         self.content[str(repository.data.id)] = data
 
-    @callback
-    def async_store_experimental_repository_data(
-        self, repository: HacsRepository
-    ) -> None:
-        """Store the experimental repository data for non downloaded repositories."""
-        data: dict[str, Any] = {}
-        self.content.setdefault(repository.data.category, [])
-
-        if repository.data.installed:
-            data["repository_manifest"] = repository.repository_manifest.manifest
-            for key, default in EXPORTED_DOWNLOADED_REPOSITORY_DATA:
-                if (value := getattr(repository.data, key, default)) != default:
-                    data[key] = value
-
-            if repository.data.installed_version:
-                data["version_installed"] = repository.data.installed_version
-            if repository.data.last_fetched:
-                data["last_fetched"] = repository.data.last_fetched.timestamp()
-        else:
-            for key, default in EXPORTED_BASE_DATA:
-                if (value := getattr(repository.data, key, default)) != default:
-                    data[key] = value
-
-        self.content[repository.data.category].append(
-            {"id": str(repository.data.id), **data}
-        )
-
     async def restore(self) -> bool:
         """Restore saved data."""
         self.hacs.status.new = False
         repositories: dict[str, Any] = {}
-        hacs: dict[str, Any] = {}
+        common: dict[str, Any] = {}
 
         with contextlib.suppress(HomeAssistantError):
-            hacs = await async_load_from_store(self.hacs.hass, "hacs") or {}
+            common = await async_load_from_store(self.hacs.hass, "common") or {}
 
         try:
             repositories = await async_load_from_store(self.hacs.hass, "repositories")
             if not repositories and (
-                data := await async_load_from_store(self.hacs.hass, "data")
+                data := await async_load_legacy_data(self.hacs.hass)
             ):
                 for category, entries in data.get("repositories", {}).items():
                     for repository in entries:
@@ -190,38 +147,37 @@ class HacsData:
         except HomeAssistantError as exception:
             self.hacs.log.error(
                 "Could not read %s, restore the file from a backup - %s",
-                self.hacs.hass.config.path(".storage/hacs.data"),
+                self.hacs.hass.config.path(".storage/store.repositories"),
                 exception,
             )
             self.hacs.disable_hacs(HacsDisabledReason.RESTORE)
             return False
 
-        if not hacs and not repositories:
+        if not common and not repositories:
             # Assume new install
             self.hacs.status.new = True
             return True
 
         self.logger.info("<HacsData restore> Restore started")
 
-        # Hacs
         self.hacs.common.archived_repositories = set()
         self.hacs.common.ignored_repositories = set()
         self.hacs.common.renamed_repositories = {}
 
         # Clear out doubble renamed values
-        renamed = hacs.get("renamed_repositories", {})
+        renamed = common.get("renamed_repositories", {})
         for entry in renamed:
             value = renamed.get(entry)
             if value not in renamed:
                 self.hacs.common.renamed_repositories[entry] = value
 
         # Clear out doubble archived values
-        for entry in hacs.get("archived_repositories", set()):
+        for entry in common.get("archived_repositories", set()):
             if entry not in self.hacs.common.archived_repositories:
                 self.hacs.common.archived_repositories.add(entry)
 
         # Clear out doubble ignored values
-        for entry in hacs.get("ignored_repositories", set()):
+        for entry in common.get("ignored_repositories", set()):
             if entry not in self.hacs.common.ignored_repositories:
                 self.hacs.common.ignored_repositories.add(entry)
 
