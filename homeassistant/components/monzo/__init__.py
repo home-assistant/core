@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from .api import AuthenticatedMonzoAPI, MonzoAPI
 from .const import CONF_CLOUDHOOK_URL, CONF_WEBHOOK_URL, DOMAIN
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoRuntimeData
+from .helpers import get_authenticated_owner_name
 from .services import async_setup_services
 from .webhook import MonzoWebhookManager, async_delete_remote_webhooks
 
@@ -105,6 +106,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> boo
     coordinator = MonzoCoordinator(hass, entry, external_api)
 
     await coordinator.async_config_entry_first_refresh()
+    if entry.title == DOMAIN and (
+        owner_name := get_authenticated_owner_name(
+            coordinator.data.accounts.values(), entry.unique_id
+        )
+    ):
+        hass.config_entries.async_update_entry(entry, title=owner_name)
 
     webhook_manager = MonzoWebhookManager(hass, entry, coordinator)
     entry.runtime_data = MonzoRuntimeData(coordinator, webhook_manager)

@@ -1,0 +1,529 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please reconfigure the same inverter you originally set up."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}",
+      "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "[%key:component::sofar::config::step::user::data_description::host%]",
+          "port": "[%key:component::sofar::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::sofar::config::step::user::data_description::unit_id%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the inverter, or of the Modbus TCP bridge it's connected through.",
+          "port": "The Modbus TCP port to connect on.",
+          "unit_id": "The inverter's Modbus unit ID, also called its Modbus device address."
+        },
+        "description": "Connect over Modbus TCP. The inverter model and register map are detected automatically from its serial number."
+      }
+    }
+  },
+  "device": {
+    "battery": {
+      "name": "Battery {number}"
+    },
+    "pv_string": {
+      "name": "PV string {number}"
+    }
+  },
+  "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
+    "select": {
+      "charger_use_mode": {
+        "name": "Charger use mode",
+        "state": {
+          "feed_in_priority_mode": "Feed-in priority mode",
+          "generator_mode": "Generator mode",
+          "off_grid_mode": "Off-grid mode",
+          "passive_mode": "Passive mode",
+          "peak_cut_mode": "Peak cut mode",
+          "self_use": "Self use",
+          "time_of_use": "Time of use",
+          "timing_mode": "Timing mode"
+        }
+      },
+      "eps_control": {
+        "name": "EPS mode",
+        "state": {
+          "turn_off": "Turn off",
+          "turn_on_enable_cold_start": "Turn on, enable cold start",
+          "turn_on_prohibit_cold_start": "Turn on, prohibit cold start"
+        }
+      }
+    },
+    "sensor": {
+      "active_power_load_sys": {
+        "name": "Active power load system"
+      },
+      "active_power_offgrid_total": {
+        "name": "Active power off-grid total"
+      },
+      "active_power_output_l1": {
+        "name": "Active power output L1"
+      },
+      "active_power_output_l1n": {
+        "name": "Active power output L1N"
+      },
+      "active_power_output_l2": {
+        "name": "Active power output L2"
+      },
+      "active_power_output_l2n": {
+        "name": "Active power output L2N"
+      },
+      "active_power_output_l3": {
+        "name": "Active power output L3"
+      },
+      "active_power_output_total": {
+        "name": "Active power output total"
+      },
+      "active_power_pcc_l1": {
+        "name": "Active power PCC L1"
+      },
+      "active_power_pcc_l1n": {
+        "name": "Active power PCC L1N"
+      },
+      "active_power_pcc_l2": {
+        "name": "Active power PCC L2"
+      },
+      "active_power_pcc_l2n": {
+        "name": "Active power PCC L2N"
+      },
+      "active_power_pcc_l3": {
+        "name": "Active power PCC L3"
+      },
+      "active_power_pcc_total": {
+        "name": "Active power PCC total"
+      },
+      "active_power_pv_ext": {
+        "name": "Active power PV external"
+      },
+      "apparent_power_offgrid_total": {
+        "name": "Apparent power off-grid total"
+      },
+      "apparent_power_output_total": {
+        "name": "Apparent power output total"
+      },
+      "apparent_power_pcc_total": {
+        "name": "Apparent power PCC total"
+      },
+      "bat_config_capacity": {
+        "name": "Battery config capacity"
+      },
+      "bat_config_cell_type": {
+        "name": "Battery config cell type",
+        "state": {
+          "agm": "AGM",
+          "flooded": "Flooded",
+          "gel": "Gel",
+          "lead_acid": "Lead acid",
+          "lithium_iron_phosphate": "Lithium iron phosphate",
+          "lithium_titanate": "Lithium titanate",
+          "ternary": "Ternary"
+        }
+      },
+      "bat_config_charging_voltage": {
+        "name": "Battery config charging voltage"
+      },
+      "bat_config_depth_of_discharge": {
+        "name": "Battery config depth of discharge"
+      },
+      "bat_config_end_of_discharge": {
+        "name": "Battery config end of discharge"
+      },
+      "bat_config_eps_buffer": {
+        "name": "Battery config EPS buffer"
+      },
+      "bat_config_maximum_charge_current_limit": {
+        "name": "Battery config maximum charge current limit"
+      },
+      "bat_config_maximum_discharge_current_limit": {
+        "name": "Battery config maximum discharge current limit"
+      },
+      "bat_config_minimum_discharge_voltage": {
+        "name": "Battery config minimum discharge voltage"
+      },
+      "bat_config_overvoltage_protection": {
+        "name": "Battery config overvoltage protection"
+      },
+      "bat_config_protocol": {
+        "name": "Battery config protocol",
+        "state": {
+          "alphaess": "AlphaESS",
+          "amass": "Amass",
+          "bts_5k": "BTS 5K",
+          "catl": "CATL",
+          "ems": "EMS",
+          "first_flight_built_in_bms_default": "First Flight built-in BMS (default)",
+          "first_flight_protocol_general": "First Flight protocol (general)",
+          "fronus": "Fronus",
+          "lg": "LG",
+          "move_for": "Move For",
+          "nilar": "Nilar",
+          "pie_energy_protocol_pylon": "Pie Energy protocol (Pylon)",
+          "weco": "WeCo"
+        }
+      },
+      "bat_config_rated_battery_voltage": {
+        "name": "Battery config rated voltage"
+      },
+      "bat_config_tempco": {
+        "name": "Battery config lead acid temperature compensation factor"
+      },
+      "bat_config_undervoltage_protection": {
+        "name": "Battery config undervoltage protection"
+      },
+      "bat_config_voltage_float": {
+        "name": "Battery config lead acid float voltage"
+      },
+      "battery_input_energy_today": {
+        "name": "Battery input energy today"
+      },
+      "battery_input_energy_total": {
+        "name": "Battery input energy total"
+      },
+      "battery_output_energy_today": {
+        "name": "Battery output energy today"
+      },
+      "battery_output_energy_total": {
+        "name": "Battery output energy total"
+      },
+      "battery_power_total": {
+        "name": "Battery power total"
+      },
+      "battery_state_of_charge_total": {
+        "name": "Battery state of charge total"
+      },
+      "battery_state_of_health_total": {
+        "name": "Battery state of health total"
+      },
+      "charge_cycle": {
+        "name": "Charge cycle"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "current_output_l1": {
+        "name": "Current output L1"
+      },
+      "current_output_l1n": {
+        "name": "Current output L1N"
+      },
+      "current_output_l2": {
+        "name": "Current output L2"
+      },
+      "current_output_l2n": {
+        "name": "Current output L2N"
+      },
+      "current_output_l3": {
+        "name": "Current output L3"
+      },
+      "current_pcc_l1": {
+        "name": "Current PCC L1"
+      },
+      "current_pcc_l1n": {
+        "name": "Current PCC L1N"
+      },
+      "current_pcc_l2": {
+        "name": "Current PCC L2"
+      },
+      "current_pcc_l2n": {
+        "name": "Current PCC L2N"
+      },
+      "current_pcc_l3": {
+        "name": "Current PCC L3"
+      },
+      "export_energy_today": {
+        "name": "Export energy today"
+      },
+      "export_energy_total": {
+        "name": "Export energy total"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "heatsink_temperature_1": {
+        "name": "Heatsink temperature 1"
+      },
+      "heatsink_temperature_2": {
+        "name": "Heatsink temperature 2"
+      },
+      "import_energy_today": {
+        "name": "Import energy today"
+      },
+      "import_energy_total": {
+        "name": "Import energy total"
+      },
+      "inverter_temperature_1": {
+        "name": "Inverter temperature 1"
+      },
+      "inverter_temperature_2": {
+        "name": "Inverter temperature 2"
+      },
+      "load_consumption_today": {
+        "name": "Load consumption today"
+      },
+      "load_consumption_total": {
+        "name": "Load consumption total"
+      },
+      "module_temperature_1": {
+        "name": "Module temperature 1"
+      },
+      "module_temperature_2": {
+        "name": "Module temperature 2"
+      },
+      "offgrid_active_power_output": {
+        "name": "Off-grid active power output"
+      },
+      "offgrid_active_power_output_l1": {
+        "name": "Off-grid active power output L1"
+      },
+      "offgrid_active_power_output_l1n": {
+        "name": "Off-grid active power output L1N"
+      },
+      "offgrid_active_power_output_l2": {
+        "name": "Off-grid active power output L2"
+      },
+      "offgrid_active_power_output_l2n": {
+        "name": "Off-grid active power output L2N"
+      },
+      "offgrid_active_power_output_l3": {
+        "name": "Off-grid active power output L3"
+      },
+      "offgrid_apparent_power_output": {
+        "name": "Off-grid apparent power output"
+      },
+      "offgrid_apparent_power_output_l1": {
+        "name": "Off-grid apparent power output L1"
+      },
+      "offgrid_apparent_power_output_l2": {
+        "name": "Off-grid apparent power output L2"
+      },
+      "offgrid_apparent_power_output_l3": {
+        "name": "Off-grid apparent power output L3"
+      },
+      "offgrid_current_output": {
+        "name": "Off-grid current output"
+      },
+      "offgrid_current_output_l1": {
+        "name": "Off-grid current output L1"
+      },
+      "offgrid_current_output_l1n": {
+        "name": "Off-grid current output L1N"
+      },
+      "offgrid_current_output_l2": {
+        "name": "Off-grid current output L2"
+      },
+      "offgrid_current_output_l2n": {
+        "name": "Off-grid current output L2N"
+      },
+      "offgrid_current_output_l3": {
+        "name": "Off-grid current output L3"
+      },
+      "offgrid_frequency": {
+        "name": "Off-grid frequency"
+      },
+      "offgrid_load_peak_ratio": {
+        "name": "Off-grid load peak ratio"
+      },
+      "offgrid_load_peak_ratio_l1": {
+        "name": "Off-grid load peak ratio L1"
+      },
+      "offgrid_load_peak_ratio_l2": {
+        "name": "Off-grid load peak ratio L2"
+      },
+      "offgrid_load_peak_ratio_l3": {
+        "name": "Off-grid load peak ratio L3"
+      },
+      "offgrid_reactive_power_output": {
+        "name": "Off-grid reactive power output"
+      },
+      "offgrid_reactive_power_output_l1": {
+        "name": "Off-grid reactive power output L1"
+      },
+      "offgrid_reactive_power_output_l2": {
+        "name": "Off-grid reactive power output L2"
+      },
+      "offgrid_reactive_power_output_l3": {
+        "name": "Off-grid reactive power output L3"
+      },
+      "offgrid_voltage": {
+        "name": "Off-grid voltage"
+      },
+      "offgrid_voltage_l1": {
+        "name": "Off-grid voltage L1"
+      },
+      "offgrid_voltage_l2": {
+        "name": "Off-grid voltage L2"
+      },
+      "offgrid_voltage_l3": {
+        "name": "Off-grid voltage L3"
+      },
+      "offgrid_voltage_output_l1n": {
+        "name": "Off-grid voltage output L1N"
+      },
+      "offgrid_voltage_output_l2n": {
+        "name": "Off-grid voltage output L2N"
+      },
+      "passive_eps_wait_time": {
+        "name": "EPS wait time"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_factor_output_l1": {
+        "name": "Power factor output L1"
+      },
+      "power_factor_output_l2": {
+        "name": "Power factor output L2"
+      },
+      "power_factor_output_l3": {
+        "name": "Power factor output L3"
+      },
+      "power_factor_pcc_l1": {
+        "name": "Power factor PCC L1"
+      },
+      "power_factor_pcc_l2": {
+        "name": "Power factor PCC L2"
+      },
+      "power_factor_pcc_l3": {
+        "name": "Power factor PCC L3"
+      },
+      "pv_power_total": {
+        "name": "PV power total"
+      },
+      "reactive_power_offgrid_total": {
+        "name": "Reactive power off-grid total"
+      },
+      "reactive_power_output_l1": {
+        "name": "Reactive power output L1"
+      },
+      "reactive_power_output_l2": {
+        "name": "Reactive power output L2"
+      },
+      "reactive_power_output_l3": {
+        "name": "Reactive power output L3"
+      },
+      "reactive_power_output_total": {
+        "name": "Reactive power output total"
+      },
+      "reactive_power_pcc_l1": {
+        "name": "Reactive power PCC L1"
+      },
+      "reactive_power_pcc_l2": {
+        "name": "Reactive power PCC L2"
+      },
+      "reactive_power_pcc_l3": {
+        "name": "Reactive power PCC L3"
+      },
+      "reactive_power_pcc_total": {
+        "name": "Reactive power PCC total"
+      },
+      "solar_generation_today": {
+        "name": "Solar generation today"
+      },
+      "solar_generation_total": {
+        "name": "Solar generation total"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "state_of_health": {
+        "name": "State of health"
+      },
+      "sync_rtc_result": {
+        "name": "Update system time operation result",
+        "state": {
+          "disabled": "Disabled",
+          "enabled_discharging": "Enabled discharging",
+          "operation_failed_controller_refused_to_respond": "Operation failed: controller refused to respond",
+          "operation_failed_current_function_disabled": "Operation failed: current function disabled",
+          "operation_failed_input_parameters_incorrect": "Operation failed: input parameters incorrect",
+          "operation_failed_no_response_from_the_controller": "Operation failed: no response from the controller",
+          "operation_failed_parameter_access_failed": "Operation failed: parameter access failed",
+          "operation_in_progress": "Operation in progress",
+          "successful": "Successful"
+        }
+      },
+      "system_state": {
+        "name": "System state",
+        "state": {
+          "checking": "Checking",
+          "emergency_power_supply": "Emergency power supply",
+          "grid_connected": "Grid connected",
+          "permanent_fault": "Permanent fault",
+          "recoverable_fault": "Recoverable fault",
+          "self_charging": "Self charging",
+          "upgrading": "Upgrading",
+          "waiting": "Waiting"
+        }
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "voltage_line_l1": {
+        "name": "Voltage line L1"
+      },
+      "voltage_line_l2": {
+        "name": "Voltage line L2"
+      },
+      "voltage_line_l3": {
+        "name": "Voltage line L3"
+      },
+      "voltage_phase_l1n": {
+        "name": "Voltage phase L1N"
+      },
+      "voltage_phase_l2n": {
+        "name": "Voltage phase L2N"
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "{error}"
+    },
+    "no_component_answered": {
+      "message": "{name}: no component answered."
+    },
+    "unrecognized_inverter_model": {
+      "message": "Unrecognized Sofar inverter model for {title}."
+    }
+  }
+}
