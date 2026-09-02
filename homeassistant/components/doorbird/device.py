@@ -73,8 +73,6 @@ class ConfiguredDoorBird:
         # Event names, ie "doorbird_1234_doorbell" or "doorbird_1234_motion"
         self.door_station_events: list[str] = []
         self.event_descriptions: list[DoorbirdEvent] = []
-        # The event names that refresh each image, by image event type. Resolved
-        # once here, since only this class knows which favorites registered.
         # The event names that refresh each image, by image event type, and the
         # configured events the device will actually call. Both are resolved
         # here, since only this class knows which favorites registered.
@@ -127,16 +125,24 @@ class ConfiguredDoorBird:
         event_config = await self._async_get_event_config(http_fav)
         _LOGGER.debug("%s: Event config: %s", self.name, event_config)
         if event_config.unconfigured_favorites:
-            await self._configure_unconfigured_favorites(event_config)
+            wired = await self._configure_unconfigured_favorites(event_config)
             event_config = await self._async_get_event_config(http_fav)
+            if not wired:
+                # A schedule the device rejected leaves its favorite without an
+                # output, so it is described but never called.
+                self._callable_events.difference_update(
+                    set(self.door_station_events)
+                    - {event.event for event in event_config.events}
+                )
         self.event_descriptions = event_config.events
         # Only the names the device will actually call can refresh an image.
         self._async_resolve_image_events()
 
     async def _configure_unconfigured_favorites(
         self, event_config: DoorbirdEventConfig
-    ) -> None:
-        """Configure unconfigured favorites."""
+    ) -> bool:
+        """Configure unconfigured favorites, returning whether all wiring stuck."""
+        schedule_failed = False
         for entry in event_config.schedule:
             modified_schedule = False
             for identifier in event_config.unconfigured_favorites.get(entry.input, ()):
@@ -161,6 +167,9 @@ class ConfiguredDoorBird:
                         entry.export,
                         code,
                     )
+                    schedule_failed = True
+
+        return not schedule_failed
 
     async def _async_register_events(self) -> dict[str, Any]:
         """Register events on device."""
