@@ -1,0 +1,156 @@
+{
+  "entity": {
+    "sensor": {
+      "adventure_isle_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "alices_curious_labyrinth_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "autopia_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "avengers_assemble_flight_force_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "big_thunder_mountain_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "blanche_neige_et_les_sept_nains_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "buzz_lightyear_laser_blast_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "cars_quatre_roues_rallye_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "cars_road_trip_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "casey_jr_le_petit_train_du_cirque_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "closing_time": {
+        "default": "mdi:clock"
+      },
+      "crushs_coaster_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "disneyland_railroad_discoveryland_station_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "disneyland_railroad_fantasyland_station_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "disneyland_railroad_frontierland_depot_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "disneyland_railroad_main_street_station_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "dumbo_the_flying_elephant_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "frontierland_playground_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "frozen_ever_after_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "indiana_jones_and_the_temple_of_peril_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "its_a_small_world_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "la_cabane_des_robinson_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "la_galerie_de_la_belle_au_bois_dormant_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "la_taniere_du_dragon_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "le_carrousel_de_lancelot_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "le_passage_enchante_daladdin_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "le_pays_des_contes_de_fees_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "les_mysteres_du_nautilus_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "les_tapis_volants_flying_carpets_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "les_voyages_de_pinocchio_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "mad_hatters_tea_cups_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "main_street_vehicles_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "opening_time": {
+        "default": "mdi:clock"
+      },
+      "orbitron_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "peter_pans_flight_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "phantom_manor_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "pirate_galleon_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "pirates_beach_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "pirates_of_the_caribbean_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "raiponce_tangled_spin_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "ratatouille_remy_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "rc_racer_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "rustler_roundup_shootin_gallery_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "slinky_dog_zigzag_spin_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "spider_man_web_adventure_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "star_tours_the_adventures_continue_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "star_wars_hyperspace_mountain_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "thunder_mesa_riverboat_landing_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "tower_of_terror_standby_wait_time": {
+        "default": "mdi:timer"
+      },
+      "toy_soldiers_parachute_drop_standby_wait_time": {
+        "default": "mdi:timer"
+      }
+    }
+  }
+}

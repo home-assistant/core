@@ -1,0 +1,171 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "description": "Set up Disneyland Paris to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "adventure_isle_standby_wait_time": {
+        "name": "Adventure Isle standby wait time"
+      },
+      "alices_curious_labyrinth_standby_wait_time": {
+        "name": "Alice's Curious Labyrinth standby wait time"
+      },
+      "autopia_standby_wait_time": {
+        "name": "Autopia standby wait time"
+      },
+      "avengers_assemble_flight_force_standby_wait_time": {
+        "name": "Avengers Assemble: Flight Force standby wait time"
+      },
+      "big_thunder_mountain_standby_wait_time": {
+        "name": "Big Thunder Mountain standby wait time"
+      },
+      "blanche_neige_et_les_sept_nains_standby_wait_time": {
+        "name": "Blanche-Neige et les Sept Nains standby wait time"
+      },
+      "buzz_lightyear_laser_blast_standby_wait_time": {
+        "name": "Buzz Lightyear Laser Blast standby wait time"
+      },
+      "cars_quatre_roues_rallye_standby_wait_time": {
+        "name": "Cars Quatre Roues Rallye standby wait time"
+      },
+      "cars_road_trip_standby_wait_time": {
+        "name": "Cars ROAD TRIP standby wait time"
+      },
+      "casey_jr_le_petit_train_du_cirque_standby_wait_time": {
+        "name": "Casey Jr. – le Petit Train du Cirque standby wait time"
+      },
+      "closing_time": {
+        "name": "Park closing time"
+      },
+      "crushs_coaster_standby_wait_time": {
+        "name": "Crush's Coaster standby wait time"
+      },
+      "disneyland_railroad_discoveryland_station_standby_wait_time": {
+        "name": "Disneyland Railroad Discoveryland Station standby wait time"
+      },
+      "disneyland_railroad_fantasyland_station_standby_wait_time": {
+        "name": "Disneyland Railroad Fantasyland Station standby wait time"
+      },
+      "disneyland_railroad_frontierland_depot_standby_wait_time": {
+        "name": "Disneyland Railroad Frontierland Depot standby wait time"
+      },
+      "disneyland_railroad_main_street_station_standby_wait_time": {
+        "name": "Disneyland Railroad Main Street Station standby wait time"
+      },
+      "dumbo_the_flying_elephant_standby_wait_time": {
+        "name": "Dumbo the Flying Elephant standby wait time"
+      },
+      "frontierland_playground_standby_wait_time": {
+        "name": "Frontierland Playground standby wait time"
+      },
+      "frozen_ever_after_standby_wait_time": {
+        "name": "Frozen Ever After standby wait time"
+      },
+      "indiana_jones_and_the_temple_of_peril_standby_wait_time": {
+        "name": "Indiana Jones and the Temple of Peril standby wait time"
+      },
+      "its_a_small_world_standby_wait_time": {
+        "name": "it's a small world standby wait time"
+      },
+      "la_cabane_des_robinson_standby_wait_time": {
+        "name": "La Cabane des Robinson standby wait time"
+      },
+      "la_galerie_de_la_belle_au_bois_dormant_standby_wait_time": {
+        "name": "La Galerie de la Belle au Bois Dormant standby wait time"
+      },
+      "la_taniere_du_dragon_standby_wait_time": {
+        "name": "La Tanière du Dragon standby wait time"
+      },
+      "le_carrousel_de_lancelot_standby_wait_time": {
+        "name": "Le Carrousel de Lancelot standby wait time"
+      },
+      "le_passage_enchante_daladdin_standby_wait_time": {
+        "name": "Le Passage Enchanté d'Aladdin standby wait time"
+      },
+      "le_pays_des_contes_de_fees_standby_wait_time": {
+        "name": "Le Pays des Contes de Fées standby wait time"
+      },
+      "les_mysteres_du_nautilus_standby_wait_time": {
+        "name": "Les Mystères du Nautilus standby wait time"
+      },
+      "les_tapis_volants_flying_carpets_standby_wait_time": {
+        "name": "Les Tapis Volants - Flying Carpets Over Agrabah standby wait time"
+      },
+      "les_voyages_de_pinocchio_standby_wait_time": {
+        "name": "Les Voyages de Pinocchio standby wait time"
+      },
+      "mad_hatters_tea_cups_standby_wait_time": {
+        "name": "Mad Hatter's Tea Cups standby wait time"
+      },
+      "main_street_vehicles_standby_wait_time": {
+        "name": "Main Street Vehicles standby wait time"
+      },
+      "opening_time": {
+        "name": "Park opening time"
+      },
+      "orbitron_standby_wait_time": {
+        "name": "Orbitron standby wait time"
+      },
+      "peter_pans_flight_standby_wait_time": {
+        "name": "Peter Pan's Flight standby wait time"
+      },
+      "phantom_manor_standby_wait_time": {
+        "name": "Phantom Manor standby wait time"
+      },
+      "pirate_galleon_standby_wait_time": {
+        "name": "Pirate Galleon standby wait time"
+      },
+      "pirates_beach_standby_wait_time": {
+        "name": "Pirates' Beach standby wait time"
+      },
+      "pirates_of_the_caribbean_standby_wait_time": {
+        "name": "Pirates of the Caribbean standby wait time"
+      },
+      "raiponce_tangled_spin_standby_wait_time": {
+        "name": "Raiponce Tangled Spin standby wait time"
+      },
+      "ratatouille_remy_standby_wait_time": {
+        "name": "Ratatouille : L’Aventure Totalement Toquée de Rémy standby wait time"
+      },
+      "rc_racer_standby_wait_time": {
+        "name": "RC Racer standby wait time"
+      },
+      "rustler_roundup_shootin_gallery_standby_wait_time": {
+        "name": "Rustler Roundup Shootin' Gallery standby wait time"
+      },
+      "slinky_dog_zigzag_spin_standby_wait_time": {
+        "name": "Slinky Dog Zigzag Spin standby wait time"
+      },
+      "spider_man_web_adventure_standby_wait_time": {
+        "name": "Spider-Man W.E.B. Adventure standby wait time"
+      },
+      "star_tours_the_adventures_continue_standby_wait_time": {
+        "name": "Star Tours: The Adventures Continue standby wait time"
+      },
+      "star_wars_hyperspace_mountain_standby_wait_time": {
+        "name": "Star Wars Hyperspace Mountain standby wait time"
+      },
+      "thunder_mesa_riverboat_landing_standby_wait_time": {
+        "name": "Thunder Mesa Riverboat Landing standby wait time"
+      },
+      "tower_of_terror_standby_wait_time": {
+        "name": "The Twilight Zone Tower of Terror standby wait time"
+      },
+      "toy_soldiers_parachute_drop_standby_wait_time": {
+        "name": "Toy Soldiers Parachute Drop standby wait time"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Disneyland Paris API"
+    }
+  }
+}
