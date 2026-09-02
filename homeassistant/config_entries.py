@@ -715,6 +715,7 @@ class ConfigEntry[_DataT = Any]:
         hass: HomeAssistant,
         integration: loader.Integration,
         exc: BaseException,
+        *,
         migration: bool = False,
     ) -> tuple[str | None, str | None, dict[str, str] | None]:
         """Handle config entry setup error."""
@@ -729,8 +730,8 @@ class ConfigEntry[_DataT = Any]:
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             logger.exception(
-                "Error setting up entry %s for %s during config entry migration: %s"
-                if migration is True
+                "Error migrating entry %s for %s: %s"
+                if migration
                 else "Error setting up entry %s for %s: %s",
                 self.title,
                 self.domain,
@@ -754,6 +755,7 @@ class ConfigEntry[_DataT = Any]:
             )
             logger.debug("Full exception", exc_info=True)  # noqa: LOG014
             if not migration:
+                # Reauth flows assume post-migration config entry state
                 self.async_start_reauth_if_available(hass)
 
         elif isinstance(exc, ConfigEntryNotReady):
@@ -774,7 +776,7 @@ class ConfigEntry[_DataT = Any]:
             ready_message = f"ready yet: {message}" if message else "ready yet"
             logger.info(
                 "Config entry migration '%s' for %s integration not %s; Retrying in %d seconds"
-                if migration is True
+                if migration
                 else "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
@@ -804,7 +806,7 @@ class ConfigEntry[_DataT = Any]:
             if (task := asyncio.current_task()) and task.cancelling() > 0:
                 logger.exception(
                     "Migration of config entry '%s' for %s integration cancelled"
-                    if migration is True
+                    if migration
                     else "Setup of config entry '%s' for %s integration cancelled",
                     self.title,
                     self.domain,
@@ -820,7 +822,7 @@ class ConfigEntry[_DataT = Any]:
                 # This was not a "real" cancellation, log it and treat as a normal error.
                 logger.exception(
                     "Error migrating entry %s for %s"
-                    if migration is True
+                    if migration
                     else "Error setting up entry %s for %s",
                     self.title,
                     integration.domain,
@@ -829,7 +831,7 @@ class ConfigEntry[_DataT = Any]:
         else:
             logger.exception(
                 "Error migrating entry %s for %s"
-                if migration is True
+                if migration
                 else "Error setting up entry %s for %s",
                 self.title,
                 integration.domain,
@@ -932,7 +934,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
                 ) = self.__async_handle_config_entry_setup_error(
-                    hass, integration, exc, True
+                    hass, integration, exc, migration=True
                 )
                 if isinstance(exc, asyncio.CancelledError):
                     if (task := asyncio.current_task()) and task.cancelling() > 0:
@@ -955,7 +957,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
                 ) = self.__async_handle_config_entry_setup_error(
-                    hass, integration, HomeAssistantError(), True
+                    hass, integration, HomeAssistantError(), migration=True
                 )
                 self._async_set_state(
                     hass,
