@@ -63,7 +63,7 @@ async def test_full_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {CONF_TOKEN: TOKEN}
-    assert result["options"] == {"experimental": True}
+    assert result["options"] == {}
 
 
 @pytest.mark.parametrize(
@@ -296,7 +296,6 @@ async def test_options_flow(
     assert init_integration.options == {
         "appdaemon": False,
         "country": "NL",
-        "experimental": True,
     }
     assert init_integration.data == {CONF_TOKEN: TOKEN}
 

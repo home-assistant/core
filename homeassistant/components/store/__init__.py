@@ -16,22 +16,33 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.typing import ConfigType
 
 from .base import HacsBase
 from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
 from .data_client import HacsDataClient
 from .enums import HacsDisabledReason, HacsStage, LovelaceMode
 from .frontend import async_register_frontend
+from .migration import async_migrate_from_hacs, async_remove_duplicate_entries
 from .utils.data import HacsData
 from .utils.queue_manager import QueueManager
 from .utils.store import STORE_CACHE_KEY
 from .websocket import async_register_websocket_commands
 
 PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Community store integration."""
+    await async_remove_duplicate_entries(hass)
+    return True
 
 
 async def _async_initialize_integration(
@@ -144,6 +155,10 @@ async def _async_initialize_integration(
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
+    # Runs before the update listener is added, trimming the options must not
+    # trigger a reload while the entry is still being set up.
+    async_migrate_from_hacs(hass, config_entry)
+
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     setup_result = await _async_initialize_integration(
         hass=hass, config_entry=config_entry

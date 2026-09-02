@@ -167,9 +167,6 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 "token": activation.access_token,
             },
-            options={
-                "experimental": True,
-            },
         )
 
     async def async_step_could_not_register(
@@ -219,9 +216,7 @@ class HacsOptionsFlowHandler(OptionsFlow):
         """Handle a flow initialized by the user."""
         hacs: HacsBase | None = self.hass.data.get(DOMAIN)
         if user_input is not None:
-            return self.async_create_entry(
-                title="", data={**user_input, "experimental": True}
-            )
+            return self.async_create_entry(title="", data=user_input)
 
         if hacs is None or hacs.configuration is None:
             return self.async_abort(reason="not_setup")
