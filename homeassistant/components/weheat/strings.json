@@ -204,6 +204,9 @@
       "electricity_used_heating": {
         "name": "Electricity used heating"
       },
+      "electricity_used_indoor_unit": {
+        "name": "Electricity used indoor unit"
+      },
       "electricity_used_standby": {
         "name": "Electricity used standby"
       },

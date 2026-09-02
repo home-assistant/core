@@ -149,6 +149,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.energy_in_cooling = 9000
     mock_heat_pump_instance.energy_in_standby = 684
     mock_heat_pump_instance.energy_total = 28689
+    mock_heat_pump_instance.energy_in_indoor_unit = 1042
     mock_heat_pump_instance.energy_out_heating = 10000
     mock_heat_pump_instance.energy_out_dhw = 6677
     mock_heat_pump_instance.energy_out_defrost = -1200

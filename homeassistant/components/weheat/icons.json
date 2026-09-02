@@ -102,6 +102,9 @@
       "electricity_used_heating": {
         "default": "mdi:flash"
       },
+      "electricity_used_indoor_unit": {
+        "default": "mdi:flash"
+      },
       "energy_output": {
         "default": "mdi:flash"
       },

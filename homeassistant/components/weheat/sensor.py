@@ -336,6 +336,14 @@ ENERGY_SENSORS = [
         value_fn=lambda status: status.energy_total,
     ),
     WeHeatSensorEntityDescription(
+        translation_key="electricity_used_indoor_unit",
+        key="electricity_used_indoor_unit",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_indoor_unit,
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="energy_output",
         key="energy_output",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
