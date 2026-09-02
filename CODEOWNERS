@@ -112,6 +112,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/alexa_devices/ @chemelli74
 /tests/components/alexa_devices/ @chemelli74
+/homeassistant/components/allnet/ @polsa
+/tests/components/allnet/ @polsa
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
