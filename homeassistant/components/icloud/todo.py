@@ -213,10 +213,17 @@ def _ordered(reminders: list[IcloudReminder]) -> list[IcloudReminder]:
     there keeps the list reading the way Reminders shows it on iOS. Nesting can
     be deeper than one level, so descendants are emitted recursively.
     """
+    uids = {reminder.uid for reminder in reminders}
     children: dict[str, list[IcloudReminder]] = {}
+    roots: list[IcloudReminder] = []
     for reminder in reminders:
-        if reminder.parent_uid is not None:
+        # A parent outside this list is no anchor to sort against, so treat the
+        # subtask as a root here rather than dropping it. Its parent may well
+        # be a reminder in another list.
+        if reminder.parent_uid is not None and reminder.parent_uid in uids:
             children.setdefault(reminder.parent_uid, []).append(reminder)
+        else:
+            roots.append(reminder)
 
     ordered: list[IcloudReminder] = []
 
@@ -225,12 +232,11 @@ def _ordered(reminders: list[IcloudReminder]) -> list[IcloudReminder]:
         for child in children.pop(reminder.uid, ()):
             _emit(child)
 
-    for reminder in reminders:
-        if reminder.parent_uid is None:
-            _emit(reminder)
+    for reminder in roots:
+        _emit(reminder)
 
-    # Keep subtasks whose parent is not in this list rather than dropping them.
-    # Pop the whole group before emitting, so the loop always makes progress.
+    # Anything still here is part of a parent cycle, which iCloud should never
+    # return. Pop the whole group before emitting, so the loop terminates.
     while children:
         for orphan in children.pop(next(iter(children))):
             _emit(orphan)

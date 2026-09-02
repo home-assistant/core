@@ -333,18 +333,19 @@ def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
     """Return the ``(list_id, name)`` pairs that should become todo entities.
 
     ``lists()`` yields every List record in the CloudKit zone, which includes
-    groups (a folder holding other lists) and the tombstones left behind by
-    deleted lists. A group and a list inside it can share a name, so both must
-    be skipped or the same name shows up twice, once permanently empty.
+    groups: a folder holding other lists rather than reminders. A group and a
+    list inside it can share a name, so leaving groups in shows that name
+    twice, once as a permanently empty list.
 
-    ``deleted`` is read defensively: pyicloud exposes it on reminders but not
-    yet on lists, so it is absent on current releases and the tombstones stay
-    visible until it lands upstream.
+    Deleted lists leave tombstones that cannot be recognised yet. pyicloud
+    exposes ``deleted`` on a reminder but not on a list, and the model forbids
+    extra fields, so a tombstone is indistinguishable from an empty list until
+    timlaing/pyicloud#319 is released.
     """
     return [
         (reminder_list.id, reminder_list.title)
         for reminder_list in service.lists()
-        if not reminder_list.is_group and not getattr(reminder_list, "deleted", False)
+        if not reminder_list.is_group
     ]
 
 

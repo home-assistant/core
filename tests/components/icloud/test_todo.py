@@ -106,29 +106,25 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_groups_and_deleted_lists_skipped(
+async def test_groups_skipped(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reminders: MagicMock,
 ) -> None:
-    """Test that groups and deleted lists do not become entities.
+    """Test that reminder groups do not become entities.
 
     A group and a list inside it can share a name, which would otherwise
     create two identically named entities, one of them always empty.
     """
-    deleted = _list("list3", "Old")
-    deleted.deleted = True
     reminders.lists.return_value = [
         _list("list1", "Groceries"),
         _list("list2", "Family", is_group=True),
-        deleted,
     ]
 
     await _setup(hass, config_entry)
 
     assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get("todo.test_icloud_account_family") is None
-    assert hass.states.get("todo.test_icloud_account_old") is None
 
 
 async def test_subtasks_follow_their_parent(
@@ -421,6 +417,36 @@ async def test_orphaned_subtask_is_kept(
     )
     summaries = [item["summary"] for item in result[ENTITY_ID]["items"]]
     assert summaries == ["Top level", "Orphan", "Orphan child"]
+
+
+async def test_orphan_parent_returned_after_its_child(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that an orphan still comes before its own child.
+
+    iCloud gives no ordering guarantee, so the child of a subtask whose parent
+    is missing can arrive first. The subtask is the root of what is present.
+    """
+    reminders.list_reminders.return_value = MagicMock(
+        reminders=[
+            _reminder("r1", "Grandchild", parent="r2"),
+            _reminder("r2", "Child", parent="missing"),
+        ]
+    )
+
+    await _setup(hass, config_entry)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [item["summary"] for item in result[ENTITY_ID]["items"]]
+    assert summaries == ["Child", "Grandchild"]
 
 
 async def test_update_refused_when_title_undecrypted(
