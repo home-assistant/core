@@ -16,7 +16,7 @@ from homeassistant.components.imou.camera import (
 )
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -285,44 +285,24 @@ async def test_camera_state(
     ],
     indirect=True,
 )
-@pytest.mark.parametrize(
-    ("exception", "message", "reauth_expected"),
-    [
-        (
-            ImouException("stream failure"),
-            "Could not get the live stream URL from Imou: stream failure",
-            False,
-        ),
-        (
-            InvalidAppIdOrSecretException("fail"),
-            "Imou rejected the App ID and App secret",
-            True,
-        ),
-    ],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_camera_stream_source_propagates_api_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    message: str,
-    reauth_expected: bool,
 ) -> None:
     """Imou API errors from stream fetch surface to the caller."""
-    mock_imou_ha_device_manager.async_get_device_stream.side_effect = exception
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = ImouException(
+        "stream failure"
+    )
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match=message):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Could not get the live stream URL from Imou: stream failure",
+    ):
         await async_get_stream_source(hass, entity_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert (
-        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
-        is reauth_expected
-    )
 
 
 @pytest.mark.parametrize(
@@ -339,20 +319,44 @@ async def test_camera_stream_source_propagates_api_error(
     ],
     indirect=True,
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_stream_source_invalid_auth_reloads_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Rejected credentials while fetching a stream reload the entry into setup error."""
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+    mock_imou_ha_device_manager.async_get_devices.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the App ID and App secret"
+    ):
+        await async_get_stream_source(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 @pytest.mark.parametrize(
-    ("exception", "message", "reauth_expected"),
+    "imou_mock_devices",
     [
-        (
-            ImouException("image failure"),
-            "Could not get a snapshot from Imou: image failure",
-            False,
-        ),
-        (
-            InvalidAppIdOrSecretException("fail"),
-            "Imou rejected the App ID and App secret",
-            True,
-        ),
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
     ],
+    indirect=True,
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_camera_image_propagates_api_error(
@@ -360,23 +364,57 @@ async def test_camera_image_propagates_api_error(
     entity_registry: er.EntityRegistry,
     mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    message: str,
-    reauth_expected: bool,
 ) -> None:
     """Imou API errors from snapshot fetch surface to the caller."""
-    mock_imou_ha_device_manager.async_get_device_image.side_effect = exception
+    mock_imou_ha_device_manager.async_get_device_image.side_effect = ImouException(
+        "image failure"
+    )
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match=message):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Could not get a snapshot from Imou: image failure",
+    ):
+        await async_get_image(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_image_invalid_auth_reloads_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Rejected credentials while fetching a snapshot reload the entry into setup error."""
+    mock_imou_ha_device_manager.async_get_device_image.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+    mock_imou_ha_device_manager.async_get_devices.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the App ID and App secret"
+    ):
         await async_get_image(hass, entity_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert (
-        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
-        is reauth_expected
-    )
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(

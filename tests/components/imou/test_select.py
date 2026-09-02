@@ -18,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_OPTION,
@@ -124,21 +124,6 @@ async def test_select_option_via_domain_service(
     assert hass.states.get(volume_entry.entity_id).state == "high"
 
 
-@pytest.mark.parametrize(
-    ("exception", "message", "reauth_expected"),
-    [
-        (
-            ImouException("cloud failure"),
-            "Imou rejected the new option: cloud failure",
-            False,
-        ),
-        (
-            InvalidAppIdOrSecretException("fail"),
-            "Imou rejected the App ID and App secret",
-            True,
-        ),
-    ],
-)
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
@@ -147,12 +132,11 @@ async def test_select_option_propagates_api_error(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
-    exception: Exception,
-    message: str,
-    reauth_expected: bool,
 ) -> None:
     """Imou API errors from async_select_option surface to the service call."""
-    mock_imou_ha_device_manager.async_select_option.side_effect = exception
+    mock_imou_ha_device_manager.async_select_option.side_effect = ImouException(
+        "cloud failure"
+    )
 
     volume_entry = next(
         entry
@@ -162,7 +146,45 @@ async def test_select_option_propagates_api_error(
         if entry.unique_id == "d1$device_volume"
     )
 
-    with pytest.raises(HomeAssistantError, match=message):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the new option: cloud failure"
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: volume_entry.entity_id, ATTR_OPTION: "high"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_select_option_invalid_auth_reloads_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Rejected credentials while changing a select reload the entry into setup error."""
+    mock_imou_ha_device_manager.async_select_option.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+    mock_imou_ha_device_manager.async_get_devices.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    volume_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$device_volume"
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the App ID and App secret"
+    ):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -171,11 +193,7 @@ async def test_select_option_propagates_api_error(
         )
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert (
-        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
-        is reauth_expected
-    )
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)

@@ -1,14 +1,10 @@
 """An abstract class common to all Imou entities."""
 
-from collections.abc import Awaitable, Callable, Coroutine
-from functools import wraps
-from typing import Any, Concatenate, override
+from typing import override
 
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
-from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -68,36 +64,3 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         return (
             self.device.sensors[PARAM_STATUS][PARAM_STATE] != DeviceStatus.OFFLINE.value
         )
-
-
-def async_wrap_imou_command[_T: ImouEntity, **_P, _R](
-    error_key: str,
-) -> Callable[
-    [Callable[Concatenate[_T, _P], Awaitable[_R]]],
-    Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]],
-]:
-    """Wrap an Imou command and start reauthentication when credentials are rejected."""
-
-    def decorator(
-        func: Callable[Concatenate[_T, _P], Awaitable[_R]],
-    ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:
-        @wraps(func)
-        async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-            try:
-                return await func(self, *args, **kwargs)
-            except InvalidAppIdOrSecretException as err:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_auth",
-                ) from err
-            except ImouException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key=error_key,
-                    translation_placeholders={"error": err.message},
-                ) from err
-
-        return wrapper
-
-    return decorator
