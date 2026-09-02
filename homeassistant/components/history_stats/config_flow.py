@@ -145,7 +145,7 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
             vol.Optional(CONF_STATE_CLASS): StateClassSelector(
-                StateClassSelectorConfig(state_classes_filter=state_class_options),
+                StateClassSelectorConfig(state_classes=state_class_options),
             ),
             vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
                 vol.Schema(

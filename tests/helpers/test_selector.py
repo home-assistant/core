@@ -1719,7 +1719,7 @@ def test_device_class_selector_schema(
         ),
         (
             {
-                "state_classes_filter": ["measurement", "total", "total_increasing"],
+                "state_classes": ["measurement", "total", "total_increasing"],
                 "multiple": True,
             },
             (["measurement"], ["total", "total_increasing"]),

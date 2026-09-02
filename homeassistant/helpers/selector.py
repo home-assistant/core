@@ -1972,7 +1972,7 @@ class StateClassSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a sensor state class selector config."""
 
     multiple: bool
-    state_classes_filter: Sequence[str | SensorStateClass]
+    state_classes: Sequence[str | SensorStateClass]
 
 
 @SELECTORS.register("state_class")
@@ -1984,7 +1984,7 @@ class StateClassSelector(Selector[StateClassSelectorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("state_classes_filter"): vol.All(cv.ensure_list, [str]),
+            vol.Optional("state_classes"): vol.All(cv.ensure_list, [str]),
         }
     )
 
