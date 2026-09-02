@@ -901,6 +901,9 @@ ebusdpy==0.0.17
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
 
+# homeassistant.components.ecowitt_ws90
+ecowitt-ws90-modbus==0.1.0
+
 # homeassistant.components.egauge
 egauge-async==0.4.0
 
