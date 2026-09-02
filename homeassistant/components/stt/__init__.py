@@ -72,9 +72,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-# Audio is read from the request body in fixed-size chunks, because line-based
-# iteration raises LineTooLong on binary audio without newline bytes.
-# 4096 bytes is 128 ms of audio at 16 kHz/16-bit/mono.
+# Audio is read from the request body in chunks of at most 4096 bytes because
+# line-based iteration raises LineTooLong on binary audio without newline bytes.
+# At 16 kHz/16-bit/mono, 4096 bytes represents up to 128 ms of audio.
 AUDIO_CHUNK_SIZE = 4096
 
 
