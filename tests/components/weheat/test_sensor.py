@@ -71,7 +71,6 @@ def _start_conditions(*unmet: str) -> dict[str, bool]:
         ),
         # the first unmet condition wins, following the order the pump reports them in
         pytest.param(_start_conditions("demand", "dtc"), "dtc", id="several_unmet"),
-        pytest.param(None, STATE_UNKNOWN, id="not_decoded"),
     ],
 )
 @pytest.mark.usefixtures("mock_weheat_discover")
@@ -79,7 +78,7 @@ async def test_cooling_blocked_by(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    conditions: dict[str, bool] | None,
+    conditions: dict[str, bool],
     expected: str,
 ) -> None:
     """Test the sensor names the condition that is keeping the heat pump from cooling."""
@@ -92,6 +91,21 @@ async def test_cooling_blocked_by(
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
+async def test_unreported_start_conditions_create_no_sensor(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a heat pump that reports no start conditions gets no sensor for them."""
+    mock_weheat_heat_pump.cooling_start_conditions = None
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_cooling_blocked_by") is None
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
 async def test_unrecognised_code_keeps_the_sensor(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
@@ -99,7 +113,7 @@ async def test_unrecognised_code_keeps_the_sensor(
 ) -> None:
     """Test a code the library cannot name still creates a sensor, reporting unknown."""
     mock_weheat_heat_pump.cooling_pause_reason = None
-    mock_weheat_heat_pump.raw_content = {"cooling_pause_reason": 99}
+    mock_weheat_heat_pump.cooling_pause_reason_code = 99
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
@@ -117,7 +131,7 @@ async def test_unreported_field_creates_no_sensor(
 ) -> None:
     """Test a field the heat pump does not report at all creates no sensor."""
     mock_weheat_heat_pump.cooling_pause_reason = None
-    mock_weheat_heat_pump.raw_content = {}
+    mock_weheat_heat_pump.cooling_pause_reason_code = None
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
@@ -142,6 +156,48 @@ async def test_code_becoming_unrecognised_reports_unknown(
     assert (
         hass.states.get("sensor.test_model_cooling_pause_reason").state == STATE_UNKNOWN
     )
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_cooling_timestamps_exist_before_the_first_cooling_cycle(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a heat pump that can cool but has not yet gets the cooling timestamps.
+
+    Entities are only created during setup, so a sensor skipped here would never
+    appear once the heat pump does complete a cooling cycle.
+    """
+    mock_weheat_heat_pump.last_cooling_time = None
+    mock_weheat_heat_pump.cooling_available_from = None
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_last_cooling").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("sensor.test_model_cooling_available_from").state
+        == STATE_UNKNOWN
+    )
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_a_heat_pump_without_cooling_gets_no_cooling_timestamps(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a heat pump that does not cool gets no cooling sensors at all."""
+    mock_weheat_heat_pump.cooling_activity = None
+    mock_weheat_heat_pump.last_cooling_time = None
+    mock_weheat_heat_pump.cooling_available_from = None
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_last_cooling") is None
+    assert hass.states.get("sensor.test_model_cooling_available_from") is None
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")

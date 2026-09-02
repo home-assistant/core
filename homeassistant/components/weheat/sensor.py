@@ -49,10 +49,15 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
     value_fn: Callable[[HeatPump], StateType | datetime]
-    # A raw log field that value_fn reads, whose presence decides whether the heat
-    # pump supports this sensor. Needed where value_fn can return None for a value
-    # the heat pump does report, such as a code the library cannot name.
-    raw_field: str | None = None
+    # Whether the heat pump supports this sensor at all. Entities are only created
+    # during setup, so a sensor whose value_fn can return None on a heat pump that
+    # does support it would otherwise never appear once a value does arrive.
+    supported_fn: Callable[[HeatPump], bool] | None = None
+
+
+def _does_cooling(status: HeatPump) -> bool:
+    """Return whether the heat pump does cooling at all."""
+    return status.cooling_activity is not None
 
 
 def _cooling_blocked_by(status: HeatPump) -> str | None:
@@ -67,9 +72,8 @@ def _is_supported(
     entity_description: WeHeatSensorEntityDescription, heat_pump: HeatPump
 ) -> bool:
     """Return whether the heat pump reports the value behind this sensor."""
-    if entity_description.raw_field is not None:
-        raw = heat_pump.raw_content or {}
-        return raw.get(entity_description.raw_field) is not None
+    if entity_description.supported_fn is not None:
+        return entity_description.supported_fn(heat_pump)
     return entity_description.value_fn(heat_pump) is not None
 
 
@@ -174,7 +178,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="heat_pump_state",
         key="heat_pump_state",
-        raw_field="state",
+        supported_fn=lambda status: status.heat_pump_state_code is not None,
         name=None,
         device_class=SensorDeviceClass.ENUM,
         options=[s.name.lower() for s in HeatPump.State],
@@ -210,13 +214,14 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="last_cooling_time",
         key="last_cooling_time",
+        supported_fn=_does_cooling,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda status: status.last_cooling_time,
     ),
     WeHeatSensorEntityDescription(
         translation_key="current_control_method",
         key="current_control_method",
-        raw_field="current_control_method",
+        supported_fn=lambda status: status.current_control_method_code is not None,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[method.name.lower() for method in HeatPump.ControlMethod],
@@ -232,7 +237,6 @@ SENSORS = [
         translation_key="cooling_blocked_by",
         key="cooling_blocked_by",
         device_class=SensorDeviceClass.ENUM,
-        raw_field="cooling_start_conditions",
         options=["none", *HeatPump.COOLING_START_CONDITION_BITS],
         value_fn=_cooling_blocked_by,
     ),
@@ -252,7 +256,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="cooling_pause_reason",
         key="cooling_pause_reason",
-        raw_field="cooling_pause_reason",
+        supported_fn=lambda status: status.cooling_pause_reason_code is not None,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[reason.name.lower() for reason in HeatPump.CoolingPauseReason],
@@ -267,7 +271,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="cooling_stop_reason",
         key="cooling_stop_reason",
-        raw_field="cooling_stop_reason",
+        supported_fn=lambda status: status.cooling_stop_reason_code is not None,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[reason.name.lower() for reason in HeatPump.CoolingStopReason],
@@ -282,6 +286,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="cooling_available_from",
         key="cooling_available_from",
+        supported_fn=_does_cooling,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda status: status.cooling_available_from,
     ),

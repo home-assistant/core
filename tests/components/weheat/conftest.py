@@ -124,6 +124,10 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.thermostat_room_temperature_setpoint = 21
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
+    mock_heat_pump_instance.heat_pump_state_code = 70
+    mock_heat_pump_instance.current_control_method_code = 4
+    mock_heat_pump_instance.cooling_pause_reason_code = 4
+    mock_heat_pump_instance.cooling_stop_reason_code = 0
     mock_heat_pump_instance.last_cooling_time = datetime(
         2025, 6, 21, 14, 30, tzinfo=UTC
     )
