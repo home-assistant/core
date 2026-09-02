@@ -340,6 +340,73 @@ _EXCEPTIONS_SCHEMA = {
 }
 
 
+RELEASE_NOTES_MESSAGES_SCHEMA = cv.schema_with_slug_keys(
+    translation_value_validator,
+    slug_validator=translation_key_validator,
+)
+
+ENTITY_COMPONENT_TRANSLATION_SCHEMA = {
+    vol.Optional("name"): str,
+    vol.Optional("state"): cv.schema_with_slug_keys(
+        custom_translation_value_validator(allow_placeholders=False),
+        slug_validator=translation_key_validator,
+    ),
+    vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+        {
+            vol.Optional("name"): str,
+            vol.Optional("state"): cv.schema_with_slug_keys(
+                custom_translation_value_validator(allow_placeholders=False),
+                slug_validator=translation_key_validator,
+            ),
+        },
+        slug_validator=translation_key_validator,
+    ),
+}
+
+ENTITY_TRANSLATION_SCHEMA = {
+    vol.Optional("name"): translation_value_validator,
+    vol.Optional("state"): cv.schema_with_slug_keys(
+        custom_translation_value_validator(allow_placeholders=False),
+        slug_validator=translation_key_validator,
+    ),
+    vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+        {
+            vol.Optional("name"): custom_translation_value_validator(
+                allow_placeholders=False
+            ),
+            vol.Optional("state"): cv.schema_with_slug_keys(
+                custom_translation_value_validator(allow_placeholders=False),
+                slug_validator=translation_key_validator,
+            ),
+        },
+        slug_validator=translation_key_validator,
+    ),
+    vol.Optional("unit_of_measurement"): custom_translation_value_validator(
+        allow_placeholders=False
+    ),
+}
+
+ENTITY_COMPONENT_SCHEMA = vol.Schema(
+    {
+        vol.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
+        vol.Any("_", cv.slug): ENTITY_COMPONENT_TRANSLATION_SCHEMA,
+    }
+)
+
+ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional("update"): {
+            vol.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
+            translation_key_validator: ENTITY_TRANSLATION_SCHEMA,
+        },
+        cv.slug: cv.schema_with_slug_keys(
+            ENTITY_TRANSLATION_SCHEMA,
+            slug_validator=translation_key_validator,
+        ),
+    }
+)
+
+
 def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
@@ -446,68 +513,14 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("description"): translation_value_validator,
             },
             vol.Optional("issues"): gen_issues_schema(config, integration),
-            vol.Optional("entity_component"): cv.schema_with_slug_keys(
-                {
-                    vol.Optional("name"): str,
-                    vol.Optional("state"): cv.schema_with_slug_keys(
-                        custom_translation_value_validator(allow_placeholders=False),
-                        slug_validator=translation_key_validator,
-                    ),
-                    vol.Optional("state_attributes"): cv.schema_with_slug_keys(
-                        {
-                            vol.Optional("name"): str,
-                            vol.Optional("state"): cv.schema_with_slug_keys(
-                                custom_translation_value_validator(
-                                    allow_placeholders=False
-                                ),
-                                slug_validator=translation_key_validator,
-                            ),
-                        },
-                        slug_validator=translation_key_validator,
-                    ),
-                },
-                slug_validator=vol.Any("_", cv.slug),
-            ),
+            vol.Optional("entity_component"): ENTITY_COMPONENT_SCHEMA,
             vol.Optional("device"): cv.schema_with_slug_keys(
                 {
                     vol.Optional("name"): translation_value_validator,
                 },
                 slug_validator=translation_key_validator,
             ),
-            vol.Optional("entity"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    {
-                        vol.Optional("name"): translation_value_validator,
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            custom_translation_value_validator(
-                                allow_placeholders=False
-                            ),
-                            slug_validator=translation_key_validator,
-                        ),
-                        vol.Optional("state_attributes"): cv.schema_with_slug_keys(
-                            {
-                                vol.Optional(
-                                    "name"
-                                ): custom_translation_value_validator(
-                                    allow_placeholders=False
-                                ),
-                                vol.Optional("state"): cv.schema_with_slug_keys(
-                                    custom_translation_value_validator(
-                                        allow_placeholders=False
-                                    ),
-                                    slug_validator=translation_key_validator,
-                                ),
-                            },
-                            slug_validator=translation_key_validator,
-                        ),
-                        vol.Optional(
-                            "unit_of_measurement"
-                        ): custom_translation_value_validator(allow_placeholders=False),
-                    },
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=cv.slug,
-            ),
+            vol.Optional("entity"): ENTITY_SCHEMA,
             **_EXCEPTIONS_SCHEMA,
             vol.Optional("services"): cv.schema_with_slug_keys(
                 {

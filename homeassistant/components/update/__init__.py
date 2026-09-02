@@ -1,5 +1,8 @@
 """Component to allow for providing device or service updates."""
 
+from collections.abc import Mapping
+from contextlib import suppress
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
@@ -24,6 +27,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -62,7 +66,39 @@ class UpdateDeviceClass(StrEnum):
     FIRMWARE = "firmware"
 
 
+class UpdateReleaseNotesMessageSeverity(StrEnum):
+    """Severity for an update release notes message."""
+
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+@dataclass(frozen=True, kw_only=True)
+class UpdateReleaseNotesMessage:
+    """Message shown before update release notes.
+
+    This is intended for static guidance that accompanies release notes, not for
+    translating the release notes themselves.
+    """
+
+    translation_domain: str
+    translation_key: str
+    severity: UpdateReleaseNotesMessageSeverity = UpdateReleaseNotesMessageSeverity.INFO
+    translation_placeholders: Mapping[str, str] | None = None
+
+
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
+
+RELEASE_NOTES_MESSAGE_BATTERY_POWERED = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="battery_powered_update",
+)
+RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="do_not_interrupt",
+    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
 
 
 __all__ = [
@@ -74,6 +110,8 @@ __all__ = [
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "RELEASE_NOTES_MESSAGE_BATTERY_POWERED",
+    "RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
     "UpdateDeviceClass",
@@ -81,6 +119,8 @@ __all__ = [
     "UpdateEntityDescription",
     "UpdateEntityFeature",
     "UpdateEntityStateAttribute",
+    "UpdateReleaseNotesMessage",
+    "UpdateReleaseNotesMessageSeverity",
 ]
 
 # mypy: disallow-any-generics
@@ -205,6 +245,7 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: UpdateDeviceClass | None = None
     display_precision: int = 0
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+    release_notes_messages: tuple[UpdateReleaseNotesMessage, ...] = ()
 
 
 @lru_cache(maxsize=256)
@@ -258,6 +299,7 @@ class UpdateEntity(
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
     _attr_update_percentage: int | float | None = None
+    _attr_release_notes_messages: tuple[UpdateReleaseNotesMessage, ...]
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -348,6 +390,15 @@ class UpdateEntity(
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self._attr_release_url
+
+    @property
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        if hasattr(self, "_attr_release_notes_messages"):
+            return self._attr_release_notes_messages
+        if hasattr(self, "entity_description"):
+            return self.entity_description.release_notes_messages
+        return ()
 
     @cached_property
     @override
@@ -586,5 +637,66 @@ async def websocket_release_notes(
         return
     connection.send_result(
         msg["id"],
-        await entity.async_release_notes(),
+        await _async_render_release_notes(hass, entity),
     )
+
+
+async def _async_render_release_notes(
+    hass: HomeAssistant, entity: UpdateEntity
+) -> str | None:
+    """Render release notes messages followed by the entity release notes."""
+    release_notes_messages = await _async_render_release_notes_messages(
+        hass, entity.release_notes_messages
+    )
+    release_notes = await entity.async_release_notes()
+
+    if release_notes_messages is None:
+        return release_notes
+    if not release_notes:
+        return release_notes_messages
+    return f"{release_notes_messages}\n\n{release_notes}"
+
+
+async def _async_render_release_notes_messages(
+    hass: HomeAssistant, messages: tuple[UpdateReleaseNotesMessage, ...]
+) -> str | None:
+    """Render release notes messages as alert elements."""
+    if not messages:
+        return None
+
+    entity_component_translations = await async_get_translations(
+        hass, hass.config.language, "entity_component", {DOMAIN}
+    )
+    entity_translations = await async_get_translations(
+        hass,
+        hass.config.language,
+        "entity",
+        {
+            message.translation_domain
+            for message in messages
+            if message.translation_domain != DOMAIN
+        },
+    )
+
+    rendered_messages: list[str] = []
+    for message in messages:
+        if message.translation_domain == DOMAIN:
+            translation = entity_component_translations.get(
+                "component.update.entity_component.release_notes_messages."
+                f"{message.translation_key}",
+                message.translation_key,
+            )
+        else:
+            translation = entity_translations.get(
+                f"component.{message.translation_domain}.entity.update."
+                f"release_notes_messages.{message.translation_key}",
+                message.translation_key,
+            )
+        if message.translation_placeholders is not None:
+            with suppress(KeyError):
+                translation = translation.format(**message.translation_placeholders)
+        rendered_messages.append(
+            f'<ha-alert alert-type="{message.severity}">{translation}</ha-alert>'
+        )
+
+    return "\n\n".join(rendered_messages)
