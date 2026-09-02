@@ -5,7 +5,7 @@ from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tplink_omada_client import OmadaSite
+from tplink_omada_client import OmadaSite, OmadaVpnCategory, OmadaVpnPolicy
 from tplink_omada_client.clients import (
     OmadaConnectedClient,
     OmadaNetworkClient,
@@ -102,6 +102,13 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
     site_client.get_firmware_details = AsyncMock(side_effect=get_firmware_details)
     site_client.start_firmware_upgrade = AsyncMock()
 
+    vpn_data = await async_load_json_array_fixture(hass, "vpn-policies.json", DOMAIN)
+    vpn_policies = [
+        OmadaVpnPolicy(OmadaVpnCategory(p["category"]), p["data"]) for p in vpn_data
+    ]
+    site_client.get_vpn_policies = AsyncMock(return_value=vpn_policies)
+    site_client.set_vpn_policy_enabled = AsyncMock()
+
     async def async_empty() -> AsyncGenerator:
         for c in ():
             yield c
@@ -120,6 +127,8 @@ def mock_omada_clients_only_site_client(hass: HomeAssistant) -> Generator[AsyncM
     site_client.get_switches = AsyncMock(return_value=[])
     site_client.get_devices = AsyncMock(return_value=[])
     site_client.get_switch_ports = AsyncMock(return_value=[])
+    site_client.get_vpn_policies = AsyncMock(return_value=[])
+    site_client.set_vpn_policy_enabled = AsyncMock()
     site_client.get_client = AsyncMock(side_effect=partial(_get_mock_client, hass))
 
     site_client.get_known_clients.side_effect = partial(_get_mock_known_clients, hass)
