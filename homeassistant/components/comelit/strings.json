@@ -130,5 +130,28 @@
     "update_failed": {
       "message": "Failed to update data: {error}"
     }
+  },
+  "options": {
+    "step": {
+      "cover_settings": {
+        "data": {
+          "travel_time": "Travel time"
+        },
+        "data_description": {
+          "travel_time": "Time, in seconds, for the cover to fully open or close. Use a lower value for windows and a higher value for door-height shutters."
+        },
+        "description": "Configure the estimated full travel time for {entity_id}.",
+        "title": "Cover travel time"
+      },
+      "init": {
+        "data": {
+          "entity_id": "Cover"
+        },
+        "data_description": {
+          "entity_id": "The cover to configure the travel time for."
+        },
+        "title": "Select cover"
+      }
+    }
   }
 }
