@@ -21,15 +21,15 @@ async def test_sensors_created(
 ) -> None:
     """Test that sensor entities are created."""
     entity_ids = {state.entity_id for state in hass.states.async_all("sensor")}
-    assert "sensor.wibeee_2233_total_active_power" in entity_ids
-    assert "sensor.wibeee_2233_l1_active_power" in entity_ids
+    assert "sensor.wibeee_112233_total_active_power" in entity_ids
+    assert "sensor.wibeee_112233_l1_active_power" in entity_ids
 
 
 async def test_sensor_state_class(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """Test sensor has correct state class."""
-    state = hass.states.get("sensor.wibeee_2233_total_active_power")
+    state = hass.states.get("sensor.wibeee_112233_total_active_power")
     assert state.attributes.get("state_class") == "measurement"
 
 
@@ -43,7 +43,7 @@ async def test_sensor_unavailable_on_coordinator_failure(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wibeee_2233_total_active_power")
+    state = hass.states.get("sensor.wibeee_112233_total_active_power")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -60,7 +60,7 @@ async def test_sensor_invalid_value(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wibeee_2233_total_active_power")
+    state = hass.states.get("sensor.wibeee_112233_total_active_power")
     assert state.state == STATE_UNKNOWN
 
 
@@ -77,7 +77,7 @@ async def test_sensor_unavailable_on_missing_key(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wibeee_2233_total_active_power")
+    state = hass.states.get("sensor.wibeee_112233_total_active_power")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -94,7 +94,7 @@ async def test_sensors_polling_mode_keeps_all_keys(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_MAC,
-        title="Wibeee 2233",
+        title="Wibeee 112233",
         data={
             CONF_HOST: MOCK_HOST,
             CONF_MAC_ADDRESS: MOCK_MAC,
@@ -109,11 +109,11 @@ async def test_sensors_polling_mode_keeps_all_keys(
 
     # angle is disabled-by-default, so check the entity registry
     assert (
-        entity_registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_active_power")
+        entity_registry.async_get(f"sensor.wibeee_{MOCK_MAC[-6:]}_total_active_power")
         is not None
     )
     assert (
-        entity_registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_phase_angle")
+        entity_registry.async_get(f"sensor.wibeee_{MOCK_MAC[-6:]}_total_phase_angle")
         is not None
     )
 
@@ -129,7 +129,7 @@ async def test_sensor_setup_no_known_phases(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_MAC,
-        title="Wibeee 2233",
+        title="Wibeee 112233",
         data={
             CONF_HOST: MOCK_HOST,
             CONF_MAC_ADDRESS: MOCK_MAC,

@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_MAC,
-        title="Wibeee 2233",
+        title="Wibeee 112233",
         data={
             CONF_HOST: MOCK_HOST,
             CONF_MAC_ADDRESS: MOCK_MAC,
@@ -72,7 +72,7 @@ def _setup_mock_api(api: MagicMock) -> None:
             wibeee_id=MOCK_WIBEEE_ID,
             mac_addr=MOCK_MAC,
             mac_addr_formatted=MOCK_MAC,
-            mac_addr_short="2233",
+            mac_addr_short="112233",
             model=MOCK_MODEL,
             firmware_version=MOCK_FIRMWARE,
             ip_addr=MOCK_HOST,
