@@ -492,6 +492,37 @@ async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_set_system_mode_resolves_entity_before_validating_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Test the target entity is resolved before mode data is validated.
+
+    Both the entity_id and the mode data are invalid here; entity_not_found must win,
+    proving mode validation runs against the resolved target, not a stale closure-
+    captured one that gets validated before the target is even confirmed to exist.
+    """
+
+    non_existent_entity_id = "climate.non_existent_entity"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {
+                SZ_MODE: "NotARealMode",
+                ATTR_ENTITY_ID: non_existent_entity_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "entity_not_found"
+    assert exc_info.value.translation_placeholders == {
+        ATTR_ENTITY_ID: non_existent_entity_id,
+    }
+
+
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
         {SZ_MODE: "NotARealMode"},
