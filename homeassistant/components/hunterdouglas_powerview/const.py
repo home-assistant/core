@@ -16,6 +16,8 @@ REDACT_SERIAL_NUMBER = "serial_number"
 REDACT_HUB_ADDRESS = "hub_address"
 
 STATE_ATTRIBUTE_ROOM_NAME = "room_name"
+STATE_ATTRIBUTE_EXECUTION_TIME = "execution_time"
+STATE_ATTRIBUTE_EXECUTION_DAYS = "execution_days"
 
 HUB_EXCEPTIONS = (
     ServerDisconnectedError,
