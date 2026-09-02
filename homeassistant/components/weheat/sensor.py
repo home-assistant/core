@@ -240,11 +240,11 @@ SENSORS = [
         translation_key="cooling_state",
         key="cooling_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.name.lower() for status in HeatPump.CoolingStatus],
+        options=[status.name.lower() for status in HeatPump.CoolingActivity],
         value_fn=(
             lambda status: (
-                status.cooling_status.name.lower()
-                if status.cooling_status is not None
+                status.cooling_activity.name.lower()
+                if status.cooling_activity is not None
                 else None
             )
         ),
