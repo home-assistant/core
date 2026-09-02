@@ -109,6 +109,8 @@ class ONVIFDevice:
             password=self.config_entry.data[CONF_PASSWORD],
         )
 
+        self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
+
         # Get all device info
         await self.device.update_xaddrs()
         LOGGER.debug("%s: xaddrs = %s", self.name, self.device.xaddrs)
@@ -117,10 +119,6 @@ class ONVIFDevice:
         self.onvif_capabilities = await self.device.get_capabilities()
 
         await self.async_check_date_and_time()
-
-        # Create event manager
-        assert self.config_entry.unique_id
-        self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
 
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
@@ -172,8 +170,7 @@ class ONVIFDevice:
 
     async def async_stop(self, event=None):
         """Shut it all down."""
-        if self.events:
-            await self.events.async_stop()
+        await self.events.async_stop()
         await self.device.close()
 
     async def async_manually_set_date_and_time(self) -> None:
