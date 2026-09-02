@@ -501,30 +501,35 @@ async def test_migrate_from_higher_version_not_supported(
 @pytest.mark.parametrize(
     ("mock_migrate_entry", "state", "log_message"),
     [
-        (
+        pytest.param(
             AsyncMock(side_effect=ConfigEntryError()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            id="ConfigEntryError",
         ),
-        (
+        pytest.param(
             AsyncMock(side_effect=ConfigEntryAuthFailed()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Config entry 'Mock Title' for comp integration could not authenticate",
+            id="ConfigEntryAuthFailed",
         ),
-        (
+        pytest.param(
             AsyncMock(side_effect=ConfigEntryNotReady()),
             config_entries.ConfigEntryState.SETUP_RETRY,
             "Config entry migration 'Mock Title' for comp integration not ready yet",
+            id="ConfigEntryNotReady",
         ),
-        (
-            AsyncMock(side_effect=HomeAssistantError()),
+        pytest.param(
+            AsyncMock(side_effect=Exception()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            id="Other exceptions",
         ),
-        (
+        pytest.param(
             AsyncMock(return_value=False),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            id="Returns False",
         ),
     ],
 )
