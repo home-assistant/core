@@ -17,6 +17,12 @@
         "title": "ISEO lock discovered"
       },
       "gw_register": {
+        "data": {
+          "enable_admin": "Enable user management"
+        },
+        "data_description": {
+          "enable_admin": "Also enrol an administrator identity, so Home Assistant can list the users on the lock and switch them on and off. It has to be enrolled now, during the same Master Card scan; turning it on later means setting the lock up again."
+        },
         "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
         "title": "Register gateway"
       },
@@ -31,7 +37,35 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "user_account": {
+        "name": "{name} (account)"
+      },
+      "user_fingerprint": {
+        "name": "{name} (fingerprint)"
+      },
+      "user_invitation": {
+        "name": "{name} (invitation)"
+      },
+      "user_other": {
+        "name": "{name}"
+      },
+      "user_phone": {
+        "name": "{name} (phone)"
+      },
+      "user_pin": {
+        "name": "{name} (PIN)"
+      },
+      "user_rfid": {
+        "name": "{name} (card)"
+      }
+    }
+  },
   "exceptions": {
+    "admin_rejected_identity": {
+      "message": "The lock rejected the Home Assistant administrator identity. Set the integration up again to enrol it anew."
+    },
     "cannot_connect": {
       "message": "Could not connect to the lock."
     },

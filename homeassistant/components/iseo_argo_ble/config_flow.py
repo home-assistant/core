@@ -23,13 +23,21 @@ from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
+from .const import (
+    CONF_ADMIN_PRIV_SCALAR,
+    CONF_ADMIN_UUID,
+    CONF_ENABLE_ADMIN,
+    CONF_PRIV_SCALAR,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +86,8 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._uuid_hex: str = ""
         self._priv_scalar: str = ""
         self._gw_priv: ec.EllipticCurvePrivateKey | None = None
+        self._admin_uuid_hex: str = ""
+        self._admin_priv_scalar: str = ""
 
     @override
     async def async_step_user(
@@ -189,6 +199,19 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "cannot_connect"
             else:
+                # The Master Card scan authorises a single session, so the admin
+                # identity has to be enrolled alongside the gateway one or not
+                # at all.
+                admin_priv: ec.EllipticCurvePrivateKey | None = None
+                if user_input[CONF_ENABLE_ADMIN]:
+                    admin_priv = await self.hass.async_add_executor_job(
+                        _generate_identity
+                    )
+                    self._admin_uuid_hex = uuid_module.uuid4().bytes.hex()
+                    self._admin_priv_scalar = hex(
+                        admin_priv.private_numbers().private_value
+                    )
+
                 assert self._gw_priv is not None
                 client = IseoClient(
                     address=self._address,
@@ -198,7 +221,13 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     ble_device=ble_device,
                 )
                 try:
-                    await client.setup_gateway(name="Home Assistant")
+                    await client.setup_gateway(
+                        name="Home Assistant",
+                        admin_uuid_bytes=bytes.fromhex(self._admin_uuid_hex)
+                        if admin_priv is not None
+                        else None,
+                        admin_identity_priv=admin_priv,
+                    )
                     return self._async_create_iseo_entry()
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
@@ -209,18 +238,32 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected error during gateway setup")
                     errors["base"] = "unknown"
 
+                # A retry generates a fresh admin identity; drop the one the
+                # lock did not take.
+                self._admin_uuid_hex = ""
+                self._admin_priv_scalar = ""
+
         return self.async_show_form(
             step_id="gw_register",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ENABLE_ADMIN, default=True): BooleanSelector(),
+                }
+            ),
             errors=errors,
         )
 
     def _async_create_iseo_entry(self) -> ConfigFlowResult:
         """Create the final config entry."""
+        data: dict[str, Any] = {
+            CONF_ADDRESS: self._address,
+            CONF_UUID: self._uuid_hex,
+            CONF_PRIV_SCALAR: self._priv_scalar,
+        }
+        if self._admin_uuid_hex:
+            data[CONF_ADMIN_UUID] = self._admin_uuid_hex
+            data[CONF_ADMIN_PRIV_SCALAR] = self._admin_priv_scalar
         return self.async_create_entry(
             title=self._device_name or f"ISEO Lock ({self._address})",
-            data={
-                CONF_ADDRESS: self._address,
-                CONF_UUID: self._uuid_hex,
-                CONF_PRIV_SCALAR: self._priv_scalar,
-            },
+            data=data,
         )
