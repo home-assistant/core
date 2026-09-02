@@ -12,7 +12,6 @@ import tarfile
 import threading
 from typing import IO, Any, cast
 
-import aiohttp
 from securetar import (
     InvalidPasswordError,
     SecureTarArchive,
@@ -508,7 +507,7 @@ class EncryptedBackupStreamer(_CipherBackupStreamer):
 
 
 async def receive_file(
-    hass: HomeAssistant, contents: aiohttp.BodyPartReader, path: Path
+    hass: HomeAssistant, stream: AsyncIterator[bytes], path: Path
 ) -> None:
     """Receive a file from a stream and write it to a file."""
     queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = SimpleQueue()
@@ -527,7 +526,7 @@ async def receive_file(
     try:
         fut = hass.async_add_executor_job(_sync_queue_consumer)
         megabytes_sending = 0
-        while chunk := await contents.read_chunk(BUF_SIZE):
+        async for chunk in stream:
             megabytes_sending += 1
             if megabytes_sending % 5 != 0:
                 queue.put_nowait((chunk, None))
