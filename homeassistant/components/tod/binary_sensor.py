@@ -286,10 +286,10 @@ class TodSensor(BinarySensorEntity):
             )
             self._time_after += self._after_offset
         else:
-            # Offset is already there
             self._time_after = self._add_one_dst_aware_day(
                 self._time_after, self._after
             )
+            self._time_after += self._after_offset
 
         if _is_sun_event(self._before):
             self._time_before = get_astral_event_next(
@@ -297,10 +297,10 @@ class TodSensor(BinarySensorEntity):
             )
             self._time_before += self._before_offset
         else:
-            # Offset is already there
             self._time_before = self._add_one_dst_aware_day(
                 self._time_before, self._before
             )
+            self._time_before += self._before_offset
 
     @override
     async def async_added_to_hass(self) -> None:
