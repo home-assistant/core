@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "pre-release": {
+        "state": {
+          "on": "mdi:test-tube",
+          "off": "mdi:test-tube-off"
+        }
+      }
+    }
+  }
+}
