@@ -392,7 +392,7 @@ class HacsBase:
 
         self.system.disabled_reason = reason
         if reason != HacsDisabledReason.REMOVED:
-            self.log.error("HACS is disabled - %s", reason)
+            self.log.error("Community store is disabled - %s", reason)
 
         if (
             reason == HacsDisabledReason.INVALID_TOKEN
@@ -404,7 +404,7 @@ class HacsBase:
         """Enable HACS."""
         if self.system.disabled_reason is not None:
             self.system.disabled_reason = None
-            self.log.info("HACS is enabled")
+            self.log.info("Community store is enabled")
 
     def enable_hacs_category(self, category: HacsCategory) -> None:
         """Enable HACS category."""
@@ -603,9 +603,11 @@ class HacsBase:
         if critical := await async_load_from_store(self.hass, "critical"):
             for repo in critical:
                 if not repo["acknowledged"]:
-                    self.log.critical("URGENT!: Check the HACS panel!")
+                    self.log.critical("URGENT!: Check the Community store!")
                     async_create_persistent_notification(
-                        self.hass, title="URGENT!", message="**Check the HACS panel!**"
+                        self.hass,
+                        title="URGENT!",
+                        message="**Check the Community store!**",
                     )
                     break
 
@@ -893,7 +895,7 @@ class HacsBase:
     async def async_process_queue(self, _: datetime | None = None) -> None:
         """Process the queue."""
         if self.system.disabled:
-            self.log.debug("HACS is disabled")
+            self.log.debug("Community store is disabled")
             return
         if not self.queue.has_pending_tasks:
             self.log.debug("Nothing in the queue")

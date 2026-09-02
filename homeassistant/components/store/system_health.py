@@ -28,9 +28,7 @@ def async_register(
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     if DOMAIN not in hass.data:
-        return {
-            "Disabled": "HACS is not loaded, but HA still requests this information..."
-        }
+        return {"Disabled": "The Community store is not loaded"}
 
     hacs: HacsBase = hass.data[DOMAIN]
     response = await hacs.githubapi.rate_limit()

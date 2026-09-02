@@ -65,6 +65,4 @@ async def test_system_health_after_unload(
 
     info = await _resolved_info(hass)
 
-    assert info == {
-        "Disabled": ("HACS is not loaded, but HA still requests this information...")
-    }
+    assert info == {"Disabled": "The Community store is not loaded"}
