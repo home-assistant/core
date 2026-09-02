@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
@@ -16,6 +16,7 @@ from matter_server.common.custom_clusters import (
 )
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -220,6 +221,40 @@ PUMP_CONTROL_MODE_MAP = {
     _pump_ctrl.kUnknownEnumValue: None,
 }
 
+type ConcentrationMeasurementCluster = (
+    clusters.CarbonDioxideConcentrationMeasurement
+    | clusters.CarbonMonoxideConcentrationMeasurement
+    | clusters.NitrogenDioxideConcentrationMeasurement
+    | clusters.OzoneConcentrationMeasurement
+    | clusters.Pm1ConcentrationMeasurement
+    | clusters.Pm25ConcentrationMeasurement
+    | clusters.Pm10ConcentrationMeasurement
+    | clusters.RadonConcentrationMeasurement
+    | clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement
+)
+
+# The MeasurementUnit enum is shared across all concentration measurement clusters.
+_mu = clusters.CarbonDioxideConcentrationMeasurement.Enums.MeasurementUnitEnum
+MEASUREMENT_UNIT_MAP: dict[int, str] = {
+    _mu.kPpm: UnitOfRatio.PARTS_PER_MILLION,
+    _mu.kPpb: UnitOfRatio.PARTS_PER_BILLION,
+    # kPpt (parts per trillion) - no HA constant
+    _mu.kMgm3: UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+    _mu.kUgm3: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    # kNgm3 (nanograms/m³) - no HA constant
+    # kPm3 (parts/m³) - deprecated HA unit, no replacement
+    _mu.kBqm3: CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+}
+
+# TVOC uses a different device class depending on whether the unit is
+# mass-based or parts-based.
+TVOC_DEVICE_CLASS_MAP: dict[int, SensorDeviceClass] = {
+    _mu.kPpm: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+    _mu.kPpb: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+    _mu.kMgm3: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+    _mu.kUgm3: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+}
+
 MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
     946684800  # Seconds from Matter 2000 epoch to Unix epoch
 )
@@ -307,6 +342,55 @@ class MatterSensor(MatterEntity, SensorEntity):
         elif value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+
+
+class MatterConcentrationSensor(MatterSensor):
+    """Representation of a Matter concentration measurement sensor."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+        # MeasurementUnit is Fixed per spec, so it only needs to be read once.
+        if (unit_value := self.matter_measurement_unit) is not None:
+            self._apply_measurement_unit(unit_value)
+
+    def _apply_measurement_unit(self, unit_value: int) -> None:
+        """Set the unit of measurement from the reported MeasurementUnit."""
+        if (mapped_unit := MEASUREMENT_UNIT_MAP.get(unit_value)) is None:
+            return
+        device_class = self.device_class
+        allowed_units = (
+            DEVICE_CLASS_UNITS.get(device_class) if device_class is not None else None
+        )
+        # Keep the statically defined unit when the device class does not accept
+        # the reported one; converting between them is left to a future change.
+        if allowed_units is not None and mapped_unit not in allowed_units:
+            return
+        self._attr_native_unit_of_measurement = mapped_unit
+
+    @property
+    def matter_measurement_unit(self) -> int | None:
+        """Return the MeasurementUnit value from the device, if reported."""
+        cluster: ConcentrationMeasurementCluster = self._endpoint.get_cluster(
+            self._entity_info.primary_attribute.cluster_id
+        )
+        value: int | Nullable | None = cluster.measurementUnit
+        if value in (None, NullValue):
+            return None
+        return value
+
+
+class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
+    """Representation of a Matter TVOC concentration sensor."""
+
+    @override
+    def _apply_measurement_unit(self, unit_value: int) -> None:
+        """Set the device class and unit from the reported MeasurementUnit."""
+        # Resolve the device class first, so the unit is validated against the
+        # matching mass- or parts-based device class.
+        if (dc := TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None:
+            self._attr_device_class = dc
+        super()._apply_measurement_unit(unit_value)
 
 
 class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
@@ -661,7 +745,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.CarbonDioxideConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -674,7 +758,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterTVOCConcentrationSensor,
         required_attributes=(
             clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -702,7 +786,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.PM1,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.Pm1ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -715,7 +799,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.Pm25ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -728,7 +812,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.Pm10ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -753,7 +837,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.CarbonMonoxideConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -766,7 +850,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.NitrogenDioxideConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -779,7 +863,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.OZONE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.OzoneConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -792,7 +876,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="radon_concentration",
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
         ),
