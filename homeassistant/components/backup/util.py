@@ -507,6 +507,16 @@ class EncryptedBackupStreamer(_CipherBackupStreamer):
         return replace(self._backup, protected=True, size=self.size())
 
 
+async def iter_upload_chunks(contents: aiohttp.BodyPartReader) -> AsyncIterator[bytes]:
+    """Yield chunks of an uploaded file.
+
+    Iterating a BodyPartReader reads the whole part into memory and enforces the
+    request's client_max_size limit; reading it in chunks does neither.
+    """
+    while chunk := await contents.read_chunk(BUF_SIZE):
+        yield chunk
+
+
 async def receive_file(
     hass: HomeAssistant, contents: aiohttp.BodyPartReader, path: Path
 ) -> None:
