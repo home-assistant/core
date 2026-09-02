@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,6 +13,17 @@
       "unsupported_device_type": "This type of Rainforest Eagle device is not supported."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "cloud_id": "Cloud ID",
+          "host": "[%key:common::config_flow::data::host%]",
+          "install_code": "Installation code"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Rainforest gateway."
+        },
+        "description": "Changing only the hostname or installation code keeps your existing entities.\n\nChanging the Cloud ID may create new devices and entities because Home Assistant uses the Cloud ID to identify this device.\n\nIf you are replacing the Rainforest Eagle device, we recommend removing this integration and adding it again."
+      },
       "user": {
         "data": {
           "cloud_id": "Cloud ID",
