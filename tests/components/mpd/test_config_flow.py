@@ -215,6 +215,37 @@ async def test_zeroconf_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_mpd_client", "mock_setup_entry")
+async def test_zeroconf_flow_second_server(hass: HomeAssistant) -> None:
+    """Test a second server is still offered when another one is configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(
+            ZEROCONF_DISCOVERY,
+            ip_address=ip_address("192.168.0.9"),
+            ip_addresses=[ip_address("192.168.0.9")],
+            hostname="other-mpd.local.",
+            name="other-mpd._mpd._tcp.local.",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.168.0.9", CONF_PORT: 6600}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
 @pytest.mark.usefixtures("mock_mpd_client")
 async def test_zeroconf_flow_already_in_progress(hass: HomeAssistant) -> None:
     """Test a reannouncement selecting another address does not open a flow."""
