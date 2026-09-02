@@ -1,83 +1,123 @@
-"""Support for Sky Hub."""
+"""Support for Sky Hub device tracking using a coordinator."""
 
-import logging
 from typing import override
 
-from pyskyqhub.skyq_hub import SkyQHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_HOST, DOMAIN
+from .coordinator import SkyHubConfigEntry, SkyHubDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_HOST): cv.string}
 )
 
 
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> SkyHubDeviceScanner | None:
-    """Return a Sky Hub scanner if successful."""
-    host = config[DEVICE_TRACKER_DOMAIN].get(CONF_HOST, "192.168.1.254")
-    websession = async_get_clientsession(hass)
-    hub = SkyQHub(websession, host)
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the legacy Sky Hub device tracker."""
+    import_data = {CONF_HOST: config.get(CONF_HOST, DEFAULT_HOST)}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
+    )
 
-    _LOGGER.debug("Initialising Sky Hub")
-    await hub.async_connect()
-    if hub.success_init:
-        return SkyHubDeviceScanner(hub)
-
-    return None
-
-
-class SkyHubDeviceScanner(DeviceScanner):
-    """Class which queries a Sky Hub router."""
-
-    def __init__(self, hub):
-        """Initialise the scanner."""
-        self._hub = hub
-        self.last_results = {}
-
-    @override
-    async def async_scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        await self._async_update_info()
-        return [device.mac for device in self.last_results]
-
-    @override
-    async def async_get_device_name(self, device):
-        """Return the name of the given device."""
-        return next(
-            (result.name for result in self.last_results if result.mac == device),
-            None,
+    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "yaml_import_cannot_connect",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_cannot_connect",
+            translation_placeholders={"host": import_data[CONF_HOST]},
         )
+        return False
 
+    # A previous failed import may have raised this issue; clear it on success.
+    ir.async_delete_issue(hass, DOMAIN, "yaml_import_cannot_connect")
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Sky Hub",
+        },
+    )
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: SkyHubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Sky Hub device tracker from a config entry."""
+    coordinator = config_entry.runtime_data
+    tracked: set[str] = set()
+
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add newly discovered devices from the coordinator."""
+        new_entities: list[SkyHubScannerEntity] = []
+        for mac in coordinator.data:
+            if mac not in tracked:
+                tracked.add(mac)
+                new_entities.append(SkyHubScannerEntity(coordinator, mac))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
+
+
+class SkyHubScannerEntity(
+    CoordinatorEntity[SkyHubDataUpdateCoordinator], ScannerEntity
+):
+    """Representation of a device connected to the Sky Hub."""
+
+    def __init__(self, coordinator: SkyHubDataUpdateCoordinator, mac: str) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac = mac
+        self._attr_name = coordinator.data.get(mac) or mac
+
+    @property
     @override
-    async def async_get_extra_attributes(self, device):
-        """Get extra attributes of a device."""
-        device = next(
-            (result for result in self.last_results if result.mac == device), None
-        )
-        if device is None:
-            return {}
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the Sky Hub."""
+        return self._mac in self.coordinator.data
 
-        return device.asdict()
+    @property
+    @override
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
 
-    async def _async_update_info(self):
-        """Ensure the information from the Sky Hub is up to date."""
-        _LOGGER.debug("Scanning")
-
-        if not (data := await self._hub.async_get_skyhub_data()):
-            return
-
-        self.last_results = data
+    @property
+    @override
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self.coordinator.data.get(self._mac)
