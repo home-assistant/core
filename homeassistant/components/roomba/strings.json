@@ -69,6 +69,9 @@
       "last_mission": {
         "name": "Last mission start time"
       },
+      "not_ready": {
+        "name": "Not ready code"
+      },
       "scrubs_count": {
         "name": "Scrubs"
       },
