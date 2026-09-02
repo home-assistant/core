@@ -106,7 +106,8 @@ class DataGrandLyonTclCoordinator(DataUpdateCoordinator[dict[str, list[TclPassag
             if sorted_passages:
                 stops[subentry.subentry_id] = sorted_passages
             else:
-                LOGGER.warning(
+                # Expected outside service hours, e.g. at night
+                LOGGER.debug(
                     "No TCL passages found for subentry %s",
                     subentry.subentry_id,
                 )

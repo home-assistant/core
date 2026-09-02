@@ -28,7 +28,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
-    DeviceEntry,
+    AnyDeviceEntry,
     DeviceEntryType,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -272,9 +272,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: SqueezeboxConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Allow removal of a Squeezebox player only if its coordinator is unavailable."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     if device_entry.entry_type is DeviceEntryType.SERVICE:
         raise HomeAssistantError(
             f"Cannot remove Lyrion Music Server '{device_entry.name}' directly. "
