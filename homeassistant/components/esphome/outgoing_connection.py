@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Bound on waiting for a previous listener to stop before rebinding
 _STOP_TIMEOUT = 10.0
+# A recurring bind failure re-warns after this long instead of staying debug
+_BIND_WARN_INTERVAL = 3600.0
 
 
 @dataclass
@@ -36,7 +38,8 @@ _KEY_OUTGOING_CONNECTION_LISTENER: HassKey[_ListenerState] = HassKey(
 _KEY_OUTGOING_CONNECTION_STOPPING: HassKey[asyncio.Task[None]] = HassKey(
     "esphome_outgoing_connection_stopping"
 )
-_KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[bool] = HassKey(
+# Monotonic time of the last bind-failure warning
+_KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[float] = HassKey(
     "esphome_outgoing_connection_bind_failed"
 )
 
@@ -60,7 +63,10 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
         # Wait for the previous listener to release the port before rebinding;
         # wait() absorbs its failure or cancellation (logged by its done
         # callback), and a still-bound port surfaces as OSError from start()
-        await asyncio.wait([stopping], timeout=_STOP_TIMEOUT)
+        done, _ = await asyncio.wait([stopping], timeout=_STOP_TIMEOUT)
+        if not done:
+            # Still stopping; keep it so the next attempt can wait on it
+            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
     server = OutgoingConnectionServer()
     await server.start()
     hass.data.pop(_KEY_OUTGOING_CONNECTION_BIND_FAILED, None)
@@ -125,18 +131,21 @@ async def async_register_outgoing_target(
         try:
             state = await _async_get_listener(hass)
         except OSError as err:
-            # One warning per failure, not one per registered device
-            level = (
-                logging.DEBUG
-                if hass.data.get(_KEY_OUTGOING_CONNECTION_BIND_FAILED)
-                else logging.WARNING
+            # One warning per failure window, not one per registered device
+            now = hass.loop.time()
+            last = hass.data.get(
+                _KEY_OUTGOING_CONNECTION_BIND_FAILED, -_BIND_WARN_INTERVAL
             )
-            hass.data[_KEY_OUTGOING_CONNECTION_BIND_FAILED] = True
+            level = logging.DEBUG
+            if now - last >= _BIND_WARN_INTERVAL:
+                hass.data[_KEY_OUTGOING_CONNECTION_BIND_FAILED] = now
+                level = logging.WARNING
             _LOGGER.log(
                 level,
                 (
                     "Cannot listen for ESPHome outgoing connections on port %s: %s;"
-                    " devices are still told to dial back and will retry"
+                    " devices are still told to dial back, reload an ESPHome entry"
+                    " to retry the bind"
                 ),
                 DEFAULT_OUTGOING_CONNECTION_PORT,
                 err,

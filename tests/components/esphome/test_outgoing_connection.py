@@ -1,13 +1,16 @@
 """Tests for device-initiated outgoing connections."""
 
-from collections.abc import Generator
+import asyncio
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
+from homeassistant.components.esphome.outgoing_connection import (
+    async_register_outgoing_target,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -37,16 +40,9 @@ def _make_entry(
 
 
 @pytest.fixture
-def mock_server() -> Generator[MagicMock]:
-    """Patch the aioesphomeapi listener class in the singleton module."""
-    server = MagicMock()
-    server.start = AsyncMock()
-    server.stop = AsyncMock()
-    with patch(
-        "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
-        return_value=server,
-    ):
-        yield server
+def mock_server(mock_outgoing_connection_server: MagicMock) -> MagicMock:
+    """The autouse listener mock from conftest, under its local name."""
+    return mock_outgoing_connection_server
 
 
 async def test_outgoing_connection_registration(
@@ -251,3 +247,34 @@ async def test_outgoing_connection_bind_failure_warns_once(
         and "Cannot listen for ESPHome outgoing connections" in record.message
     ]
     assert len(warnings) == 1
+
+
+async def test_outgoing_connection_waits_for_pending_stop(
+    hass: HomeAssistant,
+    mock_server: MagicMock,
+) -> None:
+    """A new registration does not rebind until the old listener has stopped."""
+    release = asyncio.Event()
+    stop_started = asyncio.Event()
+
+    async def gated_stop() -> None:
+        stop_started.set()
+        await release.wait()
+
+    mock_server.stop = AsyncMock(side_effect=gated_stop)
+    unregister = await async_register_outgoing_target(hass, MAC, MagicMock())
+    assert unregister is not None
+    assert mock_server.start.await_count == 1
+    unregister()  # schedules the gated stop
+    await stop_started.wait()
+
+    task = hass.async_create_task(
+        async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    # Still waiting for the old socket to be released
+    assert mock_server.start.await_count == 1
+    release.set()
+    assert await task is not None
+    assert mock_server.start.await_count == 2

@@ -95,6 +95,19 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 
 @pytest.fixture(autouse=True)
+def mock_outgoing_connection_server() -> Generator[MagicMock]:
+    """Patch the shared dial-in listener so tests never bind a real socket."""
+    server = MagicMock()
+    server.start = AsyncMock()
+    server.stop = AsyncMock()
+    with patch(
+        "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
+        return_value=server,
+    ):
+        yield server
+
+
+@pytest.fixture(autouse=True)
 def esphome_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
