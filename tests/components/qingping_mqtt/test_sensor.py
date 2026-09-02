@@ -100,6 +100,11 @@ async def test_mqtt_sensors_offline(
         await hass.async_block_till_done()
         assert hass.states.get(MQTT_TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE
 
+        # A later check while already offline does not retrigger an update
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+        assert hass.states.get(MQTT_TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE
+
         async_fire_mqtt_message(
             hass, f"{MQTT_TOPIC_PREFIX}/{MQTT_MAC}/up", MQTT_TLV_PAYLOAD
         )

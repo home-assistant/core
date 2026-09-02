@@ -16,3 +16,10 @@ MQTT_TLV_PAYLOAD = bytes.fromhex(
     "0040003200ca030000bc011006851f00d8798e6a1302018d02bf010000000000"
     "0000004a003100000400002c0110061d010000a138"
 )
+
+# A TLV packet without sensor data, e.g. a heartbeat; previous values are kept.
+MQTT_EMPTY_PAYLOAD = bytes.fromhex("43470100008b00")
+
+# A realtime frame (TLV key 0x14) without signal strength carrying rssi -60,
+# so the coordinator falls back to the rssi value.
+MQTT_REALTIME_RSSI_PAYLOAD = bytes.fromhex("4347010e00140b00a0678d6a0401f2046502c4dc04")

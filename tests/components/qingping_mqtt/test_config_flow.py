@@ -1,8 +1,14 @@
 """Test the qingping_mqtt config flow."""
 
+from collections.abc import Callable
+import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
+from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.qingping_mqtt.const import DOMAIN, MQTT_TOPIC_PREFIX
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -18,6 +24,17 @@ async def _async_start_user_flow(hass: HomeAssistant) -> FlowResult:
     """Start the user flow while a device is publishing on MQTT."""
 
     async def _fire_device_message(_: float) -> None:
+        """Publish broker traffic that discovery has to filter."""
+        # A topic that does not end in "up" is not a device topic
+        async_fire_mqtt_message(
+            hass, f"{MQTT_TOPIC_PREFIX}/{MQTT_MAC.lower()}/down", b"ignored"
+        )
+        # A bytearray payload is converted to bytes before the check
+        async_fire_mqtt_message(
+            hass,
+            f"{MQTT_TOPIC_PREFIX}/{MQTT_MAC.lower()}/up",
+            bytearray(MQTT_TLV_PAYLOAD),
+        )
         async_fire_mqtt_message(
             hass, f"{MQTT_TOPIC_PREFIX}/{MQTT_MAC.lower()}/up", MQTT_TLV_PAYLOAD
         )
@@ -82,6 +99,52 @@ async def test_async_step_user_discovered(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_async_step_user_discovery_string_payload(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test discovery handles a payload delivered as a string."""
+
+    async def _mock_subscribe(
+        _hass: HomeAssistant,
+        _topic: str,
+        msg_callback: Callable[[ReceiveMessage], None],
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> Callable[[], None]:
+        """Deliver a string payload message on a device topic."""
+        msg_callback(
+            ReceiveMessage(
+                topic=f"{MQTT_TOPIC_PREFIX}/{MQTT_MAC.lower()}/up",
+                payload=MQTT_TLV_PAYLOAD.decode("latin-1"),
+                qos=0,
+                retain=False,
+                subscribed_topic=f"{MQTT_TOPIC_PREFIX}/#",
+                timestamp=time.time(),
+            )
+        )
+        return lambda: None
+
+    with (
+        patch(
+            "homeassistant.components.qingping_mqtt.config_flow.asyncio.sleep",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.qingping_mqtt.config_flow.mqtt.async_subscribe",
+            side_effect=_mock_subscribe,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert MQTT_MAC in _mac_options(result)
+
+
 async def test_async_step_user_manual_mac_without_discovery(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -110,17 +173,25 @@ async def test_async_step_user_manual_mac_without_discovery(
     assert result2["data"] == {CONF_MAC: MQTT_MAC, CONF_MODEL: "cgr1w"}
 
 
+@pytest.mark.parametrize(
+    "invalid_mac",
+    [
+        pytest.param("not-a-mac", id="wrong_length"),
+        pytest.param("zzzzzzzzzzzz", id="not_hex"),
+    ],
+)
 async def test_async_step_user_invalid_mac(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     mock_setup_entry: AsyncMock,
+    invalid_mac: str,
 ) -> None:
     """Test manual MAC entry rejects an invalid address."""
     result = await _async_start_user_flow(hass)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAC: "not-a-mac", CONF_MODEL: "cgr1w"},
+        user_input={CONF_MAC: invalid_mac, CONF_MODEL: "cgr1w"},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
