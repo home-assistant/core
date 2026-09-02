@@ -1,5 +1,6 @@
 """Tests for the Community store setup."""
 
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -23,6 +24,7 @@ from .const import (
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_load_unload_entry(
@@ -188,3 +190,56 @@ async def test_remove_device_still_downloaded(
         match=f"Cannot remove service for {REPOSITORY_INTEGRATION}",
     ):
         await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
+
+
+@pytest.mark.parametrize(
+    ("path", "location"),
+    [
+        pytest.param("/hacs", "/store", id="panel"),
+        pytest.param(
+            "/hacs/repository/1296269",
+            "/store/repository/1296269",
+            id="repository",
+        ),
+        pytest.param(
+            "/hacs/_my_redirect/hacs_repository",
+            "/store/_my_redirect/hacs_repository",
+            id="my_redirect",
+        ),
+        pytest.param(
+            "/hacs/_my_redirect/hacs_repository?owner=test&repository=test",
+            "/store/_my_redirect/hacs_repository?owner=test&repository=test",
+            id="query_string",
+        ),
+    ],
+)
+async def test_old_panel_paths_redirect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    path: str,
+    location: str,
+) -> None:
+    """Test that the paths of the old HACS panel redirect to the store."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client()
+    response = await client.get(path, allow_redirects=False)
+
+    assert response.status == HTTPStatus.MOVED_PERMANENTLY
+    assert response.headers["Location"] == location
+
+
+async def test_old_panel_paths_redirect_without_a_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test that a bookmark opened before login is redirected."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get("/hacs/repository/1296269", allow_redirects=False)
+
+    assert response.status == HTTPStatus.MOVED_PERMANENTLY
+    assert response.headers["Location"] == "/store/repository/1296269"

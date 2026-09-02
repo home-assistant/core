@@ -8,8 +8,11 @@ https://hacs.xyz/
 
 from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPMovedPermanently
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, __version__ as HAVERSION
@@ -37,9 +40,32 @@ PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+class HacsRedirectView(HomeAssistantView):
+    """Redirect the paths below the old HACS panel to the store panel."""
+
+    url = "/hacs/{tail:.*}"
+    name = "hacs:redirect"
+    # Bookmarks are opened before there is a session, like the frontend's own
+    # redirects.
+    requires_auth = False
+
+    async def get(self, request: web.Request, tail: str) -> web.StreamResponse:
+        """Redirect to the same path below the store panel."""
+        target = f"/store/{tail}"
+        if query_string := request.query_string:
+            target = f"{target}?{query_string}"
+
+        raise HTTPMovedPermanently(target)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Community store integration."""
     await async_remove_duplicate_entries(hass)
+
+    # HACS lived at /hacs, which is what bookmarks and links still point at
+    hass.http.register_redirect("/hacs", "/store")
+    hass.http.register_view(HacsRedirectView)
+
     return True
 
 
