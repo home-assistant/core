@@ -1770,6 +1770,97 @@ async def test_device_entry_cleared_on_registry_detach(
     assert ent.device_entry is None
 
 
+async def test_device_entry_cleared_on_device_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the cached device entry is cleared when the device is removed."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "name": "Device Bla",
+        },
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
+    assert device is not None
+    assert ent.device_entry is not None
+    assert ent.device_entry.id == device.id
+
+    device_registry.async_remove_device(device.id)
+    # Cleared synchronously while the removal event is dispatched, so removal
+    # callbacks of sibling entities sharing the device cannot see a stale entry
+    assert ent.device_entry is None
+    await hass.async_block_till_done()
+
+
+async def test_shared_device_removal_from_entity_callbacks(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test sibling entities removing their shared device from callbacks.
+
+    Integrations remove their own device from entity callbacks (e.g. a remove
+    signal fanned out to every entity of the device); callbacks running after
+    the first removal must observe device_entry as None, not a stale entry.
+    """
+    ent1 = MockEntity(unique_id="qwer", device_info={"identifiers": {("hue", "1234")}})
+    ent2 = MockEntity(unique_id="asdf", device_info={"identifiers": {("hue", "1234")}})
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent1, ent2])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert ent1.device_entry is not None
+    assert ent2.device_entry is not None
+
+    # Both entities react to the same removal signal; without the synchronous
+    # clearing, the second iteration raises KeyError on the stale device id
+    for ent in (ent1, ent2):
+        if ent.device_entry:
+            device_registry.async_remove_device(ent.device_entry.id)
+
+    assert ent1.device_entry is None
+    assert ent2.device_entry is None
+    await hass.async_block_till_done()
+
+
 async def test_translation_key(hass: HomeAssistant) -> None:
     """Test translation key property."""
     mock_entity1 = entity.Entity()
