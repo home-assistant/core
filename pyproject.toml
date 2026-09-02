@@ -75,10 +75,10 @@ dependencies = [
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.12.5",
-  "probatio==0.11.3",
+  "probatio==0.11.4",
   "yarl==1.24.5",
   "webrtc-models==0.3.0",
-  "zeroconf==0.150.0",
+  "zeroconf==0.151.1",
 ]
 
 [project.urls]
