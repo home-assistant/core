@@ -37,6 +37,8 @@ SCHEDULED = "scheduled"
 PARALLEL_UPDATES = 0
 
 ATTR_SCHEDULED_AT = "scheduled_at"
+ATTR_DOWNLOAD_PERCENTAGE = "download_percentage"
+ATTR_INSTALL_PERCENTAGE = "install_percentage"
 
 # A scheduled install normally begins within hours. A schedule this old was
 # never followed by the clearing push it should have received, so treat it
@@ -49,6 +51,8 @@ class TeslemetryUpdateExtraStoredData(ExtraStoredData):
     """Extra stored data for the streaming update entity."""
 
     scheduled_at: datetime | None = None
+    download_percentage: int = 0
+    install_percentage: int = 0
 
     @override
     def as_dict(self) -> dict[str, Any]:
@@ -57,14 +61,19 @@ class TeslemetryUpdateExtraStoredData(ExtraStoredData):
             ATTR_SCHEDULED_AT: self.scheduled_at.isoformat()
             if self.scheduled_at is not None
             else None,
+            ATTR_DOWNLOAD_PERCENTAGE: self.download_percentage,
+            ATTR_INSTALL_PERCENTAGE: self.install_percentage,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> TeslemetryUpdateExtraStoredData:
         """Initialize the extra data from a dict."""
-        if (scheduled_at := data[ATTR_SCHEDULED_AT]) is None:
-            return cls()
-        return cls(dt_util.parse_datetime(scheduled_at))
+        scheduled_at = data[ATTR_SCHEDULED_AT]
+        return cls(
+            dt_util.parse_datetime(scheduled_at) if scheduled_at is not None else None,
+            data.get(ATTR_DOWNLOAD_PERCENTAGE, 0),
+            data.get(ATTR_INSTALL_PERCENTAGE, 0),
+        )
 
 
 async def async_setup_entry(
@@ -194,9 +203,10 @@ class TeslemetryStreamingUpdateEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (extra_data := await self.async_get_last_extra_data()) is not None:
-            self._scheduled_at = TeslemetryUpdateExtraStoredData.from_dict(
-                extra_data.as_dict()
-            ).scheduled_at
+            extra = TeslemetryUpdateExtraStoredData.from_dict(extra_data.as_dict())
+            self._scheduled_at = extra.scheduled_at
+            self._download_percentage = extra.download_percentage
+            self._install_percentage = extra.install_percentage
         if (state := await self.async_get_last_state()) is not None:
             self._attr_installed_version = state.attributes.get(
                 UpdateEntityStateAttribute.INSTALLED_VERSION
@@ -355,7 +365,9 @@ class TeslemetryStreamingUpdateEntity(
     @override
     def extra_restore_state_data(self) -> TeslemetryUpdateExtraStoredData:
         """Return entity specific state data to be restored."""
-        return TeslemetryUpdateExtraStoredData(self._scheduled_at)
+        return TeslemetryUpdateExtraStoredData(
+            self._scheduled_at, self._download_percentage, self._install_percentage
+        )
 
     def _async_update_progress(self) -> None:
         """Update the progress of the update."""

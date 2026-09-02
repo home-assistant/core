@@ -391,6 +391,68 @@ async def test_update_streaming_restore_completed_not_in_progress(
     assert state.attributes["update_percentage"] is None
 
 
+async def test_update_streaming_restore_real_progress_survives_stream_event(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test a restored genuine in-progress download is not cleared by the next stream event.
+
+    Reproduces a restart during a real download: only update_percentage is part
+    of the restored entity state, so without persisting download/install
+    percentage too, the next stream event recomputed progress from zeroed
+    percentages and wrongly cleared in_progress.
+    """
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entity_id = "update.test_update"
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    entity_id,
+                    STATE_ON,
+                    attributes={
+                        "in_progress": True,
+                        "update_percentage": 42,
+                        "installed_version": "2025.1.1",
+                        "latest_version": "2025.2.1",
+                    },
+                ),
+                {
+                    "scheduled_at": None,
+                    "download_percentage": 42,
+                    "install_percentage": 0,
+                },
+            ),
+        ),
+    )
+
+    await setup_platform(hass, [Platform.UPDATE])
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 42
+
+    # An unrelated stream event (no download/install signal) still triggers a
+    # progress recompute, which must be based on the restored percentages.
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.VERSION: "2025.1.1",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 42
+
+
 async def test_update_streaming_restore_scheduled_expired(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
