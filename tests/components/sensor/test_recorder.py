@@ -6939,3 +6939,57 @@ async def test_validate_statistics_mean_type_changed(
 
     # Issue should be resolved
     await assert_validation_result(hass, client, {}, {})
+
+
+@pytest.mark.parametrize("stored_unit", ["", "kWh"])
+@pytest.mark.usefixtures("recorder_mock")
+async def test_compile_statistics_with_unusable_stored_unit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    stored_unit: str,
+) -> None:
+    """Test one sensor with an unusable stored unit does not stop the others."""
+    zero = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    with session_scope(hass=hass) as session:
+        session.add(
+            StatisticsMeta.from_meta(
+                {
+                    "has_sum": False,
+                    "mean_type": StatisticMeanType.ARITHMETIC,
+                    "name": None,
+                    "source": "recorder",
+                    "statistic_id": "sensor.bad",
+                    "unit_class": "unitless",
+                    "unit_of_measurement": stored_unit,
+                }
+            )
+        )
+
+    attributes = {
+        "sensor.bad": {
+            "device_class": "humidity",
+            "state_class": "measurement",
+            "unit_of_measurement": "%",
+        },
+        "sensor.good": {
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "°C",
+        },
+    }
+    for entity_id, attrs in attributes.items():
+        with freeze_time(zero) as freezer:
+            await async_record_states(hass, freezer, zero, entity_id, attrs)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert "sensor.good" in stats
+    assert "sensor.bad" not in stats
+    assert "is not a valid unitless unit" in caplog.text
+    assert "Error while processing event" not in caplog.text
