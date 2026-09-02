@@ -14,6 +14,9 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
+        "data_description": {
+          "api_key": "[%key:component::metoffice::config::step::user::data_description::api_key%]"
+        },
         "description": "Please re-enter your DataHub API key. If you are still using an old Datapoint API key, you need to sign up for DataHub API now, see [documentation]({docs_url}) for details.",
         "title": "Reauthenticate with DataHub API"
       },
@@ -22,6 +25,11 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "data_description": {
+          "api_key": "Met Office DataHub API key for the Site Specific Global Spot API.",
+          "latitude": "The latitude of a location for which to request a weather forecast.",
+          "longitude": "The longitude of a location for which to request a weather forecast."
         },
         "title": "Connect to the UK Met Office"
       }
