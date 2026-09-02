@@ -1,7 +1,7 @@
 """Tests for the Ecowitt Modbus integration.
 
 The two models share a config flow, coordinator, and entity layer, but
-differ in ways that matter: only the WS90 reports a serial number, and only
+differ in ways that matter: only the WN90LP reports a serial number, and only
 the WN69LP needs a second read for its configuration block.
 
 Behaviour that should be identical across models is parametrized over both,
@@ -15,12 +15,12 @@ branching on the model name in its body.
 from dataclasses import dataclass, field
 from typing import Any
 
-from ecowitt_modbus import WN69LP, WS90, EcowittDevice
+from ecowitt_modbus import WN69LP, WN90LP, EcowittDevice
 from ecowitt_modbus.testing import (
     WN69LP_LIVE_EXAMPLE,
     WN69LP_UNIT_ID,
-    WS90_LIVE_EXAMPLE,
-    WS90_UNIT_ID,
+    WN90LP_LIVE_EXAMPLE,
+    WN90LP_UNIT_ID,
 )
 
 from homeassistant.components.ecowitt_modbus.const import CONF_UNIT_ID
@@ -94,12 +94,12 @@ class ModelCase:
         return {CONF_MODEL: self.name, **self.user_input}
 
 
-WS90_CASE = ModelCase(
-    model=WS90,
-    unit_id=WS90_UNIT_ID,
-    registers=WS90_LIVE_EXAMPLE,
-    # The device ID WS90_LIVE_EXAMPLE decodes to; see the device library's
-    # own ws90/test_ws90.test_serial_number_is_the_device_id.
+WN90LP_CASE = ModelCase(
+    model=WN90LP,
+    unit_id=WN90LP_UNIT_ID,
+    registers=WN90LP_LIVE_EXAMPLE,
+    # The device ID WN90LP_LIVE_EXAMPLE decodes to; see the device library's
+    # own wn90lp/test_wn90lp.test_serial_number_is_the_device_id.
     unique_id="12345678",
     serial_number="12345678",
     sw_version=None,
@@ -118,10 +118,10 @@ WS90_CASE = ModelCase(
         }
     ),
     disabled_keys=frozenset({"rain_counter"}),
-    # The WS90 archives history up here, but never during a live poll.
+    # The WN90LP archives history up here, but never during a live poll.
     unused_register=0x9B14,
     temperature_register=0x167,
-    # Register 0x160 is a fixed device code on a genuine WS90.
+    # Register 0x160 is a fixed device code on a genuine WN90LP.
     impostor_registers={0x160: 0x42},
 )
 
@@ -158,4 +158,4 @@ WN69LP_CASE = ModelCase(
     impostor_registers={0x183: 101},
 )
 
-ALL_MODELS = (WS90_CASE, WN69LP_CASE)
+ALL_MODELS = (WN90LP_CASE, WN69LP_CASE)

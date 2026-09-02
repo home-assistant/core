@@ -13,7 +13,7 @@ from .coordinator import EcowittConfigEntry
 # The host says where on the user's network the gateway is, and the rest all
 # identify the specific unit. None of it is needed to interpret a reading.
 #
-# `device_id` is the WS90's raw identity register -- the same value
+# `device_id` is the WN90LP's raw identity register -- the same value
 # `serial_number` is formatted from -- and `unique_id` is derived from one or
 # the other: the serial number where a model reports one, and the host and
 # address where it does not. Redacting `serial_number` alone would leave the

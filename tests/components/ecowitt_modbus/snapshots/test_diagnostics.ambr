@@ -42,7 +42,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[WS90]
+# name: test_diagnostics[WN90LP]
   dict({
     'configuration': dict({
       'baud_rate': 2,
@@ -56,14 +56,14 @@
     }),
     'device': dict({
       'manufacturer': 'Ecowitt',
-      'model': 'WS90',
+      'model': 'WN90LP',
       'serial_number': '**REDACTED**',
       'sw_version': None,
     }),
     'entry': dict({
       'data': dict({
         'host': '**REDACTED**',
-        'model': 'WS90',
+        'model': 'WN90LP',
         'port': 502,
         'unit_id': 144,
       }),

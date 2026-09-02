@@ -20,7 +20,7 @@ import pytest
 from homeassistant.components.ecowitt_modbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import WS90_CASE, ModelCase
+from . import WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry
 
@@ -29,10 +29,10 @@ from tests.common import MockConfigEntry
 def model_case(request: pytest.FixtureRequest) -> ModelCase:
     """The model under test.
 
-    Defaults to the WS90 so a test only concerned with shared behaviour need
+    Defaults to the WN90LP so a test only concerned with shared behaviour need
     not care. Tests covering every model parametrize this indirectly.
     """
-    return getattr(request, "param", WS90_CASE)
+    return getattr(request, "param", WN90LP_CASE)
 
 
 @pytest.fixture

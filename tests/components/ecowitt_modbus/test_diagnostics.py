@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import ALL_MODELS, MOCK_HOST, WS90_CASE, ModelCase
+from . import ALL_MODELS, MOCK_HOST, WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -52,7 +52,7 @@ async def test_the_address_is_redacted(
     assert MOCK_HOST not in json.dumps(result)
 
 
-@pytest.mark.parametrize("model_case", [WS90_CASE], ids=["WS90"], indirect=True)
+@pytest.mark.parametrize("model_case", [WN90LP_CASE], ids=["WN90LP"], indirect=True)
 async def test_the_serial_number_is_redacted(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -61,7 +61,7 @@ async def test_the_serial_number_is_redacted(
 ) -> None:
     """Test the hardware identity does not survive anywhere in the dump.
 
-    Only the WS90 has one. It appears three times over -- as
+    Only the WN90LP has one. It appears three times over -- as
     ``serial_number``, as the raw ``device_id`` register it is formatted
     from, and as the config entry's unique ID -- so redacting the obvious
     field alone would not be enough.

@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import ALL_MODELS, WN69LP_CASE, WS90_CASE, ModelCase
+from . import ALL_MODELS, WN69LP_CASE, WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -40,8 +40,8 @@ async def test_each_model_creates_exactly_its_own_entities(
 ) -> None:
     """Test a model gets its own readings and none of the other's.
 
-    The two models overlap heavily but not completely. Surfacing a WS90's
-    rain counter on a WN69LP, or a WN69LP's battery voltage on a WS90,
+    The two models overlap heavily but not completely. Surfacing a WN90LP's
+    rain counter on a WN69LP, or a WN69LP's battery voltage on a WN90LP,
     would create an entity that is permanently blank.
     """
     entries = er.async_entries_for_config_entry(
@@ -101,14 +101,14 @@ def test_every_supported_model_has_sensor_descriptions() -> None:
 @pytest.mark.parametrize(
     ("model_case", "key", "expected"),
     [
-        (WS90_CASE, "light", "17670"),
-        (WS90_CASE, "uv_index", "1.3"),
-        (WS90_CASE, "temperature", "26.2"),
-        (WS90_CASE, "humidity", "60"),
-        (WS90_CASE, "wind_direction", "150"),
-        (WS90_CASE, "absolute_pressure", "1001.0"),
+        (WN90LP_CASE, "light", "17670"),
+        (WN90LP_CASE, "uv_index", "1.3"),
+        (WN90LP_CASE, "temperature", "26.2"),
+        (WN90LP_CASE, "humidity", "60"),
+        (WN90LP_CASE, "wind_direction", "150"),
+        (WN90LP_CASE, "absolute_pressure", "1001.0"),
         (WN69LP_CASE, "light", "17670"),
-        # A whole number here, where the WS90 reports tenths.
+        # A whole number here, where the WN90LP reports tenths.
         (WN69LP_CASE, "uv_index", "1"),
         (WN69LP_CASE, "temperature", "26.2"),
         (WN69LP_CASE, "humidity", "60"),

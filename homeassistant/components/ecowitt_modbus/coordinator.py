@@ -62,7 +62,7 @@ class EcowittDataUpdateCoordinator(DataUpdateCoordinator[EcowittDevice]):
         The address in ``entry.data`` can come to point at a different
         responder than the entry was created for -- the gateway is
         reconfigured, a device address is reused. A model that reports a
-        serial number (the WS90) refreshes it on every poll, so a swap is
+        serial number (the WN90LP) refreshes it on every poll, so a swap is
         caught whenever it happens rather than only at setup.
 
         A model that reports no serial number (the WN69LP) has nothing to

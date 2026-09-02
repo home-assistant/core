@@ -902,7 +902,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.ecowitt_modbus
-ecowitt-modbus==0.2.0
+ecowitt-modbus==0.3.0
 
 # homeassistant.components.egauge
 egauge-async==0.4.0

@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from . import ALL_MODELS, MOCK_HOST, WN69LP_CASE, WS90_CASE, ModelCase
+from . import ALL_MODELS, MOCK_HOST, WN69LP_CASE, WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry
 
@@ -204,20 +204,20 @@ async def test_the_same_device_cannot_be_added_twice(
 
 
 @pytest.mark.usefixtures("mock_temporary_unit")
-async def test_a_ws90_is_recognised_at_a_new_address(
+async def test_a_wn90lp_is_recognised_at_a_new_address(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a WS90's serial number identifies it wherever it is reached.
+    """Test a WN90LP's serial number identifies it wherever it is reached.
 
-    Moving a WS90 to another gateway must not let it be added a second time,
+    Moving a WN90LP to another gateway must not let it be added a second time,
     which is the whole point of keying the entry on the device ID.
     """
     mock_config_entry.add_to_hass(hass)
 
-    flow_id = await _pick_model(hass, WS90_CASE)
+    flow_id = await _pick_model(hass, WN90LP_CASE)
     result = await hass.config_entries.flow.async_configure(
-        flow_id, {**WS90_CASE.user_input, CONF_HOST: "192.168.1.200"}
+        flow_id, {**WN90LP_CASE.user_input, CONF_HOST: "192.168.1.200"}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -371,7 +371,7 @@ class TestReconfigure:
         assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
 
     @pytest.mark.usefixtures("mock_temporary_unit")
-    async def test_a_ws90_entry_will_not_adopt_a_different_ws90(
+    async def test_a_wn90lp_entry_will_not_adopt_a_different_wn90lp(
         self,
         hass: HomeAssistant,
         mock_config_entry: MockConfigEntry,
@@ -382,13 +382,13 @@ class TestReconfigure:
         history.
         """
         mock_config_entry.add_to_hass(hass)
-        other = dict(WS90_CASE.registers) | {0x163: 0x0000, 0x164: 0x0001}
+        other = dict(WN90LP_CASE.registers) | {0x163: 0x0000, 0x164: 0x0001}
 
         result = await mock_config_entry.start_reconfigure_flow(hass)
-        with _serving(WS90_CASE.unit_id, other):
+        with _serving(WN90LP_CASE.unit_id, other):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {**WS90_CASE.user_input, CONF_HOST: "192.168.1.200"},
+                {**WN90LP_CASE.user_input, CONF_HOST: "192.168.1.200"},
             )
 
         assert result["type"] is FlowResultType.ABORT

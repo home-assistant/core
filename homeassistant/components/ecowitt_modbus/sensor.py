@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from ecowitt_modbus import WN69LP, WS90
+from ecowitt_modbus import WN69LP, WN90LP
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -108,10 +108,10 @@ RAINFALL = _reading(
     state_class=SensorStateClass.TOTAL_INCREASING,
 )
 
-# The WS90 reports UV index in tenths; the WN69LP in whole numbers. Same
+# The WN90LP reports UV index in tenths; the WN69LP in whole numbers. Same
 # quantity and unit, different resolution, so they differ only in the
 # precision each is displayed at.
-WS90_UV_INDEX = _reading(
+WN90LP_UV_INDEX = _reading(
     "uv_index",
     native_unit_of_measurement=UV_INDEX,
     state_class=SensorStateClass.MEASUREMENT,
@@ -125,9 +125,9 @@ WN69LP_UV_INDEX = _reading(
 )
 
 SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
-    WS90.MODEL: (
+    WN90LP.MODEL: (
         LIGHT,
-        WS90_UV_INDEX,
+        WN90LP_UV_INDEX,
         TEMPERATURE,
         HUMIDITY,
         WIND_SPEED,
@@ -156,7 +156,7 @@ SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
         WIND_DIRECTION,
         RAINFALL,
         ABSOLUTE_PRESSURE,
-        # The WS90 archives these two in its history block; the WN69LP has
+        # The WN90LP archives these two in its history block; the WN69LP has
         # them as live registers, re-measured once a minute.
         _reading(
             "battery_voltage",

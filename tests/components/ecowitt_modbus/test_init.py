@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import ALL_MODELS, WS90_CASE, ModelCase
+from . import ALL_MODELS, WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -49,7 +49,7 @@ async def test_device_registry_entry(
 ) -> None:
     """Test the sensor array is registered with what the model reports.
 
-    Only the WS90 has a serial number and only the WN69LP has a firmware
+    Only the WN90LP has a serial number and only the WN69LP has a firmware
     version, so this pins that each model contributes what it actually has
     rather than an empty field or a value borrowed from the other.
     """
@@ -99,7 +99,7 @@ async def test_a_poll_reads_only_the_live_block(
 ) -> None:
     """Test polling does not touch registers outside the live readings.
 
-    Both devices have addresses a poll must stay away from: the WS90's
+    Both devices have addresses a poll must stay away from: the WN90LP's
     330-register history block, and the reserved gap the WN69LP documents
     between its configuration and live blocks. Reading into either wastes
     the link at best and is rejected at worst.
@@ -169,7 +169,7 @@ async def test_setup_is_rejected_when_another_device_answers(
 
 
 class TestSerialNumberRevalidation:
-    """A WS90 swapped for a different WS90 while Home Assistant runs.
+    """A WN90LP swapped for a different WN90LP while Home Assistant runs.
 
     Only applies to models that report a serial number. The WN69LP reports
     none, so there is nothing to revalidate and no test to write -- that
@@ -178,8 +178,8 @@ class TestSerialNumberRevalidation:
 
     @pytest.fixture
     def register_image(self) -> dict[int, int]:
-        """A WS90 reporting a different device ID than the entry expects."""
-        image = dict(WS90_CASE.registers)
+        """A WN90LP reporting a different device ID than the entry expects."""
+        image = dict(WN90LP_CASE.registers)
         image[0x163] = 0x0000
         image[0x164] = 0x0001
         return image
@@ -203,7 +203,7 @@ async def test_a_swap_after_setup_takes_entities_unavailable(
     mock_unit: MockModbusUnit,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a WS90 replaced mid-run stops publishing under the old entities.
+    """Test a WN90LP replaced mid-run stops publishing under the old entities.
 
     Distinct from setup-time rejection: the entry is already loaded, so the
     coordinator -- not ``async_setup_entry`` -- is what has to notice. The
@@ -211,7 +211,7 @@ async def test_a_swap_after_setup_takes_entities_unavailable(
     way a dropped connection does.
     """
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{WS90_CASE.unique_id}_temperature"
+        "sensor", DOMAIN, f"{WN90LP_CASE.unique_id}_temperature"
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "26.2"
