@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from . import VALID_NOISE_PSK
 from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
@@ -20,7 +21,7 @@ MAC = "11:22:33:44:55:aa"
 
 def _make_entry(
     *,
-    noise_psk: str | None = "bOFFzzvfpg5DB94DuBGLXD/hMnhpDKgP9UQyBulwWVU=",
+    noise_psk: str | None = VALID_NOISE_PSK,
     unique_id: str = MAC,
 ) -> MockConfigEntry:
     data = {CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""}
@@ -35,7 +36,6 @@ def mock_server() -> Generator[MagicMock]:
     server = MagicMock()
     server.start = AsyncMock()
     server.stop = AsyncMock()
-    server.register = MagicMock(return_value=MagicMock())
     with patch(
         "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
         return_value=server,
