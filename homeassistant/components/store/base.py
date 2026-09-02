@@ -26,6 +26,7 @@ from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.persistent_notification import (
     async_create as async_create_persistent_notification,
 )
@@ -65,7 +66,6 @@ from .utils.file_system import async_exists
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
 from .utils.store import async_load_from_store, async_save_to_store
-from .utils.workarounds import async_register_static_path
 
 if TYPE_CHECKING:
     from .repositories.base import HacsRepository
@@ -117,7 +117,6 @@ class HacsConfiguration:
     config_entry: ConfigEntry | None = None
     country: str = "ALL"
     debug: bool = False
-    dev: bool = False
     frontend_repo_url: str = ""
     frontend_repo: str = ""
     plugin_path: str = "www/community/"
@@ -850,7 +849,7 @@ class HacsBase:
                 raise HacsException("Unknown error")
 
             repository.data.installed = True
-            repository.data.installed_version = self.integration.version.string
+            repository.data.installed_version = self.version.string
             repository.data.new = False
             repository.data.releases = True
 
@@ -1161,11 +1160,12 @@ class HacsBase:
             use_cache,
         )
 
-        await async_register_static_path(
-            self.hass,
-            URL_BASE,
-            self.hass.config.path("www/community"),
-            cache_headers=use_cache,
+        await self.hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    URL_BASE, self.hass.config.path("www/community"), use_cache
+                )
+            ]
         )
 
         self.status.active_frontend_endpoint_plugin = True

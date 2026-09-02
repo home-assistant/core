@@ -13,18 +13,15 @@ from aiogithubapi import (
     GitHubLoginOauthModel,
 )
 from aiogithubapi.common.const import OAUTH_USER_LOGIN
-from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
-from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers import aiohttp_client
-from homeassistant.loader import async_get_integration
 
 from .base import HacsBase
-from .const import CLIENT_ID, DOMAIN, LOCALE, MINIMUM_HA_VERSION
+from .const import CLIENT_ID, CLIENT_NAME, DOMAIN, LOCALE
 from .utils.configuration_schema import (
     APPDAEMON,
     COUNTRY,
@@ -93,11 +90,10 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
                         )
 
         if not self.device:
-            integration = await async_get_integration(self.hass, DOMAIN)
             self.device = GitHubDeviceAPI(
                 client_id=CLIENT_ID,
                 session=aiohttp_client.async_get_clientsession(self.hass),
-                client_name=f"HACS/{integration.version}",
+                client_name=CLIENT_NAME,
             )
             try:
                 response = await self.device.register()
@@ -132,11 +128,6 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
         if not user_input:
             user_input = {}
 
-        if AwesomeVersion(HAVERSION) < MINIMUM_HA_VERSION:
-            return self.async_abort(
-                reason="min_ha_version",
-                description_placeholders={"version": MINIMUM_HA_VERSION},
-            )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -202,16 +193,12 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return HacsOptionsFlowHandler(config_entry)
+        """Create the options flow."""
+        return HacsOptionsFlowHandler()
 
 
 class HacsOptionsFlowHandler(OptionsFlow):
     """HACS config flow options handler."""
-
-    def __init__(self, config_entry):
-        """Initialize HACS options flow."""
-        if AwesomeVersion(HAVERSION) < "2024.11.99":
-            self.config_entry = config_entry
 
     async def async_step_init(self, _user_input=None):
         """Manage the options."""

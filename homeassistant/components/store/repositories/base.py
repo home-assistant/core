@@ -1527,19 +1527,14 @@ class HacsRepository:
                 f"The version {ref} for this {self.data.category.value} can not be used with HACS."
             )
 
+        # The manifest `hacs` key names a HACS version, which cannot be compared
+        # with a Home Assistant version, so only `homeassistant` is checked.
         if (
             target_manifest.homeassistant is not None
             and self.hacs.core.ha_version < target_manifest.homeassistant
         ):
             raise HacsException(
                 f"This version requires Home Assistant {target_manifest.homeassistant} or newer."
-            )
-        if (
-            target_manifest.hacs is not None
-            and self.hacs.version < target_manifest.hacs
-        ):
-            raise HacsException(
-                f"This version requires HACS {target_manifest.hacs} or newer."
             )
 
     async def async_download_repository(self, *, ref: str | None = None, **_) -> None:

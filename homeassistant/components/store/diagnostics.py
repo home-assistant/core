@@ -48,7 +48,6 @@ async def async_get_config_entry_diagnostics(
         "appdaemon",
         "country",
         "debug",
-        "dev",
         "python_script",
         "release_limit",
         "theme",

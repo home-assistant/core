@@ -8,9 +8,9 @@ from homeassistant.components.frontend import (
     add_extra_js_url,
     async_register_built_in_panel,
 )
+from homeassistant.components.http import StaticPathConfig
 
 from .const import DOMAIN, URL_BASE
-from .utils.workarounds import async_register_static_path
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -24,8 +24,14 @@ async def async_register_frontend(hass: HomeAssistant, hacs: HacsBase) -> None:
     hacs.frontend_version = "core"
 
     # Custom iconset
-    await async_register_static_path(
-        hass, f"{URL_BASE}/iconset.js", str(hacs.integration_dir / "iconset.js")
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                f"{URL_BASE}/iconset.js",
+                str(hacs.integration_dir / "iconset.js"),
+                True,
+            )
+        ]
     )
     add_extra_js_url(hass, f"{URL_BASE}/iconset.js")
 

@@ -112,7 +112,6 @@ async def hacs_info(
                 "categories": hacs.common.categories,
                 "country": hacs.configuration.country,
                 "debug": hacs.configuration.debug,
-                "dev": hacs.configuration.dev,
                 "disabled_reason": hacs.system.disabled_reason,
                 "has_pending_tasks": hacs.queue.has_pending_tasks,
                 "lovelace_mode": hacs.core.lovelace_mode,

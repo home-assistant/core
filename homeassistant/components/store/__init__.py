@@ -24,14 +24,13 @@ from homeassistant.helpers.start import async_at_start
 from homeassistant.loader import async_get_integration
 
 from .base import HacsBase
-from .const import DOMAIN, HACS_SYSTEM_ID, MINIMUM_HA_VERSION
+from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
 from .data_client import HacsDataClient
 from .enums import HacsDisabledReason, HacsStage, LovelaceMode
 from .frontend import async_register_frontend
 from .utils.data import HacsData
 from .utils.queue_manager import QueueManager
 from .utils.store import STORE_CACHE_KEY
-from .utils.version import version_left_higher_or_equal_then_right
 from .websocket import async_register_websocket_commands
 
 PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
@@ -62,19 +61,18 @@ async def _async_initialize_integration(
 
     hacs.set_stage(None)
 
-    hacs.log.info("Starting HACS[%s]", integration.version)
+    hacs.log.info("Starting Community store")
 
     clientsession = async_get_clientsession(hass)
 
     hacs.integration = integration
-    hacs.version = integration.version
-    hacs.configuration.dev = integration.version == "0.0.0"
+    hacs.version = AwesomeVersion(HAVERSION)
     hacs.hass = hass
     hacs.queue = QueueManager(hass=hass)
     hacs.data = HacsData(hacs=hacs)
     hacs.data_client = HacsDataClient(
         session=clientsession,
-        client_name=f"HACS/{integration.version}",
+        client_name=CLIENT_NAME,
     )
     hacs.system.running = True
     hacs.session = clientsession
@@ -96,7 +94,7 @@ async def _async_initialize_integration(
         hacs.configuration.token,
         clientsession,
         headers={
-            "User-Agent": f"HACS/{hacs.version}",
+            "User-Agent": CLIENT_NAME,
             "Accept": ACCEPT_HEADERS["preview"],
         },
     )
@@ -105,36 +103,12 @@ async def _async_initialize_integration(
     hacs.githubapi = GitHubAPI(
         token=hacs.configuration.token,
         session=clientsession,
-        client_name=f"HACS/{hacs.version}",
+        client_name=CLIENT_NAME,
     )
 
     async def async_startup():
         """HACS startup tasks."""
         hacs.enable_hacs()
-
-        try:
-            import custom_components.custom_updater
-        except ImportError:
-            pass
-        else:
-            hacs.log.critical(
-                "HACS cannot be used with custom_updater. "
-                "To use HACS you need to remove custom_updater from `custom_components`",
-            )
-
-            hacs.disable_hacs(HacsDisabledReason.CONSTRAINS)
-            return False
-
-        if not version_left_higher_or_equal_then_right(
-            hacs.core.ha_version.string,
-            MINIMUM_HA_VERSION,
-        ):
-            hacs.log.critical(
-                "You need HA version %s or newer to use this integration.",
-                MINIMUM_HA_VERSION,
-            )
-            hacs.disable_hacs(HacsDisabledReason.CONSTRAINS)
-            return False
 
         if not await hacs.data.restore():
             hacs.disable_hacs(HacsDisabledReason.RESTORE)
