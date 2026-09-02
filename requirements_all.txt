@@ -1318,7 +1318,7 @@ home-assistant-intents==2026.8.28
 homekit-audio-proxy==1.2.1
 
 # homeassistant.components.gentex_homelink
-homelink-integration-api==0.0.5
+homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.16.0
@@ -2802,7 +2802,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.1.1
+python-roborock==7.2.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3329,7 +3329,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==16.6.1
+uiprotect==16.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3470,7 +3470,7 @@ wolf-comm==0.0.52
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.10.0
+wyoming==1.10.2
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.16.0
