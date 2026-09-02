@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.frontend import (
-    add_extra_js_url,
+    async_panel_exists,
     async_register_built_in_panel,
 )
-from homeassistant.components.http import StaticPathConfig
 
-from .const import DOMAIN, URL_BASE
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -20,37 +19,14 @@ if TYPE_CHECKING:
 
 async def async_register_frontend(hass: HomeAssistant, hacs: HacsBase) -> None:
     """Register the frontend."""
-
-    hacs.frontend_version = "core"
-
-    # Custom iconset
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(
-                f"{URL_BASE}/iconset.js",
-                str(hacs.integration_dir / "iconset.js"),
-                True,
-            )
-        ]
-    )
-    add_extra_js_url(hass, f"{URL_BASE}/iconset.js")
-
     # Add to sidepanel if needed
-    if DOMAIN not in hass.data.get("frontend_panels", {}):
+    if not async_panel_exists(hass, DOMAIN):
         async_register_built_in_panel(
             hass,
-            component_name="custom",
-            sidebar_title=hacs.configuration.sidepanel_title,
-            sidebar_icon=hacs.configuration.sidepanel_icon,
-            frontend_url_path=DOMAIN,
-            config={
-                "_panel_custom": {
-                    "name": "hacs-frontend",
-                    "embed_iframe": True,
-                    "trust_external": False,
-                    "js_url": f"/hacsfiles/frontend/entrypoint.js?hacstag={hacs.frontend_version}",
-                }
-            },
+            "store",
+            # The frontend translates this title, using the `panel.store` key
+            sidebar_title="store",
+            sidebar_icon="mdi:storefront",
             require_admin=True,
         )
 

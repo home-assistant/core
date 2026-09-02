@@ -41,13 +41,8 @@
     "step": {
       "user": {
         "data": {
-          "not_in_use": "Not in use with YAML",
           "country": "Filter with country code",
-          "release_limit": "Number of releases to show",
-          "debug": "Enable debug",
-          "appdaemon": "Enable AppDaemon apps discovery & tracking",
-          "sidepanel_icon": "Side panel icon",
-          "sidepanel_title": "Side panel title"
+          "appdaemon": "Enable AppDaemon apps discovery & tracking"
         }
       }
     }

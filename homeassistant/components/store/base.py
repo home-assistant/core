@@ -35,7 +35,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.loader import Integration
 from homeassistant.util import dt
 
 from .const import DOMAIN, TV, URL_BASE
@@ -122,8 +121,6 @@ class HacsConfiguration:
     python_script_path: str = "python_scripts/"
     python_script: bool = False
     release_limit: int = 5
-    sidepanel_icon: str = "hacs:hacs"
-    sidepanel_title: str = "HACS"
     theme_path: str = "themes/"
     theme: bool = False
     token: str = None
@@ -359,11 +356,9 @@ class HacsBase:
 
     data: HacsData | None = None
     data_client: HacsDataClient | None = None
-    frontend_version: str | None = None
     github: GitHub | None = None
     githubapi: GitHubAPI | None = None
     hass: HomeAssistant | None = None
-    integration: Integration | None = None
     queue: QueueManager | None = None
     session: ClientSession | None = None
     stage: HacsStage | None = None
@@ -381,11 +376,6 @@ class HacsBase:
         self.repositories = HacsRepositories()
         self.status = HacsStatus()
         self.system = HacsSystem()
-
-    @property
-    def integration_dir(self) -> pathlib.Path:
-        """Return the HACS integration dir."""
-        return self.integration.file_path
 
     def set_stage(self, stage: HacsStage | None) -> None:
         """Set HACS stage."""

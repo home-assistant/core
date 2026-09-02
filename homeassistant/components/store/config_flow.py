@@ -22,12 +22,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .base import HacsBase
 from .const import CLIENT_ID, CLIENT_NAME, DOMAIN, LOCALE
-from .utils.configuration_schema import (
-    APPDAEMON,
-    COUNTRY,
-    SIDEPANEL_ICON,
-    SIDEPANEL_TITLE,
-)
+from .utils.configuration_schema import APPDAEMON, COUNTRY
 from .utils.logger import LOGGER
 
 if TYPE_CHECKING:
@@ -219,12 +214,6 @@ class HacsOptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="pending_tasks")
 
         schema = {
-            vol.Optional(
-                SIDEPANEL_TITLE, default=hacs.configuration.sidepanel_title
-            ): str,
-            vol.Optional(
-                SIDEPANEL_ICON, default=hacs.configuration.sidepanel_icon
-            ): str,
             vol.Optional(COUNTRY, default=hacs.configuration.country): vol.In(LOCALE),
             vol.Optional(APPDAEMON, default=hacs.configuration.appdaemon): bool,
         }

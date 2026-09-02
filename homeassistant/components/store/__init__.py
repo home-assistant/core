@@ -10,7 +10,7 @@ from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components.frontend import async_remove_panel
+from homeassistant.components.frontend import async_panel_exists, async_remove_panel
 from homeassistant.components.lovelace.system_health import system_health_info
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, __version__ as HAVERSION
@@ -20,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
-from homeassistant.loader import async_get_integration
 
 from .base import HacsBase
 from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
@@ -56,15 +55,12 @@ async def _async_initialize_integration(
         },
     )
 
-    integration = await async_get_integration(hass, DOMAIN)
-
     hacs.set_stage(None)
 
     hacs.log.info("Starting Community store")
 
     clientsession = async_get_clientsession(hass)
 
-    hacs.integration = integration
     hacs.version = AwesomeVersion(HAVERSION)
     hacs.hass = hass
     hacs.queue = QueueManager(hass=hass)
@@ -181,12 +177,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     # Store data
     await hacs.data.async_write(force=True)
 
-    try:
-        if hass.data.get("frontend_panels", {}).get(DOMAIN):
-            hacs.log.info("Removing sidepanel")
-            async_remove_panel(hass, DOMAIN)
-    except AttributeError:
-        pass
+    if async_panel_exists(hass, DOMAIN):
+        hacs.log.info("Removing sidepanel")
+        async_remove_panel(hass, DOMAIN)
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
