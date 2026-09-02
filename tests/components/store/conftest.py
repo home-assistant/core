@@ -15,7 +15,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.store.base import HacsBase
-from homeassistant.components.store.const import DOMAIN
+from homeassistant.components.store.const import DOMAIN, VERSION_STORAGE
 from homeassistant.components.store.repositories import (
     HacsAppdaemonRepository,
     HacsIntegrationRepository,
@@ -191,6 +191,15 @@ def mock_config_entry() -> MockConfigEntry:
         options={"country": "ALL", "appdaemon": True},
         unique_id="12345",
     )
+
+
+@pytest.fixture
+def stored_repositories(hass_storage: dict[str, Any]) -> None:
+    """Seed the stored repositories with two downloaded repositories."""
+    hass_storage[f"{DOMAIN}.repositories"] = {
+        "version": VERSION_STORAGE,
+        "data": load_json_object_fixture("stored_repositories.json", DOMAIN),
+    }
 
 
 @pytest.fixture

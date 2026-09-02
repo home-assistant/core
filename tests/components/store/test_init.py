@@ -1,14 +1,17 @@
 """Tests for the Community store setup."""
 
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.store.const import DOMAIN, VERSION_STORAGE
+from homeassistant.components.store import async_remove_config_entry_device
+from homeassistant.components.store.const import DOMAIN, HACS_SYSTEM_ID
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import assert_api_usage, get_hacs, setup_integration
 from .const import (
@@ -18,17 +21,8 @@ from .const import (
     REPOSITORY_PLUGIN_ID,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-@pytest.fixture
-def stored_repositories(hass_storage: dict[str, Any]) -> None:
-    """Seed the stored repositories with two downloaded repositories."""
-    hass_storage[f"{DOMAIN}.repositories"] = {
-        "version": VERSION_STORAGE,
-        "data": load_json_object_fixture("stored_repositories.json", DOMAIN),
-    }
 
 
 async def test_load_unload_entry(
@@ -121,3 +115,91 @@ async def test_stored_repository_ids(
     store = get_hacs(hass)
     assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert store.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+
+
+@pytest.mark.parametrize(
+    ("identifiers", "message"),
+    [
+        pytest.param(
+            {("other_domain", "123456"), ("another_domain", "789")},
+            "no valid HACS repository identifier found",
+            id="other_domains_only",
+        ),
+        pytest.param(
+            set(),
+            "no valid HACS repository identifier found",
+            id="no_identifiers",
+        ),
+        pytest.param(
+            {(DOMAIN,), (DOMAIN, "123", "extra"), "not_a_tuple"},
+            "no valid HACS repository identifier found",
+            id="malformed_identifiers",
+        ),
+        pytest.param(
+            {(DOMAIN, HACS_SYSTEM_ID)},
+            "Cannot remove the service for HACS itself",
+            id="system_device",
+        ),
+        pytest.param(
+            {("other_domain", "789"), (DOMAIN, HACS_SYSTEM_ID)},
+            "Cannot remove the service for HACS itself",
+            id="system_device_among_others",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_device_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    identifiers: set[Any],
+    message: str,
+) -> None:
+    """Test removing a device that does not map to a repository is refused."""
+    device_entry = MagicMock(spec=dr.DeviceEntry)
+    device_entry.id = "test_device_id"
+    device_entry.identifiers = identifiers
+
+    with pytest.raises(HomeAssistantError, match=message):
+        await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
+
+
+@pytest.mark.parametrize(
+    "identifiers",
+    [
+        pytest.param({(DOMAIN, "123456")}, id="single_identifier"),
+        pytest.param(
+            {("other_domain", "789"), (DOMAIN, "123456")},
+            id="identifier_among_others",
+        ),
+        pytest.param({(DOMAIN, 123456)}, id="integer_identifier"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    identifiers: set[Any],
+) -> None:
+    """Test removing a device for a repository that is not downloaded."""
+    device_entry = MagicMock(spec=dr.DeviceEntry)
+    device_entry.id = "test_device_id"
+    device_entry.identifiers = identifiers
+
+    assert await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
+
+
+@pytest.mark.usefixtures("stored_repositories", "init_integration")
+async def test_remove_device_still_downloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing a device for a downloaded repository is refused."""
+    device_entry = MagicMock(spec=dr.DeviceEntry)
+    device_entry.id = "test_device_id"
+    device_entry.identifiers = {(DOMAIN, REPOSITORY_INTEGRATION_ID)}
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Cannot remove service for {REPOSITORY_INTEGRATION}",
+    ):
+        await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
