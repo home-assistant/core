@@ -13,6 +13,7 @@ import re
 import sys
 from types import CodeType
 from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
+import warnings
 import weakref
 
 import jinja2
@@ -270,8 +271,14 @@ def _cached_parse_result(render_result: str) -> Any:
     # not Python literals, so literal_eval compiles and raises for them on
     # every render. Catching here caches that outcome (return the original
     # render) so the recompile only happens once per distinct result.
+    # A result that is not a literal can still make the compiler emit a
+    # SyntaxWarning before literal_eval raises: "5in" is read as a malformed
+    # numeric literal. The template itself rendered fine, so that warning is
+    # noise in the user's log. Suppressing it also keeps this path cheap,
+    # since emitting a warning costs several times more than the parse.
     try:
-        result = literal_eval(render_result)
+        with warnings.catch_warnings(action="ignore", category=SyntaxWarning):
+            result = literal_eval(render_result)
     except ValueError, TypeError, SyntaxError, MemoryError:
         return render_result
     if type(result) in RESULT_WRAPPERS:

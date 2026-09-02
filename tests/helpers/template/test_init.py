@@ -3,6 +3,7 @@
 from datetime import datetime
 import gc
 from unittest.mock import patch
+import warnings
 
 from freezegun import freeze_time
 import pytest
@@ -933,6 +934,29 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ("set()", set()),
     ):
         assert render(hass, tpl) == result
+
+
+@pytest.mark.parametrize(
+    "tpl",
+    ["0.5in", "5in", "1and", "-0.5in", "+5in", "3if"],
+)
+async def test_parse_result_does_not_leak_a_compiler_warning(
+    hass: HomeAssistant, tpl: str
+) -> None:
+    """Test a non-literal result does not leak a warning about the parse.
+
+    Parsing a result such as "5in" makes the compiler read a malformed numeric
+    literal and emit a SyntaxWarning before it raises. The template rendered
+    fine and the user never wrote Python, so that warning only adds noise to
+    their log.
+    """
+    template._cached_parse_result.cache_clear()
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        assert render(hass, tpl) == tpl
+
+    assert [w.message for w in caught if issubclass(w.category, SyntaxWarning)] == []
 
 
 @pytest.mark.parametrize(
