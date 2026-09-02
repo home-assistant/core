@@ -273,9 +273,10 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # ds["interface"]/_is_virtual, which this populates.
             await _run_job(self.get_systeminfo)
 
-            # Fail fast so setup retries instead of crashing in
-            # register_system_device(), which indexes "hostname" right after.
-            if "hostname" not in self.ds["system_info"]:
+            # ensure_vals only backfills "unknown" when the key is absent --
+            # an explicit null/"" hostname must be rejected too.
+            hostname = self.ds["system_info"].get("hostname", "unknown")
+            if not isinstance(hostname, str) or not hostname or hostname == "unknown":
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="system_info_unavailable",

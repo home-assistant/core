@@ -423,15 +423,11 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
     def _schedule_suffix(self) -> str | None:
         """Return a best-effort Hourly/Daily/Weekly/Monthly label, or None.
 
-        TrueNAS's Daily/Weekly/Monthly periodic-snapshot-task presets each
-        pin exactly one of dom/dow/hour plus `minute` to a single fixed
-        number, leaving `month` and the rest wildcarded. The Hourly preset
-        pins only `minute`; `dom`, `dow`, and `hour` remain wildcarded. A
-        step/range/list value on any field, a pinned `month`, or an
-        all-wildcard schedule (minute included -- a
-        genuine Hourly preset always pins minute to its run time) falls
-        outside every known preset and is left unclassified rather than
-        guessed at.
+        TrueNAS's presets each pin exactly one of dom/dow/hour (plus
+        minute); Hourly pins only minute. Anything else -- a step/range/list
+        value, a pinned month, all wildcards, or dom+dow both pinned (cron
+        OR-semantics, not "Monthly") -- falls outside every known preset and
+        is left unclassified rather than guessed at.
         """
         schedule = self._data.get("schedule") if self._data else None
         if not isinstance(schedule, dict) or not schedule:
@@ -447,12 +443,21 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
             return None
         if _is_pinned_schedule_field(month):
             return None
-        if _is_pinned_schedule_field(dom):
+        dom_pinned = _is_pinned_schedule_field(dom)
+        dow_pinned = _is_pinned_schedule_field(dow)
+        if dom_pinned and dow_pinned:
+            return None
+        if dom_pinned:
             return _SCHEDULE_LABEL_MONTHLY
-        if _is_pinned_schedule_field(dow):
+        if dow_pinned:
             return _SCHEDULE_LABEL_WEEKLY
         if _is_pinned_schedule_field(hour):
             return _SCHEDULE_LABEL_DAILY
+        # The `any(...)` guard above guarantees every field is pinned or
+        # wildcard, and hour didn't match the pinned branch above, so hour
+        # is wildcard here -- no need to re-check it. Hourly still requires
+        # `minute` to be pinned; see the docstring note on fully wildcard
+        # schedules above.
         if _is_pinned_schedule_field(minute):
             return _SCHEDULE_LABEL_HOURLY
         return None

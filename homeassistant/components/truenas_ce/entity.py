@@ -402,14 +402,12 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         """Refresh cached data from the coordinator for this entity."""
         data = self.coordinator.data.get(self.entity_description.data_path or "", {})
         if not isinstance(data, dict):
-            # parse_api() always returns a dict; guard anyway so malformed
-            # data can't crash the entity instead of just rendering unavailable.
             data = {}
         self._data: dict[str, Any] = data.get(self._uid, {}) if self._uid else data
-        if self._uid and not self._data:
+        if not self._data:
             _LOGGER.debug(
-                "Data for UID %s is missing or empty in %s",
-                self._uid,
+                "Data for %s is missing or empty in %s",
+                self._uid or "keyless entity",
                 self.entity_description.data_path,
             )
 
@@ -418,6 +416,18 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     def _handle_coordinator_update(self) -> None:
         self._refresh_data()
         super()._handle_coordinator_update()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False once this entity's backing data is gone or empty.
+
+        Covers both a referenced uid no longer present (e.g. the disk/
+        dataset/VM was deleted) and a keyless data_path that came back empty
+        on a transient fetch failure -- the base CoordinatorEntity.available
+        only checks last_update_success.
+        """
+        return super().available and bool(self._data)
 
     def _core_name_translation_key(self) -> str | None:
         """Return Entity._name_translation_key, degrading gracefully.

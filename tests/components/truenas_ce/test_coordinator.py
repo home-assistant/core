@@ -1345,6 +1345,59 @@ async def test_async_update_data_runs_jobs_when_connected(
     assert result is coord.ds
 
 
+async def test_async_update_data_raises_when_hostname_missing_or_unknown(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A dict-shaped system_info reply without a real hostname fails the poll.
+
+    ``get_systeminfo`` is stubbed as a no-op here, so ``ds["system_info"]``
+    keeps whatever was set beforehand -- this simulates the field being
+    missing entirely or still carrying the "unknown" default.
+    """
+    coord = coordinator
+    coord.host = "truenas.local"
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+
+    for system_info in ({}, {"hostname": "unknown"}):
+        coord.ds = {"system_info": system_info}
+
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord._async_update_data()
+
+        coord.get_systeminfo.assert_awaited_once()
+        coord.get_pool.assert_not_awaited()
+        coord.get_systeminfo.reset_mock()
+
+
+async def test_async_update_data_raises_when_hostname_is_none_or_empty(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A None/empty hostname is rejected same as a missing/unknown one.
+
+    ensure_vals only backfills a default when the key is absent, not when
+    it's explicitly null/empty -- so that must be checked separately.
+    """
+    coord = coordinator
+    coord.host = "truenas.local"
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+
+    for bad_hostname in (None, ""):
+        coord.ds = {"system_info": {"hostname": bad_hostname}}
+
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord._async_update_data()
+
+        coord.get_systeminfo.assert_awaited_once()
+        coord.get_pool.assert_not_awaited()
+        coord.get_systeminfo.reset_mock()
+
+
 async def test_async_update_data_skips_jobs_when_disconnected(
     coordinator: TrueNASCoordinator,
 ) -> None:

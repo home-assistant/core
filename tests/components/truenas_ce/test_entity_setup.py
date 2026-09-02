@@ -30,32 +30,21 @@ from tests.common import MockConfigEntry
 #   async_add_entities (via a real platform-setup pass)
 # ---------------------------
 def _fake_api(extra_responses: dict[str, Any] | None = None) -> SimpleNamespace:
-    """A fake TrueNASAPI returning an empty (but present) system.info payload.
+    """A fake TrueNASAPI returning a minimal but valid system.info payload.
 
-    Every other query returns None -- matching the coordinator's normal
-    handling of a not-yet-responding TrueNAS -- unless ``extra_responses``
-    overrides it for a specific method. The coordinator's core jobs (disk,
-    scrub, app, alerts, certificates, arc, smb, pool, update-check, ...) run
-    unconditionally every update regardless of monitored groups, so a caller
-    only needs to override the one query it actually cares about; this keeps
-    the platform-forward pass real while avoiding any actual network I/O.
-
-    ``Any`` mirrors ``TrueNASAPI.query()``'s own return type -- per-method
-    structural types aren't modelled here because production code (see
-    ``apiparser.parse_api``) is deliberately defensive about API response
-    shapes rather than trusting a fixed schema.
-
-    ``client`` mirrors the same responses via ``.call(method, params)``:
-    ``TrueNASState`` (constructed from ``self.api.client`` in the
-    coordinator's ``__init__``) calls the underlying client directly for the
-    endpoints it has taken over normalizing, bypassing ``TrueNASAPI.query()``.
+    system.info needs a real "hostname" or the coordinator's essential-
+    hostname check aborts setup before these tests reach the entity-creation
+    behaviour they actually exercise. Every other query returns None unless
+    ``extra_responses`` overrides it. ``client`` mirrors the same responses
+    via ``.call()`` since ``TrueNASState`` calls it directly, bypassing
+    ``TrueNASAPI.query()``.
     """
     responses = extra_responses or {}
 
     async def _query(method: str, *args: object, **kwargs: object) -> Any:
         if method in responses:
             return responses[method]
-        return {} if method == "system.info" else None
+        return {"hostname": "truenas.local"} if method == "system.info" else None
 
     async def _client_call(method: str, params: object = None) -> Any:
         return await _query(method, params)

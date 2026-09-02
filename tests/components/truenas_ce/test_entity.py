@@ -740,3 +740,39 @@ def test_handle_coordinator_update_refreshes_data_and_calls_super() -> None:
 
     assert entity._data == {"guid": "g2"}
     super_update.assert_called_once()
+
+
+def test_available_keyless_entity_empty_data_path_is_unavailable() -> None:
+    """A keyless entity's empty data_path must make it unavailable too.
+
+    Uses "arc" rather than "system_info" as data_path: make_coordinator
+    always seeds system_info with defaults, so it can never be genuinely
+    empty here.
+    """
+    desc = TrueNASEntityDescription(key="arc_ratio", name="ARC Ratio", data_path="arc")
+    entity = _make_entity(
+        description=desc, coordinator=make_coordinator(data={"arc": {}})
+    )
+    assert entity.available is False
+
+
+def test_available_keyless_entity_populated_data_path_is_available() -> None:
+    """A keyless entity whose data_path has data is available."""
+    desc = TrueNASEntityDescription(key="arc_ratio", name="ARC Ratio", data_path="arc")
+    entity = _make_entity(
+        description=desc,
+        coordinator=make_coordinator(data={"arc": {"hit_ratio": 0.9}}),
+    )
+    assert entity.available is True
+
+
+def test_available_referenced_entity_empty_uid_data_is_unavailable() -> None:
+    """A referenced entity with an empty uid sub-dict goes unavailable."""
+    entity = _make_entity(uid="d1", data={}, description=_REF_DESC)
+    assert entity.available is False
+
+
+def test_available_referenced_entity_present_uid_is_available() -> None:
+    """A referenced entity whose uid still resolves to data stays available."""
+    entity = _make_entity(uid="d1", data={"guid": "g1"}, description=_REF_DESC)
+    assert entity.available is True
