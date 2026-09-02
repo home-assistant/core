@@ -28,6 +28,13 @@ SCAN_INTERVAL = timedelta(hours=1)
 
 _LOGGER = logging.getLogger(__name__)
 
+# Not (yet) a shared homeassistant.components.water_heater constant - kept
+# local to this integration since Vacation is one of this device's own
+# native operation modes (its own app lists it alongside Off/Energy
+# Saver/Heat Pump/High Demand/Electric in the same selector), not a
+# separate away-mode concept.
+STATE_VACATION = "vacation"
+
 ECONET_STATE_TO_HA = {
     WaterHeaterOperationMode.ENERGY_SAVING: STATE_ECO,
     WaterHeaterOperationMode.HIGH_DEMAND: STATE_HIGH_DEMAND,
@@ -36,6 +43,7 @@ ECONET_STATE_TO_HA = {
     WaterHeaterOperationMode.ELECTRIC_MODE: STATE_ELECTRIC,
     WaterHeaterOperationMode.GAS: STATE_GAS,
     WaterHeaterOperationMode.PERFORMANCE: STATE_PERFORMANCE,
+    WaterHeaterOperationMode.VACATION: STATE_VACATION,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
@@ -47,7 +55,7 @@ SUPPORT_FLAGS_HEATER = (
 
 def _operation_mode_to_ha(mode: WaterHeaterOperationMode | None) -> str:
     """Translate an EcoNet operation mode to a Home Assistant state."""
-    if mode in (None, WaterHeaterOperationMode.VACATION):
+    if mode is None:
         return STATE_OFF
     return ECONET_STATE_TO_HA[mode]
 
@@ -99,11 +107,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
             dict.fromkeys(
                 ECONET_STATE_TO_HA[mode]
                 for mode in self.water_heater.modes
-                if mode
-                not in (
-                    WaterHeaterOperationMode.UNKNOWN,
-                    WaterHeaterOperationMode.VACATION,
-                )
+                if mode is not WaterHeaterOperationMode.UNKNOWN
             )
         )
 
