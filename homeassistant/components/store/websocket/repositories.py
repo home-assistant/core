@@ -158,6 +158,11 @@ async def hacs_repositories_add(
     category = msg["category"]
 
     if repository is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_INVALID_FORMAT,
+            f"Could not read a repository from '{msg['repository']}'",
+        )
         return
 
     if repository in hacs.common.skip:

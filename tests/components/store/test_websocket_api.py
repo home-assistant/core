@@ -406,6 +406,29 @@ async def test_repositories_add_unknown_category(
     assert "netdaemon is not a valid category for test/test" in caplog.text
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_add_invalid_url(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that a URL no repository can be read from is answered."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "store/repositories/add",
+            "repository": "https://example.com/",
+            "category": "integration",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "invalid_format",
+        "message": "Could not read a repository from 'https://example.com/'",
+    }
+
+
 async def test_repositories_remove(
     hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
 ) -> None:
