@@ -46,11 +46,16 @@ async def async_setup_entry(
         )
     ]
 
+    # Without events nothing can invalidate the images, which do not poll, so
+    # the replacement would freeze on its first fetch. Keep these until the
+    # entry configures an event.
+    events_configured = any(door_bird_data.door_station.events)
+
     for camera_id, history_type, interval in (
         ("last_ring", "doorbell", _LAST_VISITOR_INTERVAL),
         ("last_motion", "motionsensor", _LAST_MOTION_INTERVAL),
     ):
-        if not deprecate_entity(
+        if events_configured and not deprecate_entity(
             hass,
             entity_registry,
             platform_domain=Platform.CAMERA,

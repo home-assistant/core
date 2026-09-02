@@ -9,7 +9,7 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.doorbird.const import DOMAIN
+from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -219,3 +219,22 @@ async def test_deprecated_camera_kept_when_used_by_automation(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_camera_last_ring_scripts"
+
+
+@pytest.mark.parametrize(
+    "configured_events",
+    [
+        pytest.param([], id="no_events"),
+        pytest.param([""], id="cleared_in_the_options"),
+    ],
+)
+async def test_camera_kept_without_configured_events(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    configured_events: list[str],
+) -> None:
+    """Test the deprecated cameras stay when no event can refresh the images."""
+    await doorbird_mocker(options={CONF_EVENTS: configured_events})
+
+    assert hass.states.get("camera.mydoorbird_last_ring") is not None
+    assert hass.states.get("camera.mydoorbird_last_motion") is not None
