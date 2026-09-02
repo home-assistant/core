@@ -764,6 +764,20 @@ async def test_critical_acknowledge_unknown_repository(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_critical_acknowledge_without_a_repository(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the command needs to know what to acknowledge."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "store/critical/acknowledge"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_registered_commands(hass: HomeAssistant) -> None:
     """Test that every store command is registered on the connection."""
     handlers = hass.data["websocket_api"]

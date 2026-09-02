@@ -37,7 +37,7 @@ async def hacs_critical_list(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "store/critical/acknowledge",
-        vol.Optional("repository"): cv.string,
+        vol.Required("repository"): cv.string,
     }
 )
 @websocket_api.require_admin
