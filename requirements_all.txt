@@ -2940,6 +2940,9 @@ radios==0.3.2
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
 
+# homeassistant.components.rainbowminer
+rainbowminer-api-client==0.2.2
+
 # homeassistant.components.raincloud
 raincloudy==0.0.7
 

@@ -1,0 +1,83 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the RainbowMiner server.",
+          "password": "The API password (only required when API authentication is enabled).",
+          "port": "The port of the RainbowMiner API (default 4000).",
+          "username": "The API username (only required when API authentication is enabled)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_miners": {
+        "name": "Active miners"
+      },
+      "active_pools": {
+        "name": "Active pools"
+      },
+      "daily_earnings": {
+        "name": "Daily earnings"
+      },
+      "daily_earnings_mbtc": {
+        "name": "Daily earnings (mBTC)"
+      },
+      "estimated_daily_profit": {
+        "name": "Estimated daily profit"
+      },
+      "estimated_daily_profit_mbtc": {
+        "name": "Estimated daily profit (mBTC)"
+      },
+      "hourly_earnings": {
+        "name": "Hourly earnings"
+      },
+      "hourly_earnings_mbtc": {
+        "name": "Hourly earnings (mBTC)"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "total_earnings": {
+        "name": "Total earnings"
+      },
+      "total_earnings_mbtc": {
+        "name": "Total earnings (mBTC)"
+      },
+      "unpaid_balance": {
+        "name": "Unpaid balance"
+      },
+      "unpaid_balance_mbtc": {
+        "name": "Unpaid balance (mBTC)"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "weekly_earnings": {
+        "name": "Weekly earnings"
+      },
+      "weekly_earnings_mbtc": {
+        "name": "Weekly earnings (mBTC)"
+      }
+    }
+  }
+}

@@ -5956,6 +5956,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "rainbowminer": {
+      "name": "RainbowMiner",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "rainforest_automation": {
       "name": "Rainforest Automation",
       "integrations": {

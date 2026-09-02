@@ -1,0 +1,16 @@
+{
+  "domain": "rainbowminer",
+  "name": "RainbowMiner",
+  "codeowners": ["@El1t3Mult1pl3x0r"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/rainbowminer",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["rainbowminer_api_client"],
+  "quality_scale": "bronze",
+  "requirements": ["rainbowminer-api-client==0.2.2"],
+  "ssdp": [],
+  "zeroconf": []
+}
