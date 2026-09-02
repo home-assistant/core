@@ -748,7 +748,8 @@ async def test_tom_without_temperature_measurement(
 
 @pytest.mark.usefixtures("mock_smile_legacy_anna")
 async def test_legacy_anna_no_schedule(
-    hass: HomeAssistant, init_integration: MockConfigEntry,
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test failing to set a schedule with no schedule defined."""
     with pytest.raises(HomeAssistantError):

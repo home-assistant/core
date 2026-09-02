@@ -28,7 +28,8 @@ async def test_adam_sensor_snapshot(
 
 @pytest.mark.usefixtures("mock_smile_adam_jip")
 async def test_adam_climate_sensor_humidity(
-    hass: HomeAssistant, init_integration: MockConfigEntry,
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test creation of climate related humidity sensor entity."""
     state = hass.states.get("sensor.woonkamer_humidity")

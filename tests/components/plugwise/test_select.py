@@ -150,7 +150,8 @@ async def test_adam_select_zone_profile(
 
 @pytest.mark.usefixtures("mock_smile_legacy_anna")
 async def test_legacy_anna_select_entities(
-    hass: HomeAssistant, init_integration: MockConfigEntry,
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test that "off" is the selected option for legacy Anna without schedule."""
     assert (state := hass.states.get("select.anna_thermostat_schedule"))

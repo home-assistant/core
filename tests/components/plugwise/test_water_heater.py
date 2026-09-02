@@ -166,7 +166,8 @@ async def test_adam_water_heater_active_state(
 
 @pytest.mark.usefixtures("mock_smile_adam_jip")
 async def test_adam_water_heater_setpoint_error_uses_configured_unit(
-    hass: HomeAssistant, init_integration: MockConfigEntry,
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test out-of-range setpoint errors use the configured temperature unit."""
     hass.config.units = US_CUSTOMARY_SYSTEM
