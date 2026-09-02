@@ -6,7 +6,7 @@ import logging
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
 
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry, ConfigSubentryDataWithId
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -68,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
         presence.async_config_entry_first_refresh(),
     )
 
-    entry.runtime_data = XboxCoordinators(consoles, status, presence)
+    entry.runtime_data = XboxCoordinators(
+        consoles, status, presence, _subentry_snapshot(entry)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -77,9 +79,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
     return True
 
 
+def _subentry_snapshot(
+    entry: XboxConfigEntry,
+) -> dict[str, ConfigSubentryDataWithId]:
+    """Return a snapshot of the entry's subentries by value.
+
+    ConfigSubentry instances are mutated in place when a subentry is updated,
+    so the objects themselves cannot be compared against a previous state.
+    """
+    return {
+        subentry_id: subentry.as_dict()
+        for subentry_id, subentry in entry.subentries.items()
+    }
+
+
 async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
-    """Handle update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Reload the config entry when its subentries change.
+
+    Update listeners fire on every config entry write, including the hourly
+    rewrite of the OAuth token performed by OAuth2Session. Reloading on those
+    would tear down and rebuild every platform once an hour, so only reload
+    when the friend subentries actually changed.
+    """
+    if entry.runtime_data.subentries != _subentry_snapshot(entry):
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:

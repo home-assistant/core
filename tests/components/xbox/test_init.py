@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from http import HTTPStatus
+from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
@@ -13,7 +14,7 @@ from pythonxbox.common.exceptions import AuthenticationException
 import respx
 
 from homeassistant.components.xbox.const import DOMAIN, OAUTH2_TOKEN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
@@ -271,3 +272,111 @@ async def test_dynamic_devices(
         )
         is None
     )
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_no_reload_on_token_refresh(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is not reloaded when only the OAuth token is rewritten."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                "token": {**config_entry.data["token"], "access_token": "refreshed"},
+            },
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_reload_on_subentry_added(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is reloaded when a friend subentry is added."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_add_subentry(
+            config_entry,
+            ConfigSubentry(
+                data=MappingProxyType({}),
+                subentry_type="friend",
+                title="new_friend",
+                unique_id="2533274838782905",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_reload_on_subentry_removed(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is reloaded when a friend subentry is removed."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    subentry_id = next(iter(config_entry.subentries))
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_reload_on_subentry_rename(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is reloaded when a friend subentry is renamed.
+
+    ConfigSubentry instances are mutated in place, so this only works if the
+    integration snapshots its subentries by value.
+    """
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    subentry = next(iter(config_entry.subentries.values()))
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_update_subentry(
+            config_entry, subentry, title="renamed_friend"
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(config_entry.entry_id)

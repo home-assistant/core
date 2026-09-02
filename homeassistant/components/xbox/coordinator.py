@@ -1,6 +1,7 @@
 """Coordinator for the xbox integration."""
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -18,7 +19,7 @@ from pythonxbox.api.provider.smartglass.models import (
 )
 from pythonxbox.api.provider.titlehub.models import Title
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentryDataWithId
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -54,6 +55,7 @@ class XboxCoordinators:
     consoles: XboxConsolesCoordinator
     status: XboxConsoleStatusCoordinator
     presence: XboxPresenceCoordinator
+    subentries: Mapping[str, ConfigSubentryDataWithId]
 
 
 class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
