@@ -1,9 +1,8 @@
 """Data used by this integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections import defaultdict
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpRequester
@@ -14,7 +13,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN_DATA, LOGGER
 
 
 class EventListenAddr(NamedTuple):
@@ -118,9 +117,8 @@ class DlnaDmrData:
 
 def get_domain_data(hass: HomeAssistant) -> DlnaDmrData:
     """Obtain this integration's domain data, creating it if needed."""
-    if DOMAIN in hass.data:
-        return cast(DlnaDmrData, hass.data[DOMAIN])
+    if (data := hass.data.get(DOMAIN_DATA)) is not None:
+        return data
 
-    data = DlnaDmrData(hass)
-    hass.data[DOMAIN] = data
+    data = hass.data[DOMAIN_DATA] = DlnaDmrData(hass)
     return data
