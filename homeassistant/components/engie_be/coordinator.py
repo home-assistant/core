@@ -177,7 +177,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",
-                        _mask(ean),
+                        _mask(bare_ean(ean)),
                         service_point_result,
                     )
                     continue

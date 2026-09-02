@@ -258,8 +258,10 @@ async def test_service_point_transient_failure_is_retried(
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed service-point fetch is retried on the next refresh cycle."""
+    caplog.set_level("DEBUG", logger="homeassistant.components.engie_be")
     mock_engie_client.return_value.async_get_prices.return_value = _build_prices(0.1)
     mock_engie_client.return_value.async_get_service_point.side_effect = [
         EngieBeCommunicationError("boom"),
@@ -268,6 +270,10 @@ async def test_service_point_transient_failure_is_retried(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # the failure log masks the bare EAN's last four digits, not the shared _ID1 suffix
+    assert "Fetching service point for …0001 failed" in caplog.text
+    assert "…_ID1" not in caplog.text
 
     coordinator = mock_config_entry.runtime_data.households[BAN].prices
     assert bare_ean(OFFTAKE_ONLY_EAN) not in coordinator.ean_energy_types
