@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
             hass, entry, box, "system", lambda b: b.system_get_info()
         ),
         voip=None,
+        voip_callhistorylist=None,
         wan=SFRDataUpdateCoordinator(
             hass, entry, box, "wan", lambda b: b.wan_get_info()
         ),
@@ -57,6 +58,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     if has_auth:
         data.voip = SFRDataUpdateCoordinator(
             hass, entry, box, "voip", lambda b: b.voip_get_info()
+        )
+        data.voip_callhistorylist = SFRDataUpdateCoordinator(
+            hass,
+            entry,
+            box,
+            "voip_callhistorylist",
+            lambda b: b.voip_get_call_history_list(),
         )
     # Preload system information
     await data.system.async_config_entry_first_refresh()
@@ -66,6 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     tasks = [data.wan.async_config_entry_first_refresh()]
     if data.voip is not None:
         tasks.append(data.voip.async_config_entry_first_refresh())
+    if data.voip_callhistorylist is not None:
+        tasks.append(data.voip_callhistorylist.async_config_entry_first_refresh())
     if (net_infra := system_info.net_infra) == "adsl":
         tasks.append(data.dsl.async_config_entry_first_refresh())
     elif net_infra == "ftth":
