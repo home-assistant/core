@@ -71,12 +71,10 @@ async def test_entity_state(
     context = Context()
     audio_stream = object()
 
-    entity.async_set_context(context)
-
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
     ) as mock_start_pipeline:
-        await entity.async_accept_pipeline_from_satellite(audio_stream)
+        await entity.async_accept_pipeline_from_satellite(audio_stream, context=context)
 
     assert mock_start_pipeline.called
     kwargs = mock_start_pipeline.call_args[1]
@@ -466,22 +464,28 @@ async def test_announce_default_preannounce(
         )
 
 
-async def test_context_refresh(
+async def test_context_not_inherited(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test that the context will be automatically refreshed."""
+    """Test that audio from the satellite does not inherit an existing context."""
     audio_stream = object()
 
-    # Remove context
-    entity._context = None
+    # A previous action targeting the entity, such as an announce service call
+    previous_context = Context(user_id="12345")
+    entity.async_set_context(previous_context)
 
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
-    ):
+    ) as mock_start_pipeline:
         await entity.async_accept_pipeline_from_satellite(audio_stream)
 
-    # Context should have been refreshed
-    assert entity._context is not None
+    # The speaker is unknown, so the pipeline must not run as the previous user
+    context = mock_start_pipeline.call_args[1]["context"]
+    assert context is not previous_context
+    assert context.user_id is None
+
+    # The pipeline drives the entity state from here, so it owns the context
+    assert entity._context is context
 
 
 async def test_pipeline_entity(
@@ -936,6 +940,8 @@ async def test_ask_question(
     async def async_start_conversation(start_announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
+        # The question is asked on behalf of the caller
+        assert hass.states.get(entity_id).context is context
         assert (
             start_announcement.preannounce_media_id is not None
         ) is should_preannounce
@@ -987,7 +993,6 @@ async def test_ask_question(
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
-        assert hass.states.get(entity_id).context is context
 
 
 async def test_ask_question_requires_entity_permission(

@@ -3,6 +3,8 @@
 from dataclasses import asdict
 from typing import Any
 
+from lyngdorf import Trim
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.ssdp import async_get_discovery_info_by_st
 from homeassistant.const import CONF_HOST
@@ -12,10 +14,16 @@ from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL
 from .const import CONF_SERIAL_NUMBER, SSDP_ST
 from .models import LyngdorfConfigEntry
 
-_TRIM_NAMES = tuple(
-    f"trim_{trim}" for trim in ("bass", "treble", "centre", "height", "lfe", "surround")
-)
-_RANGE_NAMES = ("lipsync_range", *(f"{name}_range" for name in _TRIM_NAMES))
+# Reported under the integration's own names, which do not all match the
+# library's spelling of the band.
+_TRIMS = {
+    "trim_bass": Trim.BASS,
+    "trim_treble": Trim.TREBLE,
+    "trim_centre": Trim.CENTER,
+    "trim_height": Trim.HEIGHT,
+    "trim_lfe": Trim.LFE,
+    "trim_surround": Trim.SURROUND,
+}
 
 # The serial doubles as the device MAC and as the config entry unique_id, so it
 # needs redacting wherever it surfaces, including inside the UPnP description.
@@ -56,43 +64,57 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     receiver = config_entry.runtime_data.receiver
+    volume = receiver.volume
+    lipsync = receiver.lipsync
+    zone_b = receiver.zone_b
 
     state: dict[str, Any] = {
         "connected": receiver.connected,
-        "model": receiver.model.name if receiver.model else None,
+        "model": receiver.model.name,
         "power_on": receiver.power_on,
-        "volume": receiver.volume,
-        "max_volume": receiver.max_volume,
-        "mute_enabled": receiver.mute_enabled,
+        "volume": volume.value if volume is not None else None,
+        "mute_enabled": receiver.muted,
         "source": receiver.source,
-        "available_sources": receiver.available_sources,
+        "available_sources": receiver.sources,
         "sound_mode": receiver.sound_mode,
-        "available_sound_modes": receiver.available_sound_modes,
+        "available_sound_modes": receiver.sound_modes,
         "audio_input": receiver.audio_input,
-        "available_audio_inputs": receiver.available_audio_inputs,
+        "available_audio_inputs": receiver.audio_inputs,
         "video_input": receiver.video_input,
-        "available_video_inputs": receiver.available_video_inputs,
+        "available_video_inputs": receiver.video_inputs,
         "audio_information": receiver.audio_information,
         "video_information": receiver.video_information,
         "streaming_source": receiver.streaming_source,
-        "available_stream_types": receiver.available_stream_types,
+        "available_stream_types": receiver.stream_types,
         "room_perfect_position": receiver.room_perfect_position,
-        "available_room_perfect_positions": receiver.available_room_perfect_positions,
+        "available_room_perfect_positions": receiver.room_perfect_positions,
         "voicing": receiver.voicing,
-        "available_voicings": receiver.available_voicings,
-        "lipsync": receiver.lipsync,
-        "zone_b_power_on": receiver.zone_b_power_on,
-        "zone_b_volume": receiver.zone_b_volume,
-        "zone_b_mute_enabled": receiver.zone_b_mute_enabled,
-        "zone_b_source": receiver.zone_b_source,
-        "zone_b_audio_input": receiver.zone_b_audio_input,
-        "zone_b_streaming_source": receiver.zone_b_streaming_source,
+        "available_voicings": receiver.voicings,
+        "lipsync": lipsync.value if lipsync is not None else None,
+        "zone_b_power_on": zone_b.power_on if zone_b is not None else None,
+        "zone_b_volume": zone_b.volume.value if zone_b is not None else None,
+        "zone_b_mute_enabled": zone_b.muted if zone_b is not None else None,
+        "zone_b_source": zone_b.source if zone_b is not None else None,
+        "zone_b_audio_input": zone_b.audio_input if zone_b is not None else None,
+        "zone_b_streaming_source": zone_b.streaming_source
+        if zone_b is not None
+        else None,
     }
-    state |= {name: getattr(receiver, name) for name in _TRIM_NAMES}
+    trims = {name: receiver.trims.get(trim) for name, trim in _TRIMS.items()}
+    state |= {
+        name: control.value if control is not None else None
+        for name, control in trims.items()
+    }
 
-    ranges = {
-        name: asdict(value) if (value := getattr(receiver, name)) is not None else None
-        for name in _RANGE_NAMES
+    # Not lipsync.range: the control reads None until the device reports a
+    # value, while the range is known from the model as soon as it connects.
+    lipsync_range = receiver.lipsync_range
+    ranges: dict[str, Any] = {
+        "lipsync_range": asdict(lipsync_range) if lipsync_range is not None else None
+    }
+    ranges |= {
+        f"{name}_range": asdict(control.range) if control is not None else None
+        for name, control in trims.items()
     }
 
     return async_redact_data(

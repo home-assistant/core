@@ -1,5 +1,6 @@
 """Tests for the Midea config flow."""
 
+from collections.abc import Callable
 from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,36 +18,44 @@ from homeassistant.components.midea.const import (
     CONF_ACCOUNT,
     CONF_KEY,
     CONF_SERVER,
+    CONF_SN,
     CONF_SUBTYPE,
     DOMAIN,
 )
 from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_SOURCE,
     CONF_TOKEN,
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from .conftest import DummyDevice, default_ac_device
 from .const import (
     BASE_DATA,
     DISCOVERY_RESULT,
     EXTENDED_DATA,
     TEST_DEVICE_ID,
+    TEST_HOSTNAME,
     TEST_IP_ADDRESS,
     TEST_KEY,
+    TEST_MAC_ADDRESS,
     TEST_MODEL,
     TEST_PORT,
     TEST_PROTOCOL,
+    TEST_SERIAL_NUMBER,
     TEST_SUBTYPE,
     TEST_TOKEN,
     TEST_TYPE,
@@ -104,6 +113,8 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         CONF_SUBTYPE: TEST_SUBTYPE,
         CONF_TOKEN: TEST_TOKEN,
         CONF_KEY: TEST_KEY,
+        CONF_MAC: TEST_MAC_ADDRESS,
+        CONF_SN: TEST_SERIAL_NUMBER,
     }
 
 
@@ -1056,7 +1067,13 @@ async def test_auto_flow_v1_v2_success_when_cloud_down(
 ) -> None:
     """Test v1/v2 devices are added without ever using the cloud, even if it is down."""
     mock_devices = {
-        TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE, CONF_PROTOCOL: protocol},
+        TEST_DEVICE_ID: {
+            **BASE_DATA,
+            CONF_TYPE: TEST_TYPE,
+            CONF_PROTOCOL: protocol,
+            CONF_MAC: TEST_MAC_ADDRESS,
+            CONF_SN: TEST_SERIAL_NUMBER,
+        },
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -1105,6 +1122,8 @@ async def test_auto_flow_v1_v2_success_when_cloud_down(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_PROTOCOL] == protocol
+    assert result["data"][CONF_MAC] == TEST_MAC_ADDRESS
+    assert result["data"][CONF_SN] == TEST_SERIAL_NUMBER
 
 
 async def test_login_credentials_step_renders_with_cloud_servers(
@@ -2017,3 +2036,79 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_method"
     assert result["errors"] == {"base": "preset_login_failed"}
+
+
+async def test_dhcp_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test DHCP discovery of a known device updates its stored host."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname=TEST_HOSTNAME,
+            ip="127.0.0.42",
+            macaddress=TEST_MAC_ADDRESS.replace(":", ""),
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_IP_ADDRESS] == "127.0.0.42"
+
+
+async def test_dhcp_discovery_same_host(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test DHCP discovery does nothing when the host is already up to date."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname=TEST_HOSTNAME,
+            ip=TEST_IP_ADDRESS,
+            macaddress=TEST_MAC_ADDRESS.replace(":", ""),
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_IP_ADDRESS] == TEST_IP_ADDRESS
+
+
+async def test_dhcp_discovery_no_match(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test DHCP discovery aborts when no matching entry is configured."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname=TEST_HOSTNAME,
+            ip="1.2.3.4",
+            macaddress="aabbccddeeff",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+    assert config_entry.data[CONF_IP_ADDRESS] == TEST_IP_ADDRESS

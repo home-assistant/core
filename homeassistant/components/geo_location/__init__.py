@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, final, override
+from typing import Any, Final, final, override
 
 from propcache.api import cached_property
 
@@ -23,7 +23,7 @@ from .const import GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "geo_location"
+DOMAIN: Final = "geo_location"
 DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA

@@ -492,6 +492,56 @@ async def test_change_device(
     )
 
 
+@pytest.mark.parametrize(
+    "linked_device",
+    [
+        pytest.param("main", id="main_device"),
+        pytest.param("child", id="child_device"),
+    ],
+)
+async def test_link_to_main_or_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    linked_device: str,
+) -> None:
+    """Test a template entity links to a selected main or child device."""
+    source_entry = MockConfigEntry()
+    source_entry.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("test", "main")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=main_device.id,
+    )
+    selected_device_id = {"main": main_device, "child": child_device}[linked_device].id
+
+    template_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{10}}",
+            "template_type": "sensor",
+            "device_id": selected_device_id,
+        },
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entities = list(
+        entity_registry.entities.get_entries_for_config_entry_id(
+            template_config_entry.entry_id
+        )
+    )
+    assert len(template_entities) == 1
+    assert template_entities[0].device_id == selected_device_id
+
+
 async def test_setup_removes_stale_helper_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
