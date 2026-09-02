@@ -20,6 +20,40 @@ from ..const import DOMAIN
 from .entity import HueBaseEntity
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Hue scene select entities from a config entry."""
+    bridge = config_entry.runtime_data
+    api: HueBridgeV2 = bridge.api
+    tracker = bridge.scene_activity_tracker
+    assert tracker is not None
+
+    # Pre-index scenes by group to avoid an O(groups x scenes) startup scan.
+    scenes_by_group: dict[str, list[HueScene | HueSmartScene]] = {}
+    for scene in api.scenes:
+        scenes_by_group.setdefault(scene.group.rid, []).append(scene)
+
+    @callback
+    def _on_group_added(_: EventType, group: Room | Zone) -> None:
+        async_add_entities([HueSceneSelectEntity(bridge, tracker, group.id)])
+
+    for group_controller in (api.groups.room, api.groups.zone):
+        async_add_entities(
+            HueSceneSelectEntity(
+                bridge, tracker, group.id, scenes_by_group.get(group.id)
+            )
+            for group in group_controller
+        )
+        config_entry.async_on_unload(
+            group_controller.subscribe(
+                _on_group_added, event_filter=EventType.RESOURCE_ADDED
+            )
+        )
+
+
 def _build_scene_option_maps(
     scenes: list[HueScene | HueSmartScene],
 ) -> tuple[dict[str, str], dict[str, str]]:
@@ -149,38 +183,4 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
         await self.bridge.async_request_call(
             self.bridge.api.scenes.recall,
             scene_id,
-        )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: HueConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Hue scene select entities from a config entry."""
-    bridge = config_entry.runtime_data
-    api: HueBridgeV2 = bridge.api
-    tracker = bridge.scene_activity_tracker
-    assert tracker is not None
-
-    # Pre-index scenes by group to avoid an O(groups x scenes) startup scan.
-    scenes_by_group: dict[str, list[HueScene | HueSmartScene]] = {}
-    for scene in api.scenes:
-        scenes_by_group.setdefault(scene.group.rid, []).append(scene)
-
-    @callback
-    def _on_group_added(_: EventType, group: Room | Zone) -> None:
-        async_add_entities([HueSceneSelectEntity(bridge, tracker, group.id)])
-
-    for group_controller in (api.groups.room, api.groups.zone):
-        async_add_entities(
-            HueSceneSelectEntity(
-                bridge, tracker, group.id, scenes_by_group.get(group.id)
-            )
-            for group in group_controller
-        )
-        config_entry.async_on_unload(
-            group_controller.subscribe(
-                _on_group_added, event_filter=EventType.RESOURCE_ADDED
-            )
         )
