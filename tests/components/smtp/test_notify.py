@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera, image, media_source
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
@@ -122,40 +123,6 @@ def test_send_message(
     with patch("email.utils.make_msgid", return_value=sample_email):
         result, _ = message.send_message(message_data, data=data)
         assert content_type in result
-
-
-def test_send_message_with_unsniffable_jpeg(
-    hass: HomeAssistant, message: MockSMTP, tmp_path: Path
-) -> None:
-    """Verify a JPEG the stdlib cannot sniff is still attached as an image.
-
-    JPEGs written by ffmpeg for camera.snapshot start with an SOI + COM
-    marker instead of JFIF/Exif, which MIMEImage does not recognize.
-    """
-    image_file = tmp_path / "doorphone.jpg"
-    image_file.write_bytes(
-        bytes.fromhex("ffd8fffe0010") + b"Lavc62.28.102\x00" + bytes.fromhex("ffdb")
-    )
-    message.hass = hass
-    hass.config.allowlist_external_dirs.add(tmp_path)
-    with patch("email.utils.make_msgid", return_value="<mock@mock>"):
-        result, _ = message.send_message("Test msg", data={"images": [str(image_file)]})
-    assert "Content-Type: image/jpeg" in result
-    assert "application/octet-stream" not in result
-
-
-def test_send_message_with_compressed_image(
-    hass: HomeAssistant, message: MockSMTP, tmp_path: Path
-) -> None:
-    """Verify a compressed image is attached as a file, not a plain image."""
-    image_file = tmp_path / "diagram.svgz"
-    image_file.write_bytes(gzip.compress(b"<svg xmlns='http://www.w3.org/2000/svg'/>"))
-    message.hass = hass
-    hass.config.allowlist_external_dirs.add(tmp_path)
-    with patch("email.utils.make_msgid", return_value="<mock@mock>"):
-        result, _ = message.send_message("Test msg", data={"images": [str(image_file)]})
-    assert "application/octet-stream" in result
-    assert "Content-Type: image/" not in result
 
 
 @pytest.mark.parametrize(
@@ -717,3 +684,69 @@ async def test_deprecated_legacy_notify_action(
     assert issue_registry.async_get_issue(
         domain=DOMAIN, issue_id="deprecated_notify_action_home_assistant"
     )
+
+
+@pytest.mark.parametrize(
+    ("file_name", "file_bytes", "expected", "not_expected"),
+    [
+        (
+            "doorphone.jpg",
+            bytes.fromhex("ffd8fffe0010")
+            + b"Lavc62.28.102\x00"
+            + bytes.fromhex("ffdb"),
+            "Content-Type: image/jpeg",
+            "application/octet-stream",
+        ),
+        (
+            "diagram.svgz",
+            gzip.compress(b"<svg xmlns='http://www.w3.org/2000/svg'/>"),
+            "application/octet-stream",
+            "Content-Type: image/",
+        ),
+    ],
+    ids=[
+        "Verify a JPEG the stdlib cannot sniff is attached as an image.",
+        "Verify a compressed image is attached as a file.",
+    ],
+)
+@pytest.mark.usefixtures("aiosmtplib")
+async def test_legacy_notify_image_attachment(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    tmp_path: Path,
+    file_name: str,
+    file_bytes: bytes,
+    expected: str,
+    not_expected: str,
+) -> None:
+    """Test the MIME type images are attached with.
+
+    JPEGs written by ffmpeg for camera.snapshot start with an SOI + COM marker
+    instead of JFIF/Exif, which MIMEImage does not recognize, so the file name
+    decides the type. Compressed images stay on the file attachment path.
+    """
+
+    image_file = tmp_path / file_name
+    image_file.write_bytes(file_bytes)
+    hass.config.allowlist_external_dirs.add(tmp_path)
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "home_assistant",
+        {
+            ATTR_MESSAGE: "Test msg",
+            ATTR_DATA: {"images": [str(image_file)]},
+        },
+        blocking=True,
+    )
+
+    sent_message = smtp.sendmail.call_args[0][2]
+    assert expected in sent_message
+    assert not_expected not in sent_message
