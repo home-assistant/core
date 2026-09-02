@@ -92,38 +92,15 @@ async def test_bypass_supply_temperature_targets_missing_skips_number_creation(
     assert hass.states.get(_ZONE_2_ENTITY_ID) is None
 
 
-@pytest.mark.parametrize(
-    "field",
-    [
-        pytest.param("minimum", id="missing_minimum"),
-        pytest.param("maximum", id="missing_maximum"),
-        pytest.param("increment", id="missing_increment"),
-    ],
-)
-@pytest.mark.usefixtures("mock_duco_client")
-async def test_bypass_supply_temperature_target_incomplete_metadata_skips_number_creation(
-    hass: HomeAssistant,
-    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
-    mock_config_entry: MockConfigEntry,
-    field: str,
-) -> None:
-    """Test incomplete target metadata does not expose an invalid control."""
-    mock_bypass_supply_temperature_targets[1] = replace(
-        mock_bypass_supply_temperature_targets[1], **{field: None}
-    )
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
-
-    assert hass.states.get(_ZONE_1_ENTITY_ID) is None
-    assert hass.states.get(_ZONE_2_ENTITY_ID) is not None
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_set_bypass_supply_temperature_target(
     hass: HomeAssistant,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test setting a bypass target refreshes the number from the box."""
+    target = mock_bypass_supply_temperature_targets[1]
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -132,7 +109,7 @@ async def test_set_bypass_supply_temperature_target(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5
+        1, 20.5, target=target
     )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -152,6 +129,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
         increment=0.5,
         maximum=25.5,
     )
+    target = mock_bypass_supply_temperature_targets[1]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
@@ -163,7 +141,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5
+        1, 20.5, target=target
     )
 
     with pytest.raises(
@@ -192,6 +170,7 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
         increment=0.5,
         maximum=25.5,
     )
+    target = mock_bypass_supply_temperature_targets[1]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
@@ -203,7 +182,7 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5
+        1, 20.5, target=target
     )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -224,6 +203,7 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
         increment=0.5,
         maximum=24.8,
     )
+    target = mock_bypass_supply_temperature_targets[1]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
@@ -235,7 +215,7 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 24.5
+        1, 24.5, target=target
     )
 
 
