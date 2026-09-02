@@ -968,6 +968,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_solaredge-modbus._tcp.local.": [
+        {
+            "domain": "solaredge_modbus",
+        },
+    ],
     "_solarman._tcp.local.": [
         {
             "domain": "solarman",

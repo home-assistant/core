@@ -2,11 +2,12 @@
 
 from midealocal.const import ProtocolVersion
 
-from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE
+from homeassistant.components.midea.const import CONF_KEY, CONF_SN, CONF_SUBTYPE
 from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_MODEL,
     CONF_PORT,
     CONF_PROTOCOL,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 
+TEST_HOSTNAME = "net_ac_2233"
 TEST_DEVICE_ID = 12345678
 TEST_IP_ADDRESS = "1.1.1.1"
 TEST_KEY = "bb" * 16
@@ -38,6 +40,8 @@ DISCOVERY_RESULT = {
     TEST_DEVICE_ID: {
         **BASE_DATA,
         CONF_TYPE: TEST_TYPE,
+        CONF_MAC: TEST_MAC_ADDRESS,
+        CONF_SN: TEST_SERIAL_NUMBER,
     }
 }
 
