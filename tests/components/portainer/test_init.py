@@ -1,7 +1,7 @@
 """Test the Portainer initial specific behavior."""
 
 from typing import Any, cast
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
@@ -114,9 +114,7 @@ async def test_remove_config_entry_device(
     )
 
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"] == expected_result
 
 
@@ -150,7 +148,7 @@ async def test_migration_v3_to_v5(
     container_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, original_container_identifier)},
-        via_device=(DOMAIN, f"{entry.entry_id}_endpoint_1"),
+        via_device_id=endpoint_device.id,
         name="Test Container",
     )
 
@@ -304,42 +302,43 @@ async def test_container_stack_device_links(
     """Test that stack-linked containers are nested under the correct stack device."""
     await setup_integration(hass, mock_config_entry)
 
-    endpoint_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1")}
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
     )
     assert endpoint_device is not None
 
-    dashy_stack_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2")}
+    dashy_stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2"), mock_config_entry.entry_id
     )
     assert dashy_stack_device is not None
     assert dashy_stack_device.via_device_id == endpoint_device.id
 
-    webstack_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1")}
+    webstack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1"), mock_config_entry.entry_id
     )
     assert webstack_device is not None
     assert webstack_device.via_device_id == endpoint_device.id
 
-    swarm_container_device = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                f"{mock_config_entry.entry_id}_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05",
-            )
-        }
+    swarm_container_device = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            f"{mock_config_entry.entry_id}_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05",
+        ),
+        mock_config_entry.entry_id,
     )
     assert swarm_container_device is not None
     assert swarm_container_device.via_device_id == dashy_stack_device.id
 
-    compose_container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_serene_banach")}
+    compose_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_serene_banach"),
+        mock_config_entry.entry_id,
     )
     assert compose_container_device is not None
     assert compose_container_device.via_device_id == webstack_device.id
 
-    standalone_container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_focused_einstein")}
+    standalone_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_focused_einstein"),
+        mock_config_entry.entry_id,
     )
 
     assert standalone_container_device is not None
@@ -354,8 +353,9 @@ async def test_docker_system_df_refresh_runs_on_ha_start(
     """Test docker system df coordinator refreshes DF data on HA start."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.my_environment_image_disk_usage_total_size")
-    assert state is not None
+    assert (
+        state := hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    )
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -406,6 +406,25 @@ async def test_new_endpoint_callback(
     )
     assert stack_device is not None
     assert stack_device.via_device_id == endpoint_device.id
+
+
+async def test_removed_endpoint_stops_event_listener(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_event_listeners: dict[int, MagicMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a removed endpoint's Docker event listener is stopped and dropped."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert 1 in coordinator._event_listeners
+
+    mock_portainer_client.get_endpoints.return_value = []
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_portainer_event_listeners[1].stop.assert_called_once()
+    assert 1 not in coordinator._event_listeners
 
 
 async def test_new_container_callback(

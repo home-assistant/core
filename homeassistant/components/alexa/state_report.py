@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import aiohttp
 
-from homeassistant.components import event
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_ON,
@@ -341,7 +341,7 @@ async def async_enable_proactive_mode(
         if should_doorbell:
             old_state = data["old_state"]
             if (
-                new_state.domain == event.DOMAIN
+                new_state.domain == EVENT_DOMAIN
                 and valid_doorbell_timestamp(new_state.entity_id, new_state.state)
                 and (old_state is None or old_state.state != STATE_UNAVAILABLE)
                 and (old_state is None or old_state.state != new_state.state)

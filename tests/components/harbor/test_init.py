@@ -140,5 +140,7 @@ async def test_device_registry(
 
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), mock_config_entry.entry_id
+    )
     assert device == snapshot

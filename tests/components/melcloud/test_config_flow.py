@@ -88,9 +88,13 @@ async def test_form_errors(
     mock_login.side_effect = error
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={"username": "test-email@test-domain.com", "password": "test-password"},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "test-email@test-domain.com", "password": "test-password"},
     )
 
     assert len(mock_login.mock_calls) == 1
@@ -113,9 +117,13 @@ async def test_form_response_errors(
     mock_login.side_effect = ClientResponseError(mock_request_info(), (), status=error)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={"username": "test-email@test-domain.com", "password": "test-password"},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "test-email@test-domain.com", "password": "test-password"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -131,13 +139,18 @@ async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) 
     )
     mock_entry.add_to_hass(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
     with patch(
         "homeassistant.components.melcloud.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
                 "username": "test-email@test-domain.com",
                 "password": "test-password",
             },

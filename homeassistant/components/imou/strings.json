@@ -1,7 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The App ID does not match the previously configured account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +12,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "app_secret": "[%key:component::imou::config::step::user::data::app_secret%]"
+        },
+        "data_description": {
+          "app_secret": "[%key:component::imou::config::step::user::data_description::app_secret%]"
+        },
+        "description": "Enter a new App secret for {app_id}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_url": "Server region",
@@ -48,6 +61,29 @@
       },
       "camera_sd": {
         "name": "Live view SD"
+      }
+    },
+    "select": {
+      "device_volume": {
+        "name": "Volume",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "mute": "Mute"
+        }
+      },
+      "night_vision_mode": {
+        "name": "Night vision mode",
+        "state": {
+          "custom": "Custom mode",
+          "fullcolor": "Bright color night vision",
+          "infrared": "Infrared night vision",
+          "intelligent": "Smart night vision",
+          "lowlight": "Low light night vision",
+          "off": "[%key:common::state::off%]",
+          "smartlowlight": "Smart low light night vision"
+        }
       }
     },
     "sensor": {
@@ -98,6 +134,26 @@
       "white_light": {
         "name": "White light"
       }
+    }
+  },
+  "exceptions": {
+    "get_image_failed": {
+      "message": "Could not get a snapshot from Imou"
+    },
+    "get_stream_failed": {
+      "message": "Could not get the live stream URL from Imou"
+    },
+    "invalid_auth": {
+      "message": "Imou rejected the App ID and App secret"
+    },
+    "press_button_failed": {
+      "message": "Imou rejected the button press"
+    },
+    "select_option_failed": {
+      "message": "Imou rejected the new option"
+    },
+    "switch_operation_failed": {
+      "message": "Imou rejected the switch change"
     }
   },
   "selector": {

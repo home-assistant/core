@@ -38,6 +38,7 @@ async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -
 async def test_data_secure_group_key_issue_only_for_configured_group_address(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
     configured_group_address: str,
 ) -> None:
     """Test that repair issue is only created for configured group addresses."""
@@ -50,7 +51,6 @@ async def test_data_secure_group_key_issue_only_for_configured_group_address(
         }
     )
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert bool(issue_registry.issues) is False
     # An issue should only be created if this address is configured.
     knx.receive_data_secure_issue("1/2/5")
@@ -62,6 +62,7 @@ async def test_data_secure_group_key_issue_repair_flow(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair flow for DataSecure group key issue."""
     await knx.setup_integration(
@@ -76,7 +77,6 @@ async def test_data_secure_group_key_issue_repair_flow(
     knx.receive_data_secure_issue("11/0/0", source="1.0.1")
     knx.receive_data_secure_issue("1/2/5", source="1.0.10")
     knx.receive_data_secure_issue("1/2/5", source="1.0.1")
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
     assert issue is not None
     assert issue.translation_placeholders == {

@@ -45,7 +45,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     # supports core bluetooth discovery
     if config_entry.version == 1:
         dev_reg = dr.async_get(hass)
-        devices = dev_reg.devices.get_devices_for_config_entry_id(config_entry.entry_id)
+        devices = dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id)
 
         if len(devices) == 0:
             _LOGGER.error("Unable to migrate; No devices registered")
