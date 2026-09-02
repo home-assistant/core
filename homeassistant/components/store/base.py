@@ -759,22 +759,10 @@ class HacsBase:
 
         platforms = [Platform.UPDATE]
 
-        # Workaround for core versions without https://github.com/home-assistant/core/pull/117084
-        if self.core.ha_version < AwesomeVersion("2024.6.0"):
-            unload_platforms_lock = asyncio.Lock()
-            async with unload_platforms_lock:
-                on_unload = config_entry._on_unload  # noqa: SLF001 # workaround needs the core internals
-                config_entry._on_unload = []  # noqa: SLF001
-                await self.hass.config_entries.async_unload_platforms(
-                    entry=config_entry,
-                    platforms=platforms,
-                )
-                config_entry._on_unload = on_unload  # noqa: SLF001
-        else:
-            await self.hass.config_entries.async_unload_platforms(
-                entry=config_entry,
-                platforms=platforms,
-            )
+        await self.hass.config_entries.async_unload_platforms(
+            entry=config_entry,
+            platforms=platforms,
+        )
         await self.hass.config_entries.async_forward_entry_setups(
             config_entry, platforms
         )
