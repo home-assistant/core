@@ -740,6 +740,49 @@ async def test_message_history_unlimited(
         assert message_count == 100
 
 
+async def test_message_history_no_history(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+) -> None:
+    """Test that no previous rounds are sent when max_history = -1."""
+    conversation_id = "1234"
+
+    def stream(*args, **kwargs) -> AsyncGenerator[dict]:
+        return stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        )
+
+    with (
+        patch("ollama.AsyncClient.chat", side_effect=stream) as mock_chat,
+    ):
+        subentry = next(iter(mock_config_entry.subentries.values()))
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={**subentry.data, ollama.CONF_MAX_HISTORY: -1},
+        )
+        await hass.async_block_till_done()
+        for i in range(3):
+            result = await conversation.async_converse(
+                hass,
+                f"message {i + 1}",
+                conversation_id=conversation_id,
+                context=Context(),
+                agent_id=mock_config_entry.entry_id,
+            )
+            assert (
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
+            ), result
+
+        args = mock_chat.call_args_list
+        assert len(args) == 3
+        # Only the system prompt and the current user message are sent
+        recorded_messages = args[-1].kwargs["messages"]
+        assert len(recorded_messages) == 2
+        assert recorded_messages[0]["role"] == "system"
+        assert recorded_messages[1]["role"] == "user"
+        assert recorded_messages[1]["content"] == "message 3"
+
+
 async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:

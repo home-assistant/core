@@ -287,21 +287,26 @@ class OllamaBaseLLMEntity(Entity):
         This sets the max history to allow a configurable size history may take
         up in the context window.
 
+        A value of 0 keeps all messages; -1 keeps no previous rounds (only the
+        system prompt and the in progress user message are sent).
+
         Note that some messages in the history may not be from ollama only, and
         may come from other anents, so the assumptions here may not strictly hold,
         but generally should be effective.
         """
-        if max_messages < 1:
+        if max_messages == 0:
             # Keep all messages
             return
 
+        max_rounds = max(max_messages, 0)
+
         # Ignore the in progress user message
         num_previous_rounds = message_history.num_user_messages - 1
-        if num_previous_rounds >= max_messages:
+        if num_previous_rounds >= max_rounds:
             # Trim history but keep system prompt (first message).
             # Every other message should be an assistant message, so keep 2x
             # message objects. Also keep the last in progress user message
-            num_keep = 2 * max_messages + 1
+            num_keep = 2 * max_rounds + 1
             drop_index = len(message_history.messages) - num_keep
             message_history.messages = [
                 message_history.messages[0],

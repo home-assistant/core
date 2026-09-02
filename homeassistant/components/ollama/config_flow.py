@@ -497,7 +497,7 @@ def ollama_config_option_schema(
                 },
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+                    min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
                 )
             ),
             vol.Optional(
