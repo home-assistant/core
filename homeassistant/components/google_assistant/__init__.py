@@ -15,6 +15,7 @@ from .const import (  # noqa: F401
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSE_BY_LABEL,
     CONF_EXPOSED_DOMAINS,
     CONF_PRIVATE_KEY,
     CONF_PROJECT_ID,
@@ -72,6 +73,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(
                 CONF_EXPOSED_DOMAINS, default=DEFAULT_EXPOSED_DOMAINS
             ): cv.ensure_list,
+            vol.Optional(CONF_EXPOSE_BY_LABEL): cv.string,
             vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
