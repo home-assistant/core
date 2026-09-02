@@ -7,10 +7,7 @@ from homeassistant.components.doorbird.const import (
     DEFAULT_DOORBELL_EVENT,
     DEFAULT_MOTION_EVENT,
 )
-from homeassistant.components.doorbird.device import (
-    DoorbirdEvent,
-    async_matching_event_names,
-)
+from homeassistant.components.doorbird.device import DoorbirdEvent
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -192,80 +189,44 @@ async def test_image_event_mapping_follows_configured_events(
 
 
 @pytest.mark.parametrize(
-    ("configured", "described", "expected_ring", "expected_motion"),
+    ("configured", "expected_ring", "expected_motion"),
     [
         pytest.param(
             ["doorbell", "motion"],
-            [("mydoorbird_doorbell", "doorbell"), ("mydoorbird_motion", "motion")],
             ["mydoorbird_doorbell"],
             ["mydoorbird_motion"],
-            id="described_as_configured",
+            id="both_defaults",
         ),
-        pytest.param(
-            ["motion"],
-            [("mydoorbird_doorbell", "doorbell"), ("mydoorbird_motion", "motion")],
-            [],
-            ["mydoorbird_motion"],
-            id="description_of_a_deconfigured_event_ignored",
-        ),
-        pytest.param(
-            ["doorbell", "motion"],
-            [("mydoorbird_doorbell", "motion"), ("mydoorbird_motion", "doorbell")],
-            ["mydoorbird_motion"],
-            ["mydoorbird_doorbell"],
-            id="descriptions_swap_the_images",
-        ),
+        pytest.param(["motion"], [], ["mydoorbird_motion"], id="motion_only"),
+        pytest.param(["doorbell"], ["mydoorbird_doorbell"], [], id="doorbell_only"),
         pytest.param(
             ["front_door"],
-            [("mydoorbird_front_door", "motion")],
-            [],
-            ["mydoorbird_front_door"],
-            id="renamed_event_classified_by_the_schedule",
-        ),
-        pytest.param(
-            ["front_door"],
-            [],
             ["mydoorbird_front_door"],
             [],
-            id="renamed_event_falls_back_to_the_ring",
+            id="renamed_falls_back_to_the_ring",
         ),
         pytest.param(
             ["doorbell", "front_door"],
-            [],
             ["mydoorbird_doorbell", "mydoorbird_front_door"],
             [],
-            id="renamed_event_alongside_a_default",
+            id="renamed_alongside_a_default",
         ),
-        pytest.param([], [], [], [], id="no_events"),
+        pytest.param([], [], [], id="no_events"),
     ],
 )
-async def test_matching_event_names(
+async def test_image_event_names(
     hass: HomeAssistant,
     doorbird_mocker: DoorbirdMockerType,
     configured: list[str],
-    described: list[tuple[str, str]],
     expected_ring: list[str],
     expected_motion: list[str],
 ) -> None:
-    """Test which configured events refresh each image."""
-    doorbird_entry = await doorbird_mocker()
-    door_station = doorbird_entry.entry.runtime_data.door_station
+    """Test which registered events refresh each image."""
+    doorbird_entry = await doorbird_mocker(options={CONF_EVENTS: configured})
+    image_event_names = doorbird_entry.entry.runtime_data.door_station.image_event_names
 
-    door_station.update_events(configured)
-    # The device keeps the favorites of a deconfigured event, so the refreshed
-    # descriptions do not always agree with the options.
-    door_station.event_descriptions = [
-        DoorbirdEvent(name, event_type) for name, event_type in described
-    ]
-
-    assert (
-        async_matching_event_names(door_station, DEFAULT_DOORBELL_EVENT)
-        == expected_ring
-    )
-    assert (
-        async_matching_event_names(door_station, DEFAULT_MOTION_EVENT)
-        == expected_motion
-    )
+    assert image_event_names.get(DEFAULT_DOORBELL_EVENT, []) == expected_ring
+    assert image_event_names.get(DEFAULT_MOTION_EVENT, []) == expected_motion
 
 
 async def test_image_cleans_up_the_events_it_registered(

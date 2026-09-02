@@ -16,7 +16,7 @@ from doorbirdpy import (
 from propcache.api import cached_property
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
 
@@ -73,6 +73,13 @@ class ConfiguredDoorBird:
         # Event names, ie "doorbird_1234_doorbell" or "doorbird_1234_motion"
         self.door_station_events: list[str] = []
         self.event_descriptions: list[DoorbirdEvent] = []
+        # The event names that refresh each image, by image event type. Resolved
+        # once here, since only this class knows which favorites registered.
+        # The event names that refresh each image, by image event type, and the
+        # configured events the device will actually call. Both are resolved
+        # here, since only this class knows which favorites registered.
+        self.image_event_names: dict[str, list[str]] = {}
+        self._callable_events: set[str] = set()
 
     def update_events(self, events: list[str]) -> None:
         """Update the doorbird events."""
@@ -113,6 +120,8 @@ class ConfiguredDoorBird:
         """Register events on device."""
         if not self.door_station_events:
             # The config entry might not have any events configured yet
+            self._callable_events = set()
+            self._async_resolve_image_events()
             return
         http_fav = await self._async_register_events()
         event_config = await self._async_get_event_config(http_fav)
@@ -121,6 +130,8 @@ class ConfiguredDoorBird:
             await self._configure_unconfigured_favorites(event_config)
             event_config = await self._async_get_event_config(http_fav)
         self.event_descriptions = event_config.events
+        # Only the names the device will actually call can refresh an image.
+        self._async_resolve_image_events()
 
     async def _configure_unconfigured_favorites(
         self, event_config: DoorbirdEventConfig
@@ -155,14 +166,14 @@ class ConfiguredDoorBird:
         """Register events on device."""
         hass_url = self._get_hass_url()
         http_fav = await self._async_get_http_favorites()
-        if any(
-            # Note that a list comp is used here to ensure all
-            # events are registered and the any does not short circuit
-            [
-                await self._async_register_event(hass_url, event, http_fav)
-                for event in self.door_station_events
-            ]
-        ):
+        self._callable_events = set(self.door_station_events)
+        # Note that a list is built here to ensure all events are registered
+        # and the any() below does not short circuit.
+        added = [
+            await self._async_register_event(hass_url, event, http_fav)
+            for event in self.door_station_events
+        ]
+        if any(added):
             # If any events were registered, get the updated favorites
             http_fav = await self._async_get_http_favorites()
 
@@ -213,6 +224,33 @@ class ConfiguredDoorBird:
         """Get device slug."""
         return slugify(self._name)
 
+    @callback
+    def _async_resolve_image_events(self) -> None:
+        """Resolve which event names refresh each image.
+
+        Only events the device will actually call are usable, so a favorite that
+        failed to register leaves its image without one and the camera it
+        replaces stays. Each callable event belongs to one image: the type the
+        schedule gives it, the type its default name implies, or the last ring
+        image when the user renamed it and nothing can classify it.
+        """
+        described = {event.event: event.event_type for event in self.event_descriptions}
+        default_types = dict(DEFAULT_EVENT_TYPES)
+        by_type: dict[str, list[str]] = {
+            event_type: [] for _, event_type in DEFAULT_EVENT_TYPES
+        }
+        for event, event_name in zip(
+            self.events, self.door_station_events, strict=True
+        ):
+            if event_name not in self._callable_events:
+                continue
+            event_type = described.get(event_name) or default_types.get(
+                event, DEFAULT_DOORBELL_EVENT
+            )
+            if event_type in by_type:
+                by_type[event_type].append(event_name)
+        self.image_event_names = by_type
+
     def _get_event_name(self, event: str) -> str:
         return f"{self.slug}_{event}"
 
@@ -243,6 +281,7 @@ class ConfiguredDoorBird:
                 url,
                 event,
             )
+            self._callable_events.discard(event)
             return False
 
         _LOGGER.debug("Successfully registered URL for %s on %s", event, self.name)
@@ -268,49 +307,3 @@ async def async_reset_device_favorites(door_station: ConfiguredDoorBird) -> None
         for favorite_id in favorite_ids:
             await door_bird.delete_favorite(favorite_type, favorite_id)
     await door_station.async_register_events()
-
-
-def async_matching_event_names(
-    door_station: ConfiguredDoorBird, event_type: str
-) -> list[str]:
-    """Return the configured event names that refresh the given image type.
-
-    Models without the schedule API report no descriptions at all, so fall back
-    to the configured events: the ones this type names, or every unclassifiable
-    one when the user renamed them.
-
-    The camera platform uses this to decide whether the image replacing a
-    deprecated camera can refresh at all.
-    """
-    # The device keeps the favorites and schedule entries of a deconfigured
-    # event, so the descriptions can still name one that was removed.
-    configured = set(door_station.door_station_events)
-    described_names = [
-        event.event
-        for event in door_station.event_descriptions
-        if event.event_type == event_type and event.event in configured
-    ]
-
-    # An event the schedule attributes to either image is spoken for, so the
-    # fallback only covers the configured events it left over.
-    described = {event.event for event in door_station.event_descriptions}
-    classifiable = {event for event, _ in DEFAULT_EVENT_TYPES}
-    own_events = {
-        event
-        for event, default_type in DEFAULT_EVENT_TYPES
-        if default_type == event_type
-    }
-    # A renamed event cannot be attributed to either image, so the doorbell one
-    # takes it: without this the replacement never refreshes, while the
-    # deprecated cameras polled on a timer regardless of the event names.
-    takes_unclassifiable = event_type == DEFAULT_DOORBELL_EVENT
-    return described_names + [
-        event_name
-        for event, event_name in zip(
-            door_station.events, door_station.door_station_events, strict=True
-        )
-        if event_name not in described
-        and (
-            event in own_events or (takes_unclassifiable and event not in classifiable)
-        )
-    ]

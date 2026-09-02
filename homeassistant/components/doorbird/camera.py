@@ -15,7 +15,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT, DOMAIN
 from .deprecation import deprecate_entity
-from .device import async_matching_event_names
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 from .util import get_mac_address_from_door_station_info
@@ -56,7 +55,7 @@ async def async_setup_entry(
         # The image replacing this camera is event driven and does not poll, so
         # without an event to invalidate it the camera has to stay. The issue
         # would name a replacement that cannot refresh, so it goes too.
-        if not async_matching_event_names(door_bird_data.door_station, event_type):
+        if not door_bird_data.door_station.image_event_names.get(event_type):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
         elif not deprecate_entity(
             hass,

@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .device import async_matching_event_names
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
@@ -109,8 +108,8 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         # Remembered rather than resolved again on removal: resetting the
         # favorites re-derives the descriptions while the entity is live, so
         # the names can have moved on by then.
-        self._registered_event_names = async_matching_event_names(
-            self._door_station, self.entity_description.doorbird_event_type
+        self._registered_event_names = self._door_station.image_event_names.get(
+            self.entity_description.doorbird_event_type, []
         )
         for event_name in self._registered_event_names:
             event_to_entity_id[event_name] = self.entity_id

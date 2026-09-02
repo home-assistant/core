@@ -51,6 +51,7 @@ def get_mock_doorbird_api(
     favorites: dict[str, dict[str, Any]] | None = None,
     favorites_side_effect: Exception | None = None,
     change_schedule: tuple[bool, int] | None = None,
+    change_favorite: bool = True,
 ) -> DoorBird:
     """Return a mock DoorBirdAPI object with return values."""
     doorbirdapi_mock = MagicMock(spec_set=DoorBird)
@@ -59,7 +60,7 @@ def get_mock_doorbird_api(
     api_mock_type.favorites = AsyncMock(
         side_effect=favorites_side_effect, return_value=favorites
     )
-    api_mock_type.change_favorite = AsyncMock(return_value=True)
+    api_mock_type.change_favorite = AsyncMock(return_value=change_favorite)
     api_mock_type.change_schedule = AsyncMock(
         return_value=change_schedule or (True, 200)
     )

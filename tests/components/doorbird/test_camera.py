@@ -258,3 +258,16 @@ async def test_camera_restored_when_events_are_cleared(
     # Nothing can refresh the images now, so the polling cameras have to return.
     assert hass.states.get("camera.mydoorbird_last_ring") is not None
     assert hass.states.get("camera.mydoorbird_last_motion") is not None
+
+
+async def test_camera_kept_when_the_event_could_not_be_registered(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test a camera stays when its image has no working webhook."""
+    await doorbird_mocker(change_favorite=False)
+
+    # The favorite could not be set, so the event never fires and the image it
+    # would have refreshed cannot replace anything.
+    assert hass.states.get("camera.mydoorbird_last_ring") is not None
+    assert hass.states.get("camera.mydoorbird_last_motion") is not None
