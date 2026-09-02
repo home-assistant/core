@@ -1,15 +1,18 @@
 """The tests the History component."""
 
+import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import sentinel
+from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
 from homeassistant.components.history import DOMAIN
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -376,6 +379,183 @@ async def async_record_states(
         )
 
     return zero, four, states
+
+
+def history_query_key() -> history._HistoryQueryKey:
+    """Return a history query key for tests."""
+    now = dt_util.utcnow()
+    return history._HistoryQueryKey(
+        start_time=now - timedelta(hours=1),
+        end_time=now,
+        entity_ids=("sensor.power",),
+        include_start_time_state=True,
+        significant_changes_only=True,
+        minimal_response=True,
+        no_attributes=True,
+    )
+
+
+async def test_coalesce_in_flight_history_queries(hass: HomeAssistant) -> None:
+    """Test identical in-flight history queries share their result."""
+    query_key = history_query_key()
+    result_future = hass.loop.create_future()
+    retry_future = hass.loop.create_future()
+    result_futures = iter((result_future, retry_future))
+    create_calls = 0
+
+    def create_result_future() -> asyncio.Future[bytes]:
+        nonlocal create_calls
+        create_calls += 1
+        return next(result_futures)
+
+    first_task = hass.async_create_task(
+        history._async_get_or_create_history_result(
+            hass, query_key, create_result_future
+        )
+    )
+    await asyncio.sleep(0)
+    second_task = hass.async_create_task(
+        history._async_get_or_create_history_result(
+            hass, query_key, create_result_future
+        )
+    )
+    await asyncio.sleep(0)
+
+    assert create_calls == 1
+    result_future.set_result(b'[["shared"]]')
+    assert await asyncio.gather(first_task, second_task) == [
+        b'[["shared"]]',
+        b'[["shared"]]',
+    ]
+    assert query_key not in hass.data[history._IN_FLIGHT_HISTORY_QUERIES]
+
+    retry_future.set_result(b'[["new"]]')
+    assert (
+        await history._async_get_or_create_history_result(
+            hass, query_key, create_result_future
+        )
+        == b'[["new"]]'
+    )
+    assert create_calls == 2
+
+
+async def test_cancelled_history_request_does_not_cancel_shared_query(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling one waiter does not cancel the shared query."""
+    query_key = history_query_key()
+    result_future = hass.loop.create_future()
+
+    first_task = hass.async_create_task(
+        history._async_get_or_create_history_result(
+            hass, query_key, lambda: result_future
+        )
+    )
+    await asyncio.sleep(0)
+    second_task = hass.async_create_task(
+        history._async_get_or_create_history_result(
+            hass, query_key, lambda: result_future
+        )
+    )
+    await asyncio.sleep(0)
+
+    first_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await first_task
+
+    assert not result_future.cancelled()
+    result_future.set_result(b'[["shared"]]')
+    assert await second_task == b'[["shared"]]'
+
+
+async def test_failed_history_query_is_retried(hass: HomeAssistant) -> None:
+    """Test a failed shared history query is removed."""
+    query_key = history_query_key()
+    failed_future = hass.loop.create_future()
+    failed_task = hass.async_create_task(
+        history._async_get_or_create_history_result(
+            hass, query_key, lambda: failed_future
+        )
+    )
+    await asyncio.sleep(0)
+
+    failed_future.set_exception(RuntimeError("query failed"))
+    with pytest.raises(RuntimeError, match="query failed"):
+        await failed_task
+
+    retry_future = hass.loop.create_future()
+    retry_future.set_result(b'[["retried"]]')
+    assert (
+        await history._async_get_or_create_history_result(
+            hass, query_key, lambda: retry_future
+        )
+        == b'[["retried"]]'
+    )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_coalesce_in_flight_history_queries_across_users(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test authorized users can share an identical in-flight query."""
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"sensor.power": True}}}
+    )
+    await async_setup_component(hass, DOMAIN, {})
+    admin_client = await hass_client()
+    read_only_client = await hass_client(hass_read_only_access_token)
+    now = dt_util.utcnow()
+    url = f"/api/history/period/{(now - timedelta(hours=1)).isoformat()}"
+    params = {
+        "filter_entity_id": "sensor.power",
+        "end_time": now.isoformat(),
+        "minimal_response": "",
+        "no_attributes": "",
+    }
+
+    result_future = hass.loop.create_future()
+    both_requests_started = asyncio.Event()
+    original_get_result = history._async_get_or_create_history_result
+    request_count = 0
+
+    async def track_get_result(
+        hass_: HomeAssistant,
+        query_key: history._HistoryQueryKey,
+        create_result_future: Callable[[], asyncio.Future[bytes]],
+    ) -> bytes:
+        nonlocal request_count
+        request_count += 1
+        if request_count == 2:
+            both_requests_started.set()
+        return await original_get_result(hass_, query_key, create_result_future)
+
+    recorder = get_instance(hass)
+    with (
+        patch.object(history, "has_states_before", return_value=True),
+        patch.object(
+            recorder, "async_add_executor_job", return_value=result_future
+        ) as add_executor_job,
+        patch.object(
+            history,
+            "_async_get_or_create_history_result",
+            side_effect=track_get_result,
+        ),
+    ):
+        admin_request = hass.async_create_task(admin_client.get(url, params=params))
+        read_only_request = hass.async_create_task(
+            read_only_client.get(url, params=params)
+        )
+        await asyncio.wait_for(both_requests_started.wait(), 1)
+
+        assert add_executor_job.call_count == 1
+        result_future.set_result(b"[]")
+        responses = await asyncio.gather(admin_request, read_only_request)
+
+    assert all(response.status == HTTPStatus.OK for response in responses)
+    assert [await response.json() for response in responses] == [[], []]
 
 
 @pytest.mark.usefixtures("recorder_mock")
