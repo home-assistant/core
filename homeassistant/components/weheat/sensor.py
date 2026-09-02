@@ -55,6 +55,18 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     supported_fn: Callable[[HeatPump], bool] | None = None
 
 
+def _cooling_available_from(status: HeatPump) -> datetime | None:
+    """Return when the restart delay ends, while the heat pump is still waiting.
+
+    The library reports the moment the delay ends even once it has gone by, so
+    follow the heat pump's own start condition for whether it is still waiting.
+    """
+    conditions = status.cooling_start_conditions
+    if conditions is None or conditions["exponential_backoff"]:
+        return None
+    return status.cooling_available_from
+
+
 def _does_cooling(status: HeatPump) -> bool:
     """Return whether the heat pump does cooling at all."""
     return status.cooling_activity is not None
@@ -288,7 +300,7 @@ SENSORS = [
         key="cooling_available_from",
         supported_fn=_does_cooling,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda status: status.cooling_available_from,
+        value_fn=_cooling_available_from,
     ),
 ]
 
