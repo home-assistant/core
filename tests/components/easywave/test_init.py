@@ -34,10 +34,10 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry_shutdown_when_first_refresh_raises_not_ready(
+async def test_setup_entry_relies_on_unload_callback_when_not_ready(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Setup shuts down the coordinator when first refresh raises ConfigEntryNotReady."""
+    """Setup does not shut down twice when first refresh raises ConfigEntryNotReady."""
     mock_config_entry.add_to_hass(hass)
     transceiver = mock_easywave_transceiver()
 
@@ -61,7 +61,8 @@ async def test_setup_entry_shutdown_when_first_refresh_raises_not_ready(
         await hass.async_block_till_done()
 
     assert result is False
-    assert mock_shutdown.await_count >= 1
+    # Core processes entry.async_on_unload once after setup failure.
+    assert mock_shutdown.await_count == 1
 
 
 async def test_setup_entry_success(

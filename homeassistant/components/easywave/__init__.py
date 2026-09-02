@@ -6,7 +6,6 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import (
@@ -70,11 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
 
     transceiver = RX11Transceiver(hass, entry.data)
     coordinator = EasywaveCoordinator(hass, transceiver, entry)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        await coordinator.async_shutdown()
-        raise
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = EasywaveRuntimeData(coordinator=coordinator)
 

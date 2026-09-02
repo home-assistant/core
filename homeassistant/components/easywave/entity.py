@@ -74,15 +74,30 @@ class EasywaveChildEntity(Entity):
             return
         device_info = dict(self.device_info)
         device_info.pop("via_device", None)
-        if via_id := dr.async_get_device_id_by_identifier(
-            self.hass,
-            (DOMAIN, self._entry.entry_id),
-            config_entry_id=self._entry.entry_id,
-        ):
-            self._attr_device_info = cast(
-                DeviceInfo,
-                {**device_info, "via_device_id": via_id},
+        if not (
+            via_id := dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._entry.entry_id),
+                config_entry_id=self._entry.entry_id,
             )
+        ):
+            return
+        self._attr_device_info = cast(
+            DeviceInfo,
+            {**device_info, "via_device_id": via_id},
+        )
+        # entity_platform already created the device from device_info before
+        # async_added_to_hass, so persist the parent link in the registry.
+        if (
+            isinstance(self.device_entry, dr.DeviceEntry)
+            and self.device_entry.via_device_id != via_id
+        ):
+            device_registry = dr.async_get(self.hass)
+            if updated := device_registry.async_update_device(
+                self.device_entry.id,
+                via_device_id=via_id,
+            ):
+                self.device_entry = updated
 
 
 class EasywaveTransmitterEntity(EasywaveChildEntity):
