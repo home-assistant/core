@@ -5,18 +5,23 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import insteon
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOME_ASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.insteon import (
     DOMAIN,
     entity as insteon_entity,
     utils as insteon_utils,
 )
 from homeassistant.components.insteon.entity import InsteonEntity
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_INPUT_PLM
+from .mock_connection import mock_successful_connection
 from .mock_devices import MockDevices
 
 from tests.common import MockConfigEntry
@@ -38,7 +43,7 @@ def lock_platform_only():
 def patch_setup_and_devices():
     """Patch the Insteon setup process and devices."""
     with (
-        patch.object(insteon, "async_connect", new=mock_connection),
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
         patch.object(insteon, "async_close"),
         patch.object(insteon, "devices", devices),
         patch.object(insteon_utils, "devices", devices),
@@ -47,18 +52,13 @@ def patch_setup_and_devices():
         yield
 
 
-async def mock_connection(*args, **kwargs):
-    """Return a successful connection."""
-    return True
-
-
 async def test_async_update_requests_status_for_mains_powered_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test homeassistant.update_entity forwards the entity's group to async_status."""
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOME_ASSISTANT_DOMAIN, {})
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
@@ -76,9 +76,9 @@ async def test_async_update_requests_status_for_mains_powered_device(
         devices["55.55.55"].async_status.reset_mock()
 
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {"entity_id": lock.entity_id},
+            HOME_ASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: lock.entity_id},
             blocking=True,
         )
         devices["55.55.55"].async_status.assert_awaited_once_with(1)

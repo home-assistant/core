@@ -193,13 +193,7 @@ class InsteonEntity(Entity):
         await self._insteon_device.async_add_default_links()
 
     async def async_update(self) -> None:
-        """Request a live status update from the device.
-
-        No-op for battery-powered devices: a status request on those queues
-        work and starts a wake-ping loop rather than completing, matching
-        the same skip used for the startup status pass in
-        async_get_device_config.
-        """
+        """Request a live status update from the device, skipping battery-powered devices."""
         if self._insteon_device.is_battery:
             return
         await self._insteon_device.async_status(self.insteon_group)
