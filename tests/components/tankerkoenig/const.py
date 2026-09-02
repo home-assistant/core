@@ -1,6 +1,7 @@
 """Constants for the Tankerkoenig tests."""
 
 from aiotankerkoenig import PriceInfo, Station, Status
+from aiotankerkoenig.models import OpeningTime
 
 from homeassistant.components.tankerkoenig.const import CONF_STATIONS
 from homeassistant.const import (
@@ -47,7 +48,10 @@ STATION = Station(
     house_number="1",
     post_code=1234,
     place="Somewhere",
-    opening_times=[],
+    opening_times=[
+        OpeningTime(start="06:00:00", end="22:00:00", text="Mo-Fr"),
+        OpeningTime(start="08:00:00", end="20:00:00", text="Sa-So"),
+    ],
     overrides=[],
     whole_day=True,
     is_open=True,
