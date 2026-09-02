@@ -511,7 +511,13 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    DeviceCategory.GGQ: BATTERY_SENSORS,
+    DeviceCategory.GGQ: (
+        *BATTERY_SENSORS,
+        TuyaSensorEntityDescription(
+            key=DPCode.SMART_WEATHER,
+            translation_key="weather",
+        ),
+    ),
     DeviceCategory.HJJCY: (
         TuyaSensorEntityDescription(
             key=DPCode.AIR_QUALITY_INDEX,
