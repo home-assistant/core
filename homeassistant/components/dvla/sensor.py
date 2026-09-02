@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfMass
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -223,13 +223,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description
         self._state = description.value_fn(coordinator.data)
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._state = self.entity_description.value_fn(self.coordinator.data)
-        self.async_write_ha_state()
 
     @property
     @override
