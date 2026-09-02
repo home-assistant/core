@@ -7,6 +7,7 @@ from easywave_home_control.codec import (
     SensorLearnPayload,
     SensorTelegramEvent,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import SubentryFlowResult
 
@@ -141,7 +142,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
     async def async_step_transmitter_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Create the learned transmitter with an auto-generated name."""
+        """Confirm the learned transmitter and create a subentry."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")  # pragma: no cover
 
@@ -155,17 +156,30 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
         ):
             return self.async_abort(reason="already_configured")
 
-        return self._save_device(
-            title=self._next_default_name(ENTRY_TYPE_TRANSMITTER),
-            unique_id=unique_id,
-            data={
-                CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                CONF_TRANSMITTER_SERIAL: serial_hex,
-                CONF_OPERATING_TYPE: "1",
-                CONF_BUTTON_COUNT: self._button_count,
-                CONF_GROUPING_MODE: self._grouping_mode,
-                CONF_SWITCH_MODE: self._switch_mode,
-            },
+        if user_input is not None and "title" in user_input:
+            return self._save_device(
+                title=user_input["title"],
+                unique_id=unique_id,
+                data={
+                    CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+                    CONF_TRANSMITTER_SERIAL: serial_hex,
+                    CONF_OPERATING_TYPE: "1",
+                    CONF_BUTTON_COUNT: self._button_count,
+                    CONF_GROUPING_MODE: self._grouping_mode,
+                    CONF_SWITCH_MODE: self._switch_mode,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="transmitter_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "title",
+                        default=self._next_default_name(ENTRY_TYPE_TRANSMITTER),
+                    ): str,
+                }
+            ),
         )
 
     async def async_step_neo_sensor(
@@ -197,7 +211,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
     async def async_step_sensor_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Create the learned neo sensor with an auto-generated name."""
+        """Confirm the learned neo sensor and create a subentry."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")  # pragma: no cover
 
@@ -211,12 +225,30 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
         ):
             return self.async_abort(reason="already_configured")
 
-        return self._save_device(
-            title=self._next_default_name(ENTRY_TYPE_NEO_SENSOR),
-            unique_id=unique_id,
-            data={
-                CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
-                CONF_SENSOR_SERIAL: serial_hex,
-                CONF_SENSOR_CAPABILITIES: self._learned_device["capabilities"],
+        if user_input is not None and "title" in user_input:
+            return self._save_device(
+                title=user_input["title"],
+                unique_id=unique_id,
+                data={
+                    CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
+                    CONF_SENSOR_SERIAL: serial_hex,
+                    CONF_SENSOR_CAPABILITIES: self._learned_device["capabilities"],
+                },
+            )
+
+        return self.async_show_form(
+            step_id="sensor_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "title",
+                        default=self._next_default_name(ENTRY_TYPE_NEO_SENSOR),
+                    ): str,
+                }
+            ),
+            description_placeholders={
+                "sensor_list": await self._async_format_neo_sensor_list(
+                    self._learned_device
+                ),
             },
         )

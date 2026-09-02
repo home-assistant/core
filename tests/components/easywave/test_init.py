@@ -123,6 +123,33 @@ async def test_setup_entry_creates_repair_issue(
     assert issue.translation_key == "frequency_not_permitted"
 
 
+async def test_remove_entry_clears_frequency_repair_issue(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Removing an entry that failed regulatory setup clears its repair issue."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config.country = "US"
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id) is False
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    issues = ir.async_get(hass)
+    assert (
+        issues.async_get_issue(
+            DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
+    assert (
+        issues.async_get_issue(
+            DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
+
+
 async def test_setup_entry_deletes_stale_repair_issue(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

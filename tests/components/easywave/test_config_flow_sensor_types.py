@@ -1,8 +1,8 @@
-"""Tests for Easywave device learning helpers."""
+"""Tests for Easywave device learning helpers and neo sensor labels."""
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,6 +16,47 @@ from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
 class _LearningHelper(EasywaveDeviceFlowMixin):
     """Minimal mixin wrapper for learning helper tests."""
+
+
+@pytest.mark.parametrize(
+    ("learned_device", "expected"),
+    [
+        pytest.param(
+            {
+                "measures_temperature": True,
+                "measures_humidity": True,
+            },
+            "• Temperature\n• Humidity",
+            id="temperature_and_humidity",
+        ),
+        pytest.param(
+            {
+                "measures_temperature": True,
+                "measures_humidity": False,
+            },
+            "• Temperature",
+            id="temperature_only",
+        ),
+        pytest.param(
+            {
+                "measures_temperature": False,
+                "measures_humidity": False,
+            },
+            "• Unknown",
+            id="unknown",
+        ),
+    ],
+)
+async def test_async_format_neo_sensor_list(
+    hass: HomeAssistant,
+    learned_device: dict[str, Any],
+    expected: str,
+) -> None:
+    """Supported neo sensor capabilities are listed with entity translations."""
+    helper = _LearningHelper()
+    helper.hass = hass
+
+    assert await helper._async_format_neo_sensor_list(learned_device) == expected
 
 
 async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
@@ -47,15 +88,31 @@ async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
         == "Unknown"
     )
     assert (
+        "{sensor_list}"
+        in config_subentries_translations[
+            "component.easywave.config_subentries.easywave_neo_sensor.step.sensor_confirm.description"
+        ]
+    )
+    assert (
         config_subentries_translations[
             "component.easywave.config_subentries.easywave_transmitter.step.transmitter_learn_intro.title"
         ]
         == "Learn Transmitter"
     )
-    assert (
-        "component.easywave.config_subentries.easywave_neo_sensor.step.sensor_confirm.description"
-        not in config_subentries_translations
-    )
+
+
+async def test_config_flow_sensor_list_uses_language_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """German falls back to English until Lokalise provides component translations."""
+    helper = _LearningHelper()
+    helper.hass = hass
+
+    with patch.object(hass.config, "language", "de"):
+        sensor_list = await helper._async_format_neo_sensor_list(
+            {"measures_temperature": True, "measures_humidity": True}
+        )
+    assert sensor_list == "• Temperature\n• Humidity"
 
 
 async def test_listen_for_telegram_resumes_after_suspend_failure() -> None:

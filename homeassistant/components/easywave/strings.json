@@ -55,6 +55,16 @@
           },
           "title": "Timeout"
         },
+        "sensor_confirm": {
+          "data": {
+            "title": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "title": "The name for this Easywave neo sensor."
+          },
+          "description": "The sensor was successfully learned!\n\nDetected sensors:\n{sensor_list}\n\nEnter a name for the new device:",
+          "title": "Learning Successful"
+        },
         "sensor_learn_intro": {
           "description": "Home Assistant automatically detects which measurement data the sensor provides.\n\nPlease press the learn button on the back of the sensor in the next step.",
           "menu_options": {
@@ -109,6 +119,16 @@
         },
         "learn_transmitter": {
           "title": "Press transmitter button!"
+        },
+        "transmitter_confirm": {
+          "data": {
+            "title": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "title": "The name for this transmitter device."
+          },
+          "description": "The transmitter was successfully learned!\n\nEnter a name for the new device:",
+          "title": "Learning Successful"
         },
         "transmitter_learn_intro": {
           "description": "Please specify the number of buttons in the next step, then press a button on the Easywave transmitter.",

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry, SubentryFlowResult
 from homeassistant.const import CONF_DEVICES
+from homeassistant.helpers import translation
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -17,6 +18,7 @@ from .const import (
     CONF_ENTRY_TYPE,
     CONF_SENSOR_SERIAL,
     CONF_TRANSMITTER_SERIAL,
+    DOMAIN,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TO_SUBENTRY_TYPE,
     ENTRY_TYPE_TRANSMITTER,
@@ -155,6 +157,34 @@ class EasywaveDeviceFlowMixin:
             data={CONF_DEVICES: devices},
         )
         return self.async_abort(reason="device_added")
+
+    async def _async_format_neo_sensor_list(
+        self, learned_device: dict[str, Any]
+    ) -> str:
+        """Return a translated bullet list of supported neo sensor measurements."""
+        language = self.hass.config.language
+        entity_translations = await translation.async_get_translations(
+            self.hass, language, "entity", integrations=[DOMAIN]
+        )
+        selector_translations = await translation.async_get_translations(
+            self.hass, language, "selector", integrations=[DOMAIN]
+        )
+        entity_prefix = f"component.{DOMAIN}.entity.sensor."
+        items: list[str] = []
+        if learned_device.get("measures_temperature"):
+            items.append(
+                entity_translations[f"{entity_prefix}neo_sensor_temperature.name"]
+            )
+        if learned_device.get("measures_humidity"):
+            items.append(
+                entity_translations[f"{entity_prefix}neo_sensor_humidity.name"]
+            )
+        if not items:
+            unknown = selector_translations[
+                f"component.{DOMAIN}.selector.sensor_type.options.unknown"
+            ]
+            return f"• {unknown}"
+        return "\n".join(f"• {name}" for name in items)
 
     def _next_default_name(self, entry_type: str) -> str:
         """Return a suggested device name based on the existing device count."""

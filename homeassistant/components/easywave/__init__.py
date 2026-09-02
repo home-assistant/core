@@ -89,6 +89,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
+    """Clean up repair issues when the config entry is deleted."""
+    # Failed regulatory setup returns False before unload hooks run, so removal
+    # must clear the issue explicitly.
+    ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
+
+
 def _device_identifier(device: dr.AnyDeviceEntry) -> str | None:
     """Return the Easywave identifier stored on a device registry entry."""
     for domain, identifier in device.identifiers:
