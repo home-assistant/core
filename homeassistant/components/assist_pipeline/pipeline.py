@@ -522,6 +522,9 @@ class AudioSettings:
     silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
+    in_command_silence_threshold: float = 0.2
+    """Probability below which in-command audio counts toward ending the command."""
+
     def __post_init__(self) -> None:
         """Verify settings post-initialization."""
         if (self.noise_suppression_level < 0) or (self.noise_suppression_level > 4):
@@ -953,7 +956,10 @@ class PipelineRun:
                 and self.stt_provider.audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
-                    silence_seconds=self.audio_settings.silence_seconds
+                    silence_seconds=self.audio_settings.silence_seconds,
+                    in_command_silence_threshold=(
+                        self.audio_settings.in_command_silence_threshold
+                    ),
                 )
 
             result = await self.stt_provider.async_process_audio_stream(
