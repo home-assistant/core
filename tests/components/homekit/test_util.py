@@ -395,6 +395,7 @@ async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][1][3] == entry.entry_id
     assert pincode.decode() in mock_create.mock_calls[0][1][1]
+    assert "/api/homekit/pairingqr?token=" in mock_create.mock_calls[0][1][1]
 
 
 async def test_async_dismiss_setup_msg(hass: HomeAssistant) -> None:

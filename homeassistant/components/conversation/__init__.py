@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from hassil.recognize import RecognizeResult
 import voluptuous as vol
@@ -293,7 +293,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(f"Error processing {text}: {err}") from err
 
         if service.return_response:
-            return result.as_dict()
+            return cast(ServiceResponse, result.as_dict())
 
         return None
 

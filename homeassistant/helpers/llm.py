@@ -303,7 +303,7 @@ class IntentResponseDict(dict):
             super().__init__(intent_response)
             return
 
-        result = intent_response.as_dict()
+        result = dict(intent_response.as_dict())
         del result["language"]
         del result["card"]
         super().__init__(result)

@@ -38,8 +38,6 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     hass.http.register_view(
         EditScriptConfigView(
-            SCRIPT_DOMAIN,
-            "config",
             SCRIPT_CONFIG_PATH,
             cv.slug,
             post_write_hook=hook,
@@ -51,6 +49,9 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 class EditScriptConfigView(EditKeyBasedConfigView):
     """Edit script config."""
+
+    name = f"api:config:{SCRIPT_DOMAIN}:config"
+    url = f"/api/config/{SCRIPT_DOMAIN}/config/{{config_key}}"
 
     @override
     def _write_value(

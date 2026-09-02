@@ -1271,12 +1271,13 @@ class HomeKitPairingQRView(HomeAssistantView):
     url = "/api/homekit/pairingqr"
     name = "api:homekit:pairingqr"
     requires_auth = False
+    openapi_security = ["queryToken"]
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve the pairing QRCode image."""
-        if not request.query_string:
+        if not (pairing_token := request.query.get("token") or request.query_string):
             raise Unauthorized
-        entry_id, secret = request.query_string.split("-")
+        entry_id, secret = pairing_token.split("-", 1)
         hass = request.app[KEY_HASS]
         entry_data: HomeKitEntryData | None
         if (

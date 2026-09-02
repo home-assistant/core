@@ -33,6 +33,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
+from typing import Any, Literal, NotRequired, TypedDict
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
@@ -44,7 +45,7 @@ from mcp.server import InitializationOptions, Server
 from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, api_response
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -56,6 +57,31 @@ from .session import Session
 from .types import MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class MCPJSONRPCResult(TypedDict):
+    """Successful JSON-RPC response."""
+
+    jsonrpc: Literal["2.0"]
+    id: str | int
+    result: dict[str, Any]
+
+
+class MCPJSONRPCErrorData(TypedDict):
+    """JSON-RPC error details."""
+
+    code: int
+    message: str
+    data: NotRequired[Any]
+
+
+class MCPJSONRPCError(TypedDict):
+    """Failed JSON-RPC response."""
+
+    jsonrpc: Literal["2.0"]
+    id: str | int
+    error: MCPJSONRPCErrorData
+
 
 # Streamable HTTP endpoint
 STREAMABLE_API = "/api/mcp"
@@ -312,6 +338,8 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
     name = f"{DOMAIN}:streamable"
     url = STREAMABLE_API
 
+    @api_response(HTTPStatus.OK, MCPJSONRPCResult | MCPJSONRPCError)
+    @api_response(HTTPStatus.ACCEPTED)
     async def post(self, request: web.Request) -> web.StreamResponse:
         """Process JSON-RPC messages for the configured LLM APIs."""
         hass = request.app[KEY_HASS]
@@ -332,6 +360,8 @@ class ModelContextProtocolStreamableApiView(HomeAssistantView):
     name = f"{DOMAIN}:streamable_api"
     url = f"{STREAMABLE_API}/{{api_id}}"
 
+    @api_response(HTTPStatus.OK, MCPJSONRPCResult | MCPJSONRPCError)
+    @api_response(HTTPStatus.ACCEPTED)
     async def post(self, request: web.Request, api_id: str) -> web.StreamResponse:
         """Process JSON-RPC messages for the LLM API identified by api_id."""
         hass = request.app[KEY_HASS]

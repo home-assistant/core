@@ -839,6 +839,7 @@ class CameraView(HomeAssistantView):
     """Base CameraView."""
 
     requires_auth = False
+    openapi_security = ["bearerAuth", "queryToken"]
 
     def __init__(self, component: EntityComponent[Camera]) -> None:
         """Initialize a basic camera view."""

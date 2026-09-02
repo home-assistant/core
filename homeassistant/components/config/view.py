@@ -27,8 +27,6 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
 
     def __init__(
         self,
-        component: str,
-        config_type: str,
         path: str,
         key_schema: Callable[[Any], str],
         *,
@@ -41,8 +39,6 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
         | None = None,
     ) -> None:
         """Initialize a config view."""
-        self.url = f"/api/config/{component}/{config_type}/{{config_key}}"
-        self.name = f"api:config:{component}:{config_type}"
         self.path = path
         self.key_schema = key_schema
         self.data_schema = data_schema

@@ -7,6 +7,7 @@ import sys
 from time import monotonic
 
 from . import (
+    api_contracts,
     application_credentials,
     bluetooth,
     codeowners,
@@ -66,6 +67,7 @@ INTEGRATION_PLUGINS = [
     config_flow,  # This needs to run last, after translations are processed
 ]
 HASS_PLUGINS = [
+    api_contracts,
     core_files,
     device_classes,
     docker,

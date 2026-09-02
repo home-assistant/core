@@ -41,8 +41,6 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     hass.http.register_view(
         EditSceneConfigView(
-            SCENE_DOMAIN,
-            "config",
             SCENE_CONFIG_PATH,
             cv.string,
             data_schema=PLATFORM_SCHEMA,
@@ -54,6 +52,9 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 class EditSceneConfigView(EditIdBasedConfigView):
     """Edit scene config."""
+
+    name = f"api:config:{SCENE_DOMAIN}:config"
+    url = f"/api/config/{SCENE_DOMAIN}/config/{{config_key}}"
 
     @override
     def _write_value(

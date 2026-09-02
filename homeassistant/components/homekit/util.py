@@ -464,7 +464,7 @@ def async_show_setup_message(
         f"To set up {bridge_name} in the Home App, "
         "scan the QR code or enter the following code:\n"
         f"### {pin}\n"
-        f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
+        f"![image](/api/homekit/pairingqr?token={entry_id}-{pairing_secret})"
     )
     persistent_notification.async_create(hass, message, "HomeKit Pairing", entry_id)
 

@@ -33,8 +33,6 @@ async def test_view_requires_data_schema_or_validator(
     with expected_result:
         view.BaseEditConfigView(
             "test",
-            "test",
-            "test",
             lambda x: "",
             data_schema=data_schema,
             data_validator=data_validator,

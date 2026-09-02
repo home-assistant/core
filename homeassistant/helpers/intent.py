@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from itertools import groupby
 import logging
-from typing import Any, override
+from typing import Any, Literal, NotRequired, TypedDict, cast, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1356,6 +1356,54 @@ class IntentResponseTarget:
     id: str | None = None
 
 
+class IntentSpeechValue(TypedDict):
+    """Spoken intent response."""
+
+    speech: str
+    extra_data: Any
+
+
+class IntentRepromptValue(TypedDict):
+    """Prompt repeated when the user does not respond."""
+
+    reprompt: str
+    extra_data: Any
+
+
+class IntentCardValue(TypedDict):
+    """Visual intent response."""
+
+    title: str
+    content: str
+
+
+class IntentResponseSuccessData(TypedDict):
+    """Targets affected by a successful intent."""
+
+    success: list[IntentResponseTarget]
+    failed: list[IntentResponseTarget]
+
+
+class IntentResponseErrorData(TypedDict):
+    """Intent processing error."""
+
+    code: IntentResponseErrorCode
+
+
+class IntentResponseDict(TypedDict):
+    """Serialized response to an intent."""
+
+    speech: dict[str, IntentSpeechValue]
+    card: dict[str, IntentCardValue]
+    language: str
+    response_type: Literal[
+        "action_done", "partial_action_done", "query_answer", "error"
+    ]
+    data: IntentResponseSuccessData | IntentResponseErrorData
+    reprompt: NotRequired[dict[str, IntentRepromptValue]]
+    speech_slots: NotRequired[dict[str, Any]]
+
+
 class IntentResponse:
     """Response to an intent."""
 
@@ -1444,7 +1492,7 @@ class IntentResponse:
         self.speech_slots = speech_slots
 
     @callback
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> IntentResponseDict:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
             "speech": {k: dict(v) for k, v in self.speech.items()},
@@ -1475,7 +1523,7 @@ class IntentResponse:
 
         response_dict["data"] = response_data
 
-        return response_dict
+        return cast(IntentResponseDict, cast(object, response_dict))
 
 
 @callback

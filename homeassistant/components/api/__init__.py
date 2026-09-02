@@ -5,7 +5,7 @@ from asyncio import shield, timeout
 from functools import lru_cache
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, TypedDict
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
@@ -18,6 +18,7 @@ from homeassistant.components.http import (
     KEY_HASS,
     KEY_HASS_USER,
     HomeAssistantView,
+    api_response,
     require_admin,
 )
 from homeassistant.const import (
@@ -70,6 +71,27 @@ STREAM_PING_INTERVAL = 50  # seconds
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+class RecorderStateResponse(TypedDict):
+    """Recorder migration state returned by the Core state endpoint."""
+
+    migration_in_progress: bool
+    migration_is_live: bool
+
+
+class CoreStateResponse(TypedDict):
+    """Current Core and recorder state."""
+
+    state: str
+    recorder_state: RecorderStateResponse
+
+
+class EventListenerResponse(TypedDict):
+    """Registered event type and its listener count."""
+
+    event: str
+    listener_count: int
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
@@ -109,6 +131,7 @@ class APICoreStateView(HomeAssistantView):
     url = URL_API_CORE_STATE
     name = "api:core:state"
 
+    @api_response(HTTPStatus.OK, CoreStateResponse)
     @ha.callback
     def get(self, request: web.Request) -> web.Response:
         """Retrieve the current core state.
@@ -322,6 +345,7 @@ class APIEventListenersView(HomeAssistantView):
     url = URL_API_EVENTS
     name = "api:event-listeners"
 
+    @api_response(HTTPStatus.OK, list[EventListenerResponse])
     @ha.callback
     def get(self, request: web.Request) -> web.Response:
         """Get event listeners."""
@@ -472,6 +496,7 @@ class APIComponentsView(HomeAssistantView):
     url = URL_API_COMPONENTS
     name = "api:components"
 
+    @api_response(HTTPStatus.OK, set[str])
     @ha.callback
     def get(self, request: web.Request) -> web.Response:
         """Get current loaded components."""
@@ -535,9 +560,9 @@ async def async_services_json(hass: HomeAssistant) -> list[dict[str, Any]]:
 
 
 @ha.callback
-def async_events_json(hass: HomeAssistant) -> list[dict[str, Any]]:
+def async_events_json(hass: HomeAssistant) -> list[EventListenerResponse]:
     """Generate event data to JSONify."""
     return [
-        {"event": key, "listener_count": value}
+        {"event": str(key), "listener_count": value}
         for key, value in hass.bus.async_listeners().items()
     ]

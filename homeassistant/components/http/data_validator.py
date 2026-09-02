@@ -26,7 +26,9 @@ class RequestDataValidator:
     """
 
     def __init__(
-        self, schema: VolDictType | vol.Schema, allow_empty: bool = False
+        self,
+        schema: VolDictType | vol.Schema,
+        allow_empty: bool = False,
     ) -> None:
         """Initialize the decorator."""
         if isinstance(schema, dict):
