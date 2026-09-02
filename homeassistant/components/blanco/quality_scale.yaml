@@ -30,7 +30,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any service actions.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
