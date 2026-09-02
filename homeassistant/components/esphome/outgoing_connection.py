@@ -45,7 +45,10 @@ _KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[float] = HassKey(
 
 
 def _log_stop_failure(task: asyncio.Task[None]) -> None:
-    if not task.cancelled() and (exc := task.exception()) is not None:
+    if task.cancelled():
+        _LOGGER.debug("Outgoing connection listener stop was cancelled")
+        return
+    if (exc := task.exception()) is not None:
         _LOGGER.warning(
             "Failed to stop the outgoing connection listener; port %s may stay bound",
             DEFAULT_OUTGOING_CONNECTION_PORT,
@@ -66,6 +69,7 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
         done, _ = await asyncio.wait([stopping], timeout=_STOP_TIMEOUT)
         if not done:
             # Still stopping; keep it so the next attempt can wait on it
+            _LOGGER.debug("Previous outgoing connection listener is still stopping")
             hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
     server = OutgoingConnectionServer()
     await server.start()
@@ -106,17 +110,18 @@ class _Registration:
             unregister()
         finally:
             state.registrations -= 1
-        # Already popped when Home Assistant is stopping
-        if (
-            state.registrations == 0
-            and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
-        ):
-            del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
-            state.remove_stop_listener()
-            # Tracked so the next registration waits for the port release
-            stopping = hass.async_create_task(state.server.stop())
-            stopping.add_done_callback(_log_stop_failure)
-            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
+            # In the finally so a raising unregister cannot leave a routeless
+            # listener holding the port. Already popped when HA is stopping.
+            if (
+                state.registrations == 0
+                and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
+            ):
+                del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
+                state.remove_stop_listener()
+                # Tracked so the next registration waits for the port release
+                stopping = hass.async_create_task(state.server.stop())
+                stopping.add_done_callback(_log_stop_failure)
+                hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
 
 
 async def async_register_outgoing_target(
@@ -127,7 +132,7 @@ async def async_register_outgoing_target(
     Returns the unregister callback, or None when the listening port cannot
     be bound. The last unregistration stops the listener and frees the port.
     """
-    while not hass.is_stopping:
+    while True:
         try:
             state = await _async_get_listener(hass)
         except OSError as err:
@@ -151,11 +156,17 @@ async def async_register_outgoing_target(
                 err,
             )
             return None
+        if hass.is_stopping:
+            # The STOP event fired while binding, so the one-shot listener
+            # missed it; nothing else would ever stop this instance
+            hass.data.pop(_KEY_OUTGOING_CONNECTION_LISTENER, None)
+            state.remove_stop_listener()
+            stopping = hass.async_create_task(state.server.stop())
+            stopping.add_done_callback(_log_stop_failure)
+            return None
         if hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state:
             break
         # Popped and stopped while we awaited it; build a fresh listener
-    else:
-        return None
     unregister = state.server.register(mac, reconnect_logic)
     state.registrations += 1
     return _Registration(hass, state, unregister).async_unregister
