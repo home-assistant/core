@@ -1959,6 +1959,47 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             ) from err
         return (tar_file_path, stat_result.st_size)
 
+    async def _receive_and_move_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        stream: AsyncIterator[bytes],
+        temp_file: Path,
+    ) -> tuple[AgentBackup, Path]:
+        """Receive the upload into temp_file, validate it, and move it into place.
+
+        Remove temp_file on any failure, including cancellation from a client
+        disconnect, so a partial or unparsable upload does not orphan a
+        potentially large temp file.
+        """
+        async_add_executor_job = self._hass.async_add_executor_job
+        try:
+            await receive_file(self._hass, stream, temp_file)
+            try:
+                backup = await async_add_executor_job(read_backup, temp_file)
+            except (
+                OSError,
+                tarfile.TarError,
+                json.JSONDecodeError,
+                KeyError,
+                InvalidBackupFilename,
+            ) as err:
+                LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
+                raise
+
+            manager = self._hass.data[DATA_MANAGER]
+            if self._local_agent_id in agent_ids:
+                local_agent = manager.local_backup_agents[self._local_agent_id]
+                tar_file_path = local_agent.get_new_backup_path(backup)
+                await async_add_executor_job(make_backup_dir, tar_file_path.parent)
+                await async_add_executor_job(shutil.move, temp_file, tar_file_path)
+            else:
+                tar_file_path = temp_file
+        except Exception, asyncio.CancelledError:
+            await async_add_executor_job(temp_file.unlink, True)
+            raise
+        return backup, tar_file_path
+
     @override
     async def async_receive_backup(
         self,
@@ -1972,28 +2013,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
-        await receive_file(self._hass, stream, temp_file)
-
-        try:
-            backup = await async_add_executor_job(read_backup, temp_file)
-        except (
-            OSError,
-            tarfile.TarError,
-            json.JSONDecodeError,
-            KeyError,
-            InvalidBackupFilename,
-        ) as err:
-            LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
-            raise
-
-        manager = self._hass.data[DATA_MANAGER]
-        if self._local_agent_id in agent_ids:
-            local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_new_backup_path(backup)
-            await async_add_executor_job(make_backup_dir, tar_file_path.parent)
-            await async_add_executor_job(shutil.move, temp_file, tar_file_path)
-        else:
-            tar_file_path = temp_file
+        backup, tar_file_path = await self._receive_and_move_backup(
+            agent_ids=agent_ids, stream=stream, temp_file=temp_file
+        )
 
         async def send_backup() -> AsyncIterator[bytes]:
             f = await async_add_executor_job(tar_file_path.open, "rb")

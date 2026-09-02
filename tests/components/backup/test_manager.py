@@ -2070,6 +2070,89 @@ async def test_receive_large_backup(
     assert max(len(chunk) for chunk in written_chunks) <= BUF_SIZE
 
 
+class _DisconnectingBodyPartReader:
+    """Minimal BodyPartReader whose read_chunk raises after the first chunk.
+
+    Models a client disconnect mid-upload: aiohttp sets a ConnectionResetError on
+    the request payload and cancels the handler when the connection is lost.
+    """
+
+    filename = "backup.tar"
+
+    def __init__(self, chunk: bytes, error: Exception) -> None:
+        """Initialize the reader."""
+        self._chunk = chunk
+        self._error = error
+        self._sent = False
+
+    async def read_chunk(self, size: int) -> bytes:
+        """Return one chunk, then raise on the next read."""
+        if self._sent:
+            raise self._error
+        self._sent = True
+        return self._chunk
+
+
+async def test_receive_backup_stream_error_resets_state(hass: HomeAssistant) -> None:
+    """Test the backup manager returns to IDLE when the upload stream fails.
+
+    A client disconnect (or other stream error) mid-upload must not wedge the
+    manager in a busy state; this drives the manager with a stream that raises
+    rather than a real socket disconnect, which the test client can't produce.
+    """
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done(True)
+    manager = hass.data[DATA_MANAGER]
+    contents = _DisconnectingBodyPartReader(
+        b"\0" * 1024, ConnectionResetError("Connection lost")
+    )
+
+    with (
+        patch("pathlib.Path.open", mock_open()),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("pathlib.Path.unlink") as unlink_mock,
+    ):
+        # Bound the await so a reintroduced deadlock fails fast instead of hanging.
+        async with asyncio.timeout(10):
+            with pytest.raises(ConnectionResetError):
+                await manager.async_receive_backup(
+                    agent_ids=["backup.local"], contents=contents
+                )
+
+    assert manager.state is BackupManagerState.IDLE
+    # The partially written temp file is removed on the failed upload.
+    assert unlink_mock.call_count == 1
+
+
+async def test_receive_backup_unparsable_file_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the temp file is removed when the uploaded backup can't be parsed."""
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done(True)
+    client = await hass_client()
+
+    with (
+        patch("pathlib.Path.open", mock_open(read_data=b"test")),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            side_effect=OSError("Boom"),
+        ),
+        patch("pathlib.Path.unlink") as unlink_mock,
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 500
+    # The unparsable temp file is removed exactly once.
+    assert unlink_mock.call_count == 1
+
+
 async def test_receive_backup_valid_filename(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
