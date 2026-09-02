@@ -79,10 +79,12 @@ async def test_entities_for_downloaded_repositories(
         REPOSITORY_PLUGIN,
     }
 
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    # The platforms are set up concurrently, so the registry order is not fixed
+    entities = sorted(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id),
+        key=lambda entity: entity.entity_id,
     )
-    assert sorted(entity.entity_id for entity in entities) == [
+    assert [entity.entity_id for entity in entities] == [
         "switch.basic_integration_pre_release",
         "switch.basic_plugin_pre_release",
         "update.basic_integration_update",
