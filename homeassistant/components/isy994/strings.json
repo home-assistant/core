@@ -37,6 +37,21 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "direction": {
+            "name": "Direction",
+            "state": {
+              "down": "Down",
+              "up": "Up"
+            }
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
