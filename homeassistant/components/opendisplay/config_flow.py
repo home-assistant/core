@@ -1,5 +1,6 @@
 """Config flow for OpenDisplay integration."""
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -29,6 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 _ENCRYPTION_KEY_VALIDATOR = vol.All(str.strip, str.lower, vol.Match(r"^[0-9a-f]{32}$"))
 
+CONNECT_TIMEOUT = 45
+
 
 class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenDisplay."""
@@ -46,10 +49,22 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         if ble_device is None:
             raise BLEConnectionError(f"Could not find connectable device for {address}")
 
-        async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
-        ) as device:
-            await device.read_firmware_version()
+        # A device that stops responding mid-probe would otherwise hold both the
+        # dialog and one of the adapter's connection slots indefinitely.
+        try:
+            async with (
+                asyncio.timeout(CONNECT_TIMEOUT),
+                OpenDisplayDevice(
+                    mac_address=address,
+                    ble_device=ble_device,
+                    encryption_key=encryption_key,
+                ) as device,
+            ):
+                await device.read_firmware_version()
+        except TimeoutError as err:
+            raise BLEConnectionError(
+                f"Connection probe exceeded {CONNECT_TIMEOUT}s"
+            ) from err
 
     @override
     async def async_step_bluetooth(
@@ -61,32 +76,37 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info = discovery_info
         self.context["title_placeholders"] = {"name": discovery_info.name}
 
-        try:
-            await self._async_test_connection(discovery_info.address)
-        except AuthenticationRequiredError:
-            return await self.async_step_encryption_key()
-        except OpenDisplayError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected error")
-            return self.async_abort(reason="unknown")
-
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm discovery."""
+        """Confirm discovery and verify the device responds."""
         assert self._discovery_info is not None
+        errors: dict[str, str] = {}
 
-        if user_input is None:
-            self._set_confirm_only()
-            return self.async_show_form(
-                step_id="bluetooth_confirm",
-                description_placeholders=self.context["title_placeholders"],
-            )
+        # The device is only contacted once the user confirms: every unconfigured
+        # device in range is discovered on every restart, and probing them all
+        # would exhaust the adapter's connection slots.
+        if user_input is not None:
+            try:
+                await self._async_test_connection(self._discovery_info.address)
+            except AuthenticationRequiredError:
+                return await self.async_step_encryption_key()
+            except OpenDisplayError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=self._discovery_info.name, data={})
 
-        return self.async_create_entry(title=self._discovery_info.name, data={})
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            description_placeholders=self.context["title_placeholders"],
+            errors=errors,
+        )
 
     @override
     async def async_step_user(
