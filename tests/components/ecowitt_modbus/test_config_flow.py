@@ -245,7 +245,49 @@ async def test_a_wn69lp_at_a_new_address_looks_like_a_new_device(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id != WN69LP_CASE.unique_id
+    # A second entry, and one that is its own device rather than a second
+    # claim on the first entry's.
+    assert result["result"].unique_id is None
+    assert result["result"].entry_id != mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+@pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
+async def test_a_moved_wn69lp_frees_its_old_address_and_holds_its_new_one(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate detection follows the entry, not where it started.
+
+    An identity-less entry is matched on the address it currently polls.
+    Keying it on the address it was created at would get both directions
+    wrong once it moved: the same device could be added again at its new
+    address, while a genuinely different device would be turned away from
+    the old one.
+    """
+    mock_config_entry.add_to_hass(hass)
+    moved_to = "192.168.1.200"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**WN69LP_CASE.user_input, CONF_HOST: moved_to}
+    )
+    await hass.async_block_till_done()
+
+    # Its new address is taken: adding the same sensor again is refused.
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**WN69LP_CASE.user_input, CONF_HOST: moved_to}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Its old address is free again: a different sensor there is accepted.
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, WN69LP_CASE.user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 class TestReconfigure:
@@ -427,18 +469,19 @@ class TestReconfigure:
 
     @pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
     @pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
-    async def test_a_wn69lp_keeps_its_original_unique_id(
+    async def test_moving_a_wn69lp_does_not_orphan_its_entities(
         self,
         hass: HomeAssistant,
         mock_config_entry: MockConfigEntry,
     ) -> None:
-        """Test moving an identity-less sensor does not orphan its entities.
+        """Test an identity-less sensor keeps what its entities are keyed on.
 
-        Its unique ID was derived from the address it was first found at.
-        Recomputing that on a move would change the ID every entity is
-        keyed under, losing all of their history.
+        With no serial number, the entry itself is that key. Deriving one
+        from the address instead would change it on every move, and every
+        entity's history would go with it.
         """
         mock_config_entry.add_to_hass(hass)
+        before = WN69LP_CASE.identity(mock_config_entry.entry_id)
 
         result = await mock_config_entry.start_reconfigure_flow(hass)
         await hass.config_entries.flow.async_configure(
@@ -447,4 +490,5 @@ class TestReconfigure:
         )
         await hass.async_block_till_done()
 
-        assert mock_config_entry.unique_id == WN69LP_CASE.unique_id
+        assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+        assert WN69LP_CASE.identity(mock_config_entry.entry_id) == before

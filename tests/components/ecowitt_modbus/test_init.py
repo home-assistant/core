@@ -54,7 +54,8 @@ async def test_device_registry_entry(
     rather than an empty field or a value borrowed from the other.
     """
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, model_case.unique_id), init_integration.entry_id
+        (DOMAIN, model_case.identity(init_integration.entry_id)),
+        init_integration.entry_id,
     )
 
     assert device is not None
@@ -113,7 +114,9 @@ async def test_a_poll_reads_only_the_live_block(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{model_case.unique_id}_temperature"
+        "sensor",
+        DOMAIN,
+        f"{model_case.identity(init_integration.entry_id)}_temperature",
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "26.2"
@@ -211,7 +214,9 @@ async def test_a_swap_after_setup_takes_entities_unavailable(
     way a dropped connection does.
     """
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{WN90LP_CASE.unique_id}_temperature"
+        "sensor",
+        DOMAIN,
+        f"{WN90LP_CASE.identity(init_integration.entry_id)}_temperature",
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "26.2"
@@ -245,7 +250,9 @@ async def test_wn69lp_has_no_identity_to_revalidate(
     should start failing.
     """
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{model_case.unique_id}_temperature"
+        "sensor",
+        DOMAIN,
+        f"{model_case.identity(init_integration.entry_id)}_temperature",
     )
     assert entity_id is not None
 
@@ -270,7 +277,9 @@ async def test_entities_go_unavailable_when_the_link_drops(
 ) -> None:
     """Test a silent device takes its entities unavailable, then recovers."""
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{model_case.unique_id}_temperature"
+        "sensor",
+        DOMAIN,
+        f"{model_case.identity(init_integration.entry_id)}_temperature",
     )
     assert entity_id is not None
 

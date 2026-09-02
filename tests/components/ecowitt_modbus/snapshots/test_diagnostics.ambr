@@ -24,7 +24,7 @@
         'port': 502,
         'unit_id': 36,
       }),
-      'unique_id': '**REDACTED**',
+      'unique_id': None,
     }),
     'readings': dict({
       'absolute_pressure': 1001.5,

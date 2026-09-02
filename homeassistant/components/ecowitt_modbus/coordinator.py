@@ -45,11 +45,22 @@ class EcowittDataUpdateCoordinator(DataUpdateCoordinator[EcowittDevice]):
         self.device = device
 
     @cached_property
+    def identity(self) -> str:
+        """What this entry's device and entities are keyed on.
+
+        A model that reports a serial number is keyed on it, so the device
+        survives being moved to another address. A model that reports none
+        falls back to the config entry itself -- an address would go stale
+        the moment the device moved, taking every entity's history with it.
+        """
+        entry = self.config_entry
+        return entry.unique_id or entry.entry_id
+
+    @cached_property
     def device_info(self) -> DeviceInfo:
         """The one sensor array every entity on this config entry belongs to."""
-        assert self.config_entry.unique_id is not None
         return DeviceInfo(
-            identifiers={(DOMAIN, self.config_entry.unique_id)},
+            identifiers={(DOMAIN, self.identity)},
             manufacturer=self.device.manufacturer,
             model=self.device.MODEL,
             serial_number=self.device.serial_number,

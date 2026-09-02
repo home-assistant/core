@@ -24,6 +24,9 @@ from . import WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry
 
+# Pinned so entity IDs derived from it are stable across runs.
+MOCK_ENTRY_ID = "01JQBX3H8Z9K2M4N6P7R8S9TAV"
+
 
 @pytest.fixture
 def model_case(request: pytest.FixtureRequest) -> ModelCase:
@@ -103,9 +106,15 @@ def mock_temporary_unit(
 
 @pytest.fixture
 def mock_config_entry(model_case: ModelCase) -> MockConfigEntry:
-    """Mock a config entry for the model under test."""
+    """Mock a config entry for the model under test.
+
+    The entry ID is pinned because a model that reports no serial number
+    keys its entities on the entry itself, and a fresh random ID each run
+    would make those snapshots unrepeatable.
+    """
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
         unique_id=model_case.unique_id,
         data=model_case.entry_data,
         title=f"{model_case.name} (192.168.1.100)",

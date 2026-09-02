@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_absolute_pressure',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_absolute_pressure',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_battery_voltage',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_battery_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -156,7 +156,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_speed',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_gust_speed',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_gust_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_humidity',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -266,7 +266,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_light',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_light',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -313,7 +313,7 @@
     'object_id_base': 'Rainfall',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
@@ -324,7 +324,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rainfall',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_rainfall',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_rainfall',
     'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
@@ -371,7 +371,7 @@
     'object_id_base': 'Recent rainfall',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
@@ -382,7 +382,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recent_rainfall',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_recent_rainfall',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_recent_rainfall',
     'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
 # ---
@@ -440,7 +440,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_voltage',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_supply_voltage',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_supply_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -498,7 +498,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_temperature',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -556,7 +556,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_uv_index',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_uv_index',
     'unit_of_measurement': 'UV index',
   })
 # ---
@@ -610,7 +610,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_wind_direction',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_wind_direction',
     'unit_of_measurement': '°',
   })
 # ---
@@ -671,7 +671,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed',
-    'unique_id': 'wn69lp_192.168.1.100_502_36_wind_speed',
+    'unique_id': '01JQBX3H8Z9K2M4N6P7R8S9TAV_wind_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -947,7 +947,7 @@
     'object_id_base': 'Rain counter',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
@@ -1005,7 +1005,7 @@
     'object_id_base': 'Rainfall',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,

@@ -42,13 +42,13 @@ async def test_the_address_is_redacted(
     """Test a shared diagnostics dump does not give away where the sensor is.
 
     Snapshots would catch a change to this, but only if someone reads them.
-    The unique ID matters as much as the host field: a model with no serial
-    number has its host embedded in it.
+    Checking the whole dump rather than the one field matters: the address
+    is the sort of thing that ends up quoted in a title or an error message
+    as well.
     """
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert result["entry"]["data"][CONF_HOST] == "**REDACTED**"
-    assert result["entry"]["unique_id"] == "**REDACTED**"
     assert MOCK_HOST not in json.dumps(result)
 
 
@@ -70,6 +70,8 @@ async def test_the_serial_number_is_redacted(
 
     assert result["device"]["serial_number"] == "**REDACTED**"
     assert result["configuration"]["device_id"] == "**REDACTED**"
+    # The entry is keyed on the serial number, so this is the same value again.
+    assert result["entry"]["unique_id"] == "**REDACTED**"
 
     serial = model_case.serial_number
     assert serial is not None

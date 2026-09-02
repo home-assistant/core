@@ -47,7 +47,7 @@ async def test_each_model_creates_exactly_its_own_entities(
     entries = er.async_entries_for_config_entry(
         entity_registry, init_integration.entry_id
     )
-    prefix = f"{model_case.unique_id}_"
+    prefix = f"{model_case.identity(init_integration.entry_id)}_"
     created = {entry.unique_id.removeprefix(prefix) for entry in entries}
 
     assert created == set(model_case.entity_keys)
@@ -63,7 +63,7 @@ async def test_the_right_entities_are_disabled_by_default(
     entries = er.async_entries_for_config_entry(
         entity_registry, init_integration.entry_id
     )
-    prefix = f"{model_case.unique_id}_"
+    prefix = f"{model_case.identity(init_integration.entry_id)}_"
     disabled = {
         entry.unique_id.removeprefix(prefix)
         for entry in entries
@@ -139,7 +139,7 @@ async def test_readings_reach_their_entities(
     proves the integration wires each decoded value to the right entity.
     """
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{model_case.unique_id}_{key}"
+        "sensor", DOMAIN, f"{model_case.identity(init_integration.entry_id)}_{key}"
     )
     assert entity_id is not None
 
@@ -162,7 +162,9 @@ async def test_an_unavailable_reading_is_reported_as_unknown(
     put 6553.5 degrees into the recorder.
     """
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{model_case.unique_id}_temperature"
+        "sensor",
+        DOMAIN,
+        f"{model_case.identity(init_integration.entry_id)}_temperature",
     )
     assert entity_id is not None
 
@@ -186,7 +188,7 @@ async def test_the_wn69lps_voltages_are_diagnostic(
     """
     for key in ("battery_voltage", "supply_voltage"):
         entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{model_case.unique_id}_{key}"
+            "sensor", DOMAIN, f"{model_case.identity(init_integration.entry_id)}_{key}"
         )
         assert entity_id is not None
         entry = entity_registry.async_get(entity_id)

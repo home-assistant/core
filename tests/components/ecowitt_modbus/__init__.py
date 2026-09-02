@@ -38,8 +38,9 @@ class ModelCase:
     unit_id: int
     registers: dict[int, int]
 
-    #: The config entry unique ID this model's device should end up with.
-    unique_id: str
+    #: The config entry unique ID this model's device should end up with,
+    #: or None for a model that reports no identity to key on.
+    unique_id: str | None
 
     #: Serial number reported to the device registry, if the model has one.
     serial_number: str | None
@@ -93,6 +94,14 @@ class ModelCase:
         """The config entry data a completed flow should store."""
         return {CONF_MODEL: self.name, **self.user_input}
 
+    def identity(self, entry_id: str) -> str:
+        """What this model's device and entities end up keyed on.
+
+        The serial number where the model reports one, and the config entry
+        itself where it does not.
+        """
+        return self.unique_id or entry_id
+
 
 WN90LP_CASE = ModelCase(
     model=WN90LP,
@@ -129,8 +138,9 @@ WN69LP_CASE = ModelCase(
     model=WN69LP,
     unit_id=WN69LP_UNIT_ID,
     registers=WN69LP_LIVE_EXAMPLE,
-    # No serial number to key on, so the entry falls back to its address.
-    unique_id=f"wn69lp_{MOCK_HOST}_{MOCK_PORT}_{WN69LP_UNIT_ID}",
+    # No serial number to key on, so the entry gets no unique ID at all
+    # and its entities fall back to the entry itself.
+    unique_id=None,
     serial_number=None,
     sw_version="1.0.0",
     entity_keys=frozenset(

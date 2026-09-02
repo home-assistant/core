@@ -95,19 +95,18 @@ def _title(model: str, user_input: Mapping[str, Any]) -> str:
     return f"{model} ({user_input[CONF_HOST]})"
 
 
-def _unique_id(model: str, device: EcowittDevice, user_input: Mapping[str, Any]) -> str:
-    """Identify this sensor array as durably as the model allows.
+def _address(model: str, user_input: Mapping[str, Any]) -> dict[str, Any]:
+    """The settings that together say which device an entry talks to.
 
-    A serial number survives the device being moved to another host, port,
-    or device address. A model that reports none can only be identified by
-    where it answers, so moving it looks like a new device.
+    Two entries sharing all of these would poll the same device, which is
+    the duplicate a model with no serial number can still be checked for.
     """
-    if (serial := device.serial_number) is not None:
-        return serial
-    return (
-        f"{model.lower()}_{user_input[CONF_HOST]}"
-        f"_{user_input[CONF_PORT]}_{user_input[CONF_UNIT_ID]}"
-    )
+    return {
+        CONF_MODEL: model,
+        CONF_HOST: user_input[CONF_HOST],
+        CONF_PORT: user_input[CONF_PORT],
+        CONF_UNIT_ID: user_input[CONF_UNIT_ID],
+    }
 
 
 class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -152,10 +151,18 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    _unique_id(self._model, device, user_input)
-                )
-                self._abort_if_unique_id_configured()
+                if (serial := device.serial_number) is not None:
+                    # Identifies the hardware wherever it is reached, so the
+                    # same sensor cannot be added twice at two addresses.
+                    await self.async_set_unique_id(serial)
+                    self._abort_if_unique_id_configured()
+                else:
+                    # No identity to key on, so the entry gets none: an
+                    # address would go stale the moment the device moved.
+                    # All that can be checked is that no other entry is
+                    # already polling this address.
+                    self._async_abort_entries_match(_address(self._model, user_input))
+
                 return self.async_create_entry(
                     title=_title(self._model, user_input),
                     data={CONF_MODEL: self._model, **user_input},
@@ -202,10 +209,9 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_mismatch(reason="another_device")
                 else:
                     # Nothing identifies this model, so a move can only be
-                    # taken on trust. The entry keeps the unique ID it was
-                    # created with; all that can be checked is that the new
-                    # address is not one another entry already polls.
-                    self._async_abort_entries_match(dict(user_input))
+                    # taken on trust. All that can be checked is that the
+                    # new address is not one another entry already polls.
+                    self._async_abort_entries_match(_address(model, user_input))
 
                 # The title carries the host, so it has to move with the
                 # entry; leaving it would keep showing the old address.

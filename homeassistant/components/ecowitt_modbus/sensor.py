@@ -99,14 +99,27 @@ ABSOLUTE_PRESSURE = _reading(
     native_unit_of_measurement=UnitOfPressure.HPA,
     state_class=SensorStateClass.MEASUREMENT,
 )
-# Both models count rainfall up from the last reset rather than reporting a
-# rate, and both can be reset by a command this integration does not send.
-RAINFALL = _reading(
-    "rainfall",
-    device_class=SensorDeviceClass.PRECIPITATION,
-    native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-)
+
+
+def _rainfall(key: str, *, precision: int, **kwargs: Any) -> EcowittSensorDescription:
+    """Describe a cumulative rainfall total.
+
+    Both models count up from the last reset rather than reporting a rate,
+    and both can be reset by a command this integration does not send.
+
+    ``precision`` has to match the register's own step, or the default
+    display rounds real increments away -- a WN69LP counts in 0.254mm tips,
+    so at anything less than three decimals every tip disappears.
+    """
+    return _reading(
+        key,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=precision,
+        **kwargs,
+    )
+
 
 # The WN90LP reports UV index in tenths; the WN69LP in whole numbers. Same
 # quantity and unit, different resolution, so they differ only in the
@@ -133,16 +146,15 @@ SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
         WIND_SPEED,
         GUST_SPEED,
         WIND_DIRECTION,
-        RAINFALL,
+        _rainfall("rainfall", precision=1),
         ABSOLUTE_PRESSURE,
         # The same cumulative total as `rainfall`, read from a separate
         # register at 0.01mm instead of 0.1mm. Off by default because it
-        # duplicates a sensor that is already there.
-        _reading(
+        # duplicates a sensor that is already there -- but the finer
+        # resolution is the only reason to enable it, so it is shown.
+        _rainfall(
             "rain_counter",
-            device_class=SensorDeviceClass.PRECIPITATION,
-            native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-            state_class=SensorStateClass.TOTAL_INCREASING,
+            precision=2,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -154,7 +166,7 @@ SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
         WIND_SPEED,
         GUST_SPEED,
         WIND_DIRECTION,
-        RAINFALL,
+        _rainfall("rainfall", precision=3),
         ABSOLUTE_PRESSURE,
         # The WN90LP archives these two in its history block; the WN69LP has
         # them as live registers, re-measured once a minute.
@@ -176,11 +188,9 @@ SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
         # The specification does not say what period this covers, only that
         # the rainfall-reset command clears it alongside the total. Off by
         # default rather than shipping a reading whose meaning is unclear.
-        _reading(
+        _rainfall(
             "recent_rainfall",
-            device_class=SensorDeviceClass.PRECIPITATION,
-            native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-            state_class=SensorStateClass.TOTAL_INCREASING,
+            precision=3,
             entity_registry_enabled_default=False,
         ),
     ),
