@@ -119,8 +119,8 @@ async def test_missing_sensor_fields_do_not_fallback(
     assert _get_state(hass, DEVICE_MODE_ENTITY_ID).state == STATE_UNKNOWN
     assert _get_state(hass, BATTERY_STATUS_ENTITY_ID).state == STATE_UNKNOWN
     assert _get_state(hass, PV1_POWER_ENTITY_ID).state == "500"
-    assert hass.states.get(PV1_VOLTAGE_ENTITY_ID) is None
-    assert hass.states.get(PV2_POWER_ENTITY_ID) is None
+    assert _get_state(hass, PV1_VOLTAGE_ENTITY_ID).state == STATE_UNKNOWN
+    assert _get_state(hass, PV2_POWER_ENTITY_ID).state == STATE_UNKNOWN
 
 
 async def test_sensor_uses_normalized_status_values(

@@ -31,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 class MarstekSensorEntityDescription(SensorEntityDescription):
     """Describe a Marstek sensor entity."""
 
-    requires_value: bool = False
-
 
 def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
     """Build sensors for each of the device's four PV input channels."""
@@ -76,7 +74,6 @@ def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
                         SensorStateClass.MEASUREMENT if metric != "state" else None
                     ),
                     options=list(PV_STATE_OPTIONS) if metric == "state" else None,
-                    requires_value=True,
                 )
             )
     return tuple(descriptions)
@@ -126,9 +123,7 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up Marstek sensors: %s", device_ip)
 
     sensors = [
-        MarstekSensor(coordinator, description)
-        for description in SENSOR_DESCRIPTIONS
-        if not description.requires_value or coordinator.data.has_value(description.key)
+        MarstekSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
     ]
 
     _LOGGER.debug("Device %s sensors set up, total %d", device_ip, len(sensors))
