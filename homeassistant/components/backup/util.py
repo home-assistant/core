@@ -525,10 +525,10 @@ async def receive_file(
     fut: asyncio.Future[None] | None = None
     try:
         fut = hass.async_add_executor_job(_sync_queue_consumer)
-        megabytes_sending = 0
+        chunks_sent = 0
         async for chunk in stream:
-            megabytes_sending += 1
-            if megabytes_sending % 5 != 0:
+            chunks_sent += 1
+            if chunks_sent % 5 != 0:
                 queue.put_nowait((chunk, None))
                 continue
 
