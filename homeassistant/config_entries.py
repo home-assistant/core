@@ -907,6 +907,7 @@ class ConfigEntry[_DataT = Any]:
         error_reason: str | None = None
         error_reason_translation_key: str | None = None
         error_reason_translation_placeholders: dict[str, str] | None = None
+        error_reason_translation_domain: str | None = None
 
         result = False
 
@@ -958,32 +959,24 @@ class ConfigEntry[_DataT = Any]:
                 return
 
             if not migration_result:
-                (
-                    error_reason,
-                    error_reason_translation_key,
-                    error_reason_translation_placeholders,
-                    error_reason_translation_domain,
-                ) = self.__async_handle_config_entry_setup_error(
-                    hass, integration, HomeAssistantError(), migration=True
+                logger.error(
+                    "Error migrating entry %s for %s",
+                    self.title,
+                    integration.domain,
                 )
                 self._async_set_state(
                     hass,
                     ConfigEntryState.MIGRATION_ERROR,
-                    error_reason,
-                    error_reason_translation_key,
-                    error_reason_translation_placeholders,
-                    error_reason_translation_domain,
+                    None,
+                    None,
+                    None,
+                    None,
                 )
                 return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
         else:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
-
-        error_reason = None
-        error_reason_translation_domain = None
-        error_reason_translation_key = None
-        error_reason_translation_placeholders = None
 
         result = False
         try:
