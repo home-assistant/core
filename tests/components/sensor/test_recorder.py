@@ -5322,7 +5322,7 @@ async def async_record_states(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5330,7 +5330,7 @@ async def async_record_states(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
     ],
 )
@@ -5561,7 +5561,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5569,7 +5569,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -6754,11 +6754,12 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     ],
 )
 async def test_clean_up_repairs(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test cleaning up repairs."""
     await async_setup_component(hass, DOMAIN, {})
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     client = await hass_ws_client()
 
     # Create some issues

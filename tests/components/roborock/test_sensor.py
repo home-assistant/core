@@ -3,9 +3,12 @@
 from typing import Any
 
 import pytest
+from roborock.data.v1 import RoborockDockTypeCode
+from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -90,3 +93,66 @@ async def test_sensors_coordinator_state(
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
     assert state.state == expected_state
+
+
+async def test_dock_cleaning_brush_sensor_not_created_and_cleaned_up(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    entity_registry: er.EntityRegistry,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test cleaning brush sensor is not created and removed if it was in the registry."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.pearl_dock)
+    )
+    entity_registry.async_get_or_create(
+        domain=Platform.SENSOR,
+        platform=DOMAIN,
+        unique_id="cleaning_brush_time_left_abc123",
+        config_entry=mock_roborock_entry,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "cleaning_brush_time_left_abc123"
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Cleaning brush sensor must be removed from the entity registry
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "cleaning_brush_time_left_abc123"
+        )
+        is None
+    )
+    assert (
+        hass.states.get("sensor.roborock_s7_maxv_dock_maintenance_brush_time_left")
+        is None
+    )
+    # Washable dock strainer sensor must still exist
+    assert (
+        hass.states.get("sensor.roborock_s7_maxv_dock_strainer_time_left") is not None
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dock_cleaning_brush_sensor_created_when_supported(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test cleaning brush sensor is created on a dock that supports it."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.o3_plus_dock)
+    )
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.roborock_s7_maxv_dock_maintenance_brush_time_left")
+    assert state is not None
+    assert state.state == "235"
