@@ -1,28 +1,24 @@
-"""Support to use FortiOS device like FortiGate as device tracker.
-
-This FortiOS integration provides a device_tracker platform.
-"""
+"""Support to use FortiOS device like FortiGate as device tracker."""
 
 import logging
-from typing import Any, override
+from typing import override
 
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    ScannerEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
-
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -33,10 +29,13 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner | None:
-    """Validate the configuration and return a FortiOSDeviceScanner."""
-    config = config[DEVICE_TRACKER_DOMAIN]
-
+def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up FortiOS device tracker from YAML configuration."""
     host = config[CONF_HOST]
     verify_ssl = config[CONF_VERIFY_SSL]
     token = config[CONF_TOKEN]
@@ -47,10 +46,10 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
         fgt.tokenlogin(host, token, verify_ssl, None, 12, "root")
     except ConnectionError as ex:
         _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
-        return None
+        return
     except Exception as ex:  # noqa: BLE001
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
-        return None
+        return
 
     status_json = fgt.monitor("system/status", "")
 
@@ -62,66 +61,99 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
             current_version,
             minimum_version,
         )
-        return None
+        return
 
-    return FortiOSDeviceScanner(fgt)
+    scanner = FortiOSDataScanner(fgt, async_add_entities)
+    scanner.update()
 
 
-class FortiOSDeviceScanner(DeviceScanner):
-    """Class which queries a FortiOS unit for connected devices."""
+class FortiOSDataScanner:
+    """Class to query FortiOS unit and create entities."""
 
-    def __init__(self, fgt) -> None:
+    def __init__(
+        self, fgt: FortiOSAPI, async_add_entities: AddEntitiesCallback
+    ) -> None:
         """Initialize the scanner."""
-        self._clients: list[str] = []
-        self._clients_json: dict[str, Any] = {}
         self._fgt = fgt
+        self.async_add_entities = async_add_entities
+        self.devices: dict[str, FortiOSDeviceEntity] = {}
 
-    def update(self):
-        """Update clients from the device."""
+    def update(self) -> None:
+        """Update clients from device and manage entities."""
         clients_json = self._fgt.monitor(
             "user/device/query",
             "",
             parameters={"filter": "format=master_mac|hostname|is_online"},
         )
 
-        self._clients_json = clients_json
+        if not clients_json or "results" not in clients_json:
+            return
 
-        self._clients = []
+        new_entities: list[FortiOSDeviceEntity] = []
 
-        if clients_json:
-            try:
-                for client in clients_json["results"]:
-                    if (
-                        "is_online" in client
-                        and "master_mac" in client
-                        and client["is_online"]
-                    ):
-                        self._clients.append(client["master_mac"].upper())
-            except KeyError as kex:
-                _LOGGER.error("Key not found in clients: %s", kex)
+        try:
+            for client in clients_json["results"]:
+                if "master_mac" not in client:
+                    continue
 
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self.update()
-        return self._clients
+                mac = client["master_mac"].upper()
+                is_online = client.get("is_online", False)
+                hostname = client.get("hostname")
 
-    @override
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        _LOGGER.debug("Getting name of device %s", device)
-
-        device = device.lower()
-
-        if (data := self._clients_json) == 0:
-            _LOGGER.error("No json results to get device names")
-            return None
-
-        for client in data["results"]:
-            if "master_mac" in client and client["master_mac"] == device:
-                if "hostname" in client:
-                    name = client["hostname"]
+                if mac not in self.devices:
+                    entity = FortiOSDeviceEntity(mac, hostname, is_online, self)
+                    self.devices[mac] = entity
+                    new_entities.append(entity)
                 else:
-                    name = client["master_mac"].replace(":", "_")
-                return name
-        return None
+                    self.devices[mac].update_data(hostname, is_online)
+
+            if new_entities:
+                self.async_add_entities(new_entities)
+
+        except KeyError as kex:
+            _LOGGER.error("Key not found in clients: %s", kex)
+
+
+class FortiOSDeviceEntity(ScannerEntity):
+    """Representation of a FortiOS tracked device."""
+
+    def __init__(
+        self,
+        mac: str,
+        hostname: str | None,
+        is_connected: bool,
+        scanner: FortiOSDataScanner,
+    ) -> None:
+        """Initialize device tracker entity."""
+        self._mac = mac
+        self._hostname = hostname
+        self._is_connected = is_connected
+        self._scanner = scanner
+
+    @property
+    @override
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._mac
+
+    @property
+    @override
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self._hostname
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._is_connected
+
+    def update_data(self, hostname: str | None, is_connected: bool) -> None:
+        """Update state data for the device."""
+        self._hostname = hostname
+        self._is_connected = is_connected
+
+    @override
+    def update(self) -> None:
+        """Update state of entity."""
+        self._scanner.update()
