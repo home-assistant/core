@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,6 +13,7 @@ from homeassistant.components.intent.timers import (
     TimerNotFoundError,
     TimersNotSupportedError,
     _round_time,
+    async_device_supports_timer_intent,
     async_device_supports_timers,
 )
 from homeassistant.components.local_timer_list import LocalTimerListEntity
@@ -20,6 +22,7 @@ from homeassistant.components.timer_list import (
     DOMAIN as TIMER_LIST_DOMAIN,
     TimerItem,
     TimerListEntity,
+    TimerListEntityFeature,
     TimerListEvent,
     TimerListEventType,
     TimerStatus,
@@ -1104,6 +1107,58 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
 
     # After the device's timer_list entity is created
     assert async_device_supports_timers(hass, device_id)
+
+
+@pytest.mark.parametrize(
+    ("intent_type", "slots"),
+    [
+        pytest.param(
+            intent.INTENT_START_TIMER, {"minutes": {"value": 5}}, id="start_timer"
+        ),
+        pytest.param(intent.INTENT_CANCEL_TIMER, {}, id="cancel_timer"),
+        pytest.param(intent.INTENT_CANCEL_ALL_TIMERS, {}, id="cancel_all_timers"),
+        pytest.param(intent.INTENT_PAUSE_TIMER, {}, id="pause_timer"),
+        pytest.param(intent.INTENT_UNPAUSE_TIMER, {}, id="unpause_timer"),
+        pytest.param(
+            intent.INTENT_INCREASE_TIMER, {"minutes": {"value": 1}}, id="increase_timer"
+        ),
+        pytest.param(
+            intent.INTENT_DECREASE_TIMER, {"minutes": {"value": 1}}, id="decrease_timer"
+        ),
+    ],
+)
+async def test_intents_require_the_entity_feature(
+    hass: HomeAssistant, init_components, intent_type: str, slots: dict[str, Any]
+) -> None:
+    """Test intents report unsupported when the list lacks the needed feature."""
+    device_id = _make_timer_device_id(hass)
+    await _register_timer_device(hass, device_id)
+    entity = _get_timer_entity(hass, device_id)
+    entity._attr_supported_features = TimerListEntityFeature(0)
+
+    assert not async_device_supports_timer_intent(hass, device_id, intent_type)
+
+    with pytest.raises(TimersNotSupportedError):
+        await intent.async_handle(hass, "test", intent_type, slots, device_id=device_id)
+
+
+async def test_timer_status_needs_no_feature(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test reading timers works on a list that advertises nothing."""
+    device_id = _make_timer_device_id(hass)
+    await _register_timer_device(hass, device_id)
+    entity = _get_timer_entity(hass, device_id)
+    entity._attr_supported_features = TimerListEntityFeature(0)
+
+    assert async_device_supports_timer_intent(
+        hass, device_id, intent.INTENT_TIMER_STATUS
+    )
+
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_id
+    )
+    assert result.speech_slots["timers"] == []
 
 
 async def test_cancel_all_timers(hass: HomeAssistant, init_components) -> None:

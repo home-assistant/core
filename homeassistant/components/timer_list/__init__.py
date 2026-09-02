@@ -302,8 +302,9 @@ class TimerListEntity(Entity):
     def timers(self) -> list[TimerItem]:
         """Return the timers in the list.
 
-        Includes archived (``finished`` and ``cancelled``) timers, which are
-        what voice commands like "how long is left on my timer?" report on.
+        Includes archived (``finished`` and ``cancelled``) timers, which the
+        websocket API and ``get_timers`` report. Voice commands only ever
+        consider active and paused timers.
         """
         raise NotImplementedError
 
@@ -368,7 +369,9 @@ class TimerListEntity(Entity):
         Emits ``TIME_CHANGED`` carrying ``duration`` as the event's signed
         ``delta``. ``created_duration`` must not change, and ``total_duration``
         must be raised so it stays at least the new remaining time. Subtracting
-        more than is left finishes the timer instead, emitting ``FINISHED``.
+        more than is left finishes the timer instead, emitting ``FINISHED``,
+        whether it was active or paused. A zero ``duration`` changes nothing
+        and emits no event.
         """
         raise NotImplementedError
 

@@ -40,7 +40,10 @@ async def setup_entity(hass: HomeAssistant) -> None:
 
 
 async def _setup_automation(
-    hass: HomeAssistant, trigger_type: str, extra_data: dict[str, str] | None = None
+    hass: HomeAssistant,
+    trigger_type: str,
+    extra_data: dict[str, str] | None = None,
+    entity_id: str = TEST_ENTITY_ID,
 ) -> None:
     """Set up an automation for the given timer list trigger."""
     assert await async_setup_component(
@@ -51,7 +54,7 @@ async def _setup_automation(
                 "triggers": [
                     {
                         CONF_PLATFORM: f"{DOMAIN}.{trigger_type}",
-                        CONF_TARGET: {CONF_ENTITY_ID: TEST_ENTITY_ID},
+                        CONF_TARGET: {CONF_ENTITY_ID: entity_id},
                     }
                 ],
                 "action": {
@@ -209,6 +212,29 @@ async def test_timer_time_changed_trigger_reports_delta(
     assert len(service_calls) == 1
     assert service_calls[0].data["timer_id"] == timer_id
     assert service_calls[0].data["delta"] == expected_delta
+
+
+async def test_trigger_picks_up_entity_added_after_setup(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a timer list created after the automation still fires the trigger."""
+    late_entity_id = "timer_list.late"
+    await _setup_automation(hass, "timer_created", entity_id=late_entity_id)
+
+    entity = MockTimerListEntity(name="Late")
+    entity.entity_id = late_entity_id
+    await create_mock_platform(hass, [entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "create_timer",
+        {"duration": {"seconds": 60}},
+        target={ATTR_ENTITY_ID: late_entity_id},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["entity_id"] == late_entity_id
 
 
 async def test_trigger_options_supported(hass: HomeAssistant) -> None:

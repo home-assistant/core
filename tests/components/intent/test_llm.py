@@ -56,7 +56,11 @@ async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
 
 async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
     """Test timer intents are not exposed without a timer-capable device."""
-    assert "intent__HassStartTimer" not in await _tool_names(hass)
+    names = await _tool_names(hass)
+    assert "intent__HassStartTimer" not in names
+    # Cancel-all resolves the requesting device's list too, so it cannot work
+    # without one either.
+    assert "intent__HassCancelAllTimers" not in names
 
 
 async def _add_timer_device(hass: HomeAssistant) -> str:
@@ -90,6 +94,7 @@ async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> No
     names = {tool.name for tool in result.tools}
     assert "intent__HassStartTimer" in names
     assert "intent__HassTimerStatus" in names
+    assert "intent__HassCancelAllTimers" in names
 
 
 async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:

@@ -168,14 +168,59 @@ async def test_add_and_subtract_time(
 
 
 @pytest.mark.usefixtures("test_entity")
-async def test_subtract_time_finishes_timer(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "setup_services",
+    [
+        pytest.param([], id="active"),
+        pytest.param(["pause_timer"], id="paused"),
+    ],
+)
+async def test_subtract_time_finishes_timer(
+    hass: HomeAssistant, setup_services: list[str]
+) -> None:
     """Test subtracting more time than remaining finishes the timer immediately."""
     timer_id = await _create_timer(hass, duration=60)
+    for service in setup_services:
+        await _call(hass, service, timer_id=timer_id)
 
     await _call(hass, "subtract_time", timer_id=timer_id, duration={"seconds": 120})
 
     assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    assert (await _get_timers(hass))[0]["status"] == "finished"
+    timers = await _get_timers(hass)
+    assert timers[0]["status"] == "finished"
+    assert timers[0]["ended_at"] is not None
+
+
+@pytest.mark.usefixtures("test_entity")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param("add_time", id="add_time"),
+        pytest.param("subtract_time", id="subtract_time"),
+    ],
+)
+async def test_zero_duration_is_noop(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, service: str
+) -> None:
+    """Test a zero duration changes nothing and emits no event."""
+    timer_id = await _create_timer(hass, duration=60)
+    before = (await _get_timers(hass))[0]
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "timer_list/item/subscribe", "entity_id": TEST_ENTITY_ID}
+    )
+    assert (await client.receive_json())["success"]
+    assert (await client.receive_json())["event"]["type"] == "timers"
+
+    await _call(hass, service, timer_id=timer_id, duration={"seconds": 0})
+
+    assert (await _get_timers(hass))[0]["finishes_at"] == before["finishes_at"]
+    # A change event would arrive before the reply to this round trip.
+    await client.send_json_auto_id(
+        {"type": "timer_list/item/list", "entity_id": TEST_ENTITY_ID}
+    )
+    assert (await client.receive_json())["success"]
 
 
 @pytest.mark.usefixtures("test_entity")
@@ -192,19 +237,19 @@ async def test_cancel_timer_archives_timer(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("test_entity")
 @pytest.mark.parametrize(
-    "paused",
+    "setup_services",
     [
-        pytest.param(False, id="active"),
-        pytest.param(True, id="paused"),
+        pytest.param([], id="active"),
+        pytest.param(["pause_timer"], id="paused"),
     ],
 )
 async def test_finish_timer_archives_as_finished(
-    hass: HomeAssistant, paused: bool
+    hass: HomeAssistant, setup_services: list[str]
 ) -> None:
     """Test finishing a timer early archives it as finished."""
     timer_id = await _create_timer(hass, duration=3600)
-    if paused:
-        await _call(hass, "pause_timer", timer_id=timer_id)
+    for service in setup_services:
+        await _call(hass, service, timer_id=timer_id)
 
     await _call(hass, "finish_timer", timer_id=timer_id)
 

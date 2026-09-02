@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.timer_list import (
     TimerItem,
     TimerListEntity,
+    TimerListEntityFeature,
     TimerStatus,
     async_get_timer_list_entity,
 )
@@ -55,21 +56,61 @@ class TimersNotSupportedError(intent.IntentHandleError):
         )
 
 
+# The entity feature each timer intent needs. INTENT_TIMER_STATUS is absent
+# because it only reads the `timers` property, which every list provides.
+_INTENT_FEATURES: dict[str, TimerListEntityFeature] = {
+    intent.INTENT_START_TIMER: TimerListEntityFeature.CREATE_TIMER,
+    intent.INTENT_CANCEL_TIMER: TimerListEntityFeature.CANCEL_TIMER,
+    intent.INTENT_CANCEL_ALL_TIMERS: TimerListEntityFeature.CANCEL_TIMER,
+    intent.INTENT_INCREASE_TIMER: TimerListEntityFeature.ADD_TIME,
+    intent.INTENT_DECREASE_TIMER: TimerListEntityFeature.ADD_TIME,
+    intent.INTENT_PAUSE_TIMER: TimerListEntityFeature.PAUSE_TIMER,
+    intent.INTENT_UNPAUSE_TIMER: TimerListEntityFeature.PAUSE_TIMER,
+}
+
+
+@callback
+def _supports_intent(entity: TimerListEntity, intent_type: str) -> bool:
+    """Return True if a timer list advertises what an intent needs."""
+    if (feature := _INTENT_FEATURES.get(intent_type)) is None:
+        return True
+    return bool((entity.supported_features or 0) & feature)
+
+
 @callback
 def async_device_supports_timers(hass: HomeAssistant, device_id: str) -> bool:
     """Return True if a device has a timer_list entity to manage timers."""
     return async_get_timer_list_entity(hass, device_id) is not None
 
 
+@callback
+def async_device_supports_timer_intent(
+    hass: HomeAssistant, device_id: str, intent_type: str
+) -> bool:
+    """Return True if a device's timer list can serve a given timer intent."""
+    if (entity := async_get_timer_list_entity(hass, device_id)) is None:
+        return False
+    return _supports_intent(entity, intent_type)
+
+
 # -----------------------------------------------------------------------------
 
 
 @callback
-def _get_timer_entity(hass: HomeAssistant, device_id: str | None) -> TimerListEntity:
-    """Return the requesting device's timer_list entity or raise if it has none."""
+def _get_timer_entity(
+    hass: HomeAssistant, device_id: str | None, intent_type: str
+) -> TimerListEntity:
+    """Return the requesting device's timer_list entity.
+
+    Raises if the device has no timer list, or if its list does not advertise
+    the feature the intent needs, so an unsupported action reports as
+    unsupported rather than reaching a base method that raises
+    ``NotImplementedError``.
+    """
     if (
         device_id is None
         or (entity := async_get_timer_list_entity(hass, device_id)) is None
+        or not _supports_intent(entity, intent_type)
     ):
         raise TimersNotSupportedError(device_id)
     return entity
@@ -324,7 +365,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         name: str | None = None
@@ -361,7 +402,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         timer = _find_timer(entity, slots)
@@ -379,7 +420,7 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
         canceled = 0
 
@@ -408,7 +449,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         total_seconds = _get_total_seconds(slots)
@@ -435,7 +476,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         total_seconds = _get_total_seconds(slots)
@@ -461,7 +502,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         timer = _find_timer(entity, slots, find_filter=FindTimerFilter.ONLY_ACTIVE)
@@ -483,7 +524,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         timer = _find_timer(entity, slots, find_filter=FindTimerFilter.ONLY_INACTIVE)
@@ -505,7 +546,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        entity = _get_timer_entity(hass, intent_obj.device_id)
+        entity = _get_timer_entity(hass, intent_obj.device_id, self.intent_type)
         slots = self.async_validate_slots(intent_obj.slots)
 
         now = dt_util.utcnow()

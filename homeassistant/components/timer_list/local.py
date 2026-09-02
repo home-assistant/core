@@ -109,7 +109,6 @@ class InMemoryTimerListEntity(TimerListEntity):
         if timer.status in _FINISHED_STATUSES:
             # Already archived (finished or cancelled); nothing to cancel.
             return
-        self._unschedule(timer_id)
         self._archive(timer, TimerStatus.CANCELLED)
 
     @override
@@ -119,27 +118,30 @@ class InMemoryTimerListEntity(TimerListEntity):
         if timer.status in _FINISHED_STATUSES:
             # Already archived (finished or cancelled); nothing to finish.
             return
-        self._unschedule(timer_id)
         self._archive(timer, TimerStatus.FINISHED)
 
     @override
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
         """Add (or, with a negative duration, subtract) time on a timer."""
         timer = self._get_timer(timer_id)
+        if not duration:
+            return
         now = dt_util.utcnow()
         if timer.status == TimerStatus.ACTIVE and timer.finishes_at is not None:
             finishes_at = timer.finishes_at + duration
             if finishes_at <= now:
                 # Subtracted past the end; finish now rather than schedule the past.
-                self._unschedule(timer_id)
                 self._archive(timer, TimerStatus.FINISHED)
                 return
             timer.finishes_at = finishes_at
             self._schedule(timer)
         elif timer.status == TimerStatus.PAUSED and timer.paused_remaining is not None:
-            timer.paused_remaining = max(
-                timedelta(0), timer.paused_remaining + duration
-            )
+            paused_remaining = timer.paused_remaining + duration
+            if paused_remaining <= timedelta(0):
+                # Same as the active case: nothing left to resume to.
+                self._archive(timer, TimerStatus.FINISHED)
+                return
+            timer.paused_remaining = paused_remaining
         else:
             return
         # Rounded to whole seconds: timers are second-granularity, and the
@@ -187,6 +189,7 @@ class InMemoryTimerListEntity(TimerListEntity):
     @callback
     def _archive(self, timer: TimerItem, status: TimerStatus) -> None:
         """Move a timer to a terminal status and notify subscribers."""
+        self._unschedule(timer.timer_id)
         timer.status = status
         timer.finishes_at = None
         timer.paused_remaining = None

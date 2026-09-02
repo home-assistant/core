@@ -10,6 +10,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.trigger import (
     Trigger,
@@ -62,11 +63,24 @@ class TimerEventListener(TargetEntityChangeTracker):
         self._unsubscribe_listeners = []
 
         component = self._hass.data[DATA_COMPONENT]
+        pending: set[str] = set()
         for entity_id in tracked_entities:
             if (entity := component.get_entity(entity_id)) is None:
+                pending.add(entity_id)
                 continue
             self._unsubscribe_listeners.append(
                 entity.async_subscribe_updates(partial(self._listener, entity_id))
+            )
+
+        if pending:
+            # Entity registry creation fires before EntityPlatform hands the
+            # entity to the component, so a targeted list added after this
+            # trigger is not resolvable yet. Its first state write is, so retry
+            # then instead of dropping it for the lifetime of the automation.
+            self._unsubscribe_listeners.append(
+                async_track_state_change_event(
+                    self._hass, pending, self._handle_target_update
+                )
             )
 
     @override
