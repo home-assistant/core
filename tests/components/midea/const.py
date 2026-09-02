@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 
+TEST_HOSTNAME = "net_ac_2233"
 TEST_DEVICE_ID = 12345678
 TEST_IP_ADDRESS = "1.1.1.1"
 TEST_KEY = "bb" * 16

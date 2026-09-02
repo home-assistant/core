@@ -1370,7 +1370,8 @@ class MediaSelector(Selector[MediaSelectorConfig]):
             vol.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
             vol.Required("media_content_type"): str,
-            vol.Remove("metadata"): dict,
+            # Data used by frontend for decoration.
+            vol.Optional("metadata"): dict,
         }
     )
 
@@ -1378,7 +1379,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
+    def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
         item_schema_dict = {
             key: value
@@ -1393,7 +1394,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         item_schema = vol.Schema(item_schema_dict)
 
         if not self.config["multiple"]:
-            media: dict[str, str] = item_schema(data)
+            media: dict[str, Any] = item_schema(data)
             return media
 
         # Backwards compatibility for places that now accept multiple items
