@@ -43,11 +43,12 @@ def _build_scene_option_maps(
     return option_to_scene_id, scene_id_to_option
 
 
-class SceneActivityBaseEntity(HueBaseEntity):
-    """Base class for per-group scene activity entities."""
+# pylint: disable-next=home-assistant-enforce-class-module
+class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
+    """Select entity showing and controlling the active scene of a Hue group."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
+    _attr_translation_key = "active_scene"
     _scene_id_to_option: dict[str, str]
     _scene_id_to_name: dict[str, str]
 
@@ -56,8 +57,9 @@ class SceneActivityBaseEntity(HueBaseEntity):
         bridge: HueBridge,
         tracker: SceneActivityTracker,
         group_id: str,
+        initial_scenes: list[HueScene | HueSmartScene] | None = None,
     ) -> None:
-        """Initialize the base scene activity entity for a Hue group."""
+        """Initialize the scene select entity."""
         super().__init__(bridge, bridge.api.groups, bridge.api.groups.get(group_id))
         self._tracker = tracker
         self._group_id = group_id
@@ -66,6 +68,8 @@ class SceneActivityBaseEntity(HueBaseEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.resource.id)},
         )
+        self._attr_unique_id = f"{group_id}_scene_select"
+        self.refresh_options(initial_scenes)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -84,25 +88,6 @@ class SceneActivityBaseEntity(HueBaseEntity):
     def scene_option_matches_name(self, scene_id: str, name: str) -> bool:
         """Return if the current option label still matches an unchanged scene name."""
         return self._scene_id_to_name.get(scene_id) == name
-
-
-# pylint: disable-next=home-assistant-enforce-class-module
-class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
-    """Select entity showing and controlling the active scene of a Hue group."""
-
-    _attr_translation_key = "active_scene"
-
-    def __init__(
-        self,
-        bridge: HueBridge,
-        tracker: SceneActivityTracker,
-        group_id: str,
-        initial_scenes: list[HueScene | HueSmartScene] | None = None,
-    ) -> None:
-        """Initialize the scene select entity."""
-        super().__init__(bridge, tracker, group_id)
-        self._attr_unique_id = f"{group_id}_scene_select"
-        self.refresh_options(initial_scenes)
 
     def refresh_options(
         self, scenes: list[HueScene | HueSmartScene] | None = None
