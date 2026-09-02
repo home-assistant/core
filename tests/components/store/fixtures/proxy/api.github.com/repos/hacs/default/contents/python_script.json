@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "python_script",
+  "path": "python_script",
+  "content": "WyJoYWNzLXRlc3Qtb3JnL3B5dGhvbl9zY3JpcHQtYmFzaWMiXQ==",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs/default/contents/python_script",
+  "git_url": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs/default/blob/main/python_script",
+  "download_url": "https://raw.githubusercontent.com/hacs/default/main/python_script",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs/default/contents/python_script",
+    "html": "https://github.com/hacs/default/blob/main/python_script"
+  }
+}

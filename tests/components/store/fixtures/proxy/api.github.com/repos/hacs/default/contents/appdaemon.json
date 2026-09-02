@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "appdaemon",
+  "path": "appdaemon",
+  "content": "WyJoYWNzLXRlc3Qtb3JnL2FwcGRhZW1vbi1iYXNpYyJd",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs/default/contents/appdaemon",
+  "git_url": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs/default/blob/main/appdaemon",
+  "download_url": "https://raw.githubusercontent.com/hacs/default/main/appdaemon",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs/default/contents/appdaemon",
+    "html": "https://github.com/hacs/default/blob/main/appdaemon"
+  }
+}

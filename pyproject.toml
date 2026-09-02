@@ -646,6 +646,10 @@ exclude_lines = [
 
 [tool.ruff]
 required-version = ">=0.16.8"
+extend-exclude = [
+  # Recorded HTTP response bodies, served verbatim by the store test harness
+  "tests/components/store/fixtures/proxy",
+]
 
 [tool.ruff.lint]
 select = [

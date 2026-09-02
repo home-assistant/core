@@ -1,0 +1,18 @@
+[
+  {
+    "type": "dir",
+    "size": 0,
+    "name": "example",
+    "path": "apps/example",
+    "sha": "a84d88e7554fc1fa21bcbc4efae3c782a70d2b9d",
+    "url": "https://api.github.com/repos/hacs-test-org/appdaemon-basic/contents/apps/example",
+    "git_url": "https://api.github.com/repos/hacs-test-org/appdaemon-basic/git/trees/a84d88e7554fc1fa21bcbc4efae3c782a70d2b9d",
+    "html_url": "https://github.com/hacs-test-org/appdaemon-basic/tree/master/apps/example",
+    "download_url": null,
+    "_links": {
+      "self": "https://api.github.com/repos/hacs-test-org/appdaemon-basic/contents/apps/example",
+      "git": "https://api.github.com/repos/hacs-test-org/appdaemon-basic/git/trees/a84d88e7554fc1fa21bcbc4efae3c782a70d2b9d",
+      "html": "https://github.com/hacs-test-org/appdaemon-basic/tree/master/apps/example"
+    }
+  }
+]
