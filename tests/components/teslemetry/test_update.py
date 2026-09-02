@@ -1,6 +1,7 @@
 """Test the Teslemetry update platform."""
 
 import copy
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,16 +10,21 @@ from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
-from homeassistant.components.teslemetry.update import INSTALLING
+from homeassistant.components.teslemetry.update import INSTALLING, SCHEDULED_STALE_AFTER
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
 
-from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.common import (
+    async_fire_time_changed,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 
 async def test_update(
@@ -250,6 +256,74 @@ async def test_update_streaming_scheduled_not_clobbered(
     assert state == snapshot(name="downloading_after_schedule_cleared")
 
 
+async def test_update_streaming_scheduled_expires(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a scheduled install self-clears once stale, with no clearing push."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, [Platform.UPDATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.SOFTWARE_UPDATE_DOWNLOAD_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_SCHEDULED_START_TIME: 1735689600,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes["in_progress"] is True
+
+    freezer.tick(SCHEDULED_STALE_AFTER + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.attributes["in_progress"] is False
+    assert state.attributes["update_percentage"] is None
+
+
+async def test_update_streaming_scheduled_not_yet_stale(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a genuinely current schedule still reports in progress."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, [Platform.UPDATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.SOFTWARE_UPDATE_DOWNLOAD_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: None,
+                Signal.SOFTWARE_UPDATE_SCHEDULED_START_TIME: 1735689600,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(SCHEDULED_STALE_AFTER - timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] is None
+
+
 async def test_update_streaming_restore(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
@@ -305,6 +379,80 @@ async def test_update_streaming_restore_completed_not_in_progress(
                     "update_percentage": None,
                     "installed_version": "2026.26.1",
                     "latest_version": "2026.26.1",
+                },
+            ),
+        ),
+    )
+
+    await setup_platform(hass, [Platform.UPDATE])
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is False
+    assert state.attributes["update_percentage"] is None
+
+
+async def test_update_streaming_restore_scheduled_expired(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a persisted latched state with an expired schedule restores NOT in progress."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entity_id = "update.test_update"
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    entity_id,
+                    STATE_ON,
+                    attributes={
+                        "in_progress": True,
+                        "update_percentage": None,
+                        "installed_version": "2025.1.1",
+                        "latest_version": "",
+                    },
+                ),
+                {
+                    "scheduled_at": (
+                        dt_util.utcnow() - SCHEDULED_STALE_AFTER - timedelta(hours=1)
+                    ).isoformat()
+                },
+            ),
+        ),
+    )
+
+    await setup_platform(hass, [Platform.UPDATE])
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is False
+    assert state.attributes["update_percentage"] is None
+
+
+async def test_update_streaming_restore_scheduled_never_recorded(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a persisted latched state with no scheduled timestamp on record self-heals.
+
+    Reproduces the live stuck-vehicle case: entities latched before this guard
+    existed have no persisted scheduled_at, so there is no evidence the schedule
+    is still current.
+    """
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entity_id = "update.test_update"
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                entity_id,
+                STATE_ON,
+                attributes={
+                    "in_progress": True,
+                    "update_percentage": None,
+                    "installed_version": "2025.1.1",
+                    "latest_version": "",
                 },
             ),
         ),
