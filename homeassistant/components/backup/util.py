@@ -542,8 +542,9 @@ async def receive_file(
             if fut.done():
                 # The executor job failed
                 break
-
-        queue.put_nowait(None)  # terminate queue consumer
     finally:
+        # Always terminate the queue consumer, also if the stream raised or the
+        # task was cancelled.
+        queue.put_nowait(None)
         if fut is not None:
             await fut
