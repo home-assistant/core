@@ -15,9 +15,9 @@ from solarlog_cli.solarlog_models import EnergyData
 
 from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, Platform
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -123,6 +123,77 @@ async def test_other_exceptions_during_first_refresh(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_devicedatacoordinator_exceptions_during_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the correct exceptions are thrown during first refresh of SolarLogDeviceDataCoordinator."""
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    mock_solarlog_connector.update_inverter_data.side_effect = (
+        SolarLogAuthenticationError
+    )
+
+    freezer.tick(delta=timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.inverter_1_power").state == STATE_UNAVAILABLE
+
+    mock_solarlog_connector.login.return_value = False
+    mock_solarlog_connector.login.side_effect = None
+
+    freezer.tick(delta=timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert isinstance(
+        config_entry.runtime_data.device_data_coordinator.last_exception,
+        ConfigEntryAuthFailed,
+    )
+
+
+async def test_longtimedatacoordinator_exceptions_during_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the correct exceptions are thrown during first refresh of SolarLogLongtimeDataCoordinator."""
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    mock_solarlog_connector.update_energy_data.side_effect = SolarLogAuthenticationError
+
+    freezer.tick(delta=timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.solarlog_self_consumption_year").state
+        == STATE_UNAVAILABLE
+    )
+
+    mock_solarlog_connector.login.return_value = False
+    mock_solarlog_connector.login.side_effect = None
+
+    freezer.tick(delta=timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert isinstance(
+        config_entry.runtime_data.longtime_data_coordinator.last_exception,
+        ConfigEntryAuthFailed,
+    )
 
 
 @pytest.mark.parametrize(
