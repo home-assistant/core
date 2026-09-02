@@ -289,7 +289,7 @@ class TodSensor(BinarySensorEntity):
             self._time_after += self._after_offset
         else:
             self._time_after = self._add_one_dst_aware_day(
-                self._time_after, self._after
+                self._time_after - self._after_offset, self._after
             )
             self._time_after += self._after_offset
 
@@ -300,7 +300,7 @@ class TodSensor(BinarySensorEntity):
             self._time_before += self._before_offset
         else:
             self._time_before = self._add_one_dst_aware_day(
-                self._time_before, self._before
+                self._time_before - self._before_offset, self._before
             )
             self._time_before += self._before_offset
 

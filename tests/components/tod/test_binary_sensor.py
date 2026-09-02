@@ -432,6 +432,80 @@ async def test_fixed_time_offsets_next_day(
     assert hass.states.get("binary_sensor.daytime").state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("config", "after", "before", "next_after", "next_before"),
+    [
+        pytest.param(
+            {
+                "after": "23:30",
+                "after_offset": "1:00",
+                "before": "02:00",
+            },
+            "2019-01-11T00:30",
+            "2019-01-11T02:00",
+            "2019-01-12T00:30",
+            "2019-01-12T02:00",
+            id="after-offset-crosses-midnight",
+        ),
+        pytest.param(
+            {
+                "after": "20:00",
+                "before": "00:30",
+                "before_offset": "-1:00",
+            },
+            "2019-01-10T20:00",
+            "2019-01-10T23:30",
+            "2019-01-11T20:00",
+            "2019-01-11T23:30",
+            id="before-offset-crosses-midnight",
+        ),
+    ],
+)
+async def test_fixed_time_offsets_crossing_midnight_next_day(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+    config: dict[str, str],
+    after: str,
+    before: str,
+    next_after: str,
+    next_before: str,
+) -> None:
+    """Test next-day rollover uses unoffset fixed-time boundaries."""
+    after_time = datetime.fromisoformat(after).replace(tzinfo=hass_tz_info)
+    before_time = datetime.fromisoformat(before).replace(tzinfo=hass_tz_info)
+    freezer.move_to(after_time)
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Offset interval",
+                    **config,
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.offset_interval").state == STATE_ON
+
+    freezer.move_to(before_time)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.offset_interval")
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes["after"]
+        == datetime.fromisoformat(next_after).replace(tzinfo=hass_tz_info).isoformat()
+    )
+    assert (
+        state.attributes["before"]
+        == datetime.fromisoformat(next_before).replace(tzinfo=hass_tz_info).isoformat()
+    )
+
+
 async def test_offset_overnight(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:

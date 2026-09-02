@@ -1,8 +1,8 @@
 {
   "config": {
     "error": {
-      "after_one_value": "Select either a specific time or sun event for After, but not both",
-      "before_one_value": "Select either a specific time or sun event for Before, but not both"
+      "after_one_value": "Select either a specific time or a sun event for After, but not both",
+      "before_one_value": "Select either a specific time or a sun event for Before, but not both"
     },
     "step": {
       "user": {
