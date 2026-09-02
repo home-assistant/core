@@ -68,11 +68,19 @@
       "week_profile": {
         "name": "Week profile"
       }
+    },
+    "switch": {
+      "disable_global_override": {
+        "name": "Disable global overrides"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, reconfigure the integration with the new IP address."
+    },
+    "set_disable_global_override_failed": {
+      "message": "Failed to change whether global overrides are disabled for the zone."
     },
     "set_global_override_failed": {
       "message": "Failed to set global override."

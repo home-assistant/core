@@ -49,12 +49,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_smtp() -> Generator[MagicMock]:
     """Mock smtplib.SMTP."""
 
+    with patch(
+        "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+        client.cls = mock_client
+        yield client
+
+
+@pytest.fixture(name="aiosmtplib")
+def mock_aiosmtplib() -> Generator[AsyncMock]:
+    """Mock aiosmtplib."""
+
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
+            "homeassistant.components.smtp.config_flow.SMTP", autospec=True
         ) as mock_client,
-        patch("homeassistant.components.smtp.helpers.smtplib.SMTP", new=mock_client),
-        patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
+        patch("homeassistant.components.smtp.SMTP", new=mock_client),
     ):
         client = mock_client.return_value
         client.cls = mock_client
@@ -78,9 +89,25 @@ def mock_randrange() -> Generator[None]:
 
     with patch(
         "random.randrange",
-        return_value=1234567890123456789,
+        side_effect=[1, 2, 3, 4, 5, 6, 7, 8, 9],
     ):
         yield
+
+
+@pytest.fixture(name="client_context")
+def mock_client_context() -> Generator[None]:
+    """Mock client_context."""
+
+    with (
+        patch(
+            "homeassistant.components.smtp.config_flow.client_context"
+        ) as mock_client,
+        patch(
+            "homeassistant.components.smtp.client_context",
+            new=mock_client,
+        ),
+    ):
+        yield mock_client
 
 
 @pytest.fixture(name="config_entry")

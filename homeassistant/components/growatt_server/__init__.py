@@ -182,7 +182,10 @@ async def async_migrate_entry(
                     )
                     return False
 
-                if not plant_info or "data" not in plant_info or not plant_info["data"]:
+                # plant_list() is annotated as list, but the classic API returns
+                # {"data": [...]}. Remove once the annotation is fixed upstream:
+                # https://github.com/indykoning/PyPi_GrowattServer/issues/157
+                if not isinstance(plant_info, dict) or not plant_info.get("data"):
                     _LOGGER.error(
                         "No plants found for this account. "
                         "Migration will retry on next restart"
@@ -333,6 +336,7 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
+    api: growattServer.GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]

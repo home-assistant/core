@@ -16,7 +16,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .exceptions import EntityNotFoundError
+from .exceptions import CoordinatesNotFoundError, EntityNotFoundError
 from .util import get_position_data
 
 type DwdWeatherWarningsConfigEntry = ConfigEntry[DwdWeatherWarningsCoordinator]
@@ -61,7 +61,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
         if self._device_tracker:
             try:
                 position = get_position_data(self.hass, self._device_tracker)
-            except (EntityNotFoundError, AttributeError) as err:
+            except (EntityNotFoundError, CoordinatesNotFoundError) as err:
                 raise UpdateFailed(f"Error fetching position: {err!r}") from err
 
             distance = None
