@@ -61,6 +61,9 @@
   "exceptions": {
     "cannot_connect": {
       "message": "Failed to reach the WS90: {error}"
+    },
+    "unexpected_device": {
+      "message": "The device answering at this address is no longer the WS90 this entry was set up for (expected ID {unique_id})."
     }
   }
 }

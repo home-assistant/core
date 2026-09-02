@@ -63,7 +63,7 @@ class EcowittWS90ConfigFlow(ConfigFlow, domain=DOMAIN):
                 ) as unit:
                     device = WS90(unit)
                     await device.async_update()
-            except ModbusError, HomeAssistantError:
+            except (ModbusError, HomeAssistantError):
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

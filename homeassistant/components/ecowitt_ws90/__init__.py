@@ -6,8 +6,9 @@ from modbus_connection import ModbusTcpParams
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_UNIT_ID
+from .const import CONF_UNIT_ID, DOMAIN
 from .coordinator import WS90ConfigEntry, WS90DataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -30,6 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: WS90ConfigEntry) -> bool
 
     coordinator = WS90DataUpdateCoordinator(hass, entry, WS90(unit))
     await coordinator.async_config_entry_first_refresh()
+
+    # The address in `entry.data` can end up pointing at a different
+    # responder than the one this entry was created for (the gateway is
+    # reconfigured, a unit ID is reused, ...). Re-check identity on every
+    # setup rather than trusting the address alone, so we don't attach this
+    # entry's entities and device to whatever now answers there.
+    info = coordinator.device.info
+    if info.model != "WS90" or f"{info.device_id:08x}" != entry.unique_id:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={"unique_id": entry.unique_id or "unknown"},
+        )
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from ecowitt_ws90_modbus.testing import WS90_UNIT_ID
+from ecowitt_ws90_modbus.testing import WS90_LIVE_EXAMPLE, WS90_UNIT_ID
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
@@ -97,3 +97,28 @@ async def test_a_silent_ws90_retries_and_recovers(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+class TestDeviceIdentityMismatch:
+    """A gateway that now answers for a different WS90 (or no WS90 at all)."""
+
+    @pytest.fixture
+    def register_image(self) -> dict[int, int]:
+        """A register image reporting a different device_id than the entry expects."""
+        image = dict(WS90_LIVE_EXAMPLE)
+        image[0x163] = 0x0000
+        image[0x164] = 0x0001
+        return image
+
+    @pytest.mark.usefixtures("mock_get_unit")
+    async def test_setup_fails_if_device_identity_changed(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test setup is rejected rather than adopting the new responder's identity."""
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
