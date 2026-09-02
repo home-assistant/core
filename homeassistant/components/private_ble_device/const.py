@@ -11,4 +11,4 @@ DOMAIN = "private_ble_device"
 
 # Resolving a private MAC against an IRK costs AES work, so a single
 # coordinator does it once for every config entry rather than per entry.
-COORDINATOR: HassKey[PrivateDevicesCoordinator] = HassKey(f"{DOMAIN}_coordinator")
+COORDINATOR: HassKey[PrivateDevicesCoordinator] = HassKey(DOMAIN)
