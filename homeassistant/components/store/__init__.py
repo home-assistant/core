@@ -10,7 +10,6 @@ from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components.frontend import async_panel_exists, async_remove_panel
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, __version__ as HAVERSION
@@ -27,7 +26,6 @@ from .base import HacsBase
 from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
 from .data_client import HacsDataClient
 from .enums import HacsDisabledReason, HacsStage, LovelaceMode
-from .frontend import async_register_frontend
 from .migration import async_migrate_from_hacs, async_remove_duplicate_entries
 from .utils.data import HacsData
 from .utils.queue_manager import QueueManager
@@ -116,7 +114,7 @@ async def _async_initialize_integration(
         hacs.set_active_categories()
 
         async_register_websocket_commands(hass)
-        await async_register_frontend(hass, hacs)
+        await hacs.async_setup_frontend_endpoint_plugin()
 
         await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -184,10 +182,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     # Store data
     await hacs.data.async_write(force=True)
-
-    if async_panel_exists(hass, DOMAIN):
-        hacs.log.info("Removing sidepanel")
-        async_remove_panel(hass, DOMAIN)
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

@@ -42,21 +42,6 @@ async def test_load_unload_entry(
     assert DOMAIN not in hass.data
 
 
-async def test_panel_registered(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the store panel is registered while the config entry is loaded."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert DOMAIN in hass.data["frontend_panels"]
-
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert DOMAIN not in hass.data["frontend_panels"]
-
-
 @pytest.mark.usefixtures("stored_repositories")
 async def test_entities_for_downloaded_repositories(
     hass: HomeAssistant,

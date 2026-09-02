@@ -759,6 +759,17 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
     assert async_panel_exists(hass, "test_panel") is False
 
 
+@pytest.mark.usefixtures("frontend")
+async def test_store_panel_registered(hass: HomeAssistant) -> None:
+    """Test the Community store panel is registered for the Settings dashboard."""
+    panel = hass.data[DATA_PANELS]["store"]
+
+    assert panel.component_name == "store"
+    assert panel.require_admin is True
+    assert panel.show_in_sidebar is False
+    assert panel.sidebar_title is None
+
+
 async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:
     """Test that the collision error says which component holds the URL path.
 
