@@ -1989,12 +1989,17 @@ class StateClassSelector(Selector[StateClassSelectorConfig]):
     )
 
     def __init__(self, config: StateClassSelectorConfig | None = None) -> None:
-        """Instantiate a device class selector."""
+        """Instantiate a state class selector."""
         super().__init__(config)
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        valid_options = _enum_options(Platform.SENSOR, "SensorStateClass")
+        state_classes_filter = self.config.get("state_classes")
+        valid_options = [
+            option
+            for option in _enum_options(Platform.SENSOR, "SensorStateClass")
+            if state_classes_filter is None or option in state_classes_filter
+        ]
         options_schema = vol.In(valid_options)
 
         if not self.config["multiple"]:
