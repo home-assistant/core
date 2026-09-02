@@ -169,7 +169,8 @@ class RX11Transceiver:
             )
         )
         self._gateway._config.port = port  # noqa: SLF001
-        self._gateway._device_path = None  # noqa: SLF001
+        # Library connect() uses _device_path; config.port alone is ignored.
+        self._gateway._device_path = port  # noqa: SLF001
         return port is not None
 
     async def connect(self) -> bool:

@@ -87,7 +87,7 @@ async def test_prepare_connection_sets_gateway_target(
         assert await transceiver._prepare_connection() is True
 
     assert mock_gateway._config.port == DEVICE_PATH
-    assert mock_gateway._device_path is None
+    assert mock_gateway._device_path == DEVICE_PATH
 
 
 async def test_prepare_connection_falls_back_to_sole_rx11_when_serial_missing(
@@ -104,6 +104,24 @@ async def test_prepare_connection_falls_back_to_sole_rx11_when_serial_missing(
         assert await transceiver._prepare_connection() is True
 
     assert mock_gateway._config.port == "/dev/ttyACM1"
+    assert mock_gateway._device_path == "/dev/ttyACM1"
+
+
+async def test_prepare_connection_clears_path_when_unresolved(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Unresolved ports clear the active gateway path so discovery stays scoped."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(
+            hass,
+            {"usb_serial_number": "missing", "device_path": "/dev/ttyACM0"},
+        )
+
+    with patch(RESOLVE_PATH, return_value=None):
+        assert await transceiver._prepare_connection() is False
+
+    assert mock_gateway._config.port is None
+    assert mock_gateway._device_path is None
 
 
 async def test_disconnect_and_dispose_delegate_to_gateway(
@@ -316,3 +334,34 @@ def test_resolve_gateway_port_returns_none_for_ambiguous_replacement() -> None:
             )
             is None
         )
+
+
+def test_resolve_gateway_port_matches_configured_device_path() -> None:
+    """Port resolution prefers an exact configured device path match."""
+    port_a = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111"
+    )
+    port_b = MagicMock(
+        device="/dev/ttyACM1", vid=0x155A, pid=0x1014, serial_number="222"
+    )
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[port_a, port_b],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                device_path="/dev/ttyACM1",
+            )
+            == "/dev/ttyACM1"
+        )
+
+
+def test_resolve_gateway_port_returns_none_when_comports_raises() -> None:
+    """Port resolution fails closed when USB enumeration raises."""
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        side_effect=OSError("usb unavailable"),
+    ):
+        assert resolve_gateway_port(SUPPORTED_USB_IDS, usb_serial="222") is None

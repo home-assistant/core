@@ -218,13 +218,13 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
 
         The path may change across reconnects (e.g. /dev/ttyACM0 → ttyACM1),
         which is why it is exposed here rather than stored only in config data.
+        An explicit offline ``None`` from the coordinator is preserved.
         """
         coordinator_data = self.coordinator.data
-        device_path = (
-            coordinator_data.get("device_path")
-            if isinstance(coordinator_data, dict)
-            else None
-        ) or self._entry.data.get(CONF_DEVICE_PATH)
+        if isinstance(coordinator_data, dict) and "device_path" in coordinator_data:
+            device_path = coordinator_data["device_path"]
+        else:
+            device_path = self._entry.data.get(CONF_DEVICE_PATH)
         return {"device_path": device_path}
 
 
