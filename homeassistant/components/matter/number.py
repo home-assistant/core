@@ -314,7 +314,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="EveTemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
             # Matter 1.4 raises this to the SignedTemperature type's usable
@@ -339,7 +339,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="TemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
             # Matter 1.4 raises this to the SignedTemperature type's usable
