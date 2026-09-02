@@ -9575,6 +9575,101 @@ async def test_migration_from_1_2(
     }
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migrated_custom_integration_domain(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entries of a taken over custom integration load as the built-in one."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {"token": "abc123"},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "hacs",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {"country": "ALL"},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": {},
+                    "title": "HACS",
+                    "unique_id": "12345",
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entry = manager.async_get_entry("0a8bd02d0d58c7debf5daf7941c9afe2")
+    assert entry is not None
+    assert entry.domain == "store"
+    assert entry.data == {"token": "abc123"}
+    assert entry.options == {"country": "ALL"}
+    assert entry.title == "HACS"
+    assert entry.unique_id == "12345"
+    assert manager.async_domains() == ["store"]
+
+    assert "Migrated config entries of 'hacs' to 'store'" in caplog.text
+
+    await flush_store(manager._store)
+    assert hass_storage[config_entries.STORAGE_KEY]["data"]["entries"][0]["domain"] == (
+        "store"
+    )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_domain_not_migrated(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entries of an integration that was not taken over are untouched."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "sun",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "subentries": {},
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    assert manager.async_domains() == ["sun"]
+    assert "Migrated config entries" not in caplog.text
+
+
 async def test_async_loaded_entries(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:

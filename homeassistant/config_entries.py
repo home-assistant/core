@@ -2406,8 +2406,16 @@ class ConfigEntries:
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
+        migrated_domains: set[str] = set()
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
+            domain = entry["domain"]
+
+            # A custom integration that a built-in integration took over keeps its
+            # entries, they are simply handed to the built-in domain from now on.
+            if replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(domain):
+                migrated_domains.add(domain)
+                domain = replacement
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2419,7 +2427,7 @@ class ConfigEntries:
                         for domain, keys in entry["discovery_keys"].items()
                     }
                 ),
-                domain=entry["domain"],
+                domain=domain,
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),
@@ -2435,6 +2443,17 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+
+        if migrated_domains:
+            _LOGGER.info(
+                "Migrated config entries of %s",
+                ", ".join(
+                    f"'{domain}' to '{loader.MIGRATED_CUSTOM_INTEGRATIONS[domain]}'"
+                    for domain in sorted(migrated_domains)
+                ),
+            )
+            self._async_schedule_save()
+
         self.async_update_issues()
 
         if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:

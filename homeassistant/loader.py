@@ -96,6 +96,7 @@ class BlockedIntegration:
 
     lowest_good_version: AwesomeVersion | None
     reason: str
+    replaced_by: str | None = None
 
 
 BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
@@ -137,6 +138,20 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
         AwesomeVersion("0.7.1"),
         "crashes Home Assistant when it can't connect to the API",
     ),
+    # Added in 2026.10.0 because HACS ships with Home Assistant now
+    "hacs": BlockedIntegration(
+        None,
+        "is now built into Home Assistant as the Community store",
+        replaced_by="store",
+    ),
+}
+
+# Custom integrations that a built-in integration took over. Their config
+# entries are rewritten to the built-in domain when they are loaded.
+MIGRATED_CUSTOM_INTEGRATIONS: dict[str, str] = {
+    domain: blocked.replaced_by
+    for domain, blocked in BLOCKED_CUSTOM_INTEGRATIONS.items()
+    if blocked.replaced_by is not None
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
@@ -749,16 +764,26 @@ class Integration:
 
             if blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain):
                 if _version_blocked(integration.version, blocked):
-                    _LOGGER.error(
-                        (
-                            "Version %s of custom integration '%s' %s and was blocked "
-                            "from loading, please %s"
-                        ),
-                        integration.version,
-                        integration.domain,
-                        blocked.reason,
-                        async_suggest_report_issue(None, integration=integration),
-                    )
+                    if blocked.replaced_by is not None:
+                        _LOGGER.info(
+                            (
+                                "Custom integration '%s' is now part of Home Assistant"
+                                " as '%s' and is no longer loaded"
+                            ),
+                            integration.domain,
+                            blocked.replaced_by,
+                        )
+                    else:
+                        _LOGGER.error(
+                            (
+                                "Version %s of custom integration '%s' %s and was "
+                                "blocked from loading, please %s"
+                            ),
+                            integration.version,
+                            integration.domain,
+                            blocked.reason,
+                            async_suggest_report_issue(None, integration=integration),
+                        )
                     return None
 
             return integration

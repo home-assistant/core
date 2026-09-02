@@ -203,6 +203,44 @@ async def test_custom_integration_version_blocked(
 @pytest.mark.parametrize(
     "blocked_versions",
     [
+        loader.BlockedIntegration(None, "is now built in", replaced_by="store"),
+        loader.BlockedIntegration(
+            AwesomeVersion("2.0.0"), "is now built in", replaced_by="store"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_custom_integration_replaced_by_built_in(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    blocked_versions: loader.BlockedIntegration,
+) -> None:
+    """Test a custom integration taken over by a built-in one is not reported."""
+    with patch.dict(
+        loader.BLOCKED_CUSTOM_INTEGRATIONS, {"test_blocked_version": blocked_versions}
+    ):
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test_blocked_version")
+
+        assert (
+            "Custom integration 'test_blocked_version' is now part of Home Assistant"
+            " as 'store' and is no longer loaded"
+        ) in caplog.text
+        assert "please report it to the author" not in caplog.text
+
+
+async def test_hacs_replaced_by_store() -> None:
+    """Test the HACS custom integration is blocked in favor of the store."""
+    blocked = loader.BLOCKED_CUSTOM_INTEGRATIONS["hacs"]
+    assert blocked.lowest_good_version is None
+    assert blocked.replaced_by == "store"
+
+    assert loader.MIGRATED_CUSTOM_INTEGRATIONS == {"hacs": "store"}
+
+
+@pytest.mark.parametrize(
+    "blocked_versions",
+    [
         loader.BlockedIntegration(AwesomeVersion("0.9.9"), "breaks Home Assistant"),
         loader.BlockedIntegration(AwesomeVersion("1.0.0"), "breaks Home Assistant"),
     ],
