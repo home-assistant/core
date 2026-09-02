@@ -1,5 +1,6 @@
 """Class for integrations in HACS."""
 
+import re
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -16,6 +17,20 @@ from .base import HacsRepository
 
 if TYPE_CHECKING:
     from ..base import HacsBase
+
+VALID_DOMAIN = re.compile(r"^[a-z0-9_]+$")
+
+
+def _validated_domain(domain: Any) -> str:
+    """Return the domain of a remote manifest, rejecting anything but a slug.
+
+    The domain names the directory below custom_components/ the download is
+    written to, so anything else would let a repository pick its own target.
+    """
+    if not isinstance(domain, str) or not VALID_DOMAIN.match(domain):
+        raise HacsException(f"'{domain}' is not a valid integration domain")
+
+    return domain
 
 
 class HacsIntegrationRepository(HacsRepository):
@@ -35,6 +50,23 @@ class HacsIntegrationRepository(HacsRepository):
     def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/custom_components/{self.data.domain}"
+
+    @override
+    async def async_pre_install(self) -> None:
+        """Run pre install steps."""
+        if not self.data.domain:
+            return
+
+        for repository in self.hacs.repositories.list_downloaded:
+            if (
+                repository is not self
+                and repository.data.category == HacsCategory.INTEGRATION
+                and repository.data.domain == self.data.domain
+            ):
+                raise HacsException(
+                    f"The '{self.data.domain}' directory is owned by "
+                    f"{repository.data.full_name}"
+                )
 
     @override
     async def async_post_installation(self) -> None:
@@ -96,7 +128,7 @@ class HacsIntegrationRepository(HacsRepository):
             try:
                 self.integration_manifest = manifest
                 self.data.authors = manifest.get("codeowners", [])
-                self.data.domain = manifest["domain"]
+                self.data.domain = _validated_domain(manifest["domain"])
                 self.data.manifest_name = manifest.get("name")
                 self.data.config_flow = manifest.get("config_flow", False)
 
@@ -141,7 +173,7 @@ class HacsIntegrationRepository(HacsRepository):
             try:
                 self.integration_manifest = manifest
                 self.data.authors = manifest.get("codeowners", [])
-                self.data.domain = manifest["domain"]
+                self.data.domain = _validated_domain(manifest["domain"])
                 self.data.manifest_name = manifest.get("name")
                 self.data.config_flow = manifest.get("config_flow", False)
 

@@ -3,7 +3,7 @@
 from asyncio import sleep
 from datetime import UTC, datetime
 import os
-import pathlib
+from pathlib import Path
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, override
@@ -20,7 +20,7 @@ import attr
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from ..const import DOMAIN
+from ..const import DOMAIN, MAX_DOWNLOAD_SIZE
 from ..enums import HacsDispatchEvent, RepositoryFile
 from ..exceptions import (
     HacsException,
@@ -36,7 +36,7 @@ from ..utils.file_system import async_exists, async_remove, async_remove_directo
 from ..utils.filters import filter_content_return_one_of_type
 from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
-from ..utils.path import is_safe
+from ..utils.path import is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
 from ..utils.store import async_remove_store
 from ..utils.url import github_archive, github_release_asset
@@ -128,6 +128,16 @@ HACS_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
     ("country", []),
     ("name", None),
 )
+
+
+def _check_archive_size(archive: zipfile.ZipFile) -> None:
+    """Reject an archive that expands to more than we are willing to write."""
+    size = sum(info.file_size for info in archive.infolist())
+    if size > MAX_DOWNLOAD_SIZE:
+        raise HacsException(
+            f"The archive expands to {size} bytes, "
+            f"the limit is {MAX_DOWNLOAD_SIZE} bytes"
+        )
 
 
 class FileInformation:
@@ -612,12 +622,16 @@ class HacsRepository:
                 return
 
             temp_dir = await self.hacs.hass.async_add_executor_job(tempfile.mkdtemp)
-            temp_file = f"{temp_dir}/{self.repository_manifest.filename}"
+            # A scratch file, deliberately not named after the remote manifest
+            temp_file = Path(temp_dir, "archive.zip")
 
-            result = await self.hacs.async_save_file(temp_file, filecontent)
+            result = await self.hacs.async_save_file(str(temp_file), filecontent)
 
             def _extract_zip_file():
                 with zipfile.ZipFile(temp_file, "r") as zip_file:
+                    _check_archive_size(zip_file)
+                    for member in zip_file.namelist():
+                        resolve_in_directory(self.content.path.local, member)
                     zip_file.extractall(self.content.path.local)
 
             await self.hacs.hass.async_add_executor_job(_extract_zip_file)
@@ -706,13 +720,15 @@ class HacsRepository:
             raise HacsException(f"[{self}] Failed to download zipball")
 
         temp_dir = await self.hacs.hass.async_add_executor_job(tempfile.mkdtemp)
-        temp_file = f"{temp_dir}/{self.repository_manifest.filename}"
-        result = await self.hacs.async_save_file(temp_file, filecontent)
+        # A scratch file, deliberately not named after the remote manifest
+        temp_file = Path(temp_dir, "archive.zip")
+        result = await self.hacs.async_save_file(str(temp_file), filecontent)
         if not result:
             raise HacsException("Could not save ZIP file")
 
         def _extract_zip_file():
             with zipfile.ZipFile(temp_file, "r") as zip_file:
+                _check_archive_size(zip_file)
                 extractable = []
                 for path in zip_file.filelist:
                     filename = "/".join(path.filename.split("/")[1:])
@@ -720,10 +736,13 @@ class HacsRepository:
                         filename.startswith(self.content.path.remote)
                         and filename != self.content.path.remote
                     ):
-                        path.filename = filename.replace(self.content.path.remote, "")
-                        if path.filename == "/":
+                        path.filename = filename.replace(
+                            self.content.path.remote, ""
+                        ).lstrip("/")
+                        if not path.filename:
                             # Blank files is not valid, and will start to throw in Python 3.12
                             continue
+                        resolve_in_directory(self.content.path.local, path.filename)
                         extractable.append(path)
 
                 if len(extractable) == 0:
@@ -821,17 +840,18 @@ class HacsRepository:
     async def remove_local_directory(self) -> bool:
         """Check the local directory."""
 
+        local_path = self.content.path.local
+
         try:
             if self.data.category in {"python_script", "template"}:
-                local_path = f"{self.content.path.local}/{self.data.file_name}"
+                local_path = str(resolve_in_directory(local_path, self.data.file_name))
             elif self.data.category == "theme":
-                path = (
+                path = resolve_in_directory(
                     f"{self.hacs.core.config_path}/"
-                    f"{self.hacs.configuration.theme_path}/"
-                    f"{self.data.name}.yaml"
+                    f"{self.hacs.configuration.theme_path}",
+                    f"{self.data.name}.yaml",
                 )
-                await async_remove(self.hacs.hass, path, missing_ok=True)
-                local_path = self.content.path.local
+                await async_remove(self.hacs.hass, str(path), missing_ok=True)
             elif self.data.category == "integration":
                 if not self.data.domain:
                     if domain := DOMAIN_OVERRIDES.get(self.data.full_name):
@@ -840,8 +860,6 @@ class HacsRepository:
                     else:
                         self.logger.error("%s Missing domain", self.string)
                         return False
-                local_path = self.content.path.local
-            else:
                 local_path = self.content.path.local
 
             if await async_exists(self.hacs.hass, local_path):
@@ -866,7 +884,7 @@ class HacsRepository:
                     local_path,
                 )
 
-        except OSError as exception:
+        except (OSError, HacsException) as exception:
             self.logger.debug(
                 "%s Removing %s failed with %s", self.string, local_path, exception
             )
@@ -981,13 +999,14 @@ class HacsRepository:
         )
 
         if self.repository_manifest.persistent_directory:
-            if await async_exists(
-                self.hacs.hass,
-                f"{self.content.path.local}/{self.repository_manifest.persistent_directory}",
-            ):
+            persistent_path = resolve_in_directory(
+                self.content.path.local,
+                self.repository_manifest.persistent_directory,
+            )
+            if await async_exists(self.hacs.hass, persistent_path):
                 persistent_directory = Backup(
                     hacs=self.hacs,
-                    local_path=f"{self.content.path.local}/{self.repository_manifest.persistent_directory}",
+                    local_path=str(persistent_path),
                     backup_path=tempfile.gettempdir() + "/hacs_persistent_directory/",
                 )
                 await self.hacs.hass.async_add_executor_job(persistent_directory.create)
@@ -1353,12 +1372,14 @@ class HacsRepository:
                 del path_parts[-1]
                 local_directory = "/".join(path_parts)
 
+            local_file_path = resolve_in_directory(
+                self.content.path.local, f"{local_directory}/{content.name}"
+            )
+
             # Check local directory
-            pathlib.Path(local_directory).mkdir(parents=True, exist_ok=True)
+            local_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            local_file_path = (f"{local_directory}/{content.name}").replace("//", "/")
-
-            result = await self.hacs.async_save_file(local_file_path, filecontent)
+            result = await self.hacs.async_save_file(str(local_file_path), filecontent)
             if result:
                 self.logger.info(
                     "%s Download of %s completed", self.string, content.name
@@ -1366,7 +1387,7 @@ class HacsRepository:
                 return
             self.validate.errors.append(f"[{content.name}] was not downloaded.")
 
-        except OSError as exception:
+        except (OSError, HacsException) as exception:
             self.validate.errors.append(f"Download was not completed [{exception}]")
 
     async def async_remove_entity_device(self) -> None:

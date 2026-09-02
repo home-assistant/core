@@ -5,12 +5,13 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.storage import Store
+from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import json as json_util
 
 from ..const import VERSION_STORAGE
 from ..exceptions import HacsException
 from .logger import LOGGER
+from .path import resolve_in_directory
 
 _LOGGER = LOGGER
 
@@ -136,4 +137,11 @@ async def async_remove_store(hass: HomeAssistant, key: str) -> None:
     """Remove a store element that should no longer be used."""
     if "/" not in key:
         return
-    await get_store_for_key(hass, key).async_remove()
+
+    store = get_store_for_key(hass, key)
+
+    # The key carries a repository id, so the file it resolves to is checked
+    # before anything is unlinked.
+    resolve_in_directory(hass.config.path(STORAGE_DIR), store.path)
+
+    await store.async_remove()

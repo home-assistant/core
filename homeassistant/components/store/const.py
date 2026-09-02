@@ -18,6 +18,10 @@ PACKAGE_NAME = "homeassistant.components.store"
 DEFAULT_CONCURRENT_TASKS = 15
 DEFAULT_CONCURRENT_BACKOFF_TIME = 1
 
+# Ceiling for anything downloaded from a repository, both for the transferred
+# bytes and for the size a ZIP archive expands to.
+MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024
+
 HACS_REPOSITORY_ID = "172733314"
 
 VERSION_STORAGE = "6"

@@ -1,10 +1,13 @@
 """Tests for the Community store utilities."""
 
+from pathlib import Path
+
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import pytest
 
 from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.enums import RepositoryFile
+from homeassistant.components.store.exceptions import HacsException
 from homeassistant.components.store.repositories.base import HacsRepository
 from homeassistant.components.store.utils import filters, path, regex, version
 from homeassistant.components.store.utils.decorator import return_none_on_exception
@@ -107,6 +110,42 @@ async def test_is_safe(store: HacsBase) -> None:
     assert not path.is_safe(store, f"{config_path}/custom_components/")
     assert not path.is_safe(store, f"{config_path}/custom_components")
     assert not path.is_safe(store, f"{config_path}/custom_templates")
+    assert not path.is_safe(store, config_path)
+    assert not path.is_safe(store, f"{config_path}/.storage")
+
+    # A path that walks back out of a managed directory is the same directory
+    assert not path.is_safe(store, f"{config_path}/custom_components/example/..")
+
+
+@pytest.mark.parametrize(
+    "candidate",
+    [
+        pytest.param("example.js", id="file"),
+        pytest.param("nested/example.js", id="nested_file"),
+        pytest.param("nested/../example.js", id="normalized_file"),
+        pytest.param("", id="the_directory_itself"),
+    ],
+)
+def test_resolve_in_directory(tmp_path: Path, candidate: str) -> None:
+    """Test the paths that are inside the target directory."""
+    resolved = path.resolve_in_directory(tmp_path, candidate)
+
+    assert resolved == (tmp_path / candidate).resolve()
+
+
+@pytest.mark.parametrize(
+    "candidate",
+    [
+        pytest.param("../escaped.js", id="parent"),
+        pytest.param("nested/../../escaped.js", id="parent_from_nested"),
+        pytest.param("/etc/passwd", id="absolute"),
+        pytest.param("..", id="the_parent_itself"),
+    ],
+)
+def test_resolve_in_directory_rejects_escapes(tmp_path: Path, candidate: str) -> None:
+    """Test that a path leaving the target directory is refused."""
+    with pytest.raises(HacsException, match="is not inside"):
+        path.resolve_in_directory(tmp_path, candidate)
 
 
 @pytest.mark.parametrize(

@@ -113,6 +113,7 @@ def mocked_response(
     status: HTTPStatus = HTTPStatus.OK,
     content: bytes | None = None,
     json_content: Any = None,
+    headers: dict[str, str] | None = None,
 ) -> AiohttpClientMockResponse:
     """Return a response to register with the response mocker."""
     return AiohttpClientMockResponse(
@@ -121,7 +122,7 @@ def mocked_response(
         status=status,
         response=content,
         json=json_content,
-        headers=PROXY_HEADERS,
+        headers={**PROXY_HEADERS, **(headers or {})},
     )
 
 

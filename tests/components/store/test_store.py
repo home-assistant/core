@@ -124,6 +124,20 @@ async def test_remove(hass: HomeAssistant) -> None:
         assert async_remove_mock.called
 
 
+async def test_remove_refuses_a_key_outside_the_storage(hass: HomeAssistant) -> None:
+    """Test that a repository id can not point the removal out of the storage."""
+    with (
+        patch(
+            "homeassistant.components.store.utils.store.HACSStore.async_remove",
+            return_value=AsyncMock(),
+        ) as async_remove_mock,
+        pytest.raises(HacsException, match="is not inside"),
+    ):
+        await async_remove_store(hass, "hacs/../../secrets.yaml")
+
+    assert not async_remove_mock.called
+
+
 async def test_save_skips_unchanged_content(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

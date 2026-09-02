@@ -1,7 +1,7 @@
 """Base HACS class."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 import gzip
@@ -34,7 +34,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, TV, URL_BASE
+from .const import DOMAIN, MAX_DOWNLOAD_SIZE, TV, URL_BASE
 from .coordinator import HacsUpdateCoordinator
 from .data_client import HacsDataClient
 from .enums import (
@@ -65,6 +65,12 @@ from .utils.store import async_load_from_store, async_save_to_store
 if TYPE_CHECKING:
     from .repositories.base import HacsRepository
     from .utils.data import HacsData
+
+
+def _declared_size(headers: Mapping[str, str]) -> int:
+    """Return the size a response declares, 0 when it declares none."""
+    length = headers.get("Content-Length", "")
+    return int(length) if length.isdigit() else 0
 
 
 @dataclass
@@ -689,7 +695,19 @@ class HacsBase:
 
                 # Make sure that we got a valid result
                 if request.status == 200:
-                    return await request.read()
+                    if _declared_size(request.headers) > MAX_DOWNLOAD_SIZE:
+                        raise HacsException(  # noqa: TRY301 # handled below
+                            f"{url} declares more than the "
+                            f"{MAX_DOWNLOAD_SIZE} byte limit"
+                        )
+
+                    content = await request.read()
+                    if len(content) > MAX_DOWNLOAD_SIZE:
+                        raise HacsException(  # noqa: TRY301 # handled below
+                            f"{url} is larger than the {MAX_DOWNLOAD_SIZE} byte limit"
+                        )
+
+                    return content
 
                 # Handle rate-limits
                 if handle_rate_limit and request.status == 429:

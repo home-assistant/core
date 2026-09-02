@@ -17,12 +17,17 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.store.base import HacsBase, RemovedRepository
+from homeassistant.components.store.const import MAX_DOWNLOAD_SIZE
 from homeassistant.components.store.enums import HacsCategory, HacsDispatchEvent
 from homeassistant.components.store.exceptions import HacsException
 from homeassistant.components.store.repositories.base import (
+    FileInformation,
     HacsManifest,
     HacsRepository,
     RepositoryData,
+)
+from homeassistant.components.store.repositories.integration import (
+    HacsIntegrationRepository,
 )
 from homeassistant.components.store.repositories.plugin import HacsPluginRepository
 from homeassistant.components.store.utils.validate import Validate
@@ -1056,6 +1061,161 @@ async def test_download_repository_zip_without_ref(store: HacsBase) -> None:
         await repository.download_repository_zip()
 
 
+async def test_download_zip_release_escaping_member(
+    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+) -> None:
+    """Test a zip release that tries to write outside the repository."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.ref = "1.0.0"
+    repository.repository_manifest.zip_release = True
+    repository.repository_manifest.filename = "release.zip"
+    repository.content.path.local = repository.localpath
+
+    url = f"https://github.com/{REPOSITORY_INTEGRATION}/releases/download/1.0.0/release.zip"
+    response_mocker.add(
+        url, mocked_response(url, content=_zip_bytes({"../../escaped.py": ""}))
+    )
+
+    validate = Validate()
+    await repository.download_zip_files(validate)
+
+    assert not validate.success
+    assert _downloaded_files(config_dir) == []
+
+
+async def test_download_zip_release_too_large(
+    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+) -> None:
+    """Test a zip release that expands to more than the limit."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.ref = "1.0.0"
+    repository.repository_manifest.zip_release = True
+    repository.repository_manifest.filename = "release.zip"
+    repository.content.path.local = repository.localpath
+
+    url = f"https://github.com/{REPOSITORY_INTEGRATION}/releases/download/1.0.0/release.zip"
+    response_mocker.add(
+        url,
+        mocked_response(url, content=_zip_bytes({"example/__init__.py": "content"})),
+    )
+
+    validate = Validate()
+    with patch("homeassistant.components.store.repositories.base.MAX_DOWNLOAD_SIZE", 1):
+        await repository.download_zip_files(validate)
+
+    assert not validate.success
+    assert _downloaded_files(config_dir) == []
+
+
+async def test_download_repository_zip_escaping_member(
+    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+) -> None:
+    """Test a repository archive that tries to write outside the repository."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.ref = "1.0.0"
+    repository.content.path.local = repository.localpath
+    repository.content.path.remote = "custom_components"
+
+    url = f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/1.0.0.zip"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            content=_zip_bytes(
+                {"integration-basic-1.0.0/custom_components/../../escaped.py": ""}
+            ),
+        ),
+    )
+
+    with pytest.raises(HacsException, match="is not inside"):
+        await repository.download_repository_zip()
+
+    assert _downloaded_files(config_dir) == []
+
+
+async def test_download_content_outside_the_repository(
+    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+) -> None:
+    """Test a file name that tries to write outside the repository."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.content.path.local = repository.localpath
+    repository.content.single = True
+
+    url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/escaped.py"
+    response_mocker.add(url, mocked_response(url, content=b""))
+
+    await repository.dowload_repository_content(
+        FileInformation(url, "escaped.py", "../../escaped.py")
+    )
+
+    assert "is not inside" in repository.validate.errors[0]
+    assert _downloaded_files(config_dir) == []
+
+
+async def test_install_rejects_escaping_persistent_directory(
+    store: HacsBase, config_dir: Path
+) -> None:
+    """Test a hacs.json pointing its persistent directory out of the repository."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.content.path.local = repository.localpath
+    repository.repository_manifest.persistent_directory = "../.."
+
+    with (
+        patch.object(repository, "update_repository"),
+        pytest.raises(HacsException, match="is not inside"),
+    ):
+        await repository.async_install_repository()
+
+    assert _downloaded_files(config_dir) == []
+
+
+async def test_download_declines_a_declared_size_over_the_limit(
+    store: HacsBase, response_mocker: StoreResponses
+) -> None:
+    """Test that a response declaring more than the limit is not read."""
+    url = "https://example.com/big"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, content=b"", headers={"Content-Length": str(MAX_DOWNLOAD_SIZE + 1)}
+        ),
+    )
+
+    assert await store.async_download_file(url) is None
+
+
+async def test_download_discards_content_over_the_limit(
+    store: HacsBase, response_mocker: StoreResponses
+) -> None:
+    """Test that a response larger than the limit is thrown away."""
+    url = "https://example.com/big"
+    response_mocker.add(url, mocked_response(url, content=b"0123456789"))
+
+    with patch("homeassistant.components.store.base.MAX_DOWNLOAD_SIZE", 5):
+        assert await store.async_download_file(url) is None
+
+
+@pytest.mark.parametrize(
+    "category_test_data",
+    category_test_data_parametrized(
+        categories=[HacsCategory.PYTHON_SCRIPT, HacsCategory.TEMPLATE]
+    ),
+)
+async def test_remove_refuses_escaping_file_name(
+    store: HacsBase, config_dir: Path, category_test_data: CategoryTestData
+) -> None:
+    """Test that a crafted file name can not delete a file of its own choosing."""
+    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository.content.path.local = repository.localpath
+    repository.data.file_name = "../configuration.yaml"
+
+    target = config_dir / "configuration.yaml"
+    target.touch()
+
+    assert not await repository.remove_local_directory()
+    assert target.exists()
+
+
 async def test_integration_restart_required_issue(
     hass: HomeAssistant,
     store: HacsBase,
@@ -1089,6 +1249,48 @@ async def test_integration_manifest_missing_key(store: HacsBase) -> None:
     assert repository.validate.errors == [
         "Missing expected key ''domain'' in manifest.json"
     ]
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        pytest.param("../../evil", id="traversal"),
+        pytest.param("with/slash", id="slash"),
+        pytest.param("Example", id="uppercase"),
+        pytest.param("", id="empty"),
+        pytest.param(1337, id="not_a_string"),
+    ],
+)
+async def test_integration_manifest_invalid_domain(
+    store: HacsBase, domain: Any
+) -> None:
+    """Test that a manifest can not name a directory of its own choosing."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+
+    with (
+        patch.object(
+            repository,
+            "async_get_integration_manifest",
+            return_value={"domain": domain, "name": "Example"},
+        ),
+        pytest.raises(HacsException, match="is not a valid integration domain"),
+    ):
+        await repository.validate_repository()
+
+
+async def test_integration_domain_owned_by_another_repository(store: HacsBase) -> None:
+    """Test that a download can not take over the directory of another one."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.domain = "example"
+
+    other = HacsIntegrationRepository(store, "test/other")
+    other.data.id = "1337"
+    other.data.domain = "example"
+    other.data.installed = True
+    store.repositories.register(other)
+
+    with pytest.raises(HacsException, match="is owned by test/other"):
+        await repository.async_pre_install()
 
 
 async def test_integration_manifest_missing_file(store: HacsBase) -> None:
