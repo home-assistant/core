@@ -17,6 +17,7 @@ from modbus_connection import ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
+from homeassistant.components.ecowitt_modbus.config_flow import _title
 from homeassistant.components.ecowitt_modbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -108,6 +109,11 @@ def mock_temporary_unit(
 def mock_config_entry(model_case: ModelCase) -> MockConfigEntry:
     """Mock a config entry for the model under test.
 
+    The title is built with the config flow's own ``_title``, not a copy of
+    its format, so this fixture cannot drift from what a real entry is
+    titled -- a mismatch there would let the snapshots pass while missing a
+    real regression in title generation.
+
     The entry ID is pinned because a model that reports no serial number
     keys its entities on the entry itself, and a fresh random ID each run
     would make those snapshots unrepeatable.
@@ -117,7 +123,7 @@ def mock_config_entry(model_case: ModelCase) -> MockConfigEntry:
         entry_id=MOCK_ENTRY_ID,
         unique_id=model_case.unique_id,
         data=model_case.entry_data,
-        title=f"{model_case.name} (192.168.1.100)",
+        title=_title(model_case.name, model_case.user_input),
     )
 
 

@@ -93,11 +93,17 @@ async def _async_probe(
 def _title(model: str, user_input: Mapping[str, Any]) -> str:
     """Name the entry for the model and where it is reached.
 
-    Includes the unit ID, not just the host: several sensors can share one
-    RTU-over-TCP gateway, each at its own device address, and a host-only
-    title would make them indistinguishable.
+    Includes the port and unit ID, not just the host: duplicate detection
+    allows two entries to share a host and unit ID on different ports, or a
+    host and port with different unit IDs, so anything less than all three
+    can land two distinct, validly-configured entries on the same title.
     """
-    return f"{model} ({user_input[CONF_HOST]}, unit {user_input[CONF_UNIT_ID]})"
+    host, port, unit = (
+        user_input[CONF_HOST],
+        user_input[CONF_PORT],
+        user_input[CONF_UNIT_ID],
+    )
+    return f"{model} ({host}:{port}, unit {unit})"
 
 
 def _address(user_input: Mapping[str, Any]) -> dict[str, Any]:

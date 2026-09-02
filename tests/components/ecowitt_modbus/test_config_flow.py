@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from . import ALL_MODELS, MOCK_HOST, WN69LP_CASE, WN90LP_CASE, ModelCase
+from . import ALL_MODELS, MOCK_HOST, MOCK_PORT, WN69LP_CASE, WN90LP_CASE, ModelCase
 
 from tests.common import MockConfigEntry
 
@@ -79,8 +79,8 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert (
-        result["title"] == f"{model_case.name} ({MOCK_HOST}, unit {model_case.unit_id})"
+    assert result["title"] == (
+        f"{model_case.name} ({MOCK_HOST}:{MOCK_PORT}, unit {model_case.unit_id})"
     )
     assert result["data"] == model_case.entry_data
     assert result["result"].unique_id == model_case.unique_id
@@ -232,6 +232,35 @@ async def test_an_address_stays_claimed_even_for_a_misleading_probe(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_the_same_host_and_unit_on_different_ports_are_not_duplicates(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate detection matches the full endpoint, not part of it.
+
+    Only meaningful for a model with no serial number: a WN90LP reporting
+    the same identity would be refused regardless of port, correctly, since
+    the port it happens to be reached through doesn't change what physical
+    device it is. A WN69LP has no such check, so two entries can validly
+    share a host and unit ID if a gateway offers the same bus on more than
+    one port -- and a title built from only the host and unit would make
+    them indistinguishable in the UI even though both are allowed.
+    """
+    mock_config_entry.add_to_hass(hass)
+    other_port = mock_config_entry.data[CONF_PORT] + 1
+
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**WN69LP_CASE.user_input, CONF_PORT: other_port}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] != mock_config_entry.title
 
 
 @pytest.mark.usefixtures("mock_temporary_unit")
@@ -420,7 +449,7 @@ class TestReconfigure:
         # The title carries the host, so a move that left it behind would
         # keep showing the old address in the UI.
         assert mock_config_entry.title == (
-            f"{model_case.name} (192.168.1.200, unit {model_case.unit_id})"
+            f"{model_case.name} (192.168.1.200:{MOCK_PORT}, unit {model_case.unit_id})"
         )
 
     @EVERY_MODEL
