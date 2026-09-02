@@ -197,19 +197,64 @@ async def test_refresh_returns_connected_data_when_online(
     }
 
 
-async def test_refresh_returns_offline_data_without_coordinator_reconnect(
+async def test_refresh_reconnects_and_updates_gateway_versions(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Periodic refresh does not reconnect while offline."""
+    """Periodic refresh reconnects from offline and updates gateway versions."""
+    device_registry.async_get_or_create(
+        config_entry_id=coordinator.config_entry.entry_id,
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
+    coordinator.register_transmitter_entities([MagicMock()])
+    await coordinator.hass.async_block_till_done(wait_background_tasks=True)
     coordinator.is_offline = True
+    mock_transceiver.reconnect = AsyncMock(return_value=True)
+    mock_transceiver.is_connected = True
+    mock_transceiver.device_path = "/dev/ttyACM0"
+    mock_transceiver.hw_version = "RX11 v1.0"
+    mock_transceiver.fw_version = "FW 2.3.4"
 
     await coordinator.async_refresh()
 
+    mock_transceiver.reconnect.assert_awaited_once()
+    assert coordinator.is_offline is False
+    assert coordinator.data == {
+        "is_connected": True,
+        "device_path": "/dev/ttyACM0",
+    }
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, coordinator.config_entry.entry_id),
+        coordinator.config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.hw_version == "RX11 v1.0"
+    assert device.sw_version == "FW 2.3.4"
+
+
+async def test_refresh_stays_offline_when_reconnect_fails(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Periodic refresh stays offline when reconnect fails."""
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.is_offline = True
+    mock_transceiver.reconnect = AsyncMock(return_value=False)
+
+    await coordinator.async_refresh()
+
+    mock_transceiver.reconnect.assert_awaited_once()
     assert coordinator.is_offline is True
     assert coordinator.data == {"is_connected": False, "device_path": None}
-    mock_transceiver.reconnect.assert_not_called()
 
 
 async def test_connected_callback_restores_online_state(
@@ -218,7 +263,7 @@ async def test_connected_callback_restores_online_state(
     mock_transceiver: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Library reconnect callbacks restore the coordinator online state."""
+    """Transceiver connect callbacks restore the coordinator online state."""
     device_registry.async_get_or_create(
         config_entry_id=coordinator.config_entry.entry_id,
         identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
@@ -261,6 +306,39 @@ async def test_refresh_detects_lost_connection(
 
     assert coordinator.is_offline is True
     assert coordinator.data == {"is_connected": False, "device_path": None}
+
+
+async def test_refresh_reraises_update_failed(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """UpdateFailed from reconnect is recorded during refresh."""
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.is_offline = True
+    mock_transceiver.reconnect = AsyncMock(side_effect=UpdateFailed("fail"))
+
+    await coordinator.async_refresh()
+
+    assert coordinator.is_offline is True
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+
+
+async def test_refresh_wraps_reconnect_os_error_in_update_failed(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """OS errors during reconnect are wrapped in UpdateFailed."""
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.is_offline = True
+    mock_transceiver.reconnect = AsyncMock(side_effect=OSError("boom"))
+
+    await coordinator.async_refresh()
+
+    assert coordinator.is_offline is True
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert str(coordinator.last_exception) == "Update failed: boom"
 
 
 async def test_refresh_wraps_os_error_in_update_failed(

@@ -1,8 +1,9 @@
 """Thin Home Assistant wrapper around easywave_home_control.EasywaveGateway.
 
-Connection management, health checks, and protocol handling live in the
-easywave-home-control library. This module only adapts the gateway API to
-Home Assistant callbacks and entity lifecycle.
+Protocol handling lives in easywave-home-control. Reconnection is owned by the
+integration coordinator. Configured RF devices are independent of a specific
+RX11; port resolution prefers the setup stick but accepts any compatible
+replacement when it is the only one present.
 """
 
 from collections.abc import Callable, Mapping
@@ -37,7 +38,12 @@ def resolve_gateway_port(
     usb_serial: str | None = None,
     device_path: str | None = None,
 ) -> str | None:
-    """Return the serial port for a configured gateway, if uniquely identifiable."""
+    """Return the serial port for an RX11 gateway.
+
+    Prefers the configured USB serial or device path. When that hardware is
+    absent, any sole compatible stick is accepted so a replacement RX11 can be
+    used without reconfiguration.
+    """
     try:
         ports = [
             port
@@ -53,7 +59,6 @@ def resolve_gateway_port(
         for port in ports:
             if port.serial_number == usb_serial:
                 return port.device
-        return None
 
     if device_path:
         for port in ports:
@@ -61,6 +66,11 @@ def resolve_gateway_port(
                 return port.device
 
     if len(ports) == 1:
+        if usb_serial or device_path:
+            _LOGGER.debug(
+                "Configured RX11 unavailable, using sole compatible stick on %s",
+                ports[0].device,
+            )
         return ports[0].device
 
     return None
@@ -88,7 +98,7 @@ class RX11Transceiver:
                 transceiver_id="RX11",
                 port=None,
                 usb_ids=SUPPORTED_USB_IDS,
-                auto_reconnect=True,
+                auto_reconnect=False,
                 auto_listen=False,
             ),
             callbacks=GatewayCallbacks(
@@ -148,7 +158,7 @@ class RX11Transceiver:
         except (OSError, RuntimeError) as err:
             _LOGGER.error("Error in disconnect callback: %s", err)
 
-    async def _prepare_connection(self) -> None:
+    async def _prepare_connection(self) -> bool:
         """Resolve the configured gateway port before connecting."""
         port = await self.hass.async_add_executor_job(
             partial(
@@ -160,10 +170,12 @@ class RX11Transceiver:
         )
         self._gateway._config.port = port  # noqa: SLF001
         self._gateway._device_path = None  # noqa: SLF001
+        return port is not None
 
     async def connect(self) -> bool:
         """Connect to the RX11 transceiver."""
-        await self._prepare_connection()
+        if not await self._prepare_connection():
+            return False
         return await self._gateway.connect()
 
     async def disconnect(self) -> None:
@@ -176,7 +188,8 @@ class RX11Transceiver:
 
     async def reconnect(self) -> bool:
         """Reconnect to the RX11 transceiver."""
-        await self._prepare_connection()
+        if not await self._prepare_connection():
+            return False
         return await self._gateway.reconnect()
 
     async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:

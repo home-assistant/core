@@ -225,12 +225,23 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update device data periodically.
 
-        Reconnection is handled by the easywave-home-control library. This
-        refresh only mirrors the current connection state and detects edge
-        cases the disconnect callback may miss.
+        Attempt reconnection when offline and detect disconnections the
+        callback may miss.
         """
         try:
             if self.is_offline:
+                connected = await self.transceiver.reconnect()
+                if connected:
+                    self.is_offline = False
+                    self._register_transceiver_callbacks()
+                    self._update_gateway_device()
+                    if self._has_telegram_listeners:
+                        self._start_telegram_listener()
+                    self._sync_gateway_connection_events()
+                    return {
+                        "is_connected": self.transceiver.is_connected,
+                        "device_path": self.transceiver.device_path,
+                    }
                 return {
                     "is_connected": False,
                     "device_path": None,

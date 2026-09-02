@@ -52,11 +52,25 @@ async def test_connect_prepares_connection_before_gateway_connect(
     transceiver: RX11Transceiver, mock_gateway: MagicMock
 ) -> None:
     """Connect resolves the configured gateway before opening it."""
-    with patch.object(transceiver, "_prepare_connection", AsyncMock()) as mock_prepare:
+    with patch.object(
+        transceiver, "_prepare_connection", AsyncMock(return_value=True)
+    ) as mock_prepare:
         assert await transceiver.connect() is True
 
     mock_prepare.assert_awaited_once()
     mock_gateway.connect.assert_awaited_once()
+
+
+async def test_connect_fails_when_configured_port_unresolved(
+    transceiver: RX11Transceiver, mock_gateway: MagicMock
+) -> None:
+    """Connect aborts when the configured gateway cannot be resolved."""
+    with patch.object(
+        transceiver, "_prepare_connection", AsyncMock(return_value=False)
+    ):
+        assert await transceiver.connect() is False
+
+    mock_gateway.connect.assert_not_called()
 
 
 async def test_prepare_connection_sets_gateway_target(
@@ -70,10 +84,26 @@ async def test_prepare_connection_sets_gateway_target(
         )
 
     with patch(RESOLVE_PATH, return_value=DEVICE_PATH):
-        await transceiver._prepare_connection()
+        assert await transceiver._prepare_connection() is True
 
     assert mock_gateway._config.port == DEVICE_PATH
     assert mock_gateway._device_path is None
+
+
+async def test_prepare_connection_falls_back_to_sole_rx11_when_serial_missing(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Connection preparation accepts a replacement RX11 when it is the only one."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(
+            hass,
+            {"usb_serial_number": "missing", "device_path": "/dev/ttyACM0"},
+        )
+
+    with patch(RESOLVE_PATH, return_value="/dev/ttyACM1"):
+        assert await transceiver._prepare_connection() is True
+
+    assert mock_gateway._config.port == "/dev/ttyACM1"
 
 
 async def test_disconnect_and_dispose_delegate_to_gateway(
@@ -91,10 +121,22 @@ async def test_reconnect_prepares_connection_before_gateway_reconnect(
     transceiver: RX11Transceiver, mock_gateway: MagicMock
 ) -> None:
     """Reconnect re-resolves the configured gateway port."""
-    with patch.object(transceiver, "_prepare_connection", AsyncMock()):
+    with patch.object(transceiver, "_prepare_connection", AsyncMock(return_value=True)):
         assert await transceiver.reconnect() is True
 
     mock_gateway.reconnect.assert_awaited_once()
+
+
+async def test_reconnect_fails_when_configured_port_unresolved(
+    transceiver: RX11Transceiver, mock_gateway: MagicMock
+) -> None:
+    """Reconnect aborts when the configured gateway cannot be resolved."""
+    with patch.object(
+        transceiver, "_prepare_connection", AsyncMock(return_value=False)
+    ):
+        assert await transceiver.reconnect() is False
+
+    mock_gateway.reconnect.assert_not_called()
 
 
 async def test_receive_telegram_delegates_to_gateway(
@@ -204,15 +246,15 @@ def test_properties_proxy_gateway_state(mock_gateway: MagicMock) -> None:
     assert transceiver.fw_version == "2.5"
 
 
-def test_gateway_config_enables_library_auto_reconnect(
+def test_gateway_config_disables_library_auto_reconnect(
     hass: HomeAssistant, mock_gateway: MagicMock
 ) -> None:
-    """The transceiver wrapper delegates reconnect handling to the library."""
+    """The transceiver wrapper leaves reconnect handling to the coordinator."""
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
         RX11Transceiver(hass, device_path=DEVICE_PATH)
 
     gateway_config = mock_gateway_cls.call_args.args[0]
-    assert gateway_config.auto_reconnect is True
+    assert gateway_config.auto_reconnect is False
 
 
 def test_resolve_gateway_port_prefers_usb_serial() -> None:
@@ -237,13 +279,35 @@ def test_resolve_gateway_port_prefers_usb_serial() -> None:
         )
 
 
-def test_resolve_gateway_port_returns_none_for_unknown_serial() -> None:
-    """Port resolution fails when the configured serial is absent."""
-    port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111")
+def test_resolve_gateway_port_falls_back_to_sole_rx11_when_serial_missing() -> None:
+    """Port resolution accepts a replacement RX11 when it is the only one."""
+    port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222")
 
     with patch(
         "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
         return_value=[port],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="missing",
+            )
+            == "/dev/ttyACM0"
+        )
+
+
+def test_resolve_gateway_port_returns_none_for_ambiguous_replacement() -> None:
+    """Port resolution stays unresolved when multiple RX11s are present."""
+    port_a = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111"
+    )
+    port_b = MagicMock(
+        device="/dev/ttyACM1", vid=0x155A, pid=0x1014, serial_number="222"
+    )
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[port_a, port_b],
     ):
         assert (
             resolve_gateway_port(
