@@ -717,18 +717,20 @@ class ConfigEntry[_DataT = Any]:
         exc: BaseException,
         *,
         migration: bool = False,
-    ) -> tuple[str | None, str | None, dict[str, str] | None]:
+    ) -> tuple[str | None, str | None, dict[str, str] | None, str | None]:
         """Handle config entry setup error."""
         logger = self.logger
 
         error_reason: str | None = None
         error_reason_translation_key: str | None = None
         error_reason_translation_placeholders: dict[str, str] | None = None
+        error_reason_translation_domain: str | None = None
 
         if isinstance(exc, ConfigEntryError):
             error_reason = str(exc) or "Unknown fatal config entry error"
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
+            error_reason_translation_domain = exc.translation_domain
             logger.exception(
                 "Error migrating entry %s for %s: %s"
                 if migration
@@ -744,6 +746,7 @@ class ConfigEntry[_DataT = Any]:
             error_reason = message or auth_base_message
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
+            error_reason_translation_domain = exc.translation_domain
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
             )
@@ -762,12 +765,14 @@ class ConfigEntry[_DataT = Any]:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
+            error_reason_translation_domain = exc.translation_domain
             self._async_set_state(
                 hass,
                 ConfigEntryState.SETUP_RETRY,
                 message or None,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+                error_reason_translation_domain,
             )
             wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
@@ -817,6 +822,7 @@ class ConfigEntry[_DataT = Any]:
                     None,
                     None,
                     None,
+                    None,
                 )
             else:
                 # This was not a "real" cancellation, log it and treat as a normal error.
@@ -836,11 +842,11 @@ class ConfigEntry[_DataT = Any]:
                 self.title,
                 integration.domain,
             )
-
         return (
             error_reason,
             error_reason_translation_key,
             error_reason_translation_placeholders,
+            error_reason_translation_domain,
         )
 
     async def __async_setup_with_context(
@@ -933,6 +939,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason,
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
+                    error_reason_translation_domain,
                 ) = self.__async_handle_config_entry_setup_error(
                     hass, integration, exc, migration=True
                 )
@@ -948,6 +955,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason,
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
+                    error_reason_translation_domain,
                 )
                 return
 
@@ -956,6 +964,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason,
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
+                    error_reason_translation_domain,
                 ) = self.__async_handle_config_entry_setup_error(
                     hass, integration, HomeAssistantError(), migration=True
                 )
@@ -965,6 +974,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason,
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
+                    error_reason_translation_domain,
                 )
                 return
 
@@ -998,6 +1008,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+                error_reason_translation_domain,
             ) = self.__async_handle_config_entry_setup_error(hass, integration, exc)
             if isinstance(exc, asyncio.CancelledError):
                 if (task := asyncio.current_task()) and task.cancelling() > 0:

@@ -504,7 +504,7 @@ async def test_migrate_from_higher_version_not_supported(
         (
             AsyncMock(side_effect=ConfigEntryError()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "Error setting up entry Mock Title for comp during config entry migration",
+            "Error migrating entry Mock Title for comp",
         ),
         (
             AsyncMock(side_effect=ConfigEntryAuthFailed()),
