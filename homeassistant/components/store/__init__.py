@@ -188,10 +188,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Reload the HACS config entry."""
-    if not await async_unload_entry(hass, config_entry):
-        return
-    await async_setup_entry(hass, config_entry)
+    """Reload the config entry when its options change."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_remove_config_entry_device(
