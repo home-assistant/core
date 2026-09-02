@@ -2093,7 +2093,9 @@ async def test_reconfigure_flow_no_discovery(
         mock_discovery.assert_called_once()
         assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
 
-        _assert_reconfigure_success(hass=hass, config_entry=config_entry, result=result)
+        await _assert_reconfigure_success(
+            hass=hass, config_entry=config_entry, result=result
+        )
 
 
 async def test_reconfigure_flow_wrong_device_id_discovery(
@@ -2128,4 +2130,6 @@ async def test_reconfigure_flow_wrong_device_id_discovery(
         mock_discovery.assert_called_once()
         assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
 
-        _assert_reconfigure_success(hass=hass, config_entry=config_entry, result=result)
+        await _assert_reconfigure_success(
+            hass=hass, config_entry=config_entry, result=result
+        )
