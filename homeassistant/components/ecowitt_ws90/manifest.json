@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["ecowitt-ws90-modbus==1.0.0"]
+  "requirements": ["ecowitt-ws90-modbus==0.1.0"]
 }
