@@ -1,12 +1,16 @@
 """Tests for the Alexa Devices coordinator."""
 
+from copy import deepcopy
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
+from aioamazondevices.const.schedules import NOTIFICATION_TIMER
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonSchedule
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -213,3 +217,40 @@ async def test_sync_media_state_auth_failed(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_notification_event_handler_updates_sensors(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that on_notification_event updates timer/alarm/reminder sensor entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Timer sensor starts with no next_occurrence (state is unknown/None)
+    timer_entity_id = "sensor.echo_test_timer"
+    assert hass.states.get(timer_entity_id) is not None
+
+    # Retrieve the notification event handler registered by the coordinator
+    on_notification_event = mock_amazon_devices_client.on_notification_event
+    on_notification_event.append.assert_called_once()
+    notification_handler = on_notification_event.append.call_args.args[0]
+
+    # Build updated device with a timer that now has a next_occurrence
+    timer_occurrence = datetime(2026, 7, 21, 19, 11, 0, tzinfo=UTC)
+    updated_device = deepcopy(TEST_DEVICE_1)
+    updated_device.notifications[NOTIFICATION_TIMER] = AmazonSchedule(
+        type=NOTIFICATION_TIMER,
+        status="ON",
+        label="1 minute timer",
+        next_occurrence=timer_occurrence,
+    )
+
+    # Fire the push event as the library would
+    await notification_handler({TEST_DEVICE_1_SN: updated_device})
+    await hass.async_block_till_done()
+
+    # Timer sensor should now reflect the updated next_occurrence
+    state = hass.states.get(timer_entity_id)
+    assert state is not None
+    assert state.state == timer_occurrence.isoformat()
