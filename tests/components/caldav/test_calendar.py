@@ -1172,7 +1172,6 @@ END:VCALENDAR"""
         pytest.param("TENTATIVE", "tentative", id="tentative"),
         pytest.param("CONFIRMED", "confirmed", id="confirmed"),
         pytest.param("Tentative", "tentative", id="mixed_case"),
-        pytest.param("CANCELLED", None, id="cancelled_is_not_reported"),
         pytest.param("X-VENDOR-SPECIFIC", None, id="unsupported_value"),
     ],
 )
@@ -1189,6 +1188,56 @@ async def test_get_events_with_status(
 
     assert len(events) == 1
     assert events[0]["status"] == expected_status
+
+
+def _mock_calendar_holding(name: str, vevents: list[str]) -> Mock:
+    """Return a mock calendar holding exactly the given VEVENTs."""
+    calendar = Mock()
+    calendar.name = name
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar.search = MagicMock(
+        return_value=[
+            Event(None, f"{idx}.ics", vevent, calendar, str(idx))
+            for idx, vevent in enumerate(vevents)
+        ]
+    )
+    return calendar
+
+
+async def test_cancelled_event_is_not_returned(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that an event called off is not returned by the API."""
+    events = await _get_api_events_for_vevent(
+        hass,
+        hass_client,
+        ICS_WITH_STATUS.format(status="CANCELLED"),
+        "status-event-uid",
+    )
+
+    assert events == []
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.parametrize(
+    ("calendars"),
+    [[_mock_calendar_holding("Example", [ICS_WITH_STATUS.format(status="CANCELLED")])]],
+)
+@pytest.mark.freeze_time(_local_datetime(17, 30))
+async def test_cancelled_event_is_not_the_ongoing_event(
+    hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
+) -> None:
+    """Test that an event called off does not turn the entity on.
+
+    The event would be ongoing at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    await setup_platform_cb()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
