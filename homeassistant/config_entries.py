@@ -1001,7 +1001,12 @@ class ConfigEntry[_DataT = Any]:
                 error_reason_translation_placeholders,
                 error_reason_translation_domain,
             ) = self.__async_handle_config_entry_setup_error(hass, integration, exc)
-            if isinstance(exc, ConfigEntryNotReady):
+            if isinstance(exc, ConfigEntryAuthFailed):
+                # Guard against exceptions that inherits both
+                # ConfigEntryAuthFailed and ConfigEntryNotReady
+                # ex. OAuth2TokenRequestReauthError
+                pass
+            elif isinstance(exc, ConfigEntryNotReady):
                 return
 
         finally:
