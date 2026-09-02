@@ -5,7 +5,9 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import (
     PARAM_BATTERY,
+    PARAM_STATE,
     PARAM_STATE_VARIANT,
+    PARAM_STATUS,
     PARAM_STORAGE_USED,
     STATE_VARIANT_ENUM,
 )
@@ -13,7 +15,6 @@ from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imou.const import PARAM_STATE, PARAM_STATUS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform

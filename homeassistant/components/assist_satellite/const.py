@@ -2,7 +2,7 @@
 
 import asyncio
 from enum import IntFlag
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
     from .entity import AssistSatelliteEntity
 
-DOMAIN = "assist_satellite"
+DOMAIN: Final = "assist_satellite"
 
 DATA_COMPONENT: HassKey[EntityComponent[AssistSatelliteEntity]] = HassKey(DOMAIN)
 CONNECTION_TEST_DATA: HassKey[dict[str, asyncio.Event]] = HassKey(

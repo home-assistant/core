@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
 
@@ -29,33 +29,24 @@ async def handle_upload_image(call: ServiceCall) -> None:
     hass = call.hass
     image_url = call.data["image_url"]
     device_ids = call.data.get("device_id", [])
-    dev_reg = dr.async_get(hass)
 
     for ha_device_id in device_ids:
-        device = dev_reg.async_get(ha_device_id)
-        if device is None:
-            raise ServiceValidationError(f"Device {ha_device_id} not found")
+        device, config_entry = service.async_get_device_and_config_entry(
+            hass, DOMAIN, ha_device_id
+        )
 
         device_mac = next(
             (iid[1] for iid in device.identifiers if iid[0] == DOMAIN), None
         )
-        if device_mac:
-            for config_entry_id in device.config_entries:
-                entry = hass.config_entries.async_get_entry(config_entry_id)
-                if entry is not None and entry.domain == DOMAIN:
-                    break
-            else:
-                raise ServiceValidationError(
-                    f"Device {ha_device_id} is not a SwitchBot Cloud device"
-                )
-            await entry.runtime_data.api.send_command(
-                device_id=device_mac,
-                command=ArtFrameCommands.UPLOAD.value,
-                command_type="command",
-                parameters={"imageUrl": image_url},
-            )
-        else:
+        if device_mac is None:
             raise ServiceValidationError("No valid MAC address obtained.")
+
+        await config_entry.runtime_data.api.send_command(
+            device_id=device_mac,
+            command=ArtFrameCommands.UPLOAD.value,
+            command_type="command",
+            parameters={"imageUrl": image_url},
+        )
 
 
 def async_register_services(hass: HomeAssistant) -> None:

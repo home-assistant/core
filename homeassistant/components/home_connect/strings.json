@@ -10,12 +10,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
@@ -1207,6 +1201,22 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
+      "favorite_long_press": {
+        "name": "Favorite long press",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "favorite_short_press": {
+        "name": "Favorite short press",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "freezer_door_alarm": {
         "name": "Freezer door alarm",
         "state": {
@@ -1271,6 +1281,30 @@
           "tempmap": "Temporary map"
         }
       },
+      "machine_care_and_filter_cleaning_reminder": {
+        "name": "Machine care and filter cleaning reminder",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "machine_care_and_low_maintenance_filter_cleaning_reminder": {
+        "name": "Machine care and low maintenance filter cleaning reminder",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "machine_care_reminder": {
+        "name": "Machine care reminder",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "milk_counter": {
         "name": "Milk cups",
         "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
@@ -1328,6 +1362,14 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
+      "program_blocked_salt_lack": {
+        "name": "Program blocked - salt lack",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "program_finish_time": {
         "name": "Program finish time"
       },
@@ -1358,6 +1400,14 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
+      "rinse_aid_lack": {
+        "name": "Rinse aid lack",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "rinse_aid_nearly_empty": {
         "name": "Rinse aid nearly empty",
         "state": {
@@ -1378,8 +1428,24 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
+      "salt_lack": {
+        "name": "Salt lack",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "salt_nearly_empty": {
         "name": "Salt nearly empty",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "smart_filter_cleaning_reminder": {
+        "name": "Smart filter cleaning reminder",
         "state": {
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "off": "[%key:common::state::off%]",
@@ -1511,12 +1577,6 @@
     "auth_error": {
       "message": "Authentication error: {error}. Please, re-authenticate your account"
     },
-    "config_entry_not_found": {
-      "message": "Config entry for device ID {device_id} not found"
-    },
-    "device_entry_not_found": {
-      "message": "Device entry for device ID {device_id} not found"
-    },
     "execute_command": {
       "message": "Error executing command {command}: {error}"
     },
@@ -1573,6 +1633,9 @@
     },
     "start_program": {
       "message": "Error starting program {program}: {error}"
+    },
+    "start_program_option_not_writable": {
+      "message": "Option {option} is not writable for program {program}"
     },
     "stop_program": {
       "message": "Error stopping program: {error}"
@@ -2243,6 +2306,10 @@
         "heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage": {
           "description": "Setting to adjust the venting level of the air conditioner as a percentage.",
           "name": "Fan speed percentage"
+        },
+        "heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature": {
+          "description": "Defines the target temperature, which will be held by the air conditioner.",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_setpoint_temperature::name%]"
         },
         "laundry_care_common_option_silent_mode": {
           "description": "Defines if the silent mode is activated.",

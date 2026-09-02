@@ -52,6 +52,10 @@ PARALLEL_UPDATES = 0
 # Teslemetry streams TPMS pressure in atmospheres; entities are declared in bar.
 ATM_TO_BAR = 1.01325
 
+# Tesla only reports the self-driving/mileage-since-reset fields (258-259) on HW4
+# vehicles, identified by this driver-assist capability in the vehicle config.
+DRIVER_ASSIST_HW4 = "TeslaAP4"
+
 BMS_STATES = {
     "Standby": "standby",
     "Drive": "drive",
@@ -208,6 +212,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
         | None
     ) = None
     streaming_firmware: str = "2024.26"
+    requires_hw4: bool = False
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
@@ -1148,6 +1153,17 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
+        key="lifetime_energy_gained_regen",
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_LifetimeEnergyGainedRegen(callback)
+        ),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
         key="lifetime_energy_used",
         streaming_listener=lambda vehicle, callback: vehicle.listen_LifetimeEnergyUsed(
             callback
@@ -1165,6 +1181,19 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="miles_since_reset",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_MilesSinceReset(
+            callback
+        ),
+        streaming_firmware="2025.44.25.5",
+        requires_hw4=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1311,6 +1340,21 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.ENUM,
         options=list(SCHEDULED_CHARGING_MODES.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="self_driving_miles_since_reset",
+        streaming_listener=(
+            lambda vehicle, callback: vehicle.listen_SelfDrivingMilesSinceReset(
+                callback
+            )
+        ),
+        streaming_firmware="2025.44.25.5",
+        requires_hw4=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1607,6 +1651,11 @@ async def async_setup_entry(
                 not vehicle.poll
                 and description.streaming_listener
                 and firmware_at_least(vehicle.firmware, description.streaming_firmware)
+                and (
+                    not description.requires_hw4
+                    or vehicle.coordinator.data.get("vehicle_config_driver_assist")
+                    == DRIVER_ASSIST_HW4
+                )
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
             elif description.polling:

@@ -34,6 +34,7 @@ IS_WIFI: Final = "is_wifi"
 IS_WIFIWAVE2: Final = "is_wifiwave2"
 IS_WIRELESS: Final = "is_wireless"
 POE: Final = "poe"
+PING: Final = "ping"
 REBOOT: Final = "reboot"
 RESOURCE: Final = "resource"
 ROUTERBOARD_UPDATE: Final = "routerboard-update"
@@ -59,6 +60,7 @@ MIKROTIK_SERVICES: Final = {
     IS_WIFIWAVE2: "/interface/wifiwave2/print",
     IS_WIRELESS: "/interface/wireless/print",
     POE: "/interface/ethernet/poe/print",
+    PING: "/ping",
     REBOOT: "/system/reboot",
     RESOURCE: "/system/resource/print",
     ROUTERBOARD_UPDATE: "/system/routerboard/upgrade",

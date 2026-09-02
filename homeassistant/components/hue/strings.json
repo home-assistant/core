@@ -146,6 +146,9 @@
       "light_sensor_enabled": {
         "name": "Light sensor enabled"
       },
+      "motion_aware": {
+        "name": "MotionAware"
+      },
       "motion_sensor_enabled": {
         "name": "Motion sensor enabled"
       }
