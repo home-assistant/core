@@ -17,6 +17,9 @@ from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
+# Bound on waiting for a previous listener to stop before rebinding
+_STOP_TIMEOUT = 10.0
+
 
 @dataclass
 class _ListenerState:
@@ -38,6 +41,15 @@ _KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[bool] = HassKey(
 )
 
 
+def _log_stop_failure(task: asyncio.Task[None]) -> None:
+    if not task.cancelled() and (exc := task.exception()) is not None:
+        _LOGGER.warning(
+            "Failed to stop the outgoing connection listener; port %s may stay bound",
+            DEFAULT_OUTGOING_CONNECTION_PORT,
+            exc_info=exc,
+        )
+
+
 @singleton(_KEY_OUTGOING_CONNECTION_LISTENER, async_=True)
 async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
     """Start the shared listener; raises OSError when the port cannot be bound.
@@ -46,13 +58,9 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
     """
     if (stopping := hass.data.pop(_KEY_OUTGOING_CONNECTION_STOPPING, None)) is not None:
         # Wait for the previous listener to release the port before rebinding;
-        # wait() absorbs its failure or cancellation without re-raising here,
-        # and a still-bound port surfaces as OSError from start()
-        await asyncio.wait([stopping])
-        if not stopping.cancelled() and (exc := stopping.exception()) is not None:
-            _LOGGER.debug(
-                "Previous outgoing connection listener failed to stop", exc_info=exc
-            )
+        # wait() absorbs its failure or cancellation (logged by its done
+        # callback), and a still-bound port surfaces as OSError from start()
+        await asyncio.wait([stopping], timeout=_STOP_TIMEOUT)
     server = OutgoingConnectionServer()
     await server.start()
     hass.data.pop(_KEY_OUTGOING_CONNECTION_BIND_FAILED, None)
@@ -86,10 +94,12 @@ class _Registration:
         if (unregister := self._unregister) is None:
             return
         self._unregister = None
-        unregister()
         hass = self._hass
         state = self._state
-        state.registrations -= 1
+        try:
+            unregister()
+        finally:
+            state.registrations -= 1
         # Already popped when Home Assistant is stopping
         if (
             state.registrations == 0
@@ -98,9 +108,9 @@ class _Registration:
             del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
             state.remove_stop_listener()
             # Tracked so the next registration waits for the port release
-            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = hass.async_create_task(
-                state.server.stop()
-            )
+            stopping = hass.async_create_task(state.server.stop())
+            stopping.add_done_callback(_log_stop_failure)
+            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
 
 
 async def async_register_outgoing_target(

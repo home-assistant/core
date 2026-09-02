@@ -1,6 +1,7 @@
 """Tests for device-initiated outgoing connections."""
 
 from collections.abc import Generator
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
@@ -8,7 +9,12 @@ import pytest
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 
 from . import VALID_NOISE_PSK
@@ -197,3 +203,51 @@ async def test_outgoing_connection_listener_restarts_after_last_unload(
     await hass.async_block_till_done()
     assert mock_server.start.await_count == 2
     assert mock_server.register.call_count == 2
+
+
+async def test_outgoing_connection_stops_on_hass_stop(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+) -> None:
+    """The shared listener is stopped when Home Assistant stops."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_server.stop.assert_awaited_once()
+
+
+async def test_outgoing_connection_bind_failure_warns_once(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """N devices behind a taken port produce one warning, not N."""
+    mock_server.start.side_effect = OSError("address in use")
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    entry2 = _make_entry(unique_id="aa:bb:cc:dd:ee:01")
+    entry2.add_to_hass(hass)
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry2,
+        device_info={"mac_address": "AA:BB:CC:DD:EE:01", "name": "test2"},
+    )
+    await hass.async_block_till_done()
+
+    mock_server.register.assert_not_called()
+    warnings = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.WARNING
+        and "Cannot listen for ESPHome outgoing connections" in record.message
+    ]
+    assert len(warnings) == 1
