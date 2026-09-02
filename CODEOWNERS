@@ -1500,6 +1500,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/qbus/ @Qbus-iot @thomasddn
 /homeassistant/components/qingping/ @bdraco @tengfeili-qingping
 /tests/components/qingping/ @bdraco @tengfeili-qingping
+/homeassistant/components/qingping_mqtt/ @tengfeili-qingping
+/tests/components/qingping_mqtt/ @tengfeili-qingping
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw

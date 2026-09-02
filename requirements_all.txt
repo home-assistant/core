@@ -2928,6 +2928,9 @@ qbusmqttapi==1.5.1
 # homeassistant.components.qingping
 qingping-ble==1.1.5
 
+# homeassistant.components.qingping_mqtt
+qingping-tlv==0.2.0
+
 # homeassistant.components.qnap
 qnapstats==0.4.0
 

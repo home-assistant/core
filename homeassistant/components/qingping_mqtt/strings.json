@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "mqtt_not_configured": "MQTT is not configured"
+    },
+    "error": {
+      "invalid_mac": "Enter a valid MAC address, for example 58:2D:34:12:A4:C2"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "mac": "Device MAC address",
+          "model": "Model"
+        },
+        "data_description": {
+          "mac": "Devices that recently published data are listed automatically. If your device is not in the list, enter its MAC address.",
+          "model": "The model of the device, as printed on the device label."
+        },
+        "description": "Set up a Qingping device connected to the MQTT broker."
+      }
+    }
+  },
+  "selector": {
+    "model": {
+      "options": {
+        "cgr1w": "Qingping Indoor Environment Monitor"
+      }
+    }
+  }
+}

@@ -642,6 +642,7 @@ FLOWS = {
         "qbittorrent",
         "qbus",
         "qingping",
+        "qingping_mqtt",
         "qnap",
         "qnap_qsw",
         "rabbitair",
