@@ -506,3 +506,23 @@ async def test_scene_select_options(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["options"] == expected_options
+
+
+async def test_scene_select_removed_when_group_deleted(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test that deleting a Hue group removes its scene select entity."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    entity_id = "select.test_room_test_room_scene"
+    assert hass.states.get(entity_id) is not None
+
+    mock_bridge_v2.api.emit_event(
+        "delete",
+        {"type": "room", "id": "6ddc9066-7e7d-4a03-a773-c73937968296"},
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
