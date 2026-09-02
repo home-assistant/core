@@ -135,7 +135,7 @@
           "name": "[%key:component::notify::services::send_message::fields::title::name%]"
         },
         "transparency": {
-          "description": "The opacity of the background, from 0% (solid) to 100% (invisible).",
+          "description": "The transparency of the background, from 0% (solid) to 100% (invisible)."
           "name": "Transparency"
         }
       },
