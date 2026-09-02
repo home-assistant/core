@@ -6,6 +6,10 @@ DOMAIN = "wibeee"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
+# Overall deadline for device info discovery, which issues several
+# sequential HTTP requests to the device.
+DEVICE_INFO_TIMEOUT = 15
+
 CONF_MAC_ADDRESS = "mac_address"
 CONF_WIBEEE_ID = "wibeee_id"
 
