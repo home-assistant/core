@@ -125,24 +125,24 @@ class ConfiguredDoorBird:
         event_config = await self._async_get_event_config(http_fav)
         _LOGGER.debug("%s: Event config: %s", self.name, event_config)
         if event_config.unconfigured_favorites:
-            wired = await self._configure_unconfigured_favorites(event_config)
+            await self._configure_unconfigured_favorites(event_config)
             event_config = await self._async_get_event_config(http_fav)
-            if not wired:
-                # A schedule the device rejected leaves its favorite without an
-                # output, so it is described but never called.
-                self._callable_events.difference_update(
-                    set(self.door_station_events)
-                    - {event.event for event in event_config.events}
-                )
         self.event_descriptions = event_config.events
+        if event_config.schedule:
+            # With the schedule API the device reports which input calls each
+            # favorite, so one it does not describe it will never call: the
+            # schedule write was rejected, or a renamed event has not been
+            # assigned to an input in the DoorBird app yet.
+            self._callable_events.intersection_update(
+                event.event for event in event_config.events
+            )
         # Only the names the device will actually call can refresh an image.
         self._async_resolve_image_events()
 
     async def _configure_unconfigured_favorites(
         self, event_config: DoorbirdEventConfig
-    ) -> bool:
-        """Configure unconfigured favorites, returning whether all wiring stuck."""
-        schedule_failed = False
+    ) -> None:
+        """Configure unconfigured favorites."""
         for entry in event_config.schedule:
             modified_schedule = False
             for identifier in event_config.unconfigured_favorites.get(entry.input, ()):
@@ -167,9 +167,6 @@ class ConfiguredDoorBird:
                         entry.export,
                         code,
                     )
-                    schedule_failed = True
-
-        return not schedule_failed
 
     async def _async_register_events(self) -> dict[str, Any]:
         """Register events on device."""

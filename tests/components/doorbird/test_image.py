@@ -7,7 +7,6 @@ from homeassistant.components.doorbird.const import (
     DEFAULT_DOORBELL_EVENT,
     DEFAULT_MOTION_EVENT,
 )
-from homeassistant.components.doorbird.device import DoorbirdEvent
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -201,13 +200,13 @@ async def test_image_event_mapping_follows_configured_events(
         pytest.param(["doorbell"], ["mydoorbird_doorbell"], [], id="doorbell_only"),
         pytest.param(
             ["front_door"],
-            ["mydoorbird_front_door"],
             [],
-            id="renamed_falls_back_to_the_ring",
+            [],
+            id="renamed_awaiting_a_schedule_assignment",
         ),
         pytest.param(
             ["doorbell", "front_door"],
-            ["mydoorbird_doorbell", "mydoorbird_front_door"],
+            ["mydoorbird_doorbell"],
             [],
             id="renamed_alongside_a_default",
         ),
@@ -221,7 +220,12 @@ async def test_image_event_names(
     expected_ring: list[str],
     expected_motion: list[str],
 ) -> None:
-    """Test which registered events refresh each image."""
+    """Test which registered events refresh each image.
+
+    A renamed event has to be assigned to an input in the DoorBird app before
+    the device calls it, which the schedule reports, so until then it refreshes
+    nothing here.
+    """
     doorbird_entry = await doorbird_mocker(options={CONF_EVENTS: configured})
     image_event_names = doorbird_entry.entry.runtime_data.door_station.image_event_names
 
@@ -241,12 +245,12 @@ async def test_image_cleans_up_the_events_it_registered(
 
     assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
 
-    # Resetting the favorites re-derives the descriptions while the entities
-    # are live, here attributing each event to the other image.
-    door_station.event_descriptions = [
-        DoorbirdEvent("mydoorbird_doorbell", "motion"),
-        DoorbirdEvent("mydoorbird_motion", "doorbell"),
-    ]
+    # A resolve while the entities are live, here attributing each event to the
+    # other image. Removal has to drop what it registered, not what this says.
+    door_station.image_event_names = {
+        DEFAULT_DOORBELL_EVENT: ["mydoorbird_motion"],
+        DEFAULT_MOTION_EVENT: ["mydoorbird_doorbell"],
+    }
     entity_registry.async_update_entity(
         "image.mydoorbird_last_ring", disabled_by=er.RegistryEntryDisabler.USER
     )

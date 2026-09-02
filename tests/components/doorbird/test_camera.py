@@ -271,3 +271,15 @@ async def test_camera_kept_when_the_event_could_not_be_registered(
     # would have refreshed cannot replace anything.
     assert hass.states.get("camera.mydoorbird_last_ring") is not None
     assert hass.states.get("camera.mydoorbird_last_motion") is not None
+
+
+async def test_camera_kept_until_a_renamed_event_is_assigned(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test a camera stays while its renamed event has no schedule input."""
+    await doorbird_mocker(options={CONF_EVENTS: ["front_door"]})
+
+    # The favorite exists but has to be assigned to an input in the DoorBird
+    # app before the device calls it, so the image cannot refresh yet.
+    assert hass.states.get("camera.mydoorbird_last_ring") is not None
