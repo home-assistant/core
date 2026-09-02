@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from ipaddress import IPv4Network, IPv6Network, ip_address
 import logging
+from urllib.parse import urlsplit
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
@@ -121,7 +122,18 @@ def async_setup_forwarded(
             )
         )
         try:
-            forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for_split]
+            forwarded_for = []
+
+            for addr in forwarded_for_split:
+                a = addr.strip()
+                # If the item contains a '/', treat it as valid.
+                # ip_address will raise ValueError when validating the host.
+                if "/" in a:
+                    host = a
+                else:
+                    host = urlsplit("//" + a).hostname or a
+
+                forwarded_for.append(ip_address(host))
         except ValueError as err:
             _LOGGER.error(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
