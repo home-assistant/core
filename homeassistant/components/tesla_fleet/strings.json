@@ -612,6 +612,9 @@
     "command_reason": {
       "message": "Command was unsuccessful: {reason}"
     },
+    "entry_not_loaded": {
+      "message": "The Tesla Fleet integration is not loaded for this device."
+    },
     "homelink_no_location": {
       "message": "Vehicle location is not available. Ensure the vehicle is awake and that the location scope has been granted."
     },
@@ -620,6 +623,9 @@
     },
     "invalid_data": {
       "message": "Received invalid data"
+    },
+    "invalid_device": {
+      "message": "Invalid device ID: {device_id}"
     },
     "missing_scope_energy_cmds": {
       "message": "Missing energy commands scope."
@@ -639,6 +645,9 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
+    "site_not_tou_capable": {
+      "message": "This energy site does not support time-of-use tariffs."
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },
@@ -650,11 +659,110 @@
     }
   },
   "selector": {
+    "days_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    },
     "region": {
       "options": {
         "eu": "Europe, Middle East & Africa",
         "na": "North America & Asia-Pacific"
       }
+    },
+    "tou_period": {
+      "fields": {
+        "buy_rate": {
+          "description": "Import price per kWh during this period. Negative prices are supported.",
+          "name": "Buy rate"
+        },
+        "days": {
+          "description": "Days of the week this period applies to. Leave empty to apply every day.",
+          "name": "Days"
+        },
+        "end_time": {
+          "description": "Time this period ends. Leave both times empty to run from midnight to midnight.",
+          "name": "End time"
+        },
+        "name": {
+          "description": "Name of this rate period, such as On peak or Off peak.",
+          "name": "Period name"
+        },
+        "sell_rate": {
+          "description": "Export price per kWh during this period. If used, every period needs one. Negative prices are supported.",
+          "name": "Sell rate"
+        },
+        "start_time": {
+          "description": "Time this period starts. Leave both times empty to run from midnight to midnight.",
+          "name": "Start time"
+        }
+      }
+    },
+    "tou_season": {
+      "fields": {
+        "end_day": {
+          "description": "Day of the end month this season runs until.",
+          "name": "End day"
+        },
+        "end_month": {
+          "description": "Month this season ends.",
+          "name": "End month"
+        },
+        "name": {
+          "description": "Name of this season, such as Summer or Winter.",
+          "name": "Season name"
+        },
+        "periods": {
+          "description": "The rate periods that make up this season.",
+          "name": "Periods"
+        },
+        "start_day": {
+          "description": "Day of the start month this season begins on.",
+          "name": "Start day"
+        },
+        "start_month": {
+          "description": "Month this season starts.",
+          "name": "Start month"
+        }
+      }
+    }
+  },
+  "services": {
+    "time_of_use": {
+      "description": "Configures a time-of-use tariff on a Tesla energy site.",
+      "fields": {
+        "currency": {
+          "description": "Three-letter currency code for the rates, such as GBP or USD.",
+          "name": "Currency"
+        },
+        "daily_charge": {
+          "description": "Fixed standing charge applied each day, in the selected currency.",
+          "name": "Daily standing charge"
+        },
+        "device_id": {
+          "description": "The energy site to apply the tariff to.",
+          "name": "Energy site device"
+        },
+        "name": {
+          "description": "Name of the tariff.",
+          "name": "Tariff name"
+        },
+        "seasons": {
+          "description": "The seasons that make up the tariff. A single season with no dates applies all year.",
+          "name": "Seasons"
+        },
+        "utility": {
+          "description": "Name of the energy supplier.",
+          "name": "Utility"
+        }
+      },
+      "name": "Time of use"
     }
   }
 }

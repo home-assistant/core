@@ -332,5 +332,10 @@
         "default": "mdi:speedometer-slow"
       }
     }
+  },
+  "services": {
+    "time_of_use": {
+      "service": "mdi:clock-time-eight-outline"
+    }
   }
 }

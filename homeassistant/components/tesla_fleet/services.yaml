@@ -1,0 +1,121 @@
+time_of_use:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: tesla_fleet
+    name:
+      required: true
+      example: Agile Octopus
+      selector:
+        text:
+    utility:
+      required: true
+      example: Octopus Energy
+      selector:
+        text:
+    currency:
+      required: true
+      example: GBP
+      selector:
+        text:
+    daily_charge:
+      required: false
+      example: 0.6
+      selector:
+        number:
+          min: 0
+          step: any
+          mode: box
+    seasons:
+      required: true
+      selector:
+        object:
+          multiple: true
+          label_field: name
+          translation_key: tou_season
+          fields:
+            name:
+              required: true
+              selector:
+                text:
+            start_month:
+              required: false
+              selector:
+                number:
+                  min: 1
+                  max: 12
+                  step: 1
+                  mode: box
+            start_day:
+              required: false
+              selector:
+                number:
+                  min: 1
+                  max: 31
+                  step: 1
+                  mode: box
+            end_month:
+              required: false
+              selector:
+                number:
+                  min: 1
+                  max: 12
+                  step: 1
+                  mode: box
+            end_day:
+              required: false
+              selector:
+                number:
+                  min: 1
+                  max: 31
+                  step: 1
+                  mode: box
+            periods:
+              required: true
+              selector:
+                object:
+                  multiple: true
+                  label_field: name
+                  translation_key: tou_period
+                  fields:
+                    name:
+                      required: true
+                      selector:
+                        text:
+                    days:
+                      required: false
+                      selector:
+                        select:
+                          multiple: true
+                          translation_key: days_of_week
+                          options:
+                            - monday
+                            - tuesday
+                            - wednesday
+                            - thursday
+                            - friday
+                            - saturday
+                            - sunday
+                    start_time:
+                      required: false
+                      selector:
+                        time:
+                    end_time:
+                      required: false
+                      selector:
+                        time:
+                    buy_rate:
+                      required: true
+                      selector:
+                        number:
+                          step: any
+                          mode: box
+                    sell_rate:
+                      required: false
+                      selector:
+                        number:
+                          step: any
+                          mode: box
