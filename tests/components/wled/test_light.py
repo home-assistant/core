@@ -557,8 +557,7 @@ async def test_rgbww_white_channel_split(
     expected_warm_white: int,
 ) -> None:
     """Test the WLED cct value is split into cold and warm white channels."""
-    # Simulate the device reporting a mixed white with a grey tint, the grey
-    # tint keeps the light in rgbww color mode so the white split is reported.
+    # Simulate the device reporting a mixed white value
     device = mock_wled.update.return_value
     device.state.segments[0].color.primary = (128, 128, 128, 255)
     device.state.segments[0].cct = cct

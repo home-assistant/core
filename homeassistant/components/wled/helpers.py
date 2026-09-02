@@ -23,9 +23,7 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
     async def handler(self: _WLEDEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-            # Fetch fresh device state, so entities do not report stale
-            # values from before the command was applied.
-            await self.coordinator.async_refresh()
+            self.coordinator.async_update_listeners()
 
         except WLEDConnectionError as error:
             self.coordinator.last_update_success = False
