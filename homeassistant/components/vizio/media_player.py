@@ -1,6 +1,6 @@
 """Vizio SmartCast Device support."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from vizaio import AppConfig, AppRecord, RemoteKey
 from vizaio.apps import (
@@ -19,9 +19,8 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DATA_APPS
 from .const import (
@@ -41,11 +40,8 @@ from .const import (
     VIZIO_SOUND_MODE,
     VIZIO_VOLUME,
 )
-from .coordinator import (
-    VizioAppsDataUpdateCoordinator,
-    VizioConfigEntry,
-    VizioDeviceCoordinator,
-)
+from .coordinator import VizioAppsDataUpdateCoordinator, VizioConfigEntry
+from .entity import VizioEntity
 from .helpers import async_device_command
 
 PARALLEL_UPDATES = 0
@@ -59,46 +55,9 @@ async def async_setup_entry(
     """Set up a Vizio media player entry."""
     device_class = config_entry.data[CONF_DEVICE_CLASS]
 
-    # If config entry options not set up, set them up,
-    # otherwise assign values managed in options
-    volume_step = config_entry.options.get(
-        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
-    )
-
-    params = {}
-    if not config_entry.options:
-        params["options"] = {CONF_VOLUME_STEP: volume_step}
-
-        include_or_exclude_key = next(
-            (
-                key
-                for key in config_entry.data.get(CONF_APPS, {})
-                if key in (CONF_INCLUDE, CONF_EXCLUDE)
-            ),
-            None,
-        )
-        if include_or_exclude_key:
-            params["options"][CONF_APPS] = {
-                include_or_exclude_key: config_entry.data[CONF_APPS][
-                    include_or_exclude_key
-                ].copy()
-            }
-
-    if not config_entry.data.get(CONF_VOLUME_STEP):
-        new_data = config_entry.data.copy()
-        new_data.update({CONF_VOLUME_STEP: volume_step})
-        params["data"] = new_data
-
-    if params:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            **params,  # type: ignore[arg-type]
-        )
-
     entity = VizioDevice(
         config_entry,
         device_class,
-        config_entry.runtime_data.device_coordinator,
         hass.data.get(DATA_APPS) if device_class == MediaPlayerDeviceClass.TV else None,
     )
 
@@ -114,10 +73,9 @@ def _app_config_from_conf(config: dict[str, Any]) -> AppConfig:
     )
 
 
-class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
+class VizioDevice(VizioEntity, MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _current_input: str | None = None
     _current_app_config: AppConfig | None = None
@@ -126,11 +84,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self,
         config_entry: VizioConfigEntry,
         device_class: MediaPlayerDeviceClass,
-        coordinator: VizioDeviceCoordinator,
         apps_coordinator: VizioAppsDataUpdateCoordinator | None,
     ) -> None:
         """Initialize Vizio device."""
-        super().__init__(coordinator)
+        super().__init__(config_entry)
 
         self._config_entry = config_entry
         self._apps_coordinator = apps_coordinator
@@ -142,7 +99,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
         )
-        self._device = coordinator.device
         if apps_coordinator:
             self._device.set_app_catalog(apps_coordinator.data)
             self._device.set_app_availability(apps_coordinator.availability)
@@ -151,23 +107,19 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
-
-        # Entity class attributes that will not change
-        unique_id = config_entry.unique_id
-        assert unique_id
-        self._attr_unique_id = unique_id
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     @property
     def _volume_step(self) -> int:
         """Return the configured volume step."""
-        return self._config_entry.options[CONF_VOLUME_STEP]
+        return cast(
+            int, self._config_entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+        )
 
     @property
-    def _conf_apps(self) -> dict:
+    def _conf_apps(self) -> dict[str, Any]:
         """Return the configured app filter options."""
-        return self._config_entry.options.get(CONF_APPS, {})
+        return cast("dict[str, Any]", self._config_entry.options.get(CONF_APPS, {}))
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
@@ -200,20 +152,26 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         # Device is on - apply coordinator data
         self._attr_state = MediaPlayerState.ON
 
-        # Audio settings
+        # Audio settings. Volume and mute come from the collection when it
+        # carries them, and from the coordinator's individual reads when it
+        # does not - some firmware omits them from the collection.
+        volume: int | None
+        if data.audio_settings and VIZIO_VOLUME in data.audio_settings:
+            volume = int(data.audio_settings[VIZIO_VOLUME].value)
+        else:
+            volume = data.volume
+        self._attr_volume_level = (
+            None if volume is None else float(volume) / self._max_volume
+        )
+
+        if data.audio_settings and VIZIO_MUTE in data.audio_settings:
+            self._attr_is_volume_muted = (
+                str(data.audio_settings[VIZIO_MUTE].value).lower() == VIZIO_MUTE_ON
+            )
+        else:
+            self._attr_is_volume_muted = data.is_muted
+
         if data.audio_settings:
-            if VIZIO_VOLUME in data.audio_settings:
-                self._attr_volume_level = (
-                    float(data.audio_settings[VIZIO_VOLUME].value) / self._max_volume
-                )
-            else:
-                self._attr_volume_level = None
-            if VIZIO_MUTE in data.audio_settings:
-                self._attr_is_volume_muted = (
-                    str(data.audio_settings[VIZIO_MUTE].value).lower() == VIZIO_MUTE_ON
-                )
-            else:
-                self._attr_is_volume_muted = None
             if VIZIO_SOUND_MODE in data.audio_settings:
                 self._attr_supported_features |= (
                     MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -286,6 +244,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             self._device.set_setting(setting_type, setting_name, new_value)
         )
 
+    async def async_send_text(self, text: str) -> None:
+        """Type text into the focused on-screen field when send_text is called."""
+        await async_device_command(self._device.send_text(text))
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
@@ -351,8 +313,13 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
 
     @property
     @override
-    def app_id(self):
-        """Return the ID of the current app if it is unknown by vizaio."""
+    # pylint: disable-next=home-assistant-return-type
+    def app_id(self) -> dict[str, Any] | None:  # type: ignore[override]
+        """Return the app config of the current app if it is unknown by vizaio.
+
+        Documented way for users to obtain app configs for additional_configs;
+        intentionally returns a dict instead of the app ID string.
+        """
         if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 CONF_APP_ID: self._current_app_config.app_id,
@@ -365,12 +332,15 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        if sound_mode in (self._attr_sound_mode_list or ()):
-            await async_device_command(
-                self._device.set_setting(
-                    VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
-                )
+        if sound_mode not in (self._attr_sound_mode_list or ()):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
             )
+        await async_device_command(
+            self._device.set_setting(VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode)
+        )
 
     @override
     async def async_turn_on(self) -> None:
@@ -421,6 +391,12 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             )
         elif source in self._available_apps:
             await async_device_command(self._device.launch_app(source))
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": source},
+            )
 
     @override
     async def async_volume_up(self) -> None:
@@ -445,16 +421,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        if self._attr_volume_level is not None:
-            if volume > self._attr_volume_level:
-                num = int(self._max_volume * (volume - self._attr_volume_level))
-                await async_device_command(self._device.volume_up(steps=num))
-                self._attr_volume_level = volume
-
-            elif volume < self._attr_volume_level:
-                num = int(self._max_volume * (self._attr_volume_level - volume))
-                await async_device_command(self._device.volume_down(steps=num))
-                self._attr_volume_level = volume
+        await async_device_command(
+            self._device.set_volume(round(volume * self._max_volume))
+        )
+        self._attr_volume_level = volume
 
     @override
     async def async_media_play(self) -> None:

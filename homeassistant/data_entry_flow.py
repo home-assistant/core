@@ -107,12 +107,17 @@ class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
     def __init__(
-        self, reason: str, description_placeholders: Mapping[str, str] | None = None
+        self,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        *,
+        translation_domain: str | None = None,
     ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
         self.reason = reason
         self.description_placeholders = description_placeholders
+        self.translation_domain = translation_domain
 
 
 class FlowContext(TypedDict, total=False):
@@ -468,6 +473,23 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         except Exception:
             _LOGGER.exception("Error removing %s flow", flow.handler)
 
+    def _abort_flow_result(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+        err: AbortFlow,
+    ) -> _FlowResultT:
+        """Convert an AbortFlow exception into an abort result."""
+        result = self._flow_result(
+            type=FlowResultType.ABORT,
+            flow_id=flow.flow_id,
+            handler=flow.handler,
+            reason=err.reason,
+            description_placeholders=err.description_placeholders,
+        )
+        if err.translation_domain is not None:
+            result["translation_domain"] = err.translation_domain
+        return result
+
     async def _async_handle_step(
         self,
         flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
@@ -481,13 +503,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         try:
             result: _FlowResultT = await getattr(flow, method)(user_input)
         except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+            result = self._abort_flow_result(flow, err)
 
         if flow.flow_id not in self._progress:
             # The flow was removed during the step, raise UnknownFlow unless
@@ -544,13 +560,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             # We pass a copy of the result because we're mutating our version
             result = await self.async_finish_flow(flow, result.copy())
         except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+            result = self._abort_flow_result(flow, err)
 
         # _async_finish_flow may change result type, check it again
         if result["type"] is FlowResultType.FORM:
@@ -747,15 +757,23 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
     ) -> _FlowResultT:
-        """Abort the flow."""
-        return self._flow_result(
+        """Abort the flow.
+
+        Pass `translation_domain` to resolve the reason from another integration's
+        translations instead of the one owning the flow.
+        """
+        flow_result = self._flow_result(
             type=FlowResultType.ABORT,
             flow_id=self.flow_id,
             handler=self.handler,
             reason=reason,
             description_placeholders=description_placeholders,
         )
+        if translation_domain is not None:
+            flow_result["translation_domain"] = translation_domain
+        return flow_result
 
     @callback
     def async_external_step(

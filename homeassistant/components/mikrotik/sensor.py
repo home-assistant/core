@@ -12,7 +12,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
 )
@@ -43,10 +45,71 @@ SENSORS: Final = (
         type=HEALTH,
     ),
     MikrotikSensorEntityDescription(
+        key="board-temperature1",
+        translation_key="board_temperature",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
+        key="cpu-temperature",
+        translation_key="cpu_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
+        key="psu1-current",
+        translation_key="psu_current",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
+        key="psu2-current",
+        translation_key="psu_current",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
+        key="psu1-voltage",
+        translation_key="psu_voltage",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
+        key="psu2-voltage",
+        translation_key="psu_voltage",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
         key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        type=HEALTH,
+    ),
+    MikrotikSensorEntityDescription(
+        key="poe-out-consumption",
+        translation_key="poe_out_consumption",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
         type=HEALTH,
     ),
     MikrotikSensorEntityDescription(
@@ -79,6 +142,7 @@ SENSORS: Final = (
     MikrotikSensorEntityDescription(
         key="uptime",
         device_class=SensorDeviceClass.UPTIME,
+        entity_category=EntityCategory.DIAGNOSTIC,
         type=RESOURCE,
     ),
 )
@@ -103,9 +167,7 @@ async def async_setup_entry(
     async_add_entities(sensors_list)
 
 
-class MikrotikSensorEntity(
-    MikrotikEntity[MikrotikSensorEntityDescription], SensorEntity
-):
+class MikrotikSensorEntity(MikrotikEntity, SensorEntity):
     """Sensor device."""
 
     entity_description: MikrotikSensorEntityDescription

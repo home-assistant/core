@@ -9,7 +9,11 @@ from typing import Any, Concatenate, override
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
-from async_upnp_client.exceptions import UpnpError, UpnpResponseError
+from async_upnp_client.exceptions import (
+    UpnpConnectionError,
+    UpnpError,
+    UpnpResponseError,
+)
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
 from async_upnp_client.utils import async_get_local_ip
 from didl_lite import didl_lite
@@ -29,6 +33,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -79,10 +84,24 @@ def catch_request_errors[_DlnaDmrEntityT: DlnaDmrEntity, **_P, _R](
             return None
         try:
             return await func(self, *args, **kwargs)
+        except UpnpConnectionError as err:
+            # Inform user explicitly of connection issues (like device turned off)
+            self.check_available = True
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_connection_error",
+                translation_placeholders={"action": func.__name__},
+            ) from err
         except UpnpError as err:
             self.check_available = True
-            _LOGGER.error("Error during call %s: %r", func.__name__, err)
-        return None
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_error",
+                translation_placeholders={
+                    "action": func.__name__,
+                    "upnperror": str(err),
+                },
+            ) from err
 
     return wrapper
 
@@ -107,7 +126,7 @@ async def async_setup_entry(
         )
         and (existing_entry := ent_reg.async_get(existing_entity_id))
         and (device_id := existing_entry.device_id)
-        and (device_entry := dev_reg.async_get(device_id))
+        and (device_entry := dev_reg.async_get(device_id, include_child_devices=False))
         and (dr.CONNECTION_UPNP, udn) not in device_entry.connections
     ):
         # If the existing device is missing the udn connection, add it
@@ -115,7 +134,7 @@ async def async_setup_entry(
         # the correct device.
         dev_reg.async_update_device(
             device_id,
-            merge_connections={(dr.CONNECTION_UPNP, udn)},
+            new_connections=device_entry.connections | {(dr.CONNECTION_UPNP, udn)},
         )
 
     # Create our own device-wrapping entity
@@ -612,7 +631,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return None
         return self._device.volume_level
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_set_volume_level(self, volume: float) -> None:
@@ -628,7 +646,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return None
         return self._device.is_volume_muted
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_mute_volume(self, mute: bool) -> None:
@@ -637,7 +654,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         desired_mute = bool(mute)
         await self._device.async_mute_volume(desired_mute)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_media_pause(self) -> None:
@@ -645,7 +661,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         assert self._device is not None
         await self._device.async_pause()
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_media_play(self) -> None:
@@ -653,7 +668,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         assert self._device is not None
         await self._device.async_play()
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_media_stop(self) -> None:
@@ -661,7 +675,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         assert self._device is not None
         await self._device.async_stop()
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_media_seek(self, position: float) -> None:
@@ -670,7 +683,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         time = timedelta(seconds=position)
         await self._device.async_seek_rel_time(time)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_play_media(
@@ -740,7 +752,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device.async_wait_for_can_play()
         await self.async_media_play()
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_media_previous_track(self) -> None:
@@ -748,7 +759,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         assert self._device is not None
         await self._device.async_previous()
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_media_next_track(self) -> None:
@@ -771,7 +781,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         return play_mode in (PlayMode.SHUFFLE, PlayMode.RANDOM)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
@@ -813,7 +822,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         return RepeatMode.OFF
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
@@ -842,7 +850,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return None
         return self._device.preset_names
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:

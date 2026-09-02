@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 8
-PATCH_VERSION: Final = "3"
+MINOR_VERSION: Final = 9
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 14, 2)
@@ -397,7 +397,9 @@ ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
 ATTR_HW_VERSION: Final = "hw_version"
-ATTR_VIA_DEVICE: Final = "via_device"
+_DEPRECATED_ATTR_VIA_DEVICE = DeprecatedConstant(
+    "via_device", "via_device_id", "2027.8"
+)
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"

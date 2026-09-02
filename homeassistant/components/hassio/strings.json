@@ -152,11 +152,18 @@
         },
         "step": {
           "fix_menu": {
-            "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
+            "description": "Could not set up `{reference}`. This can happen when the storage device is unreachable, or when local data is blocking the mount location. Check host logs for errors from the mount service for more details.\n\nUse reload to try again. If you need to update `{reference}`, go to [storage]({storage_url}).",
             "menu_options": {
               "mount_execute_reload": "[%key:common::action::reload%]",
-              "mount_execute_remove": "Remove"
+              "mount_execute_remove": "Remove",
+              "mount_move_local_data": "Move blocking local data away"
             }
+          },
+          "mount_execute_remove": {
+            "description": "Select **Submit** to remove the network storage `{reference}` from Home Assistant. Any data stored on the device itself is not affected, but automations, backups or apps relying on this storage will no longer have access to it.\n\nYou can add the network storage again later from [storage]({storage_url})."
+          },
+          "mount_move_local_data": {
+            "description": "Select **Submit** to move the local data blocking `{reference}` to a `{reference}_local_recovery` folder and set up the mount again.\n\nNo files are deleted. For media and share mounts the recovery folder is created next to the mount, where you can review and remove it. For backup mounts it is placed in local backup storage."
           }
         }
       },

@@ -1,3 +1,5 @@
 """Constants for the Switch integration."""
 
-DOMAIN = "switch"
+from typing import Final
+
+DOMAIN: Final = "switch"

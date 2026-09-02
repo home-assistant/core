@@ -51,11 +51,12 @@ from zwave_js_server.model.node.firmware import (
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
+from zwave_js_server.model.statistics import RouteStatistics
 from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
 )
-from zwave_js_server.model.value import ConfigurationValueFormat
+from zwave_js_server.model.value import ConfigurationValueFormat, Value
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -84,6 +85,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LOGGER,
     USER_AGENT,
 )
@@ -445,6 +447,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_get_raw_config_parameter)
     websocket_api.async_register_command(hass, websocket_set_raw_config_parameter)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_config_parameter_updates
+    )
     websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
@@ -2113,6 +2118,46 @@ async def websocket_set_raw_config_parameter(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        vol.Required(TYPE): "zwave_js/subscribe_config_parameter_updates",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Subscribe to value updates for the config parameters of a node."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_values(event: dict) -> None:
+        value: Value = event["value"]
+        if value.command_class != CommandClass.CONFIGURATION:
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"id": value.value_id, "value": value.value}
+            )
+        )
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(EVENT_VALUE_UPDATED, forward_values)]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         vol.Required(TYPE): "zwave_js/get_raw_config_parameter",
         vol.Required(DEVICE_ID): str,
         vol.Required(PROPERTY): int,
@@ -2791,10 +2836,30 @@ def _get_node_statistics_dict(
         device = dev_reg.async_get_device_by_identifier(
             get_device_id(driver, node), entry.entry_id
         )
-        assert device
+        if device is None:
+            raise ValueError(f"Device for node {node.node_id} not found")
         return device.id
 
-    data: dict = {
+    def _get_route_statistics_dict(
+        route_statistics: RouteStatistics | None,
+    ) -> dict[str, Any] | None:
+        """Get dictionary of route statistics."""
+        if route_statistics is None:
+            return None
+        try:
+            data: dict[str, Any] = dict(route_statistics.as_dict())
+            for key in ("repeaters", "route_failed_between"):
+                if data[key]:
+                    data[key] = [_convert_node_to_device_id(node) for node in data[key]]
+        except KeyError, StopIteration, ValueError:
+            # The route may reference nodes that have been removed from the
+            # network (KeyError) or that don't have a device entry (ValueError),
+            # and async_get_config_entry_from_node raises StopIteration when
+            # the config entry is no longer loaded
+            return None
+        return data
+
+    return {
         "commands_tx": statistics.commands_tx,
         "commands_rx": statistics.commands_rx,
         "commands_dropped_tx": statistics.commands_dropped_tx,
@@ -2802,20 +2867,9 @@ def _get_node_statistics_dict(
         "timeout_response": statistics.timeout_response,
         "rtt": statistics.rtt,
         "rssi": statistics.rssi,
-        "lwr": statistics.lwr.as_dict() if statistics.lwr else None,
-        "nlwr": statistics.nlwr.as_dict() if statistics.nlwr else None,
+        "lwr": _get_route_statistics_dict(statistics.lwr),
+        "nlwr": _get_route_statistics_dict(statistics.nlwr),
     }
-    for key in ("lwr", "nlwr"):
-        if not data[key]:
-            continue
-        for key_2 in ("repeaters", "route_failed_between"):
-            if not data[key][key_2]:
-                continue
-            data[key][key_2] = [
-                _convert_node_to_device_id(node) for node in data[key][key_2]
-            ]
-
-    return data
 
 
 @websocket_api.require_admin
@@ -2866,7 +2920,7 @@ async def websocket_subscribe_node_statistics(
             {
                 "event": "statistics updated",
                 "source": "node",
-                "nodeId": node.node_id,
+                "node_id": node.node_id,
                 **_get_node_statistics_dict(hass, node.statistics),
             },
         )

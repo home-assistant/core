@@ -33,8 +33,8 @@ async def test_victron_battery_sensor(
     await hass.async_block_till_done()
 
     # Verify system device has no via_device (it IS the gateway)
-    system_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), mock_config_entry.entry_id
     )
     assert system_device is not None
     assert system_device.via_device_id is None
@@ -69,8 +69,8 @@ async def test_victron_battery_sensor(
     assert state.attributes["unit_of_measurement"] == "A"
 
     # Verify device info was registered correctly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
@@ -114,8 +114,8 @@ async def test_victron_enum_sensor(
     assert state.state == "low_power"
 
     # Verify system device has no via_device (it IS the gateway)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), _mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"

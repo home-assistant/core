@@ -22,8 +22,30 @@ PARALLEL_UPDATES = 1
 class PeblarSelectEntityDescription(SelectEntityDescription):
     """Class describing Peblar select entities."""
 
+    options_fn: Callable[[PeblarUserConfiguration], list[str]] | None = None
     current_fn: Callable[[PeblarUserConfiguration], str | None]
     select_fn: Callable[[Peblar, str], Awaitable[Any]]
+
+
+def _smart_charging_options(configuration: PeblarUserConfiguration) -> list[str]:
+    """Return the smart charging modes this charger will accept.
+
+    A charger without a power meter configured rejects solar charging, and
+    scheduled charging can be switched off during commissioning. Offering
+    those anyway lands the user on a mode the charger quietly ignores.
+    """
+    solar = configuration.solar_charging_allowed
+    return [
+        option
+        for option, allowed in (
+            ("default", True),
+            ("fast_solar", solar),
+            ("pure_solar", solar),
+            ("scheduled", configuration.scheduled_charging_allowed),
+            ("smart_solar", solar),
+        )
+        if allowed
+    ]
 
 
 DESCRIPTIONS = [
@@ -31,13 +53,7 @@ DESCRIPTIONS = [
         key="smart_charging",
         translation_key="smart_charging",
         entity_category=EntityCategory.CONFIG,
-        options=[
-            "default",
-            "fast_solar",
-            "pure_solar",
-            "scheduled",
-            "smart_solar",
-        ],
+        options_fn=_smart_charging_options,
         current_fn=lambda x: x.smart_charging.value if x.smart_charging else None,
         select_fn=lambda x, mode: x.smart_charging(SmartChargingMode(mode)),
     ),
@@ -67,6 +83,14 @@ class PeblarSelectEntity(
     """Defines a Peblar select entity."""
 
     entity_description: PeblarSelectEntityDescription
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the options this charger currently accepts."""
+        if (options_fn := self.entity_description.options_fn) is not None:
+            return options_fn(self.coordinator.data)
+        return super().options
 
     @property
     @override

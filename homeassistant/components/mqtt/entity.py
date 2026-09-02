@@ -28,6 +28,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    EntityCapabilityAttribute,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -133,24 +135,24 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 MQTT_ATTRIBUTES_BLOCKED = {
-    "assumed_state",
     "available",
-    "device_class",
     "device_info",
     "entity_category",
     "entity_id",
-    "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
     "force_update",
-    "group_entities",
-    "icon",
-    "friendly_name",
     "should_poll",
     "state",
-    "supported_features",
     "unique_id",
-    "unit_of_measurement",
+    EntityCapabilityAttribute.GROUP_ENTITIES,
+    EntityStateAttribute.ASSUMED_STATE,
+    EntityStateAttribute.DEVICE_CLASS,
+    EntityStateAttribute.ENTITY_PICTURE,
+    EntityStateAttribute.FRIENDLY_NAME,
+    EntityStateAttribute.ICON,
+    EntityStateAttribute.SUPPORTED_FEATURES,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT,
 }
 
 PUBLISH_KWARGS = (CONF_MESSAGE_EXPIRY_INTERVAL,)

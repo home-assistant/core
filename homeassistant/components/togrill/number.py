@@ -2,12 +2,14 @@
 
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, override
 
 from togrill_bluetooth.packets import (
     AlarmType,
     PacketA0Notify,
     PacketA6Write,
+    PacketA7Write,
     PacketA8Notify,
     PacketA300Write,
     PacketA301Write,
@@ -121,6 +123,37 @@ def _get_temperature_descriptions(
     )
 
 
+def _get_timer_description(probe_number: int) -> ToGrillNumberEntityDescription:
+    def _get_timer(coordinator: ToGrillCoordinator) -> float | None:
+        if not (packet := coordinator.get_packet(PacketA8Notify, probe_number)):
+            return None
+        return packet.time.total_seconds() / 60
+
+    def _set_timer(coordinator: ToGrillCoordinator, value: float) -> PacketWrite:
+        return PacketA7Write(
+            probe=probe_number,
+            time=timedelta(minutes=value),
+            unknown=1 if value else 0,
+        )
+
+    return ToGrillNumberEntityDescription(
+        key=f"timer_{probe_number}",
+        translation_key="timer",
+        translation_placeholders={"probe_number": f"{probe_number}"},
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=0,
+        native_max_value=720,
+        native_step=1,
+        mode=NumberMode.BOX,
+        icon="mdi:timer-outline",
+        set_packet=_set_timer,
+        get_value=_get_timer,
+        entity_supported=lambda x: probe_number <= x[CONF_PROBE_COUNT],
+        probe_number=probe_number,
+    )
+
+
 def _get_ambient_temperatures(
     coordinator: ToGrillCoordinator, alarm_type: AlarmType
 ) -> tuple[float | None, float | None]:
@@ -136,6 +169,10 @@ ENTITY_DESCRIPTIONS = (
         description
         for probe_number in range(1, MAX_PROBE_COUNT + 1)
         for description in _get_temperature_descriptions(probe_number)
+    ],
+    *[
+        _get_timer_description(probe_number)
+        for probe_number in range(1, MAX_PROBE_COUNT + 1)
     ],
     ToGrillNumberEntityDescription(
         key="ambient_temperature_minimum",

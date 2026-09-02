@@ -541,6 +541,60 @@ async def test_device_rename_refreshes_slot_list(
 
 
 @pytest.mark.usefixtures("init_components")
+async def test_entity_moved_to_device_refreshes_slot_list(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test moving an entity to another device updates its matchable computed name."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    kitchen = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "kitchen")},
+        name="Kitchen",
+    )
+    bedroom = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "bedroom")},
+        name="Bedroom",
+    )
+
+    light = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        device_id=kitchen.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    hass.states.async_set(light.entity_id, "off")
+    expose_entity(hass, light.entity_id, True)
+
+    # Populate the slot list cache: the current computed name matches.
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on Kitchen Light", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+
+    # Moving the light to the bedroom changes its computed name to "Bedroom Light".
+    entity_registry.async_update_entity(light.entity_id, device_id=bedroom.id)
+    await hass.async_block_till_done()
+
+    # The new name is now matchable.
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on Bedroom Light", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+
+
+@pytest.mark.usefixtures("init_components")
 async def test_trigger_sentences(hass: HomeAssistant) -> None:
     """Test registering/unregistering/matching a few trigger sentences."""
     trigger_sentences = ["It's party time", "It is time to party"]

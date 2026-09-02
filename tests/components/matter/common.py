@@ -24,6 +24,7 @@ FIXTURES = [
     "aqara_multi_state_p100",
     "aqara_presence_fp300",
     "aqara_sensor_w100",
+    "aqara_shutter_switch_h2",
     "aqara_thermostat_w500",
     "aqara_u200",
     "atios_knx_bridge",
@@ -108,6 +109,7 @@ FIXTURES = [
     "silabs_water_heater",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
+    "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
 ]

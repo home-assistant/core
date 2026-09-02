@@ -207,6 +207,17 @@
       "vehicle_soc": {
         "name": "Vehicle state of charge"
       }
+    },
+    "switch": {
+      "current_shaper": {
+        "name": "Current shaper"
+      },
+      "manual_override": {
+        "name": "Manual override"
+      },
+      "solar_pv_divert": {
+        "name": "Solar PV divert"
+      }
     }
   },
   "exceptions": {

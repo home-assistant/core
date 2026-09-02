@@ -603,8 +603,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform(use_default_responses=True)
 
         device_registry = dr.async_get(self.hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-        picnic_service = device_registry.async_get_device(
-            identifiers={(const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"])}
+        picnic_service = device_registry.async_get_device_by_identifier(
+            (const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"]),
+            self.config_entry.entry_id,
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Mock Title"

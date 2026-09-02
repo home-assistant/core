@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -14,12 +14,11 @@ from homeassistant.components.remote import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import VizioConfigEntry, VizioDeviceCoordinator
+from .coordinator import VizioConfigEntry
+from .entity import VizioEntity
 from .helpers import async_device_command
 
 PARALLEL_UPDATES = 0
@@ -60,21 +59,12 @@ async def async_setup_entry(
     async_add_entities([VizioRemote(config_entry)])
 
 
-class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
+class VizioRemote(VizioEntity, RemoteEntity):
     """Remote entity for Vizio SmartCast devices."""
-
-    _attr_has_entity_name = True
 
     def __init__(self, config_entry: VizioConfigEntry) -> None:
         """Initialize the remote entity."""
-        coordinator = config_entry.runtime_data.device_coordinator
-        super().__init__(coordinator)
-        self._attr_unique_id = unique_id = config_entry.unique_id
-        # Guard against config entries missing unique_id, which should never happen
-        if TYPE_CHECKING:
-            assert unique_id is not None
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
-        self._device = coordinator.device
+        super().__init__(config_entry)
         valid_keys = set(self._device.available_keys)
         # Map lowercased native keys to their original uppercase vizaio names
         self._command_map: dict[str, str] = {key.lower(): key for key in valid_keys}

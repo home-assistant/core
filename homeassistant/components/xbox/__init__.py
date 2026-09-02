@@ -88,6 +88,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> boo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: XboxConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Remove a stale device from a config entry."""
+
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and (
+            (
+                isinstance(device_entry, dr.DeviceEntry)
+                and device_entry.entry_type == dr.DeviceEntryType.SERVICE
+            )
+            or identifier[1] in config_entry.runtime_data.consoles.data
+        )
+    )
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Migrate config entry."""
 
