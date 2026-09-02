@@ -26,7 +26,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE_SIGNAL, USER_AGENT
@@ -35,6 +35,8 @@ from .coordinator import (
     ElectroluxData,
     ElectroluxDataUpdateCoordinator,
 )
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
