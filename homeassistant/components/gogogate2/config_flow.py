@@ -32,6 +32,7 @@ DEVICE_NAMES = {
     DEVICE_TYPE_GOGOGATE2: "Gogogate2",
     DEVICE_TYPE_ISMARTGATE: "ismartgate",
 }
+ISMARTGATE_DEVICE_NOT_CONFIGURED_ERROR_CODE = 23
 
 
 class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -115,7 +116,12 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 )
 
-                if is_invalid_auth:
+                if (
+                    device_type == DEVICE_TYPE_ISMARTGATE
+                    and api_error.code == ISMARTGATE_DEVICE_NOT_CONFIGURED_ERROR_CODE
+                ):
+                    errors["base"] = "device_not_configured"
+                elif is_invalid_auth:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
