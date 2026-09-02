@@ -12,7 +12,6 @@ import tarfile
 import threading
 from typing import IO, Any, cast
 
-import aiohttp
 from securetar import (
     InvalidPasswordError,
     SecureTarArchive,
@@ -518,7 +517,7 @@ async def iter_upload_chunks(contents: aiohttp.BodyPartReader) -> AsyncIterator[
 
 
 async def receive_file(
-    hass: HomeAssistant, contents: aiohttp.BodyPartReader, path: Path
+    hass: HomeAssistant, stream: AsyncIterator[bytes], path: Path
 ) -> None:
     """Receive a file from a stream and write it to a file."""
     queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = SimpleQueue()
@@ -536,10 +535,10 @@ async def receive_file(
     fut: asyncio.Future[None] | None = None
     try:
         fut = hass.async_add_executor_job(_sync_queue_consumer)
-        megabytes_sending = 0
-        while chunk := await contents.read_chunk(BUF_SIZE):
-            megabytes_sending += 1
-            if megabytes_sending % 5 != 0:
+        chunks_sent = 0
+        async for chunk in stream:
+            chunks_sent += 1
+            if chunks_sent % 5 != 0:
                 queue.put_nowait((chunk, None))
                 continue
 
@@ -552,8 +551,9 @@ async def receive_file(
             if fut.done():
                 # The executor job failed
                 break
-
-        queue.put_nowait(None)  # terminate queue consumer
     finally:
+        # Always terminate the queue consumer, also if the stream raised or the
+        # task was cancelled.
+        queue.put_nowait(None)
         if fut is not None:
             await fut
