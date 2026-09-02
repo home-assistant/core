@@ -18,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_OPTION,
@@ -146,9 +146,7 @@ async def test_select_option_propagates_api_error(
         if entry.unique_id == "d1$device_volume"
     )
 
-    with pytest.raises(
-        HomeAssistantError, match="Imou rejected the new option: cloud failure"
-    ):
+    with pytest.raises(HomeAssistantError, match="Imou rejected the new option"):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -160,17 +158,14 @@ async def test_select_option_propagates_api_error(
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
-async def test_select_option_invalid_auth_reloads_entry(
+async def test_select_option_invalid_auth_starts_reauth(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
-    """Rejected credentials while changing a select reload the entry into setup error."""
+    """Rejected credentials while changing a select start reauthentication."""
     mock_imou_ha_device_manager.async_select_option.side_effect = (
-        InvalidAppIdOrSecretException("fail")
-    )
-    mock_imou_ha_device_manager.async_get_devices.side_effect = (
         InvalidAppIdOrSecretException("fail")
     )
 
@@ -193,7 +188,8 @@ async def test_select_option_invalid_auth_reloads_entry(
         )
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)

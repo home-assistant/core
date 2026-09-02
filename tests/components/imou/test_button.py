@@ -13,7 +13,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import PTZ_MOVE_DURATION_MS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -131,9 +131,7 @@ async def test_press_button_service_propagates_api_error(
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
-    with pytest.raises(
-        HomeAssistantError, match="Imou rejected the button press: cloud failure"
-    ):
+    with pytest.raises(HomeAssistantError, match="Imou rejected the button press"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -143,16 +141,13 @@ async def test_press_button_service_propagates_api_error(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_press_button_invalid_auth_reloads_entry(
+async def test_press_button_invalid_auth_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
-    """Rejected credentials while pressing a button reload the entry into setup error."""
+    """Rejected credentials while pressing a button start reauthentication."""
     mock_imou_ha_device_manager.async_press_button.side_effect = (
-        InvalidAppIdOrSecretException("fail")
-    )
-    mock_imou_ha_device_manager.async_get_devices.side_effect = (
         InvalidAppIdOrSecretException("fail")
     )
 
@@ -169,7 +164,8 @@ async def test_press_button_invalid_auth_reloads_entry(
         )
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(

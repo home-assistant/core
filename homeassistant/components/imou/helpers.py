@@ -18,7 +18,7 @@ def async_wrap_imou_command[_T: ImouEntity, **_P, _R](
     [Callable[Concatenate[_T, _P], Awaitable[_R]]],
     Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]],
 ]:
-    """Wrap an Imou command and reload the entry when credentials are rejected."""
+    """Wrap an Imou command and start reauthentication when credentials are rejected."""
 
     def decorator(
         func: Callable[Concatenate[_T, _P], Awaitable[_R]],
@@ -28,9 +28,7 @@ def async_wrap_imou_command[_T: ImouEntity, **_P, _R](
             try:
                 return await func(self, *args, **kwargs)
             except InvalidAppIdOrSecretException as err:
-                self.hass.config_entries.async_schedule_reload(
-                    self.coordinator.config_entry.entry_id
-                )
+                self.coordinator.config_entry.async_start_reauth(self.hass)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
@@ -39,7 +37,6 @@ def async_wrap_imou_command[_T: ImouEntity, **_P, _R](
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key=error_key,
-                    translation_placeholders={"error": err.message},
                 ) from err
 
         return wrapper

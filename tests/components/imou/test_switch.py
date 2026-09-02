@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -174,9 +174,7 @@ async def test_turn_on_service_propagates_api_error(
 
     entity_id = hass.states.async_all("switch")[0].entity_id
 
-    with pytest.raises(
-        HomeAssistantError, match="Imou rejected the switch change: cloud failure"
-    ):
+    with pytest.raises(HomeAssistantError, match="Imou rejected the switch change"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -187,16 +185,13 @@ async def test_turn_on_service_propagates_api_error(
 
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
-async def test_turn_on_invalid_auth_reloads_entry(
+async def test_turn_on_invalid_auth_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
-    """Rejected credentials while toggling a switch reload the entry into setup error."""
+    """Rejected credentials while toggling a switch start reauthentication."""
     mock_imou_ha_device_manager.async_switch_operation.side_effect = (
-        InvalidAppIdOrSecretException("fail")
-    )
-    mock_imou_ha_device_manager.async_get_devices.side_effect = (
         InvalidAppIdOrSecretException("fail")
     )
 
@@ -213,7 +208,8 @@ async def test_turn_on_invalid_auth_reloads_entry(
         )
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(
