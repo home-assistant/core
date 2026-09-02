@@ -3,6 +3,7 @@
 from dataclasses import replace
 from ipaddress import ip_address
 from socket import gaierror
+from typing import Any
 from unittest.mock import AsyncMock
 
 import mpd
@@ -30,10 +31,32 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        pytest.param(
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600, CONF_PASSWORD: "test123"},
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600, CONF_PASSWORD: "test123"},
+            id="with_password",
+        ),
+        pytest.param(
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
+            id="without_password",
+        ),
+        pytest.param(
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600, CONF_PASSWORD: ""},
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
+            id="empty_password",
+        ),
+    ],
+)
 async def test_full_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_mpd_client: AsyncMock,
+    user_input: dict[str, str | int],
+    expected_data: dict[str, str | int],
 ) -> None:
     """Test the happy flow."""
     result = await hass.config_entries.flow.async_init(
@@ -43,18 +66,15 @@ async def test_full_flow(
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.0.1", CONF_PORT: 6600, CONF_PASSWORD: "test123"},
+        result["flow_id"], user_input
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Music Player Daemon"
-    assert result["data"] == {
-        CONF_HOST: "192.168.0.1",
-        CONF_PORT: 6600,
-        CONF_PASSWORD: "test123",
-    }
+    assert result["data"] == expected_data
+    # An empty field is not a password, so the server is never asked to check it.
+    assert mock_mpd_client.password.called is (CONF_PASSWORD in expected_data)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -139,6 +159,11 @@ async def test_existing_entry(
             {},
             {CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
             id="without_password",
+        ),
+        pytest.param(
+            {CONF_PASSWORD: ""},
+            {CONF_HOST: "192.168.0.1", CONF_PORT: 6600},
+            id="empty_password",
         ),
     ],
 )
@@ -248,9 +273,24 @@ async def test_zeroconf_flow_second_server(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
+@pytest.mark.parametrize(
+    "reannouncement",
+    [
+        pytest.param(
+            {
+                "ip_address": ip_address("2001:db8::1"),
+                "ip_addresses": [ip_address("2001:db8::1"), ip_address("192.168.0.1")],
+            },
+            id="another_address",
+        ),
+        pytest.param({"hostname": "MPD-SERVER.LOCAL."}, id="another_hostname_casing"),
+    ],
+)
 @pytest.mark.usefixtures("mock_mpd_client")
-async def test_zeroconf_flow_already_in_progress(hass: HomeAssistant) -> None:
-    """Test a reannouncement selecting another address does not open a flow."""
+async def test_zeroconf_flow_already_in_progress(
+    hass: HomeAssistant, reannouncement: dict[str, Any]
+) -> None:
+    """Test a reannouncement of one server does not open a second flow."""
     await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
     )
@@ -258,11 +298,7 @@ async def test_zeroconf_flow_already_in_progress(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=replace(
-            ZEROCONF_DISCOVERY,
-            ip_address=ip_address("2001:db8::1"),
-            ip_addresses=[ip_address("2001:db8::1"), ip_address("192.168.0.1")],
-        ),
+        data=replace(ZEROCONF_DISCOVERY, **reannouncement),
     )
 
     assert result["type"] is FlowResultType.ABORT

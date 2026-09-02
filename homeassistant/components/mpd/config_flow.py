@@ -83,6 +83,10 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
+            # An optional text field submits "" when it is left empty, which is
+            # not a password the server can be asked to check.
+            if not user_input.get(CONF_PASSWORD):
+                user_input.pop(CONF_PASSWORD, None)
             error = await _async_try_connect(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
@@ -117,7 +121,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
-        hostname = discovery_info.hostname.rstrip(".")
+        # Every comparison below is made on normalized values, so the same
+        # server always reduces to the same ones however it is spelled.
+        hostname = _normalize_host(discovery_info.hostname)
         self._name = hostname.removesuffix(".local") or self._host
 
         # Entries may be configured under any address the server advertises or
@@ -152,7 +158,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         # Submitting without a password yields an empty dict, not None.
         if user_input is not None:
-            password = user_input.get(CONF_PASSWORD)
+            # An optional text field submits "" when it is left empty, which is
+            # not a password the server can be asked to check.
+            password = user_input.get(CONF_PASSWORD) or None
             error = await _async_try_connect(self._host, self._port, password)
             if error:
                 errors["base"] = error
