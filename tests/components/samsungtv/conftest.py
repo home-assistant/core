@@ -55,7 +55,7 @@ def silent_ssdp_scanner() -> Generator[None]:
 def samsungtv_mock_async_get_local_ip() -> Generator[None]:
     """Mock upnp util's async_get_local_ip."""
     with patch(
-        "homeassistant.components.samsungtv.media_player.async_get_local_ip",
+        "homeassistant.components.samsungtv.dmr.async_get_local_ip",
         return_value=(AddressFamily.AF_INET, "10.10.10.10"),
     ):
         yield
@@ -82,7 +82,7 @@ def app_list_delay_fixture() -> Generator[None]:
 def upnp_factory_fixture() -> Generator[Mock]:
     """Patch UpnpFactory."""
     with patch(
-        "homeassistant.components.samsungtv.media_player.UpnpFactory",
+        "homeassistant.components.samsungtv.dmr.UpnpFactory",
         autospec=True,
     ) as upnp_factory_class:
         upnp_factory: Mock = upnp_factory_class.return_value
@@ -104,7 +104,7 @@ def upnp_device_fixture(upnp_factory: Mock) -> Mock:
 def dmr_device_fixture(upnp_device: Mock) -> Generator[Mock]:
     """Patch async_upnp_client."""
     with patch(
-        "homeassistant.components.samsungtv.media_player.DmrDevice",
+        "homeassistant.components.samsungtv.dmr.DmrDevice",
         autospec=True,
     ) as dmr_device_class:
         dmr_device: Mock = dmr_device_class.return_value
@@ -139,7 +139,7 @@ def dmr_device_fixture(upnp_device: Mock) -> Generator[Mock]:
 def upnp_notify_server_fixture(upnp_factory: Mock) -> Generator[Mock]:
     """Patch async_upnp_client."""
     with patch(
-        "homeassistant.components.samsungtv.media_player.AiohttpNotifyServer",
+        "homeassistant.components.samsungtv.dmr.AiohttpNotifyServer",
         autospec=True,
     ) as notify_server_class:
         notify_server: Mock = notify_server_class.return_value
