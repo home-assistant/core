@@ -1,13 +1,15 @@
 """Fixtures for the Community store tests."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Generator
 from functools import lru_cache
 from http import HTTPStatus
 from pathlib import Path
 import re
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiogithubapi import GitHubLoginDeviceModel, GitHubLoginOauthModel
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
@@ -29,7 +31,11 @@ from homeassistant.core import HomeAssistant
 from . import dummy_repository_base, get_hacs, setup_integration
 from .const import FROZEN_TIME, TOKEN
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 FIXTURE_PROXY_PATH = Path(__file__).parent / "fixtures" / "proxy"
@@ -128,6 +134,44 @@ async def response_mocker(
         aioclient_mock.request(method, re.compile(r".*"), side_effect=_serve)
 
     return responses
+
+
+@pytest.fixture
+def device_activation_event() -> asyncio.Event:
+    """Return the event that releases the mocked device activation."""
+    return asyncio.Event()
+
+
+@pytest.fixture
+def github_device_client(
+    hass: HomeAssistant, device_activation_event: asyncio.Event
+) -> Generator[AsyncMock]:
+    """Mock the GitHub device flow client used by the config flow."""
+    with patch(
+        "homeassistant.components.store.config_flow.GitHubDeviceAPI",
+        autospec=True,
+    ) as device_client_mock:
+        client = device_client_mock.return_value
+
+        registration = AsyncMock()
+        registration.data = GitHubLoginDeviceModel(
+            load_json_object_fixture("device_register.json", DOMAIN)
+        )
+        client.register.return_value = registration
+
+        async def mock_activation(device_code: str) -> AsyncMock:
+            """Wait for the test to release the activation, then return."""
+            await device_activation_event.wait()
+            activation = AsyncMock()
+            activation.data = GitHubLoginOauthModel(
+                await async_load_json_object_fixture(
+                    hass, "device_activate.json", DOMAIN
+                )
+            )
+            return activation
+
+        client.activation = mock_activation
+        yield client
 
 
 @pytest.fixture
