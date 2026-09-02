@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 
 
 @patch(
-    "pyschlage.Auth",
+    "homeassistant.components.schlage.pyschlage.Auth",
     side_effect=WarrantException,
 )
 async def test_auth_failed(
@@ -50,6 +50,8 @@ async def test_update_data_fails(
 
     assert mock_schlage.locks.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # The coordinator is only stored once its first refresh succeeds.
+    assert not hasattr(mock_config_entry, "runtime_data")
 
 
 async def test_update_data_auth_error(

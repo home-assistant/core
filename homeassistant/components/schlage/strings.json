@@ -5,7 +5,7 @@
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The user credentials provided do not match this Schlage account."
     },
@@ -61,10 +61,10 @@
     },
     "switch": {
       "beeper": {
-        "name": "Keypress Beep"
+        "name": "Keypress beep"
       },
       "lock_and_leave": {
-        "name": "1-Touch Locking"
+        "name": "1-touch locking"
       }
     }
   },

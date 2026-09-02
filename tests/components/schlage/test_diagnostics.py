@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 
 from . import MockSchlageConfigEntry
@@ -9,16 +11,85 @@ from . import MockSchlageConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
+# The raw device JSON as pyschlage redacts it: everything outside the library's
+# allow-list is replaced with "<REDACTED>", lists collapse to a single redacted
+# element, and nested dicts are redacted key by key.
+LOCK_DIAGNOSTICS = {
+    "CAT": "<REDACTED>",
+    "SAT": "<REDACTED>",
+    "attributes": {
+        "CAT": "<REDACTED>",
+        "SAT": "<REDACTED>",
+        "accessCodeLength": 4,
+        "actAlarmBuzzerEnabled": 0,
+        "actAlarmState": 0,
+        "actuationCurrentMax": 226,
+        "alarmSelection": 0,
+        "alarmSensitivity": 0,
+        "alarmState": 0,
+        "autoLockTime": 15,
+        "batteryChangeDate": 1669017530,
+        "batteryLevel": 20,
+        "batteryLowState": 0,
+        "batterySaverConfig": {"activePeriod": [], "enabled": 0},
+        "batterySaverState": 0,
+        "beeperEnabled": 1,
+        "bleFirmwareVersion": "9.2.15.3011",
+        "diagnostics": {"deviceId": "<REDACTED>", "serialNumber": "<REDACTED>"},
+        "firmwareUpdate": {"status": {"additionalInfo": None, "code": -1}},
+        "homePosCurrentMax": 153,
+        "keypadFirmwareVersion": "b3aa601",
+        "lockAndLeaveEnabled": 1,
+        "lockState": 0,
+        "lockStateMetadata": {
+            "actAlarmState": 0,
+            "alarmState": 0,
+            "attributeName": "lockState",
+            "clientId": None,
+            "mainFirmwareVersion": "10.00.00264232",
+            "newValue": 0,
+            "oldValue": 1,
+            "serialNumber": "d0d0d0d0",
+            "wifiFirmwareVersion": "03.00.00250052",
+        },
+        "macAddress": "<REDACTED>",
+        "mainFirmwareVersion": "10.00.00264232",
+        "mode": 2,
+        "modelName": "<model-name>",
+        "periodicDeepQueryTimeSetting": 60,
+        "psPollEnabled": 1,
+        "serialNumber": "<REDACTED>",
+        "timezone": -20,
+        "wifiFirmwareVersion": "03.00.00250052",
+        "wifiRssi": -42,
+    },
+    "connected": True,
+    "connectivityUpdated": "2022-12-04T20:58:22.000Z",
+    "created": "2022-12-04T20:58:22.000Z",
+    "deviceId": "<REDACTED>",
+    "devicetypeId": "be489wifi",
+    "lastUpdated": "2022-12-04T20:58:22.000Z",
+    "macAddress": "<REDACTED>",
+    "modelName": "<model-name>",
+    "name": "Vault Door",
+    "physicalId": "<REDACTED>",
+    "role": "owner",
+    "serialNumber": "<REDACTED>",
+    "timezone": -20,
+    "users": ["<REDACTED>"],
+}
+
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_added_config_entry: MockSchlageConfigEntry,
     mock_lock: Mock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test Schlage diagnostics."""
-    mock_lock.get_diagnostics.return_value = {"foo": "bar"}
+    mock_lock.get_diagnostics.return_value = LOCK_DIAGNOSTICS
     diag = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_added_config_entry
     )
-    assert diag == {"locks": [{"foo": "bar"}]}
+    assert diag == snapshot
