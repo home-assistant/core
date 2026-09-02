@@ -147,6 +147,47 @@ class MatterGenericCommandSwitchEntityDescription(MatterSwitchEntityDescription)
 
 
 @dataclass(frozen=True, kw_only=True)
+class MatterBitmapSwitchEntityDescription(MatterSwitchEntityDescription):
+    """Describe Matter switch entities that map to a single bit of a bitmap attribute."""
+
+    bitmask: int
+
+
+class MatterBitmapSwitch(MatterSwitch):
+    """Representation of a single bit of a Matter bitmap attribute as a Switch entity."""
+
+    entity_description: MatterBitmapSwitchEntityDescription
+
+    async def _async_set_bit(self, value: bool) -> None:
+        """Set or clear the bit in the bitmap attribute, preserving the other bits."""
+        current_value: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        bitmask = self.entity_description.bitmask
+        new_value = current_value | bitmask if value else current_value & ~bitmask
+        await self.write_attribute(value=new_value)
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Set the bit."""
+        await self._async_set_bit(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Clear the bit."""
+        await self._async_set_bit(False)
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        self._attr_is_on = (
+            None if value is None else bool(value & self.entity_description.bitmask)
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class MatterNumericSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Numeric Switch entities."""
 
@@ -345,5 +386,16 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumericSwitch,
         required_attributes=(clusters.EveCluster.Attributes.ChildLock,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterBitmapSwitchEntityDescription(
+            key="WindowCoveringReverseMotorDirection",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="reverse_motor_direction",
+            bitmask=clusters.WindowCovering.Bitmaps.Mode.kMotorDirectionReversed,
+        ),
+        entity_class=MatterBitmapSwitch,
+        required_attributes=(clusters.WindowCovering.Attributes.Mode,),
     ),
 ]

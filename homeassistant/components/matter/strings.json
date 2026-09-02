@@ -706,6 +706,9 @@
       "privacy_mode_button": {
         "name": "Privacy mode button"
       },
+      "reverse_motor_direction": {
+        "name": "Reverse motor direction"
+      },
       "speaker_mute": {
         "name": "Mute"
       },

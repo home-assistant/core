@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_switches[aqara_shutter_switch_h2][switch.aqara_shutter_switch_h2_eu_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.aqara_shutter_switch_h2_eu_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-00000000000000C1-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[aqara_shutter_switch_h2][switch.aqara_shutter_switch_h2_eu_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aqara_shutter_switch_h2_eu_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -397,6 +447,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_shutter_switch_20eci1701_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[eve_shutter][switch.eve_shutter_switch_20eci1701_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_shutter_switch_20eci1701_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_shutter][switch.eve_shutter_switch_20eci1701_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Shutter Switch 20ECI1701 Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_shutter_switch_20eci1701_reverse_motor_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1416,6 +1516,256 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[mock_window_covering_full][switch.mock_full_window_covering_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_full_window_covering_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_window_covering_full][switch.mock_full_window_covering_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Full Window Covering Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_full_window_covering_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_window_covering_lift][switch.mock_lift_window_covering_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_lift_window_covering_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_window_covering_lift][switch.mock_lift_window_covering_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lift Window Covering Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_lift_window_covering_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_window_covering_pa_lift][switch.longan_link_wncv_da01_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.longan_link_wncv_da01_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_window_covering_pa_lift][switch.longan_link_wncv_da01_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link WNCV DA01 Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.longan_link_wncv_da01_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_window_covering_pa_tilt][switch.mock_pa_tilt_window_covering_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_pa_tilt_window_covering_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_window_covering_pa_tilt][switch.mock_pa_tilt_window_covering_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock PA Tilt Window Covering Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_pa_tilt_window_covering_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_window_covering_tilt][switch.mock_tilt_window_covering_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_tilt_window_covering_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_window_covering_tilt][switch.mock_tilt_window_covering_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Tilt Window Covering Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_tilt_window_covering_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[silabs_evse_charging][switch.evse_enable_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1617,5 +1967,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switches[zemismart_mt25b][switch.zemismart_mt25b_roller_motor_reverse_motor_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.zemismart_mt25b_roller_motor_reverse_motor_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reverse motor direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse motor direction',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse_motor_direction',
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-1-WindowCoveringReverseMotorDirection-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[zemismart_mt25b][switch.zemismart_mt25b_roller_motor_reverse_motor_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zemismart MT25B Roller Motor Reverse motor direction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.zemismart_mt25b_roller_motor_reverse_motor_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
