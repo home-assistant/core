@@ -14,7 +14,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -28,6 +28,7 @@ from .const import (
     CONF_BEFORE_OFFSET,
     CONF_BEFORE_TIME,
     DOMAIN,
+    MAX_OFFSET,
 )
 
 CONF_SUN_EVENT = "sun_event"
@@ -89,6 +90,8 @@ def _resolve_sections(
             raise SchemaFlowError(f"{section_key}_one_value")
         resolved_input[time_key] = time_value or sun_event
         if CONF_OFFSET in section_input:
+            if abs(cv.time_period(section_input[CONF_OFFSET])) > MAX_OFFSET:
+                raise SchemaFlowError(f"{section_key}_offset_range")
             resolved_input[offset_key] = section_input[CONF_OFFSET]
         else:
             omitted_offsets.append(offset_key)

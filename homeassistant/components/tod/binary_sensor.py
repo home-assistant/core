@@ -35,6 +35,7 @@ from .const import (
     CONF_AFTER_TIME,
     CONF_BEFORE_OFFSET,
     CONF_BEFORE_TIME,
+    MAX_OFFSET,
 )
 
 type SunEventType = Literal["sunrise", "sunset"]
@@ -46,14 +47,15 @@ ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
 
 TIME_OR_SUN_EVENT = vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event))
+OFFSET = vol.All(cv.time_period, vol.Range(min=-MAX_OFFSET, max=MAX_OFFSET))
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AFTER): TIME_OR_SUN_EVENT,
         vol.Required(CONF_BEFORE): TIME_OR_SUN_EVENT,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
-        vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
+        vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): OFFSET,
+        vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): OFFSET,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -70,13 +72,9 @@ async def async_setup_entry(
         return
 
     after = TIME_OR_SUN_EVENT(config_entry.options[CONF_AFTER_TIME])
-    after_offset = cv.time_period(
-        config_entry.options.get(CONF_AFTER_OFFSET, timedelta(0))
-    )
+    after_offset = OFFSET(config_entry.options.get(CONF_AFTER_OFFSET, timedelta(0)))
     before = TIME_OR_SUN_EVENT(config_entry.options[CONF_BEFORE_TIME])
-    before_offset = cv.time_period(
-        config_entry.options.get(CONF_BEFORE_OFFSET, timedelta(0))
-    )
+    before_offset = OFFSET(config_entry.options.get(CONF_BEFORE_OFFSET, timedelta(0)))
     name = config_entry.title
     unique_id = config_entry.entry_id
 

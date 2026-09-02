@@ -4,7 +4,9 @@ from datetime import datetime, timedelta, tzinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
+from homeassistant.components.tod.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -85,6 +87,21 @@ async def test_in_period_on_start(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.evening")
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize("offset", ["24:00", "-24:00"])
+def test_reject_multi_day_offset(offset: str) -> None:
+    """Test YAML offsets must be less than one day."""
+    with pytest.raises(vol.Invalid):
+        PLATFORM_SCHEMA(
+            {
+                "after": "10:00",
+                "after_offset": offset,
+                "before": "18:00",
+                "name": "Daytime",
+                "platform": "tod",
+            }
+        )
 
 
 @pytest.mark.freeze_time("2019-01-10 22:30:00-08:00")

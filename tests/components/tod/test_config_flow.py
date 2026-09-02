@@ -130,6 +130,32 @@ async def test_config_flow_requires_one_boundary_value(
     assert result["errors"] == {"base": error}
 
 
+@pytest.mark.parametrize(
+    "offset",
+    [
+        pytest.param({"days": 1}, id="positive"),
+        pytest.param({"hours": -24}, id="negative"),
+    ],
+)
+async def test_config_flow_rejects_multi_day_offset(
+    hass: HomeAssistant, offset: dict[str, float]
+) -> None:
+    """Test offsets must be less than one day."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "after": {"offset": offset, "time": "10:00"},
+            "before": {"time": "18:00"},
+            "name": "My tod",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "after_offset_range"}
+
+
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
 async def test_options_time_boundaries(hass: HomeAssistant) -> None:
     """Test reconfiguring specific-time boundaries."""
