@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Generic, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from ring_doorbell import RingDoorBell
+from ring_doorbell import RingCapability, RingDoorBell, RingOther
 from ring_doorbell.webrtcstream import RingWebRtcMessage
 
 from homeassistant.components import ffmpeg
@@ -42,21 +42,22 @@ MOTION_DETECTION_CAPABILITY = "motion_detection"
 
 _LOGGER = logging.getLogger(__name__)
 
+RingCameraDevice = RingDoorBell | RingOther
 
 @dataclass(frozen=True, kw_only=True)
 class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
-    exists_fn: Callable[[RingDoorBell], bool]
+    exists_fn: Callable[[RingDeviceT], bool]
     live_stream: bool
     motion_detection: bool
 
 
-CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
+CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription[RingCameraDevice], ...] = (
     RingCameraEntityDescription(
         key="live_view",
         translation_key="live_view",
-        exists_fn=lambda _: True,
+        exists_fn=lambda device: device.has_capability(RingCapability.VIDEO),
         live_stream=True,
         motion_detection=False,
     ),
@@ -64,7 +65,11 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
         key="last_recording",
         translation_key="last_recording",
         entity_registry_enabled_default=False,
-        exists_fn=lambda camera: camera.has_subscription,
+        exists_fn=lambda camera: (
+            not isinstance(camera, RingOther)
+            and camera.has_capability(RingCapability.HISTORY)
+            and camera.has_subscription
+        ),
         live_stream=False,
         motion_detection=True,
     ),
@@ -76,33 +81,42 @@ async def async_setup_entry(
     entry: RingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a Ring Door Bell and StickUp Camera."""
+    """Set up Ring camera-capable devices."""
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
+    devices: list[RingCameraDevice] = [
+        *[
+            device
+            for device in ring_data.devices.video_devices
+            if isinstance(device, RingDoorBell)
+        ],
+        *ring_data.devices.other,
+    ]
+
     cams = [
         RingCam(camera, devices_coordinator, description, ffmpeg_manager=ffmpeg_manager)
         for description in CAMERA_DESCRIPTIONS
-        for camera in ring_data.devices.video_devices
+        for camera in devices
         if description.exists_fn(camera)
     ]
 
     async_add_entities(cams)
 
 
-class RingCam(RingEntity[RingDoorBell], Camera):
-    """An implementation of a Ring Door Bell camera."""
+class RingCam(RingEntity[RingCameraDevice], Camera):
+    """Representation of a Ring camera-capable device."""
 
     def __init__(
         self,
-        device: RingDoorBell,
+        device: RingCameraDevice,
         coordinator: RingDataCoordinator,
-        description: RingCameraEntityDescription,
+        description: RingCameraEntityDescription[RingCameraDevice],
         *,
         ffmpeg_manager: ffmpeg.FFmpegManager,
     ) -> None:
-        """Initialize a Ring Door Bell camera."""
+        """Initialize a Ring camera-capable device."""
         super().__init__(device, coordinator)
         self.entity_description = description
         Camera.__init__(self)
@@ -113,8 +127,10 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._images: dict[tuple[int | None, int | None], bytes] = {}
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
         self._attr_unique_id = f"{device.id}-{description.key}"
-        if description.motion_detection and device.has_capability(
-            MOTION_DETECTION_CAPABILITY
+        if (
+            not isinstance(device, RingOther)
+            and description.motion_detection
+            and device.has_capability(MOTION_DETECTION_CAPABILITY)
         ):
             self._attr_motion_detection_enabled = device.motion_detection
         if description.live_stream:
@@ -124,9 +140,19 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        self._device = self._get_coordinator_data().get_video_device(
-            self._device.device_api_id
-        )
+        device = self._get_coordinator_data().get_device(self._device.device_api_id)
+        if not isinstance(device, RingDoorBell | RingOther):
+            return
+        self._device = device
+
+        if isinstance(self._device, RingOther):
+            self._last_event = None
+            self._last_video_id = None
+            self._video_url = None
+            self._images = {}
+            self._expires_at = dt_util.utcnow()
+            self.async_write_ha_state()
+            return
 
         history_data = self._device.last_history
         if history_data and self._device.has_subscription:
@@ -157,6 +183,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if self._video_url is None:
+            if isinstance(self._device, RingOther):
+                return await self._async_get_fresh_snapshot()
+
             if not self._device.has_subscription:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -177,6 +206,13 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                 self._images[key] = image
 
         return image
+
+    @exception_wrap
+    async def _async_get_fresh_snapshot(self) -> bytes | None:
+        """Get a fresh snapshot from the camera."""
+        if isinstance(self._device, RingOther) and callable(self._device.async_get_snapshot):
+            return await self._device.async_get_snapshot()
+        return None
 
     @override
     async def handle_async_mjpeg_stream(
@@ -222,7 +258,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                     )
                 )
 
-        return await self._device.generate_async_webrtc_stream(
+        await self._device.generate_async_webrtc_stream(
             offer_sdp, session_id, message_wrapper, keep_alive_timeout=None
         )
 
@@ -252,6 +288,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     @override
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
+        if isinstance(self._device, RingOther):
+            return
+
         if (
             self._device.has_capability(MOTION_DETECTION_CAPABILITY)
             and self._attr_motion_detection_enabled != self._device.motion_detection
@@ -285,11 +324,15 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             assert self._last_event
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
+        if TYPE_CHECKING:
+            assert not isinstance(self._device, RingOther)
         return await self._device.async_recording_url(event_id)
 
     @exception_wrap
     async def _async_set_motion_detection_enabled(self, new_state: bool) -> None:
-        if not self._device.has_capability(MOTION_DETECTION_CAPABILITY):
+        if isinstance(self._device, RingOther) or not self._device.has_capability(
+            MOTION_DETECTION_CAPABILITY
+        ):
             _LOGGER.error(
                 "Entity %s does not have motion detection capability", self.entity_id
             )
