@@ -111,12 +111,7 @@ class _ConflictingUnit:
 async def test_user_flow_link_settings_in_use(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
-    """A link already claimed with different settings is not a transient failure.
-
-    The form recovers once the conflicting entry is gone, the same as any
-    other form error - only the patched-out probe during the first attempt
-    made it look permanent.
-    """
+    """A link already claimed with different settings recovers once it's free."""
     with patch(
         "homeassistant.components.bluetti_modbus.config_flow.async_get_temporary_unit",
         return_value=_ConflictingUnit(),
@@ -156,11 +151,7 @@ async def test_user_flow_rejects_a_zero_serial(
 async def test_user_flow_probe_timeout_surfaces_cannot_connect(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
-    """A probe that exceeds async_update_with_retry()'s own budget is not a crash.
-
-    That budget expiring raises a bare TimeoutError, not a ModbusError - it
-    must still surface as a form error here, not propagate uncaught.
-    """
+    """A probe that times out surfaces cannot_connect, not an uncaught crash."""
     mock_modbus_unit.fail_requests(TimeoutError("timed out"))
 
     result = await hass.config_entries.flow.async_init(
@@ -199,14 +190,7 @@ async def test_user_flow_rejects_the_same_serial_at_a_different_endpoint(
     mock_modbus_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """The same device answering at a different address/unit id still aborts.
-
-    Distinct from test_user_flow_already_configured, which deliberately
-    mismatches the existing entry's unique_id to isolate the host/port/
-    unit_id link-match path (_async_abort_entries_match) - this isolates
-    the other one, _abort_if_unique_id_configured(): a genuinely different
-    link (a different unit id here), but the same confirmed serial.
-    """
+    """The same device answering at a different address/unit id still aborts."""
     mock_config_entry.add_to_hass(hass)
     seed_unit(mock_modbus_connection.for_unit(2))  # same default SERIAL
 
