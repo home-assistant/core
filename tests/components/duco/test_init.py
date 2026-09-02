@@ -106,27 +106,6 @@ def _node_configs_with_primary_name(
             None,
             False,
         ),
-        (
-            "async_get_diagnostics_info",
-            DucoConnectionError("Connection refused"),
-            ConfigEntryState.SETUP_RETRY,
-            "cannot_connect",
-            False,
-        ),
-        (
-            "async_get_diagnostics_info",
-            DucoError("Unexpected API error"),
-            ConfigEntryState.SETUP_RETRY,
-            "api_error",
-            False,
-        ),
-        (
-            "async_get_diagnostics_info",
-            DucoResponseError(500, "/info"),
-            ConfigEntryState.SETUP_RETRY,
-            "api_error",
-            False,
-        ),
     ],
 )
 async def test_setup_entry_error(

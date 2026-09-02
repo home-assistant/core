@@ -41,6 +41,7 @@ class DucoData:
 
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
+    diagnostics_available: bool
     diagnostic_subsystems: dict[str, DiagStatus | None]
     rssi_wifi: int | None
     time_filter_remain: int | None
@@ -176,23 +177,20 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
+        # Diagnostics only back optional binary sensors. Preserve known components
+        # but mark their data unavailable without failing the shared coordinator.
+        diagnostics_available = True
+        diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
         try:
             diagnostic_info = await self.client.async_get_diagnostics_info()
-        except DucoConnectionError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
         except DucoError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-            ) from err
-
-        diagnostic_subsystems = {
-            diagnostic.component: diagnostic.status
-            for diagnostic in diagnostic_info.diagnostic_subsystems
-        }
+            diagnostics_available = False
+            _LOGGER.debug("Could not fetch Duco diagnostics", exc_info=err)
+        else:
+            diagnostic_subsystems = {
+                diagnostic.component: diagnostic.status
+                for diagnostic in diagnostic_info.diagnostic_subsystems
+            }
 
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
@@ -231,6 +229,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
+            diagnostics_available=diagnostics_available,
             diagnostic_subsystems=diagnostic_subsystems,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,

@@ -134,6 +134,12 @@ class DucoDiagnosticBinarySensorEntity(DucoEntity, BinarySensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return whether current diagnostic data is available."""
+        return super().available and self.coordinator.data.diagnostics_available
+
+    @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether the diagnostic subsystem reports a problem."""
         if (

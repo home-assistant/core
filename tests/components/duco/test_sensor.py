@@ -183,6 +183,17 @@ async def test_iaq_sensor_entities_disabled_by_default(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_rssi_sensor_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the RSSI sensor is disabled by default."""
+    entry = entity_registry.async_get("sensor.living_signal_strength")
+    assert entry is not None
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("exception_type", "exception_message"),
     [

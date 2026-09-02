@@ -228,7 +228,7 @@ async def test_diagnostic_binary_sensor_becomes_unknown_without_known_status(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "exception",
     [
@@ -238,11 +238,18 @@ async def test_diagnostic_binary_sensor_becomes_unknown_without_known_status(
 )
 async def test_diagnostic_binary_sensor_becomes_unavailable_on_refresh_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
     exception: DucoError,
 ) -> None:
-    """Test diagnostic binary sensors become unavailable on refresh errors."""
+    """Test diagnostics failures do not affect other Duco entities."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.BINARY_SENSOR, Platform.SENSOR]
+    )
+
     state = hass.states.get(VENTILATION_PROBLEM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
@@ -256,3 +263,56 @@ async def test_diagnostic_binary_sensor_becomes_unavailable_on_refresh_error(
     state = hass.states.get(VENTILATION_PROBLEM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == "405"
+
+    mock_duco_client.async_get_diagnostics_info.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(VENTILATION_PROBLEM_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoConnectionError("offline"), id="connection_error"),
+        pytest.param(DucoError("api error"), id="duco_error"),
+    ],
+)
+async def test_initial_diagnostics_failure_is_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    exception: DucoError,
+) -> None:
+    """Test setup succeeds and diagnostics recover after an initial failure."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_diagnostics_info.side_effect = exception
+
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.BINARY_SENSOR, Platform.SENSOR]
+    )
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(VENTILATION_PROBLEM_ENTITY_ID) is None
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == "405"
+
+    mock_duco_client.async_get_diagnostics_info.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(VENTILATION_PROBLEM_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
