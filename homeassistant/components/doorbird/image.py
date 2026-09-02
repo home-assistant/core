@@ -117,15 +117,14 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         # A renamed event cannot be attributed to either image, so the doorbell
         # one takes it: without this the replacement never refreshes, while the
         # deprecated cameras polled on a timer regardless of the event names.
-        takes_unclassifiable = event_type == DEFAULT_DOORBELL_EVENT and not any(
-            event in classifiable for event in door_station.events
-        )
+        takes_unclassifiable = event_type == DEFAULT_DOORBELL_EVENT
         return [
             event_name
             for event, event_name in zip(
                 door_station.events, door_station.door_station_events, strict=True
             )
-            if event in own_events or takes_unclassifiable
+            if event in own_events
+            or (takes_unclassifiable and event not in classifiable)
         ]
 
     @override

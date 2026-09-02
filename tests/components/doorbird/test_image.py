@@ -1,5 +1,7 @@
 """Test DoorBird image entities."""
 
+import pytest
+
 from homeassistant.components.doorbird.const import CONF_EVENTS, SIGNAL_EVENTS_UPDATED
 from homeassistant.components.doorbird.device import DoorbirdEvent
 from homeassistant.components.doorbird.util import (
@@ -206,10 +208,18 @@ async def test_image_ignores_deconfigured_event_descriptions(
     )
 
 
+@pytest.mark.parametrize(
+    "configured_events",
+    [
+        pytest.param(["front_door"], id="only_renamed"),
+        pytest.param(["doorbell", "front_door"], id="mixed_with_default"),
+    ],
+)
 async def test_image_updates_on_renamed_event_without_schedule_api(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     doorbird_mocker: DoorbirdMockerType,
+    configured_events: list[str],
 ) -> None:
     """A renamed event on a schedule-less model still refreshes an image.
 
@@ -220,7 +230,7 @@ async def test_image_updates_on_renamed_event_without_schedule_api(
         schedule_side_effect=mock_not_found_exception()
     )
     hass.config_entries.async_update_entry(
-        doorbird_entry.entry, options={CONF_EVENTS: ["front_door"]}
+        doorbird_entry.entry, options={CONF_EVENTS: configured_events}
     )
     await hass.async_block_till_done()
     client = await hass_client()
