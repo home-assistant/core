@@ -1,5 +1,4 @@
 """The lookin integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -23,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     DOMAIN,
@@ -36,8 +36,6 @@ from .entity import _lookin_device_to_device_info
 from .models import LookinConfigEntry, LookinData
 
 LOGGER = logging.getLogger(__name__)
-
-UDP_MANAGER = "udp_manager"
 
 
 def _async_climate_updater(
@@ -90,9 +88,13 @@ class LookinUDPManager:
             self._subscriptions = None
 
 
+# One UDP listener serves every lookin device, so the manager is shared between
+# config entries rather than owned by any one of them.
+UDP_MANAGER: HassKey[LookinUDPManager] = HassKey(f"{DOMAIN}_udp_manager")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bool:
     """Set up lookin from a config entry."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
         api_uri=f"http://{host}", session=async_get_clientsession(hass)
@@ -159,10 +161,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
         meteo.update_from_value(event.value)
         meteo_coordinator.async_set_updated_data(meteo)
 
-    if UDP_MANAGER not in domain_data:
-        manager = domain_data[UDP_MANAGER] = LookinUDPManager()
-    else:
-        manager = domain_data[UDP_MANAGER]
+    if (manager := hass.data.get(UDP_MANAGER)) is None:
+        manager = hass.data[UDP_MANAGER] = LookinUDPManager()
 
     lookin_udp_subs = await manager.async_get_subscriptions()
 
@@ -200,7 +200,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> b
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
-        manager: LookinUDPManager = hass.data[DOMAIN][UDP_MANAGER]
+        manager = hass.data[UDP_MANAGER]
         await manager.async_stop()
     return unload_ok
 
