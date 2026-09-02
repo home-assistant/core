@@ -9,7 +9,12 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmartyplants import Sensor, SmartyPlantsAuthError, SmartyPlantsConnectionError
+from pysmartyplants import (
+    Sensor,
+    SmartyPlantsAuthError,
+    SmartyPlantsConnectionError,
+    SmartyPlantsForbiddenError,
+)
 import pytest
 
 from homeassistant.components.smartyplants.const import (
@@ -27,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import SENSOR_FIXTURE
 
@@ -187,6 +193,33 @@ async def test_rejected_key_marks_entities_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
+
+
+async def test_blocked_request_reports_the_reason(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A key used from an address it does not allow says so.
+
+    Reporting this as a bad key would send the user off to make a new one,
+    which would be refused in exactly the same way.
+    """
+    entry, client = await _setup(hass)
+
+    client.async_get_sensors.side_effect = SmartyPlantsForbiddenError(
+        "This API key does not allow requests from 198.51.100.7."
+    )
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
+
+    # The address is the whole point: without it the user cannot tell this
+    # from a bad key.
+    failure = entry.runtime_data.last_exception
+    assert isinstance(failure, UpdateFailed)
+    assert failure.translation_key == "forbidden"
+    assert "198.51.100.7" in failure.translation_placeholders["error"]
 
 
 async def test_entry_without_a_webhook_id_only_polls(hass: HomeAssistant) -> None:

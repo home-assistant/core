@@ -10,6 +10,7 @@ from pysmartyplants import (
     SmartyPlantsAuthError,
     SmartyPlantsClient,
     SmartyPlantsError,
+    SmartyPlantsForbiddenError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -57,6 +58,15 @@ class SmartyPlantsCoordinator(DataUpdateCoordinator[dict[str, Sensor]]):
                 # flow, which this integration does not offer yet.
                 raise UpdateFailed(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from err
+            except SmartyPlantsForbiddenError as err:
+                # The key is accepted but this request is not allowed, usually
+                # because the key is restricted to other addresses. A new key
+                # would not help, so the reason is passed on as it was given.
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="forbidden",
+                    translation_placeholders={"error": str(err)},
                 ) from err
             except SmartyPlantsError as err:
                 raise UpdateFailed(

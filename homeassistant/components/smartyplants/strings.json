@@ -50,6 +50,9 @@
     "cannot_connect": {
       "message": "Could not reach SmartyPlants: {error}"
     },
+    "forbidden": {
+      "message": "SmartyPlants refused the request: {error}"
+    },
     "invalid_auth": {
       "message": "The SmartyPlants API key was rejected. Enter a new one to reconnect."
     }
