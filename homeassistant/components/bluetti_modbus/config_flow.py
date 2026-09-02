@@ -51,10 +51,12 @@ STEP_USER = vol.Schema(
 def _normalized(user_input: dict[str, Any]) -> dict[str, Any]:
     """Return config entry data with the host lowercased.
 
-    homeassistant.components.modbus.connection keys its shared connections
-    on ModbusTcpParams, comparing the host string as-is - two entries
-    (or the same one re-added) spelling the same host with different case
-    would be treated as different links instead of sharing one connection.
+    ModbusTcpParams itself already folds the host to lower case, so two
+    differently-cased spellings of the same host already share one
+    underlying connection. This normalizes the *config entry's own* stored
+    data instead, so _async_abort_entries_match() below - which compares
+    the raw stored strings, not a ModbusTcpParams - actually recognizes a
+    re-added entry spelling the host differently as the same link.
     """
     return {**user_input, CONF_HOST: user_input[CONF_HOST].lower()}
 

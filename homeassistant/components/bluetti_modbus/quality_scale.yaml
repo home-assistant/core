@@ -82,7 +82,11 @@ rules:
       plausible candidates to disable by default; not yet triaged.
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: >-
+      No icons.json yet - non-device-class entities currently fall back to
+      the default icon (icon: None in the entity registry snapshots).
   reconfiguration-flow:
     status: todo
     comment: Split off to a follow-up PR to keep this one reviewable.

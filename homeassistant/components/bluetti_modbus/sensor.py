@@ -7,7 +7,7 @@ from typing import cast, override
 
 from bluetti_modbus_lib.base_devices.bluetti_device import BluettiDevice
 from modbus_connection.model import RegisterField
-from modbus_connection.model.fields import NumberField
+from modbus_connection.model.fields import FloatField, NumberField
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -48,7 +48,8 @@ _LIFETIME_ENERGY = _FieldOverride(
     device_class=SensorDeviceClass.ENERGY, state_class=SensorStateClass.TOTAL_INCREASING
 )
 # The battery's present charge level - SoH percentages are health, not
-# charge, and use the default (unit-derived) device class instead.
+# charge, and get no device class at all: "%" has no entry in
+# _UNIT_DEVICE_CLASSES below, so they fall through to None.
 _BATTERY_LEVEL = _FieldOverride(
     device_class=SensorDeviceClass.BATTERY, state_class=SensorStateClass.MEASUREMENT
 )
@@ -103,6 +104,21 @@ def _enum_value_map(enum_cls: type[Enum]) -> dict[Enum, str]:
     return {member: _slug(member.name) for member in enum_cls}
 
 
+def _suggested_precision(field: RegisterField[object]) -> int | None:
+    """Decimal places implied by a scaled field's own scale factor.
+
+    Left unset (None) for an unscaled field: HA's own precision
+    auto-detection already lands on 0 for those. A *scaled* field (0.1-scale
+    battery voltage or grid frequency, say) needs this explicit - otherwise
+    that auto-detection guesses from whichever value happens to be read
+    first, which can under-round it to a whole number depending on what
+    that first sample was.
+    """
+    if not isinstance(field, NumberField | FloatField) or field.scale == 1.0:
+        return None
+    return max(0, len(f"{field.scale:.10f}".rstrip("0").split(".")[1]))
+
+
 def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescription:
     """Build an entity description for one register field."""
     field_override = _FIELD_OVERRIDES.get(name)
@@ -127,6 +143,7 @@ def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescriptio
             native_unit_of_measurement=field.unit,
             device_class=field_override.device_class,
             state_class=field_override.state_class,
+            suggested_display_precision=_suggested_precision(field),
         )
 
     device_class = _UNIT_DEVICE_CLASSES.get(field.unit or "")
@@ -138,6 +155,7 @@ def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescriptio
         device_class=device_class,
         state_class=SensorStateClass.MEASUREMENT if device_class else None,
         entity_category=field_override.entity_category if field_override else None,
+        suggested_display_precision=_suggested_precision(field),
     )
 
 
