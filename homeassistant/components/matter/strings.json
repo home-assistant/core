@@ -196,6 +196,54 @@
             }
           }
         }
+      },
+      "matter_semantic_tag_bottom": {
+        "name": "Bottom"
+      },
+      "matter_semantic_tag_close": {
+        "name": "[%key:common::action::close%]"
+      },
+      "matter_semantic_tag_down": {
+        "name": "Down"
+      },
+      "matter_semantic_tag_enter_ok_select": {
+        "name": "Enter/OK"
+      },
+      "matter_semantic_tag_left": {
+        "name": "Left"
+      },
+      "matter_semantic_tag_middle": {
+        "name": "Middle"
+      },
+      "matter_semantic_tag_next": {
+        "name": "Next"
+      },
+      "matter_semantic_tag_off": {
+        "name": "[%key:common::state::off%]"
+      },
+      "matter_semantic_tag_on": {
+        "name": "[%key:common::state::on%]"
+      },
+      "matter_semantic_tag_open": {
+        "name": "[%key:common::action::open%]"
+      },
+      "matter_semantic_tag_previous": {
+        "name": "Previous"
+      },
+      "matter_semantic_tag_right": {
+        "name": "Right"
+      },
+      "matter_semantic_tag_stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "matter_semantic_tag_toggle": {
+        "name": "[%key:common::action::toggle%]"
+      },
+      "matter_semantic_tag_top": {
+        "name": "Top"
+      },
+      "matter_semantic_tag_up": {
+        "name": "Up"
       }
     },
     "fan": {
@@ -557,6 +605,54 @@
       },
       "hepa_filter_condition": {
         "name": "HEPA filter condition"
+      },
+      "matter_semantic_tag_bottom": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_bottom::name%]"
+      },
+      "matter_semantic_tag_close": {
+        "name": "[%key:common::action::close%]"
+      },
+      "matter_semantic_tag_down": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_down::name%]"
+      },
+      "matter_semantic_tag_enter_ok_select": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_enter_ok_select::name%]"
+      },
+      "matter_semantic_tag_left": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_left::name%]"
+      },
+      "matter_semantic_tag_middle": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_middle::name%]"
+      },
+      "matter_semantic_tag_next": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_next::name%]"
+      },
+      "matter_semantic_tag_off": {
+        "name": "[%key:common::state::off%]"
+      },
+      "matter_semantic_tag_on": {
+        "name": "[%key:common::state::on%]"
+      },
+      "matter_semantic_tag_open": {
+        "name": "[%key:common::action::open%]"
+      },
+      "matter_semantic_tag_previous": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_previous::name%]"
+      },
+      "matter_semantic_tag_right": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_right::name%]"
+      },
+      "matter_semantic_tag_stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "matter_semantic_tag_toggle": {
+        "name": "[%key:common::action::toggle%]"
+      },
+      "matter_semantic_tag_top": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_top::name%]"
+      },
+      "matter_semantic_tag_up": {
+        "name": "[%key:component::matter::entity::event::matter_semantic_tag_up::name%]"
       },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"

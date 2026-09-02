@@ -1,5 +1,6 @@
 """Test Matter entity behavior."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
@@ -128,6 +129,85 @@ async def test_label_modified_entity_translation_key(
     state_bottom = hass.states.get("switch.eve_energy_20ecn4101_switch_bottom")
     assert state_bottom is not None
     assert state_bottom.name == "Eve Energy 20ECN4101 Switch (bottom)"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["ikea_bilresa_dual_button"])
+async def test_semantic_tag_translated_tag_wins_over_custom_label(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a structured semantic tag is preferred over a Custom tag label.
+
+    Both endpoints of this device carry a Common Position tag (Top/Bottom), a
+    Switches action tag (On/Up, Off/Down) and a Switches Custom tag with a
+    free-text label ("button 1"/"button 2"). The Custom tag label would
+    produce a redundant name (the entity is already named "Button"), so the
+    translated Common Position tag must take priority over it.
+    """
+    entry_1 = entity_registry.async_get("event.bilresa_dual_button_button_top")
+    assert entry_1 is not None
+    assert entry_1.original_name == "Button (Top)"
+
+    state_1 = hass.states.get("event.bilresa_dual_button_button_top")
+    assert state_1 is not None
+    assert state_1.name == "BILRESA dual button Button (Top)"
+
+    entry_2 = entity_registry.async_get("event.bilresa_dual_button_button_bottom")
+    assert entry_2 is not None
+    assert entry_2.original_name == "Button (Bottom)"
+
+    state_2 = hass.states.get("event.bilresa_dual_button_button_bottom")
+    assert state_2 is not None
+    assert state_2.name == "BILRESA dual button Button (Bottom)"
+
+
+@pytest.mark.parametrize(
+    ("tags", "expected_postfix"),
+    [
+        # Common Position namespace (0x08), tag 2 = Top: translated word
+        ([{"0": None, "1": 8, "2": 2}], "Top"),
+        # Common Position namespace (0x08), tags 1 + 2 = Right + Top: a
+        # namespace can carry multiple tags at once for a corner position.
+        # Sent in reverse (Right before Top) to verify the result is still
+        # combined in canonical reading order ("Top Right"), not device order.
+        (
+            [{"0": None, "1": 8, "2": 1}, {"0": None, "1": 8, "2": 2}],
+            "Top Right",
+        ),
+        # Switches namespace (0x43), tag 3 = Up: translated word, used as
+        # fallback when no Common Position tag is present
+        ([{"0": None, "1": 67, "2": 3}], "Up"),
+        # Common Number namespace (0x07), tag 5 = Five: a plain digit does
+        # not need any translation, used as fallback when no structured,
+        # translatable tag (Common Position or Switches action) is present
+        ([{"0": None, "1": 7, "2": 5}], "5"),
+        # Switches namespace (0x43), tag 8 = Custom: a free-text vendor label,
+        # used as the last-resort fallback
+        ([{"0": None, "1": 67, "2": 8, "3": "custom label"}], "custom label"),
+    ],
+)
+async def test_semantic_tag_name_modifier(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    tags: list[dict[str, Any]],
+    expected_postfix: str,
+) -> None:
+    """Test that a Descriptor TagList entry can modify the entity name postfix.
+
+    Endpoint 1 of "mock_generic_switch_multi" has no FixedLabel/UserLabel, so
+    it normally falls back to its raw endpoint id ("1") as name postfix.
+    """
+    await setup_integration_with_node_fixture(
+        hass, "mock_generic_switch_multi", matter_client, {"1/29/4": tags}
+    )
+
+    entity_id = (
+        f"event.mock_generic_switch_button_{expected_postfix.lower().replace(' ', '_')}"
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == f"Mock Generic Switch Button ({expected_postfix})"
 
 
 @pytest.mark.usefixtures("matter_node")
