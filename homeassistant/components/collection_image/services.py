@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -49,7 +50,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SELECT_NEXT,
         entity_domain=IMAGE_DOMAIN,
-        schema={vol.Optional(ATTR_WRAP): vol.Coerce(bool)},
+        schema={vol.Optional(ATTR_WRAP): cv.boolean},
         func="get_next_image",
     )
     service.async_register_platform_entity_service(
@@ -57,6 +58,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SELECT_PREVIOUS,
         entity_domain=IMAGE_DOMAIN,
-        schema={vol.Optional(ATTR_WRAP): vol.Coerce(bool)},
+        schema={vol.Optional(ATTR_WRAP): cv.boolean},
         func="get_previous_image",
     )

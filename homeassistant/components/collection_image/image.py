@@ -68,6 +68,7 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_unique_id = unique_id
         self._attr_name = name
         self.media_content_id = media_content_id
+        self.current_image_id = None
 
     def set_unavailable(self) -> None:
         """Set the entity to unavailable state."""
