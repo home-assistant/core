@@ -17,6 +17,14 @@
     }
   },
   "entity": {
+    "number": {
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "timer": {
+        "name": "Timer"
+      }
+    },
     "sensor": {
       "cook_time": {
         "name": "Cook time"
@@ -60,6 +68,28 @@
       "water_temperature": {
         "name": "Water temperature"
       }
+    },
+    "switch": {
+      "cook": {
+        "name": "Cook"
+      }
+    }
+  },
+  "exceptions": {
+    "set_target_temperature_failed": {
+      "message": "Failed to set target temperature to {value}"
+    },
+    "set_timer_failed": {
+      "message": "Failed to set timer to {value}"
+    },
+    "start_cook_failed": {
+      "message": "Failed to start the cook"
+    },
+    "start_cook_unavailable": {
+      "message": "The cook cannot be started yet"
+    },
+    "stop_cook_failed": {
+      "message": "Failed to stop the cook"
     }
   }
 }
