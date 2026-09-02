@@ -1,5 +1,6 @@
 """Test the pushover notify platform."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
@@ -92,6 +93,78 @@ async def test_send_message(
         html=0,
         ttl=900,
     )
+
+
+@pytest.mark.usefixtures("mock_pushover")
+@pytest.mark.parametrize(
+    ("is_allowed", "translation_key"),
+    [
+        pytest.param(False, "attachment_not_allowed", id="not_allowed"),
+        pytest.param(True, "attachment_open_failed", id="open_failed"),
+    ],
+)
+async def test_send_message_attachment_error(
+    hass: HomeAssistant,
+    mock_send_message: MagicMock,
+    is_allowed: bool,
+    translation_key: str,
+) -> None:
+    """Test that an unusable attachment raises and sends nothing."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=is_allowed),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "notify",
+            "pushover",
+            {
+                "message": "Hello",
+                "data": {"attachment": "/nonexistent/attachment.jpg"},
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    mock_send_message.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_pushover")
+async def test_send_message_with_attachment(
+    hass: HomeAssistant,
+    mock_send_message: MagicMock,
+    tmp_path: Path,
+) -> None:
+    """Test that a readable attachment is sent as an open file."""
+    attachment = tmp_path / "attachment.jpg"
+    attachment.write_bytes(b"image data")
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await hass.services.async_call(
+            "notify",
+            "pushover",
+            {
+                "message": "Hello",
+                "data": {"attachment": str(attachment)},
+            },
+            blocking=True,
+        )
+
+    image = mock_send_message.call_args.kwargs["image"]
+    assert image.name == str(attachment)
+    image.close()
 
 
 async def test_cancel_by_tag(
