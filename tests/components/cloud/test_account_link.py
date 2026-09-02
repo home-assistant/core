@@ -288,7 +288,7 @@ async def test_refresh_token_error(
     status: int,
     expected_exception: type[OAuth2TokenRequestError],
 ) -> None:
-    """Test that _async_refresh_token wraps ClientResponseError."""
+    """Test a failing token request reports the service, not the cloud domain."""
     hass.data[DATA_CLOUD] = None
     impl = account_link.CloudOAuth2Implementation(hass, "test")
 
@@ -299,7 +299,7 @@ async def test_refresh_token_error(
         ),
         pytest.raises(expected_exception) as exc_info,
     ):
-        await impl._async_refresh_token(
+        await impl.async_refresh_token(
             {"refresh_token": "mock-refresh", "access_token": "mock-access"}
         )
 
