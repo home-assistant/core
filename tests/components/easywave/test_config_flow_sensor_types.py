@@ -1,5 +1,6 @@
 """Tests for neo sensor type labels in the config flow."""
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -145,3 +146,60 @@ async def test_listen_for_telegram_returns_none_when_learning_busy() -> None:
 
     assert result is None
     coordinator.suspend_telegram_listener.assert_not_called()
+
+
+async def test_await_learning_task_uses_entry_background_task(
+    hass: HomeAssistant,
+) -> None:
+    """Device learning is owned by the config entry so unload cancels it."""
+    helper = _SensorListHelper()
+    helper.hass = hass
+    entry = MagicMock()
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _learning(_coordinator: object) -> dict[str, object] | None:
+        started.set()
+        await release.wait()
+        return {"serial": "aa"}
+
+    def _create_background_task(
+        _hass: HomeAssistant,
+        coro: object,
+        name: str,
+        eager_start: bool = True,
+    ) -> asyncio.Task[Any]:
+        return hass.async_create_background_task(coro, name, eager_start)  # type: ignore[arg-type]
+
+    entry.async_create_background_task = MagicMock(side_effect=_create_background_task)
+    helper._get_entry = MagicMock(return_value=entry)  # type: ignore[method-assign]
+    helper._get_coordinator = MagicMock(  # type: ignore[method-assign]
+        return_value=MagicMock(
+            transceiver=MagicMock(is_connected=True),
+            is_learning_busy=MagicMock(return_value=False),
+        )
+    )
+    helper._init_device_flow()
+    helper._do_learning = _learning  # type: ignore[method-assign]
+    helper.async_show_progress = MagicMock(  # type: ignore[method-assign]
+        return_value={"type": "progress"}
+    )
+    helper.async_abort = MagicMock(return_value={"type": "abort"})  # type: ignore[method-assign]
+
+    result = await helper._await_learning_task(
+        progress_action="learn",
+        confirm_step="confirm",
+        learn_step="learn",
+    )
+
+    await asyncio.wait_for(started.wait(), timeout=1)
+    entry.async_create_background_task.assert_called_once()
+    assert (
+        entry.async_create_background_task.call_args.args[2]
+        == "easywave_device_learning"
+    )
+    assert result == {"type": "progress"}
+    assert helper._learn_task is not None
+    assert not helper._learn_task.done()
+    release.set()
+    await helper._learn_task

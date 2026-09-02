@@ -79,11 +79,15 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
         self._learning_lock = asyncio.Lock()
+        self._shutting_down = False
         self._ha_started = self.hass.state is CoreState.running
         self._gateway_last_status = "disconnected"
         self._battery_ok_streak: dict[str, int] = {}
         self._battery_state: dict[str, str] = {}
         self._register_homeassistant_started_listener()
+        # Run before DataUpdateCoordinator.async_shutdown (LIFO) so cancelled
+        # learning cleanup cannot restart reception after unload begins.
+        self.config_entry.async_on_unload(self._mark_shutting_down)
 
     def is_learning_busy(self) -> bool:
         """Return True when a device learning session holds the hardware lock."""
@@ -99,6 +103,11 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def end_learning(self) -> None:
         """Release a device learning session lock."""
         self._learning_lock.release()
+
+    @callback
+    def _mark_shutting_down(self) -> None:
+        """Prevent telegram reception from restarting during entry unload."""
+        self._shutting_down = True
 
     def _update_gateway_device(self) -> None:
         """Update the gateway device in the device registry."""
@@ -274,6 +283,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect transceiver."""
+        self._shutting_down = True
         try:
             task = self._stop_telegram_listener()
             if task is not None:
@@ -362,6 +372,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _start_telegram_listener(self) -> None:
         """Start the background telegram listener task."""
+        if self._shutting_down:
+            return
         if self._listener_task is not None and not self._listener_task.done():
             return
         if not self._has_telegram_listeners or self.is_offline:

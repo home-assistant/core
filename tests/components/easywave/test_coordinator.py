@@ -438,6 +438,35 @@ async def test_async_shutdown(
     await coordinator.async_shutdown()
 
     mock_transceiver.dispose.assert_awaited_once()
+    assert coordinator._shutting_down is True
+
+
+async def test_resume_telegram_listener_ignored_while_shutting_down(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Learning cleanup must not restart reception after unload begins."""
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+
+    await coordinator.async_config_entry_first_refresh()
+    entity = MagicMock()
+    coordinator.register_sensor_entities([entity])
+    await coordinator.hass.async_block_till_done(wait_background_tasks=True)
+    assert coordinator._listener_task is not None
+
+    coordinator._mark_shutting_down()
+    await coordinator.suspend_telegram_listener()
+    mock_transceiver.receive_telegram.reset_mock()
+    coordinator.resume_telegram_listener()
+    await coordinator.hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator._listener_task is None
+    mock_transceiver.receive_telegram.assert_not_called()
+    await coordinator.async_shutdown()
 
 
 async def test_async_shutdown_error(

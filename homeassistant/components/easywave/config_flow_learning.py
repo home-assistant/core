@@ -214,7 +214,9 @@ class EasywaveDeviceFlowMixin:
             return self.async_abort(reason="learning_in_progress")
 
         if self._learn_task is None:
-            self._learn_task = self.hass.async_create_task(
+            # Bind to the entry so unload cancels learning before dispose cleanup.
+            self._learn_task = self._get_entry().async_create_background_task(
+                self.hass,
                 self._do_learning(coordinator),
                 "easywave_device_learning",
             )

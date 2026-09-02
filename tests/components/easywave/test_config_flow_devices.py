@@ -85,7 +85,7 @@ async def _start_neo_sensor_flow(
         result["flow_id"], {"next_step_id": "learn"}
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     return await hass.config_entries.subentries.async_configure(result["flow_id"])
 
 
@@ -622,7 +622,7 @@ async def test_transmitter_flow_with_deferred_telegram(
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "learn_transmitter"
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     result = await hass.config_entries.subentries.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "transmitter_confirm"
