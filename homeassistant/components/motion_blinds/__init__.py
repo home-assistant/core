@@ -121,6 +121,11 @@ async def async_setup_entry(
 
     return True
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: MotionBlindsConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return True
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MotionBlindsConfigEntry
