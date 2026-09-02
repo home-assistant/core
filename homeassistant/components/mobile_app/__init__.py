@@ -50,6 +50,9 @@ from .const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
+    DATA_PUSH_SUBSCRIPTION_DEBOUNCE,
+    DATA_PUSH_SUBSCRIPTION_UNSUBS,
+    DATA_PUSH_SUBSCRIPTIONS,
     DATA_STORE,
     DOMAIN,
     SENSOR_TYPES,
@@ -60,6 +63,11 @@ from .const import (
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
 from .live_activity.store import async_cleanup_expired_live_activity_tokens
+from .push_subscription import (
+    async_restore_push_subscriptions,
+    async_teardown_device_subscriptions,
+    remove_stored_device_subscriptions,
+)
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
@@ -82,7 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
-        app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
+        app_config = {
+            DATA_DELETED_IDS: [],
+            DATA_LIVE_ACTIVITY_TOKENS: {},
+            DATA_PUSH_SUBSCRIPTIONS: {},
+        }
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
@@ -90,6 +102,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DEVICES: {},
         DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
         DATA_LIVE_ACTIVITY_CLEANUP_CANCEL: None,
+        DATA_PUSH_SUBSCRIPTIONS: app_config.get(DATA_PUSH_SUBSCRIPTIONS, {}),
+        DATA_PUSH_SUBSCRIPTION_UNSUBS: {},
+        DATA_PUSH_SUBSCRIPTION_DEBOUNCE: {},
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
@@ -230,6 +245,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass_notify.async_reload(hass, DOMAIN)
 
+    # Restore any push subscriptions persisted before a restart so the app does
+    # not need to re-register them.
+    async_restore_push_subscriptions(hass, webhook_id)
+
     return True
 
 
@@ -242,6 +261,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
 
     webhook_unregister(hass, webhook_id)
+    async_teardown_device_subscriptions(hass, webhook_id)
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
     await hass_notify.async_reload(hass, DOMAIN)
@@ -254,6 +274,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
+    remove_stored_device_subscriptions(hass, webhook_id)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
@@ -275,4 +296,6 @@ class _MobileAppStore(Store[dict[str, Any]]):
         """Migrate mobile_app storage to the current version."""
         if old_major_version == 1 and old_minor_version < 2:
             old_data.setdefault(DATA_LIVE_ACTIVITY_TOKENS, {})
+        if old_major_version == 1 and old_minor_version < 3:
+            old_data.setdefault(DATA_PUSH_SUBSCRIPTIONS, {})
         return old_data
