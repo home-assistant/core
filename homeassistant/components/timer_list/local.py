@@ -12,13 +12,12 @@ from functools import partial
 from typing import override
 
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
 from . import TimerItem, TimerListEntity
-from .const import DOMAIN, TimerListEntityFeature, TimerListEventType, TimerStatus
+from .const import TimerListEntityFeature, TimerListEventType, TimerStatus
 
 _ARCHIVE_EVENTS = {
     TimerStatus.FINISHED: TimerListEventType.FINISHED,
@@ -158,17 +157,6 @@ class InMemoryTimerListEntity(TimerListEntity):
         self._unschedule(timer_id)
         del self._timers[timer_id]
         self._notify(TimerListEventType.REMOVED, timer)
-
-    @override
-    def _get_timer(self, timer_id: str) -> TimerItem:
-        """Return a timer by id or raise if it does not exist."""
-        if (timer := self._timers.get(timer_id)) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="timer_not_found",
-                translation_placeholders={"timer_id": timer_id},
-            )
-        return timer
 
     @callback
     def _schedule(self, timer: TimerItem) -> None:

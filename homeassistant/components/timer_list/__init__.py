@@ -310,8 +310,8 @@ class TimerListEntity(Entity):
     def _get_timer(self, timer_id: str) -> TimerItem:
         """Return a timer by id or raise if it does not exist.
 
-        Implementations that can look an id up more cheaply than scanning
-        ``timers`` should override this, keeping the same exception.
+        Implementations holding enough timers for the scan to matter may
+        override this, as long as they raise the same exception.
         """
         for timer in self.timers:
             if timer.timer_id == timer_id:
