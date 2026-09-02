@@ -4,13 +4,28 @@ from typing import override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
-from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberMode,
+    RestoreNumber,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN, UNIT_MAP
+from . import FullDevice, SmartThingsConfigEntry, SmartThingsData
+from .const import (
+    DEFAULT_FAN_SPEED_COUNT,
+    DOMAIN,
+    MAIN,
+    MAX_FAN_SPEED_COUNT,
+    MIN_FAN_SPEED_COUNT,
+    UNIT_MAP,
+    fan_speed_count_signal,
+)
 from .entity import SmartThingsEntity
 
 
@@ -47,6 +62,13 @@ async def async_setup_entry(
             Attribute.COOLING_SETPOINT_RANGE
         ].value
         is not None
+    )
+    entities.extend(
+        SmartThingsFanSpeedCountNumberEntity(entry_data, device)
+        for device in entry_data.devices.values()
+        if Capability.SWITCH in device.status[MAIN]
+        and Capability.FAN_SPEED in device.status[MAIN]
+        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[MAIN]
     )
     async_add_entities(entities)
 
@@ -250,3 +272,66 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
             Command.SET_COOLING_SETPOINT,
             int(value),
         )
+
+
+class SmartThingsFanSpeedCountNumberEntity(RestoreNumber):
+    """Local-only config entity: how many speeds a SmartThings fan supports.
+
+    SmartThings never reports this (see fan.py), so core assumes 3 for every
+    fan. This isn't backed by a real device capability -- it's a per-device
+    override that lives on the fan's own device page (Settings > Devices >
+    that fan > this entity, listed under "Configuration"), and fan.py reads
+    it live via `entry_data.fan_speed_counts`.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "fan_speed_count"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = MIN_FAN_SPEED_COUNT
+    _attr_native_max_value = MAX_FAN_SPEED_COUNT
+    _attr_native_step = 1
+    _attr_mode = NumberMode.BOX
+    _attr_should_poll = False
+
+    def __init__(self, entry_data: SmartThingsData, device: FullDevice) -> None:
+        """Initialize the instance."""
+        self._entry_data = entry_data
+        self._device_id = device.device.device_id
+        self._attr_unique_id = f"{self._device_id}_fan_speed_count"
+        # Same identifiers as the fan's own device -> shows up on that
+        # device's page instead of creating a separate device.
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._device_id)})
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last configured value, or default to DEFAULT_FAN_SPEED_COUNT."""
+        await super().async_added_to_hass()
+        restored = await self.async_get_last_number_data()
+        value = DEFAULT_FAN_SPEED_COUNT
+        if restored is not None and restored.native_value is not None:
+            value = int(restored.native_value)
+            value = max(
+                int(self._attr_native_min_value),
+                min(int(self._attr_native_max_value), value),
+            )
+        self._entry_data.fan_speed_counts[self._device_id] = value
+        async_dispatcher_send(self.hass, fan_speed_count_signal(self._device_id))
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the currently configured speed count."""
+        return self._entry_data.fan_speed_counts.get(
+            self._device_id, DEFAULT_FAN_SPEED_COUNT
+        )
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Store the new speed count and tell the fan entity to refresh."""
+        clamped_value = max(
+            int(self._attr_native_min_value),
+            min(int(self._attr_native_max_value), int(value)),
+        )
+        self._entry_data.fan_speed_counts[self._device_id] = clamped_value
+        self.async_write_ha_state()
+        async_dispatcher_send(self.hass, fan_speed_count_signal(self._device_id))

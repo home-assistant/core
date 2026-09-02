@@ -6,7 +6,8 @@ from typing import Any, override
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -14,13 +15,10 @@ from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
-from homeassistant.util.scaling import int_states_in_range
 
-from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from . import FullDevice, SmartThingsConfigEntry, SmartThingsData
+from .const import DEFAULT_FAN_SPEED_COUNT, MAIN, fan_speed_count_signal
 from .entity import SmartThingsEntity
-
-SPEED_RANGE = (1, 3)  # off is not included
 
 SMART = 14
 PRESET_SMART = "smart"
@@ -34,7 +32,7 @@ async def async_setup_entry(
     """Add fans for a config entry."""
     entry_data = entry.runtime_data
     entities: list[FanEntity] = [
-        SmartThingsFan(entry_data.client, device)
+        SmartThingsFan(entry_data.client, device, entry_data)
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
         and any(
@@ -65,9 +63,10 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
     _attr_name = None
-    _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, device: FullDevice, entry_data: SmartThingsData
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
@@ -78,7 +77,42 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
                 Capability.AIR_CONDITIONER_FAN_MODE,
             },
         )
+        self._entry_data = entry_data
         self._attr_supported_features = self._determine_features()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates, including this device's speed-count number entity."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                fan_speed_count_signal(self.device.device.device_id),
+                self._handle_speed_count_updated,
+            )
+        )
+
+    @callback
+    def _handle_speed_count_updated(self) -> None:
+        """Refresh state when the device's "Fan speed count" number entity changes."""
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def speed_count(self) -> int:
+        """Return the number of speeds this fan supports.
+
+        SmartThings doesn't expose this anywhere in the device status, so it
+        defaults to 3 unless overridden by that device's "Fan speed count"
+        config entity (see number.py), which lives on this same device page.
+        """
+        return self._entry_data.fan_speed_counts.get(
+            self.device.device.device_id, DEFAULT_FAN_SPEED_COUNT
+        )
+
+    @property
+    def _speed_range(self) -> tuple[int, int]:
+        return (1, self.speed_count)
 
     def _determine_features(self):
         flags = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
@@ -96,7 +130,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         if percentage == 0:
             await self.execute_device_command(Capability.SWITCH, Command.OFF)
         else:
-            value = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            value = math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
             await self.execute_device_command(
                 Capability.FAN_SPEED,
                 Command.SET_FAN_SPEED,
@@ -144,7 +178,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(
-            SPEED_RANGE,
+            self._speed_range,
             self.get_attribute_value(Capability.FAN_SPEED, Attribute.FAN_SPEED),
         )
 

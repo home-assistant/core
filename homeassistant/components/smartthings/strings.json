@@ -233,6 +233,9 @@
       "cooler_temperature": {
         "name": "Fridge temperature"
       },
+      "fan_speed_count": {
+        "name": "Number of speeds"
+      },
       "freezer_temperature": {
         "name": "Freezer temperature"
       },

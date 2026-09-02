@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -92,6 +92,11 @@ class SmartThingsData:
     scenes: dict[str, Scene]
     rooms: dict[str, str]
     client: SmartThings
+    # device_id -> number of fan speeds (not counting off). Populated/edited
+    # via the per-device "Fan speed count" config number entity (number.py).
+    # SmartThings doesn't expose this anywhere in device status, so fan.py
+    # falls back to a default of 3 for any device not present here.
+    fan_speed_counts: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
