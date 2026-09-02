@@ -90,7 +90,7 @@ class LookinUDPManager:
 
 # One UDP listener serves every lookin device, so the manager is shared between
 # config entries rather than owned by any one of them.
-UDP_MANAGER: HassKey[LookinUDPManager] = HassKey(f"{DOMAIN}_udp_manager")
+UDP_MANAGER: HassKey[LookinUDPManager] = HassKey(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bool:
