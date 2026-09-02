@@ -97,9 +97,6 @@
       "compressor_rpm": {
         "name": "Compressor speed"
       },
-      "cooling_available_from": {
-        "name": "Cooling available from"
-      },
       "cooling_blocked_by": {
         "name": "Cooling blocked by",
         "state": {
@@ -159,6 +156,9 @@
           "none": "Not stopped",
           "thermostat_disabled": "Thermostat disabled"
         }
+      },
+      "cooling_wait_time": {
+        "name": "Cooling wait time"
       },
       "cop": {
         "name": "COP"

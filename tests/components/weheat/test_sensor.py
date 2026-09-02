@@ -159,62 +159,41 @@ async def test_code_becoming_unrecognised_reports_unknown(
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
-async def test_cooling_timestamps_exist_before_the_first_cooling_cycle(
+async def test_last_cooling_exists_before_the_first_cooling_cycle(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a heat pump that can cool but has not yet gets the cooling timestamps.
+    """Test a heat pump that can cool but has not yet still gets the sensor.
 
     Entities are only created during setup, so a sensor skipped here would never
     appear once the heat pump does complete a cooling cycle.
     """
     mock_weheat_heat_pump.last_cooling_time = None
-    mock_weheat_heat_pump.cooling_available_from = None
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.test_model_last_cooling").state == STATE_UNKNOWN
-    assert (
-        hass.states.get("sensor.test_model_cooling_available_from").state
-        == STATE_UNKNOWN
-    )
 
 
-@pytest.mark.parametrize(
-    ("unmet", "expected"),
-    [
-        # only the restart delay puts a moment on this sensor
-        pytest.param(
-            ("exponential_backoff",), "2025-06-21T15:30:00+00:00", id="waiting"
-        ),
-        pytest.param((), STATE_UNKNOWN, id="delay_has_passed"),
-        # cooling can be held off for another reason without any delay running
-        pytest.param(
-            ("outside_air_temperature",), STATE_UNKNOWN, id="blocked_otherwise"
-        ),
-    ],
-)
 @pytest.mark.usefixtures("mock_weheat_discover")
-async def test_cooling_available_from(
+async def test_cooling_wait_time(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    unmet: tuple[str, ...],
-    expected: str,
 ) -> None:
-    """Test a moment is reported only while the heat pump waits on the delay."""
-    mock_weheat_heat_pump.cooling_start_conditions = _start_conditions(*unmet)
+    """Test the wait after a cooling cycle is reported as the heat pump gives it."""
+    mock_weheat_heat_pump.cooling_backoff = 360
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.test_model_cooling_available_from").state == expected
+    assert hass.states.get("sensor.test_model_cooling_wait_time").state == "360"
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
-async def test_a_heat_pump_without_cooling_gets_no_cooling_timestamps(
+async def test_a_heat_pump_without_cooling_gets_no_cooling_sensors(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -222,13 +201,13 @@ async def test_a_heat_pump_without_cooling_gets_no_cooling_timestamps(
     """Test a heat pump that does not cool gets no cooling sensors at all."""
     mock_weheat_heat_pump.cooling_activity = None
     mock_weheat_heat_pump.last_cooling_time = None
-    mock_weheat_heat_pump.cooling_available_from = None
+    mock_weheat_heat_pump.cooling_backoff = None
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.test_model_last_cooling") is None
-    assert hass.states.get("sensor.test_model_cooling_available_from") is None
+    assert hass.states.get("sensor.test_model_cooling_wait_time") is None
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")

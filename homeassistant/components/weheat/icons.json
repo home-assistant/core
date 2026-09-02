@@ -63,9 +63,6 @@
       "compressor_rpm": {
         "default": "mdi:fan"
       },
-      "cooling_available_from": {
-        "default": "mdi:timer-sand"
-      },
       "cooling_blocked_by": {
         "default": "mdi:snowflake-alert"
       },
@@ -77,6 +74,9 @@
       },
       "cooling_stop_reason": {
         "default": "mdi:snowflake-off"
+      },
+      "cooling_wait_time": {
+        "default": "mdi:timer-sand"
       },
       "cop": {
         "default": "mdi:speedometer"

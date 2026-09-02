@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
@@ -53,18 +54,6 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     # during setup, so a sensor whose value_fn can return None on a heat pump that
     # does support it would otherwise never appear once a value does arrive.
     supported_fn: Callable[[HeatPump], bool] | None = None
-
-
-def _cooling_available_from(status: HeatPump) -> datetime | None:
-    """Return when the restart delay ends, while the heat pump is still waiting.
-
-    The library reports the moment the delay ends even once it has gone by, so
-    follow the heat pump's own start condition for whether it is still waiting.
-    """
-    conditions = status.cooling_start_conditions
-    if conditions is None or conditions["exponential_backoff"]:
-        return None
-    return status.cooling_available_from
 
 
 def _does_cooling(status: HeatPump) -> bool:
@@ -296,11 +285,12 @@ SENSORS = [
         ),
     ),
     WeHeatSensorEntityDescription(
-        translation_key="cooling_available_from",
-        key="cooling_available_from",
-        supported_fn=_does_cooling,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=_cooling_available_from,
+        translation_key="cooling_wait_time",
+        key="cooling_wait_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: status.cooling_backoff,
     ),
 ]
 
