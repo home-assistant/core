@@ -53,7 +53,7 @@ class CollectionImageImageEntity(ImageEntity):
     """Implement the image entity for Collection Image."""
 
     path: Path | None
-    current_image_id: str | None
+    _current_image_id: str | None = None
 
     def __init__(
         self,
@@ -113,21 +113,21 @@ class CollectionImageImageEntity(ImageEntity):
 
     async def get_first_image(self) -> None:
         """Get the first image."""
-        await self.get_image_at_position(0)
+        await self._get_image_at_position(0)
 
     async def get_last_image(self) -> None:
         """Get the last image."""
-        await self.get_image_at_position(-1)
+        await self._get_image_at_position(-1)
 
     async def get_next_image(self, wrap=False) -> None:
         """Get the next image."""
-        await self.get_next_sequential_image(False, wrap)
+        await self._get_next_sequential_image(False, wrap)
 
     async def get_previous_image(self, wrap=False) -> None:
         """Get the previous image."""
-        await self.get_next_sequential_image(True, wrap)
+        await self._get_next_sequential_image(True, wrap)
 
-    async def get_image_at_position(self, position: Literal[0, -1]) -> None:
+    async def _get_image_at_position(self, position: Literal[0, -1]) -> None:
         """Get the first or last image."""
 
         filtered = await self.get_valid_images()
@@ -139,7 +139,7 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
-    async def get_next_sequential_image(self, reverse=False, wrap=False) -> None:
+    async def _get_next_sequential_image(self, reverse=False, wrap=False) -> None:
         """Get the next or previous image."""
 
         filtered = await self.get_valid_images()
@@ -156,7 +156,7 @@ class CollectionImageImageEntity(ImageEntity):
             None,
         )
         if current_index is None:
-            new_index = 0
+            new_index = -1 if reverse else 0
         else:
             new_index = current_index + (-1 if reverse else 1)
             if new_index < 0:
@@ -170,7 +170,7 @@ class CollectionImageImageEntity(ImageEntity):
 
     async def update_image(self, image_id: str):
         """Update the entity from the image_id."""
-        self.current_image_id = image_id
+        self._current_image_id = image_id
         self._cached_image = None
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
