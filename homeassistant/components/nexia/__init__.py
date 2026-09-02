@@ -82,7 +82,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bo
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: NexiaConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: NexiaConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a nexia config entry from a device."""
     coordinator = entry.runtime_data

@@ -485,17 +485,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ),
     )
 
-    # Register listeners for polling vehicle sw_version updates
-    for vehicle_data in vehicles:
-        if vehicle_data.poll:
-            entry.async_on_unload(
-                vehicle_data.coordinator.async_add_listener(
-                    create_vehicle_polling_listener(
-                        hass, vehicle_data.vin, entry.entry_id, vehicle_data.coordinator
-                    )
-                )
-            )
-
     # Setup energy devices with models, versions, and listeners
     for energysite in energysites:
         async_setup_energy_device(hass, entry, energysite, device_registry)
@@ -661,24 +650,6 @@ def create_vehicle_streaming_listener(
             async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
 
     return handle_version
-
-
-def create_vehicle_polling_listener(
-    hass: HomeAssistant,
-    vin: str,
-    config_entry_id: str,
-    coordinator: TeslemetryVehicleDataCoordinator,
-) -> Callable[[], None]:
-    """Create a listener for vehicle polling coordinator updates."""
-
-    def handle_update() -> None:
-        """Handle coordinator update."""
-        if version := coordinator.data.get("vehicle_state_car_version"):
-            # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
-            sw_version = version.split(" ")[0]
-            async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
-
-    return handle_update
 
 
 def create_energy_info_listener(

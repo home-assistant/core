@@ -318,6 +318,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
 /tests/components/coinbase/ @tombrien
+/homeassistant/components/collection_image/ @karwosts
+/tests/components/collection_image/ @karwosts
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
 /homeassistant/components/comelit/ @chemelli74
@@ -839,7 +841,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/hypontech/ @jcisio
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
-/homeassistant/components/iammeter/ @lewei50
+/homeassistant/components/iammeter/ @lewei50 @IAMMETER @miwyf
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
 /homeassistant/components/icloud/ @Quentame @nzapponi
@@ -1236,6 +1238,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/netgear/ @Quentame @starkillerOG
 /homeassistant/components/netgear_lte/ @tkdrob
 /tests/components/netgear_lte/ @tkdrob
+/homeassistant/components/netio/ @agners
+/tests/components/netio/ @agners
 /homeassistant/components/network/ @home-assistant/core
 /tests/components/network/ @home-assistant/core
 /homeassistant/components/nexia/ @bdraco
@@ -1594,6 +1598,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl @edurenye
 /tests/components/saj/ @fredericvl @edurenye
+/homeassistant/components/samsung_exlink/ @balloob
+/tests/components/samsung_exlink/ @balloob
 /homeassistant/components/samsung_infrared/ @lmaertin
 /tests/components/samsung_infrared/ @lmaertin
 /homeassistant/components/samsungtv/ @chemelli74
@@ -1882,6 +1888,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tolo/ @MatthiasLohr
 /homeassistant/components/tomorrowio/ @raman325 @lymanepp
 /tests/components/tomorrowio/ @raman325 @lymanepp
+/homeassistant/components/tonewinner/ @emma-sg
+/tests/components/tonewinner/ @emma-sg
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
 /homeassistant/components/touchline/ @mnordseth

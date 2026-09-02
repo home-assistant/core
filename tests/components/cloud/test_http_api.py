@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from hass_nabucasa import AlreadyConnectedError
+from hass_nabucasa import AlreadyConnectedError, AuthTimeoutError
 from hass_nabucasa.auth import (
     InvalidTotpCode,
     MFARequired,
@@ -386,6 +386,24 @@ async def test_login_view_request_timeout(
     assert cloud.login.call_args[1]["check_connection"] is False
 
     assert req.status == HTTPStatus.BAD_GATEWAY
+
+
+async def test_login_view_request_auth_timeout(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test authentication timeout while trying to log in."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = AuthTimeoutError
+
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert cloud.login.call_args[1]["check_connection"] is False
+
+    assert req.status == HTTPStatus.GATEWAY_TIMEOUT
 
 
 async def test_login_view_with_already_existing_connection(

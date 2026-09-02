@@ -1,0 +1,26 @@
+{
+  "config": {
+    "error": {
+      "failed_browse": "Failed to browse media: {error}",
+      "selected_media_no_images": "The selected media has no images. Please select a media directory with images."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "media": "Media"
+        },
+        "data_description": {
+          "media": "The media directory where images will be retrieved from."
+        },
+        "description": "The Collection Image integration creates a single image entity by selecting an image from the selected media folder.",
+        "submit": "Create"
+      }
+    }
+  },
+  "exceptions": {
+    "image_read_error": {
+      "message": "Error reading image from {path}: {error}"
+    }
+  },
+  "title": "Collection Image"
+}

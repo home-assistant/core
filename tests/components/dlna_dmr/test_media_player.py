@@ -1359,12 +1359,13 @@ async def test_unavailable_device(
             blocking=True,
         )
 
-    # Check hass device information has not been filled in yet
+    # The device is named after the config entry until it can be connected to;
+    # detailed information such as manufacturer is filled in once connected.
     device = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
-    assert device.name is None
+    assert device.name == MOCK_DEVICE_NAME
     assert device.manufacturer is None
 
     # Unload config entry to clean up

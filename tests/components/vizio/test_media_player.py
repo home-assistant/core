@@ -290,6 +290,27 @@ async def _test_service(
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_tv_without_volume_in_audio_settings(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test a TV whose audio settings omit volume.
+
+    Some firmware does not list `volume` (or `mute`) in the `audio`
+    settings collection even though the individual settings still work.
+    The entity must still load, with the unavailable attributes reported
+    as None instead of raising on every coordinator update.
+    """
+    async with _cm_for_test_setup_without_apps({"eq": CURRENT_EQ}, True):
+        await setup_integration(hass, mock_tv_config_entry)
+
+        attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
+        # Unset attributes are omitted from the state entirely.
+        assert attr.get("volume_level") is None
+        assert attr.get("is_volume_muted") is None
+        assert attr[ATTR_SOUND_MODE] == CURRENT_EQ
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_speaker_on(
     hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
 ) -> None:

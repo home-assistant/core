@@ -36,7 +36,7 @@ NO_ENTITIES_PROMPT = (
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
-    "the home using the `GetLiveContext` tool."
+    "the home using the `homeassistant__GetLiveContext` tool."
     " This is a primary function."
     " Do not state you lack the\n"
     "functionality if the question requires live data.\n"
@@ -50,7 +50,7 @@ DYNAMIC_CONTEXT_PROMPT = (
     ' "What mode is the thermostat in?",'
     ' "What is the temperature outside?"):\n'
     "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `GetLiveContext`."
+    "    2.  You MUST call `homeassistant__GetLiveContext`."
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
@@ -198,7 +198,7 @@ class GetLiveContextTool(Tool):
     returns state for entities based on intent parameters.
     """
 
-    name = "GetLiveContext"
+    name = "homeassistant__GetLiveContext"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"

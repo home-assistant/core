@@ -431,11 +431,13 @@ def async_get_nodes_from_area_id(
             if entity.platform == DOMAIN and entity.device_id is not None
         }
     )
-    # Add devices in an area that are Z-Wave JS devices
+    # Add devices in an area that are Z-Wave JS devices. Child devices are skipped
+    # since a child device is not a Z-Wave JS node.
     nodes.update(
         async_get_node_from_device_id(hass, device.id, dev_reg)
         for device in dr.async_entries_for_area(dev_reg, area_id)
-        if any(
+        if not isinstance(device, dr.ChildDeviceEntry)
+        and any(
             cast(
                 ZwaveJSConfigEntry,
                 hass.config_entries.async_get_entry(config_entry_id),

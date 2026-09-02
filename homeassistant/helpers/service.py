@@ -430,8 +430,8 @@ async def async_extract_config_entry_ids(
 
     # Some devices may have no entities
     for device_id in referenced.referenced_devices:
-        if (device_id in dev_reg.devices or device_id in dev_reg.child_devices) and (
-            device := dev_reg.async_get(device_id)
+        if (
+            device := dev_reg.async_get(device_id, include_composite_devices=False)
         ) is not None:
             config_entry_ids.update(device.config_entries)
 

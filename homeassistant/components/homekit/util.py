@@ -28,11 +28,10 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntit
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -398,7 +397,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
 def get_media_player_features(state: State) -> list[str]:
     """Determine features for media players."""
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     supported_modes = []
     if features & (
@@ -711,7 +710,7 @@ def state_needs_accessory_mode(state: State) -> bool:
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS)
+        and state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         in (
             MediaPlayerDeviceClass.TV,
             MediaPlayerDeviceClass.RECEIVER,
@@ -719,7 +718,7 @@ def state_needs_accessory_mode(state: State) -> bool:
         )
     ) or (
         state.domain == REMOTE_DOMAIN
-        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        and state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
 

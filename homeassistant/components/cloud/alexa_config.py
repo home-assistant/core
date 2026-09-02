@@ -383,7 +383,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities()
+            await self._async_sync_entities_unless_relink_needed()
             return
 
         # Nothing to do if no Alexa related things have changed
@@ -396,7 +396,14 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         ):
             return
 
-        await self.async_sync_entities()
+        await self._async_sync_entities_unless_relink_needed()
+
+    async def _async_sync_entities_unless_relink_needed(self) -> None:
+        """Sync entities, tolerating an account with no linked Alexa skill."""
+        try:
+            await self.async_sync_entities()
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
+            await self.set_authorized(False)
 
     @callback
     def _async_exposed_entities_updated(self) -> None:

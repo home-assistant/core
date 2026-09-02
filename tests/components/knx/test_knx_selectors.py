@@ -2,9 +2,9 @@
 
 from typing import Any
 
+from probatio import to_field_list
 import pytest
 import voluptuous as vol
-from voluptuous_serialize import convert
 
 from homeassistant.components.knx.const import ColorTempModes
 from homeassistant.components.knx.storage.knx_selector import (
@@ -350,4 +350,4 @@ def test_ga_selector_serialization(
 )
 def test_serialization(schema: Any, serialized: dict[str, Any]) -> None:
     """Test serialization of the selector."""
-    assert convert(schema, custom_serializer=knx_serializer) == serialized
+    assert to_field_list(schema, custom_serializer=knx_serializer) == serialized

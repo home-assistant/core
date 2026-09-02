@@ -29,6 +29,7 @@ from tests.typing import ClientSessionGenerator
 EXPECTED_VALUE_GETTERS = {
     "balance": lambda x: x["balance"]["balance"] / 100,
     "total_balance": lambda x: x["balance"]["total_balance"] / 100,
+    "spend_today": lambda x: abs(x["balance"]["spend_today"]) / 100,
     "pot_balance": lambda x: x["balance"] / 100,
 }
 

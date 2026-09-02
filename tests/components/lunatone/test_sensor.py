@@ -21,6 +21,7 @@ async def test_setup(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -41,6 +42,7 @@ async def test_sensor_value_update(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:

@@ -532,6 +532,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ariston": {
+      "name": "Ariston",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "arris_tg2492lg": {
       "name": "Arris TG2492LG",
       "integration_type": "hub",
@@ -1103,6 +1108,11 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "collection_image": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "color_extractor": {
       "name": "ColorExtractor",
@@ -3368,7 +3378,7 @@
       "name": "IntesisHome",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "iometer": {
       "name": "IOmeter",
@@ -4781,8 +4791,8 @@
     },
     "netio": {
       "name": "Netio",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "neurio_energy": {
@@ -5568,11 +5578,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "portlandgeneral": {
-      "name": "Portland General Electric (PGE)",
-      "integration_type": "virtual",
-      "supported_by": "opower"
-    },
     "powerfox": {
       "name": "Powerfox",
       "integrations": {
@@ -5977,8 +5982,8 @@
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "remote_calendar": {
@@ -6230,6 +6235,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "Samsung Family Hub"
+        },
+        "samsung_exlink": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Samsung TV via ExLink"
         },
         "samsung_infrared": {
           "integration_type": "device",
@@ -7389,6 +7400,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "tonewinner": {
+      "name": "Tonewinner",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "toon": {
       "name": "Toon",
@@ -8564,6 +8581,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "collection_image",
     "counter",
     "cpuspeed",
     "demo",

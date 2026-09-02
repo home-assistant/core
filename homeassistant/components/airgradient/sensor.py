@@ -210,7 +210,9 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         device_class=SensorDeviceClass.ENUM,
         options=list(PM_STANDARD_REVERSE),
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda config: PM_STANDARD.get(config.pm_standard),
+        value_fn=lambda config: (
+            PM_STANDARD.get(config.pm_standard) if config.pm_standard else None
+        ),
     ),
     AirGradientConfigSensorEntityDescription(
         key="display_brightness",

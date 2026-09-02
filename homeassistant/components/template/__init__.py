@@ -102,8 +102,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_all_devices=True,
     )
 
-    if device_id is not None and dr.async_get(hass).async_is_composite_device_id(
-        device_id
+    device_registry = dr.async_get(hass)
+    if (
+        device_id is not None
+        and device_registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
     ):
         # The device was split into one device per config entry; ask the user to
         # select a device again

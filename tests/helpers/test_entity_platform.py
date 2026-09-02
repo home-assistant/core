@@ -1531,7 +1531,7 @@ async def test_device_info_called(
 async def test_device_info_not_overrides(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test device info is forwarded correctly."""
+    """Test re-registering a device does not override existing values."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
     config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -1556,9 +1556,6 @@ async def test_device_info_not_overrides(
                     unique_id="qwer",
                     device_info={
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
-                        "default_name": "default name 1",
-                        "default_model": "default model 1",
-                        "default_manufacturer": "default manufacturer 1",
                     },
                 )
             ]
@@ -2734,8 +2731,8 @@ async def test_device_name_defaulting_config_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_title: str,
-    entity_device_name: str,
-    entity_device_default_name: str,
+    entity_device_name: str | None,
+    entity_device_default_name: str | None,
     expected_device_name: str,
 ) -> None:
     """Test setting the device name based on input info."""
@@ -2767,8 +2764,11 @@ async def test_device_name_defaulting_config_entry(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert await entity_platform.async_setup_entry(config_entry)
-    await hass.async_block_till_done()
+    # `default_name` is deprecated in the device registry; suppress the deprecation
+    # report so it does not raise when the entity is added.
+    with patch.object(dr, "report_usage"):
+        assert await entity_platform.async_setup_entry(config_entry)
+        await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, "1234"), config_entry.entry_id
@@ -2783,16 +2783,6 @@ async def test_device_name_defaulting_config_entry(
         # No identifiers
         ({}, 1),  # Empty device info does not prevent the entity from being created
         ({"name": "bla"}, 0),
-        ({"default_name": "bla"}, 0),
-        # Match multiple types
-        (
-            {
-                "identifiers": {("hue", "1234")},
-                "name": "bla",
-                "default_name": "yo",
-            },
-            0,
-        ),
     ],
 )
 async def test_device_type_error_checking(

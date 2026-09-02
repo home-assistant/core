@@ -522,7 +522,9 @@ class RuntimeEntryData:
         """
         self.available = False
         if self.bluetooth_device:
-            self.bluetooth_device.available = False
+            # Fails pending BLE slot waiters and clears the dead
+            # session's allocations in addition to closing the gate.
+            self.bluetooth_device.async_set_unavailable()
         # Make a copy since calling the disconnect callbacks
         # may also try to discard/remove themselves.
         for disconnect_cb in self.disconnect_callbacks.copy():

@@ -597,7 +597,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("image.my_template")
+    template_entity = entity_registry.async_get("image.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 

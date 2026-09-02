@@ -3,24 +3,18 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientError, Measures
+from airgradient import AirGradientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import async_load_measures_fixture, setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -45,15 +39,15 @@ async def test_create_entities(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test creating entities."""
-    mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
-        await async_load_fixture(hass, "measures_after_boot.json", DOMAIN)
+    mock_airgradient_client.get_current_measures.return_value = (
+        await async_load_measures_fixture(hass, "measures_after_boot.json")
     )
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert len(hass.states.async_all()) == 0
-    mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
-        await async_load_fixture(hass, "current_measures_indoor.json", DOMAIN)
+    mock_airgradient_client.get_current_measures.return_value = (
+        await async_load_measures_fixture(hass, "current_measures_indoor.json")
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
