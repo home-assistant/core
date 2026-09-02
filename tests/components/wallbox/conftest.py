@@ -50,12 +50,8 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_STATION: "12345",
             CHARGER_JWT_TOKEN: "test_token",
             CHARGER_JWT_REFRESH_TOKEN: "test_refresh_token",
-            CHARGER_JWT_TTL: (
-                datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
-            ),
-            CHARGER_JWT_REFRESH_TTL: (
-                datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
-            ),
+            CHARGER_JWT_TTL: (time.time() + 3600) * 1000,
+            CHARGER_JWT_REFRESH_TTL: (time.time() + 3600) * 1000,
         },
         entry_id="testEntry",
     )
@@ -98,12 +94,8 @@ def mock_wallbox():
         wallbox.getChargerStatus = Mock(return_value=WALLBOX_STATUS_RESPONSE)
         wallbox.jwtToken = "test_token"
         wallbox.jwtRefreshToken = "test_refresh_token"
-        wallbox.jwtTokenTtl = (
-            datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
-        )
-        wallbox.jwtRefreshTokenTtl = (
-            datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
-        )
+        wallbox.jwtTokenTtl = (time.time() + 3600) * 1000
+        wallbox.jwtRefreshTokenTtl = (time.time() + 3600) * 1000
         mock.return_value = wallbox
         yield wallbox
 
