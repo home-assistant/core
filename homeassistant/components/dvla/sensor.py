@@ -41,31 +41,15 @@ ENUM_OPTIONS = {
 }
 
 
-@dataclass(frozen=True, kw_only=True)
-class DVLASensorEntityDescription(SensorEntityDescription):
-    """Describe a DVLA sensor."""
-
-    value_fn: Callable[[Mapping[str, Any]], StateType | date]
+def raw_value(value: Any) -> StateType:
+    """Return a raw DVLA value."""
+    return cast(StateType, value)
 
 
-def value_fn(key: str) -> Callable[[Mapping[str, Any]], StateType]:
-    """Return a value function for a raw DVLA field."""
-
-    def _value_fn(data: Mapping[str, Any]) -> StateType:
-        return cast(StateType, data.get(key))
-
-    return _value_fn
-
-
-def enum_value_fn(
-    key: str,
-    options: Mapping[str, str],
-) -> Callable[[Mapping[str, Any]], StateType]:
+def enum_value_fn(options: Mapping[str, str]) -> Callable[[Any], StateType]:
     """Return a value function for a DVLA enum field."""
 
-    def _value_fn(data: Mapping[str, Any]) -> StateType:
-        value = data.get(key)
-
+    def _value_fn(value: Any) -> StateType:
         if value is None:
             return None
 
@@ -74,38 +58,35 @@ def enum_value_fn(
     return _value_fn
 
 
-def int_value_fn(key: str) -> Callable[[Mapping[str, Any]], StateType]:
-    """Return a value function for an integer DVLA field."""
+def int_value(value: Any) -> StateType:
+    """Return an integer DVLA value."""
 
-    def _value_fn(data: Mapping[str, Any]) -> StateType:
-        value = data.get(key)
+    if value is None:
+        return None
 
-        if value is None:
-            return None
-
-        try:
-            return int(value)
-        except TypeError, ValueError:
-            return None
-
-    return _value_fn
+    try:
+        return int(value)
+    except TypeError, ValueError:
+        return None
 
 
-def date_value_fn(key: str) -> Callable[[Mapping[str, Any]], StateType | date]:
-    """Return a value function for a date DVLA field."""
+def date_value(value: Any) -> StateType | date:
+    """Return a date DVLA value."""
 
-    def _value_fn(data: Mapping[str, Any]) -> StateType | date:
-        value = data.get(key)
+    if not isinstance(value, str):
+        return None
 
-        if not isinstance(value, str):
-            return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
 
-        try:
-            return date.fromisoformat(value)
-        except ValueError:
-            return None
 
-    return _value_fn
+@dataclass(frozen=True, kw_only=True)
+class DVLASensorEntityDescription(SensorEntityDescription):
+    """Describe a DVLA sensor."""
+
+    value_fn: Callable[[Any], StateType | date] = raw_value
 
 
 SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
@@ -114,97 +95,90 @@ SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
         translation_key="tax_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(TAX_STATUS_OPTIONS.values()),
-        value_fn=enum_value_fn("taxStatus", TAX_STATUS_OPTIONS),
+        value_fn=enum_value_fn(TAX_STATUS_OPTIONS),
     ),
     DVLASensorEntityDescription(
         key="taxDueDate",
         translation_key="tax_due_date",
         device_class=SensorDeviceClass.DATE,
-        value_fn=date_value_fn("taxDueDate"),
+        value_fn=date_value,
     ),
     DVLASensorEntityDescription(
         key="artEndDate",
         translation_key="additional_rate_of_tax_end_date",
         device_class=SensorDeviceClass.DATE,
-        value_fn=date_value_fn("artEndDate"),
+        value_fn=date_value,
     ),
     DVLASensorEntityDescription(
         key="motStatus",
         translation_key="mot_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(MOT_STATUS_OPTIONS.values()),
-        value_fn=enum_value_fn("motStatus", MOT_STATUS_OPTIONS),
+        value_fn=enum_value_fn(MOT_STATUS_OPTIONS),
     ),
     DVLASensorEntityDescription(
         key="engineCapacity",
         translation_key="engine_capacity",
         native_unit_of_measurement="cc",
-        value_fn=int_value_fn("engineCapacity"),
+        value_fn=int_value,
     ),
     DVLASensorEntityDescription(
         key="yearOfManufacture",
         translation_key="year_of_manufacture",
-        value_fn=int_value_fn("yearOfManufacture"),
+        value_fn=int_value,
     ),
     DVLASensorEntityDescription(
         key="co2Emissions",
         translation_key="co2_emissions",
         native_unit_of_measurement="g/km",
-        value_fn=int_value_fn("co2Emissions"),
+        value_fn=int_value,
     ),
     DVLASensorEntityDescription(
         key="fuelType",
         translation_key="fuel_type",
-        value_fn=value_fn("fuelType"),
     ),
     DVLASensorEntityDescription(
         key="colour",
         translation_key="color",
-        value_fn=value_fn("colour"),
     ),
     DVLASensorEntityDescription(
         key="typeApproval",
         translation_key="type_approval",
-        value_fn=value_fn("typeApproval"),
     ),
     DVLASensorEntityDescription(
         key="revenueWeight",
         translation_key="revenue_weight",
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-        value_fn=int_value_fn("revenueWeight"),
+        value_fn=int_value,
     ),
     DVLASensorEntityDescription(
         key="dateOfLastV5CIssued",
         translation_key="date_of_last_v5c_issued",
         device_class=SensorDeviceClass.DATE,
-        value_fn=date_value_fn("dateOfLastV5CIssued"),
+        value_fn=date_value,
     ),
     DVLASensorEntityDescription(
         key="motExpiryDate",
         translation_key="mot_expiry_date",
         device_class=SensorDeviceClass.DATE,
-        value_fn=date_value_fn("motExpiryDate"),
+        value_fn=date_value,
     ),
     DVLASensorEntityDescription(
         key="wheelplan",
         translation_key="wheelplan",
-        value_fn=value_fn("wheelplan"),
     ),
     DVLASensorEntityDescription(
         key="monthOfFirstRegistration",
         translation_key="month_of_first_registration",
-        value_fn=value_fn("monthOfFirstRegistration"),
     ),
     DVLASensorEntityDescription(
         key="realDrivingEmissions",
         translation_key="real_driving_emissions",
-        value_fn=int_value_fn("realDrivingEmissions"),
     ),
     DVLASensorEntityDescription(
         key="euroStatus",
         translation_key="euro_status",
-        value_fn=value_fn("euroStatus"),
     ),
 )
 
@@ -248,9 +222,19 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         )
         self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description
+        self._state = description.value_fn(coordinator.data)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._state = self.entity_description.value_fn(self.coordinator.data)
+        self.async_write_ha_state()
 
     @property
     @override
     def native_value(self) -> StateType | date:
         """Native value."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(
+            self.coordinator.data.get(self.entity_description.key)
+        )
