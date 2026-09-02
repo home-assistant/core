@@ -16,10 +16,9 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
-from .entity import ApSystemsEntity
+from .coordinator import ApSystemsConfigEntry, ApSystemsData
+from .entity import ApSystemsCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,7 +59,9 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.te1 + c.te2,
+        value_fn=lambda c: (
+            c.te1 + c.te2 if c.te1 is not None and c.te2 is not None else None
+        ),
     ),
     ApsystemsLocalApiSensorDescription(
         key="lifetime_production_p1",
@@ -84,7 +85,9 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.e1 + c.e2,
+        value_fn=lambda c: (
+            c.e1 + c.e2 if c.e1 is not None and c.e2 is not None else None
+        ),
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production_p1",
@@ -123,13 +126,10 @@ async def async_setup_entry(
     )
 
 
-class ApSystemsSensorWithDescription(
-    CoordinatorEntity[ApSystemsDataCoordinator], ApSystemsEntity, SensorEntity
-):
+class ApSystemsSensorWithDescription(ApSystemsCoordinatorEntity, SensorEntity):
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -137,8 +137,7 @@ class ApSystemsSensorWithDescription(
         entity_description: ApsystemsLocalApiSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(data.coordinator)
-        ApSystemsEntity.__init__(self, data)
+        super().__init__(data)
         self.entity_description = entity_description
         self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
 
