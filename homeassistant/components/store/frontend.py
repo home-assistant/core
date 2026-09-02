@@ -24,7 +24,7 @@ async def async_register_frontend(hass: HomeAssistant, hacs: HacsBase) -> None:
             "store",
             # The frontend translates this title, using the `panel.store` key
             sidebar_title="store",
-            sidebar_icon="mdi:storefront",
+            sidebar_icon="mdi:store",
             require_admin=True,
         )
 
