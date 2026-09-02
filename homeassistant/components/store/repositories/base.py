@@ -6,7 +6,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 import zipfile
 
 from aiogithubapi import (
@@ -33,7 +33,7 @@ from ..utils.decode import decode_content
 from ..utils.decorator import concurrent, return_none_on_exception
 from ..utils.file_system import async_exists, async_remove, async_remove_directory
 from ..utils.filters import filter_content_return_one_of_type
-from ..utils.json import json_loads
+from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.path import is_safe
 from ..utils.queue_manager import QueueManager
@@ -102,7 +102,7 @@ TOPIC_FILTER = (
 )
 
 
-REPOSITORY_KEYS_TO_EXPORT = (
+REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
     # Keys can not be removed from this list until v3
     # If keys are added, the action need to be re-run with force
     ("description", ""),
@@ -121,7 +121,7 @@ REPOSITORY_KEYS_TO_EXPORT = (
     ("topics", []),
 )
 
-HACS_MANIFEST_KEYS_TO_EXPORT = (
+HACS_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
     # Keys can not be removed from this list until v3
     # If keys are added, the action need to be re-run with force
     ("country", []),
@@ -132,7 +132,7 @@ HACS_MANIFEST_KEYS_TO_EXPORT = (
 class FileInformation:
     """FileInformation."""
 
-    def __init__(self, url, path, name):
+    def __init__(self, url: str, path: str, name: str) -> None:
         """Initialize the file information."""
         self.download_url = url
         self.path = path
@@ -147,55 +147,58 @@ class RepositoryData:
     authors: list[str] = attr.field(factory=list)
     category: str = ""
     config_flow: bool = False
-    default_branch: str = None
+    default_branch: str | None = None
     description: str = ""
-    domain: str = None
+    domain: str | None = None
     downloads: int = 0
-    etag_repository: str = None
-    etag_releases: str = None
+    etag_repository: str | None = None
+    etag_releases: str | None = None
     file_name: str = ""
     first_install: bool = False
     full_name: str = ""
+    full_name_lower: str = ""
     hide: bool = False
     has_issues: bool = True
     id: int = 0
-    installed_commit: str = None
-    installed_version: str = None
+    installed_commit: str | None = None
+    installed_version: str | None = None
     installed: bool = False
-    last_commit: str = None
-    last_fetched: datetime = None
-    last_updated: str = 0
-    last_version: str = None
-    manifest_name: str = None
+    last_commit: str | None = None
+    last_fetched: datetime | None = None
+    last_updated: str | int = 0
+    last_version: str | None = None
+    manifest_name: str | None = None
     new: bool = True
     open_issues: int = 0
-    prerelease: str = None
+    prerelease: str | None = None
     published_tags: list[str] = attr.field(factory=list)
     releases: bool = False
-    selected_tag: str = None
+    selected_tag: str | None = None
     show_beta: bool = False
     stargazers_count: int = 0
     topics: list[str] = attr.field(factory=list)
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name."""
         if self.category == "integration":
             return self.domain
         return self.full_name.split("/")[-1]
 
-    def to_json(self):
+    def to_json(self) -> dict[str, Any]:
         """Export to json."""
         return attr.asdict(self, filter=lambda attr, value: attr.name != "last_fetched")
 
     @staticmethod
-    def create_from_dict(source: dict, action: bool = False) -> RepositoryData:
+    def create_from_dict(
+        source: dict[str, Any], action: bool = False
+    ) -> RepositoryData:
         """Set attributes from dicts."""
         data = RepositoryData()
         data.update_data(source, action)
         return data
 
-    def update_data(self, data: dict, action: bool = False) -> None:
+    def update_data(self, data: dict[str, Any], action: bool = False) -> None:
         """Update data of the repository."""
         for key, value in data.items():
             if key not in self.__dict__:
@@ -220,22 +223,22 @@ class HacsManifest:
 
     content_in_root: bool = False
     country: list[str] = attr.field(factory=list)
-    filename: str = None
-    hacs: str = None  # Minimum HACS version
+    filename: str | None = None
+    hacs: str | None = None  # Minimum HACS version
     hide_default_branch: bool = False
-    homeassistant: str = None  # Minimum Home Assistant version
-    manifest: dict = attr.field(factory=dict)
-    name: str = None
-    persistent_directory: str = None
+    homeassistant: str | None = None  # Minimum Home Assistant version
+    manifest: dict[str, Any] = attr.field(factory=dict)
+    name: str | None = None
+    persistent_directory: str | None = None
     render_readme: bool = False
     zip_release: bool = False
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """Export to json."""
         return attr.asdict(self)
 
     @staticmethod
-    def from_dict(manifest: dict):
+    def from_dict(manifest: dict[str, Any] | None) -> HacsManifest:
         """Set attributes from dicts."""
         if manifest is None:
             raise HacsException("Missing manifest data")
@@ -254,7 +257,7 @@ class HacsManifest:
                 setattr(manifest_data, key, value)
         return manifest_data
 
-    def update_data(self, data: dict) -> None:
+    def update_data(self, data: dict[str, Any]) -> None:
         """Update the manifest data."""
         for key, value in data.items():
             if key not in self.__dict__:
@@ -272,28 +275,28 @@ class HacsManifest:
 class RepositoryReleases:
     """RepositoyReleases."""
 
-    last_release = None
-    last_release_object = None
-    published_tags = []
+    last_release: str | None = None
+    last_release_object: GitHubReleaseModel | None = None
+    published_tags: list[str] = []
     objects: list[GitHubReleaseModel] = []
-    releases = False
-    downloads = None
+    releases: bool = False
+    downloads: int | None = None
 
 
 class RepositoryPath:
     """RepositoryPath."""
 
-    local: str | None = None
+    local: str = ""
     remote: str | None = None
 
 
 class RepositoryContent:
     """RepositoryContent."""
 
-    path: RepositoryPath | None = None
-    files = []
-    objects = []
-    single = False
+    path: RepositoryPath
+    files: list[Any] = []
+    objects: list[Any] = []
+    single: bool = False
 
 
 class HacsRepository:
@@ -308,18 +311,19 @@ class HacsRepository:
         self.content.path = RepositoryPath()
         self.repository_object: AIOGitHubAPIRepository | None = None
         self.updated_info = False
-        self.state = None
+        self.state: str | None = None
         self.force_branch = False
-        self.integration_manifest = {}
+        self.integration_manifest: dict[str, Any] = {}
         self.repository_manifest = HacsManifest.from_dict({})
         self.validate = Validate()
         self.releases = RepositoryReleases()
         self.pending_restart = False
-        self.tree = []
-        self.treefiles = []
-        self.ref = None
+        self.tree: list[LegacyTreeFile] = []
+        self.treefiles: list[str] = []
+        self.ref: str | None = None
         self.logger = LOGGER
 
+    @override
     def __str__(self) -> str:
         """Return a string representation of the repository."""
         return self.string
@@ -445,14 +449,14 @@ class HacsRepository:
         return True
 
     @property
-    def localpath(self) -> str | None:
+    def localpath(self) -> str:
         """Return localpath."""
-        return None
+        return ""
 
     @property
     def should_try_releases(self) -> bool:
         """Return a boolean indicating whether to download releases or not."""
-        if self.repository_manifest.zip_release:
+        if self.repository_manifest.zip_release and self.repository_manifest.filename:
             if self.repository_manifest.filename.endswith(".zip"):
                 if self.ref != self.data.default_branch:
                     return True
@@ -464,11 +468,14 @@ class HacsRepository:
             return False
         return True
 
-    async def validate_repository(self) -> None:
+    async def validate_repository(self) -> bool:
         """Validate."""
+        return False
 
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues=False, force=False) -> None:
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update the repository."""
 
     async def common_validate(self, ignore_issues: bool = False) -> None:
@@ -518,7 +525,10 @@ class HacsRepository:
 
     @concurrent(concurrenttasks=10, backoff_time=5)
     async def common_update(
-        self, ignore_issues=False, force=False, skip_releases=False
+        self,
+        ignore_issues: bool = False,
+        force: bool = False,
+        skip_releases: bool = False,
     ) -> bool:
         """Common information update steps of the repository."""
         self.logger.debug("%s Getting repository information", self.string)
@@ -579,15 +589,16 @@ class HacsRepository:
 
     async def download_zip_files(self, validate: Validate) -> None:
         """Download ZIP archive from repository release."""
+        filename = self.repository_manifest.filename or ""
 
         try:
             await self.async_download_zip_file(
                 DownloadableContent(
-                    name=self.repository_manifest.filename,
+                    name=filename,
                     url=github_release_asset(
                         repository=self.data.full_name,
-                        version=self.ref,
-                        filename=self.repository_manifest.filename,
+                        version=f"{self.ref}",
+                        filename=filename,
                     ),
                 ),
                 validate,
@@ -638,7 +649,7 @@ class HacsRepository:
         except OSError, zipfile.BadZipFile:
             validate.errors.append("Download was not completed")
 
-    async def download_content(self, version: string | None = None) -> None:
+    async def download_content(self, version: str | None = None) -> None:
         """Download the content of a directory."""
         contents: list[FileInformation] | None = None
         if (
@@ -681,7 +692,7 @@ class HacsRepository:
 
         await download_queue.execute()
 
-    async def download_repository_zip(self):
+    async def download_repository_zip(self) -> None:
         """Download the zip archive of the repository."""
         ref = f"{self.ref}".replace("tags/", "")
 
@@ -755,13 +766,13 @@ class HacsRepository:
                 params={"ref": ref or self.version_to_download()},
             )
             if response:
-                return json_loads(decode_content(response.data.content))
+                return json_loads_object(decode_content(response.data.content))
         except GitHubNotModifiedException, ValueError:
             pass
         return None
 
     async def async_get_info_file_contents(
-        self, *, version: str | None = None, **kwargs
+        self, *, version: str | None = None, **kwargs: Any
     ) -> str:
         """Get the content of the info.md file."""
 
@@ -817,7 +828,7 @@ class HacsRepository:
         await self.async_remove_entity_device()
         ir.async_delete_issue(self.hacs.hass, DOMAIN, f"removed_{self.data.id}")
 
-    async def remove_local_directory(self) -> None:
+    async def remove_local_directory(self) -> bool:
         """Check the local directory."""
 
         try:
@@ -876,7 +887,7 @@ class HacsRepository:
         """Run pre registration steps."""
 
     @concurrent(concurrenttasks=10)
-    async def async_registration(self, ref=None) -> None:
+    async def async_registration(self, ref: str | None = None) -> None:
         """Run registration steps."""
         await self.async_pre_registration()
 
@@ -886,7 +897,7 @@ class HacsRepository:
             self.force_branch = True
 
         if not await self.validate_repository():
-            return False
+            return
 
         # Run common registration steps.
         await self.common_registration()
@@ -896,7 +907,6 @@ class HacsRepository:
 
         # Run local post registration steps.
         await self.async_post_registration()
-        return None
 
     async def async_post_registration(self) -> None:
         """Run post registration steps."""
@@ -913,7 +923,7 @@ class HacsRepository:
         await self.async_pre_install()
         self.logger.info("%s Pre installation steps completed", self.string)
 
-    async def async_install(self, *, version: str | None = None, **_) -> None:
+    async def async_install(self, *, version: str | None = None, **_: Any) -> None:
         """Run install steps."""
         await self._async_pre_install()
         self.hacs.async_dispatch(
@@ -936,10 +946,10 @@ class HacsRepository:
     async def async_post_installation(self) -> None:
         """Run post install steps."""
 
-    async def async_post_uninstall(self):
+    async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
 
-    async def _async_post_uninstall(self):
+    async def _async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         await self.async_post_uninstall()
 
@@ -960,7 +970,7 @@ class HacsRepository:
         self.logger.info("%s Post installation steps completed", self.string)
 
     async def async_install_repository(
-        self, *, version: str | None = None, **_
+        self, *, version: str | None = None, **_: Any
     ) -> None:
         """Common installation steps of the repository."""
         persistent_directory = None
@@ -1071,7 +1081,7 @@ class HacsRepository:
     def update_filenames(self) -> None:
         """Get the filename to target."""
 
-    async def get_tree(self, ref: str) -> list[GitHubGitTreeEntryModel] | None:
+    async def get_tree(self, ref: str | None) -> list[GitHubGitTreeEntryModel] | None:
         """Return the repository tree."""
         try:
             response = await self.hacs.async_github_api_method(
@@ -1085,14 +1095,14 @@ class HacsRepository:
         return response.data.tree
 
     async def get_releases(
-        self, prerelease=False, returnlimit=5
+        self, prerelease: bool = False, returnlimit: int = 5
     ) -> list[GitHubReleaseModel]:
         """Return the repository releases."""
         response = await self.hacs.async_github_api_method(
             method=self.hacs.githubapi.repos.releases.list,
             repository=self.data.full_name,
         )
-        releases = []
+        releases: list[GitHubReleaseModel] = []
         for release in response.data or []:
             if len(releases) == returnlimit:
                 break
@@ -1105,11 +1115,11 @@ class HacsRepository:
         self,
         ignore_issues: bool = False,
         force: bool = False,
-        retry=False,
-        skip_releases=False,
+        retry: bool = False,
+        skip_releases: bool = False,
     ) -> None:
         """Common update data."""
-        releases = []
+        releases: list[GitHubReleaseModel] = []
         try:
             repository_object, etag = await self.async_get_legacy_repository_object(
                 etag=None
@@ -1204,7 +1214,9 @@ class HacsRepository:
             await self.async_set_last_commits()
 
         self.hacs.log.debug(
-            "%s Running checks against %s", self.string, self.ref.replace("tags/", "")
+            "%s Running checks against %s",
+            self.string,
+            f"{self.ref}".replace("tags/", ""),
         )
 
         try:
@@ -1241,7 +1253,7 @@ class HacsRepository:
 
     def gather_files_to_download(self) -> list[FileInformation]:
         """Return a list of file objects to be downloaded."""
-        files = []
+        files: list[FileInformation] = []
         tree = self.tree
         ref = f"{self.ref}".replace("tags/", "")
         releaseobjects = self.releases.objects
@@ -1353,10 +1365,9 @@ class HacsRepository:
                         f"{self.content.path.remote}", ""
                     )
 
-                local_directory = f"{self.content.path.local}/{_content_path}"
-                local_directory = local_directory.split("/")
-                del local_directory[-1]
-                local_directory = "/".join(local_directory)
+                path_parts = f"{self.content.path.local}/{_content_path}".split("/")
+                del path_parts[-1]
+                local_directory = "/".join(path_parts)
 
             # Check local directory
             pathlib.Path(local_directory).mkdir(parents=True, exist_ok=True)
@@ -1417,12 +1428,13 @@ class HacsRepository:
         *,
         filename: str | None = None,
         version: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> str | None:
         """Get the documentation of the repository."""
         if filename is None:
             return None
 
+        target_version: str | None
         if version is not None:
             target_version = version
         elif self.data.installed:
@@ -1453,7 +1465,9 @@ class HacsRepository:
         )
 
     @return_none_on_exception
-    async def get_hacs_json(self, *, version: str, **kwargs) -> HacsManifest | None:
+    async def get_hacs_json(
+        self, *, version: str | None, **kwargs: Any
+    ) -> HacsManifest | None:
         """Get the hacs.json file of the repository."""
         if (result := await self.get_hacs_json_raw(version=version)) is None:
             return None
@@ -1463,8 +1477,8 @@ class HacsRepository:
     async def get_hacs_json_raw(
         self,
         *,
-        version: str,
-        **kwargs,
+        version: str | None,
+        **kwargs: Any,
     ) -> dict[str, Any] | None:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
@@ -1473,7 +1487,7 @@ class HacsRepository:
             nolog=True,
             handle_rate_limit=True,
         )
-        return json_loads(result) if result else None
+        return json_loads_object(result) if result else None
 
     def _find_target_asset(
         self,
@@ -1513,7 +1527,7 @@ class HacsRepository:
         if ref is None:
             if not self.can_download:
                 raise HacsException(
-                    f"This {self.data.category.value} is not available for download."
+                    f"This {self.data.category} is not available for download."
                 )
             return
 
@@ -1524,7 +1538,7 @@ class HacsRepository:
 
         if target_manifest is None:
             raise HacsException(
-                f"The version {ref} for this {self.data.category.value} can not be used with HACS."
+                f"The version {ref} for this {self.data.category} can not be used with HACS."
             )
 
         # The manifest `hacs` key names a HACS version, which cannot be compared
@@ -1537,7 +1551,9 @@ class HacsRepository:
                 f"This version requires Home Assistant {target_manifest.homeassistant} or newer."
             )
 
-    async def async_download_repository(self, *, ref: str | None = None, **_) -> None:
+    async def async_download_repository(
+        self, *, ref: str | None = None, **_: Any
+    ) -> None:
         """Download the content of a repository."""
         await self._ensure_download_capabilities(ref)
         self.logger.info("Starting download, %s", ref)

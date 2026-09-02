@@ -1,6 +1,6 @@
 """Class for themes in HACS."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class HacsThemeRepository(HacsRepository):
     """Themes in HACS."""
 
-    def __init__(self, hacs: HacsBase, full_name: str):
+    def __init__(self, hacs: HacsBase, full_name: str) -> None:
         """Initialize."""
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
@@ -27,15 +27,18 @@ class HacsThemeRepository(HacsRepository):
         self.content.single = False
 
     @property
-    def localpath(self):
+    @override
+    def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/themes/{self.data.file_name.replace('.yaml', '')}"
 
-    async def async_post_installation(self):
+    @override
+    async def async_post_installation(self) -> None:
         """Run post installation steps."""
         await self._reload_frontend_themes()
 
-    async def validate_repository(self):
+    @override
+    async def validate_repository(self) -> bool:
         """Validate."""
         # Run common validation steps.
         await self.common_validate()
@@ -48,7 +51,7 @@ class HacsThemeRepository(HacsRepository):
                 break
         if not compliant:
             raise HacsException(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
         if self.repository_manifest.content_in_root:
@@ -61,7 +64,8 @@ class HacsThemeRepository(HacsRepository):
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
-    async def async_post_registration(self):
+    @override
+    async def async_post_registration(self) -> None:
         """Registration."""
         # Set name
         self.update_filenames()
@@ -78,12 +82,16 @@ class HacsThemeRepository(HacsRepository):
         except HomeAssistantError:
             self.logger.exception("%s Reloading frontend themes failed", self.string)
 
+    @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         await self._reload_frontend_themes()
 
+    @override
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues=False, force=False):
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
@@ -108,6 +116,7 @@ class HacsThemeRepository(HacsRepository):
                 },
             )
 
+    @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
         for treefile in self.tree:

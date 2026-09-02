@@ -1,5 +1,7 @@
 """Validate the HACS manifest of the repository."""
 
+from typing import override
+
 from voluptuous.error import Invalid
 from voluptuous.humanize import humanize_error
 
@@ -19,6 +21,7 @@ class Validator(ActionValidationBase):
 
     more_info = "https://hacs.xyz/docs/publish/include#check-hacs-manifest"
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
         if RepositoryFile.HACS_JSON not in [x.filename for x in self.repository.tree]:

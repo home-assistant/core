@@ -1,6 +1,6 @@
 """Class for appdaemon apps in HACS."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ..enums import HacsCategory, HacsDispatchEvent
 from ..exceptions import HacsException
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class HacsAppdaemonRepository(HacsRepository):
     """Appdaemon apps in HACS."""
 
-    def __init__(self, hacs: HacsBase, full_name: str):
+    def __init__(self, hacs: HacsBase, full_name: str) -> None:
         """Initialize."""
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
@@ -25,10 +25,12 @@ class HacsAppdaemonRepository(HacsRepository):
         self.content.path.remote = "apps"
 
     @property
-    def localpath(self):
+    @override
+    def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/appdaemon/apps/{self.data.name}"
 
+    @override
     async def validate_repository(self) -> bool:
         """Validate."""
         await self.common_validate()
@@ -44,6 +46,7 @@ class HacsAppdaemonRepository(HacsRepository):
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
+    @override
     @concurrent(concurrenttasks=10, backoff_time=5)
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
@@ -79,7 +82,7 @@ class HacsAppdaemonRepository(HacsRepository):
         """Get the first apps directory from the repository tree."""
         if not (app_dir := get_first_directory_in_directory(self.tree, "apps")):
             raise HacsException(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant. "
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant. "
                 "Expected to find at least one directory under '<root>/apps/'"
             )
         return app_dir

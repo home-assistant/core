@@ -1,6 +1,6 @@
 """Validate that the repository has an information file."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .base import ActionValidationBase, ValidationException
 
@@ -18,6 +18,7 @@ class Validator(ActionValidationBase):
 
     more_info = "https://hacs.xyz/docs/publish/include#check-info"
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
         filenames = [x.filename.lower() for x in self.repository.tree]

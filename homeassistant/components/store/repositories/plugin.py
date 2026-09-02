@@ -1,7 +1,7 @@
 """Class for plugins in HACS."""
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components import lovelace
 
@@ -19,21 +19,23 @@ if TYPE_CHECKING:
 class HacsPluginRepository(HacsRepository):
     """Plugins in HACS."""
 
-    def __init__(self, hacs: HacsBase, full_name: str):
+    def __init__(self, hacs: HacsBase, full_name: str) -> None:
         """Initialize."""
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
-        self.data.file_name = None
+        self.data.file_name = ""
         self.data.category = HacsCategory.PLUGIN
         self.content.path.local = self.localpath
 
     @property
-    def localpath(self):
+    @override
+    def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/www/community/{self.data.full_name.split('/')[-1]}"
 
-    async def validate_repository(self):
+    @override
+    async def validate_repository(self) -> bool:
         """Validate."""
         # Run common validation steps.
         await self.common_validate()
@@ -43,7 +45,7 @@ class HacsPluginRepository(HacsRepository):
 
         if self.content.path.remote is None:
             raise HacsException(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
         if self.content.path.remote == "release":
@@ -56,17 +58,22 @@ class HacsPluginRepository(HacsRepository):
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
-    async def async_post_installation(self):
+    @override
+    async def async_post_installation(self) -> None:
         """Run post installation steps."""
         await self.hacs.async_setup_frontend_endpoint_plugin()
         await self.update_dashboard_resources()
 
-    async def async_post_uninstall(self):
+    @override
+    async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         await self.remove_dashboard_resources()
 
+    @override
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues=False, force=False):
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
@@ -76,7 +83,7 @@ class HacsPluginRepository(HacsRepository):
 
         if self.content.path.remote is None:
             self.validate.errors.append(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
         if self.content.path.remote == "release":
@@ -94,17 +101,20 @@ class HacsPluginRepository(HacsRepository):
                 },
             )
 
+    @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
         content_in_root = self.repository_manifest.content_in_root
+        valid_filenames: tuple[str, ...]
         if specific_filename := self.repository_manifest.filename:
             valid_filenames = (specific_filename,)
         else:
+            name = self.data.name or ""
             valid_filenames = (
-                f"{self.data.name.replace('lovelace-', '')}.js",
-                f"{self.data.name}.js",
-                f"{self.data.name}.umd.js",
-                f"{self.data.name}-bundle.js",
+                f"{name.replace('lovelace-', '')}.js",
+                f"{name}.js",
+                f"{name}.umd.js",
+                f"{name}-bundle.js",
             )
 
         if not content_in_root:
@@ -175,7 +185,10 @@ class HacsPluginRepository(HacsRepository):
             return None
 
         # Only the storage resource mode has a store to update
-        if not hasattr(resources, "store") or resources.store is None:
+        if (
+            not isinstance(resources, lovelace.resources.ResourceStorageCollection)
+            or resources.store is None
+        ):
             self.logger.info(
                 "%s YAML mode detected, can not update resources", self.string
             )

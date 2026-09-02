@@ -8,9 +8,9 @@ def filter_content_return_one_of_type(
     namestartswith: str,
     filterfiltype: str,
     attr: str = "name",
-) -> list[str]:
+) -> list[Any]:
     """Only match 1 of the filter."""
-    contents: list[str] = []
+    contents: list[Any] = []
     filetypefound = False
     for filename in content:
         if isinstance(filename, str):

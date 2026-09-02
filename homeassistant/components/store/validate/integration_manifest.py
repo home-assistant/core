@@ -1,6 +1,6 @@
 """Validate the integration manifest of the repository."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from voluptuous.error import Invalid
 from voluptuous.humanize import humanize_error
@@ -26,6 +26,7 @@ class Validator(ActionValidationBase):
     more_info = "https://hacs.xyz/docs/publish/include#check-manifest"
     categories = (HacsCategory.INTEGRATION,)
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
         if RepositoryFile.MAINIFEST_JSON not in [

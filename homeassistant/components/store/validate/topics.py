@@ -1,6 +1,6 @@
 """Validate the topics of the repository."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from .base import ActionValidationBase, ValidationException
 
@@ -19,6 +19,7 @@ class Validator(ActionValidationBase):
     more_info = "https://hacs.xyz/docs/publish/include#check-repository"
     allow_fork = False
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
         if not self.repository.data.topics:

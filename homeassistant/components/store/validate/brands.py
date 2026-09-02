@@ -1,6 +1,6 @@
 """Validate the brands assets of the repository."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ..enums import HacsCategory
 from .base import ActionValidationBase, ValidationException
@@ -23,6 +23,7 @@ class Validator(ActionValidationBase):
     more_info = "https://hacs.xyz/docs/publish/include#check-brands"
     categories = (HacsCategory.INTEGRATION,)
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
 

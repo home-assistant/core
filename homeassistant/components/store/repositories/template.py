@@ -1,6 +1,6 @@
 """Class for themes in HACS."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class HacsTemplateRepository(HacsRepository):
     """Custom templates in HACS."""
 
-    def __init__(self, hacs: HacsBase, full_name: str):
+    def __init__(self, hacs: HacsBase, full_name: str) -> None:
         """Initialize."""
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
@@ -27,21 +27,24 @@ class HacsTemplateRepository(HacsRepository):
         self.content.single = True
 
     @property
-    def localpath(self):
+    @override
+    def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/custom_templates"
 
-    async def async_post_installation(self):
+    @override
+    async def async_post_installation(self) -> None:
         """Run post installation steps."""
         await self._reload_custom_templates()
 
-    async def validate_repository(self):
+    @override
+    async def validate_repository(self) -> bool:
         """Validate."""
         # Run common validation steps.
         await self.common_validate()
 
         # Custom step 1: Validate content.
-        self.data.file_name = self.repository_manifest.filename
+        self.data.file_name = self.repository_manifest.filename or ""
 
         if (
             not self.data.file_name
@@ -50,7 +53,7 @@ class HacsTemplateRepository(HacsRepository):
             or self.data.file_name not in self.treefiles
         ):
             raise HacsException(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
         # Handle potential errors
@@ -60,15 +63,17 @@ class HacsTemplateRepository(HacsRepository):
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
-    async def async_post_registration(self):
+    @override
+    async def async_post_registration(self) -> None:
         """Registration."""
         # Set filenames
-        self.data.file_name = self.repository_manifest.filename
+        self.data.file_name = self.repository_manifest.filename or ""
         self.content.path.local = self.localpath
 
         if self.hacs.system.action:
             await self.hacs.validation.async_run_repository_checks(self)
 
+    @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         await self._reload_custom_templates()
@@ -83,14 +88,17 @@ class HacsTemplateRepository(HacsRepository):
         except HomeAssistantError:
             self.logger.exception("%s Reloading custom templates failed", self.string)
 
+    @override
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues=False, force=False):
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
         # Update filenames
-        self.data.file_name = self.repository_manifest.filename
+        self.data.file_name = self.repository_manifest.filename or ""
         self.content.path.local = self.localpath
 
         # Signal frontend to refresh

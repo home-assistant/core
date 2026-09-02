@@ -1,6 +1,6 @@
 """Class for python_scripts in HACS."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ..enums import HacsCategory, HacsDispatchEvent
 from ..exceptions import HacsException
@@ -16,7 +16,7 @@ class HacsPythonScriptRepository(HacsRepository):
 
     category = "python_script"
 
-    def __init__(self, hacs: HacsBase, full_name: str):
+    def __init__(self, hacs: HacsBase, full_name: str) -> None:
         """Initialize."""
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
@@ -27,11 +27,13 @@ class HacsPythonScriptRepository(HacsRepository):
         self.content.single = True
 
     @property
-    def localpath(self):
+    @override
+    def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/python_scripts"
 
-    async def validate_repository(self):
+    @override
+    async def validate_repository(self) -> bool:
         """Validate."""
         # Run common validation steps.
         await self.common_validate()
@@ -49,7 +51,7 @@ class HacsPythonScriptRepository(HacsRepository):
                 break
         if not compliant:
             raise HacsException(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
         # Handle potential errors
@@ -59,7 +61,8 @@ class HacsPythonScriptRepository(HacsRepository):
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
-    async def async_post_registration(self):
+    @override
+    async def async_post_registration(self) -> None:
         """Registration."""
         # Set name
         self.update_filenames()
@@ -67,8 +70,11 @@ class HacsPythonScriptRepository(HacsRepository):
         if self.hacs.system.action:
             await self.hacs.validation.async_run_repository_checks(self)
 
+    @override
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues=False, force=False):
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
@@ -86,7 +92,7 @@ class HacsPythonScriptRepository(HacsRepository):
                 break
         if not compliant:
             raise HacsException(
-                f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
         # Update name
@@ -104,6 +110,7 @@ class HacsPythonScriptRepository(HacsRepository):
                 },
             )
 
+    @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
         for treefile in self.tree:

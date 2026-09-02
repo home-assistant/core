@@ -1,8 +1,8 @@
 """Validate the license of the repository."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
-from ..utils.json import json_loads
+from ..utils.json import json_loads_object
 from .base import ActionValidationBase, ValidationException
 
 if TYPE_CHECKING:
@@ -49,11 +49,13 @@ class Validator(ActionValidationBase):
     more_info = "https://hacs.xyz/docs/publish/include#check-license"
     allow_fork = False
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
-        if (
-            license_info := self.repository.repository_object.attributes.get("license")
-        ) is None:
+        if (repository_object := self.repository.repository_object) is None:
+            raise ValidationException("The repository has not been fetched")
+
+        if (license_info := repository_object.attributes.get("license")) is None:
             raise ValidationException("The repository has no license")
 
         spdx_id = license_info.get("spdx_id")
@@ -78,8 +80,8 @@ class Validator(ActionValidationBase):
             raise ValidationException("Could not fetch the SPDX license list")
 
         try:
-            licenses = json_loads(result).get("licenses", [])
-        except Exception as err:
+            licenses: Any = json_loads_object(result).get("licenses", [])
+        except ValueError as err:
             raise ValidationException("Could not parse the SPDX license list") from err
 
         osi_approved = {

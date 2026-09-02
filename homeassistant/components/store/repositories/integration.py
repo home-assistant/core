@@ -1,6 +1,6 @@
 """Class for integrations in HACS."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import async_get_custom_components
@@ -11,7 +11,7 @@ from ..exceptions import AppRepositoryException, HacsException
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
-from ..utils.json import json_loads
+from ..utils.json import json_loads_object
 from .base import HacsRepository
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class HacsIntegrationRepository(HacsRepository):
     """Integrations in HACS."""
 
-    def __init__(self, hacs: HacsBase, full_name: str):
+    def __init__(self, hacs: HacsBase, full_name: str) -> None:
         """Initialize."""
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
@@ -31,11 +31,13 @@ class HacsIntegrationRepository(HacsRepository):
         self.content.path.local = self.localpath
 
     @property
-    def localpath(self):
+    @override
+    def localpath(self) -> str:
         """Return localpath."""
         return f"{self.hacs.core.config_path}/custom_components/{self.data.domain}"
 
-    async def async_post_installation(self):
+    @override
+    async def async_post_installation(self) -> None:
         """Run post installation steps."""
         self.pending_restart = True
         if self.data.config_flow:
@@ -58,6 +60,7 @@ class HacsIntegrationRepository(HacsRepository):
                 },
             )
 
+    @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
         if self.data.config_flow:
@@ -65,7 +68,8 @@ class HacsIntegrationRepository(HacsRepository):
         else:
             self.pending_restart = True
 
-    async def validate_repository(self):
+    @override
+    async def validate_repository(self) -> bool:
         """Validate."""
         await self.common_validate()
 
@@ -83,7 +87,7 @@ class HacsIntegrationRepository(HacsRepository):
                 ):
                     raise AppRepositoryException
                 raise HacsException(
-                    f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
+                    f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
                 )
             self.content.path.remote = f"custom_components/{name}"
 
@@ -116,8 +120,11 @@ class HacsIntegrationRepository(HacsRepository):
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
+    @override
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues=False, force=False):
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
@@ -163,7 +170,7 @@ class HacsIntegrationRepository(HacsRepository):
                 },
             )
 
-    async def reload_custom_components(self):
+    async def reload_custom_components(self) -> None:
         """Reload custom_components (and config flows)in HA."""
         self.logger.info("Reloading custom_component cache")
         del self.hacs.hass.data["custom_components"]
@@ -197,11 +204,11 @@ class HacsIntegrationRepository(HacsRepository):
             params={"ref": target_ref},
         )
         if response:
-            return json_loads(decode_content(response.data.content))
+            return json_loads_object(decode_content(response.data.content))
         return None
 
     async def get_integration_manifest(
-        self, *, version: str, **kwargs
+        self, *, version: str | None, **kwargs: Any
     ) -> dict[str, Any] | None:
         """Get the content of the manifest.json file."""
         manifest_path = (
@@ -225,6 +232,6 @@ class HacsIntegrationRepository(HacsRepository):
             )
             if result is None:
                 return None
-            return json_loads(result)
+            return json_loads_object(result)
         except ValueError:
             return None

@@ -1,6 +1,6 @@
 """Validate that the repository information file has images."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ..enums import HacsCategory
 from .base import ActionValidationBase, ValidationException
@@ -22,6 +22,7 @@ class Validator(ActionValidationBase):
     categories = (HacsCategory.PLUGIN, HacsCategory.THEME)
     more_info = "https://hacs.xyz/docs/publish/include#check-images"
 
+    @override
     async def async_validate(self) -> None:
         """Validate the repository."""
         info = await self.repository.async_get_info_file_contents(
