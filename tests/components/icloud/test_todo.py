@@ -131,23 +131,17 @@ async def test_groups_and_deleted_lists_skipped(
     assert hass.states.get("todo.test_icloud_account_old") is None
 
 
-async def test_subtasks_are_listed_as_top_level_items(
+async def test_subtasks_follow_their_parent(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reminders: MagicMock,
 ) -> None:
-    """Test that subtasks become plain items in the order iCloud returned them.
-
-    Nesting is not interpreted at all, so a grandchild and a subtask whose
-    parent lives in another list are listed like any other reminder.
-    """
+    """Test that a subtask is ordered directly after its parent."""
     reminders.list_reminders.return_value = MagicMock(
         reminders=[
             _reminder("r1", "Child", parent="r2"),
             _reminder("r2", "Parent"),
-            _reminder("r3", "Grandchild", parent="r1"),
-            _reminder("r4", "Orphan", parent="missing"),
-            _reminder("r5", "Other"),
+            _reminder("r3", "Other"),
         ]
     )
 
@@ -161,7 +155,7 @@ async def test_subtasks_are_listed_as_top_level_items(
         return_response=True,
     )
     summaries = [item["summary"] for item in result[ENTITY_ID]["items"]]
-    assert summaries == ["Child", "Parent", "Grandchild", "Orphan", "Other"]
+    assert summaries == ["Parent", "Child", "Other"]
 
 
 async def test_create_item(
@@ -368,6 +362,65 @@ async def test_update_item_with_datetime_due(
     # Home Assistant hands the platform a timezone-aware value.
     assert existing.due_date.tzinfo is not None
     assert existing.due_date.replace(tzinfo=None) == datetime(2024, 5, 1, 9, 30)
+
+
+async def test_nested_subtasks_follow_their_parent(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a grandchild stays with its parent rather than sorting last."""
+    reminders.list_reminders.return_value = MagicMock(
+        reminders=[
+            _reminder("r1", "Grandchild", parent="r2"),
+            _reminder("r2", "Child", parent="r3"),
+            _reminder("r3", "Parent"),
+            _reminder("r4", "Other"),
+        ]
+    )
+
+    await _setup(hass, config_entry)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [item["summary"] for item in result[ENTITY_ID]["items"]]
+    assert summaries == ["Parent", "Child", "Grandchild", "Other"]
+
+
+async def test_orphaned_subtask_is_kept(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a subtask whose parent is absent is still listed.
+
+    The parent may live in another list, so the subtask has no anchor here.
+    It must still appear, and must not spin the ordering loop.
+    """
+    reminders.list_reminders.return_value = MagicMock(
+        reminders=[
+            _reminder("r1", "Top level"),
+            _reminder("r2", "Orphan", parent="missing"),
+            _reminder("r3", "Orphan child", parent="r2"),
+        ]
+    )
+
+    await _setup(hass, config_entry)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [item["summary"] for item in result[ENTITY_ID]["items"]]
+    assert summaries == ["Top level", "Orphan", "Orphan child"]
 
 
 async def test_update_refused_when_title_undecrypted(

@@ -235,6 +235,9 @@ class IcloudReminder:
     due: date | datetime | None
     completed: bool
     completed_at: datetime | None
+    # Only used to order subtasks after their parent; never exposed on the
+    # to-do item, which has no notion of a parent.
+    parent_uid: str | None
 
 
 @dataclass(slots=True)
@@ -346,11 +349,7 @@ def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
 
 
 def _as_reminder(reminder) -> IcloudReminder:
-    """Convert a pyicloud reminder into the coordinator's model.
-
-    ``parent_reminder_id`` is deliberately not carried over: a subtask becomes
-    a to-do item of its own, in the position iCloud returned it in.
-    """
+    """Convert a pyicloud reminder into the coordinator's model."""
     due = reminder.due_date
     if due is not None and reminder.all_day and isinstance(due, datetime):
         due = due.date()
@@ -362,4 +361,5 @@ def _as_reminder(reminder) -> IcloudReminder:
         due=due,
         completed=reminder.completed,
         completed_at=reminder.completed_date,
+        parent_uid=reminder.parent_reminder_id,
     )

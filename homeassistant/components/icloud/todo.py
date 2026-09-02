@@ -110,13 +110,12 @@ class IcloudTodoListEntity(
     def todo_items(self) -> list[TodoItem] | None:
         """Return the reminders in this list.
 
-        Home Assistant to-do lists are flat, so a subtask is listed as an
-        ordinary item alongside the reminder it belongs to. This matches the
-        companion iOS app, whose Labs Reminders sync does the same today.
+        A subtask is an ordinary to-do item here, not a child of anything: the
+        hierarchy only decides the order, so no entity model change is needed.
         """
         if (reminder_list := (self.coordinator.data or {}).get(self._list_id)) is None:
             return None
-        return [_as_todo_item(item) for item in reminder_list.reminders]
+        return [_as_todo_item(item) for item in _ordered(reminder_list.reminders)]
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -204,6 +203,39 @@ def _as_due(due: date | datetime | None) -> tuple[datetime | None, bool]:
     if isinstance(due, datetime):
         return due, False
     return datetime(due.year, due.month, due.day), True
+
+
+def _ordered(reminders: list[IcloudReminder]) -> list[IcloudReminder]:
+    """Return the reminders with each subtask placed after its parent.
+
+    Home Assistant renders a flat list in the order given, and iCloud does not
+    guarantee that a subtask follows the reminder it belongs to, so putting it
+    there keeps the list reading the way Reminders shows it on iOS. Nesting can
+    be deeper than one level, so descendants are emitted recursively.
+    """
+    children: dict[str, list[IcloudReminder]] = {}
+    for reminder in reminders:
+        if reminder.parent_uid is not None:
+            children.setdefault(reminder.parent_uid, []).append(reminder)
+
+    ordered: list[IcloudReminder] = []
+
+    def _emit(reminder: IcloudReminder) -> None:
+        ordered.append(reminder)
+        for child in children.pop(reminder.uid, ()):
+            _emit(child)
+
+    for reminder in reminders:
+        if reminder.parent_uid is None:
+            _emit(reminder)
+
+    # Keep subtasks whose parent is not in this list rather than dropping them.
+    # Pop the whole group before emitting, so the loop always makes progress.
+    while children:
+        for orphan in children.pop(next(iter(children))):
+            _emit(orphan)
+
+    return ordered
 
 
 def _as_todo_item(reminder: IcloudReminder) -> TodoItem:
