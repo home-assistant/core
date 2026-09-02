@@ -42,6 +42,7 @@ from . import NAME
 from tests.common import AsyncMock, MockConfigEntry, snapshot_platform
 
 LEGACY_SERVICE_NAME = "android_tv_fire_tv_1_2_3_4"
+ENTITY_ID = "notify.android_tv_fire_tv_1_2_3_4"
 
 
 @pytest.fixture(autouse=True)
@@ -79,14 +80,14 @@ async def test_send_message(
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
     """Test sending a message."""
-    entity_id = "notify.android_tv_fire_tv_1_2_3_4"
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -94,14 +95,14 @@ async def test_send_message(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_MESSAGE: "Hello",
             ATTR_TITLE: "World",
         },
         blocking=True,
     )
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "1970-01-01T00:00:00+00:00"
 
@@ -130,7 +131,7 @@ async def test_send_message_exception(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.android_tv_fire_tv_1_2_3_4",
+                ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_MESSAGE: "Hello",
                 ATTR_TITLE: "World",
             },
@@ -186,14 +187,14 @@ async def test_nfandroidtv_send_message(
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
     """Test sending a message via nfandroidtv.send_message action."""
-    entity_id = "notify.android_tv_fire_tv_1_2_3_4"
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -201,7 +202,7 @@ async def test_nfandroidtv_send_message(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_MESSAGE: "Hello",
             ATTR_TITLE: "World",
             ATTR_POSITION: "center",
@@ -225,7 +226,7 @@ async def test_nfandroidtv_send_message(
         bkgcolor="teal",
     )
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "1970-01-01T00:00:00+00:00"
 
@@ -237,14 +238,14 @@ async def test_nfandroidtv_send_message_camera_snapshot(
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
     """Test sending a message with camera snapshot via nfandroidtv.send_message action."""
-    entity_id = "notify.android_tv_fire_tv_1_2_3_4"
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
     with (
@@ -257,7 +258,7 @@ async def test_nfandroidtv_send_message_camera_snapshot(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_MESSAGE: "Hello",
                 ATTR_TITLE: "World",
                 ATTR_IMAGE: {
@@ -272,7 +273,7 @@ async def test_nfandroidtv_send_message_camera_snapshot(
         message="Hello", title="World", image_file=b"I play the sax\n"
     )
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "1970-01-01T00:00:00+00:00"
 
@@ -284,14 +285,14 @@ async def test_nfandroidtv_send_message_image_snapshot(
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
     """Test sending a message with image snapshot via nfandroidtv.send_message action."""
-    entity_id = "notify.android_tv_fire_tv_1_2_3_4"
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -303,7 +304,7 @@ async def test_nfandroidtv_send_message_image_snapshot(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_MESSAGE: "Hello",
                 ATTR_TITLE: "World",
                 ATTR_ICON: {
@@ -318,7 +319,7 @@ async def test_nfandroidtv_send_message_image_snapshot(
         message="Hello", title="World", icon=b"\x89PNG"
     )
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "1970-01-01T00:00:00+00:00"
 
@@ -331,14 +332,14 @@ async def test_nfandroidtv_send_message_local_media_source(
 ) -> None:
     """Test sending a message with local media source via nfandroidtv.send_message action."""
     assert await async_setup_component(hass, "media_source", {})
-    entity_id = "notify.android_tv_fire_tv_1_2_3_4"
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -349,7 +350,7 @@ async def test_nfandroidtv_send_message_local_media_source(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_MESSAGE: "Hello",
                 ATTR_TITLE: "World",
                 ATTR_ICON: {
@@ -363,27 +364,27 @@ async def test_nfandroidtv_send_message_local_media_source(
         message="Hello", title="World", icon=b"\x89PNG"
     )
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "1970-01-01T00:00:00+00:00"
 
 
+@pytest.mark.usefixtures("mock_notifications_android_tv")
 @pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message_unsupported_source(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_notifications_android_tv: AsyncMock,
 ) -> None:
     """Test sending a message with unsupported media source via nfandroidtv.send_message action."""
     assert await async_setup_component(hass, "media_source", {})
-    entity_id = "notify.android_tv_fire_tv_1_2_3_4"
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -402,7 +403,7 @@ async def test_nfandroidtv_send_message_unsupported_source(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_MESSAGE: "Hello",
                 ATTR_TITLE: "World",
                 ATTR_IMAGE: {
@@ -435,7 +436,7 @@ async def test_nfandroidtv_send_message_exception(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.android_tv_fire_tv_1_2_3_4",
+                ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_MESSAGE: "Hello",
                 ATTR_TITLE: "World",
             },
@@ -466,7 +467,7 @@ async def test_deprecated_legacy_notify_action(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        "android_tv_fire_tv_1_2_3_4",
+        LEGACY_SERVICE_NAME,
         {ATTR_MESSAGE: "Hello World"},
         blocking=True,
     )
