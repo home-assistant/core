@@ -340,7 +340,7 @@ async def test_year_of_manufacture_sensor(
     state = hass.states.get(entity_id)
 
     assert state is not None
-    assert state.state == "2024"
+    assert state.state == str(MOCK_VEHICLE_DATA["yearOfManufacture"])
 
 
 async def test_date_sensor_non_string_value_is_unknown(
