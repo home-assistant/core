@@ -1,5 +1,7 @@
 """The tests for Core components."""
 
+from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,6 +20,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
+    _get_missing_cpu_features,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -45,6 +48,16 @@ from tests.common import (
     async_mock_service,
     patch_yaml_files,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_missing_cpu_features() -> Generator[None]:
+    """Prevent CPU feature detection from depending on the host running the tests."""
+    with patch(
+        "homeassistant.components.homeassistant._get_missing_cpu_features",
+        return_value=None,
+    ):
+        yield
 
 
 async def test_turn_on_without_entities(hass: HomeAssistant) -> None:
@@ -805,3 +818,91 @@ async def test_deprecated_installation_issue_container_32bit(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"arch": arch}
+
+
+@pytest.mark.parametrize(
+    ("machine", "cpuinfo_content", "expected"),
+    [
+        ("aarch64", "flags\t\t: \n", None),
+        ("x86_64", "", None),
+        ("x86_64", "flags\t\t: \n", None),
+        (
+            "x86_64",
+            "flags\t\t: pni popcnt sse sse2\n",
+            ["cx16", "lahf_lm", "sse4_1", "sse4_2", "ssse3"],
+        ),
+        (
+            "x86_64",
+            "flags\t\t: pni ssse3 sse4_1 sse4_2 popcnt cx16 sse sse2\n",
+            ["lahf_lm"],
+        ),
+        (
+            "x86_64",
+            "flags\t\t: pni ssse3 sse4_1 sse4_2 popcnt lahf_lm cx16\n",
+            [],
+        ),
+    ],
+)
+def test_get_missing_cpu_features(
+    machine: str,
+    cpuinfo_content: str,
+    expected: list[str] | None,
+    tmp_path: Path,
+) -> None:
+    """Test detection of CPU features required by NumPy."""
+    cpuinfo_file = tmp_path / "cpuinfo"
+    cpuinfo_file.write_text(cpuinfo_content)
+    with (
+        patch("platform.machine", return_value=machine),
+        patch("homeassistant.components.homeassistant.CPUINFO_PATH", cpuinfo_file),
+    ):
+        assert _get_missing_cpu_features() == expected
+
+
+def test_get_missing_cpu_features_no_cpuinfo_file(tmp_path: Path) -> None:
+    """Test detection returns None when /proc/cpuinfo is unavailable."""
+    with (
+        patch("platform.machine", return_value="x86_64"),
+        patch(
+            "homeassistant.components.homeassistant.CPUINFO_PATH",
+            tmp_path / "does_not_exist",
+        ),
+    ):
+        assert _get_missing_cpu_features() is None
+
+
+@pytest.mark.parametrize("missing_features", [None, []])
+async def test_unsupported_cpu_issue_not_created(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    missing_features: list[str] | None,
+) -> None:
+    """Test no repair issue is created when no CPU features are missing."""
+    with patch(
+        "homeassistant.components.homeassistant._get_missing_cpu_features",
+        return_value=missing_features,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_cpu") is None
+
+
+async def test_unsupported_cpu_issue_created(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the unsupported CPU repair issue is created when features are missing."""
+    with patch(
+        "homeassistant.components.homeassistant._get_missing_cpu_features",
+        return_value=["sse4_1", "sse4_2"],
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_cpu")
+    assert issue.domain == DOMAIN
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"missing_features": "sse4_1, sse4_2"}
