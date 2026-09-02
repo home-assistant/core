@@ -17,11 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_EVENTS, DOMAIN, PLATFORMS
+from .const import CONF_EVENTS, DOMAIN, PLATFORMS, SIGNAL_EVENTS_UPDATED
 from .device import ConfiguredDoorBird
 from .models import DoorBirdConfigEntry, DoorBirdData
+from .util import get_mac_address_from_door_station_info
 from .view import DoorBirdRequestView
 
 CONF_CUSTOM_URL = "hass_url_override"
@@ -118,3 +120,9 @@ async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> N
     door_station.update_events(entry.options[CONF_EVENTS])
     # Subscribe to doorbell or motion events
     await _async_register_events(hass, door_station, entry)
+    # The entities resolve their events from the refreshed descriptions, so they
+    # have to remap without waiting for a reload.
+    mac_address = get_mac_address_from_door_station_info(
+        entry.runtime_data.door_station_info
+    )
+    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")

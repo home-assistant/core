@@ -11,13 +11,13 @@ from homeassistant.components.image import (
     ImageEntityDescription,
     infer_image_type,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DEFAULT_EVENT_TYPES, DOMAIN, SIGNAL_EVENTS_UPDATED
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
@@ -78,10 +78,37 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-        self._matching_event_names = [
+        self._subscribed_event_names: list[str] = []
+        self._event_unsubscribes: list[CALLBACK_TYPE] = []
+
+    @property
+    def _matching_event_names(self) -> list[str]:
+        """Return the event names that refresh this image.
+
+        Resolved on each use because the options listener replaces the
+        descriptions without reloading the platform. Models without the
+        schedule API report no descriptions at all, so fall back to the
+        configured events for this type to keep the image refreshing.
+        """
+        event_type = self.entity_description.doorbird_event_type
+        door_station = self._door_station
+        if names := [
             event.event
-            for event in self._door_station.event_descriptions
-            if event.event_type == description.doorbird_event_type
+            for event in door_station.event_descriptions
+            if event.event_type == event_type
+        ]:
+            return names
+        default_events = {
+            event
+            for event, default_type in DEFAULT_EVENT_TYPES
+            if default_type == event_type
+        }
+        return [
+            event_name
+            for event, event_name in zip(
+                door_station.events, door_station.door_station_events, strict=True
+            )
+            if event in default_events
         ]
 
     @override
@@ -104,14 +131,14 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         self._attr_content_type = content_type
         return image_bytes
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to the underlying DoorBird events."""
-        await super().async_added_to_hass()
+    @callback
+    def _async_subscribe_events(self) -> None:
+        """Map and subscribe to the events that currently refresh this image."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event_name in self._matching_event_names:
+        self._subscribed_event_names = self._matching_event_names
+        for event_name in self._subscribed_event_names:
             event_to_entity_id[event_name] = self.entity_id
-            self.async_on_remove(
+            self._event_unsubscribes.append(
                 async_dispatcher_connect(
                     self.hass,
                     f"{DOMAIN}_{event_name}",
@@ -119,12 +146,38 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
                 )
             )
 
+    @callback
+    def _async_unsubscribe_events(self) -> None:
+        """Drop the current mappings and subscriptions."""
+        event_to_entity_id = self._door_bird_data.event_entity_ids
+        for event_name in self._subscribed_event_names:
+            event_to_entity_id.pop(event_name, None)
+        while self._event_unsubscribes:
+            self._event_unsubscribes.pop()()
+
+    @callback
+    def _async_handle_events_updated(self) -> None:
+        """Resubscribe after the configured events changed."""
+        self._async_unsubscribe_events()
+        self._async_subscribe_events()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the underlying DoorBird events."""
+        await super().async_added_to_hass()
+        self._async_subscribe_events()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_EVENTS_UPDATED}_{self._mac_addr}",
+                self._async_handle_events_updated,
+            )
+        )
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events."""
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event_name in self._matching_event_names:
-            event_to_entity_id.pop(event_name, None)
+        self._async_unsubscribe_events()
         await super().async_will_remove_from_hass()
 
     @callback

@@ -1,11 +1,12 @@
 """Test DoorBird image entities."""
 
+from homeassistant.components.doorbird.const import CONF_EVENTS
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import mock_webhook_call
+from . import mock_not_found_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType
 
 from tests.typing import ClientSessionGenerator
@@ -119,3 +120,56 @@ async def test_image_rejects_non_image_body(
         f"/api/{IMAGE_DOMAIN}_proxy/image.mydoorbird_last_ring?token={access_token}"
     )
     assert resp.status == 500
+
+
+async def test_image_updates_on_event_without_schedule_api(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Models without the schedule API still refresh on their configured events."""
+    doorbird_entry = await doorbird_mocker(
+        schedule_side_effect=mock_not_found_exception()
+    )
+    client = await hass_client()
+
+    assert hass.states.get("image.mydoorbird_last_ring").state == STATE_UNKNOWN
+
+    await mock_webhook_call(doorbird_entry.entry, client, "mydoorbird_doorbell")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("image.mydoorbird_last_ring").state != STATE_UNKNOWN
+    assert hass.states.get("image.mydoorbird_last_motion").state == STATE_UNKNOWN
+
+
+async def test_image_event_mapping_follows_configured_events(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """The event to entity_id mapping tracks options changes without a reload."""
+    doorbird_entry = await doorbird_mocker()
+    entry = doorbird_entry.entry
+    event_entity_ids = entry.runtime_data.event_entity_ids
+
+    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
+
+    hass.config_entries.async_update_entry(entry, options={CONF_EVENTS: ["motion"]})
+    await hass.async_block_till_done()
+
+    # The ring image no longer answers to a doorbell event, so the stale mapping
+    # would otherwise keep naming it in the event data.
+    assert "mydoorbird_doorbell" not in event_entity_ids
+
+    hass.config_entries.async_update_entry(
+        entry, options={CONF_EVENTS: ["motion", "doorbell"]}
+    )
+    await hass.async_block_till_done()
+
+    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
+
+    client = await hass_client()
+    await mock_webhook_call(entry, client, "mydoorbird_doorbell")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("image.mydoorbird_last_ring").state != STATE_UNKNOWN

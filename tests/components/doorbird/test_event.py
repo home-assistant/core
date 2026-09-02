@@ -79,7 +79,11 @@ async def test_event_data_entity_id_without_schedule_api(
     hass_client: ClientSessionGenerator,
     doorbird_mocker: DoorbirdMockerType,
 ) -> None:
-    """Models without the schedule API report no entity_id on their events."""
+    """Models without the schedule API still report the image entity_id.
+
+    They expose no event entities, since those are built from the schedule, but
+    the image falls back to the configured events so it still maps.
+    """
     doorbird_entry = await doorbird_mocker(
         schedule_side_effect=mock_not_found_exception()
     )
@@ -102,4 +106,4 @@ async def test_event_data_entity_id_without_schedule_api(
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert events[0].data[ATTR_ENTITY_ID] is None
+    assert events[0].data[ATTR_ENTITY_ID] == "image.mydoorbird_last_ring"
