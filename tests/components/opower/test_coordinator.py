@@ -142,6 +142,134 @@ async def test_coordinator_subsequent_run(
     assert stats == snapshot
 
 
+async def test_coordinator_uses_import_export_registers(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the meter's own import/export registers are preferred over the net.
+
+    An interval that is net-export can still contain real grid import, so
+    splitting the net on its sign undercounts both directions. When the utility
+    publishes the registers we use them verbatim.
+    """
+    mock_opower_api.async_get_cost_reads.return_value = [
+        # Net export, but 0.25 kWh really was taken from the grid in that hour.
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            consumption=-3.9,
+            provided_cost=-1.2,
+            imported=0.25,
+            exported=4.15,
+        ),
+        # Net import, with a little export in the same hour.
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 10)),
+            consumption=1.5,
+            provided_cost=0.5,
+            imported=1.75,
+            exported=0.25,
+        ),
+    ]
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {
+            "opower:pge_elec_111111_energy_consumption",
+            "opower:pge_elec_111111_energy_return",
+        },
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+
+    consumption = stats["opower:pge_elec_111111_energy_consumption"]
+    grid_return = stats["opower:pge_elec_111111_energy_return"]
+    # Sign splitting would have recorded 0 and 1.5 for consumption
+    # and 3.9 and 0 for return.
+    assert [s["state"] for s in consumption] == [0.25, 1.75]
+    assert [s["sum"] for s in consumption] == [0.25, 2.0]
+    assert [s["state"] for s in grid_return] == [4.15, 0.25]
+    assert [s["sum"] for s in grid_return] == [4.15, 4.4]
+
+
+async def test_coordinator_falls_back_to_sign_split(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test reads without registers still split the net on its sign.
+
+    Utilities that do not publish the registers leave both fields None, and even
+    those that do can leave gaps (PG&E publishes none for the hours around a DST
+    transition), so both paths have to coexist within a single update.
+    """
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            consumption=-3.9,
+            provided_cost=-1.2,
+        ),
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 10)),
+            consumption=1.5,
+            provided_cost=0.5,
+            imported=1.75,
+            exported=0.25,
+        ),
+        # Only one of the two registers came back; not enough to use either.
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 10)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 11)),
+            consumption=2.0,
+            provided_cost=0.7,
+            imported=2.0,
+        ),
+    ]
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {
+            "opower:pge_elec_111111_energy_consumption",
+            "opower:pge_elec_111111_energy_return",
+        },
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        0.0,
+        1.75,
+        2.0,
+    ]
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_return"]] == [
+        3.9,
+        0.25,
+        0.0,
+    ]
+
+
 async def test_coordinator_subsequent_run_no_energy_data(
     recorder_mock: Recorder,
     hass: HomeAssistant,
