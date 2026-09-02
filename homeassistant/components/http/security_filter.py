@@ -31,12 +31,13 @@ FILTERS: Final = re.compile(
     r"|concat.*\("
 
     r")",
-    flags=re.IGNORECASE,
+    flags=re.IGNORECASE | re.DOTALL,
 )
 # fmt: on
 
 # Unsafe bytes to be removed per WHATWG spec
 UNSAFE_URL_BYTES = ["\t", "\r", "\n"]
+UNSAFE_URL_BYTES_TRANSLATION: Final = str.maketrans("", "", "".join(UNSAFE_URL_BYTES))
 
 
 @callback
@@ -59,29 +60,38 @@ def setup_security_filter(app: Application) -> None:
         # Most requests (WebSocket/API traffic) have no query string; avoid the
         # concat and only scan the path in that case.
         if query_string:
+            # Check the raw query string so percent-encoded control bytes remain valid values.
+            raw_query_string = request.raw_path.partition("?")[2]
             path_with_query_string = f"{request.path}?{query_string}"
         else:
+            raw_query_string = ""
             path_with_query_string = request.path
 
         for unsafe_byte in UNSAFE_URL_BYTES:
-            if unsafe_byte in path_with_query_string:
-                if unsafe_byte in query_string:
-                    _LOGGER.warning(
-                        "Filtered a request with unsafe byte query string: %s",
-                        request.raw_path,
-                    )
-                    raise HTTPBadRequest
+            if unsafe_byte in request.path:
                 _LOGGER.warning(
                     "Filtered a request with an unsafe byte in path: %s",
                     request.raw_path,
                 )
                 raise HTTPBadRequest
+            if unsafe_byte in raw_query_string:
+                _LOGGER.warning(
+                    "Filtered a request with unsafe byte query string: %s",
+                    request.raw_path,
+                )
+                raise HTTPBadRequest
 
-        if FILTERS.search(_recursive_unquote(path_with_query_string)):
+        if FILTERS.search(
+            _recursive_unquote(path_with_query_string).translate(
+                UNSAFE_URL_BYTES_TRANSLATION
+            )
+        ):
             # Check the full path with query string first, if its
             # a hit, than check just the query string to give a more
             # specific warning.
-            if FILTERS.search(_recursive_unquote(query_string)):
+            if FILTERS.search(
+                _recursive_unquote(query_string).translate(UNSAFE_URL_BYTES_TRANSLATION)
+            ):
                 _LOGGER.warning(
                     "Filtered a request with a potential harmful query string: %s",
                     request.raw_path,
