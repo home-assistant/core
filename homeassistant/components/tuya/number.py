@@ -294,6 +294,12 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
+        NumberEntityDescription(
+            key=DPCode.PERCENT_CONTROL,
+            translation_key="valve_opening",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SGBJ: (
         NumberEntityDescription(

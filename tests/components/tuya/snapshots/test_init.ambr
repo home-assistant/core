@@ -3269,6 +3269,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[eikafwrmuhdvizruqzktk]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'eikafwrmuhdvizruqzktk',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'VITAL+ (unsupported)',
+    'model_id': 'urzivdhumrwfakie',
+    'name': 'VITAL+',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ej2zsznihehztkzqcaderarfni]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5693,6 +5723,36 @@
     'model': 'E20',
     'model_id': 'i6hyjg3af7doaswm',
     'name': 'Hoover',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[n8b7ineqe0tuidckqzkfs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'n8b7ineqe0tuidckqzkfs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Water Valve BV05',
+    'model_id': 'kcdiut0eqeni7b8n',
+    'name': 'Smart Water Valve BV05',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
@@ -8213,36 +8273,6 @@
     'model': 'WiFi Temperature & Humidity Sensor',
     'model_id': 'yqiqbaldtr0i7mru',
     'name': 'WiFi Temperature & Humidity Sensor',
-    'name_by_user': None,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_device_registry[eikafwrmuhdvizruqzktk]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tuya',
-        'eikafwrmuhdvizruqzktk',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Tuya',
-    'model': 'VITAL+ (unsupported)',
-    'model_id': 'urzivdhumrwfakie',
-    'name': 'VITAL+',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,

@@ -39,6 +39,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -1091,6 +1092,33 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.WORK_STATE,
             translation_key="irrigation_status",
             entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PERCENT_STATE,
+            translation_key="valve_opening_state",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_ONCE,
+            translation_key="water_once",
+            device_class=SensorDeviceClass.WATER,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TOTAL,
+            translation_key="water_total",
+            device_class=SensorDeviceClass.WATER,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),

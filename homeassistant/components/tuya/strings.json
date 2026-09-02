@@ -283,6 +283,9 @@
       "time": {
         "name": "Time"
       },
+      "valve_opening": {
+        "name": "Valve opening"
+      },
       "video_brightness": {
         "name": "Video brightness"
       },
@@ -972,6 +975,9 @@
       "uv_runtime": {
         "name": "UV runtime"
       },
+      "valve_opening_state": {
+        "name": "Valve opening state"
+      },
       "voc": {
         "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
       },
@@ -989,8 +995,14 @@
           "level_3": "[%key:common::state::full%]"
         }
       },
+      "water_once": {
+        "name": "Session water usage"
+      },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "water_total": {
+        "name": "Total water usage"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
