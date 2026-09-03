@@ -25,8 +25,7 @@
   "config_subentries": {
     "ai_task_data": {
       "abort": {
-        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]"
       },
       "entry_type": "AI task",
       "initiate_flow": {
@@ -55,8 +54,7 @@
     },
     "conversation": {
       "abort": {
-        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
       "entry_type": "Conversation agent",
       "error": {
@@ -97,8 +95,7 @@
     },
     "stt": {
       "abort": {
-        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]"
       },
       "entry_type": "Speech-to-text",
       "initiate_flow": {
@@ -131,8 +128,7 @@
     },
     "tts": {
       "abort": {
-        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]"
       },
       "entry_type": "Text-to-speech",
       "initiate_flow": {

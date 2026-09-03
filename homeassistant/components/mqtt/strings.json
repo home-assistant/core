@@ -106,9 +106,6 @@
   },
   "config_subentries": {
     "device": {
-      "abort": {
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-      },
       "create_entry": {
         "default": "MQTT device with {platform} entity \"{entity}\" was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
       },

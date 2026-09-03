@@ -3823,6 +3823,7 @@ class ConfigSubentryFlow(
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reason: str | UndefinedType = UNDEFINED,
     ) -> SubentryFlowResult:
         """Update config subentry and finish subentry flow.
 
@@ -3831,6 +3832,8 @@ class ConfigSubentryFlow(
         keys are overridden
         :param title: replace the title of the subentry
         :param unique_id: replace the unique_id of the subentry
+        :param reason: set the reason for the abort, defaults to
+        `reconfigure_successful`. A custom reason requires a matching strings.json entry
         """
         self._async_update(
             entry=entry,
@@ -3840,7 +3843,11 @@ class ConfigSubentryFlow(
             data=data,
             data_updates=data_updates,
         )
-        return self.async_abort(reason="reconfigure_successful")
+        translation_domain: str | None = None
+        if reason is UNDEFINED:
+            reason = "reconfigure_successful"
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
     def async_update_reload_and_abort(
@@ -3852,6 +3859,7 @@ class ConfigSubentryFlow(
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> SubentryFlowResult:
         """Update config subentry, reload config entry and finish subentry flow.
@@ -3861,6 +3869,8 @@ class ConfigSubentryFlow(
         keys are overridden
         :param title: replace the title of the subentry
         :param unique_id: replace the unique_id of the subentry
+        :param reason: set the reason for the abort, defaults to
+        `reconfigure_successful`. A custom reason requires a matching strings.json entry
         :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
         should not be reloaded if it is unchanged
         """
@@ -3876,7 +3886,11 @@ class ConfigSubentryFlow(
             if entry.update_listeners:
                 raise ValueError("Cannot update and reload entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        return self.async_abort(reason="reconfigure_successful")
+        translation_domain: str | None = None
+        if reason is UNDEFINED:
+            reason = "reconfigure_successful"
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @property
     def _entry_id(self) -> str:
