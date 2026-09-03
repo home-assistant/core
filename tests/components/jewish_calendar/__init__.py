@@ -16,7 +16,8 @@ class GetCalendarEvents(Protocol):
         entity_id: str,
         start_date: dt.datetime,
         end_date: dt.datetime | None = None,
-    ) -> list[dict[str, str]]: ...
+    ) -> list[dict[str, str]]:
+        """Return the events between the two dates."""
 
 
 @dataclass(frozen=True)
