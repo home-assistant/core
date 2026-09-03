@@ -6,7 +6,6 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
