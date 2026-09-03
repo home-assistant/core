@@ -82,6 +82,7 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "active_scene"
+    _option_to_scene_id: dict[str, str]
     _scene_id_to_option: dict[str, str]
     _scene_id_to_name: dict[str, str]
 
@@ -127,6 +128,7 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
                 ),
             )
         )
+        self.refresh_options()
 
     @callback
     def _handle_scene_event(
@@ -136,14 +138,14 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
         if scene.group.rid != self._group_id:
             return
         # Skip rebuild on status updates where the name hasn't changed.
-        if event_type == EventType.RESOURCE_UPDATED and self.scene_option_matches_name(
+        if event_type == EventType.RESOURCE_UPDATED and self._scene_option_matches_name(
             scene.id, scene.metadata.name
         ):
             return
         self.refresh_options()
         self.async_write_ha_state()
 
-    def scene_option_matches_name(self, scene_id: str, name: str) -> bool:
+    def _scene_option_matches_name(self, scene_id: str, name: str) -> bool:
         """Return if the current option label still matches an unchanged scene name."""
         return self._scene_id_to_name.get(scene_id) == name
 
