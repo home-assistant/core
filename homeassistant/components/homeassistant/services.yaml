@@ -49,7 +49,8 @@ update_entity:
 
 reload_custom_templates:
 reload_config_entry:
-  target:
+  # Target is intentionally hidden from the UI to steer users towards selecting
+  # the config entry to reload. It is still accepted by the service schema.
   fields:
     entry_id:
       required: false
