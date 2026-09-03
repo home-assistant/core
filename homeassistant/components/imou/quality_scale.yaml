@@ -45,7 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud hub; DHCP only surfaces the integration. Device IP is not stored or updated.
