@@ -19,6 +19,7 @@ from .const import (
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_PERMANENT,
 )
+from .neo import sensor_learn_capabilities
 
 if TYPE_CHECKING:
     from . import EasywaveConfigEntry
@@ -54,11 +55,11 @@ def _transmitter_model(data: dict[str, Any]) -> str:
 
 def _neo_sensor_model(data: dict[str, Any]) -> str:
     """Return a human-readable model string for an EWneo sensor."""
-    capabilities = data.get(CONF_SENSOR_CAPABILITIES, 0)
+    capabilities = sensor_learn_capabilities(data.get(CONF_SENSOR_CAPABILITIES, 0))
     parts = ["Easywave neo sensor"]
-    if (capabilities >> 4) & 1:
+    if capabilities.measures_temperature:
         parts.append("Temperature")
-    if (capabilities >> 5) & 1:
+    if capabilities.measures_humidity:
         parts.append("Humidity")
     return ", ".join(parts)
 

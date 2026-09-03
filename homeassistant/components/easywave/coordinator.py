@@ -313,7 +313,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _handle_transmitter_battery_status(self, device_id: str, is_low: bool) -> None:
-        """Fire battery device automation events for a configured transmitter."""
+        """Update battery state and fire device automation events."""
         if is_low:
             self._battery_ok_streak[device_id] = 0
             if self._battery_state.get(device_id) != _BATTERY_STATE_LOW:
@@ -332,6 +332,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._battery_state[device_id] = _BATTERY_STATE_OK
             self._battery_ok_streak[device_id] = 0
             self.fire_device_event(device_id, EVENT_TYPE_BATTERY_NORMAL, subtype="ok")
+
+    def transmitter_battery_state(self, device_id: str) -> str | None:
+        """Return the coordinator-owned battery state for a transmitter."""
+        return self._battery_state.get(device_id)
 
     @callback
     def sync_transmitter_battery_state(self, device_id: str, state: str) -> None:
@@ -471,6 +475,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         is_low_battery = event.function == ButtonFunction.LOW_BATTERY
         device_id = self._transmitter_device_id_for_serial(event.transmitter_serial)
 
+        # Update coordinator-owned battery state before entities mirror it.
+        if device_id is not None:
+            self._handle_transmitter_battery_status(device_id, is_low_battery)
+
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 if not is_low_battery:
@@ -481,9 +489,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
             return
         if is_low_battery:
-            self._handle_transmitter_battery_status(device_id, True)
             return
-        self._handle_transmitter_battery_status(device_id, False)
         button_letter = "abcd"[event.button] if event.button < 4 else None
         if button_letter is not None:
             self.fire_device_event(

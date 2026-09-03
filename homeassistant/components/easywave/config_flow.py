@@ -222,7 +222,23 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             d = self._device
-            if not await self._async_validate_device_connection(d["device"]):
+            try:
+                connected = await self._async_validate_device_connection(d["device"])
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error validating RX11 connection on %s", d["device"]
+                )
+                return self.async_show_form(
+                    step_id="confirm",
+                    data_schema=vol.Schema({}),
+                    errors={"base": "unknown"},
+                    description_placeholders={
+                        "name": self._device["product"],
+                        "serial_number": serial_number,
+                        "device": self._device["device"],
+                    },
+                )
+            if not connected:
                 return self.async_show_form(
                     step_id="confirm",
                     data_schema=vol.Schema({}),

@@ -52,6 +52,7 @@ from .entity import (
     EasywaveNeoSensorEntity,
     EasywaveTransmitterEntity,
 )
+from .neo import sensor_learn_capabilities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,11 +83,13 @@ async def async_setup_entry(
                 config_subentry_id=device.subentry_id,
             )
         elif entry_type == ENTRY_TYPE_NEO_SENSOR:
-            capabilities = device.data.get(CONF_SENSOR_CAPABILITIES, 0)
+            capabilities = sensor_learn_capabilities(
+                device.data.get(CONF_SENSOR_CAPABILITIES, 0)
+            )
             neo_entities: list[SensorEntity] = []
-            if (capabilities >> 4) & 1:
+            if capabilities.measures_temperature:
                 neo_entities.append(EasywaveNeoSensorTemperatureSensor(entry, device))
-            if (capabilities >> 5) & 1:
+            if capabilities.measures_humidity:
                 neo_entities.append(EasywaveNeoSensorHumiditySensor(entry, device))
             if neo_entities:
                 async_add_entities(
@@ -332,8 +335,8 @@ _BATTERY_OPTIONS = [_BATTERY_STATE_OK, _BATTERY_STATE_LOW]
 class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor):
     """Diagnostic battery-state sensor for an Easywave transmitter.
 
-    Requires two consecutive non-low PUSH telegrams to clear an existing
-    warning (_CLEAR_THRESHOLD) to avoid spurious OK flashes on restart.
+    State transitions are owned by the coordinator; this entity mirrors that
+    state for the UI.
     """
 
     _attr_device_class = SensorDeviceClass.ENUM
@@ -341,13 +344,10 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
     _attr_translation_key = "battery_warning"
     _attr_options = _BATTERY_OPTIONS
 
-    _CLEAR_THRESHOLD = 2
-
     def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:
         """Initialize the transmitter battery sensor."""
         super().__init__(entry, device, "battery_warning")
         self._native_value: str | None = None
-        self._ok_streak: int = 0
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -390,20 +390,12 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
     @override
     @callback
     def handle_battery_status(self, is_low: bool) -> None:
-        """Update battery state from the LOWBAT flag of a PUSH telegram."""
-        if is_low:
-            self._ok_streak = 0
-            if self._native_value != _BATTERY_STATE_LOW:
-                self._native_value = _BATTERY_STATE_LOW
-                self.async_write_ha_state()
+        """Mirror coordinator battery state after a PUSH telegram."""
+        state = self._coordinator.transmitter_battery_state(self._device_id)
+        if state is None or state == self._native_value:
             return
-        if self._native_value == _BATTERY_STATE_OK:
-            return
-        self._ok_streak += 1
-        if self._ok_streak >= self._CLEAR_THRESHOLD:
-            self._native_value = _BATTERY_STATE_OK
-            self._ok_streak = 0
-            self.async_write_ha_state()
+        self._native_value = state
+        self.async_write_ha_state()
 
 
 class EasywaveNeoSensorTemperatureSensor(EasywaveNeoSensorEntity, RestoreSensor):

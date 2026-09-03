@@ -59,7 +59,13 @@ rules:
   docs-use-cases: todo
   dynamic-devices: done
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: exempt
+    comment: >
+      Temperature and humidity sensors use the correct device classes. Gateway
+      connectivity and transmitter battery warning stay SensorDeviceClass.ENUM
+      in this PR to remain on a single platform; BinarySensor CONNECTIVITY and
+      BATTERY follow in a follow-up.
   entity-disabled-by-default:
     status: exempt
     comment: No entities are disabled by default.

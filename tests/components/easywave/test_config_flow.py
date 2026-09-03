@@ -320,6 +320,32 @@ async def test_user_flow_cannot_connect_on_connection_error(
     mock_transceiver.dispose.assert_awaited()
 
 
+async def test_user_flow_unknown_error_on_unexpected_validation_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Confirm step recovers with unknown when validation raises unexpectedly."""
+    port = _make_port()
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(side_effect=RuntimeError("boom"))
+    mock_transceiver.dispose = AsyncMock()
+
+    with (
+        patch(COMPORTS_PATH, return_value=[port]),
+        patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "unknown"}
+    mock_transceiver.dispose.assert_awaited()
+
+
 async def test_user_flow_multiple_ports(hass: HomeAssistant) -> None:
     """Test user flow with multiple serial ports shows selection form."""
     port1 = _make_port()

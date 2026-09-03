@@ -6,7 +6,8 @@
     },
     "error": {
       "cannot_connect": "Could not connect to the RX11 USB Transceiver. Make sure it is plugged in and no other application is using the port.",
-      "device_no_longer_available": "The selected device is no longer available. Please try again."
+      "device_no_longer_available": "The selected device is no longer available. Please try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "confirm": {
