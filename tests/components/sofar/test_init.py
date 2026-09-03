@@ -346,7 +346,7 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     # Availability alone cannot tell a failed poll from one that reported
     # every component as failed; only the logged error separates them.
-    assert "no component answered" in caplog.text
+    assert "No component answered" in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))

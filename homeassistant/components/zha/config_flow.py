@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -828,7 +828,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
                 # Abort discovery if the device path is already configured
                 if path is not None and path in current_device_paths:
-                    return self.async_abort(reason="single_instance_allowed")
+                    return self.async_abort(
+                        reason="single_instance_allowed",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
@@ -1032,7 +1035,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title="", data=data)
         # This should never be reached
-        return self.async_abort(reason="single_instance_allowed")
+        return self.async_abort(
+            reason="single_instance_allowed",
+            translation_domain=HOMEASSISTANT_DOMAIN,
+        )
 
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):

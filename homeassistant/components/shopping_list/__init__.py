@@ -58,7 +58,7 @@ async def _async_setup(hass: HomeAssistant) -> None:
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Shopping List",
+            "integration_title": "Shopping list",
         },
     )
 
