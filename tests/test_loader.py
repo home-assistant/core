@@ -876,6 +876,52 @@ async def test_get_config_flows(hass: HomeAssistant) -> None:
         assert "test_1" not in flows
 
 
+@pytest.mark.parametrize(
+    ("type_filter", "expected"),
+    [
+        (None, {"core_helper", "core_integration", "custom_helper", "custom_hub"}),
+        ("integration", {"core_integration", "custom_hub"}),
+        ("helper", {"core_helper", "custom_helper"}),
+    ],
+)
+async def test_get_config_flows_type_filter(
+    hass: HomeAssistant, type_filter: str | None, expected: set[str]
+) -> None:
+    """Verify custom integrations are bucketed like the generated flows.
+
+    Custom integrations report integration types such as "hub", which must map
+    onto the "integration" bucket the way hassfest generates FLOWS.
+    """
+    custom_hub = _get_test_integration(hass, "custom_hub", True)
+    custom_helper = loader.Integration(
+        hass,
+        "homeassistant.components.custom_helper",
+        None,
+        {
+            "name": "custom_helper",
+            "domain": "custom_helper",
+            "config_flow": True,
+            "integration_type": "helper",
+            "dependencies": [],
+            "requirements": [],
+        },
+    )
+
+    with (
+        patch("homeassistant.loader.async_get_custom_components") as mock_get,
+        patch.object(
+            loader,
+            "FLOWS",
+            {"integration": ["core_integration"], "helper": ["core_helper"]},
+        ),
+    ):
+        mock_get.return_value = {
+            "custom_hub": custom_hub,
+            "custom_helper": custom_helper,
+        }
+        assert await loader.async_get_config_flows(hass, type_filter) == expected
+
+
 async def test_get_zeroconf(hass: HomeAssistant) -> None:
     """Verify that custom components with zeroconf are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)

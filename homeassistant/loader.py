@@ -369,12 +369,14 @@ async def async_get_config_flows(
         for type_flows in FLOWS.values():
             flows.update(type_flows)
 
-    flows.update(
-        integration.domain
-        for integration in integrations.values()
-        if integration.config_flow
-        and (type_filter is None or integration.integration_type == type_filter)
-    )
+    for integration in integrations.values():
+        if not integration.config_flow:
+            continue
+        # custom integrations report a finer grained integration_type than the
+        # two buckets hassfest generates FLOWS with, so map it the same way
+        bucket = "helper" if integration.integration_type == "helper" else "integration"
+        if type_filter is None or bucket == type_filter:
+            flows.add(integration.domain)
 
     return flows
 
