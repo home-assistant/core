@@ -2138,6 +2138,8 @@ async def test_reconfigure_flow_wrong_device_id_discovery(
         await _assert_reconfigure_success(
             hass=hass, config_entry=config_entry, result=result
         )
+
+
 async def test_dhcp_discovery_updates_host(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
