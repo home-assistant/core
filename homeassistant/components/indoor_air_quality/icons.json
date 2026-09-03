@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "sensor": {
+      "iaq_index": {
+        "default": "mdi:air-filter"
+      },
+      "iaq_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "excellent": "mdi:emoticon-excited",
+          "fair": "mdi:emoticon-neutral",
+          "good": "mdi:emoticon-happy",
+          "inadequate": "mdi:emoticon-dead",
+          "poor": "mdi:emoticon-sad"
+        }
+      }
+    }
+  }
+}
