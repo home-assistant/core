@@ -1,0 +1,44 @@
+name: YouLess snapshot update
+
+on:
+  push:
+    branches:
+      - youless-month-peak-time
+
+permissions:
+  contents: write
+
+jobs:
+  update-snapshots:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.6"
+          python-version: "3.14.5"
+          enable-cache: true
+      - name: Create virtual environment
+        run: |
+          uv venv --python 3.14.5 venv
+          . venv/bin/activate
+          uv pip install -r requirements_test.txt
+          uv pip install -r requirements_all.txt
+      - name: Generate translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
+      - name: Update YouLess snapshots
+        run: |
+          . venv/bin/activate
+          python3 -m pytest tests/components/youless/test_sensor.py --snapshot-update -q
+      - name: Commit generated snapshots and remove temporary workflow
+        run: |
+          rm .github/workflows/youless-snapshot-update.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/components/youless/snapshots/test_sensor.ambr .github/workflows/youless-snapshot-update.yml
+          git commit -m "Update YouLess sensor snapshots"
+          git push origin HEAD:youless-month-peak-time
