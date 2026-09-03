@@ -505,6 +505,7 @@ async def test_migrate_from_higher_version_not_supported(
         "mock_migrate_entry",
         "state",
         "log_message",
+        "logs",
         "translation_key",
         "translation_domain",
     ),
@@ -517,6 +518,7 @@ async def test_migrate_from_higher_version_not_supported(
             ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            True,
             "error",
             "comp",
             id="ConfigEntryError",
@@ -529,6 +531,7 @@ async def test_migrate_from_higher_version_not_supported(
             ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Config entry 'Mock Title' for comp integration could not authenticate",
+            True,
             "error",
             "comp",
             id="ConfigEntryAuthFailed",
@@ -541,6 +544,7 @@ async def test_migrate_from_higher_version_not_supported(
             ),
             config_entries.ConfigEntryState.SETUP_RETRY,
             "Config entry migration 'Mock Title' for comp integration not ready yet",
+            True,
             "error",
             "comp",
             id="ConfigEntryNotReady",
@@ -549,6 +553,7 @@ async def test_migrate_from_higher_version_not_supported(
             AsyncMock(side_effect=Exception()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
+            True,
             None,
             None,
             id="Other exceptions",
@@ -556,7 +561,8 @@ async def test_migrate_from_higher_version_not_supported(
         pytest.param(
             AsyncMock(return_value=False),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "",  # No logging
+            "Error migrating entry Mock Title for comp",
+            False,  # No logging
             None,
             None,
             id="Returns False",
@@ -575,6 +581,7 @@ async def test_migrate_from_higher_version_not_supported(
             ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Config entry 'Mock Title' for comp integration could not authenticate",
+            True,
             "oauth2_helper_reauth_required",
             "homeassistant",
             id="OAuth reauth error",
@@ -587,6 +594,7 @@ async def test_migrate_handle_exceptions(
     mock_migrate_entry: AsyncMock,
     state: config_entries.ConfigEntryState,
     log_message: str,
+    logs: bool,
     translation_key: str | None,
     translation_domain: str | None,
 ) -> None:
@@ -624,7 +632,7 @@ async def test_migrate_handle_exceptions(
     assert entry.state is state
     assert entry.error_reason_translation_domain == translation_domain
     assert entry.error_reason_translation_key == translation_key
-    assert log_message in caplog.text
+    assert bool(log_message in caplog.text) is logs
 
     assert hass.config_entries.flow.async_progress_by_handler("comp") == []
 
@@ -641,17 +649,9 @@ async def test_migrate_raise_configentrynotready(
 
     mock_setup_entry = AsyncMock(return_value=True)
 
-    runs = 0
-
-    async def mock_migrate_entry(
-        hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
-        """Mock migrate entry."""
-        nonlocal runs
-        if runs == 0:
-            runs += 1
-            raise config_entries.ConfigEntryNotReady("Migration not ready yet")
-        return True
+    mock_migrate_entry = AsyncMock(
+        side_effect=[ConfigEntryNotReady("Migration not ready yet"), True]
+    )
 
     mock_integration(
         hass,
