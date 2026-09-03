@@ -58,10 +58,5 @@
         "unit_of_measurement": "souvenirs"
       }
     }
-  },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    }
   }
 }

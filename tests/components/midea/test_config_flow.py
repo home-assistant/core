@@ -23,7 +23,7 @@ from homeassistant.components.midea.const import (
     DOMAIN,
 )
 from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -2036,6 +2036,109 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_method"
     assert result["errors"] == {"base": "preset_login_failed"}
+
+
+async def _assert_reconfigure_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry, result: ConfigFlowResult
+) -> None:
+    """Assert reconfigure success."""
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    discovery_result = DISCOVERY_RESULT
+    discovery_result[TEST_DEVICE_ID][CONF_IP_ADDRESS] = "8.8.8.8"
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.discover",
+            return_value=discovery_result,
+        ) as mock_discovery,
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+        ) as mock_device_selector,
+    ):
+        mock_device = MagicMock()
+        mock_device.connect.return_value = True
+        mock_device_selector.return_value = mock_device
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "8.8.8.8"},
+        )
+
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == "8.8.8.8"
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert config_entry.data[CONF_IP_ADDRESS] == "8.8.8.8"
+
+        assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reconfigure_flow_no_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with no discovery in the new IP."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value={},
+    ) as mock_discovery:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"].get("base") == "invalid_device_ip"
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
+
+        await _assert_reconfigure_success(
+            hass=hass, config_entry=config_entry, result=result
+        )
+
+
+async def test_reconfigure_flow_wrong_device_id_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow when the new IP belongs to a different device."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value={
+            123: {
+                **BASE_DATA,
+                CONF_TYPE: TEST_TYPE,
+                CONF_MAC: TEST_MAC_ADDRESS,
+                CONF_SN: TEST_SERIAL_NUMBER,
+            }
+        },
+    ) as mock_discovery:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"].get("base") == "invalid_device_id_for_ip"
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
+
+        await _assert_reconfigure_success(
+            hass=hass, config_entry=config_entry, result=result
+        )
 
 
 async def test_dhcp_discovery_updates_host(
