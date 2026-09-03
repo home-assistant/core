@@ -860,8 +860,8 @@ LOCK_PRO_WIFI_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-LOCK_ULTRA_2_SERVICE_INFO = BluetoothServiceInfoBleak(
-    name="Lock Ultra 2",
+LOCK_ULTRA_MAX_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Ultra Max",
     manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
     service_data={
         "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x11\x9f\xb8"
@@ -871,14 +871,14 @@ LOCK_ULTRA_2_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     source="local",
     advertisement=generate_advertisement_data(
-        local_name="Lock Ultra 2",
+        local_name="Lock Ultra Max",
         manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
         service_data={
             "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x11\x9f\xb8"
         },
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra 2"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra Max"),
     time=0,
     connectable=True,
     tx_power=-127,

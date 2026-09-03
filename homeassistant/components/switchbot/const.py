@@ -47,7 +47,7 @@ class SupportedModels(StrEnum):
     HUB3 = "hub3"
     LOCK_LITE = "lock_lite"
     LOCK_ULTRA = "lock_ultra"
-    LOCK_ULTRA_2 = "lock_ultra_2"
+    LOCK_ULTRA_MAX = "lock_ultra_max"
     AIR_PURIFIER_JP = "air_purifier_jp"
     AIR_PURIFIER_US = "air_purifier_us"
     AIR_PURIFIER_TABLE_JP = "air_purifier_table_jp"
@@ -102,7 +102,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
     SwitchbotModel.LOCK_LITE: SupportedModels.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA: SupportedModels.LOCK_ULTRA,
-    SwitchbotModel.LOCK_ULTRA_2: SupportedModels.LOCK_ULTRA_2,
+    SwitchbotModel.LOCK_ULTRA_MAX: SupportedModels.LOCK_ULTRA_MAX,
     SwitchbotModel.AIR_PURIFIER_JP: SupportedModels.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US: SupportedModels.AIR_PURIFIER_US,
     SwitchbotModel.AIR_PURIFIER_TABLE_JP: SupportedModels.AIR_PURIFIER_TABLE_JP,
@@ -161,7 +161,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_PRO,
     SwitchbotModel.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA,
-    SwitchbotModel.LOCK_ULTRA_2,
+    SwitchbotModel.LOCK_ULTRA_MAX,
     SwitchbotModel.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US,
     SwitchbotModel.AIR_PURIFIER_TABLE_JP,
@@ -196,7 +196,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.LOCK_LITE: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_ULTRA: switchbot.SwitchbotLock,
-    SwitchbotModel.LOCK_ULTRA_2: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_ULTRA_MAX: switchbot.SwitchbotLock,
     SwitchbotModel.AIR_PURIFIER_JP: switchbot.SwitchbotAirPurifier,
     SwitchbotModel.AIR_PURIFIER_US: switchbot.SwitchbotAirPurifier,
     SwitchbotModel.AIR_PURIFIER_TABLE_JP: switchbot.SwitchbotAirPurifier,

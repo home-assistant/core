@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
     WOCURTAIN_SERVICE_INFO,
@@ -173,6 +174,40 @@ async def test_bluetooth_discovery_encrypted_key(hass: HomeAssistant) -> None:
         CONF_SENSOR_TYPE: "lock",
     }
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
+    """Test discovery of an encrypted Lock Ultra Max."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=LOCK_ULTRA_MAX_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "lock_ultra_max"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1883,76 +1918,18 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow_lock_pro_wifi(hass: HomeAssistant) -> None:
-    """Test updating options for lock_pro_wifi."""
+@pytest.mark.parametrize("sensor_type", ["lock_pro_wifi", "lock_ultra_max"])
+async def test_options_flow_lock_with_night_latch(
+    hass: HomeAssistant, sensor_type: str
+) -> None:
+    """Test updating options for locks with night latch support."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
-            CONF_SENSOR_TYPE: "lock_pro_wifi",
-        },
-        options={CONF_RETRY_COUNT: 10},
-        unique_id="aabbccddeeff",
-    )
-    entry.add_to_hass(hass)
-
-    # Test night_latch should be disabled by default.
-    with patch_async_setup_entry() as mock_setup_entry:
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-        assert result["errors"] is None
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_RETRY_COUNT: 3,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_LOCK_NIGHTLATCH] is False
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-    # Test Set force night_latch to be enabled.
-    with patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-        assert result["errors"] is None
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_LOCK_NIGHTLATCH: True,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_LOCK_NIGHTLATCH] is True
-
-    assert len(mock_setup_entry.mock_calls) == 0
-
-    assert entry.options[CONF_LOCK_NIGHTLATCH] is True
-
-
-async def test_options_flow_lock_ultra_2(hass: HomeAssistant) -> None:
-    """Test updating options for lock_ultra_2."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            CONF_NAME: "test-name",
-            CONF_PASSWORD: "test-password",
-            CONF_SENSOR_TYPE: "lock_ultra_2",
+            CONF_SENSOR_TYPE: sensor_type,
         },
         options={CONF_RETRY_COUNT: 10},
         unique_id="aabbccddeeff",
