@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
+    ZERO_NOISE_PSK,
     APIClient,
     APIVersion,
     BluetoothProxyFeature,
@@ -99,7 +100,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_outgoing_connection_server() -> Generator[MagicMock]:
     """Patch the shared dial-in listener so tests never bind a real socket.
 
-    spec pins the synchronous start/close/register/discard contract.
+    spec pins the synchronous start/close/register contract.
     """
     server = MagicMock(spec=OutgoingConnectionServer)
     with patch(
@@ -210,7 +211,13 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
         mock_client.timezone = timezone
-        mock_client.outgoing_connection_target = outgoing_connection_target
+        # Mirror the real constructor: the declaration is dropped without
+        # a real key
+        mock_client.outgoing_connection_target = (
+            outgoing_connection_target
+            and bool(noise_psk)
+            and noise_psk != ZERO_NOISE_PSK
+        )
         return mock_client
 
     mock_client.side_effect = mock_constructor

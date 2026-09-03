@@ -116,16 +116,6 @@ def _has_mac_unique_id(entry: ESPHomeConfigEntry) -> bool:
 
 
 @callback
-def _is_outgoing_connection_target(noise_psk: str | None) -> bool:
-    """A dial-back target must hold a real key.
-
-    Keyless entries store an empty key, and the zero-PSK provisioning client
-    authenticates nobody, so neither may declare the flag or route dial-ins.
-    """
-    return bool(noise_psk) and noise_psk != ZERO_NOISE_PSK
-
-
-@callback
 def async_create_api_client(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
@@ -143,9 +133,9 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        # Only declared when a dial-in route can actually exist
+        # The library drops the declaration for keyless and zero-PSK
+        # clients; the MAC gate is ours, a route needs a MAC unique id
         outgoing_connection_target=declare_outgoing_target
-        and _is_outgoing_connection_target(noise_psk)
         and _has_mac_unique_id(entry),
     )
 
