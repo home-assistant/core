@@ -93,26 +93,25 @@ async def test_navigation(
 
     assert_resolve_index(1)
 
+    wrap = {CollectionImageServiceArgument.WRAP: True}
     steps = (
-        (CollectionImageService.SELECT_FIRST, 0),
-        (CollectionImageService.SELECT_LAST, 2),
-        (CollectionImageService.SELECT_PREVIOUS, 1),
-        (CollectionImageService.SELECT_PREVIOUS, 0),
-        (CollectionImageService.SELECT_PREVIOUS, 0),
-        (CollectionImageService.SELECT_PREVIOUS, 2, True),
-        (CollectionImageService.SELECT_PREVIOUS, 1, True),
-        (CollectionImageService.SELECT_PREVIOUS, 0, True),
-        (CollectionImageService.SELECT_NEXT, 1),
-        (CollectionImageService.SELECT_NEXT, 2),
-        (CollectionImageService.SELECT_NEXT, 2),
-        (CollectionImageService.SELECT_NEXT, 0, True),
-        (CollectionImageService.SELECT_NEXT, 1, True),
+        (CollectionImageService.SELECT_FIRST, {}, 0),
+        (CollectionImageService.SELECT_LAST, {}, 2),
+        (CollectionImageService.SELECT_PREVIOUS, {}, 1),
+        (CollectionImageService.SELECT_PREVIOUS, {}, 0),
+        (CollectionImageService.SELECT_PREVIOUS, {}, 0),
+        (CollectionImageService.SELECT_PREVIOUS, wrap, 2),
+        (CollectionImageService.SELECT_PREVIOUS, wrap, 1),
+        (CollectionImageService.SELECT_PREVIOUS, wrap, 0),
+        (CollectionImageService.SELECT_NEXT, {}, 1),
+        (CollectionImageService.SELECT_NEXT, {}, 2),
+        (CollectionImageService.SELECT_NEXT, {}, 2),
+        (CollectionImageService.SELECT_NEXT, wrap, 0),
+        (CollectionImageService.SELECT_NEXT, wrap, 1),
     )
 
-    for service, expected_index, *wrap_arg in steps:
-        data = {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID}
-        if wrap_arg:
-            data[CollectionImageServiceArgument.WRAP] = True
+    for service, wrap, expected_index in steps:
+        data = {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID, **wrap}
         await hass.services.async_call(
             DOMAIN,
             service,
