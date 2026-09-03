@@ -608,18 +608,13 @@ class ESPHomeManager:
         the next reload or restart.
         """
         entry = self.entry
-        # The client's key, not entry data: must match what the hello declared
-        if not _is_outgoing_connection_target(self.cli.noise_psk):
-            return
-        if not _has_mac_unique_id(entry):
-            _LOGGER.debug(
-                "%s: Not routing dial-ins; unique id %s is not a MAC address",
-                entry.title,
-                entry.unique_id,
-            )
+        # Read the flag off the client so the route matches what the hello
+        # actually declared, not a later snapshot of the entry data
+        if not self.cli.outgoing_connection_target:
+            _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
             return
         mac = entry.unique_id
-        assert mac is not None
+        assert mac is not None  # the declared flag requires a MAC unique id
         try:
             unregister = await async_register_outgoing_target(
                 self.hass, mac, reconnect_logic

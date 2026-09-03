@@ -187,6 +187,16 @@ async def async_register_outgoing_target(
         if hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state:
             break
         # Popped and stopped while we awaited it; build a fresh listener
-    unregister = state.server.register(mac, reconnect_logic)
+    try:
+        unregister = state.server.register(mac, reconnect_logic)
+    except Exception:
+        # A freshly started listener with no registrations would otherwise
+        # hold the port for the rest of the run
+        if (
+            state.registrations == 0
+            and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
+        ):
+            _async_stop_listener(hass, state)
+        raise
     state.registrations += 1
     return _Registration(hass, state, unregister).async_unregister

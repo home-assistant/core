@@ -335,3 +335,22 @@ async def test_outgoing_connection_unregister_error_contained(
     await hass.async_block_till_done()
     assert "Error removing the dial-in route" in caplog.text
     mock_server.stop.assert_awaited_once()
+
+
+async def test_outgoing_connection_register_error_stops_listener(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A raising register tears the fresh listener down; setup still loads."""
+    mock_server.register.side_effect = RuntimeError("boom")
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "Could not set up dial-in routing" in caplog.text
+    mock_server.stop.assert_awaited_once()
