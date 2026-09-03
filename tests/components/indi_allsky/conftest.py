@@ -1,16 +1,14 @@
 """Common fixtures for the INDI Allsky tests."""
 
-from collections.abc import Callable, Generator
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
-from aioindiallsky import ExposureData
 import pytest
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -32,14 +30,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_indi_allsky_client() -> Generator[AsyncMock]:
     """Mock the third-party aioindiallsky client globally across coordinator and config flow."""
-    callbacks: dict[str, list[Callable[..., Any]]] = {}
-
-    def register_callback(
-        event_type: str, callback: Callable[..., Any]
-    ) -> Callable[[], None]:
-        callbacks.setdefault(event_type, []).append(callback)
-        return lambda: callbacks[event_type].remove(callback)
-
     with (
         patch(
             "homeassistant.components.indi_allsky.coordinator.IndiAllSkyClient",
@@ -52,20 +42,7 @@ def mock_indi_allsky_client() -> Generator[AsyncMock]:
     ):
         client_instance = mock_client.return_value
         client_instance.fetch_image = AsyncMock(return_value=b"fake_jpeg_data")
-        client_instance.connect = AsyncMock()
-        client_instance.listen = AsyncMock()
-        client_instance.disconnect = AsyncMock()
-        client_instance.is_connected = False
-        client_instance.register_callback = MagicMock(side_effect=register_callback)
-        client_instance.callbacks = callbacks
         yield client_instance
-
-
-@pytest.fixture
-def mock_exposure_data() -> ExposureData:
-    """Fixture to provide sample ExposureData from fixture JSON."""
-    raw_data = load_json_object_fixture("exposure_complete.json", DOMAIN)
-    return ExposureData.from_dict(raw_data)
 
 
 @pytest.fixture

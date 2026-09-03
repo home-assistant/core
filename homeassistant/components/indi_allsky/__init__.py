@@ -15,12 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -
 
     entry.runtime_data = coordinator
 
-    entry.async_create_background_task(
-        hass,
-        coordinator.client.listen(auto_reconnect=True),
-        "indi_allsky_ws_events",
-    )
-
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 

@@ -3348,7 +3348,7 @@
       "name": "INDI Allsky",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_polling"
     },
     "indianamichiganpower": {
       "name": "Indiana Michigan Power",
