@@ -1235,6 +1235,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/nanoleaf/ @milanmeu @joostlek @loebi-ch @JaspervRijbroek @jonathanrobichaud4
 /homeassistant/components/nasweb/ @nasWebio
 /tests/components/nasweb/ @nasWebio
+/homeassistant/components/nature_remo/ @tnj
+/tests/components/nature_remo/ @tnj
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /homeassistant/components/neopool/ @svasek

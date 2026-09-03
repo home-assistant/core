@@ -409,6 +409,7 @@ homeassistant.components.myuplink.*
 homeassistant.components.nam.*
 homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
+homeassistant.components.nature_remo.*
 homeassistant.components.neato.*
 homeassistant.components.neopool.*
 homeassistant.components.nest.*

@@ -518,6 +518,7 @@ FLOWS = {
         "namecheapdns",
         "nanoleaf",
         "nasweb",
+        "nature_remo",
         "neato",
         "nederlandse_spoorwegen",
         "neopool",
