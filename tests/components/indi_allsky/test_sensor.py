@@ -1,5 +1,6 @@
 """Tests for the INDI Allsky sensor platform."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import ExposureData
@@ -97,3 +98,11 @@ async def test_sensor_updates(
     state = hass.states.get("sensor.indi_allsky_gain")
     assert state is not None
     assert state.state == "0.0"
+
+    for callback in mock_indi_allsky_client.callbacks.get("exposure_complete", []):
+        callback(replace(mock_exposure_data, temp=12.5))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_temperature")
+    assert state is not None
+    assert state.state == "12.5"
