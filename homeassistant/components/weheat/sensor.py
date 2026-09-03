@@ -60,8 +60,11 @@ def _cooling_wait_until(status: HeatPump) -> datetime | None:
 
     Only while the heat pump reports it is still waiting, since the moment is the
     last cooling cycle plus the wait and so lies in the past once it has passed.
-    It says when the wait ends, not when cooling starts: the other start
-    conditions have to be met as well, and in practice a cycle can begin sooner.
+
+    It says when the wait ends, not when cooling starts. The other start
+    conditions have to be met as well, which can only push a cycle out further.
+    The wait itself is not exact either: owners have measured cycles starting
+    before this moment, so it is not a prediction of when cooling resumes.
     """
     conditions = status.cooling_start_conditions
     if conditions is None or conditions["exponential_backoff"]:
