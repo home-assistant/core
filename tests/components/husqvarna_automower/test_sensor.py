@@ -286,6 +286,7 @@ async def test_error_sensor(
     for state, error_key, expected_state in (
         (MowerStates.IN_OPERATION, None, "no_error"),
         (MowerStates.ERROR, "can_error", "can_error"),
+        (MowerStates.ERROR, "destination_blocked", "destination_blocked"),
         (MowerStates.ERROR, None, MowerStates.ERROR.lower()),
         (MowerStates.ERROR_AT_POWER_UP, None, MowerStates.ERROR_AT_POWER_UP.lower()),
         (MowerStates.FATAL_ERROR, None, MowerStates.FATAL_ERROR.lower()),
