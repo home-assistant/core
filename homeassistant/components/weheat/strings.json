@@ -114,8 +114,10 @@
           "heating": "Heating",
           "legionella_prevention": "Legionella prevention",
           "manual_control": "Manual control",
+          "offline": "Offline",
           "self_test": "Self-test",
           "standby": "[%key:common::state::standby%]",
+          "updating": "Updating",
           "water_check": "Checking water temperature"
         }
       },
