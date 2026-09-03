@@ -38,12 +38,13 @@ def resolve_gateway_port(
     *,
     usb_serial: str | None = None,
     device_path: str | None = None,
+    allow_replacement: bool = True,
 ) -> str | None:
     """Return the serial port for an RX11 gateway.
 
     Prefers the configured USB serial or device path. When that hardware is
-    absent, any sole compatible stick is accepted so a replacement RX11 can be
-    used without reconfiguration.
+    absent and ``allow_replacement`` is true, any sole compatible stick is
+    accepted so a replacement RX11 can be used without reconfiguration.
     """
     try:
         ports = [
@@ -66,7 +67,7 @@ def resolve_gateway_port(
             if port.device == device_path:
                 return port.device
 
-    if len(ports) == 1:
+    if allow_replacement and len(ports) == 1:
         if usb_serial or device_path:
             _LOGGER.debug(
                 "Configured RX11 unavailable, using sole compatible stick on %s",
@@ -86,12 +87,14 @@ class RX11Transceiver:
         config: Mapping[str, Any] | None = None,
         *,
         device_path: str | None = None,
+        allow_replacement: bool = True,
     ) -> None:
         """Initialize the RX11 gateway wrapper."""
         self.hass = hass
         config = config or {}
         self._usb_serial = normalized_usb_serial(config.get(CONF_USB_SERIAL_NUMBER))
         self._configured_path = config.get(CONF_DEVICE_PATH) or device_path
+        self._allow_replacement = allow_replacement
         self._disconnect_callback: Callable[[], None] | None = None
         self._connected_callback: Callable[[], None] | None = None
         self._gateway = self._build_gateway(None)
@@ -171,6 +174,7 @@ class RX11Transceiver:
                 SUPPORTED_USB_IDS,
                 usb_serial=self._usb_serial,
                 device_path=self._configured_path,
+                allow_replacement=self._allow_replacement,
             )
         )
         # Recreate the gateway with the resolved port via the public config API.

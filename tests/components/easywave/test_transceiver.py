@@ -325,6 +325,25 @@ def test_resolve_gateway_port_falls_back_to_sole_rx11_when_serial_missing() -> N
         )
 
 
+def test_resolve_gateway_port_rejects_replacement_when_disabled() -> None:
+    """Strict resolution does not adopt a different sole RX11 stick."""
+    port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222")
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[port],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="missing",
+                device_path="/dev/ttyACM1",
+                allow_replacement=False,
+            )
+            is None
+        )
+
+
 def test_resolve_gateway_port_returns_none_for_ambiguous_replacement() -> None:
     """Port resolution stays unresolved when multiple RX11s are present."""
     port_a = MagicMock(

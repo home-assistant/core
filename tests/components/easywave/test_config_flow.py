@@ -524,3 +524,21 @@ async def test_validate_device_connection_disposes_on_unexpected_connect_error(
         await flow._async_validate_device_connection("/dev/ttyACM0")
 
     mock_transceiver.dispose.assert_awaited_once()
+
+
+async def test_validate_device_connection_disables_replacement_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Config-flow validation must connect only to the selected port."""
+    flow = EasywaveConfigFlow()
+    flow.hass = hass
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(return_value=True)
+    mock_transceiver.dispose = AsyncMock()
+
+    with patch(TRANSCEIVER_PATH, return_value=mock_transceiver) as mock_cls:
+        assert await flow._async_validate_device_connection("/dev/ttyACM0") is True
+
+    mock_cls.assert_called_once_with(
+        hass, device_path="/dev/ttyACM0", allow_replacement=False
+    )

@@ -93,7 +93,9 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_device_connection(self, device_path: str) -> bool:
         """Verify that an RX11 transceiver is reachable on the given port."""
-        transceiver = RX11Transceiver(self.hass, device_path=device_path)
+        transceiver = RX11Transceiver(
+            self.hass, device_path=device_path, allow_replacement=False
+        )
         try:
             connected = await transceiver.connect()
         except OSError, TimeoutError:
