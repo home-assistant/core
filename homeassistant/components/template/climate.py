@@ -12,8 +12,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MIN_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
     ENTITY_ID_FORMAT,
     ClimateEntity,
@@ -42,7 +40,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -118,6 +116,11 @@ _EXTRA_OPTIMISTIC_OPTIONS = (
 )
 
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(ClimateEntityCapabilityAttribute, ClimateEntityStateAttribute)
+)
+
+
 def _round_to_step(value: float, step: float) -> float:
     """Round a temperature to the nearest step using half-up midpoint handling."""
     decimal_value = Decimal(str(value))
@@ -136,9 +139,9 @@ CLIMATE_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_HVAC_ACTION): cv.template,
         vol.Optional(CONF_HVAC_MODE): cv.template,
         vol.Required(CONF_HVAC_MODES): cv.template,
-        vol.Optional(CONF_MAX_HUMIDITY, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(int),
+        vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(int),
         vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MIN_HUMIDITY, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(int),
+        vol.Optional(CONF_MIN_HUMIDITY): vol.Coerce(int),
         vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): vol.Any(
             PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
@@ -151,8 +154,8 @@ CLIMATE_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_SWING_HORIZONTAL_MODES): cv.template,
         vol.Optional(CONF_TARGET_HUMIDITY): cv.template,
         vol.Optional(CONF_TARGET_HUMIDITY_STEP): cv.positive_int,
-        vol.Optional(CONF_TARGET_TEMPERATURE_HIGH): cv.template,
-        vol.Optional(CONF_TARGET_TEMPERATURE_LOW): cv.template,
+        vol.Inclusive(CONF_TARGET_TEMPERATURE_HIGH, "temperature_limits"): cv.template,
+        vol.Inclusive(CONF_TARGET_TEMPERATURE_LOW, "temperature_limits"): cv.template,
         vol.Optional(CONF_TARGET_TEMPERATURE_STEP): cv.positive_float,
         vol.Optional(CONF_TARGET_TEMPERATURE): cv.template,
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
@@ -167,16 +170,14 @@ CLIMATE_COMMON_SCHEMA = vol.Schema(
 )
 
 _CLIMATE_INCLUSIVE_GROUPS = (
-    template_validators.inclusive_group(
-        "fan_mode", CONF_FAN_MODE, CONF_FAN_MODES, SET_FAN_MODE_ACTION
-    ),
-    template_validators.inclusive_group(
+    tcv.inclusive_group("fan_mode", CONF_FAN_MODE, CONF_FAN_MODES, SET_FAN_MODE_ACTION),
+    tcv.inclusive_group(
         "preset_mode", CONF_PRESET_MODE, CONF_PRESET_MODES, SET_PRESET_MODE_ACTION
     ),
-    template_validators.inclusive_group(
+    tcv.inclusive_group(
         "swing_mode", CONF_SWING_MODE, CONF_SWING_MODES, SET_SWING_MODE_ACTION
     ),
-    template_validators.inclusive_group(
+    tcv.inclusive_group(
         "horizontal_swing_mode",
         CONF_SWING_HORIZONTAL_MODE,
         CONF_SWING_HORIZONTAL_MODES,
@@ -190,7 +191,7 @@ CLIMATE_YAML_SCHEMA = vol.All(
         make_template_entity_common_schema(
             CLIMATE_DOMAIN,
             DEFAULT_NAME,
-            (ClimateEntityCapabilityAttribute, ClimateEntityStateAttribute),
+            _BLOCKED_ATTRIBUTES,
         ).schema
     ),
     *_CLIMATE_INCLUSIVE_GROUPS,
@@ -265,7 +266,7 @@ def hvac_modes_list(
     expected = f"expected a list of hvac modes: [{', '.join([str(item) for item in HVACMode])}]"
 
     def convert(result: Any) -> list[HVACMode] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if isinstance(result, str):
@@ -284,15 +285,13 @@ def hvac_modes_list(
                     invalid.append(item)
 
             if invalid:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity, CONF_HVAC_MODES, result, expected
                 )
 
             return validated
 
-        template_validators.log_validation_result_error(
-            entity, CONF_HVAC_MODES, result, expected
-        )
+        tcv.log_validation_result_error(entity, CONF_HVAC_MODES, result, expected)
         return None
 
     return convert
@@ -394,6 +393,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
     _extra_optimistic_options = _EXTRA_OPTIMISTIC_OPTIONS
     _restore_state_extra_data = ClimateExtraStoredData
     _restore_state_properties = ("_attr_hvac_mode",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -410,10 +410,17 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         )
         self._attr_target_temperature_step = config.get(CONF_TARGET_TEMPERATURE_STEP)
 
-        self._attr_min_temp = config[CONF_MIN_TEMP]
-        self._attr_max_temp = config[CONF_MAX_TEMP]
-        self._attr_min_humidity = config[CONF_MIN_HUMIDITY]
-        self._attr_max_humidity = config[CONF_MAX_HUMIDITY]
+        # Only set these options when it exists in the configuration in order
+        # to properly use default values set by the upstream class.
+        for attr, option in (
+            ("_attr_max_temp", CONF_MAX_TEMP),
+            ("_attr_min_temp", CONF_MIN_TEMP),
+            ("_attr_max_humidity", CONF_MAX_HUMIDITY),
+            ("_attr_min_humidity", CONF_MIN_HUMIDITY),
+            ("_attr_precision", CONF_PRECISION),
+        ):
+            if option_value := config.get(option):
+                setattr(attr, option, option_value)
 
         self._attr_hvac_mode = None
         self._attr_hvac_modes = []
@@ -423,7 +430,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         # Setup HVAC Mode
         self.setup_state_template(
             "_attr_hvac_mode",
-            template_validators.strenum(self, CONF_HVAC_MODE, HVACMode),
+            tcv.strenum(self, CONF_HVAC_MODE, HVACMode),
             self._update_hvac_mode,
         )
         self.setup_template(
@@ -435,14 +442,14 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_HVAC_ACTION,
             "_attr_hvac_action",
-            template_validators.strenum(self, CONF_HVAC_ACTION, HVACAction),
+            tcv.strenum(self, CONF_HVAC_ACTION, HVACAction),
         )
 
         # Temperatures
         self.setup_template(
             CONF_CURRENT_TEMPERATURE,
             "_attr_current_temperature",
-            template_validators.number(self, CONF_CURRENT_TEMPERATURE),
+            tcv.number(self, CONF_CURRENT_TEMPERATURE),
         )
 
         for option, attr in (
@@ -453,16 +460,14 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self.setup_template(
                 option,
                 attr,
-                template_validators.number(
-                    self, option, self._attr_min_temp, self._attr_max_temp
-                ),
+                tcv.number(self, option, self._attr_min_temp, self._attr_max_temp),
             )
 
         # Humidities
         self.setup_template(
             CONF_TARGET_HUMIDITY,
             "_attr_target_humidity",
-            template_validators.number(
+            tcv.number(
                 self,
                 CONF_TARGET_HUMIDITY,
                 self._attr_min_humidity,
@@ -473,7 +478,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_CURRENT_HUMIDITY,
             "_attr_current_humidity",
-            template_validators.number(self, CONF_CURRENT_HUMIDITY, 0, 100, int),
+            tcv.number(self, CONF_CURRENT_HUMIDITY, 0, 100, int),
         )
 
         # Fan Mode
@@ -482,7 +487,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_FAN_MODES,
             "_attr_fan_modes",
-            template_validators.list_of_strings(self, CONF_FAN_MODES),
+            tcv.list_of_strings(self, CONF_FAN_MODES),
         )
 
         # Swing Mode
@@ -490,7 +495,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_SWING_MODES,
             "_attr_swing_modes",
-            template_validators.list_of_strings(self, CONF_SWING_MODES),
+            tcv.list_of_strings(self, CONF_SWING_MODES),
         )
 
         # Swing Horizontal Mode
@@ -500,7 +505,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_SWING_HORIZONTAL_MODES,
             "_attr_swing_horizontal_modes",
-            template_validators.list_of_strings(self, CONF_SWING_HORIZONTAL_MODES),
+            tcv.list_of_strings(self, CONF_SWING_HORIZONTAL_MODES),
         )
 
         # Preset Mode
@@ -508,28 +513,33 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_PRESET_MODES,
             "_attr_preset_modes",
-            template_validators.list_of_strings(self, CONF_PRESET_MODES),
+            tcv.list_of_strings(self, CONF_PRESET_MODES),
         )
 
         self._attr_supported_features = ClimateEntityFeature(0)
         for action_id, supported_feature in (
             (SET_FAN_MODE_ACTION, ClimateEntityFeature.FAN_MODE),
             (SET_HUMIDITY_ACTION, ClimateEntityFeature.TARGET_HUMIDITY),
+            (SET_HVAC_MODE_ACTION, 0),
             (SET_PRESET_MODE_ACTION, ClimateEntityFeature.PRESET_MODE),
             (
                 SET_SWING_HORIZONTAL_MODE_ACTION,
                 ClimateEntityFeature.SWING_HORIZONTAL_MODE,
             ),
             (SET_SWING_MODE_ACTION, ClimateEntityFeature.SWING_MODE),
-            (
-                SET_TEMPERATURE_ACTION,
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
-            ),
+            (SET_TEMPERATURE_ACTION, ClimateEntityFeature.TARGET_TEMPERATURE),
         ):
             if (action_config := self._config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+
+        if (
+            CONF_TARGET_TEMPERATURE_HIGH in self._templates
+            and CONF_TARGET_TEMPERATURE_LOW in self._templates
+        ):
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
 
     def _update_hvac_mode(self, render) -> None:
         self._attr_hvac_mode = render
@@ -673,7 +683,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         common_params: dict[str, Any] = {}
         write_state = False
         if (attr := kwargs.get(ATTR_TEMPERATURE)) is not None and (
-            temperature := template_validators.number(
+            temperature := tcv.number(
                 self,
                 f"{SET_TEMPERATURE_ACTION} {ATTR_TEMPERATURE}",
                 self._attr_min_temp,
@@ -686,7 +696,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 write_state = True
 
         if (attr := kwargs.get(ATTR_TARGET_TEMP_HIGH)) and (
-            target_temp_high := template_validators.number(
+            target_temp_high := tcv.number(
                 self,
                 f"{SET_TEMPERATURE_ACTION} {ATTR_TARGET_TEMP_HIGH}",
                 self._attr_min_temp,
@@ -699,7 +709,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 write_state = True
 
         if (attr := kwargs.get(ATTR_TARGET_TEMP_LOW)) and (
-            target_temp_low := template_validators.number(
+            target_temp_low := tcv.number(
                 self,
                 f"{SET_TEMPERATURE_ACTION} {ATTR_TARGET_TEMP_LOW}",
                 self._attr_min_temp,
@@ -713,7 +723,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
 
         breadcrumb = f"{SET_TEMPERATURE_ACTION} {ATTR_HVAC_MODE}"
         if (attr := kwargs.get(ATTR_HVAC_MODE)) and (
-            hvac_mode := template_validators.strenum(self, breadcrumb, HVACMode)(attr)
+            hvac_mode := tcv.strenum(self, breadcrumb, HVACMode)(attr)
         ) is not None:
             if hvac_mode in self._attr_hvac_modes:
                 common_params["hvac_mode"] = hvac_mode
@@ -721,7 +731,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                     self._attr_hvac_mode = hvac_mode
                     write_state = True
             else:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     self,
                     breadcrumb,
                     hvac_mode.value,
