@@ -11751,8 +11751,6 @@ async def test_loading_drops_empty_deleted_devices(
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
-    # The two devices retaining an identifier or a connection are kept; the two with
-    # neither are dropped
     assert set(registry._deleted_devices) == {"with_identifiers", "with_connections"}
     assert "Dropped 2 deleted devices with no identifiers or connections" in caplog.text
 
