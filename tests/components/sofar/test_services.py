@@ -5,6 +5,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.components.sofar.services import (
@@ -251,5 +252,46 @@ async def test_write_failure_is_a_home_assistant_error(
                 ATTR_MODE: "disabled",
                 ATTR_MAX_POWER: 0,
             },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        pytest.param(
+            SERVICE_SET_FEED_IN_LIMIT,
+            {ATTR_MODE: "disabled", ATTR_MAX_POWER: 10_000_000},
+            id="feed_in_max_power",
+        ),
+        pytest.param(
+            SERVICE_SET_PASSIVE_MODE_TIMEOUT,
+            {ATTR_TIMEOUT: 70000, ATTR_ACTION: "force_standby"},
+            id="passive_timeout",
+        ),
+        pytest.param(
+            SERVICE_SET_PASSIVE_MODE_POWER,
+            {
+                ATTR_GRID_POWER: 200_000,
+                ATTR_BATTERY_POWER_MIN: 0,
+                ATTR_BATTERY_POWER_MAX: 0,
+            },
+            id="passive_grid_power",
+        ),
+    ],
+)
+async def test_value_past_the_selector_bounds_is_refused(
+    hass: HomeAssistant,
+    service: str,
+    data: dict[str, int | str],
+) -> None:
+    """Test the schema bounds a scripted call, which skips the selectors."""
+    entry, _ = await _setup_hybrid(hass)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_CONFIG_ENTRY_ID: entry.entry_id, **data},
             blocking=True,
         )
