@@ -66,6 +66,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     try:
         await client.fetch_image("latestimage")
+        await client.connect()
     except IndiAllSkyAuthError as err:
         _LOGGER.error(
             "Authentication failed for INDI Allsky at %s:%s: %s",
@@ -84,6 +85,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise CannotConnect from err
     except Exception as err:
         raise Unknown from err
+    finally:
+        await client.disconnect()
 
 
 class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):

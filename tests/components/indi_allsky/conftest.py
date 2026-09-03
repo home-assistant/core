@@ -1,7 +1,6 @@
 """Common fixtures for the INDI Allsky tests."""
 
 from collections.abc import Callable, Generator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,7 +10,7 @@ import pytest
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -53,8 +52,10 @@ def mock_indi_allsky_client() -> Generator[AsyncMock]:
     ):
         client_instance = mock_client.return_value
         client_instance.fetch_image = AsyncMock(return_value=b"fake_jpeg_data")
+        client_instance.connect = AsyncMock()
         client_instance.listen = AsyncMock()
         client_instance.disconnect = AsyncMock()
+        client_instance.is_connected = False
         client_instance.register_callback = MagicMock(side_effect=register_callback)
         client_instance.callbacks = callbacks
         yield client_instance
@@ -63,7 +64,7 @@ def mock_indi_allsky_client() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_exposure_data() -> ExposureData:
     """Fixture to provide sample ExposureData from fixture JSON."""
-    raw_data = json.loads(load_fixture("exposure_complete.json", DOMAIN))
+    raw_data = load_json_object_fixture("exposure_complete.json", DOMAIN)
     return ExposureData.from_dict(raw_data)
 
 

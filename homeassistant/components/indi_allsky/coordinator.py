@@ -67,6 +67,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         """Fetch INDI Allsky metadata and verify connection."""
         try:
             await self.client.fetch_image("latestimage")
+            if not self.client.is_connected:
+                await self.client.connect()
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

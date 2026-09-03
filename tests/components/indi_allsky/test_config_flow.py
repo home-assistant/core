@@ -16,8 +16,11 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_indi_allsky_client")
-async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
     """Test we get the form, validate the client, and create a successful entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -44,6 +47,8 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_indi_allsky_client.connect.assert_awaited_once()
+    mock_indi_allsky_client.disconnect.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_indi_allsky_client")
@@ -67,11 +72,13 @@ async def test_form_custom_port_title(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_key"),
+    ("side_effect", "error_key", "error_method"),
     [
-        (IndiAllSkyConnectionError("Cannot connect"), "cannot_connect"),
-        (IndiAllSkyAuthError("Invalid key"), "invalid_auth"),
-        (Exception("Unexpected error"), "unknown"),
+        (IndiAllSkyConnectionError("Cannot connect"), "cannot_connect", "fetch_image"),
+        (IndiAllSkyAuthError("Invalid key"), "invalid_auth", "fetch_image"),
+        (Exception("Unexpected error"), "unknown", "fetch_image"),
+        (IndiAllSkyConnectionError("Cannot connect WS"), "cannot_connect", "connect"),
+        (IndiAllSkyAuthError("Invalid auth WS"), "invalid_auth", "connect"),
     ],
 )
 async def test_form_failures_and_recovery(
@@ -80,13 +87,14 @@ async def test_form_failures_and_recovery(
     mock_indi_allsky_client: AsyncMock,
     side_effect: Exception,
     error_key: str,
+    error_method: str,
 ) -> None:
     """Test handling validation failures and ensuring the flow can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_indi_allsky_client.fetch_image.side_effect = side_effect
+    getattr(mock_indi_allsky_client, error_method).side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -99,7 +107,7 @@ async def test_form_failures_and_recovery(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_key}
 
-    mock_indi_allsky_client.fetch_image.side_effect = None
+    getattr(mock_indi_allsky_client, error_method).side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aioindiallsky import IndiAllSkyConnectionError
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -21,6 +22,7 @@ async def test_setup_and_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_indi_allsky_client.connect.assert_awaited_once()
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -29,15 +31,20 @@ async def test_setup_and_unload_entry(
     mock_indi_allsky_client.disconnect.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "method_name",
+    ["fetch_image", "connect"],
+)
 async def test_setup_failure_retry(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    method_name: str,
 ) -> None:
     """Test that an API connection failure during initial setup places entry in retry state."""
-    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyConnectionError(
-        "Cannot connect to INDI Allsky server"
-    )
+    getattr(
+        mock_indi_allsky_client, method_name
+    ).side_effect = IndiAllSkyConnectionError("Cannot connect to INDI Allsky server")
 
     await setup_integration(hass, mock_config_entry)
 
