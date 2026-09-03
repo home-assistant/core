@@ -84,8 +84,13 @@ def _dhw_target_temperature(status: HeatPump) -> float | None:
 
 
 def _is_cooling(status: HeatPump) -> bool:
-    """Return whether the heat pump is running a cooling cycle right now."""
-    return status.heat_pump_state is HeatPump.State.COOLING
+    """Return whether the heat pump is running a cooling cycle right now.
+
+    The heat pump only reports a cooling state during a cooling cycle, and it
+    covers the substates the cycle passes through, including the water check
+    that the overall state reports as its own thing.
+    """
+    return status.cooling_state is not None
 
 
 # Left out of the count to match the portal, which tallies the conditions the

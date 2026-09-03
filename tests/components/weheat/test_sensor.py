@@ -10,6 +10,7 @@ from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.components import weheat
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weheat.sensor import COOLING_CONDITIONS_NOT_COUNTED
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -57,6 +58,19 @@ async def test_create_entities(
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == nr_of_entities
+
+
+# The cooling sensors a heat pump that does not cool must not get. The cooling
+# energy counters are not among them: those are reported either way, at zero.
+COOLING_SENSORS = {
+    "sensor.test_model_last_cooling",
+    "sensor.test_model_cooling_wait_until",
+    "sensor.test_model_cooling_state",
+    "sensor.test_model_cooling_blocked_by",
+    "sensor.test_model_cooling_conditions_met",
+    "sensor.test_model_cooling_pause_reason",
+    "sensor.test_model_cooling_stop_reason",
+}
 
 
 def _start_conditions(*unmet: str) -> dict[str, bool]:
@@ -124,6 +138,7 @@ async def test_stale_cooling_reasons_are_not_reported_while_cooling(
 ) -> None:
     """Test what held cooling off is not reported once a cycle is running."""
     mock_weheat_heat_pump.heat_pump_state = HeatPump.State.COOLING
+    mock_weheat_heat_pump.cooling_state = HeatPump.CoolingState.ACTIVE
     setattr(mock_weheat_heat_pump, attribute, stale)
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
@@ -186,18 +201,35 @@ async def test_cooling_conditions_met(
     assert hass.states.get("sensor.test_model_cooling_conditions_met").state == expected
 
 
+@pytest.mark.parametrize(
+    ("cooling_state", "heat_pump_state"),
+    [
+        pytest.param(HeatPump.CoolingState.ACTIVE, HeatPump.State.COOLING, id="active"),
+        pytest.param(HeatPump.CoolingState.IDLE, HeatPump.State.COOLING, id="idle"),
+        # the heat pump reports the water check as a state of its own, so the
+        # overall state is not cooling while the cooling cycle still is
+        pytest.param(
+            HeatPump.CoolingState.WATER_CHECK,
+            HeatPump.State.WATER_CHECK,
+            id="water_check",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_weheat_discover")
 async def test_cooling_conditions_met_is_unknown_while_cooling(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    cooling_state: HeatPump.CoolingState,
+    heat_pump_state: HeatPump.State,
 ) -> None:
     """Test the count is not reported once a cooling cycle is running.
 
     The demand condition goes back to unmet as soon as the heat pump acts on it,
     so the count would drop by one for the length of the cycle.
     """
-    mock_weheat_heat_pump.heat_pump_state = HeatPump.State.COOLING
+    mock_weheat_heat_pump.heat_pump_state = heat_pump_state
+    mock_weheat_heat_pump.cooling_state = cooling_state
     mock_weheat_heat_pump.cooling_start_conditions = _start_conditions("demand")
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
@@ -339,12 +371,19 @@ async def test_a_heat_pump_without_cooling_gets_no_cooling_sensors(
     mock_weheat_heat_pump.last_cooling_time = None
     mock_weheat_heat_pump.cooling_available_from = None
     mock_weheat_heat_pump.cooling_start_conditions = None
+    mock_weheat_heat_pump.cooling_pause_reason = None
+    mock_weheat_heat_pump.cooling_pause_reason_code = None
+    mock_weheat_heat_pump.cooling_stop_reason = None
+    mock_weheat_heat_pump.cooling_stop_reason_code = None
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.test_model_last_cooling") is None
-    assert hass.states.get("sensor.test_model_cooling_wait_until") is None
+    assert [
+        entity_id
+        for entity_id in hass.states.async_entity_ids(SENSOR_DOMAIN)
+        if entity_id in COOLING_SENSORS
+    ] == []
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")

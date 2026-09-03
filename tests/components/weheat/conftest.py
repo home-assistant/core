@@ -136,8 +136,10 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.current_control_method = (
         HeatPump.ControlMethod.SMART_OPEN_THERM
     )
-    mock_heat_pump_instance.cooling_state = HeatPump.CoolingState.ACTIVE
-    mock_heat_pump_instance.cooling_activity = HeatPump.CoolingActivity.ACTIVE
+    # The heat pump only reports a cooling state during a cooling cycle, so a
+    # heating one derives its cooling activity from the latched reasons instead.
+    mock_heat_pump_instance.cooling_state = None
+    mock_heat_pump_instance.cooling_activity = HeatPump.CoolingActivity.WAITING
     mock_heat_pump_instance.cooling_pause_reason = (
         HeatPump.CoolingPauseReason.WATER_TEMPERATURE_BELOW_SETPOINT
     )

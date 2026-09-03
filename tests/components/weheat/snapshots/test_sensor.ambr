@@ -716,7 +716,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'active',
+    'state': 'waiting',
   })
 # ---
 # name: test_all_entities[sensor.test_model_cooling_stop_reason-entry]
