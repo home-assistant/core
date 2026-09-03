@@ -97,8 +97,6 @@ async def async_setup_entry(
                     config_subentry_id=device.subentry_id,
                 )
 
-    coordinator.enable_telegram_reception()
-
 
 class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity):
     """Represents the RX11 USB gateway connectivity/state."""

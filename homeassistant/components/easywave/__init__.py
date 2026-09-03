@@ -90,6 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     entry.async_on_unload(coordinator.async_add_listener(_keep_reconnect_polling))
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    # After platforms finish adding/restoring entities so early telegrams are not lost.
+    coordinator.enable_telegram_reception()
     return True
 
 
