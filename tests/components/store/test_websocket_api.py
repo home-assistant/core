@@ -11,7 +11,7 @@ from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.enums import HacsCategory, HacsDispatchEvent
 from homeassistant.components.store.exceptions import HacsException
-from homeassistant.components.store.utils.store import async_save_to_store
+from homeassistant.components.store.utils.storage import async_save_to_storage
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -719,7 +719,7 @@ async def test_critical_list(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test listing the stored critical repositories."""
-    await async_save_to_store(hass, "critical", [CRITICAL_REPOSITORY])
+    await async_save_to_storage(hass, "critical", [CRITICAL_REPOSITORY])
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "store/critical/list"})
@@ -734,7 +734,7 @@ async def test_critical_acknowledge(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test acknowledging a critical repository."""
-    await async_save_to_store(hass, "critical", [CRITICAL_REPOSITORY])
+    await async_save_to_storage(hass, "critical", [CRITICAL_REPOSITORY])
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -751,7 +751,7 @@ async def test_critical_acknowledge_unknown_repository(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test acknowledging a repository that is not critical."""
-    await async_save_to_store(hass, "critical", [CRITICAL_REPOSITORY])
+    await async_save_to_storage(hass, "critical", [CRITICAL_REPOSITORY])
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(

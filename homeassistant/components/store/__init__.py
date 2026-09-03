@@ -39,7 +39,7 @@ from .exceptions import HacsException
 from .migration import async_migrate_from_hacs, async_remove_duplicate_entries
 from .utils.data import HacsData
 from .utils.queue_manager import QueueManager
-from .utils.store import STORE_CACHE_KEY
+from .utils.storage import STORAGE_CACHE_KEY
 from .websocket import async_register_websocket_commands
 
 PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
@@ -218,7 +218,7 @@ async def async_unload_entry(
     hacs.set_stage(None)
     hacs.disable_hacs(HacsDisabledReason.REMOVED)
 
-    hass.data.pop(STORE_CACHE_KEY, None)
+    hass.data.pop(STORAGE_CACHE_KEY, None)
 
     return unload_ok
 

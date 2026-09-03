@@ -81,7 +81,7 @@ async def test_restore(
     data = HacsData(store)
 
     with patch(
-        "homeassistant.components.store.utils.data.async_load_from_store",
+        "homeassistant.components.store.utils.data.async_load_from_storage",
         side_effect=_mocked_repositories,
     ):
         assert await data.restore()
@@ -109,7 +109,7 @@ async def test_restore_skips_placeholder_repository(store: HacsBase) -> None:
         return {"0": {"category": "integration", "full_name": "test/test"}}
 
     with patch(
-        "homeassistant.components.store.utils.data.async_load_from_store",
+        "homeassistant.components.store.utils.data.async_load_from_storage",
         side_effect=mocked_load,
     ):
         assert await data.restore()
@@ -126,7 +126,7 @@ async def test_restore_unreadable_data(
     data = HacsData(store)
 
     with patch(
-        "homeassistant.components.store.utils.data.async_load_from_store",
+        "homeassistant.components.store.utils.data.async_load_from_storage",
         side_effect=HomeAssistantError("Not valid JSON"),
     ):
         assert not await data.restore()

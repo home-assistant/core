@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
-from ..utils.store import async_load_from_store, async_save_to_store
+from ..utils.storage import async_load_from_storage, async_save_to_storage
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ async def hacs_critical_list(
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
-            (await async_load_from_store(hass, "critical") or []),
+            (await async_load_from_storage(hass, "critical") or []),
         )
     )
 
@@ -50,9 +50,9 @@ async def hacs_critical_acknowledge(
     """Acknowledge critical repository."""
     repository = msg["repository"]
 
-    critical = await async_load_from_store(hass, "critical")
+    critical = await async_load_from_storage(hass, "critical")
     for repo in critical:
         if repository == repo["repository"]:
             repo["acknowledged"] = True
-    await async_save_to_store(hass, "critical", critical)
+    await async_save_to_storage(hass, "critical", critical)
     connection.send_message(websocket_api.result_message(msg["id"], critical))

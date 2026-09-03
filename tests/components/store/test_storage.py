@@ -7,12 +7,12 @@ import pytest
 
 from homeassistant.components.store.const import DOMAIN, VERSION_STORAGE
 from homeassistant.components.store.exceptions import HacsException
-from homeassistant.components.store.utils.store import (
-    STORE_CACHE_KEY,
-    async_load_from_store,
-    async_remove_store,
-    async_save_to_store,
-    get_store_for_key,
+from homeassistant.components.store.utils.storage import (
+    STORAGE_CACHE_KEY,
+    async_load_from_storage,
+    async_remove_storage,
+    async_save_to_storage,
+    get_storage_for_key,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -64,12 +64,12 @@ async def test_load(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test loading a store."""
     hass_storage["store.test"] = _stored({"test": "test"})
 
-    assert await async_load_from_store(hass, "test") == {"test": "test"}
+    assert await async_load_from_storage(hass, "test") == {"test": "test"}
 
 
 async def test_load_missing(hass: HomeAssistant) -> None:
     """Test loading a store without a file of its own."""
-    assert await async_load_from_store(hass, "test") == {}
+    assert await async_load_from_storage(hass, "test") == {}
 
 
 @pytest.mark.parametrize(
@@ -88,10 +88,10 @@ def test_synchronous_load(
     expected: dict[str, Any] | None,
 ) -> None:
     """Test the synchronous load used to read a store off the loop."""
-    store = get_store_for_key(hass, "test")
+    store = get_storage_for_key(hass, "test")
 
     with patch(
-        "homeassistant.components.store.utils.store.json_util.load_json",
+        "homeassistant.components.store.utils.storage.json_util.load_json",
         return_value=stored,
     ):
         assert store.load() == expected
@@ -99,11 +99,11 @@ def test_synchronous_load(
 
 def test_synchronous_load_unreadable(hass: HomeAssistant) -> None:
     """Test an unreadable store raises."""
-    store = get_store_for_key(hass, "test")
+    store = get_storage_for_key(hass, "test")
 
     with (
         patch(
-            "homeassistant.components.store.utils.store.json_util.load_json",
+            "homeassistant.components.store.utils.storage.json_util.load_json",
             side_effect=HomeAssistantError("Not valid JSON"),
         ),
         pytest.raises(HacsException),
@@ -114,13 +114,13 @@ def test_synchronous_load_unreadable(hass: HomeAssistant) -> None:
 async def test_remove(hass: HomeAssistant) -> None:
     """Test only the per repository stores can be removed."""
     with patch(
-        "homeassistant.components.store.utils.store.HACSStore.async_remove",
+        "homeassistant.components.store.utils.storage.StoreStorage.async_remove",
         return_value=AsyncMock(),
     ) as async_remove_mock:
-        await async_remove_store(hass, "test")
+        await async_remove_storage(hass, "test")
         assert not async_remove_mock.called
 
-        await async_remove_store(hass, "test/test")
+        await async_remove_storage(hass, "test/test")
         assert async_remove_mock.called
 
 
@@ -128,12 +128,12 @@ async def test_remove_refuses_a_key_outside_the_storage(hass: HomeAssistant) -> 
     """Test that a repository id can not point the removal out of the storage."""
     with (
         patch(
-            "homeassistant.components.store.utils.store.HACSStore.async_remove",
+            "homeassistant.components.store.utils.storage.StoreStorage.async_remove",
             return_value=AsyncMock(),
         ) as async_remove_mock,
         pytest.raises(HacsException, match="is not inside"),
     ):
-        await async_remove_store(hass, "hacs/../../secrets.yaml")
+        await async_remove_storage(hass, "hacs/../../secrets.yaml")
 
     assert not async_remove_mock.called
 
@@ -147,14 +147,14 @@ async def test_save_skips_unchanged_content(
     hass_storage["store.test"] = _stored({"test": "test"})
 
     with patch(
-        "homeassistant.components.store.utils.store.HACSStore.async_save",
+        "homeassistant.components.store.utils.storage.StoreStorage.async_save",
         return_value=AsyncMock(),
     ) as async_save_mock:
-        await async_save_to_store(hass, "test", {"test": "test"})
+        await async_save_to_storage(hass, "test", {"test": "test"})
         assert not async_save_mock.called
         assert "Did not store data for 'store.test'" in caplog.text
 
-        await async_save_to_store(hass, "test", {"test": "other"})
+        await async_save_to_storage(hass, "test", {"test": "other"})
         assert async_save_mock.call_count == 1
 
 
@@ -164,15 +164,15 @@ async def test_instance_cached_per_key(hass: HomeAssistant) -> None:
     Store.async_delay_save() debounces via instance state, so callers that
     schedule delayed writes need the same Store object each time.
     """
-    assert get_store_for_key(hass, "test") is get_store_for_key(hass, "test")
-    assert get_store_for_key(hass, "test") is not get_store_for_key(hass, "other")
+    assert get_storage_for_key(hass, "test") is get_storage_for_key(hass, "test")
+    assert get_storage_for_key(hass, "test") is not get_storage_for_key(hass, "other")
 
 
 async def test_cache_cleared_on_unload(hass: HomeAssistant) -> None:
-    """Clearing STORE_CACHE_KEY (as async_unload_entry does) drops cached Stores."""
-    first = get_store_for_key(hass, "test")
-    hass.data.pop(STORE_CACHE_KEY, None)
-    assert get_store_for_key(hass, "test") is not first
+    """Clearing STORAGE_CACHE_KEY (as async_unload_entry does) drops cached Stores."""
+    first = get_storage_for_key(hass, "test")
+    hass.data.pop(STORAGE_CACHE_KEY, None)
+    assert get_storage_for_key(hass, "test") is not first
 
 
 async def test_hacs_data_is_adopted(

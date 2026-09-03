@@ -14,7 +14,11 @@ from ..enums import HacsDispatchEvent
 from ..repositories.base import TOPIC_FILTER, HacsManifest, HacsRepository
 from .logger import LOGGER
 from .path import is_safe
-from .store import async_load_from_store, async_load_legacy_data, async_save_to_store
+from .storage import (
+    async_load_from_storage,
+    async_load_legacy_data,
+    async_save_to_storage,
+)
 
 EXPORTED_BASE_DATA: tuple[tuple[str, Any], ...] = (
     ("new", False),
@@ -76,7 +80,7 @@ class HacsData:
 
         self.logger.debug("<HacsData async_write> Saving data")
 
-        await async_save_to_store(
+        await async_save_to_storage(
             self.hacs.hass,
             "common",
             {
@@ -97,7 +101,7 @@ class HacsData:
             if repository.data.category in self.hacs.common.categories:
                 self.async_store_repository_data(repository)
 
-        await async_save_to_store(self.hacs.hass, "repositories", self.content)
+        await async_save_to_storage(self.hacs.hass, "repositories", self.content)
         for event in (HacsDispatchEvent.REPOSITORY, HacsDispatchEvent.CONFIG):
             self.hacs.async_dispatch(event, {})
 
@@ -130,10 +134,10 @@ class HacsData:
         common: dict[str, Any] = {}
 
         with contextlib.suppress(HomeAssistantError):
-            common = await async_load_from_store(self.hacs.hass, "common") or {}
+            common = await async_load_from_storage(self.hacs.hass, "common") or {}
 
         try:
-            repositories = await async_load_from_store(self.hacs.hass, "repositories")
+            repositories = await async_load_from_storage(self.hacs.hass, "repositories")
             if not repositories and (
                 data := await async_load_legacy_data(self.hacs.hass)
             ):

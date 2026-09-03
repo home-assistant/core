@@ -38,7 +38,7 @@ from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.path import is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
-from ..utils.store import async_remove_store
+from ..utils.storage import async_remove_storage
 from ..utils.url import github_archive, github_release_asset
 from ..utils.validate import Validate
 from ..utils.version import (
@@ -820,7 +820,7 @@ class HacsRepository:
             raise HacsException("Could not uninstall")
         self.data.installed = False
         await self._async_post_uninstall()
-        await async_remove_store(self.hacs.hass, f"hacs/{self.data.id}.hacs")
+        await async_remove_storage(self.hacs.hass, f"hacs/{self.data.id}.hacs")
 
         self.data.installed_version = None
         self.data.installed_commit = None

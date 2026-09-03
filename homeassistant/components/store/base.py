@@ -61,7 +61,7 @@ from .repositories.base import HACS_MANIFEST_KEYS_TO_EXPORT, REPOSITORY_KEYS_TO_
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
-from .utils.store import async_load_from_store, async_save_to_store
+from .utils.storage import async_load_from_storage, async_save_to_storage
 
 if TYPE_CHECKING:
     from .repositories.base import HacsRepository
@@ -601,7 +601,7 @@ class HacsBase:
         """Tasks that are started after setup."""
         self.set_stage(HacsStage.STARTUP)
 
-        if critical := await async_load_from_store(self.hass, "critical"):
+        if critical := await async_load_from_storage(self.hass, "critical"):
             for repo in critical:
                 if not repo["acknowledged"]:
                     self.log.critical("URGENT!: Check the Community store!")
@@ -1050,7 +1050,7 @@ class HacsBase:
             self.log.debug("No critical repositories")
             return
 
-        stored_critical = await async_load_from_store(self.hass, "critical")
+        stored_critical = await async_load_from_storage(self.hass, "critical")
 
         instored.extend(stored["repository"] for stored in stored_critical or [])
 
@@ -1088,7 +1088,7 @@ class HacsBase:
         await critical_queue.execute()
 
         # Save to FS
-        await async_save_to_store(self.hass, "critical", stored_critical)
+        await async_save_to_storage(self.hass, "critical", stored_critical)
 
         # Restart HASS
         if was_installed:
