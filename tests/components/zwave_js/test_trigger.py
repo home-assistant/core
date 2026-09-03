@@ -1944,7 +1944,9 @@ async def test_node_status_trigger_invalid_status(
 async def test_node_status_trigger_description(hass: HomeAssistant) -> None:
     """Test the described node status fields match the schema and statuses."""
     descriptions = await trigger.async_get_all_descriptions(hass)
-    fields = descriptions[f"{DOMAIN}.node_status"]["fields"]
+    description = descriptions[f"{DOMAIN}.node_status"]
+    assert description["target"]["primary_entities_only"] is False
+    fields = description["fields"]
     assert set(fields) == {"behavior", "for"} | {
         str(key) for key in NODE_STATUS_OPTIONS_SCHEMA_DICT
     }

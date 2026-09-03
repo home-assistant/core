@@ -70,6 +70,7 @@ node_status:
         domain: sensor
     device:
       - integration: zwave_js
+    primary_entities_only: false
   fields:
     behavior:
       required: true
