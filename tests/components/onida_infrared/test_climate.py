@@ -34,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
@@ -599,6 +600,52 @@ async def test_set_temperature_with_hvac_mode(
     assert state is not None
     assert state.state == hvac_mode
     assert state.attributes["temperature"] == 24.0
+
+
+async def test_fahrenheit_temperatures_round_trip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+) -> None:
+    """Test temperatures convert to Celsius on a Fahrenheit installation."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                _CLIMATE_ENTITY_ID,
+                HVACMode.COOL,
+                {"fan_mode": FAN_AUTO, "temperature": 75},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.onida_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == 75
+
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 75},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == OnidaAcCommand(
+            mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

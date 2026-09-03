@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_HVAC_MODES,
@@ -137,7 +138,15 @@ class OnidaAcClimateEntity(
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_target_temperature = float(temperature)
+            self._attr_target_temperature = float(
+                round(
+                    TemperatureConverter.convert(
+                        float(temperature),
+                        self.hass.config.units.temperature_unit,
+                        self.temperature_unit,
+                    )
+                )
+            )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -161,7 +170,7 @@ class OnidaAcClimateEntity(
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature, switching the HVAC mode when one is given."""
-        temp = int(kwargs[ATTR_TEMPERATURE])
+        temp = round(kwargs[ATTR_TEMPERATURE])
         hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
         if hvac_mode is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
