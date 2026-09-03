@@ -72,11 +72,30 @@ class AlertEntity(Entity):
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
+        self._watched_entity_id = watched_entity_id
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
         async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Evaluate the watched entity's current state once added.
+
+        The alert only subscribes to future state changes of the watched
+        entity. If that entity is already in the alert state when the alert
+        is created - for example a restored state after a restart - no
+        state change event will ever arrive, and the alert would stay idle
+        even though its condition is met. Evaluate the current state here so
+        an already-met condition starts alerting.
+        """
+        await super().async_added_to_hass()
+        if (
+            (state := self.hass.states.get(self._watched_entity_id)) is not None
+            and state.state == self._alert_state
+            and not self._firing
+        ):
+            await self.begin_alerting()
 
     @property
     @override
