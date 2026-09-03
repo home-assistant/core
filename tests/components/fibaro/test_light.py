@@ -2,7 +2,11 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -55,6 +59,29 @@ async def test_light_brightness(
         # Assert
         state = hass.states.get("light.room_1_test_light_3")
         assert state.attributes["brightness"] == 51
+        assert state.state == "on"
+
+
+async def test_fgd212_light_brightness_without_setvalue_action(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_fgd212_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test FGD212 dimmers with levelChange but no setValue action."""
+
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_fgd212_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        state = hass.states.get("light.room_1_8_spots_116")
+        assert state.attributes[ATTR_BRIGHTNESS] == 128
+        assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
         assert state.state == "on"
 
 
