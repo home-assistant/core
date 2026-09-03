@@ -15,7 +15,7 @@ set_demand_control:
         number:
           min: 40
           max: 100
-          step: 5
+          step: 1
           unit_of_measurement: "%"
     mode:
       default: "manual"
