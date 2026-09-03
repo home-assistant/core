@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from my_pv.exceptions import MyPVTooManyRequestsError
 import pytest
 
 from homeassistant.components.my_pv.coordinator import UPDATE_INTERVAL
@@ -73,6 +74,41 @@ async def test_coordinator_update_data_not_connected(
 
     mock_my_pv_client.connect.side_effect = reconnect
 
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_my_pv_client.connect.assert_awaited_once_with()
+    states = hass.states.async_all()
+    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+
+
+async def test_coordinator_update_data_rate_limiting(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test coordinator update when client is rate limiting."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Test successful setup and first data fetch
+    await hass.async_block_till_done()
+    states = hass.states.async_all()
+    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+
+    # Test states stay available when rate limiting
+    freezer.tick(UPDATE_INTERVAL)
+    mock_my_pv_client.fetch_data = AsyncMock(side_effect=MyPVTooManyRequestsError)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_my_pv_client.fetch_data.assert_awaited_once_with()
+    states = hass.states.async_all()
+    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+
+    # Test successful data fetch
+    freezer.tick(UPDATE_INTERVAL)
+    mock_my_pv_client.fetch_data.reset_mock()
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_my_pv_client.connect.assert_awaited_once_with()
