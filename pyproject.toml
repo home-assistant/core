@@ -61,7 +61,10 @@ dependencies = [
   "Pillow==12.3.0",
   "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
-  "orjson==3.12.0",
+  # Do not bump orjson until the very aggressive buffer resizing
+  # introduced in 3.12.0 which causes memory use to ballooon have
+  # been adjusted or we have a workaround
+  "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
