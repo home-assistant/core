@@ -612,10 +612,10 @@
       "message": "Maximum power must be a multiple of 100 W."
     },
     "modbus_error": {
-      "message": "{error}"
+      "message": "Error communicating with the inverter."
     },
     "no_component_answered": {
-      "message": "{name}: no component answered."
+      "message": "No component answered."
     },
     "unrecognized_inverter_model": {
       "message": "Unrecognized Sofar inverter model for {title}."
