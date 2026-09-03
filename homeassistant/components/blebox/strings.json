@@ -5,7 +5,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "authorization_required": "The BleBox device requires authentication.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device identifier does not match the previously configured device.",
       "unsupported_device_response": "The BleBox device returned an unrecognized response.",

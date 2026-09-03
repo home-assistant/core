@@ -10,7 +10,6 @@
       "cannot_connect": "Failed to connect.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_profile_scope": "Missing required Google Health profile read permission. Please try again and select the right permission.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "Wrong account: Please authenticate with the right account."
     },

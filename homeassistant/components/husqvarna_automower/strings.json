@@ -6,7 +6,6 @@
       "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_mower_connected": "No mowers connected to this account.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account."
     },

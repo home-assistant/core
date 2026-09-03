@@ -7,7 +7,6 @@
       "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_server_version": "The Music Assistant server is not the correct version",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "This Ghost site is already configured.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The provided credentials belong to a different Ghost site."
     },

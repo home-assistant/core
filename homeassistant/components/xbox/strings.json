@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_configured_as_subentry": "This account is already configured as a sub-entry. Please remove the existing sub-entry before adding it.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The account ({gamertag}) you used is not the one previously configured. Please sign in again with the correct account."
     },
     "create_entry": {

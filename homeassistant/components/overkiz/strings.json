@@ -5,7 +5,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_gateways": "No gateways were found for your account.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reconfigure_wrong_account": "You can only reconfigure this entry with the same Overkiz account and hub"
