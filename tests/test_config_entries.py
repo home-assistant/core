@@ -4290,6 +4290,7 @@ async def test_unique_id_not_update_existing_entry(
 ABORT_IN_PROGRESS = {
     "type": data_entry_flow.FlowResultType.ABORT,
     "reason": "already_in_progress",
+    "translation_domain": HOMEASSISTANT_DOMAIN,
 }
 
 
