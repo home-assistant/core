@@ -38,9 +38,13 @@ rules:
     status: todo
     comment: Linked docs PR home-assistant/home-assistant.io#47351 still lists options (cron-skip toggle, poll interval) this Bronze scope does not expose; will be marked done once the docs PR is aligned.
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: Coordinator jobs run behind a blanket exception-swallowing wrapper with no per-job/per-endpoint success tracking, so an endpoint whose job keeps raising retains its last-good ds snapshot (and its entities stay "available") indefinitely -- entity.py's available property only catches the case where the snapshot itself comes back empty, not a stale one. Planned as a follow-up PR after the initial bronze PR merges.
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: todo
+    comment: Same root cause as entity-unavailable -- no per-job state to log a transition on. Planned as a follow-up PR after the initial bronze PR merges.
   parallel-updates: done
   reauthentication-flow:
     status: todo

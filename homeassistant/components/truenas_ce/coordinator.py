@@ -249,6 +249,13 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.get_rsync,
             self.get_snapshottask,
             self.get_scrub,
+            # get_app_stats reads self.ds["app"] (written by get_app) to decide
+            # whether to prune the app_stats cache. Both run concurrently in
+            # the same gather below with no ordering guarantee between them,
+            # so get_app_stats may see this cycle's fresh ds["app"] or the
+            # previous cycle's snapshot depending on scheduling -- harmless
+            # (it self-corrects next poll), but worth knowing before relying
+            # on same-cycle freshness here.
             self.get_app,
             self.get_app_stats,
             self.get_alerts,
@@ -1019,6 +1026,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
 
         if not self.ds.get("app"):
+            self._prune_stale_app_stats(set())
             return
 
         messages = await self.api.get_subscription_events(self._app_stats_sub_id)
@@ -1111,11 +1119,20 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return current_app_names
 
     def _prune_stale_app_stats(self, current_app_names: set[str]) -> None:
-        """Remove cached app_stats entries whose app no longer exists."""
+        """Remove cached app_stats entries whose app no longer exists.
+
+        Logged at warning (not debug) when this clears the cache entirely
+        (``current_app_names`` empty) -- discarding all app-stats history on
+        a single poll is a lossy event worth surfacing without debug logging.
+        """
         if stale := [
             name for name in self.ds["app_stats"] if name not in current_app_names
         ]:
-            _LOGGER.debug("Pruning stale app_stats entries: %s", stale)
+            _LOGGER.log(
+                logging.WARNING if not current_app_names else logging.DEBUG,
+                "Pruning stale app_stats entries: %s",
+                stale,
+            )
             for app_name in stale:
                 del self.ds["app_stats"][app_name]
 

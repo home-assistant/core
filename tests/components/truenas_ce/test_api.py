@@ -9,6 +9,7 @@ network I/O happens.
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiotruenas.exceptions import (
@@ -365,11 +366,18 @@ async def test_connection_test_succeeds(connected_api: TrueNASAPI) -> None:
     assert error == ""
 
 
-async def test_connection_test_fails_when_hostname_missing(
-    connected_api: TrueNASAPI,
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"version": "25.04"}, id="hostname_missing"),
+        pytest.param({"version": "25.04", "hostname": 1}, id="hostname_not_a_string"),
+    ],
+)
+async def test_connection_test_fails_on_malformed_hostname(
+    connected_api: TrueNASAPI, payload: dict[str, Any]
 ) -> None:
-    """A truthy-but-malformed payload (e.g. {}) must not pass as success."""
-    connected_api._client.call.return_value = {"version": "25.04"}
+    """A truthy-but-malformed system.info payload must not pass as success."""
+    connected_api._client.call.return_value = payload
     ok, error = await connected_api.connection_test()
     assert ok is False
     assert error == ERR_MALFORMED_RESULT

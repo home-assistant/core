@@ -611,10 +611,10 @@ async def test_get_app_stats_does_nothing_when_disconnected_mid_call(
     assert coord._app_stats_sub_id == original_sub_id
 
 
-async def test_get_app_stats_does_nothing_when_no_apps(
+async def test_get_app_stats_prunes_all_when_no_apps(
     coordinator: TrueNASCoordinator,
 ) -> None:
-    """No apps: get_app_stats is a no-op."""
+    """No apps: get_app_stats skips fetching but prunes stale cached entries."""
     coord = coordinator
     coord.ds = {
         "app": {},
@@ -629,7 +629,7 @@ async def test_get_app_stats_does_nothing_when_no_apps(
     await coord.get_app_stats()
 
     coord.api.get_subscription_events.assert_not_called()
-    assert coord.ds["app_stats"] == {"existing-app": {"app_name": "existing-app"}}
+    assert coord.ds["app_stats"] == {}
 
 
 async def test_get_app_stats_re_subscribes_when_sub_id_missing(

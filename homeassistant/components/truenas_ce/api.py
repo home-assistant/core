@@ -198,7 +198,8 @@ class TrueNASAPI:
             return self.connected(), self._error
 
         result = await self.query("system.info")
-        if not isinstance(result, dict) or not result.get("hostname"):
+        hostname = result.get("hostname") if isinstance(result, dict) else None
+        if not isinstance(hostname, str) or not hostname:
             self._error = self._error or ERR_MALFORMED_RESULT
             return False, self._error
 
