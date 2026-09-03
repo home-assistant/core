@@ -133,6 +133,7 @@ async def test_enabled_by_default_excludes_commercial_hardware(
     [
         pytest.param(0b0, STATE_OFF, id="not_armed"),
         pytest.param(0b1, STATE_ON, id="armed"),
+        pytest.param(0b10, STATE_OFF, id="unrelated_flag_only"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
