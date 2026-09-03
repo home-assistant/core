@@ -29,7 +29,7 @@
         'suggested_display_precision': 2,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Absolute pressure',
     'platform': 'ecowitt_modbus',
@@ -44,7 +44,7 @@
 # name: test_all_entities[WN69LP][sensor.wn69lp_192_168_1_100_502_unit_36_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WN69LP (192.168.1.100:502, unit 36) Absolute pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
@@ -721,7 +721,7 @@
         'suggested_display_precision': 2,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Absolute pressure',
     'platform': 'ecowitt_modbus',
@@ -736,7 +736,7 @@
 # name: test_all_entities[WN90LP][sensor.wn90lp_192_168_1_100_502_unit_144_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WN90LP (192.168.1.100:502, unit 144) Absolute pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
