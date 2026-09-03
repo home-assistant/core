@@ -21,7 +21,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, NamedTuple, Self, TypedDict, cast, override
 
 from async_interrupt import interrupt
 from propcache.api import cached_property
@@ -289,6 +289,13 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "minor_version",
     "version",
 }
+
+
+class _SetupErrorReason(NamedTuple):
+    reason: str | None = None
+    translation_key: str | None = None
+    translation_placeholders: dict[str, str] | None = None
+    translation_domain: str | None = None
 
 
 class ConfigFlowContext(FlowContext, total=False):
@@ -717,7 +724,7 @@ class ConfigEntry[_DataT = Any]:
         exc: BaseException,
         *,
         migration: bool = False,
-    ) -> tuple[str | None, str | None, dict[str, str] | None, str | None]:
+    ) -> tuple[_SetupErrorReason, bool]:
         """Handle config entry setup error."""
         logger = self.logger
 
@@ -725,6 +732,7 @@ class ConfigEntry[_DataT = Any]:
         error_reason_translation_key: str | None = None
         error_reason_translation_placeholders: dict[str, str] | None = None
         error_reason_translation_domain: str | None = None
+        retry_later = False
 
         if isinstance(exc, ConfigEntryError):
             error_reason = str(exc) or "Unknown fatal config entry error"
@@ -766,6 +774,7 @@ class ConfigEntry[_DataT = Any]:
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             error_reason_translation_domain = exc.translation_domain
+            retry_later = True
             self._async_set_state(
                 hass,
                 ConfigEntryState.SETUP_RETRY,
@@ -844,10 +853,13 @@ class ConfigEntry[_DataT = Any]:
                 integration.domain,
             )
         return (
-            error_reason,
-            error_reason_translation_key,
-            error_reason_translation_placeholders,
-            error_reason_translation_domain,
+            _SetupErrorReason(
+                reason=error_reason,
+                translation_key=error_reason_translation_key,
+                translation_placeholders=error_reason_translation_placeholders,
+                translation_domain=error_reason_translation_domain,
+            ),
+            retry_later,
         )
 
     async def __async_setup_with_context(
@@ -904,10 +916,7 @@ class ConfigEntry[_DataT = Any]:
                 )
             return
 
-        error_reason: str | None = None
-        error_reason_translation_key: str | None = None
-        error_reason_translation_placeholders: dict[str, str] | None = None
-        error_reason_translation_domain: str | None = None
+        reason = _SetupErrorReason()
 
         result = False
 
@@ -937,48 +946,24 @@ class ConfigEntry[_DataT = Any]:
                 SystemExit,
                 Exception,  # noqa: BLE001
             ) as exc:
-                (
-                    error_reason,
-                    error_reason_translation_key,
-                    error_reason_translation_placeholders,
-                    error_reason_translation_domain,
-                ) = self.__async_handle_config_entry_setup_error(
+                reason, retry_later = self.__async_handle_config_entry_setup_error(
                     hass, integration, exc, migration=True
                 )
-                if isinstance(exc, ConfigEntryNotReady):
-                    # Allow for retrying migration if the integration is not ready yet.
+                if retry_later:
                     return
-                self._async_set_state(
-                    hass,
-                    ConfigEntryState.MIGRATION_ERROR,
-                    error_reason,
-                    error_reason_translation_key,
-                    error_reason_translation_placeholders,
-                    error_reason_translation_domain,
-                )
-                return
+                migration_result = False
 
             if not migration_result:
-                logger.error(
-                    "Error migrating entry %s for %s",
-                    self.title,
-                    integration.domain,
+                self.logger.error(
+                    "%s.async_migrate_entry did not return boolean", self.domain
                 )
-                self._async_set_state(
-                    hass,
-                    ConfigEntryState.MIGRATION_ERROR,
-                    None,
-                    None,
-                    None,
-                    None,
-                )
+                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, *reason)
                 return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
         else:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
 
-        result = False
         try:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
@@ -995,18 +980,10 @@ class ConfigEntry[_DataT = Any]:
             SystemExit,
             Exception,  # noqa: BLE001
         ) as exc:
-            (
-                error_reason,
-                error_reason_translation_key,
-                error_reason_translation_placeholders,
-                error_reason_translation_domain,
-            ) = self.__async_handle_config_entry_setup_error(hass, integration, exc)
-            if isinstance(exc, ConfigEntryAuthFailed):
-                # Guard against exceptions that inherits both
-                # ConfigEntryAuthFailed and ConfigEntryNotReady
-                # ex. OAuth2TokenRequestReauthError
-                pass
-            elif isinstance(exc, ConfigEntryNotReady):
+            reason, retry_later = self.__async_handle_config_entry_setup_error(
+                hass, integration, exc
+            )
+            if retry_later:
                 return
 
         finally:
@@ -1032,14 +1009,7 @@ class ConfigEntry[_DataT = Any]:
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
-            self._async_set_state(
-                hass,
-                ConfigEntryState.SETUP_ERROR,
-                error_reason,
-                error_reason_translation_key,
-                error_reason_translation_placeholders,
-                error_reason_translation_domain,
-            )
+            self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, *reason)
 
     @callback
     def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:

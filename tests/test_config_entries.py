@@ -554,7 +554,7 @@ async def test_migrate_from_higher_version_not_supported(
         pytest.param(
             AsyncMock(return_value=False),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "Error migrating entry Mock Title for comp",
+            "",  # No logging
             None,
             None,
             id="Returns False",
