@@ -1,0 +1,587 @@
+# serializer version: 1
+# name: test_sensors[sensor.helsinki_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality index',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Air quality index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index_day_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_air_quality_index_day_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality index day 1',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index day 1',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_day',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_day_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index_day_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Air quality index day 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_air_quality_index_day_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '34',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index_day_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_air_quality_index_day_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality index day 2',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index day 2',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_day',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_day_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index_day_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Air quality index day 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_air_quality_index_day_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index_day_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_air_quality_index_day_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality index day 3',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index day 3',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_day',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_day_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_air_quality_index_day_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Air quality index day 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_air_quality_index_day_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_carbon_monoxide_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_carbon_monoxide_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carbon monoxide AQI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide AQI',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_co',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_co',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_carbon_monoxide_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Carbon monoxide AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_carbon_monoxide_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dominant pollutant',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dominant pollutant',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dominant_pollutant',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-dominant_pollutant',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Dominant pollutant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Ozone',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_nitrogen_dioxide_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_nitrogen_dioxide_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Nitrogen dioxide AQI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nitrogen dioxide AQI',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_no2',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_no2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_nitrogen_dioxide_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Nitrogen dioxide AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_nitrogen_dioxide_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_ozone_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_ozone_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ozone AQI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ozone AQI',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_o3',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_o3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_ozone_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Ozone AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_ozone_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_pm10_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_pm10_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM10 AQI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PM10 AQI',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_pm10',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_pm10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_pm10_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki PM10 AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_pm10_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_pm2_5_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_pm2_5_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM2.5 AQI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PM2.5 AQI',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_pm2p5',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_pm2p5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_pm2_5_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki PM2.5 AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_pm2_5_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_sulphur_dioxide_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_sulphur_dioxide_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sulphur dioxide AQI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sulphur dioxide AQI',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqi_so2',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-aqi_so2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_sulphur_dioxide_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Sulphur dioxide AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_sulphur_dioxide_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---

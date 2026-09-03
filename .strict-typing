@@ -222,6 +222,7 @@ homeassistant.components.flexit_bacnet.*
 homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
+homeassistant.components.foreca.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.freshr.*
 homeassistant.components.fritz.*

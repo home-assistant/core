@@ -1,0 +1,122 @@
+# serializer version: 1
+# name: test_forecast[daily]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'condition': 'rainy',
+          'datetime': '2026-09-02',
+          'precipitation': 1.2,
+          'precipitation_probability': 40,
+          'temperature': 18.0,
+          'templow': 9.0,
+          'uv_index': 3,
+          'wind_bearing': 225,
+          'wind_gust_speed': 39.6,
+          'wind_speed': 21.6,
+        }),
+        dict({
+          'condition': 'snowy',
+          'datetime': '2026-09-03',
+          'precipitation': 0.4,
+          'precipitation_probability': None,
+          'temperature': 12.0,
+          'templow': 4.0,
+          'uv_index': None,
+          'wind_bearing': 180,
+          'wind_speed': 18.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast[hourly]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'apparent_temperature': 15.2,
+          'cloud_coverage': 60,
+          'condition': 'partlycloudy',
+          'datetime': '2026-09-01T18:00+03:00',
+          'humidity': 70,
+          'precipitation': 0.0,
+          'precipitation_probability': 10,
+          'temperature': 16.0,
+          'uv_index': 1,
+          'wind_bearing': 200,
+          'wind_gust_speed': 25.56,
+          'wind_speed': 14.04,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_weather[weather.helsinki-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.helsinki',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WeatherEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '01JZ4Q1F0RECA0000000000000',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather[weather.helsinki-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 16.9,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <WeatherEntityStateAttribute.CLOUD_COVERAGE: 'cloud_coverage'>: 40,
+      <WeatherEntityStateAttribute.DEW_POINT: 'dew_point'>: 10.1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki',
+      <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 62,
+      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1013.2,
+      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
+      <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.4,
+      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 2,
+      <WeatherEntityStateAttribute.VISIBILITY: 'visibility'>: 20.0,
+      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 210,
+      <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 28.8,
+      <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 15.12,
+      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.helsinki',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'partlycloudy',
+  })
+# ---

@@ -1,0 +1,90 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not register conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not register triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities are updated by the coordinator and subscribe to no events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration is a cloud service and does not support discovery.
+  discovery:
+    status: exempt
+    comment: The integration is a cloud service and does not support discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: This is a service, which does not integrate with any devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration has a fixed single service per config entry.
+  entity-category:
+    status: exempt
+    comment: The entities are primary data and need no category.
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no cases where raising a repair issue is needed.
+  stale-devices:
+    status: exempt
+    comment: The integration has a fixed single service per config entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

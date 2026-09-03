@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Create a free account at developer.foreca.com to get an API key.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "api_key": "Your Foreca Weather API key from the My API page",
+          "location": "Coordinates to get the weather forecast for"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dominant_pollutant": { "name": "Dominant pollutant" },
+      "aqi_day": { "name": "Air quality index day {forecast_day}" },
+      "aqi_co": { "name": "Carbon monoxide AQI" },
+      "aqi_no2": { "name": "Nitrogen dioxide AQI" },
+      "aqi_o3": { "name": "Ozone AQI" },
+      "aqi_so2": { "name": "Sulphur dioxide AQI" },
+      "aqi_pm10": { "name": "PM10 AQI" },
+      "aqi_pm2p5": { "name": "PM2.5 AQI" }
+    }
+  }
+}
