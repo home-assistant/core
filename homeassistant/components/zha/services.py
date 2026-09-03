@@ -23,6 +23,7 @@ from zha.application.const import (
     ATTR_WARNING_DEVICE_STROBE_INTENSITY,
     CLUSTER_TYPE_IN,
 )
+from zha.application.gateway import Gateway
 from zha.application.platforms.siren import (
     BaseSiren,
     SirenLevel,
@@ -39,6 +40,7 @@ from zigpy.typing import (
 
 from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import VolSchemaType
@@ -52,7 +54,7 @@ from .const import (
     MFG_CLUSTER_ID_START,
     RESPONSE,
 )
-from .helpers import IEEE_SCHEMA, SERVICE_PERMIT_PARAMS, get_zha_gateway
+from .helpers import IEEE_SCHEMA, SERVICE_PERMIT_PARAMS, get_zha_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,9 +175,20 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
 }
 
 
+def _get_gateway(service: ServiceCall) -> Gateway:
+    """Return the ZHA gateway, raising a user-facing error if it is unavailable."""
+    if (gateway_proxy := get_zha_data(service.hass).gateway_proxy) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_gateway",
+        )
+
+    return gateway_proxy.gateway
+
+
 async def _permit(service: ServiceCall) -> None:
     """Allow devices to join this network."""
-    application_controller = get_zha_gateway(service.hass).application_controller
+    application_controller = _get_gateway(service).application_controller
     duration: int = service.data[ATTR_DURATION]
     ieee: EUI64 | None = service.data.get(ATTR_IEEE)
     src_ieee: EUI64
@@ -206,7 +219,7 @@ async def _permit(service: ServiceCall) -> None:
 
 async def _remove(service: ServiceCall) -> None:
     """Remove a node from the network."""
-    zha_gateway = get_zha_gateway(service.hass)
+    zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ATTR_IEEE]
     _LOGGER.info("Removing node %s", ieee)
     await zha_gateway.async_remove_device(ieee)
@@ -214,7 +227,7 @@ async def _remove(service: ServiceCall) -> None:
 
 async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
     """Set zigbee attribute for cluster on zha entity."""
-    zha_gateway = get_zha_gateway(service.hass)
+    zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ATTR_IEEE]
     endpoint_id: int = service.data[ATTR_ENDPOINT_ID]
     cluster_id: int = service.data[ATTR_CLUSTER_ID]
@@ -262,7 +275,7 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
 
 async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
     """Issue command on zigbee cluster on ZHA entity."""
-    zha_gateway = get_zha_gateway(service.hass)
+    zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ATTR_IEEE]
     endpoint_id: int = service.data[ATTR_ENDPOINT_ID]
     cluster_id: int = service.data[ATTR_CLUSTER_ID]
@@ -317,7 +330,7 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
 
 async def _issue_zigbee_group_command(service: ServiceCall) -> None:
     """Issue command on zigbee cluster on a zigbee group."""
-    zha_gateway = get_zha_gateway(service.hass)
+    zha_gateway = _get_gateway(service)
     group_id: int = service.data[ATTR_GROUP]
     cluster_id: int = service.data[ATTR_CLUSTER_ID]
     command: int = service.data[ATTR_COMMAND]
@@ -351,7 +364,7 @@ async def _issue_zigbee_group_command(service: ServiceCall) -> None:
 
 async def _warning_device_squawk(service: ServiceCall) -> None:
     """Issue the squawk command for an IAS warning device."""
-    zha_gateway = get_zha_gateway(service.hass)
+    zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ATTR_IEEE]
     mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
     strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
@@ -365,7 +378,7 @@ async def _warning_device_squawk(service: ServiceCall) -> None:
 
 async def _warning_device_warn(service: ServiceCall) -> None:
     """Issue the warning command for an IAS warning device."""
-    zha_gateway = get_zha_gateway(service.hass)
+    zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ATTR_IEEE]
     mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
     strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
