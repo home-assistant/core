@@ -9,12 +9,11 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import trigger
 from .const import DOMAIN, KNX_MODULE_KEY
 from .trigger import (
     CONF_KNX_DESTINATION,
@@ -23,9 +22,8 @@ from .trigger import (
     CONF_KNX_GROUP_VALUE_WRITE,
     CONF_KNX_INCOMING,
     CONF_KNX_OUTGOING,
-    PLATFORM_TYPE_TRIGGER_TELEGRAM,
     TELEGRAM_TRIGGER_SCHEMA,
-    TRIGGER_SCHEMA as TRIGGER_TRIGGER_SCHEMA,
+    async_subscribe_telegrams,
 )
 
 TRIGGER_TELEGRAM: Final = "telegram"
@@ -36,6 +34,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         **TELEGRAM_TRIGGER_SCHEMA,
     }
 )
+_TELEGRAM_OPTIONS_SCHEMA: Final = vol.Schema(TELEGRAM_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(
@@ -107,13 +106,13 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    # Remove device trigger specific fields and add trigger platform identifier
-    trigger_config = {
+    # Remove device trigger specific fields
+    telegram_options = {
         key: config[key] for key in (config.keys() & TELEGRAM_TRIGGER_SCHEMA.keys())
-    } | {CONF_PLATFORM: PLATFORM_TYPE_TRIGGER_TELEGRAM}
+    }
 
     try:
-        trigger_config = TRIGGER_TRIGGER_SCHEMA(trigger_config)
+        telegram_options = _TELEGRAM_OPTIONS_SCHEMA(telegram_options)
     except vol.Invalid as err:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
@@ -121,6 +120,12 @@ async def async_attach_trigger(
             translation_placeholders={"error": str(err)},
         ) from err
 
-    return await trigger.async_attach_trigger(
-        hass, config=trigger_config, action=action, trigger_info=trigger_info
-    )
+    job = HassJob(action, f"KNX device trigger {trigger_info}")
+    trigger_data = trigger_info["trigger_data"]
+
+    @callback
+    def async_telegram_received(telegram_data: dict[str, Any]) -> None:
+        """Run the action for a matching telegram."""
+        hass.async_run_hass_job(job, {"trigger": {**trigger_data, **telegram_data}})
+
+    return async_subscribe_telegrams(hass, telegram_options, async_telegram_received)
