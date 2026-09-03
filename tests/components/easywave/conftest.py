@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.easywave.const import (
     BUCKET_SUBENTRY_TITLES,
+    CONF_BUTTON,
     CONF_BUTTON_COUNT,
     CONF_DEVICE_PATH,
     CONF_DEVICE_TITLE,
@@ -76,24 +77,26 @@ def _transmitter_device_record(
     title: str = "Test Transmitter",
     serial: str = MOCK_TRANSMITTER_SERIAL,
     button_count: int = 4,
+    button: str | None = None,
     switch_mode: str | None = None,
     grouping_mode: str | None = None,
 ) -> ConfigSubentryData:
     """Return a transmitter bucket subentry for config entry tests."""
     device_id = f"transmitter_{serial}"
+    device_data: dict[str, object] = {
+        CONF_DEVICE_TITLE: title,
+        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+        CONF_TRANSMITTER_SERIAL: serial,
+        CONF_OPERATING_TYPE: "1",
+        CONF_BUTTON_COUNT: button_count,
+        CONF_GROUPING_MODE: grouping_mode or TRANSMITTER_GROUPING_GROUP,
+        CONF_SWITCH_MODE: switch_mode or TRANSMITTER_SWITCH_IMPULSE,
+    }
+    if button is not None:
+        device_data[CONF_BUTTON] = button
     return _bucket_subentry_data(
         subentry_type=SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
-        devices={
-            device_id: {
-                CONF_DEVICE_TITLE: title,
-                CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                CONF_TRANSMITTER_SERIAL: serial,
-                CONF_OPERATING_TYPE: "1",
-                CONF_BUTTON_COUNT: button_count,
-                CONF_GROUPING_MODE: grouping_mode or TRANSMITTER_GROUPING_GROUP,
-                CONF_SWITCH_MODE: switch_mode or TRANSMITTER_SWITCH_IMPULSE,
-            }
-        },
+        devices={device_id: device_data},
     )
 
 

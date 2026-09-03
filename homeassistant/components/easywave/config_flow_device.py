@@ -13,6 +13,7 @@ from homeassistant.config_entries import SubentryFlowResult
 
 from .config_flow_learning import EasywaveDeviceFlowMixin
 from .const import (
+    CONF_BUTTON,
     CONF_BUTTON_COUNT,
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
@@ -53,16 +54,12 @@ def _normalize_learned_sensor(telegram: Any) -> dict[str, Any] | None:
         return None
     if not isinstance(telegram.payload, SensorLearnPayload):
         return None
-    measures_temperature = telegram.payload.measures_temperature
-    measures_humidity = telegram.payload.measures_humidity
-    if not measures_temperature and not measures_humidity:
-        return None
     return {
         "serial": telegram.sensor_serial,
         "capabilities": telegram.payload.capabilities,
         "has_battery": telegram.payload.has_battery,
-        "measures_temperature": measures_temperature,
-        "measures_humidity": measures_humidity,
+        "measures_temperature": telegram.payload.measures_temperature,
+        "measures_humidity": telegram.payload.measures_humidity,
     }
 
 
@@ -161,17 +158,22 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
             return self.async_abort(reason="already_configured")
 
         if user_input is not None and "title" in user_input:
+            data: dict[str, Any] = {
+                CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+                CONF_TRANSMITTER_SERIAL: serial_hex,
+                CONF_OPERATING_TYPE: "1",
+                CONF_BUTTON_COUNT: self._button_count,
+                CONF_GROUPING_MODE: self._grouping_mode,
+                CONF_SWITCH_MODE: self._switch_mode,
+            }
+            if self._button_count == 1:
+                button_index = int(self._learned_device["button"])
+                if 0 <= button_index < 4:
+                    data[CONF_BUTTON] = "abcd"[button_index]
             return self._save_device(
                 title=user_input["title"],
                 unique_id=unique_id,
-                data={
-                    CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                    CONF_TRANSMITTER_SERIAL: serial_hex,
-                    CONF_OPERATING_TYPE: "1",
-                    CONF_BUTTON_COUNT: self._button_count,
-                    CONF_GROUPING_MODE: self._grouping_mode,
-                    CONF_SWITCH_MODE: self._switch_mode,
-                },
+                data=data,
             )
 
         return self.async_show_form(

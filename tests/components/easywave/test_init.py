@@ -13,6 +13,7 @@ from homeassistant.components.easywave.const import (
 )
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.components.easywave.devices import get_devices
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -95,13 +96,15 @@ async def test_setup_entry_country_allowed(
 async def test_setup_entry_country_not_allowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup returns False for disallowed country."""
+    """Test setup raises ConfigEntryError for disallowed country."""
     mock_config_entry.add_to_hass(hass)
     hass.config.country = "US"
 
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "frequency_not_permitted"
 
 
 async def test_setup_entry_creates_repair_issue(
@@ -114,6 +117,7 @@ async def test_setup_entry_creates_repair_issue(
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     # pylint: disable-next=home-assistant-tests-registry-fixtures
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(
@@ -148,6 +152,17 @@ async def test_remove_entry_clears_frequency_repair_issue(
         )
         is None
     )
+
+
+async def test_setup_entry_keeps_reconnect_polling_without_entity_listeners(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Config entry keeps coordinator refresh scheduled without entity listeners."""
+    await async_setup_easywave_entry(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    assert coordinator._listeners
+    assert coordinator._unsub_refresh is not None
 
 
 async def test_setup_entry_deletes_stale_repair_issue(

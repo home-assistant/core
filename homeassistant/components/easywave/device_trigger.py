@@ -20,7 +20,6 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_BUTTON_COUNT,
     CONF_ENTRY_TYPE,
     CONF_SWITCH_MODE,
     DOMAIN,
@@ -33,12 +32,12 @@ from .const import (
     EVENT_TYPE_GATEWAY_CONNECTED,
     EVENT_TYPE_GATEWAY_DISCONNECTED,
     TRANSMITTER_SWITCH_IMPULSE,
+    transmitter_button_letters,
 )
 from .devices import get_device_data
 
 CONF_SUBTYPE = "subtype"
 
-_BUTTON_SUBTYPES = ("a", "b", "c", "d")
 _BATTERY_TRIGGER_TYPES = (EVENT_TYPE_BATTERY_LOW, EVENT_TYPE_BATTERY_NORMAL)
 _GATEWAY_TRIGGER_TYPES = (
     EVENT_TYPE_GATEWAY_CONNECTED,
@@ -164,7 +163,6 @@ async def async_get_triggers(
     if device_data.get(CONF_ENTRY_TYPE) != ENTRY_TYPE_TRANSMITTER:
         return []
 
-    button_count = min(int(device_data.get(CONF_BUTTON_COUNT, 4)), 4)
     switch_mode = device_data.get(CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE)
     triggers: list[dict[str, Any]] = [
         {
@@ -174,7 +172,7 @@ async def async_get_triggers(
             CONF_TYPE: EVENT_TYPE_BUTTON_PRESS,
             CONF_SUBTYPE: button,
         }
-        for button in _BUTTON_SUBTYPES[:button_count]
+        for button in transmitter_button_letters(device_data)
     ]
     if switch_mode == TRANSMITTER_SWITCH_IMPULSE:
         triggers.append(

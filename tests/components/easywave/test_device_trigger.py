@@ -281,6 +281,35 @@ async def test_websocket_list_transmitter_triggers(
     assert len(easywave_triggers) == 5
 
 
+async def test_get_triggers_for_one_button_uses_learned_code(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """One-button transmitters advertise the stored learned button subtype."""
+    entry = await _async_setup_entry(
+        hass,
+        _make_gateway_entry(
+            _transmitter_device_record(
+                button_count=1,
+                button="c",
+                title="Button C Remote",
+            )
+        ),
+    )
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), entry.entry_id
+    )
+    assert device is not None
+
+    triggers = await device_trigger.async_get_triggers(hass, device.id)
+    press_subtypes = {
+        trigger[CONF_SUBTYPE]
+        for trigger in triggers
+        if trigger[CONF_TYPE] == EVENT_TYPE_BUTTON_PRESS
+    }
+    assert press_subtypes == {"c"}
+
+
 async def test_get_triggers_returns_empty_for_unknown_device(
     hass: HomeAssistant,
 ) -> None:

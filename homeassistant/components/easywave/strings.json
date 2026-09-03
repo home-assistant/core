@@ -196,6 +196,11 @@
       }
     }
   },
+  "exceptions": {
+    "frequency_not_permitted": {
+      "message": "This Easywave hardware operates on {frequency}, which is not permitted in your configured Home Assistant region ({country})."
+    }
+  },
   "issues": {
     "frequency_not_permitted": {
       "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf your country setting is wrong, correct it under **Settings → System → General → Country**, then reload this integration (or restart Home Assistant).\n\nIf the country setting is correct, disconnect the RX11 USB Transceiver and remove this integration. The 868 MHz band is permitted in CEPT member states.",

@@ -44,11 +44,11 @@ async def test_update_gateway_device_registers_versions(
     assert device.name == MOCK_ENTRY_DATA[CONF_USB_PRODUCT]
 
 
-async def test_update_gateway_device_falls_back_to_entry_data(
+async def test_update_gateway_device_does_not_fallback_to_entry_serial(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Missing transceiver metadata falls back to config entry USB fields."""
+    """Missing transceiver serial clears metadata instead of using entry data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_GATEWAY_TITLE,
@@ -72,9 +72,49 @@ async def test_update_gateway_device_falls_back_to_entry_data(
         (DOMAIN, entry.entry_id), entry.entry_id
     )
     assert device is not None
-    assert device.serial_number == MOCK_ENTRY_DATA["usb_serial_number"]
+    assert device.serial_number is None
     assert device.hw_version is None
     assert device.sw_version is None
+
+
+async def test_update_gateway_device_clears_stale_serial(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A replacement stick without serial clears the previous serial_number."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="RX11 USB Transceiver",
+        manufacturer="ELDAT",
+        model="RX11 USB Transceiver",
+        serial_number="old-serial",
+    )
+
+    transceiver = type(
+        "Transceiver",
+        (),
+        {
+            "usb_serial_number": None,
+            "hw_version": "1.0",
+            "fw_version": "2.0",
+        },
+    )()
+
+    update_gateway_device(hass, entry, transceiver)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.serial_number is None
 
 
 async def test_update_gateway_device_omits_unknown_serial(

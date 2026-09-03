@@ -555,6 +555,17 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.config_entry.entry_id,
         )
         if device_entry is None:
+            for candidate in device_registry.async_get_devices(
+                identifiers={(DOMAIN, easywave_device_id)}
+            ):
+                if (
+                    candidate.via_device_id
+                    and (via := device_registry.async_get(candidate.via_device_id))
+                    and self.config_entry.entry_id in via.config_entries
+                ):
+                    device_entry = candidate
+                    break
+        if device_entry is None:
             return
         self.hass.bus.async_fire(
             EVENT_EASYWAVE,

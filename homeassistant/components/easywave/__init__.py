@@ -5,7 +5,8 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICES, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import (
@@ -51,6 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
             frequency,
             country_code or "unknown",
         )
+        placeholders = {
+            "frequency": frequency,
+            "country": country_code or "unknown",
+        }
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -58,12 +63,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="frequency_not_permitted",
-            translation_placeholders={
-                "frequency": frequency,
-                "country": country_code or "unknown",
-            },
+            translation_placeholders=placeholders,
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="frequency_not_permitted",
+            translation_placeholders=placeholders,
+        )
 
     ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
 
@@ -74,6 +80,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     entry.runtime_data = EasywaveRuntimeData(coordinator=coordinator)
 
     update_gateway_device(hass, entry, transceiver)
+
+    # Keep reconnect polling scheduled even when all sensor entities are disabled
+    # but device-trigger automations still need telegram reception after reconnect.
+    @callback
+    def _keep_reconnect_polling() -> None:
+        """No-op listener so DataUpdateCoordinator keeps its update interval."""
+
+    entry.async_on_unload(coordinator.async_add_listener(_keep_reconnect_polling))
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
@@ -91,8 +105,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
 
 async def async_remove_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
     """Clean up repair issues when the config entry is deleted."""
-    # Failed regulatory setup returns False before unload hooks run, so removal
-    # must clear the issue explicitly.
+    # Failed regulatory setup raises ConfigEntryError before unload hooks run, so
+    # removal must clear the issue explicitly.
     ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
 
 

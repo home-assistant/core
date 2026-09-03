@@ -1,8 +1,9 @@
 """Constants for the Easywave integration."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 from enum import IntFlag
-from typing import Final
+from typing import Any, Final
 
 DOMAIN: Final = "easywave"
 
@@ -186,8 +187,11 @@ CONF_SENSOR_CAPABILITIES: Final = "sensor_capabilities"
 
 CONF_OPERATING_TYPE: Final = "operating_type"
 CONF_BUTTON_COUNT: Final = "button_count"
+CONF_BUTTON: Final = "button"
 CONF_GROUPING_MODE: Final = "grouping_mode"
 CONF_SWITCH_MODE: Final = "switch_mode"
+
+_BUTTON_LETTERS: Final = ("a", "b", "c", "d")
 
 # Grouping modes for 1-button transmitters (operating_type "1")
 TRANSMITTER_GROUPING_GROUP: Final = "group"  # one shared "last button" entity
@@ -222,11 +226,37 @@ _BUTTON_FEATURE_BY_INDEX: Final = (
 )
 
 
-def transmitter_trigger_features(button_count: int, switch_mode: str) -> int:
+def transmitter_button_letters(data: Mapping[str, Any]) -> tuple[str, ...]:
+    """Return the button letters exposed by a transmitter configuration."""
+    button_count = min(int(data.get(CONF_BUTTON_COUNT, 4)), 4)
+    if button_count <= 0:
+        return ()
+    if button_count == 1:
+        button = data.get(CONF_BUTTON, "a")
+        if isinstance(button, int) and 0 <= button < 4:
+            return (_BUTTON_LETTERS[button],)
+        if isinstance(button, str) and button in _BUTTON_LETTERS:
+            return (button,)
+        return ("a",)
+    return _BUTTON_LETTERS[:button_count]
+
+
+def transmitter_trigger_features(
+    button_count: int,
+    switch_mode: str,
+    *,
+    button: str | int | None = None,
+) -> int:
     """Return supported trigger feature flags for a group-mode transmitter."""
+    data: dict[str, Any] = {
+        CONF_BUTTON_COUNT: button_count,
+        CONF_SWITCH_MODE: switch_mode,
+    }
+    if button is not None:
+        data[CONF_BUTTON] = button
     features = EasywaveTransmitterFeature(0)
-    for index in range(min(button_count, 4)):
-        features |= _BUTTON_FEATURE_BY_INDEX[index]
+    for letter in transmitter_button_letters(data):
+        features |= _BUTTON_FEATURE_BY_INDEX[_BUTTON_LETTERS.index(letter)]
     if switch_mode == TRANSMITTER_SWITCH_IMPULSE:
         features |= EasywaveTransmitterFeature.BUTTON_RELEASE
     return features.value

@@ -18,6 +18,7 @@ from homeassistant.components.easywave.config_flow_device import (
 )
 from homeassistant.components.easywave.const import (
     BUCKET_SUBENTRY_TITLES,
+    CONF_BUTTON,
     CONF_BUTTON_COUNT,
     CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
@@ -136,12 +137,13 @@ NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 def _make_transmitter_telegram(
     serial_hex: str = MOCK_TRANSMITTER_SERIAL,
     *,
+    button: EasywaveButton = EasywaveButton.A,
     should_ignore: bool = False,
 ) -> ButtonPushEvent:
     """Return a mock button-press telegram."""
     return ButtonPushEvent(
         transmitter_serial=bytes.fromhex(serial_hex),
-        button=EasywaveButton.A,
+        button=button,
         function=ButtonFunction.DEFAULT,
         should_ignore=should_ignore,
     )
@@ -171,11 +173,15 @@ def _make_sensor_learn_telegram(
     )
 
 
-def test_normalize_learned_sensor_rejects_without_measurements() -> None:
-    """Learn telegrams without temperature or humidity are not accepted."""
+def test_normalize_learned_sensor_accepts_without_measurements() -> None:
+    """Learn telegrams without temperature or humidity still normalize."""
     telegram = _make_sensor_learn_telegram(capabilities=0)
 
-    assert _normalize_learned_sensor(telegram) is None
+    learned = _normalize_learned_sensor(telegram)
+
+    assert learned is not None
+    assert learned["measures_temperature"] is False
+    assert learned["measures_humidity"] is False
 
 
 async def test_transmitter_flow_group_impulse(
@@ -477,12 +483,39 @@ async def test_transmitter_flow_buttons_1(
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    assert (
-        entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)[0].data[
-            CONF_DEVICES
-        ][f"transmitter_{MOCK_TRANSMITTER_SERIAL}"][CONF_BUTTON_COUNT]
-        == 1
+    device = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)[0].data[
+        CONF_DEVICES
+    ][f"transmitter_{MOCK_TRANSMITTER_SERIAL}"]
+    assert device[CONF_BUTTON_COUNT] == 1
+    assert device[CONF_BUTTON] == "a"
+
+
+async def test_transmitter_flow_buttons_1_preserves_learned_button(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """One-button learning stores the actual learned button code."""
+    telegram = _make_transmitter_telegram(button=EasywaveButton.C)
+    coordinator = _make_coordinator(telegram=telegram)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_device_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "buttons_1"}
     )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={"title": "Button C Remote"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    device = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)[0].data[
+        CONF_DEVICES
+    ][f"transmitter_{MOCK_TRANSMITTER_SERIAL}"]
+    assert device[CONF_BUTTON_COUNT] == 1
+    assert device[CONF_BUTTON] == "c"
 
 
 async def test_neo_sensor_flow_abort_learning(
@@ -722,23 +755,19 @@ async def test_neo_sensor_flow_rejects_sensor_without_measurements(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Neo sensor learning ignores learn telegrams without temp/humidity."""
+    """Neo sensor learning aborts when the sensor has no temp/humidity."""
     telegram = _make_sensor_learn_telegram(capabilities=0)
     coordinator = _make_coordinator(telegram=telegram)
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
 
     result = await _start_neo_sensor_flow_until_intro(hass, mock_config_entry)
-    with patch(
-        "homeassistant.components.easywave.config_flow_learning.LEARNING_TIMEOUT",
-        0.01,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {"next_step_id": "learn"}
-        )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "learn"}
+    )
 
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "learn_timeout_sensor"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_sensor"
 
 
 async def test_neo_sensor_learning_aborts_when_gateway_disconnects(

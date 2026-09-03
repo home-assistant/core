@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EasywaveConfigEntry
 from .const import (
+    CONF_BUTTON,
     CONF_BUTTON_COUNT,
     CONF_DEVICE_PATH,
     CONF_ENTRY_TYPE,
@@ -41,6 +42,7 @@ from .const import (
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
     EasywaveGatewayFeature,
+    transmitter_button_letters,
     transmitter_trigger_features,
 )
 from .coordinator import EasywaveCoordinator
@@ -235,13 +237,6 @@ _BUTTON_STATE_C = "c"
 _BUTTON_STATE_D = "d"
 _BUTTON_STATE_RELEASED = "released"
 
-_BUTTON_STATES: list[str] = [
-    _BUTTON_STATE_A,
-    _BUTTON_STATE_B,
-    _BUTTON_STATE_C,
-    _BUTTON_STATE_D,
-]
-
 _ICON_MAP_LAST_BUTTON: dict[str, str] = {
     _BUTTON_STATE_A: "mdi:alpha-a-circle",
     _BUTTON_STATE_B: "mdi:alpha-b-circle",
@@ -269,14 +264,16 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
     ) -> None:
         """Initialize the last-button sensor."""
         super().__init__(entry, device, "last_button")
-        button_count: int = min(device.data.get(CONF_BUTTON_COUNT, 4), 4)
+        button_letters = transmitter_button_letters(device.data)
         switch_mode: str = device.data.get(CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE)
-        options = list(_BUTTON_STATES[:button_count])
+        options = list(button_letters)
         if switch_mode == TRANSMITTER_SWITCH_IMPULSE:
             options.append(_BUTTON_STATE_RELEASED)
         self._attr_options = options
         self._attr_supported_features = transmitter_trigger_features(
-            button_count, switch_mode
+            len(button_letters) or int(device.data.get(CONF_BUTTON_COUNT, 4)),
+            switch_mode,
+            button=device.data.get(CONF_BUTTON),
         )
         self._switch_mode = switch_mode
         self._native_value: str | None = None
