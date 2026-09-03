@@ -1,9 +1,11 @@
 {
   "config": {
     "abort": {
+      "admin_already_enabled": "User management is already enabled for this lock. There is nothing to reconfigure.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "not_iseo_device": "This device does not appear to be an ISEO lock."
+      "not_iseo_device": "This device does not appear to be an ISEO lock.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "auth_failed": "The lock rejected the request. Make sure the Argo app is closed, then try again — scan a valid Master Card on the lock (the LED will blink green on success).",
@@ -21,7 +23,7 @@
           "enable_admin": "Enable user management"
         },
         "data_description": {
-          "enable_admin": "Also enrol an administrator identity, so Home Assistant can list the users on the lock and switch them on and off. It has to be enrolled now, during the same Master Card scan; turning it on later means setting the lock up again."
+          "enable_admin": "Also enrol an administrator identity, so Home Assistant can list the users on the lock and switch them on and off. If you skip it now, you can enrol it later from the integration's Reconfigure option — either way it needs its own Master Card scan."
         },
         "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
         "title": "Register gateway"
