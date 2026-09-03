@@ -1396,7 +1396,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==9.1.0
+infrared-protocols==10.0.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -3114,7 +3114,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.8.0
+sofar-modbus==0.9.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3

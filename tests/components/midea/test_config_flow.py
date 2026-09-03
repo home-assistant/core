@@ -2044,11 +2044,12 @@ async def _assert_reconfigure_success(
     """Assert reconfigure success."""
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-
+    discovery_result = DISCOVERY_RESULT
+    discovery_result[TEST_DEVICE_ID][CONF_IP_ADDRESS] = "8.8.8.8"
     with (
         patch(
             "homeassistant.components.midea.config_flow.discover",
-            return_value=DISCOVERY_RESULT,
+            return_value=discovery_result,
         ) as mock_discovery,
         patch(
             "homeassistant.components.midea.config_flow.device_selector",
