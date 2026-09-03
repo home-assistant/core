@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nexblue.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -151,6 +151,7 @@ async def test_command_refreshes_and_assumed_state_expires(
     )
 
     assert hass.states.get(entity_id).state == "off"
+    assert hass.states.get(entity_id).attributes[ATTR_ASSUMED_STATE] is True
     assert mock_client.async_list_chargers.await_count == 0
     assert mock_client.async_get_charger_status.await_count == 0
 
@@ -163,10 +164,12 @@ async def test_command_refreshes_and_assumed_state_expires(
         assert mock_client.async_get_charger_status.await_count == expected_refreshes
 
     freezer.tick(timedelta(seconds=5))
-    await init_integration.runtime_data.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert mock_client.async_list_chargers.await_count == 3
-    assert mock_client.async_get_charger_status.await_count == 3
+    assert mock_client.async_list_chargers.await_count == 2
+    assert mock_client.async_get_charger_status.await_count == 2
+    assert not hass.states.get(entity_id).attributes.get(ATTR_ASSUMED_STATE)
     assert hass.states.get(entity_id).state == "on"
 
 
