@@ -83,7 +83,9 @@ SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
             data.exposure.temp
-            if data.exposure and data.exposure.temp != _UNSUPPORTED_TEMPERATURE
+            if data.exposure
+            and data.exposure.temp is not None
+            and round(data.exposure.temp, 2) > _UNSUPPORTED_TEMPERATURE
             else None
         ),
     ),
