@@ -131,6 +131,9 @@
       }
     },
     "sensor": {
+      "active_power_export_limit": {
+        "name": "Active power limit"
+      },
       "active_power_load_sys": {
         "name": "Active power load system"
       },
@@ -317,6 +320,17 @@
       "export_energy_total": {
         "name": "Export energy total"
       },
+      "feedin_limitation_mode": {
+        "name": "Feed-in limitation mode",
+        "state": {
+          "disabled": "[%key:component::sofar::selector::feedin_limitation_mode::options::disabled%]",
+          "enabled_3_phase_limit": "[%key:component::sofar::selector::feedin_limitation_mode::options::enabled_3_phase_limit%]",
+          "enabled_feed_in_limitation": "[%key:component::sofar::selector::feedin_limitation_mode::options::enabled_feed_in_limitation%]"
+        }
+      },
+      "feedin_max_power": {
+        "name": "Feed-in maximum power"
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -445,6 +459,25 @@
       },
       "passive_eps_wait_time": {
         "name": "EPS wait time"
+      },
+      "passive_mode_battery_power_max": {
+        "name": "Passive mode maximum battery power"
+      },
+      "passive_mode_battery_power_min": {
+        "name": "Passive mode minimum battery power"
+      },
+      "passive_mode_grid_power": {
+        "name": "Passive mode grid power"
+      },
+      "passive_mode_timeout": {
+        "name": "Passive mode timeout"
+      },
+      "passive_mode_timeout_action": {
+        "name": "Passive mode timeout action",
+        "state": {
+          "force_standby": "[%key:component::sofar::selector::passive_mode_timeout_action::options::force_standby%]",
+          "return_to_previous_mode": "[%key:component::sofar::selector::passive_mode_timeout_action::options::return_to_previous_mode%]"
+        }
       },
       "power": {
         "name": "Power"
