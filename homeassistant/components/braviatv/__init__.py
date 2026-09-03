@@ -1,6 +1,7 @@
 """The Bravia TV integration."""
 
-from typing import Final
+import logging
+from typing import TYPE_CHECKING, Final
 
 from aiohttp import CookieJar
 from pybravia import BraviaClient
@@ -8,17 +9,69 @@ from pybravia import BraviaClient
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_USE_SSL
+from .const import CONF_USE_SSL, DOMAIN
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.REMOTE,
 ]
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: BraviaTVConfigEntry
+) -> bool:
+    """Migrate old config entries to the new unique_id based on MAC."""
+    if config_entry.version == 1:
+        mac = config_entry.data[CONF_MAC]
+        new_unique_id = dr.format_mac(mac)
+        old_unique_id = config_entry.unique_id
+
+        if TYPE_CHECKING:
+            assert old_unique_id is not None
+
+        if old_unique_id != new_unique_id:
+            ent_reg = er.async_get(hass)
+            for entity in er.async_entries_for_config_entry(
+                ent_reg, config_entry.entry_id
+            ):
+                if entity.unique_id == old_unique_id:
+                    ent_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=new_unique_id
+                    )
+                elif entity.unique_id is not None and entity.unique_id.startswith(
+                    f"{old_unique_id}_"
+                ):
+                    suffix = entity.unique_id[len(old_unique_id) :]
+                    ent_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=f"{new_unique_id}{suffix}"
+                    )
+
+            dev_reg = dr.async_get(hass)
+            for device in dr.async_entries_for_config_entry(
+                dev_reg, config_entry.entry_id
+            ):
+                dev_reg.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, new_unique_id)}
+                )
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, version=2
+        )
+
+        _LOGGER.info(
+            "Migration to configuration version %s successful",
+            config_entry.version,
+        )
+
+    return True
 
 
 async def async_setup_entry(
