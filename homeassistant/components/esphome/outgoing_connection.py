@@ -44,6 +44,10 @@ _KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[float] = HassKey(
 )
 
 
+async def _wait_all(tasks: set[asyncio.Task[None]]) -> None:
+    await asyncio.wait(tasks)
+
+
 @callback
 def _async_stop_listener(hass: HomeAssistant, state: _ListenerState) -> None:
     # Drops the cached listener and stops it; the caller checked ownership
@@ -52,6 +56,10 @@ def _async_stop_listener(hass: HomeAssistant, state: _ListenerState) -> None:
     # Tracked so the next registration waits for the port release
     stopping = hass.async_create_task(state.server.stop())
     stopping.add_done_callback(_log_stop_failure)
+    previous = hass.data.get(_KEY_OUTGOING_CONNECTION_STOPPING)
+    if previous is not None and not previous.done():
+        # A slow earlier stop may still hold the port; wait on both
+        stopping = hass.async_create_task(_wait_all({previous, stopping}))
     hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
 
 
@@ -129,6 +137,15 @@ class _Registration:
             # A cleanup callback must not abort the entry's remaining cleanup
             failed = True
             _LOGGER.exception("Error removing the dial-in route")
+            if state.registrations > 1:
+                _LOGGER.warning(
+                    (
+                        "Stopping the outgoing connection listener; %s other"
+                        " device(s) will not receive dial-ins until their"
+                        " entries are reloaded"
+                    ),
+                    state.registrations - 1,
+                )
         finally:
             state.registrations -= 1
             # In the finally so a raising unregister cannot leave a routeless

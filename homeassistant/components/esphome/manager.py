@@ -613,8 +613,9 @@ class ESPHomeManager:
         if not self.cli.outgoing_connection_target:
             _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
             return
-        mac = entry.unique_id
-        assert mac is not None  # the declared flag requires a MAC unique id
+        # The declared flag requires a MAC unique id
+        if (mac := entry.unique_id) is None:
+            return
         try:
             unregister = await async_register_outgoing_target(
                 self.hass, mac, reconnect_logic
@@ -1240,8 +1241,7 @@ class ESPHomeManager:
 
         # Last so a failed setup cannot leak the route: the device may open
         # the TCP connection to us when it cannot be reached, and a dial-in
-        # for this MAC is handed to the reconnect logic. After the restored
-        # unique id above so those entries register too.
+        # for this MAC is handed to the reconnect logic
         await self._async_register_outgoing_target(reconnect_logic)
 
 
