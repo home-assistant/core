@@ -36,10 +36,5 @@
         "title": "Discovered Smappee device"
       }
     }
-  },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    }
   }
 }

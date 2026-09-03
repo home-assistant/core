@@ -1175,7 +1175,7 @@
       "iot_class": "local_push"
     },
     "command_line": {
-      "name": "Command Line",
+      "name": "Command line",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -1383,7 +1383,7 @@
       "iot_class": "local_polling"
     },
     "device_sun_light_trigger": {
-      "name": "Presence-based Lights",
+      "name": "Presence-based lights",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
@@ -2249,7 +2249,7 @@
       "iot_class": "local_polling"
     },
     "folder_watcher": {
-      "name": "Folder Watcher",
+      "name": "Folder watcher",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3582,6 +3582,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "kaco_modbus": {
+      "name": "KACO Modbus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
       "integration_type": "virtual",
@@ -4057,7 +4063,7 @@
       "iot_class": "local_polling"
     },
     "local_file": {
-      "name": "Local File",
+      "name": "Local file",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4285,7 +4291,7 @@
       "iot_class": "local_polling"
     },
     "media_extractor": {
-      "name": "Media Extractor",
+      "name": "Media extractor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated",
@@ -4647,7 +4653,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_push",
-          "name": "Manual MQTT Alarm Control Panel"
+          "name": "Manual MQTT alarm control panel"
         },
         "mqtt": {
           "integration_type": "service",
@@ -4671,7 +4677,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_push",
-          "name": "MQTT Room Presence"
+          "name": "MQTT room presence"
         },
         "mqtt_statestream": {
           "integration_type": "hub",
@@ -6238,7 +6244,7 @@
       "iot_class": "cloud_polling"
     },
     "rss_feed_template": {
-      "name": "RSS Feed Template",
+      "name": "RSS feed template",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -7069,6 +7075,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "sunsynk": {
+      "name": "Sunsynk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "sunweg": {
       "name": "Sun WEG",
       "integration_type": "hub",
@@ -7197,7 +7209,7 @@
       "iot_class": "local_push"
     },
     "systemmonitor": {
-      "name": "System Monitor",
+      "name": "System monitor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push",
@@ -8540,6 +8552,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "zonneplan": {
+      "name": "Zonneplan",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "zooz": {
       "name": "Zooz",
       "iot_standards": [
@@ -8630,7 +8648,7 @@
       "iot_class": "local_push"
     },
     "manual": {
-      "name": "Manual Alarm Control Panel",
+      "name": "Manual alarm control panel",
       "integration_type": "helper",
       "config_flow": false,
       "iot_class": "calculated"

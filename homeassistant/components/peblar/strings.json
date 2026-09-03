@@ -203,8 +203,17 @@
     "authentication_error": {
       "message": "An authentication failure occurred while communicating with the Peblar EV charger."
     },
+    "authorization_not_required": {
+      "message": "{charger} is set to charge without authorization, so there is nothing to authorize."
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the Peblar EV charger: {error}"
+    },
+    "customization_update_first": {
+      "message": "Install the customization update before the firmware update, the way the charger's own web interface does."
+    },
+    "managed_by_backoffice": {
+      "message": "{charger} is managed over OCPP, so its sessions are authorized by the backoffice."
     },
     "no_autocharge_hardware": {
       "message": "{charger} has no power line communication hardware, so it cannot use autocharge."
@@ -252,6 +261,24 @@
         }
       },
       "name": "Add autocharge vehicle"
+    },
+    "authorize_charge_session": {
+      "description": "Presents a token to the charger, as if it were held against the reader. This authorizes a session that is waiting for it, and stops one that is already running.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to present the token to.",
+          "name": "Peblar EV charger"
+        },
+        "description": {
+          "description": "The label of the RFID token to present, instead of its UID.",
+          "name": "Description"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token to present.",
+          "name": "UID"
+        }
+      },
+      "name": "Authorize charge session"
     },
     "delete_rfid_token": {
       "description": "Deletes an RFID token from the charger's standalone authorization list.",
