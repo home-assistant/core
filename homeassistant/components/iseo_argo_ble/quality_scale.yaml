@@ -1,8 +1,9 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
-    comment: The only action is an entity action, registered in the lock platform setup.
+    status: done
+    comment: |
+      The integration only has an entity action, registered in the lock platform.
   appropriate-polling: done
   brands: done
   common-modules: done
