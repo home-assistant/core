@@ -151,7 +151,6 @@ SERVICE_STOP = "stop"
 
 # dispatcher signals
 SIGNAL_STOP_ENTITY = "modbus.stop"
-SIGNAL_START_ENTITY = "modbus.start"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
