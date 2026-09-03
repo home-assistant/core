@@ -58,9 +58,17 @@ class EcowittDataUpdateCoordinator(DataUpdateCoordinator[EcowittDevice]):
 
     @cached_property
     def device_info(self) -> DeviceInfo:
-        """The one sensor array every entity on this config entry belongs to."""
+        """The one sensor array every entity on this config entry belongs to.
+
+        ``name`` has to be passed explicitly rather than left to the device
+        registry's own config-entry-title fallback: that fallback only
+        applies the first time the device is created, so on reconfigure
+        (an update to an existing device, not a new one) an omitted name
+        would leave the device and its entities showing the old address.
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self.identity)},
+            name=self.config_entry.title,
             manufacturer=self.device.manufacturer,
             model=self.device.MODEL,
             serial_number=self.device.serial_number,
