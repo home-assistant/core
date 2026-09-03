@@ -1269,7 +1269,7 @@ hass-splunk==0.1.4
 hassil==3.12.0
 
 # homeassistant.components.jewish_calendar
-hdate[astral]==1.2.1
+hdate[astral]==1.2.2
 
 # homeassistant.components.hdfury
 hdfury==1.6.1
@@ -2150,7 +2150,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.19.0
+pydaikin==2.19.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0

@@ -416,7 +416,7 @@
     dict({
       'description': '''
         Jewish Holiday: שושן פורים
-        Holiday Type: HolidayTypes.MELACHA_PERMITTED_HOLIDAY
+        Holiday Type: חג (מלאכה מותרת)
       ''',
       'end': '2024-03-26',
       'start': '2024-03-25',
@@ -481,7 +481,7 @@
     dict({
       'description': '''
         Jewish Holiday: שמחת תורה
-        Holiday Type: HolidayTypes.YOM_TOV
+        Holiday Type: יום טוב
       ''',
       'end': '2024-10-26',
       'start': '2024-10-25',
@@ -506,7 +506,7 @@
     dict({
       'description': '''
         Jewish Holiday: שמיני עצרת
-        Holiday Type: HolidayTypes.YOM_TOV
+        Holiday Type: יום טוב
       ''',
       'end': '2024-10-25',
       'start': '2024-10-24',
@@ -515,7 +515,7 @@
     dict({
       'description': '''
         Jewish Holiday: שמחת תורה
-        Holiday Type: HolidayTypes.YOM_TOV
+        Holiday Type: יום טוב
       ''',
       'end': '2024-10-25',
       'start': '2024-10-24',
