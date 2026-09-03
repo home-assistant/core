@@ -551,18 +551,77 @@ async def test_state_restored_on_restart(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("hvac_mode", "expected_cmd"),
+    [
+        pytest.param(
+            HVACMode.COOL,
+            OnidaAcCommand(
+                mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.AUTO
+            ),
+            id="cool",
+        ),
+        pytest.param(
+            HVACMode.OFF,
+            OnidaAcCommand(
+                power=False,
+                mode=OnidaAcMode.COOL,
+                temperature=24,
+                fan=OnidaAcFanSpeed.AUTO,
+            ),
+            id="off",
+        ),
+    ],
+)
 async def test_set_temperature_with_hvac_mode(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    hvac_mode: HVACMode,
+    expected_cmd: OnidaAcCommand,
 ) -> None:
-    """Test set_temperature switches mode when one is given, even while off."""
+    """Test set_temperature applies a given mode, off included, while off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
             ATTR_TEMPERATURE: 24,
-            "hvac_mode": HVACMode.COOL,
+            "hvac_mode": hvac_mode,
+        },
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == expected_cmd.get_raw_timings()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == hvac_mode
+    assert state.attributes["temperature"] == 24.0
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_hvac_mode_off_while_active(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test requesting off alongside a temperature turns an active AC off."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ATTR_TEMPERATURE: 26,
+            "hvac_mode": HVACMode.OFF,
         },
         blocking=True,
     )
@@ -572,14 +631,17 @@ async def test_set_temperature_with_hvac_mode(
     assert (
         timings
         == OnidaAcCommand(
-            mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.AUTO
+            power=False,
+            mode=OnidaAcMode.COOL,
+            temperature=26,
+            fan=OnidaAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
 
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
-    assert state.state == HVACMode.COOL
-    assert state.attributes["temperature"] == 24.0
+    assert state.state == HVACMode.OFF
+    assert state.attributes["temperature"] == 26.0
 
 
 @pytest.mark.usefixtures("init_integration")

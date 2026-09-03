@@ -167,16 +167,20 @@ class OnidaAcClimateEntity(
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
 
         effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
+        fan_mode = self._attr_fan_mode or FAN_AUTO
         if effective_mode is not HVACMode.OFF:
             lib_mode = _HA_MODE_TO_LIB[effective_mode]
             await self._send_command(
-                self._build_command(
-                    lib_mode, True, temp, self._attr_fan_mode or FAN_AUTO
-                )
+                self._build_command(lib_mode, True, temp, fan_mode)
             )
             self._last_active_lib_mode = lib_mode
-            if hvac_mode is not None:
-                self._attr_hvac_mode = hvac_mode
+        elif hvac_mode is HVACMode.OFF:
+            await self._send_command(
+                self._build_command(self._last_active_lib_mode, False, temp, fan_mode)
+            )
+
+        if hvac_mode is not None:
+            self._attr_hvac_mode = hvac_mode
 
         self._attr_target_temperature = float(temp)
         self.async_write_ha_state()
