@@ -410,6 +410,12 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
             await _async_repoint_preferred_dataset(
                 call.hass, source_xpan, str(target[MeshcopTLVType.EXTPANID])
             )
+        # The store saves on a delay, and a normal restart flushes it; a crash
+        # inside that delay would not. The mesh is migrating either way, so
+        # write now: the dataset entry would be re-imported from the router
+        # on the next setup, but the preferred pointer would stay on the
+        # abandoned network until someone noticed.
+        await store.async_save()
         if result is DatasetAddResult.DISCARDED:
             # Newer credentials for this network were stored while the router
             # was being written to. The mesh is migrating to the dataset above
