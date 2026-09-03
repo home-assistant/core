@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
@@ -955,13 +954,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     sort=True,
                 )
             ),
-            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(SensorStateClass),
-                    translation_key="component.knx.selector.sensor_state_class",
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            ),
+            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.StateClassSelector(),
             probatio.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
             probatio.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
                 allow_false=True

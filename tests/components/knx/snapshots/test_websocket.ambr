@@ -2418,18 +2418,8 @@
         'optional': True,
         'required': False,
         'selector': dict({
-          'select': dict({
-            'custom_value': False,
-            'mode': 'dropdown',
+          'state_class': dict({
             'multiple': False,
-            'options': list([
-              'measurement',
-              'measurement_angle',
-              'total',
-              'total_increasing',
-            ]),
-            'sort': False,
-            'translation_key': 'component.knx.selector.sensor_state_class',
           }),
         }),
         'type': 'ha_selector',
