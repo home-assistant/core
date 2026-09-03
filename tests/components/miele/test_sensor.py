@@ -407,6 +407,38 @@ async def test_coffee_system_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("program_id", "expected_state"),
+    [
+        pytest.param(24010, "caffe_americano", id="caffe-americano"),
+        pytest.param(24011, "long_black", id="long-black"),
+        pytest.param(24023, "chai_latte", id="chai-latte"),
+    ],
+)
+@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_observed_coffee_system_program_ids(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: MockConfigEntry,
+    device_fixture: MieleDevices,
+    program_id: int,
+    expected_state: str,
+) -> None:
+    """Test observed coffee system program IDs."""
+    device_fixture["DummyAppliance_CoffeeSystem"]["state"]["ProgramID"]["value_raw"] = (
+        program_id
+    )
+    data_callback = get_data_callback(mock_miele_client)
+    await data_callback(device_fixture)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.coffee_system_program")
+    assert state is not None
+    assert state.state == expected_state
+    assert state.attributes["profile"] == "profile_1"
+
+
 @pytest.mark.parametrize("load_device_file", ["laundry.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_laundry_wash_scenario(
