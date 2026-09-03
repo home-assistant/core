@@ -148,7 +148,6 @@ CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 SERVICE_STOP = "stop"
-SERVICE_RESTART = "restart"
 
 # dispatcher signals
 SIGNAL_STOP_ENTITY = "modbus.stop"
