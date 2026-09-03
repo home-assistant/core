@@ -88,6 +88,19 @@ def _is_cooling(status: HeatPump) -> bool:
     return status.heat_pump_state is HeatPump.State.COOLING
 
 
+def _cooling_conditions_met(status: HeatPump) -> int | None:
+    """Return how many of the conditions for starting cooling are met.
+
+    Nothing once a cycle is running, for the same reason the blocking condition
+    is not reported then: the demand condition goes back to unmet as soon as the
+    heat pump acts on it, so the count would drop while cooling.
+    """
+    conditions = status.cooling_start_conditions
+    if conditions is None or _is_cooling(status):
+        return None
+    return sum(conditions.values())
+
+
 def _cooling_blocked_by(status: HeatPump) -> str | None:
     """Return the first condition that is keeping the heat pump from cooling.
 
@@ -273,11 +286,8 @@ SENSORS = [
         translation_key="cooling_conditions_met",
         key="cooling_conditions_met",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda status: (
-            sum(status.cooling_start_conditions.values())
-            if status.cooling_start_conditions is not None
-            else None
-        ),
+        supported_fn=lambda status: status.cooling_start_conditions is not None,
+        value_fn=_cooling_conditions_met,
     ),
     WeHeatSensorEntityDescription(
         translation_key="cooling_blocked_by",

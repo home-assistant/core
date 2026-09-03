@@ -180,6 +180,29 @@ async def test_cooling_conditions_met(
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
+async def test_cooling_conditions_met_is_unknown_while_cooling(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the count is not reported once a cooling cycle is running.
+
+    The demand condition goes back to unmet as soon as the heat pump acts on it,
+    so the count would drop by one for the length of the cycle.
+    """
+    mock_weheat_heat_pump.heat_pump_state = HeatPump.State.COOLING
+    mock_weheat_heat_pump.cooling_start_conditions = _start_conditions("demand")
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.test_model_cooling_conditions_met").state
+        == STATE_UNKNOWN
+    )
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
 async def test_unreported_start_conditions_create_no_sensor(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
