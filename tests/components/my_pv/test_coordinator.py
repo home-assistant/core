@@ -107,10 +107,10 @@ async def test_coordinator_update_data_rate_limiting(
     assert False not in [state.state != STATE_UNAVAILABLE for state in states]
 
     # Test successful data fetch
-    freezer.tick(UPDATE_INTERVAL)
-    mock_my_pv_client.fetch_data.reset_mock()
+    freezer.tick(2 * UPDATE_INTERVAL)
+    mock_my_pv_client.fetch_data.reset_mock(side_effect=True)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_my_pv_client.connect.assert_awaited_once_with()
+    mock_my_pv_client.fetch_data.assert_awaited_once_with()
     states = hass.states.async_all()
     assert False not in [state.state != STATE_UNAVAILABLE for state in states]
