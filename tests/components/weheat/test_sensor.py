@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
+from homeassistant.components.weheat.sensor import COOLING_CONDITIONS_NOT_COUNTED
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -156,10 +157,13 @@ async def test_dhw_target_temperature(
 @pytest.mark.parametrize(
     ("unmet", "expected"),
     [
-        pytest.param((), "11", id="all_met"),
-        pytest.param(("demand",), "10", id="one_unmet"),
+        pytest.param((), "9", id="all_met"),
+        pytest.param(("demand",), "8", id="one_unmet"),
         # the payload that reported two at once
-        pytest.param(("outside_air_temperature", "exponential_backoff"), "9", id="two"),
+        pytest.param(("outside_air_temperature", "exponential_backoff"), "7", id="two"),
+        pytest.param(
+            COOLING_CONDITIONS_NOT_COUNTED, "9", id="settings_are_not_counted"
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_weheat_discover")
@@ -331,6 +335,7 @@ async def test_a_heat_pump_without_cooling_gets_no_cooling_sensors(
     mock_weheat_heat_pump.cooling_activity = None
     mock_weheat_heat_pump.last_cooling_time = None
     mock_weheat_heat_pump.cooling_available_from = None
+    mock_weheat_heat_pump.cooling_start_conditions = None
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)

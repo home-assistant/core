@@ -88,17 +88,28 @@ def _is_cooling(status: HeatPump) -> bool:
     return status.heat_pump_state is HeatPump.State.COOLING
 
 
+# Left out of the count to match the portal, which tallies the conditions the
+# heat pump waits on and keeps these two settings out of it.
+COOLING_CONDITIONS_NOT_COUNTED = ("control_method", "contact_not_blocked")
+
+
 def _cooling_conditions_met(status: HeatPump) -> int | None:
     """Return how many of the conditions for starting cooling are met.
 
-    Nothing once a cycle is running, for the same reason the blocking condition
-    is not reported then: the demand condition goes back to unmet as soon as the
-    heat pump acts on it, so the count would drop while cooling.
+    Counted the way the portal counts them, so the number can be read against
+    the same total, and nothing once a cycle is running, for the same reason the
+    blocking condition is not reported then: the demand condition goes back to
+    unmet as soon as the heat pump acts on it, so the count would drop while
+    cooling.
     """
     conditions = status.cooling_start_conditions
     if conditions is None or _is_cooling(status):
         return None
-    return sum(conditions.values())
+    return sum(
+        met
+        for name, met in conditions.items()
+        if name not in COOLING_CONDITIONS_NOT_COUNTED
+    )
 
 
 def _cooling_blocked_by(status: HeatPump) -> str | None:
@@ -347,7 +358,7 @@ SENSORS = [
         translation_key="cooling_wait_until",
         key="cooling_wait_until",
         device_class=SensorDeviceClass.TIMESTAMP,
-        supported_fn=_does_cooling,
+        supported_fn=lambda status: status.cooling_start_conditions is not None,
         value_fn=_cooling_wait_until,
     ),
 ]

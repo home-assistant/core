@@ -563,7 +563,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '8',
   })
 # ---
 # name: test_all_entities[sensor.test_model_cooling_pause_reason-entry]
