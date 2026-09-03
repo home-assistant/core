@@ -8428,7 +8428,6 @@ async def test_update_device_no_connections_or_identifiers(
     ):
         device_registry.async_update_device(device.id, **update)
 
-    # The rejected update leaves the device untouched and creates no deleted device
     assert device_registry.async_get(device.id) == device
     assert len(device_registry._deleted_devices) == 0
 
@@ -8447,7 +8446,6 @@ async def test_update_device_can_clear_one_identity_side(
         identifiers={identifier},
     )
 
-    # Dropping all identifiers is allowed while a connection remains
     updated = device_registry.async_update_device(device.id, new_identifiers=set())
     assert updated.identifiers == set()
     assert updated.connections == {connection}
