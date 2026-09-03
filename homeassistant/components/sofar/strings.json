@@ -46,6 +46,59 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fault_ac_output": {
+        "name": "AC output fault"
+      },
+      "fault_arc_fault": {
+        "name": "Arc fault (AFCI)"
+      },
+      "fault_battery": {
+        "name": "Battery fault"
+      },
+      "fault_battery_pack": {
+        "name": "Battery pack communication fault"
+      },
+      "fault_combiner_box": {
+        "name": "Combiner box fault"
+      },
+      "fault_communication": {
+        "name": "Communication fault"
+      },
+      "fault_dc_bus": {
+        "name": "DC bus fault"
+      },
+      "fault_derating": {
+        "name": "Derating"
+      },
+      "fault_fan": {
+        "name": "Fan fault"
+      },
+      "fault_grid": {
+        "name": "Grid fault"
+      },
+      "fault_input_fuse": {
+        "name": "Input fuse open"
+      },
+      "fault_insulation": {
+        "name": "Insulation fault"
+      },
+      "fault_internal": {
+        "name": "Internal fault"
+      },
+      "fault_pv": {
+        "name": "PV fault"
+      },
+      "fault_shutdown": {
+        "name": "Shutdown"
+      },
+      "fault_string_fuse": {
+        "name": "String fuse open"
+      },
+      "fault_thermal": {
+        "name": "Thermal fault"
+      }
+    },
     "button": {
       "iv_curve_scan": {
         "name": "IV curve scan"
