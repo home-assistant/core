@@ -143,7 +143,11 @@ class NexBlueChargingSwitch(
                 """Request coordinator data after a command."""
                 if cancel is not None:
                     self._pending_refreshes.discard(cancel)
-                self.hass.async_create_task(self.coordinator.async_request_refresh())
+                self.coordinator.config_entry.async_create_task(
+                    self.hass,
+                    self.coordinator.async_request_refresh(),
+                    name="NexBlue command refresh",
+                )
 
             cancel = async_call_later(self.hass, delay, _request_refresh)
             self._pending_refreshes.add(cancel)
