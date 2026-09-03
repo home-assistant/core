@@ -1,4 +1,4 @@
-"""Support for IHC devices."""
+"""Support for IHC services."""
 
 import voluptuous as vol
 
@@ -51,8 +51,8 @@ PULSE_SCHEMA = vol.Schema(
 )
 
 
-def setup_service_functions(hass: HomeAssistant) -> None:
-    """Set up the IHC service functions."""
+def setup_services(hass: HomeAssistant) -> None:
+    """Register the IHC services."""
 
     def _get_controller(call):
         controller_index = call.data[ATTR_CONTROLLER_ID]

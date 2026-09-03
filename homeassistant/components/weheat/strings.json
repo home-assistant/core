@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_devices_found": "Could not find any heat pumps on this account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -114,8 +113,10 @@
           "heating": "Heating",
           "legionella_prevention": "Legionella prevention",
           "manual_control": "Manual control",
+          "offline": "Offline",
           "self_test": "Self-test",
           "standby": "[%key:common::state::standby%]",
+          "updating": "Updating",
           "water_check": "Checking water temperature"
         }
       },
