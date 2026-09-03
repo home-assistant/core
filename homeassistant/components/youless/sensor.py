@@ -356,6 +356,6 @@ class YouLessSensor(YouLessEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.device)
