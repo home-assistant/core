@@ -108,6 +108,9 @@ class _Registration:
         state = self._state
         try:
             unregister()
+        except Exception:
+            # A cleanup callback must not abort the entry's remaining cleanup
+            _LOGGER.exception("Error removing the dial-in route")
         finally:
             state.registrations -= 1
             # In the finally so a raising unregister cannot leave a routeless
@@ -157,12 +160,17 @@ async def async_register_outgoing_target(
             )
             return None
         if hass.is_stopping:
-            # The STOP event fired while binding, so the one-shot listener
-            # missed it; nothing else would ever stop this instance
-            hass.data.pop(_KEY_OUTGOING_CONNECTION_LISTENER, None)
-            state.remove_stop_listener()
-            stopping = hass.async_create_task(state.server.stop())
-            stopping.add_done_callback(_log_stop_failure)
+            # The STOP event may have fired while binding, in which case the
+            # one-shot listener missed it and nothing else would stop this
+            # instance; a shared listener others route through is left alone
+            if (
+                state.registrations == 0
+                and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
+            ):
+                del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
+                state.remove_stop_listener()
+                stopping = hass.async_create_task(state.server.stop())
+                stopping.add_done_callback(_log_stop_failure)
             return None
         if hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state:
             break
