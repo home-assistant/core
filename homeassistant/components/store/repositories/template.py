@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
 
-from ..enums import HacsCategory, HacsDispatchEvent
-from ..exceptions import HacsException
+from ..enums import RepositoryCategory, StoreSignal
+from ..exceptions import StoreError
 from ..utils.decorator import concurrent
 from .base import HacsRepository
 
@@ -21,7 +21,7 @@ class HacsTemplateRepository(HacsRepository):
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
-        self.data.category = HacsCategory.TEMPLATE
+        self.data.category = RepositoryCategory.TEMPLATE
         self.content.path.remote = ""
         self.content.path.local = self.localpath
         self.content.single = True
@@ -52,7 +52,7 @@ class HacsTemplateRepository(HacsRepository):
             or not self.data.file_name.endswith(".jinja")
             or self.data.file_name not in self.treefiles
         ):
-            raise HacsException(
+            raise StoreError(
                 f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
@@ -101,7 +101,7 @@ class HacsTemplateRepository(HacsRepository):
         # Signal frontend to refresh
         if self.data.installed:
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY,
+                StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",

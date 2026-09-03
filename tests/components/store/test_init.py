@@ -9,9 +9,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.store import async_remove_config_entry_device
-from homeassistant.components.store.const import DOMAIN, HACS_SYSTEM_ID
-from homeassistant.components.store.enums import HacsDisabledReason
-from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.const import DOMAIN, LEGACY_HACS_SYSTEM_ID
+from homeassistant.components.store.enums import DisabledReason
+from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.utils.data import HacsData
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -61,7 +61,7 @@ async def test_load_unload_entry(
             id="github_api",
         ),
         pytest.param(
-            HacsException("Something went wrong"),
+            StoreError("Something went wrong"),
             ConfigEntryState.SETUP_RETRY,
             id="store",
         ),
@@ -99,12 +99,12 @@ async def test_setup_retries_without_restored_data(
     ("reason", "state"),
     [
         pytest.param(
-            HacsDisabledReason.INVALID_TOKEN,
+            DisabledReason.INVALID_TOKEN,
             ConfigEntryState.SETUP_ERROR,
             id="invalid_token",
         ),
         pytest.param(
-            HacsDisabledReason.RATE_LIMIT,
+            DisabledReason.RATE_LIMIT,
             ConfigEntryState.SETUP_RETRY,
             id="rate_limit",
         ),
@@ -113,7 +113,7 @@ async def test_setup_retries_without_restored_data(
 async def test_setup_with_a_disabled_store(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    reason: HacsDisabledReason,
+    reason: DisabledReason,
     state: ConfigEntryState,
 ) -> None:
     """Test a store that ends up disabled while setting up fails the setup."""
@@ -229,12 +229,12 @@ async def test_stored_repository_ids(
             id="malformed_identifiers",
         ),
         pytest.param(
-            {(DOMAIN, HACS_SYSTEM_ID)},
+            {(DOMAIN, LEGACY_HACS_SYSTEM_ID)},
             "Cannot remove the service of the Community store itself",
             id="system_device",
         ),
         pytest.param(
-            {("other_domain", "789"), (DOMAIN, HACS_SYSTEM_ID)},
+            {("other_domain", "789"), (DOMAIN, LEGACY_HACS_SYSTEM_ID)},
             "Cannot remove the service of the Community store itself",
             id="system_device_among_others",
         ),

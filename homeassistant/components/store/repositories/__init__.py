@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ..enums import HacsCategory
+from ..enums import RepositoryCategory
 from .appdaemon import HacsAppdaemonRepository
 from .base import HacsRepository
 from .integration import HacsIntegrationRepository
@@ -16,11 +16,13 @@ if TYPE_CHECKING:
     from ..base import HacsBase
 
 # The category classes all take (hacs, full_name), which the base class does not.
-REPOSITORY_CLASSES: dict[HacsCategory, Callable[[HacsBase, str], HacsRepository]] = {
-    HacsCategory.THEME: HacsThemeRepository,
-    HacsCategory.INTEGRATION: HacsIntegrationRepository,
-    HacsCategory.PYTHON_SCRIPT: HacsPythonScriptRepository,
-    HacsCategory.APPDAEMON: HacsAppdaemonRepository,
-    HacsCategory.PLUGIN: HacsPluginRepository,
-    HacsCategory.TEMPLATE: HacsTemplateRepository,
+REPOSITORY_CLASSES: dict[
+    RepositoryCategory, Callable[[HacsBase, str], HacsRepository]
+] = {
+    RepositoryCategory.THEME: HacsThemeRepository,
+    RepositoryCategory.INTEGRATION: HacsIntegrationRepository,
+    RepositoryCategory.PYTHON_SCRIPT: HacsPythonScriptRepository,
+    RepositoryCategory.APPDAEMON: HacsAppdaemonRepository,
+    RepositoryCategory.PLUGIN: HacsPluginRepository,
+    RepositoryCategory.TEMPLATE: HacsTemplateRepository,
 }

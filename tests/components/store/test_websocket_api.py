@@ -9,8 +9,8 @@ from syrupy.filters import props
 
 from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.const import DOMAIN
-from homeassistant.components.store.enums import HacsCategory, HacsDispatchEvent
-from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.enums import RepositoryCategory, StoreSignal
+from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.utils.storage import async_save_to_storage
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,7 @@ CRITICAL_REPOSITORY = {
 # One valid message per registered command, used to check the admin requirement.
 COMMANDS: tuple[dict[str, Any], ...] = (
     {"type": "store/info"},
-    {"type": "store/subscribe", "signal": HacsDispatchEvent.REPOSITORY},
+    {"type": "store/subscribe", "signal": StoreSignal.REPOSITORY},
     {"type": "store/critical/list"},
     {"type": "store/critical/acknowledge", "repository": REPOSITORY_INTEGRATION},
     {"type": "store/repositories/list"},
@@ -165,12 +165,12 @@ async def test_subscribe(
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
-        {"type": "store/subscribe", "signal": HacsDispatchEvent.REPOSITORY}
+        {"type": "store/subscribe", "signal": StoreSignal.REPOSITORY}
     )
     assert (await client.receive_json())["success"]
 
     async_dispatcher_send(
-        hass, HacsDispatchEvent.REPOSITORY, {"action": "update", "id": 1337}
+        hass, StoreSignal.REPOSITORY, {"action": "update", "id": 1337}
     )
 
     response = await client.receive_json()
@@ -222,9 +222,7 @@ async def test_repository_info_survives_a_broken_update(
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
-    with patch.object(
-        repository, "update_repository", side_effect=HacsException("Nope")
-    ):
+    with patch.object(repository, "update_repository", side_effect=StoreError("Nope")):
         await client.send_json_auto_id(
             {
                 "type": "store/repository/info",
@@ -580,7 +578,7 @@ async def test_repository_download_failure(
     with patch.object(
         repository,
         "async_download_repository",
-        side_effect=HacsException("Could not download"),
+        side_effect=StoreError("Could not download"),
     ):
         await client.send_json_auto_id(
             {
@@ -686,7 +684,7 @@ async def test_repository_releases_failure(
 
     client = await hass_ws_client(hass)
     with patch.object(
-        repository, "async_get_releases", side_effect=HacsException("Rate limited")
+        repository, "async_get_releases", side_effect=StoreError("Rate limited")
     ):
         await client.send_json_auto_id(
             {
@@ -798,9 +796,9 @@ async def test_categories_are_reported(
     response = await client.receive_json()
 
     assert set(response["result"]["categories"]) == {
-        HacsCategory.APPDAEMON,
-        HacsCategory.INTEGRATION,
-        HacsCategory.PLUGIN,
-        HacsCategory.TEMPLATE,
-        HacsCategory.THEME,
+        RepositoryCategory.APPDAEMON,
+        RepositoryCategory.INTEGRATION,
+        RepositoryCategory.PLUGIN,
+        RepositoryCategory.TEMPLATE,
+        RepositoryCategory.THEME,
     }

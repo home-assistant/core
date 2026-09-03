@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.enums import RepositoryFile
-from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.repositories.base import HacsRepository
 from homeassistant.components.store.utils import filters, path, regex, version
 from homeassistant.components.store.utils.decorator import return_none_on_exception
@@ -144,7 +144,7 @@ def test_resolve_in_directory(tmp_path: Path, candidate: str) -> None:
 )
 def test_resolve_in_directory_rejects_escapes(tmp_path: Path, candidate: str) -> None:
     """Test that a path leaving the target directory is refused."""
-    with pytest.raises(HacsException, match="is not inside"):
+    with pytest.raises(StoreError, match="is not inside"):
         path.resolve_in_directory(tmp_path, candidate)
 
 

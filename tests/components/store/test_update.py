@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.const import DOMAIN
-from homeassistant.components.store.enums import HacsDispatchEvent
+from homeassistant.components.store.enums import StoreSignal
 from homeassistant.components.store.repositories.base import HacsRepository
 from homeassistant.components.update import (
     ATTR_VERSION,
@@ -182,7 +182,7 @@ async def test_update_entity_download_progress(
 
     async_dispatcher_send(
         hass,
-        HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+        StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
         {"repository": REPOSITORY_INTEGRATION, "progress": 40},
     )
     await hass.async_block_till_done()
@@ -193,7 +193,7 @@ async def test_update_entity_download_progress(
 
     async_dispatcher_send(
         hass,
-        HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+        StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
         {"repository": REPOSITORY_INTEGRATION, "progress": False},
     )
     await hass.async_block_till_done()
@@ -209,7 +209,7 @@ async def test_update_entity_ignores_other_repositories(
     """Test that the progress of another download is ignored."""
     async_dispatcher_send(
         hass,
-        HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+        StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
         {"repository": "other/repository", "progress": 40},
     )
     await hass.async_block_till_done()

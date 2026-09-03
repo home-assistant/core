@@ -29,7 +29,7 @@
     'labels': set({
     }),
     'manufacturer': 'hacs-test-org',
-    'model': <HacsCategory.INTEGRATION: 'integration'>,
+    'model': <RepositoryCategory.INTEGRATION: 'integration'>,
     'model_id': None,
     'name': 'Basic integration',
     'name_by_user': None,

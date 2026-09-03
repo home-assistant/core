@@ -18,8 +18,8 @@ from syrupy.filters import props
 
 from homeassistant.components.store.base import HacsBase, RemovedRepository
 from homeassistant.components.store.const import MAX_DOWNLOAD_SIZE
-from homeassistant.components.store.enums import HacsCategory, HacsDispatchEvent
-from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.enums import RepositoryCategory, StoreSignal
+from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.repositories.base import (
     FileInformation,
     HacsManifest,
@@ -110,7 +110,7 @@ def test_manifest_defaults() -> None:
 
 def test_manifest_rejects_none() -> None:
     """Test that a missing hacs.json is not silently accepted."""
-    with pytest.raises(HacsException):
+    with pytest.raises(StoreError):
         HacsManifest.from_dict(None)
 
 
@@ -656,11 +656,11 @@ async def test_get_documentation_without_version(store: HacsBase) -> None:
     [
         pytest.param(
             "hacs-test-org/integration-basic-custom",
-            HacsCategory.INTEGRATION,
+            RepositoryCategory.INTEGRATION,
             id="integration",
         ),
         pytest.param(
-            "hacs-test-org/plugin-custom-dist", HacsCategory.PLUGIN, id="plugin"
+            "hacs-test-org/plugin-custom-dist", RepositoryCategory.PLUGIN, id="plugin"
         ),
     ],
 )
@@ -669,7 +669,7 @@ async def test_register_repository(
     store: HacsBase,
     hass_ws_client: WebSocketGenerator,
     repository_full_name: str,
-    category: HacsCategory,
+    category: RepositoryCategory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test adding a repository the store did not know about."""
@@ -702,35 +702,35 @@ async def test_register_repository(
     [
         pytest.param(
             "home-assistant/core",
-            "HomeAssistantCoreRepositoryException",
+            "CoreRepositoryError",
             "You can not add homeassistant/core, to use core integrations check the"
             " Home Assistant documentation for how to add them.",
             id="core",
         ),
         pytest.param(
             "home-assistant/addons",
-            "AppRepositoryException",
+            "AppRepositoryError",
             "The repository does not seem to be an integration, but an app"
-            " repository. HACS does not manage apps.",
+            " repository. The Community store does not manage apps.",
             id="core-addons",
         ),
         pytest.param(
             "hassio-addons/example",
-            "AppRepositoryException",
+            "AppRepositoryError",
             "The repository does not seem to be an integration, but an app"
-            " repository. HACS does not manage apps.",
+            " repository. The Community store does not manage apps.",
             id="addon-org",
         ),
         pytest.param(
             "hacs-test-org/addon-basic",
-            "AppRepositoryException",
+            "AppRepositoryError",
             "The repository does not seem to be an integration, but an app"
-            " repository. HACS does not manage apps.",
+            " repository. The Community store does not manage apps.",
             id="addon-repository",
         ),
         pytest.param(
             "hacs-test-org/integration-invalid",
-            "HacsException",
+            "StoreError",
             "<Integration hacs-test-org/integration-invalid> Repository structure"
             " for main is not compliant",
             id="not-compliant",
@@ -747,7 +747,7 @@ async def test_register_repository_failures(
 ) -> None:
     """Test the errors reported when a repository can not be added."""
     messages: list[dict[str, Any]] = []
-    async_dispatcher_connect(hass, HacsDispatchEvent.ERROR, messages.append)
+    async_dispatcher_connect(hass, StoreSignal.ERROR, messages.append)
 
     assert store.repositories.get_by_full_name(repository_full_name) is None
 
@@ -756,7 +756,7 @@ async def test_register_repository_failures(
         {
             "type": "store/repositories/add",
             "repository": repository_full_name,
-            "category": HacsCategory.INTEGRATION.value,
+            "category": RepositoryCategory.INTEGRATION.value,
         }
     )
     response = await client.receive_json()
@@ -786,10 +786,10 @@ async def test_validate_repository(
     "category_test_data",
     category_test_data_parametrized(
         categories=[
-            HacsCategory.APPDAEMON,
-            HacsCategory.PYTHON_SCRIPT,
-            HacsCategory.TEMPLATE,
-            HacsCategory.THEME,
+            RepositoryCategory.APPDAEMON,
+            RepositoryCategory.PYTHON_SCRIPT,
+            RepositoryCategory.TEMPLATE,
+            RepositoryCategory.THEME,
         ]
     ),
 )
@@ -805,7 +805,7 @@ async def test_validate_repository_without_content(
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(HacsException, match="is not compliant"),
+        pytest.raises(StoreError, match="is not compliant"),
     ):
         await repository.validate_repository()
 
@@ -821,7 +821,7 @@ async def test_validate_integration_without_content(store: HacsBase) -> None:
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(HacsException, match="is not compliant"),
+        pytest.raises(StoreError, match="is not compliant"),
     ):
         await repository.validate_repository()
 
@@ -837,7 +837,7 @@ async def test_validate_plugin_without_content(store: HacsBase) -> None:
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(HacsException, match="is not compliant"),
+        pytest.raises(StoreError, match="is not compliant"),
     ):
         await repository.validate_repository()
 
@@ -845,7 +845,7 @@ async def test_validate_plugin_without_content(store: HacsBase) -> None:
 @pytest.mark.parametrize(
     "category_test_data",
     category_test_data_parametrized(
-        categories=[HacsCategory.PYTHON_SCRIPT, HacsCategory.THEME]
+        categories=[RepositoryCategory.PYTHON_SCRIPT, RepositoryCategory.THEME]
     ),
 )
 async def test_validate_repository_with_content_in_root(
@@ -1057,7 +1057,7 @@ async def test_download_repository_zip_without_ref(store: HacsBase) -> None:
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = ""
 
-    with pytest.raises(HacsException, match="Missing required elements"):
+    with pytest.raises(StoreError, match="Missing required elements"):
         await repository.download_repository_zip()
 
 
@@ -1127,7 +1127,7 @@ async def test_download_repository_zip_escaping_member(
         ),
     )
 
-    with pytest.raises(HacsException, match="is not inside"):
+    with pytest.raises(StoreError, match="is not inside"):
         await repository.download_repository_zip()
 
     assert _downloaded_files(config_dir) == []
@@ -1162,7 +1162,7 @@ async def test_install_rejects_escaping_persistent_directory(
 
     with (
         patch.object(repository, "update_repository"),
-        pytest.raises(HacsException, match="is not inside"),
+        pytest.raises(StoreError, match="is not inside"),
     ):
         await repository.async_install_repository()
 
@@ -1198,7 +1198,7 @@ async def test_download_discards_content_over_the_limit(
 @pytest.mark.parametrize(
     "category_test_data",
     category_test_data_parametrized(
-        categories=[HacsCategory.PYTHON_SCRIPT, HacsCategory.TEMPLATE]
+        categories=[RepositoryCategory.PYTHON_SCRIPT, RepositoryCategory.TEMPLATE]
     ),
 )
 async def test_remove_refuses_escaping_file_name(
@@ -1273,7 +1273,7 @@ async def test_integration_manifest_invalid_domain(
             "async_get_integration_manifest",
             return_value={"domain": domain, "name": "Example"},
         ),
-        pytest.raises(HacsException, match="is not a valid integration domain"),
+        pytest.raises(StoreError, match="is not a valid integration domain"),
     ):
         await repository.validate_repository()
 
@@ -1289,7 +1289,7 @@ async def test_integration_domain_owned_by_another_repository(store: HacsBase) -
     other.data.installed = True
     store.repositories.register(other)
 
-    with pytest.raises(HacsException, match="is owned by test/other"):
+    with pytest.raises(StoreError, match="is owned by test/other"):
         await repository.async_pre_install()
 
 
@@ -1298,7 +1298,7 @@ async def test_integration_manifest_missing_file(store: HacsBase) -> None:
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.tree = []
 
-    with pytest.raises(HacsException, match="No manifest.json file found"):
+    with pytest.raises(StoreError, match="No manifest.json file found"):
         await repository.async_get_integration_manifest()
 
 
@@ -1597,7 +1597,7 @@ async def test_uninstall_without_a_domain(store: HacsBase) -> None:
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = None
 
-    with pytest.raises(HacsException, match="Could not uninstall"):
+    with pytest.raises(StoreError, match="Could not uninstall"):
         await repository.uninstall()
 
 
@@ -1626,6 +1626,6 @@ async def test_ensure_download_capabilities_rejects_new_core_requirement(
     )
 
     with pytest.raises(
-        HacsException, match="This version requires Home Assistant 9999.99.99 or newer"
+        StoreError, match="This version requires Home Assistant 9999.99.99 or newer"
     ):
         await repository.async_download_repository(ref="3.0.0")

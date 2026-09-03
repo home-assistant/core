@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from ..exceptions import HacsException
+from ..exceptions import StoreError
 
 if TYPE_CHECKING:
     from ..base import HacsBase
@@ -56,6 +56,6 @@ def resolve_in_directory(directory: str | Path, path: str | Path) -> Path:
     resolved = Path(directory, path).resolve()
 
     if resolved != resolved_directory and resolved_directory not in resolved.parents:
-        raise HacsException(f"'{path}' is not inside {resolved_directory}")
+        raise StoreError(f"'{path}' is not inside {resolved_directory}")
 
     return resolved

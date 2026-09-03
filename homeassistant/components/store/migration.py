@@ -14,7 +14,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from .const import DOMAIN, HACS_REPOSITORY_ID, HACS_SYSTEM_ID
+from .const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, LEGACY_HACS_SYSTEM_ID
 from .utils.logger import LOGGER
 
 HACS_DOMAIN = "hacs"
@@ -111,7 +111,7 @@ def _async_adopt_devices(
 ) -> None:
     """Rewrite the identifiers of the HACS devices to this integration."""
     for device in hacs_devices:
-        if (HACS_DOMAIN, HACS_SYSTEM_ID) in device.identifiers:
+        if (HACS_DOMAIN, LEGACY_HACS_SYSTEM_ID) in device.identifiers:
             _async_remove_system_device(entity_registry, device_registry, device)
             continue
 
@@ -167,7 +167,7 @@ def _async_remove_system_device(
     for entity in er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
     ):
-        if entity.unique_id == HACS_REPOSITORY_ID:
+        if entity.unique_id == LEGACY_HACS_REPOSITORY_ID:
             entity_registry.async_remove(entity.entity_id)
 
     device_registry.async_remove_device(device.id)

@@ -10,8 +10,8 @@ from homeassistant.loader import (
 )
 
 from ..const import DOMAIN
-from ..enums import HacsCategory, HacsDispatchEvent, RepositoryFile
-from ..exceptions import AppRepositoryException, HacsException
+from ..enums import RepositoryCategory, RepositoryFile, StoreSignal
+from ..exceptions import AppRepositoryError, StoreError
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
@@ -31,7 +31,7 @@ def _validated_domain(domain: Any) -> str:
     written to, so anything else would let a repository pick its own target.
     """
     if not isinstance(domain, str) or not VALID_DOMAIN.match(domain):
-        raise HacsException(f"'{domain}' is not a valid integration domain")
+        raise StoreError(f"'{domain}' is not a valid integration domain")
 
     return domain
 
@@ -44,7 +44,7 @@ class HacsIntegrationRepository(HacsRepository):
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
-        self.data.category = HacsCategory.INTEGRATION
+        self.data.category = RepositoryCategory.INTEGRATION
         self.content.path.remote = "custom_components"
         self.content.path.local = self.localpath
 
@@ -63,10 +63,10 @@ class HacsIntegrationRepository(HacsRepository):
         for repository in self.hacs.repositories.list_downloaded:
             if (
                 repository is not self
-                and repository.data.category == HacsCategory.INTEGRATION
+                and repository.data.category == RepositoryCategory.INTEGRATION
                 and repository.data.domain == self.data.domain
             ):
-                raise HacsException(
+                raise StoreError(
                     f"The '{self.data.domain}' directory is owned by "
                     f"{repository.data.full_name}"
                 )
@@ -120,8 +120,8 @@ class HacsIntegrationRepository(HacsRepository):
                     or "repository.yaml" in self.treefiles
                     or "repository.yml" in self.treefiles
                 ):
-                    raise AppRepositoryException
-                raise HacsException(
+                    raise AppRepositoryError
+                raise StoreError(
                     f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
                 )
             self.content.path.remote = f"custom_components/{name}"
@@ -196,7 +196,7 @@ class HacsIntegrationRepository(HacsRepository):
         # Signal frontend to refresh
         if self.data.installed:
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY,
+                StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",
@@ -223,7 +223,7 @@ class HacsIntegrationRepository(HacsRepository):
         )
 
         if manifest_path not in (x.full_path for x in self.tree):
-            raise HacsException(
+            raise StoreError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
 
@@ -253,7 +253,7 @@ class HacsIntegrationRepository(HacsRepository):
         )
 
         if manifest_path not in (x.full_path for x in self.tree):
-            raise HacsException(
+            raise StoreError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
 

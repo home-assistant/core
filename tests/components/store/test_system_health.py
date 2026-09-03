@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.store.base import HacsBase
 from homeassistant.components.store.const import DOMAIN
-from homeassistant.components.store.enums import HacsDisabledReason
+from homeassistant.components.store.enums import DisabledReason
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -48,11 +48,11 @@ async def test_system_health_when_disabled(
 ) -> None:
     """Test that a disabled store reports why."""
     assert await async_setup_component(hass, "system_health", {})
-    store.disable_hacs(HacsDisabledReason.RATE_LIMIT)
+    store.disable_hacs(DisabledReason.RATE_LIMIT)
 
     info = await _resolved_info(hass)
 
-    assert info["Disabled"] is HacsDisabledReason.RATE_LIMIT
+    assert info["Disabled"] is DisabledReason.RATE_LIMIT
 
 
 async def test_system_health_after_unload(

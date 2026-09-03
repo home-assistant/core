@@ -21,12 +21,12 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from ..const import DOMAIN, MAX_DOWNLOAD_SIZE
-from ..enums import HacsDispatchEvent, RepositoryFile
+from ..enums import RepositoryFile, StoreSignal
 from ..exceptions import (
-    HacsException,
-    HacsNotModifiedException,
-    HacsRepositoryArchivedException,
-    HacsRepositoryExistException,
+    NotModifiedError,
+    RepositoryArchivedError,
+    RepositoryExistsError,
+    StoreError,
 )
 from ..types import DownloadableContent
 from ..utils.backup import Backup
@@ -134,7 +134,7 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
     """Reject an archive that expands to more than we are willing to write."""
     size = sum(info.file_size for info in archive.infolist())
     if size > MAX_DOWNLOAD_SIZE:
-        raise HacsException(
+        raise StoreError(
             f"The archive expands to {size} bytes, "
             f"the limit is {MAX_DOWNLOAD_SIZE} bytes"
         )
@@ -250,7 +250,7 @@ class HacsManifest:
     def from_dict(manifest: dict[str, Any] | None) -> HacsManifest:
         """Set attributes from dicts."""
         if manifest is None:
-            raise HacsException("Missing manifest data")
+            raise StoreError("Missing manifest data")
 
         manifest_data = HacsManifest()
         manifest_data.manifest = {
@@ -514,7 +514,7 @@ class HacsRepository:
                 )
                 self.data.update_data(self.repository_object.attributes)
                 self.data.etag_repository = etag
-            except HacsNotModifiedException:
+            except NotModifiedError:
                 self.logger.debug(
                     "%s Did not update, content was not modified", self.string
                 )
@@ -544,13 +544,13 @@ class HacsRepository:
                 force=force,
                 skip_releases=skip_releases,
             )
-        except HacsRepositoryExistException:
+        except RepositoryExistsError:
             self.data.full_name = self.hacs.common.renamed_repositories[
                 self.data.full_name
             ]
             await self.common_update_data(ignore_issues=ignore_issues, force=force)
 
-        except HacsException:
+        except StoreError:
             if not ignore_issues and not force:
                 return False
 
@@ -603,7 +603,7 @@ class HacsRepository:
                 ),
                 validate,
             )
-        except HacsException:
+        except StoreError:
             validate.errors.append(
                 f"Download of {self.repository_manifest.filename} was not completed"
             )
@@ -664,7 +664,7 @@ class HacsRepository:
             self.logger.info("%s Downloading repository archive", self.string)
             try:
                 await self.download_repository_zip()
-            except HacsException:
+            except StoreError:
                 self.logger.exception(
                     "%s Downloading repository archive failed", self.string
                 )
@@ -681,7 +681,7 @@ class HacsRepository:
             contents = self.gather_files_to_download()
 
         if not contents:
-            raise HacsException("No content to download")
+            raise StoreError("No content to download")
 
         download_queue = QueueManager(hass=self.hacs.hass)
 
@@ -701,7 +701,7 @@ class HacsRepository:
         ref = f"{self.ref}".replace("tags/", "")
 
         if not ref:
-            raise HacsException("Missing required elements.")
+            raise StoreError("Missing required elements.")
 
         filecontent = await self.hacs.async_download_file(
             github_archive(repository=self.data.full_name, version=ref, variant="tags"),
@@ -717,14 +717,14 @@ class HacsRepository:
                 keep_url=True,
             )
         if filecontent is None:
-            raise HacsException(f"[{self}] Failed to download zipball")
+            raise StoreError(f"[{self}] Failed to download zipball")
 
         temp_dir = await self.hacs.hass.async_add_executor_job(tempfile.mkdtemp)
         # A scratch file, deliberately not named after the remote manifest
         temp_file = Path(temp_dir, "archive.zip")
         result = await self.hacs.async_save_file(str(temp_file), filecontent)
         if not result:
-            raise HacsException("Could not save ZIP file")
+            raise StoreError("Could not save ZIP file")
 
         def _extract_zip_file():
             with zipfile.ZipFile(temp_file, "r") as zip_file:
@@ -746,7 +746,7 @@ class HacsRepository:
                         extractable.append(path)
 
                 if len(extractable) == 0:
-                    raise HacsException("No content to extract")
+                    raise StoreError("No content to extract")
                 zip_file.extractall(self.content.path.local, extractable)
 
         await self.hacs.hass.async_add_executor_job(_extract_zip_file)
@@ -817,7 +817,7 @@ class HacsRepository:
         """Run uninstall tasks."""
         self.logger.info("%s Removing", self.string)
         if not await self.remove_local_directory():
-            raise HacsException("Could not uninstall")
+            raise StoreError("Could not uninstall")
         self.data.installed = False
         await self._async_post_uninstall()
         await async_remove_storage(self.hacs.hass, f"hacs/{self.data.id}.hacs")
@@ -825,7 +825,7 @@ class HacsRepository:
         self.data.installed_version = None
         self.data.installed_commit = None
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY,
+            StoreSignal.REPOSITORY,
             {
                 "id": 1337,
                 "action": "uninstall",
@@ -884,7 +884,7 @@ class HacsRepository:
                     local_path,
                 )
 
-        except (OSError, HacsException) as exception:
+        except (OSError, StoreError) as exception:
             self.logger.debug(
                 "%s Removing %s failed with %s", self.string, local_path, exception
             )
@@ -932,19 +932,19 @@ class HacsRepository:
         """Run install steps."""
         await self._async_pre_install()
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 30},
         )
         self.logger.info("%s Running installation steps", self.string)
         await self.async_install_repository(version=version)
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 90},
         )
         self.logger.info("%s Installation steps completed", self.string)
         await self._async_post_install()
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": False},
         )
 
@@ -964,7 +964,7 @@ class HacsRepository:
         await self.async_post_installation()
         self.data.new = False
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY,
+            StoreSignal.REPOSITORY,
             {
                 "id": 1337,
                 "action": "install",
@@ -984,7 +984,7 @@ class HacsRepository:
         )
         await self.update_repository(force=force_update)
         if self.content.path.local is None:
-            raise HacsException("repository.content.path.local is None")
+            raise StoreError("repository.content.path.local is None")
         self.validate.errors.clear()
 
         version_to_install = version or self.version_to_download()
@@ -994,7 +994,7 @@ class HacsRepository:
             self.ref = f"tags/{version_to_install}"
 
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 40},
         )
 
@@ -1026,7 +1026,7 @@ class HacsRepository:
         )
 
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 50},
         )
 
@@ -1036,7 +1036,7 @@ class HacsRepository:
             await self.download_content(version_to_install)
 
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 70},
         )
 
@@ -1050,10 +1050,10 @@ class HacsRepository:
                     backup.cleanup()
 
                 await self.hacs.hass.async_add_executor_job(_restore_backup)
-            raise HacsException("Could not download, see log for details")
+            raise StoreError("Could not download, see log for details")
 
         self.hacs.async_dispatch(
-            HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 80},
         )
 
@@ -1086,9 +1086,9 @@ class HacsRepository:
             repository = await self.hacs.github.get_repo(self.data.full_name, etag)
             etag_repository = self.hacs.github.client.last_response.etag
         except AIOGitHubAPINotModifiedException as exception:
-            raise HacsNotModifiedException(exception) from exception
+            raise NotModifiedError(exception) from exception
         except (ValueError, AIOGitHubAPIException, Exception) as exception:
-            raise HacsException(exception) from exception
+            raise StoreError(exception) from exception
         else:
             return repository, etag_repository
 
@@ -1105,7 +1105,7 @@ class HacsRepository:
                 params={"recursive": "true"},
             )
         except GitHubException as exception:
-            raise HacsException(exception) from exception
+            raise StoreError(exception) from exception
         return response.data.tree
 
     async def get_releases(
@@ -1145,26 +1145,26 @@ class HacsRepository:
                 self.hacs.common.renamed_repositories[self.data.full_name] = (
                     repository_object.full_name
                 )
-                raise HacsRepositoryExistException  # noqa: TRY301 # handled below
+                raise RepositoryExistsError  # noqa: TRY301 # handled below
             self.data.update_data(repository_object.attributes)
             self.data.etag_repository = etag
-        except HacsNotModifiedException:
+        except NotModifiedError:
             return None
-        except HacsRepositoryExistException:
-            raise HacsRepositoryExistException from None
-        except (AIOGitHubAPIException, HacsException) as exception:
+        except RepositoryExistsError:
+            raise RepositoryExistsError from None
+        except (AIOGitHubAPIException, StoreError) as exception:
             if not self.hacs.status.startup:
                 self.logger.error("%s %s", self.string, exception)
             if not ignore_issues:
                 self.validate.errors.append("Repository does not exist.")
-                raise HacsException(exception) from exception
+                raise StoreError(exception) from exception
 
         # Make sure the repository is not archived.
         if self.data.archived and not ignore_issues:
             self.validate.errors.append("Repository is archived.")
             if self.data.full_name not in self.hacs.common.archived_repositories:
                 self.hacs.common.archived_repositories.add(self.data.full_name)
-            raise HacsRepositoryArchivedException(f"{self} Repository is archived.")
+            raise RepositoryArchivedError(f"{self} Repository is archived.")
 
         # Make sure the repository is not in the blacklist.
         if self.hacs.repositories.is_removed(self.data.full_name):
@@ -1173,9 +1173,7 @@ class HacsRepository:
                 self.validate.errors.append(
                     "Repository has been requested to be removed."
                 )
-                raise HacsException(
-                    f"{self} Repository has been requested to be removed."
-                )
+                raise StoreError(f"{self} Repository has been requested to be removed.")
 
         # Get releases.
         if not skip_releases:  # pylint: disable=too-many-nested-blocks
@@ -1204,7 +1202,7 @@ class HacsRepository:
                     self.releases.objects = filtered_releases
                     self.data.published_tags = [x.tag_name for x in filtered_releases]
 
-            except HacsException:
+            except StoreError:
                 self.data.releases = False
 
         if not self.force_branch:
@@ -1225,7 +1223,7 @@ class HacsRepository:
         try:
             tree = await self.get_tree(self.ref)
             if not tree:
-                raise HacsException("No files in tree")  # noqa: TRY301 # handled below
+                raise StoreError("No files in tree")  # noqa: TRY301 # handled below
             self.tree = [
                 LegacyTreeFile(entry, repository=self.data.full_name, ref=self.ref)
                 for entry in tree
@@ -1234,7 +1232,7 @@ class HacsRepository:
             self.treefiles = []
             for treefile in self.tree:
                 self.treefiles.append(treefile.full_path)
-        except HacsException as exception:
+        except StoreError as exception:
             if (
                 not retry
                 and self.ref is not None
@@ -1252,7 +1250,7 @@ class HacsRepository:
             if not self.hacs.status.startup and not ignore_issues:
                 self.logger.error("%s %s", self.string, exception)
             if not ignore_issues:
-                raise HacsException(exception) from None
+                raise StoreError(exception) from None
 
     def gather_files_to_download(self) -> list[FileInformation]:
         """Return a list of file objects to be downloaded."""
@@ -1387,7 +1385,7 @@ class HacsRepository:
                 return
             self.validate.errors.append(f"[{content.name}] was not downloaded.")
 
-        except (OSError, HacsException) as exception:
+        except (OSError, StoreError) as exception:
             self.validate.errors.append(f"Download was not completed [{exception}]")
 
     async def async_remove_entity_device(self) -> None:
@@ -1531,7 +1529,7 @@ class HacsRepository:
         target_manifest: HacsManifest | None = None
         if ref is None:
             if not self.can_download:
-                raise HacsException(
+                raise StoreError(
                     f"This {self.data.category} is not available for download."
                 )
             return
@@ -1542,7 +1540,7 @@ class HacsRepository:
             target_manifest = await self.get_hacs_json(version=ref)
 
         if target_manifest is None:
-            raise HacsException(
+            raise StoreError(
                 f"The version {ref} for this {self.data.category} can not be used with HACS."
             )
 
@@ -1552,7 +1550,7 @@ class HacsRepository:
             target_manifest.homeassistant is not None
             and self.hacs.core.ha_version < target_manifest.homeassistant
         ):
-            raise HacsException(
+            raise StoreError(
                 f"This version requires Home Assistant {target_manifest.homeassistant} or newer."
             )
 
@@ -1564,7 +1562,7 @@ class HacsRepository:
         self.logger.info("Starting download, %s", ref)
         if self.display_version_or_commit == "version":
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": 10},
             )
             if not ref:
@@ -1574,21 +1572,21 @@ class HacsRepository:
             self.data.selected_tag = ref
             self.force_branch = ref is not None
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": 20},
             )
 
         try:
             await self.async_install(version=ref)
-        except HacsException as exception:
-            raise HacsException(
+        except StoreError as exception:
+            raise StoreError(
                 f"Downloading {self.data.full_name} with version {ref or self.data.last_version or self.data.last_commit} failed with ({exception})"
             ) from exception
         finally:
             self.data.selected_tag = None
             self.force_branch = False
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": False},
             )
 

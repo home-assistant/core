@@ -1,36 +1,36 @@
-"""Custom Exceptions for HACS."""
+"""Custom exceptions for the Community store."""
 
 
-class HacsException(Exception):
+class StoreError(Exception):
     """Super basic."""
 
 
-class HacsRepositoryArchivedException(HacsException):
+class RepositoryArchivedError(StoreError):
     """For repositories that are archived."""
 
 
-class HacsNotModifiedException(HacsException):
+class NotModifiedError(StoreError):
     """For responses that are not modified."""
 
 
-class HacsExpectedException(HacsException):
+class ExpectedError(StoreError):
     """For stuff that are expected."""
 
 
-class HacsRepositoryExistException(HacsException):
-    """For repositories that are already exist."""
+class RepositoryExistsError(StoreError):
+    """For repositories that already exist."""
 
 
-class HacsExecutionStillInProgress(HacsException):
+class ExecutionInProgressError(StoreError):
     """Exception to raise if execution is still in progress."""
 
 
-class AppRepositoryException(HacsException):
+class AppRepositoryError(StoreError):
     """Exception to raise when user tries to add an app repository."""
 
     exception_message = (
         "The repository does not seem to be an integration, "
-        "but an app repository. HACS does not manage apps."
+        "but an app repository. The Community store does not manage apps."
     )
 
     def __init__(self) -> None:
@@ -38,7 +38,7 @@ class AppRepositoryException(HacsException):
         super().__init__(self.exception_message)
 
 
-class HomeAssistantCoreRepositoryException(HacsException):
+class CoreRepositoryError(StoreError):
     """Exception to raise when user tries to add the home-assistant/core repository."""
 
     exception_message = (

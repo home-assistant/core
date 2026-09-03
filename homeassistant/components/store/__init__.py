@@ -32,10 +32,10 @@ from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 
 from .base import HacsBase, StoreConfigEntry
-from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
+from .const import CLIENT_NAME, DOMAIN, LEGACY_HACS_SYSTEM_ID
 from .data_client import HacsDataClient
-from .enums import HacsDisabledReason, HacsStage, LovelaceMode
-from .exceptions import HacsException
+from .enums import DisabledReason, LovelaceMode, StoreStage
+from .exceptions import StoreError
 from .migration import async_migrate_from_hacs, async_remove_duplicate_entries
 from .utils.data import HacsData
 from .utils.queue_manager import QueueManager
@@ -150,16 +150,16 @@ async def _async_initialize_integration(
         raise ConfigEntryAuthFailed(
             "The GitHub token is no longer valid"
         ) from exception
-    except (AIOGitHubAPIException, HacsException) as exception:
+    except (AIOGitHubAPIException, StoreError) as exception:
         raise ConfigEntryNotReady(
             f"Could not set up the Community store: {exception}"
         ) from exception
 
-    hacs.set_stage(HacsStage.SETUP)
+    hacs.set_stage(StoreStage.SETUP)
 
     # Setting up can leave the store disabled, an invalid token is for the user
     # to fix, anything else is worth another try.
-    if hacs.system.disabled_reason is HacsDisabledReason.INVALID_TOKEN:
+    if hacs.system.disabled_reason is DisabledReason.INVALID_TOKEN:
         raise ConfigEntryAuthFailed("The GitHub token is no longer valid")
 
     if hacs.system.disabled:
@@ -169,7 +169,7 @@ async def _async_initialize_integration(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    hacs.set_stage(HacsStage.WAITING)
+    hacs.set_stage(StoreStage.WAITING)
     hacs.log.info(
         "Setup complete, waiting for Home Assistant before startup tasks starts"
     )
@@ -216,7 +216,7 @@ async def async_unload_entry(
     )
 
     hacs.set_stage(None)
-    hacs.disable_hacs(HacsDisabledReason.REMOVED)
+    hacs.disable_hacs(DisabledReason.REMOVED)
 
     hass.data.pop(STORAGE_CACHE_KEY, None)
 
@@ -254,7 +254,7 @@ async def async_remove_config_entry_device(
             translation_placeholders={"device_id": device_entry.id},
         )
 
-    if repository_id == HACS_SYSTEM_ID:
+    if repository_id == LEGACY_HACS_SYSTEM_ID:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_of_the_store",

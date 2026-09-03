@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, override
 
 from homeassistant.components import lovelace
 
-from ..enums import HacsCategory, HacsDispatchEvent
-from ..exceptions import HacsException
+from ..enums import RepositoryCategory, StoreSignal
+from ..exceptions import StoreError
 from ..utils.decorator import concurrent
 from .base import HacsRepository
 
@@ -25,7 +25,7 @@ class HacsPluginRepository(HacsRepository):
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.file_name = ""
-        self.data.category = HacsCategory.PLUGIN
+        self.data.category = RepositoryCategory.PLUGIN
         self.content.path.local = self.localpath
 
     @property
@@ -44,7 +44,7 @@ class HacsPluginRepository(HacsRepository):
         self.update_filenames()
 
         if self.content.path.remote is None:
-            raise HacsException(
+            raise StoreError(
                 f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
@@ -92,7 +92,7 @@ class HacsPluginRepository(HacsRepository):
         # Signal frontend to refresh
         if self.data.installed:
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY,
+                StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",

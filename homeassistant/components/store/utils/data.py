@@ -9,8 +9,8 @@ from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from ..base import HacsBase
-from ..const import HACS_REPOSITORY_ID
-from ..enums import HacsDispatchEvent
+from ..const import LEGACY_HACS_REPOSITORY_ID
+from ..enums import StoreSignal
 from ..repositories.base import TOPIC_FILTER, HacsManifest, HacsRepository
 from .logger import LOGGER
 from .path import is_safe
@@ -102,7 +102,7 @@ class HacsData:
                 self.async_store_repository_data(repository)
 
         await async_save_to_storage(self.hacs.hass, "repositories", self.content)
-        for event in (HacsDispatchEvent.REPOSITORY, HacsDispatchEvent.CONFIG):
+        for event in (StoreSignal.REPOSITORY, StoreSignal.CONFIG):
             self.hacs.async_dispatch(event, {})
 
     @callback
@@ -215,7 +215,7 @@ class HacsData:
             # since its unlikely to ever suspend at startup
             repo_category = repo_data.get("category", category)
             if (
-                entry in ("0", HACS_REPOSITORY_ID)
+                entry in ("0", LEGACY_HACS_REPOSITORY_ID)
                 or repo_category is None
                 or self.hacs.repositories.is_registered(repository_id=entry)
             ):
@@ -235,7 +235,7 @@ class HacsData:
         self, entry: str, repository_data: dict[str, Any]
     ) -> None:
         """Restore repository."""
-        if entry == HACS_REPOSITORY_ID:
+        if entry == LEGACY_HACS_REPOSITORY_ID:
             # The old HACS self-repository is not managed by the store
             return
 

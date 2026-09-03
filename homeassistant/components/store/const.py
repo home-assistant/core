@@ -1,4 +1,4 @@
-"""Constants for HACS."""
+"""Constants for the Community store."""
 
 from typing import TypeVar
 
@@ -8,7 +8,7 @@ DOMAIN = "store"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 CLIENT_NAME = f"HomeAssistantCommunityStore/{HAVERSION}"
 
-# Kept for compatibility with HACS installs, migrates in a later release
+# Kept for compatibility with the HACS install, migrates in a later release
 URL_BASE = "/hacsfiles"
 
 TV = TypeVar("TV")
@@ -22,11 +22,15 @@ DEFAULT_CONCURRENT_BACKOFF_TIME = 1
 # bytes and for the size a ZIP archive expands to.
 MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024
 
-HACS_REPOSITORY_ID = "172733314"
+LEGACY_HACS_REPOSITORY_ID = "172733314"
+
+# The catalog repositories in the HACS ecosystem the store consumes
+HACS_DEFAULT_REPOSITORY = "hacs/default"
+HACS_INTEGRATION_REPOSITORY = "hacs/integration"
 
 VERSION_STORAGE = "6"
 
-HACS_SYSTEM_ID = (
+LEGACY_HACS_SYSTEM_ID = (
     "0717a0cd-745c-48fd-9b16-c8534c9704f9-bc944b0f-fd42-4a58-a072-ade38d1444cd"
 )
 

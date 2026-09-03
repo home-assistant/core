@@ -1,18 +1,11 @@
-"""Helper constants."""
+"""Enums for the Community store."""
 
 from enum import StrEnum
 from typing import override
 
 
-class HacsGitHubRepo(StrEnum):
-    """HacsGitHubRepo."""
-
-    DEFAULT = "hacs/default"
-    INTEGRATION = "hacs/integration"
-
-
-class HacsCategory(StrEnum):
-    """Repository categories HACS knows about."""
+class RepositoryCategory(StrEnum):
+    """Repository categories the store knows about."""
 
     APPDAEMON = "appdaemon"
     INTEGRATION = "integration"
@@ -27,17 +20,17 @@ class HacsCategory(StrEnum):
         return str(self.value)
 
 
-class HacsDispatchEvent(StrEnum):
-    """HacsDispatchEvent."""
+class StoreSignal(StrEnum):
+    """Dispatcher signals the store sends."""
 
-    CONFIG = "hacs_dispatch_config"
-    ERROR = "hacs_dispatch_error"
-    RELOAD = "hacs_dispatch_reload"
-    REPOSITORY = "hacs_dispatch_repository"
-    REPOSITORY_DOWNLOAD_PROGRESS = "hacs_dispatch_repository_download_progress"
-    STAGE = "hacs_dispatch_stage"
-    STARTUP = "hacs_dispatch_startup"
-    STATUS = "hacs_dispatch_status"
+    CONFIG = "store_config"
+    ERROR = "store_error"
+    RELOAD = "store_reload"
+    REPOSITORY = "store_repository"
+    REPOSITORY_DOWNLOAD_PROGRESS = "store_repository_download_progress"
+    STAGE = "store_stage"
+    STARTUP = "store_startup"
+    STATUS = "store_status"
 
 
 class RepositoryFile(StrEnum):
@@ -56,8 +49,8 @@ class LovelaceMode(StrEnum):
     YAML = "yaml"
 
 
-class HacsStage(StrEnum):
-    """Stages HACS moves through during its lifetime."""
+class StoreStage(StrEnum):
+    """Stages the store moves through during its lifetime."""
 
     SETUP = "setup"
     STARTUP = "startup"
@@ -65,8 +58,8 @@ class HacsStage(StrEnum):
     RUNNING = "running"
 
 
-class HacsDisabledReason(StrEnum):
-    """Reasons why HACS can be disabled."""
+class DisabledReason(StrEnum):
+    """Reasons why the store can be disabled."""
 
     RATE_LIMIT = "rate_limit"
     REMOVED = "removed"

@@ -1,6 +1,6 @@
 """Constants for the Community store tests."""
 
-from homeassistant.components.store.enums import HacsCategory
+from homeassistant.components.store.enums import RepositoryCategory
 
 TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
@@ -27,7 +27,7 @@ PROXY_HEADERS = {
 
 # The categories that are always active, regardless of what is downloaded.
 DEFAULT_CATEGORIES = {
-    HacsCategory.INTEGRATION,
-    HacsCategory.PLUGIN,
-    HacsCategory.TEMPLATE,
+    RepositoryCategory.INTEGRATION,
+    RepositoryCategory.PLUGIN,
+    RepositoryCategory.TEMPLATE,
 }

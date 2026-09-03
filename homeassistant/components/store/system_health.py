@@ -8,7 +8,7 @@ from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
 from .base import async_get_store
-from .const import DOMAIN
+from .const import DOMAIN, HACS_DEFAULT_REPOSITORY
 
 GITHUB_STATUS = "https://www.githubstatus.com/"
 CLOUDFLARE_STATUS = "https://www.cloudflarestatus.com/"
@@ -36,7 +36,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             hass, BASE_API_URL, GITHUB_STATUS
         ),
         "GitHub Content": system_health.async_check_can_reach_url(
-            hass, "https://raw.githubusercontent.com/hacs/default/main/integration"
+            hass,
+            f"https://raw.githubusercontent.com/{HACS_DEFAULT_REPOSITORY}/main/integration",
         ),
         "GitHub Web": system_health.async_check_can_reach_url(
             hass, "https://github.com/", GITHUB_STATUS

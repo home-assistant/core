@@ -5,7 +5,7 @@ from typing import Any
 from aiohttp import ClientSession, ClientTimeout
 import voluptuous as vol
 
-from .exceptions import HacsException, HacsNotModifiedException
+from .exceptions import NotModifiedError, StoreError
 from .utils.logger import LOGGER
 from .utils.validate import (
     VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
@@ -45,14 +45,14 @@ class HacsDataClient:
                 },
             )
             if response.status == 304:
-                raise HacsNotModifiedException from None  # noqa: TRY301 # re-raised untouched below
+                raise NotModifiedError from None  # noqa: TRY301 # re-raised untouched below
             response.raise_for_status()
-        except HacsNotModifiedException:
+        except NotModifiedError:
             raise
         except TimeoutError:
-            raise HacsException("Timeout of 60s reached") from None
+            raise StoreError("Timeout of 60s reached") from None
         except Exception as exception:
-            raise HacsException(
+            raise StoreError(
                 f"Error fetching data from HACS: {exception}"
             ) from exception
 

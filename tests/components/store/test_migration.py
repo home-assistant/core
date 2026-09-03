@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant.components.store.const import (
     DOMAIN,
-    HACS_REPOSITORY_ID,
-    HACS_SYSTEM_ID,
+    LEGACY_HACS_REPOSITORY_ID,
+    LEGACY_HACS_SYSTEM_ID,
 )
 from homeassistant.components.store.migration import HACS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -78,7 +78,7 @@ def _seed_system_device(
     """Create the HACS system device and the entities of HACS itself."""
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(HACS_DOMAIN, HACS_SYSTEM_ID)},
+        identifiers={(HACS_DOMAIN, LEGACY_HACS_SYSTEM_ID)},
         name="HACS",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
@@ -90,7 +90,7 @@ def _seed_system_device(
         entity_registry.async_get_or_create(
             domain,
             HACS_DOMAIN,
-            HACS_REPOSITORY_ID,
+            LEGACY_HACS_REPOSITORY_ID,
             config_entry=entry,
             device_id=device.id,
             suggested_object_id=object_id,

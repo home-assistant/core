@@ -8,8 +8,8 @@ from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
 from ..base import async_get_store
-from ..enums import HacsDispatchEvent
-from ..exceptions import HacsException
+from ..enums import StoreSignal
+from ..exceptions import StoreError
 from ..utils.version import version_left_higher_then_right
 
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ async def hacs_repository_info(
     if not repository.updated_info:
         try:
             await repository.update_repository(ignore_issues=True, force=True)
-        except HacsException as exception:
+        except StoreError as exception:
             repository.logger.error("%s %s", repository.string, exception)
         repository.updated_info = True
 
@@ -258,12 +258,12 @@ async def hacs_repository_download(
         was_installed = repository.data.installed
         await repository.async_download_repository(ref=msg.get("version"))
         if not was_installed:
-            hacs.async_dispatch(HacsDispatchEvent.RELOAD, {"force": True})
+            hacs.async_dispatch(StoreSignal.RELOAD, {"force": True})
             await hacs.async_recreate_entities()
 
         await hacs.data.async_write()
         connection.send_message(websocket_api.result_message(msg["id"], {}))
-    except HacsException as exception:
+    except StoreError as exception:
         repository.logger.error("%s %s", repository.string, exception)
         connection.send_error(msg["id"], "error", str(exception))
 
@@ -295,7 +295,7 @@ async def hacs_repository_remove(
     repository.data.new = False
     try:
         await repository.update_repository(ignore_issues=True, force=True)
-    except HacsException as exception:
+    except StoreError as exception:
         repository.logger.error("%s %s", repository.string, exception)
     await repository.uninstall()
 
@@ -404,7 +404,7 @@ async def hacs_repository_releases(
 
     try:
         releases = await repository.async_get_releases()
-    except HacsException as exception:
+    except StoreError as exception:
         hacs.log.exception("Could not get the releases for %s", repository.string)
         connection.send_error(msg["id"], "unknown", str(exception))
         return

@@ -8,8 +8,8 @@ from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
 from ..base import async_get_store
-from ..enums import HacsDispatchEvent
-from ..exceptions import HacsException
+from ..enums import StoreSignal
+from ..exceptions import StoreError
 from ..utils import regex
 
 if TYPE_CHECKING:
@@ -107,7 +107,7 @@ async def hacs_repositories_clear_new(
                     repo.data.full_name,
                 )
                 repo.data.new = False
-    hacs.async_dispatch(HacsDispatchEvent.REPOSITORY, {})
+    hacs.async_dispatch(StoreSignal.REPOSITORY, {})
     await hacs.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -177,9 +177,9 @@ async def hacs_repositories_add(
                 category=category,
             )
 
-        except HacsException as exception:
+        except StoreError as exception:
             hacs.async_dispatch(
-                HacsDispatchEvent.ERROR,
+                StoreSignal.ERROR,
                 {
                     "action": "add_repository",
                     "exception": type(exception).__name__,
@@ -189,7 +189,7 @@ async def hacs_repositories_add(
 
     else:
         hacs.async_dispatch(
-            HacsDispatchEvent.ERROR,
+            StoreSignal.ERROR,
             {
                 "action": "add_repository",
                 "message": f"Repository '{repository}' exists in the store.",

@@ -11,7 +11,7 @@ from yarl import URL
 
 from homeassistant.components.store.base import HacsBase, async_get_store
 from homeassistant.components.store.const import DOMAIN
-from homeassistant.components.store.enums import HacsCategory
+from homeassistant.components.store.enums import RepositoryCategory
 from homeassistant.components.store.repositories.base import (
     HacsManifest,
     HacsRepository,
@@ -40,7 +40,7 @@ class CategoryTestData(TypedDict):
 CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     CategoryTestData(
         id="1296265",
-        category=HacsCategory.APPDAEMON,
+        category=RepositoryCategory.APPDAEMON,
         repository="hacs-test-org/appdaemon-basic",
         files=["__init__.py", "example.py"],
         version_base="1.0.0",
@@ -49,7 +49,7 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     ),
     CategoryTestData(
         id="1296269",
-        category=HacsCategory.INTEGRATION,
+        category=RepositoryCategory.INTEGRATION,
         repository="hacs-test-org/integration-basic",
         files=["__init__.py", "manifest.json", "module/__init__.py"],
         version_base="1.0.0",
@@ -58,7 +58,7 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     ),
     CategoryTestData(
         id="1296267",
-        category=HacsCategory.PLUGIN,
+        category=RepositoryCategory.PLUGIN,
         repository="hacs-test-org/plugin-basic",
         files=["example.js", "example.js.gz"],
         version_base="1.0.0",
@@ -67,7 +67,7 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     ),
     CategoryTestData(
         id="1296262",
-        category=HacsCategory.PYTHON_SCRIPT,
+        category=RepositoryCategory.PYTHON_SCRIPT,
         repository="hacs-test-org/python_script-basic",
         files=["example.py"],
         version_base="1.0.0",
@@ -76,7 +76,7 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     ),
     CategoryTestData(
         id="1296268",
-        category=HacsCategory.TEMPLATE,
+        category=RepositoryCategory.TEMPLATE,
         repository="hacs-test-org/template-basic",
         files=["example.jinja"],
         version_base="1.0.0",
@@ -85,7 +85,7 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
     ),
     CategoryTestData(
         id="1296266",
-        category=HacsCategory.THEME,
+        category=RepositoryCategory.THEME,
         repository="hacs-test-org/theme-basic",
         files=["example.yaml"],
         version_base="1.0.0",
@@ -97,7 +97,7 @@ CATEGORY_TEST_DATA: tuple[CategoryTestData, ...] = (
 
 def category_test_data_parametrized(
     *,
-    categories: Iterable[HacsCategory] | None = None,
+    categories: Iterable[RepositoryCategory] | None = None,
 ) -> Iterable[pytest.param]:
     """Return the category test data as pytest parameters."""
     return (

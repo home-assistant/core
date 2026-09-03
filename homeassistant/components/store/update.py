@@ -11,8 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .base import StoreConfigEntry
 from .const import DOMAIN
 from .entity import HacsRepositoryEntity
-from .enums import HacsCategory, HacsDispatchEvent
-from .exceptions import HacsException
+from .enums import RepositoryCategory, StoreSignal
+from .exceptions import StoreError
 
 
 async def async_setup_entry(
@@ -77,7 +77,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         if (
-            self.repository.data.category != HacsCategory.INTEGRATION
+            self.repository.data.category != RepositoryCategory.INTEGRATION
             or self.repository.data.domain is None
         ):
             return None
@@ -104,7 +104,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
 
         try:
             await self.repository.async_download_repository(ref=to_download)
-        except HacsException as exception:
+        except StoreError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="download_failed",
@@ -148,12 +148,12 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
             release_notes += self.repository.releases.objects[0].body
 
         if self.repository.pending_update:
-            if self.repository.data.category == HacsCategory.INTEGRATION:
+            if self.repository.data.category == RepositoryCategory.INTEGRATION:
                 release_notes += (
                     "\n\n<ha-alert alert-type='warning'>You need to restart"
                     " Home Assistant manually after updating.</ha-alert>\n\n"
                 )
-            if self.repository.data.category == HacsCategory.PLUGIN:
+            if self.repository.data.category == RepositoryCategory.PLUGIN:
                 release_notes += (
                     "\n\n<ha-alert alert-type='warning'>You need to manually"
                     " clear the frontend cache after updating.</ha-alert>\n\n"
@@ -168,7 +168,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                HacsDispatchEvent.REPOSITORY_DOWNLOAD_PROGRESS,
+                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 self._update_download_progress,
             )
         )

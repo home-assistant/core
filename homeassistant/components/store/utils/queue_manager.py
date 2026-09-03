@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from ..exceptions import HacsExecutionStillInProgress
+from ..exceptions import ExecutionInProgressError
 from .logger import LOGGER
 
 _LOGGER = LOGGER
@@ -44,7 +44,7 @@ class QueueManager:
         """Execute the tasks in the queue."""
         if self.running:
             _LOGGER.debug("<QueueManager> Execution is already running")
-            raise HacsExecutionStillInProgress
+            raise ExecutionInProgressError
         if len(self.queue) == 0:
             _LOGGER.debug("<QueueManager> The queue is empty")
             return

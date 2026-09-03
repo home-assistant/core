@@ -10,7 +10,7 @@ from homeassistant.util import json as json_util
 from homeassistant.util.hass_dict import HassKey
 
 from ..const import VERSION_STORAGE
-from ..exceptions import HacsException
+from ..exceptions import StoreError
 from .logger import LOGGER
 from .path import resolve_in_directory
 
@@ -44,7 +44,7 @@ class StoreStorage(Store[dict[str, Any]]):
                 self.path,
                 exception,
             )
-            raise HacsException(exception) from exception
+            raise StoreError(exception) from exception
         if data == {} or data["version"] != self.version:
             return None
         return data["data"]

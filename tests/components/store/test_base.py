@@ -7,8 +7,8 @@ from homeassistant.components.store.base import (
     HacsConfiguration,
     HacsRepositories,
 )
-from homeassistant.components.store.enums import HacsCategory
-from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.enums import RepositoryCategory
+from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.repositories.base import HacsRepository
 
 from .const import DEFAULT_CATEGORIES
@@ -48,7 +48,7 @@ def test_configuration_rejects_non_dict() -> None:
     """Test updating from something that is not a dict."""
     configuration = HacsConfiguration()
 
-    with pytest.raises(HacsException):
+    with pytest.raises(StoreError):
         configuration.update_from_dict(None)
 
 
@@ -62,7 +62,7 @@ async def test_repository_lookups(
     assert store.repositories.get_by_full_name(None) is None
 
     mock_repository.data.id = "1337"
-    mock_repository.data.category = HacsCategory.INTEGRATION
+    mock_repository.data.category = RepositoryCategory.INTEGRATION
     mock_repository.data.installed = True
     store.repositories.register(mock_repository)
 
@@ -79,12 +79,12 @@ async def test_category_downloaded(
     """Test only the category of a downloaded repository counts as downloaded."""
     store.repositories = HacsRepositories()
     mock_repository.data.id = "1337"
-    mock_repository.data.category = HacsCategory.INTEGRATION
+    mock_repository.data.category = RepositoryCategory.INTEGRATION
     mock_repository.data.installed = True
     store.repositories.register(mock_repository)
 
-    assert store.repositories.category_downloaded(HacsCategory.INTEGRATION)
-    assert not store.repositories.category_downloaded(HacsCategory.THEME)
+    assert store.repositories.category_downloaded(RepositoryCategory.INTEGRATION)
+    assert not store.repositories.category_downloaded(RepositoryCategory.THEME)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -126,6 +126,6 @@ async def test_unregister_repository(
 async def test_active_categories(store: HacsBase) -> None:
     """Test which categories are active for the default options."""
     assert store.common.categories == DEFAULT_CATEGORIES | {
-        HacsCategory.APPDAEMON,
-        HacsCategory.THEME,
+        RepositoryCategory.APPDAEMON,
+        RepositoryCategory.THEME,
     }

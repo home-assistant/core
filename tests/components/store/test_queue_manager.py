@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.store.exceptions import HacsExecutionStillInProgress
+from homeassistant.components.store.exceptions import ExecutionInProgressError
 from homeassistant.components.store.utils.queue_manager import QueueManager
 from homeassistant.core import HomeAssistant
 
@@ -42,5 +42,5 @@ async def test_queue_manager_already_running(hass: HomeAssistant) -> None:
     queue_manager = QueueManager(hass=hass)
     queue_manager.running = True
 
-    with pytest.raises(HacsExecutionStillInProgress):
+    with pytest.raises(ExecutionInProgressError):
         await queue_manager.execute()

@@ -35,26 +35,25 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MAX_DOWNLOAD_SIZE, TV, URL_BASE
+from .const import DOMAIN, HACS_INTEGRATION_REPOSITORY, MAX_DOWNLOAD_SIZE, TV, URL_BASE
 from .coordinator import HacsUpdateCoordinator
 from .data_client import HacsDataClient
 from .enums import (
-    HacsCategory,
-    HacsDisabledReason,
-    HacsDispatchEvent,
-    HacsGitHubRepo,
-    HacsStage,
+    DisabledReason,
     LovelaceMode,
+    RepositoryCategory,
+    StoreSignal,
+    StoreStage,
 )
 from .exceptions import (
-    AppRepositoryException,
-    HacsException,
-    HacsExecutionStillInProgress,
-    HacsExpectedException,
-    HacsNotModifiedException,
-    HacsRepositoryArchivedException,
-    HacsRepositoryExistException,
-    HomeAssistantCoreRepositoryException,
+    AppRepositoryError,
+    CoreRepositoryError,
+    ExecutionInProgressError,
+    ExpectedError,
+    NotModifiedError,
+    RepositoryArchivedError,
+    RepositoryExistsError,
+    StoreError,
 )
 from .repositories import REPOSITORY_CLASSES
 from .repositories.base import HACS_MANIFEST_KEYS_TO_EXPORT, REPOSITORY_KEYS_TO_EXPORT
@@ -135,7 +134,7 @@ class HacsConfiguration:
     def update_from_dict(self, data: dict[str, Any]) -> None:
         """Set attributes from dicts."""
         if not isinstance(data, dict):
-            raise HacsException("Configuration is not valid.")
+            raise StoreError("Configuration is not valid.")
 
         for key, value in data.items():
             if key in {"experimental", "netdaemon", "release_limit", "debug"}:
@@ -155,7 +154,7 @@ class HacsCore:
 class HacsCommon:
     """Common for HACS."""
 
-    categories: set[HacsCategory] = field(default_factory=set)
+    categories: set[RepositoryCategory] = field(default_factory=set)
     renamed_repositories: dict[str, str] = field(default_factory=dict)
     archived_repositories: set[str] = field(default_factory=set)
     ignored_repositories: set[str] = field(default_factory=set)
@@ -177,9 +176,9 @@ class HacsStatus:
 class HacsSystem:
     """HACS System info."""
 
-    disabled_reason: HacsDisabledReason | None = None
+    disabled_reason: DisabledReason | None = None
     running: bool = False
-    stage: HacsStage = HacsStage.SETUP
+    stage: StoreStage = StoreStage.SETUP
 
     @property
     def disabled(self) -> bool:
@@ -214,7 +213,7 @@ class HacsRepositories:
         """Return a list of downloaded repositories."""
         return [repo for repo in self._repositories if repo.data.installed]
 
-    def category_downloaded(self, category: HacsCategory) -> bool:
+    def category_downloaded(self, category: RepositoryCategory) -> bool:
         """Check if a given category has been downloaded."""
         for repository in self.list_downloaded:
             if repository.data.category == category:
@@ -361,7 +360,7 @@ class HacsBase:
     hass: HomeAssistant
     queue: QueueManager
     session: ClientSession
-    stage: HacsStage | None = None
+    stage: StoreStage | None = None
     version: AwesomeVersion
 
     def __init__(self) -> None:
@@ -376,7 +375,7 @@ class HacsBase:
         self.status = HacsStatus()
         self.system = HacsSystem()
 
-    def set_stage(self, stage: HacsStage | None) -> None:
+    def set_stage(self, stage: StoreStage | None) -> None:
         """Set HACS stage."""
         if stage and self.stage == stage:
             return
@@ -384,19 +383,19 @@ class HacsBase:
         self.stage = stage
         if stage is not None:
             self.log.info("Stage changed: %s", self.stage)
-            self.async_dispatch(HacsDispatchEvent.STAGE, {"stage": self.stage})
+            self.async_dispatch(StoreSignal.STAGE, {"stage": self.stage})
 
-    def disable_hacs(self, reason: HacsDisabledReason) -> None:
+    def disable_hacs(self, reason: DisabledReason) -> None:
         """Disable HACS."""
         if self.system.disabled_reason == reason:
             return
 
         self.system.disabled_reason = reason
-        if reason != HacsDisabledReason.REMOVED:
+        if reason != DisabledReason.REMOVED:
             self.log.error("Community store is disabled - %s", reason)
 
         if (
-            reason == HacsDisabledReason.INVALID_TOKEN
+            reason == DisabledReason.INVALID_TOKEN
             and (config_entry := self.configuration.config_entry) is not None
         ):
             self.hass.add_job(config_entry.async_start_reauth, self.hass)
@@ -407,7 +406,7 @@ class HacsBase:
             self.system.disabled_reason = None
             self.log.info("Community store is enabled")
 
-    def enable_hacs_category(self, category: HacsCategory) -> None:
+    def enable_hacs_category(self, category: RepositoryCategory) -> None:
         """Enable HACS category."""
         if category not in self.common.categories:
             self.log.info("Enable category: %s", category)
@@ -466,8 +465,8 @@ class HacsBase:
                 response.data.resources.core.remaining,
                 f"{reset.hour}:{reset.minute}:{reset.second}",
             )
-            self.disable_hacs(HacsDisabledReason.RATE_LIMIT)
-        except HacsException:
+            self.disable_hacs(DisabledReason.RATE_LIMIT)
+        except StoreError:
             self.log.exception("Could not get the GitHub API rate limit")
 
         return 0
@@ -503,10 +502,10 @@ class HacsBase:
         try:
             return await method(*args, **kwargs)
         except GitHubAuthenticationException as exception:
-            self.disable_hacs(HacsDisabledReason.INVALID_TOKEN)
+            self.disable_hacs(DisabledReason.INVALID_TOKEN)
             _exception = exception
         except GitHubRatelimitException as exception:
-            self.disable_hacs(HacsDisabledReason.RATE_LIMIT)
+            self.disable_hacs(DisabledReason.RATE_LIMIT)
             _exception = exception
         except GitHubNotModifiedException:
             raise
@@ -517,13 +516,13 @@ class HacsBase:
             _exception = exception
 
         if raise_exception and _exception is not None:
-            raise HacsException(_exception)
+            raise StoreError(_exception)
         return None
 
     async def async_register_repository(
         self,
         repository_full_name: str,
-        category: HacsCategory,
+        category: RepositoryCategory,
         *,
         check: bool = True,
         ref: str | None = None,
@@ -532,16 +531,16 @@ class HacsBase:
     ) -> list[str] | None:
         """Register a repository."""
         if repository_full_name in self.common.skip:
-            raise HacsExpectedException(f"Skipping {repository_full_name}")
+            raise ExpectedError(f"Skipping {repository_full_name}")
 
         if repository_full_name == "home-assistant/core":
-            raise HomeAssistantCoreRepositoryException
+            raise CoreRepositoryError
 
         if (
             repository_full_name == "home-assistant/addons"
             or repository_full_name.startswith("hassio-addons/")
         ):
-            raise AppRepositoryException
+            raise AppRepositoryError
 
         if category not in REPOSITORY_CLASSES:
             self.log.warning(
@@ -570,11 +569,11 @@ class HacsBase:
                         )
                     return repository.validate.errors
                 repository.logger.info("%s Registration completed", repository.string)
-            except HacsRepositoryExistException, HacsRepositoryArchivedException:
+            except RepositoryExistsError, RepositoryArchivedError:
                 return None
             except AIOGitHubAPIException as exception:
                 self.common.skip.add(repository.data.full_name)
-                raise HacsException(
+                raise StoreError(
                     f"Validation for {repository_full_name} failed with {exception}."
                 ) from exception
 
@@ -586,7 +585,7 @@ class HacsBase:
 
         elif self.hass is not None and check and repository.data.new:
             self.async_dispatch(
-                HacsDispatchEvent.REPOSITORY,
+                StoreSignal.REPOSITORY,
                 {
                     "action": "registration",
                     "repository": repository.data.full_name,
@@ -599,7 +598,7 @@ class HacsBase:
 
     async def startup_tasks(self, _: HomeAssistant | None = None) -> None:
         """Tasks that are started after setup."""
-        self.set_stage(HacsStage.STARTUP)
+        self.set_stage(StoreStage.STARTUP)
 
         if critical := await async_load_from_storage(self.hass, "critical"):
             for repo in critical:
@@ -654,19 +653,19 @@ class HacsBase:
         )
 
         self.status.startup = False
-        self.async_dispatch(HacsDispatchEvent.STATUS, {})
+        self.async_dispatch(StoreSignal.STATUS, {})
 
         await self.async_handle_removed_repositories()
         await self.async_get_all_category_repositories()
 
-        self.set_stage(HacsStage.RUNNING)
+        self.set_stage(StoreStage.RUNNING)
 
-        self.async_dispatch(HacsDispatchEvent.RELOAD, {"force": True})
+        self.async_dispatch(StoreSignal.RELOAD, {"force": True})
 
         await self.async_handle_critical_repositories()
         await self.async_process_queue()
 
-        self.async_dispatch(HacsDispatchEvent.STATUS, {})
+        self.async_dispatch(StoreSignal.STATUS, {})
 
     async def async_download_file(
         self,
@@ -699,14 +698,14 @@ class HacsBase:
                 # Make sure that we got a valid result
                 if request.status == 200:
                     if _declared_size(request.headers) > MAX_DOWNLOAD_SIZE:
-                        raise HacsException(  # noqa: TRY301 # handled below
+                        raise StoreError(  # noqa: TRY301 # handled below
                             f"{url} declares more than the "
                             f"{MAX_DOWNLOAD_SIZE} byte limit"
                         )
 
                     content = await request.read()
                     if len(content) > MAX_DOWNLOAD_SIZE:
-                        raise HacsException(  # noqa: TRY301 # handled below
+                        raise StoreError(  # noqa: TRY301 # handled below
                             f"{url} is larger than the {MAX_DOWNLOAD_SIZE} byte limit"
                         )
 
@@ -730,7 +729,7 @@ class HacsBase:
                     await asyncio.sleep(retry_after)
                     continue
 
-                raise HacsException(  # noqa: TRY301 # handled by the retry loop below
+                raise StoreError(  # noqa: TRY301 # handled by the retry loop below
                     f"Got status code {request.status} when trying to download {url}"
                 )
             except TimeoutError:
@@ -772,7 +771,7 @@ class HacsBase:
 
     @callback
     def async_dispatch(
-        self, signal: HacsDispatchEvent, data: dict[str, Any] | None = None
+        self, signal: StoreSignal, data: dict[str, Any] | None = None
     ) -> None:
         """Dispatch a signal with data."""
         async_dispatcher_send(self.hass, signal, data)
@@ -781,25 +780,25 @@ class HacsBase:
         """Set the active categories."""
         self.common.categories = set()
         for category in (
-            HacsCategory.INTEGRATION,
-            HacsCategory.PLUGIN,
-            HacsCategory.TEMPLATE,
+            RepositoryCategory.INTEGRATION,
+            RepositoryCategory.PLUGIN,
+            RepositoryCategory.TEMPLATE,
         ):
-            self.enable_hacs_category(HacsCategory(category))
+            self.enable_hacs_category(RepositoryCategory(category))
 
         if (
-            HacsCategory.PYTHON_SCRIPT in self.hass.config.components
-            or self.repositories.category_downloaded(HacsCategory.PYTHON_SCRIPT)
+            RepositoryCategory.PYTHON_SCRIPT in self.hass.config.components
+            or self.repositories.category_downloaded(RepositoryCategory.PYTHON_SCRIPT)
         ):
-            self.enable_hacs_category(HacsCategory.PYTHON_SCRIPT)
+            self.enable_hacs_category(RepositoryCategory.PYTHON_SCRIPT)
 
         if self.hass.services.has_service(
             "frontend", "reload_themes"
-        ) or self.repositories.category_downloaded(HacsCategory.THEME):
-            self.enable_hacs_category(HacsCategory.THEME)
+        ) or self.repositories.category_downloaded(RepositoryCategory.THEME):
+            self.enable_hacs_category(RepositoryCategory.THEME)
 
         if self.configuration.appdaemon:
-            self.enable_hacs_category(HacsCategory.APPDAEMON)
+            self.enable_hacs_category(RepositoryCategory.APPDAEMON)
 
     async def async_get_all_category_repositories(
         self, _: datetime | None = None
@@ -816,16 +815,16 @@ class HacsBase:
         )
 
     async def async_get_category_repositories_experimental(
-        self, category: HacsCategory
+        self, category: RepositoryCategory
     ) -> None:
         """Update all category repositories."""
         self.log.debug("Fetching updated content for %s", category)
         try:
             category_data = await self.data_client.get_data(category, validate=True)
-        except HacsNotModifiedException:
+        except NotModifiedError:
             self.log.debug("No updates for %s", category)
             return
-        except HacsException as exception:
+        except StoreError as exception:
             self.log.error("Could not update %s - %s", category, exception)
             return
 
@@ -833,7 +832,7 @@ class HacsBase:
         category_data = {
             repo_id: repo_data
             for repo_id, repo_data in category_data.items()
-            if repo_data["full_name"] != HacsGitHubRepo.INTEGRATION
+            if repo_data["full_name"] != HACS_INTEGRATION_REPOSITORY
         }
 
         await self.data.register_unknown_repositories(category_data, category)
@@ -863,7 +862,7 @@ class HacsBase:
         if category == "integration":
             self.status.inital_fetch_done = True
 
-        if self.stage == HacsStage.STARTUP:
+        if self.stage == StoreStage.STARTUP:
             for repository in self.repositories.list_all:
                 if (
                     repository.data.category == category
@@ -875,14 +874,14 @@ class HacsBase:
                     )
                     self.repositories.unregister(repository)
 
-        self.async_dispatch(HacsDispatchEvent.REPOSITORY, {})
+        self.async_dispatch(StoreSignal.REPOSITORY, {})
         self.coordinators[category].async_update_listeners()
 
     async def async_check_rate_limit(self, _: datetime | None = None) -> None:
         """Check rate limit."""
         if (
             not self.system.disabled
-            or self.system.disabled_reason != HacsDisabledReason.RATE_LIMIT
+            or self.system.disabled_reason != DisabledReason.RATE_LIMIT
         ):
             return
 
@@ -918,7 +917,7 @@ class HacsBase:
             if can_update != 0:
                 try:
                     await self.queue.execute(can_update)
-                except HacsExecutionStillInProgress:
+                except ExecutionInProgressError:
                     return
 
                 await _handle_queue()
@@ -938,7 +937,7 @@ class HacsBase:
             removed_repositories = await self.data_client.get_data(
                 "removed", validate=True
             )
-        except HacsException:
+        except StoreError:
             return
 
         for item in removed_repositories:
@@ -1041,9 +1040,9 @@ class HacsBase:
 
         try:
             critical = await self.data_client.get_data("critical", validate=True)
-        except GitHubNotModifiedException, HacsNotModifiedException:
+        except GitHubNotModifiedException, NotModifiedError:
             return
-        except HacsException:
+        except StoreError:
             pass
 
         if not critical:

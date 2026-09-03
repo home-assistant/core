@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
 
-from ..enums import HacsCategory, HacsDispatchEvent
-from ..exceptions import HacsException
+from ..enums import RepositoryCategory, StoreSignal
+from ..exceptions import StoreError
 from ..utils.decorator import concurrent
 from .base import HacsRepository
 
@@ -21,7 +21,7 @@ class HacsThemeRepository(HacsRepository):
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
-        self.data.category = HacsCategory.THEME
+        self.data.category = RepositoryCategory.THEME
         self.content.path.remote = "themes"
         self.content.path.local = self.localpath
         self.content.single = False
@@ -50,7 +50,7 @@ class HacsThemeRepository(HacsRepository):
                 compliant = True
                 break
         if not compliant:
-            raise HacsException(
+            raise StoreError(
                 f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
@@ -104,7 +104,7 @@ class HacsThemeRepository(HacsRepository):
         # Signal frontend to refresh
         if self.data.installed:
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY,
+                StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",

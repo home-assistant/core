@@ -8,10 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.store.base import HacsBase
-from homeassistant.components.store.exceptions import (
-    HacsException,
-    HacsNotModifiedException,
-)
+from homeassistant.components.store.exceptions import NotModifiedError, StoreError
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -90,7 +87,7 @@ async def test_request_exceptions(
         url, AiohttpClientMockResponse("get", url, exc=exception), keep=True
     )
 
-    with pytest.raises(HacsException, match=message):
+    with pytest.raises(StoreError, match=message):
         await store.data_client.get_repositories("integration")
 
 
@@ -101,18 +98,16 @@ async def test_request_exceptions(
         pytest.param(HTTPStatus.CREATED, does_not_raise(), id="201"),
         pytest.param(
             HTTPStatus.NOT_MODIFIED,
-            pytest.raises(HacsNotModifiedException),
+            pytest.raises(NotModifiedError),
             id="304",
         ),
-        pytest.param(HTTPStatus.BAD_REQUEST, pytest.raises(HacsException), id="400"),
-        pytest.param(HTTPStatus.UNAUTHORIZED, pytest.raises(HacsException), id="401"),
-        pytest.param(HTTPStatus.FORBIDDEN, pytest.raises(HacsException), id="403"),
-        pytest.param(
-            HTTPStatus.TOO_MANY_REQUESTS, pytest.raises(HacsException), id="429"
-        ),
+        pytest.param(HTTPStatus.BAD_REQUEST, pytest.raises(StoreError), id="400"),
+        pytest.param(HTTPStatus.UNAUTHORIZED, pytest.raises(StoreError), id="401"),
+        pytest.param(HTTPStatus.FORBIDDEN, pytest.raises(StoreError), id="403"),
+        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, pytest.raises(StoreError), id="429"),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
-            pytest.raises(HacsException),
+            pytest.raises(StoreError),
             id="500",
         ),
     ],
@@ -144,7 +139,7 @@ async def test_etag_is_sent_back(
         url, mocked_response(url, status=HTTPStatus.NOT_MODIFIED), keep=True
     )
 
-    with pytest.raises(HacsNotModifiedException):
+    with pytest.raises(NotModifiedError):
         await store.data_client.get_repositories("integration")
 
 

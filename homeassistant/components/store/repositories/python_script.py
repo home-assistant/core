@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING, override
 
-from ..enums import HacsCategory, HacsDispatchEvent
-from ..exceptions import HacsException
+from ..enums import RepositoryCategory, StoreSignal
+from ..exceptions import StoreError
 from ..utils.decorator import concurrent
 from .base import HacsRepository
 
@@ -21,7 +21,7 @@ class HacsPythonScriptRepository(HacsRepository):
         super().__init__(hacs=hacs)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
-        self.data.category = HacsCategory.PYTHON_SCRIPT
+        self.data.category = RepositoryCategory.PYTHON_SCRIPT
         self.content.path.remote = "python_scripts"
         self.content.path.local = self.localpath
         self.content.single = True
@@ -50,7 +50,7 @@ class HacsPythonScriptRepository(HacsRepository):
                 compliant = True
                 break
         if not compliant:
-            raise HacsException(
+            raise StoreError(
                 f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
@@ -88,7 +88,7 @@ class HacsPythonScriptRepository(HacsRepository):
                 compliant = True
                 break
         if not compliant:
-            raise HacsException(
+            raise StoreError(
                 f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
@@ -98,7 +98,7 @@ class HacsPythonScriptRepository(HacsRepository):
         # Signal frontend to refresh
         if self.data.installed:
             self.hacs.async_dispatch(
-                HacsDispatchEvent.REPOSITORY,
+                StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",

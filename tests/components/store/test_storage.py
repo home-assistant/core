@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.store.const import DOMAIN, VERSION_STORAGE
-from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.utils.storage import (
     STORAGE_CACHE_KEY,
     async_load_from_storage,
@@ -106,7 +106,7 @@ def test_synchronous_load_unreadable(hass: HomeAssistant) -> None:
             "homeassistant.components.store.utils.storage.json_util.load_json",
             side_effect=HomeAssistantError("Not valid JSON"),
         ),
-        pytest.raises(HacsException),
+        pytest.raises(StoreError),
     ):
         store.load()
 
@@ -131,7 +131,7 @@ async def test_remove_refuses_a_key_outside_the_storage(hass: HomeAssistant) -> 
             "homeassistant.components.store.utils.storage.StoreStorage.async_remove",
             return_value=AsyncMock(),
         ) as async_remove_mock,
-        pytest.raises(HacsException, match="is not inside"),
+        pytest.raises(StoreError, match="is not inside"),
     ):
         await async_remove_storage(hass, "hacs/../../secrets.yaml")
 
