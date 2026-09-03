@@ -602,12 +602,7 @@ def fake_q10_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
 
 @pytest.fixture
 def fake_zeo_without_countdown(fake_devices: list[FakeDevice]) -> FakeDevice:
-    """Add a Zeo washing machine whose schema lacks the countdown data point.
-
-    The device is registered in the mock data with a product schema that does
-    not advertise DP 217 (countdown), so its coordinator omits the countdown
-    protocol and the delay-start number entity should not be created.
-    """
+    """Add a Zeo washing machine whose schema lacks the countdown data point."""
     fake_device = FakeDevice(
         device_info=deepcopy(ZEO_NO_COUNTDOWN_DEVICE),
         product=deepcopy(ZEO_NO_COUNTDOWN_PRODUCT),
