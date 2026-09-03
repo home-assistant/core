@@ -450,15 +450,20 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             tcv.number(self, CONF_CURRENT_TEMPERATURE),
         )
 
-        for option, attr in (
-            (CONF_TARGET_TEMPERATURE, "_attr_target_temperature"),
-            (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low"),
-            (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high"),
+        for option, attr, on_update in (
+            (
+                CONF_TARGET_TEMPERATURE,
+                "_attr_target_temperature",
+                self._update_target_temperature,
+            ),
+            (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low", None),
+            (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high", None),
         ):
             self.setup_template(
                 option,
                 attr,
                 tcv.number(self, option, self._attr_min_temp, self._attr_max_temp),
+                on_update=on_update,
             )
 
         # Humidities
