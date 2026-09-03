@@ -7,11 +7,19 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.hue.v2.select import HueSceneSelectEntity
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
+
+TEST_ROOM_ID = "6ddc9066-7e7d-4a03-a773-c73937968296"
+TEST_ZONE_ID = "7cee478d-6455-483a-9e32-9f9fdcbcc4f6"
+TEST_ROOM_SCENE_ENTITY = "select.test_room_test_room_scene"
+DUPLICATE_SCENE_ID = "22222222-3333-4444-8555-666666666666"
+LITERAL_SUFFIX_SCENE_ID = "33333333-4444-4555-8666-777777777777"
 
 
 async def test_scene_select_initial_state(
@@ -178,8 +186,27 @@ async def test_scene_select_disambiguates_duplicate_names(
     assert duplicate_scene_id in last_request["path"]
 
 
+@pytest.mark.parametrize(
+    ("option", "expected_scene_id"),
+    [
+        pytest.param(
+            "Regular Test Scene",
+            DUPLICATE_SCENE_ID,
+            id="duplicate_keeps_bare_name",
+        ),
+        pytest.param(
+            "Regular Test Scene (2) (2)",
+            LITERAL_SUFFIX_SCENE_ID,
+            id="literal_name_is_disambiguated",
+        ),
+    ],
+)
 async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
-    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    option: str,
+    expected_scene_id: str,
 ) -> None:
     """Test a generated duplicate label cannot shadow a literal scene name."""
     test_data = deepcopy(v2_resources_test_data)
@@ -191,14 +218,12 @@ async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
     )
 
     duplicate_scene = deepcopy(regular_scene)
-    duplicate_scene_id = "22222222-3333-4444-8555-666666666666"
-    duplicate_scene["id"] = duplicate_scene_id
+    duplicate_scene["id"] = DUPLICATE_SCENE_ID
     duplicate_scene["status"]["active"] = "inactive"
     test_data.append(duplicate_scene)
 
     literal_suffix_scene = deepcopy(regular_scene)
-    literal_suffix_scene_id = "33333333-4444-4555-8666-777777777777"
-    literal_suffix_scene["id"] = literal_suffix_scene_id
+    literal_suffix_scene["id"] = LITERAL_SUFFIX_SCENE_ID
     literal_suffix_scene["metadata"]["name"] = "Regular Test Scene (2)"
     literal_suffix_scene["status"]["active"] = "inactive"
     test_data.append(literal_suffix_scene)
@@ -206,7 +231,7 @@ async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
     await mock_bridge_v2.api.load_test_data(test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
-    state = hass.states.get("select.test_room_test_room_scene")
+    state = hass.states.get(TEST_ROOM_SCENE_ENTITY)
     assert state is not None
     assert state.attributes["options"] == [
         "Regular Test Scene",
@@ -215,18 +240,14 @@ async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
         "Smart Test Scene",
     ]
 
-    for option, scene_id in (
-        ("Regular Test Scene", duplicate_scene_id),
-        ("Regular Test Scene (2) (2)", literal_suffix_scene_id),
-    ):
-        mock_bridge_v2.mock_requests.clear()
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {"entity_id": "select.test_room_test_room_scene", "option": option},
-            blocking=True,
-        )
-        assert scene_id in mock_bridge_v2.mock_requests[0]["path"]
+    mock_bridge_v2.mock_requests.clear()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": TEST_ROOM_SCENE_ENTITY, "option": option},
+        blocking=True,
+    )
+    assert expected_scene_id in mock_bridge_v2.mock_requests[0]["path"]
 
 
 async def test_scene_select_skips_rebuild_on_status_update_for_duplicate_names(
@@ -509,20 +530,117 @@ async def test_scene_select_options(
 
 
 async def test_scene_select_removed_when_group_deleted(
-    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test that deleting a Hue group removes its scene select entity."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
-    entity_id = "select.test_room_test_room_scene"
-    assert hass.states.get(entity_id) is not None
+    assert hass.states.get(TEST_ROOM_SCENE_ENTITY) is not None
+    assert entity_registry.async_get(TEST_ROOM_SCENE_ENTITY) is not None
 
     mock_bridge_v2.api.emit_event(
         "delete",
-        {"type": "room", "id": "6ddc9066-7e7d-4a03-a773-c73937968296"},
+        {"type": "room", "id": TEST_ROOM_ID},
     )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
+    assert hass.states.get(TEST_ROOM_SCENE_ENTITY) is None
+    assert entity_registry.async_get(TEST_ROOM_SCENE_ENTITY) is None
+
+
+@pytest.mark.parametrize(
+    ("source_id", "new_id", "new_name", "entity_id"),
+    [
+        pytest.param(
+            TEST_ROOM_ID,
+            "aaaaaaaa-bbbb-4ccc-8ddd-111111111111",
+            "New Room",
+            "select.new_room_new_room_scene",
+            id="room",
+        ),
+        pytest.param(
+            TEST_ZONE_ID,
+            "aaaaaaaa-bbbb-4ccc-8ddd-222222222222",
+            "New Zone",
+            "select.new_zone_scene",
+            id="zone",
+        ),
+    ],
+)
+async def test_scene_select_created_when_group_added(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    source_id: str,
+    new_id: str,
+    new_name: str,
+    entity_id: str,
+) -> None:
+    """Test that adding a Hue group at runtime creates its scene select entity."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
     assert hass.states.get(entity_id) is None
+
+    new_group = deepcopy(
+        next(
+            resource
+            for resource in v2_resources_test_data
+            if resource["id"] == source_id
+        )
+    )
+    new_group["id"] = new_id
+    new_group["metadata"]["name"] = new_name
+    mock_bridge_v2.api.emit_event("add", new_group)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["options"] == []
+
+
+async def test_scene_select_refreshes_options_missed_before_subscribe(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test options include a scene added after init and before subscribe."""
+    test_data = deepcopy(v2_resources_test_data)
+    regular_scene = next(
+        resource
+        for resource in test_data
+        if resource["type"] == "scene"
+        and resource["metadata"]["name"] == "Regular Test Scene"
+    )
+    late_scene = deepcopy(regular_scene)
+    late_scene["id"] = "44444444-5555-4666-8777-888888888888"
+    late_scene["metadata"]["name"] = "Late scene"
+    late_scene["status"]["active"] = "inactive"
+
+    original_added_to_hass = HueSceneSelectEntity.async_added_to_hass
+
+    async def async_added_to_hass_with_late_scene(
+        self: HueSceneSelectEntity,
+    ) -> None:
+        if self.unique_id == f"{TEST_ROOM_ID}_scene_select":
+            mock_bridge_v2.api.emit_event("add", late_scene)
+        await original_added_to_hass(self)
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    with patch.object(
+        HueSceneSelectEntity,
+        "async_added_to_hass",
+        async_added_to_hass_with_late_scene,
+    ):
+        await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    state = hass.states.get(TEST_ROOM_SCENE_ENTITY)
+    assert state is not None
+    assert state.attributes["options"] == [
+        "Late scene",
+        "Regular Test Scene",
+        "Smart Test Scene",
+    ]
