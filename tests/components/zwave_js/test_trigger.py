@@ -11,13 +11,13 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.components.zwave_js.helpers import (
+    async_bypass_dynamic_config_validation,
+    get_device_id,
+)
 from homeassistant.components.zwave_js.trigger import TRIGGERS
 from homeassistant.components.zwave_js.triggers.event import (
     _OPTIONS_SCHEMA_DICT as EVENT_OPTIONS_SCHEMA_DICT,
-)
-from homeassistant.components.zwave_js.triggers.trigger_helpers import (
-    async_bypass_dynamic_config_validation,
 )
 from homeassistant.components.zwave_js.triggers.value_updated import (
     _OPTIONS_SCHEMA_DICT as VALUE_UPDATED_OPTIONS_SCHEMA_DICT,

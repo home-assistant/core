@@ -34,6 +34,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_TYPE,
@@ -703,3 +704,36 @@ def async_wait_for_driver_ready_event(
 
 class CannotConnect(HomeAssistantError):
     """Indicate connection error."""
+
+
+@callback
+def async_bypass_dynamic_config_validation(
+    hass: HomeAssistant, config: ConfigType
+) -> bool:
+    """Return whether target zwave_js config entry is not loaded."""
+    # If the config entry is not loaded for a zwave_js device, entity, or the
+    # config entry ID provided, we can't perform dynamic validation
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    trigger_devices = config.get(ATTR_DEVICE_ID, [])
+    trigger_entities = config.get(ATTR_ENTITY_ID, [])
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.state is not ConfigEntryState.LOADED and (
+            entry.entry_id == config.get(ATTR_CONFIG_ENTRY_ID)
+            or any(
+                device.id in trigger_devices
+                for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+            )
+            or (
+                entity.entity_id in trigger_entities
+                for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+            )
+        ):
+            return True
+
+        # The driver may not be ready when the config entry is loaded.
+        client = entry.runtime_data.client
+        if client.driver is None:
+            return True
+
+    return False
