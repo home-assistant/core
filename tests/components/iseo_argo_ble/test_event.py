@@ -1,5 +1,6 @@
 """Test the ISEO Argo BLE access log event entity."""
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
@@ -16,14 +17,24 @@ from homeassistant.components.iseo_argo_ble.lock import (
     SERVICE_READ_ACCESS_LOG,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 ENTITY_ID = "event.iseo_lock_access_log"
 LOCK_ENTITY_ID = "lock.iseo_lock"
@@ -69,6 +80,16 @@ async def _open_the_door(
     freezer.tick(timedelta(seconds=_ACCESS_LOG_DEBOUNCE))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+
+async def _call_read_action(hass: HomeAssistant) -> None:
+    """Call the read access log action on the lock."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_READ_ACCESS_LOG,
+        {ATTR_ENTITY_ID: LOCK_ENTITY_ID},
+        blocking=True,
+    )
 
 
 @pytest.mark.usefixtures("mock_iseo_client", "mock_derive_private_key")
@@ -135,12 +156,19 @@ async def test_only_the_newest_of_each_kind_is_reported(
         _log_entry(CODE_IGNORED, base + timedelta(minutes=3)),
     ]
 
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
     await _open_the_door(hass, freezer, mock_iseo_client)
 
-    state = hass.states.get(ENTITY_ID)
-    # Reported oldest first, so the entity settles on the most recent entry.
-    assert state.attributes[ATTR_EVENT_TYPE] == "opened"
-    assert state.attributes["opened_by"] == "Bob"
+    reported = [
+        event.data["new_state"].attributes[ATTR_EVENT_TYPE]
+        for event in events
+        if event.data["entity_id"] == ENTITY_ID
+    ]
+    # The wrong PIN came first, then the newest of the two openings. Alice's
+    # opening and the entry that is not an access event are both dropped.
+    assert reported == ["access_denied", "opened"]
+    assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Bob"
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
@@ -332,6 +360,67 @@ async def test_read_is_skipped_when_the_lock_goes_out_of_range(
 
     mock_iseo_client.gw_read_unread_logs.assert_not_called()
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_action_joins_a_read_already_running(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the action joins a background read instead of starting a second.
+
+    Reading empties the log, so a second read would spend another Bluetooth
+    session to find nothing left.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    release = asyncio.Event()
+    opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
+
+    async def _blocked_read() -> list[LogEntry]:
+        await release.wait()
+        return [_log_entry(CODE_OPENED, opened_at, extra_description="Federico")]
+
+    mock_iseo_client.gw_read_unread_logs.side_effect = _blocked_read
+
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=_ACCESS_LOG_DEBOUNCE))
+    async_fire_time_changed(hass)
+    while not mock_iseo_client.gw_read_unread_logs.called:
+        await asyncio.sleep(0)
+
+    action = hass.async_create_task(_call_read_action(hass))
+    await asyncio.sleep(0)
+    release.set()
+    await action
+    await hass.async_block_till_done()
+
+    mock_iseo_client.gw_read_unread_logs.assert_called_once()
+    assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Federico"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [IseoAuthError("rejected"), IseoConnectionError("no link"), TimeoutError],
+)
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_action_raises_when_the_read_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test the action reports a failed read rather than looking successful."""
+    await setup_integration(hass, mock_config_entry)
+    mock_iseo_client.gw_read_unread_logs.side_effect = error
+
+    with pytest.raises(HomeAssistantError):
+        await _call_read_action(hass)
 
 
 @pytest.mark.parametrize(

@@ -310,11 +310,31 @@ class IseoLockEntity(LockEntity):
 
     @callback
     def _start_access_log_read(self, _now: datetime) -> None:
-        """Debounce elapsed — read the log, unless a read is already running."""
+        """Debounce elapsed — read the log in the background."""
         self._access_log_unsub = None
-        if self._access_log_task and not self._access_log_task.done():
-            return
-        self._access_log_task = self.hass.async_create_task(self._async_read_log())
+        self.hass.async_create_task(self._async_background_read())
+
+    def _async_shared_read(self) -> asyncio.Task[None]:
+        """Return the read already running, or start one.
+
+        Every caller joins the same read. Reading is destructive, so a second
+        one would spend another BLE session to find the log already emptied by
+        the first.
+        """
+        if self._access_log_task is None or self._access_log_task.done():
+            self._access_log_task = self.hass.async_create_task(self._async_read_log())
+        return self._access_log_task
+
+    async def _async_background_read(self) -> None:
+        """Read the log without troubling anyone if it fails.
+
+        Nothing is lost: a failed read leaves the entries on the lock, and the
+        next read picks them up.
+        """
+        try:
+            await self._async_shared_read()
+        except HomeAssistantError as err:
+            _LOGGER.debug("Could not read the access log: %s", err)
 
     async def async_read_access_log(self) -> None:
         """Read the lock's unread access log now.
@@ -325,14 +345,7 @@ class IseoLockEntity(LockEntity):
         if self._access_log_unsub is not None:
             self._access_log_unsub()
             self._access_log_unsub = None
-        if not async_ble_device_from_address(
-            self.hass, self._entry.data[CONF_ADDRESS], connectable=True
-        ):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
-        await self._async_read_log()
+        await self._async_shared_read()
 
     async def _async_read_log(self) -> None:
         """Drain the unread access log and report what it holds.
@@ -340,21 +353,32 @@ class IseoLockEntity(LockEntity):
         Reading is destructive — the lock marks the entries read — so every
         entry is only ever seen once, by whichever read gets there first.
         """
+        address = self._entry.data[CONF_ADDRESS]
         if not (
             ble_device := async_ble_device_from_address(
-                self.hass, self._entry.data[CONF_ADDRESS], connectable=True
+                self.hass, address, connectable=True
             )
         ):
-            _LOGGER.debug("No BLE device available to read the access log")
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"address": address},
+            )
 
         try:
             async with self._ble_lock:
                 self.client.update_ble_device(ble_device)
                 entries = await self.client.gw_read_unread_logs()
-        except (TimeoutError, IseoConnectionError, IseoAuthError, OSError) as exc:
-            _LOGGER.debug("Could not read the access log: %s", exc)
-            return
+        except IseoAuthError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="lock_rejected_identity",
+            ) from err
+        except (TimeoutError, IseoConnectionError, OSError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         self._report_log_entries(entries)
 
