@@ -42,7 +42,7 @@
         "name": "Demand for cooling from cooling curve"
       },
       "cooling_start_condition_dtc": {
-        "name": "No cooling related faults"
+        "name": "No cooling-related faults"
       },
       "cooling_start_condition_exponential_backoff": {
         "name": "No cooling back-off waiting time"

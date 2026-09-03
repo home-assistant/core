@@ -58,13 +58,8 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
 def _cooling_wait_until(status: HeatPump) -> datetime | None:
     """Return when the wait after the last cooling cycle runs out.
 
-    Only while the heat pump reports it is still waiting, since the moment is the
-    last cooling cycle plus the wait and so lies in the past once it has passed.
-
-    It says when the wait ends, not when cooling starts. The other start
-    conditions have to be met as well, which can only push a cycle out further.
-    The wait itself is not exact either: owners have measured cycles starting
-    before this moment, so it is not a prediction of when cooling resumes.
+    Only while the heat pump says it is still waiting, as the moment is the last
+    cooling cycle plus the wait and so lies in the past once the wait is over.
     """
     conditions = status.cooling_start_conditions
     if conditions is None or conditions["exponential_backoff"]:

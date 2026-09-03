@@ -4,25 +4,13 @@
     'heat_pumps': list([
       dict({
         'energy': dict({
-          'cooling_pause_reason': 4,
-          'cooling_start_conditions': 2043,
-          'cooling_stop_reason': 0,
-          'current_control_method': 4,
           'heat_pump_id': '**REDACTED**',
-          'state': 70,
-          't_water_in': 11,
           'total_ein_heating': 12345,
         }),
         'has_dhw': True,
         'logs': dict({
-          'cooling_pause_reason': 4,
-          'cooling_start_conditions': 2043,
-          'cooling_stop_reason': 0,
-          'current_control_method': 4,
           'heat_pump_id': '**REDACTED**',
-          'state': 70,
           't_water_in': 11,
-          'total_ein_heating': 12345,
         }),
         'model': 'Test Model',
       }),
