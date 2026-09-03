@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "auth_error": "Authentication error, please try again",
       "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -262,6 +261,9 @@
   "exceptions": {
     "invalid_username": {
       "message": "The username {username} does not exist on the Music Assistant server."
+    },
+    "tts_entity_not_available": {
+      "message": "The text-to-speech entity {entity_id} is not available."
     }
   },
   "issues": {
@@ -387,12 +389,20 @@
           "description": "Use a forced volume level for the announcement. Omit to use player default.",
           "name": "Announce volume"
         },
+        "message": {
+          "description": "Text to announce, spoken by the selected text-to-speech entity. Provide either a message or a URL.",
+          "name": "Message"
+        },
         "pre_announce_url": {
           "description": "URL to the pre-announcement sound.",
           "name": "Pre-announce URL"
         },
+        "tts_entity_id": {
+          "description": "Text-to-speech entity that speaks the message. Required when a message is given.",
+          "name": "Text-to-speech entity"
+        },
         "url": {
-          "description": "URL to the notification sound.",
+          "description": "URL to the notification sound. Provide either a message or a URL.",
           "name": "URL"
         },
         "use_pre_announce": {

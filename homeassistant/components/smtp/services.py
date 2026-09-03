@@ -18,6 +18,7 @@ from .const import (
     ATTR_FILENAME,
     ATTR_HTML,
     ATTR_MEDIA_SOURCE,
+    ATTR_PRIORITY,
     DOMAIN,
 )
 
@@ -39,6 +40,9 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
                     }
                 )
             ],
+        ),
+        vol.Optional(ATTR_PRIORITY): vol.In(
+            ["highest", "high", "normal", "low", "lowest"]
         ),
     }
 )

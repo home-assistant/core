@@ -203,6 +203,9 @@
     "connection_initialization_failed": {
       "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
     },
+    "missing_alarm_access_code": {
+      "message": "Cannot disarm the alarm panel because no user code was provided."
+    },
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
     },

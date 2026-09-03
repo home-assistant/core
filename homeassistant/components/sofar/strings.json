@@ -1,13 +1,27 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please reconfigure the same inverter you originally set up."
     },
     "error": {
       "cannot_connect": "Failed to connect: {error}",
       "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "[%key:component::sofar::config::step::user::data_description::host%]",
+          "port": "[%key:component::sofar::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::sofar::config::step::user::data_description::unit_id%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -23,7 +37,99 @@
       }
     }
   },
+  "device": {
+    "battery": {
+      "name": "Battery {number}"
+    },
+    "pv_string": {
+      "name": "PV string {number}"
+    }
+  },
   "entity": {
+    "binary_sensor": {
+      "fault_ac_output": {
+        "name": "AC output fault"
+      },
+      "fault_arc_fault": {
+        "name": "Arc fault (AFCI)"
+      },
+      "fault_battery": {
+        "name": "Battery fault"
+      },
+      "fault_battery_pack": {
+        "name": "Battery pack communication fault"
+      },
+      "fault_combiner_box": {
+        "name": "Combiner box fault"
+      },
+      "fault_communication": {
+        "name": "Communication fault"
+      },
+      "fault_dc_bus": {
+        "name": "DC bus fault"
+      },
+      "fault_derating": {
+        "name": "Derating"
+      },
+      "fault_fan": {
+        "name": "Fan fault"
+      },
+      "fault_grid": {
+        "name": "Grid fault"
+      },
+      "fault_input_fuse": {
+        "name": "Input fuse open"
+      },
+      "fault_insulation": {
+        "name": "Insulation fault"
+      },
+      "fault_internal": {
+        "name": "Internal fault"
+      },
+      "fault_pv": {
+        "name": "PV fault"
+      },
+      "fault_shutdown": {
+        "name": "Shutdown"
+      },
+      "fault_string_fuse": {
+        "name": "String fuse open"
+      },
+      "fault_thermal": {
+        "name": "Thermal fault"
+      }
+    },
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
+    "select": {
+      "charger_use_mode": {
+        "name": "Charger use mode",
+        "state": {
+          "feed_in_priority_mode": "Feed-in priority mode",
+          "generator_mode": "Generator mode",
+          "off_grid_mode": "Off-grid mode",
+          "passive_mode": "Passive mode",
+          "peak_cut_mode": "Peak cut mode",
+          "self_use": "Self use",
+          "time_of_use": "Time of use",
+          "timing_mode": "Timing mode"
+        }
+      },
+      "eps_control": {
+        "name": "EPS mode",
+        "state": {
+          "turn_off": "Turn off",
+          "turn_on_enable_cold_start": "Turn on, enable cold start",
+          "turn_on_prohibit_cold_start": "Turn on, prohibit cold start"
+        }
+      }
+    },
     "sensor": {
       "active_power_load_sys": {
         "name": "Active power load system"
@@ -148,54 +254,6 @@
       "bat_config_voltage_float": {
         "name": "Battery config lead acid float voltage"
       },
-      "battery_charge_cycle_1": {
-        "name": "Battery charge cycle 1"
-      },
-      "battery_charge_cycle_2": {
-        "name": "Battery charge cycle 2"
-      },
-      "battery_charge_cycle_3": {
-        "name": "Battery charge cycle 3"
-      },
-      "battery_charge_cycle_4": {
-        "name": "Battery charge cycle 4"
-      },
-      "battery_charge_cycle_5": {
-        "name": "Battery charge cycle 5"
-      },
-      "battery_charge_cycle_6": {
-        "name": "Battery charge cycle 6"
-      },
-      "battery_charge_cycle_7": {
-        "name": "Battery charge cycle 7"
-      },
-      "battery_charge_cycle_8": {
-        "name": "Battery charge cycle 8"
-      },
-      "battery_current_1": {
-        "name": "Battery current 1"
-      },
-      "battery_current_2": {
-        "name": "Battery current 2"
-      },
-      "battery_current_3": {
-        "name": "Battery current 3"
-      },
-      "battery_current_4": {
-        "name": "Battery current 4"
-      },
-      "battery_current_5": {
-        "name": "Battery current 5"
-      },
-      "battery_current_6": {
-        "name": "Battery current 6"
-      },
-      "battery_current_7": {
-        "name": "Battery current 7"
-      },
-      "battery_current_8": {
-        "name": "Battery current 8"
-      },
       "battery_input_energy_today": {
         "name": "Battery input energy today"
       },
@@ -208,134 +266,20 @@
       "battery_output_energy_total": {
         "name": "Battery output energy total"
       },
-      "battery_power_1": {
-        "name": "Battery power 1"
-      },
-      "battery_power_2": {
-        "name": "Battery power 2"
-      },
-      "battery_power_3": {
-        "name": "Battery power 3"
-      },
-      "battery_power_4": {
-        "name": "Battery power 4"
-      },
-      "battery_power_5": {
-        "name": "Battery power 5"
-      },
-      "battery_power_6": {
-        "name": "Battery power 6"
-      },
-      "battery_power_7": {
-        "name": "Battery power 7"
-      },
-      "battery_power_8": {
-        "name": "Battery power 8"
-      },
       "battery_power_total": {
         "name": "Battery power total"
-      },
-      "battery_state_of_charge_1": {
-        "name": "Battery state of charge 1"
-      },
-      "battery_state_of_charge_2": {
-        "name": "Battery state of charge 2"
-      },
-      "battery_state_of_charge_3": {
-        "name": "Battery state of charge 3"
-      },
-      "battery_state_of_charge_4": {
-        "name": "Battery state of charge 4"
-      },
-      "battery_state_of_charge_5": {
-        "name": "Battery state of charge 5"
-      },
-      "battery_state_of_charge_6": {
-        "name": "Battery state of charge 6"
-      },
-      "battery_state_of_charge_7": {
-        "name": "Battery state of charge 7"
-      },
-      "battery_state_of_charge_8": {
-        "name": "Battery state of charge 8"
       },
       "battery_state_of_charge_total": {
         "name": "Battery state of charge total"
       },
-      "battery_state_of_health_1": {
-        "name": "Battery state of health 1"
-      },
-      "battery_state_of_health_2": {
-        "name": "Battery state of health 2"
-      },
-      "battery_state_of_health_3": {
-        "name": "Battery state of health 3"
-      },
-      "battery_state_of_health_4": {
-        "name": "Battery state of health 4"
-      },
-      "battery_state_of_health_5": {
-        "name": "Battery state of health 5"
-      },
-      "battery_state_of_health_6": {
-        "name": "Battery state of health 6"
-      },
-      "battery_state_of_health_7": {
-        "name": "Battery state of health 7"
-      },
-      "battery_state_of_health_8": {
-        "name": "Battery state of health 8"
-      },
       "battery_state_of_health_total": {
         "name": "Battery state of health total"
       },
-      "battery_temperature_1": {
-        "name": "Battery temperature 1"
+      "charge_cycle": {
+        "name": "Charge cycle"
       },
-      "battery_temperature_2": {
-        "name": "Battery temperature 2"
-      },
-      "battery_temperature_3": {
-        "name": "Battery temperature 3"
-      },
-      "battery_temperature_4": {
-        "name": "Battery temperature 4"
-      },
-      "battery_temperature_5": {
-        "name": "Battery temperature 5"
-      },
-      "battery_temperature_6": {
-        "name": "Battery temperature 6"
-      },
-      "battery_temperature_7": {
-        "name": "Battery temperature 7"
-      },
-      "battery_temperature_8": {
-        "name": "Battery temperature 8"
-      },
-      "battery_voltage_1": {
-        "name": "Battery voltage 1"
-      },
-      "battery_voltage_2": {
-        "name": "Battery voltage 2"
-      },
-      "battery_voltage_3": {
-        "name": "Battery voltage 3"
-      },
-      "battery_voltage_4": {
-        "name": "Battery voltage 4"
-      },
-      "battery_voltage_5": {
-        "name": "Battery voltage 5"
-      },
-      "battery_voltage_6": {
-        "name": "Battery voltage 6"
-      },
-      "battery_voltage_7": {
-        "name": "Battery voltage 7"
-      },
-      "battery_voltage_8": {
-        "name": "Battery voltage 8"
+      "current": {
+        "name": "Current"
       },
       "current_output_l1": {
         "name": "Current output L1"
@@ -457,16 +401,16 @@
       "offgrid_frequency": {
         "name": "Off-grid frequency"
       },
-      "offgrid_loadpeakratio": {
+      "offgrid_load_peak_ratio": {
         "name": "Off-grid load peak ratio"
       },
-      "offgrid_loadpeakratio_l1": {
+      "offgrid_load_peak_ratio_l1": {
         "name": "Off-grid load peak ratio L1"
       },
-      "offgrid_loadpeakratio_l2": {
+      "offgrid_load_peak_ratio_l2": {
         "name": "Off-grid load peak ratio L2"
       },
-      "offgrid_loadpeakratio_l3": {
+      "offgrid_load_peak_ratio_l3": {
         "name": "Off-grid load peak ratio L3"
       },
       "offgrid_reactive_power_output": {
@@ -502,6 +446,9 @@
       "passive_eps_wait_time": {
         "name": "EPS wait time"
       },
+      "power": {
+        "name": "Power"
+      },
       "power_factor_output_l1": {
         "name": "Power factor output L1"
       },
@@ -520,98 +467,8 @@
       "power_factor_pcc_l3": {
         "name": "Power factor PCC L3"
       },
-      "pv_current_1": {
-        "name": "PV current 1"
-      },
-      "pv_current_10": {
-        "name": "PV current 10"
-      },
-      "pv_current_2": {
-        "name": "PV current 2"
-      },
-      "pv_current_3": {
-        "name": "PV current 3"
-      },
-      "pv_current_4": {
-        "name": "PV current 4"
-      },
-      "pv_current_5": {
-        "name": "PV current 5"
-      },
-      "pv_current_6": {
-        "name": "PV current 6"
-      },
-      "pv_current_7": {
-        "name": "PV current 7"
-      },
-      "pv_current_8": {
-        "name": "PV current 8"
-      },
-      "pv_current_9": {
-        "name": "PV current 9"
-      },
-      "pv_power_1": {
-        "name": "PV power 1"
-      },
-      "pv_power_10": {
-        "name": "PV power 10"
-      },
-      "pv_power_2": {
-        "name": "PV power 2"
-      },
-      "pv_power_3": {
-        "name": "PV power 3"
-      },
-      "pv_power_4": {
-        "name": "PV power 4"
-      },
-      "pv_power_5": {
-        "name": "PV power 5"
-      },
-      "pv_power_6": {
-        "name": "PV power 6"
-      },
-      "pv_power_7": {
-        "name": "PV power 7"
-      },
-      "pv_power_8": {
-        "name": "PV power 8"
-      },
-      "pv_power_9": {
-        "name": "PV power 9"
-      },
       "pv_power_total": {
         "name": "PV power total"
-      },
-      "pv_voltage_1": {
-        "name": "PV voltage 1"
-      },
-      "pv_voltage_10": {
-        "name": "PV voltage 10"
-      },
-      "pv_voltage_2": {
-        "name": "PV voltage 2"
-      },
-      "pv_voltage_3": {
-        "name": "PV voltage 3"
-      },
-      "pv_voltage_4": {
-        "name": "PV voltage 4"
-      },
-      "pv_voltage_5": {
-        "name": "PV voltage 5"
-      },
-      "pv_voltage_6": {
-        "name": "PV voltage 6"
-      },
-      "pv_voltage_7": {
-        "name": "PV voltage 7"
-      },
-      "pv_voltage_8": {
-        "name": "PV voltage 8"
-      },
-      "pv_voltage_9": {
-        "name": "PV voltage 9"
       },
       "reactive_power_offgrid_total": {
         "name": "Reactive power off-grid total"
@@ -640,14 +497,17 @@
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
       },
-      "serial_number": {
-        "name": "Serial number"
-      },
       "solar_generation_today": {
         "name": "Solar generation today"
       },
       "solar_generation_total": {
         "name": "Solar generation total"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "state_of_health": {
+        "name": "State of health"
       },
       "sync_rtc_result": {
         "name": "Update system time operation result",
@@ -676,6 +536,12 @@
           "waiting": "Waiting"
         }
       },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
       "voltage_l1": {
         "name": "Voltage L1"
       },
@@ -699,9 +565,6 @@
       },
       "voltage_phase_l2n": {
         "name": "Voltage phase L2N"
-      },
-      "waiting_ends": {
-        "name": "Waiting ends"
       }
     }
   },
