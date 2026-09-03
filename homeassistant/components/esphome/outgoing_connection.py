@@ -44,6 +44,17 @@ _KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[float] = HassKey(
 )
 
 
+@callback
+def _async_stop_listener(hass: HomeAssistant, state: _ListenerState) -> None:
+    # Drops the cached listener and stops it; the caller checked ownership
+    del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
+    state.remove_stop_listener()
+    # Tracked so the next registration waits for the port release
+    stopping = hass.async_create_task(state.server.stop())
+    stopping.add_done_callback(_log_stop_failure)
+    hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
+
+
 def _log_stop_failure(task: asyncio.Task[None]) -> None:
     if task.cancelled():
         _LOGGER.debug("Outgoing connection listener stop was cancelled")
@@ -73,7 +84,11 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
             hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
     server = OutgoingConnectionServer()
     await server.start()
-    hass.data.pop(_KEY_OUTGOING_CONNECTION_BIND_FAILED, None)
+    if hass.data.pop(_KEY_OUTGOING_CONNECTION_BIND_FAILED, None) is not None:
+        _LOGGER.info(
+            "Listening for ESPHome outgoing connections on port %s",
+            DEFAULT_OUTGOING_CONNECTION_PORT,
+        )
 
     async def _async_stop(event: Event) -> None:
         # Drop the cached instance so late registrations cannot attach to it
@@ -119,12 +134,7 @@ class _Registration:
                 state.registrations == 0
                 and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
             ):
-                del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
-                state.remove_stop_listener()
-                # Tracked so the next registration waits for the port release
-                stopping = hass.async_create_task(state.server.stop())
-                stopping.add_done_callback(_log_stop_failure)
-                hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
+                _async_stop_listener(hass, state)
 
 
 async def async_register_outgoing_target(
@@ -167,10 +177,7 @@ async def async_register_outgoing_target(
                 state.registrations == 0
                 and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
             ):
-                del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
-                state.remove_stop_listener()
-                stopping = hass.async_create_task(state.server.stop())
-                stopping.add_done_callback(_log_stop_failure)
+                _async_stop_listener(hass, state)
             return None
         if hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state:
             break

@@ -610,11 +610,15 @@ class ESPHomeManager:
                 entry.unique_id,
             )
             return
-        if (
-            unregister := await async_register_outgoing_target(
+        try:
+            unregister = await async_register_outgoing_target(
                 self.hass, mac, reconnect_logic
             )
-        ) is not None:
+        except Exception:
+            # Dial-in is an optional extra; it must not fail the entry
+            _LOGGER.exception("%s: Could not set up dial-in routing", entry.title)
+            return
+        if unregister is not None:
             self.entry_data.cleanup_callbacks.append(unregister)
 
     async def _on_connect(self) -> None:
