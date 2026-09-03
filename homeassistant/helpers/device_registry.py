@@ -4156,6 +4156,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         child_devices = ChildDeviceRegistryItems()
         deleted_devices = DeletedDeviceRegistryItems()
         child_devices_dropped = False
+        empty_deleted_devices_dropped = 0
 
         if data is not None:
             for device in data["devices"]:
@@ -4259,6 +4260,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     return None
 
             for device in data["deleted_devices"]:
+                # A deleted device with neither identifiers nor connections can never
+                # be restored (restore matches a re-registered device by identifier or
+                # connection) and serves no deduplication purpose, so it would linger
+                # forever. Current code cannot create one; drop such legacy cruft on
+                # load instead of carrying it in memory and rewriting it on every save.
+                if not device["identifiers"] and not device["connections"]:
+                    empty_deleted_devices_dropped += 1
+                    continue
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     area_id=device["area_id"],
                     config_entry_id=device["config_entry_id"],
@@ -4290,6 +4299,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 shadowed_count,
             )
 
+        if empty_deleted_devices_dropped:
+            _LOGGER.info(
+                "Dropped %d deleted devices with no identifiers or connections",
+                empty_deleted_devices_dropped,
+            )
+
         self._devices = devices
         self.devices = _DeprecatedDeviceRegistryItemsView(self._devices)
         self._child_devices = child_devices
@@ -4298,9 +4313,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._device_data = devices.data
         self._child_device_data = child_devices.data
 
-        # Persist dropped corrupt/orphaned children so the store isn't left dirty until
-        # an unrelated write
-        if child_devices_dropped:
+        # Persist dropped corrupt/orphaned children and empty deleted devices so the
+        # store isn't left dirty until an unrelated write
+        if child_devices_dropped or empty_deleted_devices_dropped:
             self.async_schedule_save()
 
         self._loaded_event.set()
