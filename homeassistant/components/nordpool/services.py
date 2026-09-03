@@ -56,6 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_AREAS = "areas"
 ATTR_CURRENCY = "currency"
+ATTR_MULTIPLIER = "multiplier"
 
 SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
 SERVICE_GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
@@ -69,6 +70,7 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
             vol.Upper,
             vol.In([currency.value for currency in Currency]),
         ),
+        vol.Optional(ATTR_MULTIPLIER, default=1.0): vol.Coerce(float),
     }
 )
 SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
@@ -86,7 +88,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     def get_service_params(
         call: ServiceCall,
-    ) -> tuple[NordPoolClient, date, str, list[str], int]:
+    ) -> tuple[NordPoolClient, date, str, list[str], int, float]:
         """Return the parameters for the service."""
         entry: NordPoolConfigEntry = service.async_get_config_entry(
             hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
@@ -103,7 +105,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         resolution = call.data.get(ATTR_RESOLUTION)
         resolution = resolution or 60
 
-        return (client, asked_date, currency, areas, resolution)
+        multiplier: float = call.data[ATTR_MULTIPLIER]
+
+        return (client, asked_date, currency, areas, resolution, multiplier)
 
     async def get_prices_for_date(
         client: NordPoolClient,
@@ -136,7 +140,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def get_prices(func: Callable, call: ServiceCall) -> ServiceResponse:
         """Get price service."""
-        client, asked_date, currency, areas, resolution = get_service_params(call)
+        client, asked_date, currency, areas, resolution, multiplier = (
+            get_service_params(call)
+        )
 
         try:
             price_data = await func(
@@ -165,7 +171,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 {
                     "start": price_entry.start.isoformat(),
                     "end": price_entry.end.isoformat(),
-                    "price": price_entry.entry[area],
+                    "price": price_entry.entry[area] * multiplier,
                 }
                 for price_entry in price_data.entries
             ]

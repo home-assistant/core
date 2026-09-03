@@ -135,6 +135,10 @@
           "description": "[%key:component::nordpool::services::get_prices_for_date::fields::date::description%]",
           "name": "[%key:component::nordpool::services::get_prices_for_date::fields::date::name%]"
         },
+        "multiplier": {
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::multiplier::description%]",
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::multiplier::name%]"
+        },
         "resolution": {
           "description": "Resolution time for the prices, can be any of 15, 30 and 60 minutes.",
           "name": "Resolution"
@@ -160,6 +164,10 @@
         "date": {
           "description": "Only dates in the range from two months in the past to one day in the future are allowed.",
           "name": "Date"
+        },
+        "multiplier": {
+          "description": "Factor to multiply each returned price with, for example to include taxes and VAT. Accepts a template and defaults to 1 (unmodified prices).",
+          "name": "Multiplier"
         }
       },
       "name": "Get prices for date"

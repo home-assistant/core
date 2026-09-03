@@ -49,6 +49,11 @@ get_prices_for_date:
             - "PLN"
             - "SEK"
           mode: dropdown
+    multiplier:
+      default: 1
+      example: "1.25"
+      selector:
+        template:
 get_price_indices_for_date:
   fields:
     config_entry:
@@ -100,6 +105,11 @@ get_price_indices_for_date:
             - "PLN"
             - "SEK"
           mode: dropdown
+    multiplier:
+      default: 1
+      example: "1.25"
+      selector:
+        template:
     resolution:
       selector:
         select:

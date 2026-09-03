@@ -11,12 +11,14 @@ from pynordpool import (
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.nordpool.const import DOMAIN
 from homeassistant.components.nordpool.services import (
     ATTR_AREAS,
     ATTR_CONFIG_ENTRY,
     ATTR_CURRENCY,
+    ATTR_MULTIPLIER,
     ATTR_RESOLUTION,
     SERVICE_GET_PRICE_INDICES_FOR_DATE,
     SERVICE_GET_PRICES_FOR_DATE,
@@ -45,6 +47,20 @@ TEST_SERVICE_DATA3 = {
     ATTR_DATE: "2025-10-01",
     ATTR_AREAS: ["SE3", "SE4"],
     ATTR_CURRENCY: "EUR",
+}
+TEST_SERVICE_DATA_MULTIPLIER = {
+    ATTR_CONFIG_ENTRY: "to_replace",
+    ATTR_DATE: "2025-10-01",
+    ATTR_AREAS: "SE3",
+    ATTR_CURRENCY: "EUR",
+    ATTR_MULTIPLIER: 1.25,
+}
+TEST_SERVICE_DATA_MULTIPLIER_RENDERED_TEMPLATE = {
+    ATTR_CONFIG_ENTRY: "to_replace",
+    ATTR_DATE: "2025-10-01",
+    ATTR_AREAS: "SE3",
+    ATTR_CURRENCY: "EUR",
+    ATTR_MULTIPLIER: "1.25",
 }
 TEST_SERVICE_DATA_USE_DEFAULTS = {
     ATTR_CONFIG_ENTRY: "to_replace",
@@ -120,6 +136,57 @@ async def test_service_call_use_defaults(
     )
 
     assert "SE3" in response
+
+
+@pytest.mark.parametrize(
+    "test_config",
+    [
+        (TEST_SERVICE_DATA_MULTIPLIER),
+        (TEST_SERVICE_DATA_MULTIPLIER_RENDERED_TEMPLATE),
+    ],
+    ids=["multiplier_as_number", "multiplier_as_rendered_template"],
+)
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
+async def test_service_call_with_multiplier(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    test_config: dict[str, Any],
+) -> None:
+    """Test get_prices_for_date service call with a multiplier."""
+
+    service_data = test_config.copy()
+    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PRICES_FOR_DATE,
+        service_data,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == snapshot
+
+
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
+async def test_service_call_with_invalid_multiplier(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+) -> None:
+    """Test get_prices_for_date service call with a multiplier that is not a number."""
+
+    service_data = TEST_SERVICE_DATA_MULTIPLIER.copy()
+    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[ATTR_MULTIPLIER] = "not a number"
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_PRICES_FOR_DATE,
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -279,3 +346,16 @@ async def test_service_call_for_price_indices(
     )
 
     assert response == snapshot(name="get_price_indices_for_date_15")
+
+    service_data = TEST_SERVICE_INDICES_DATA_60.copy()
+    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[ATTR_MULTIPLIER] = 1.25
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PRICE_INDICES_FOR_DATE,
+        service_data,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == snapshot(name="get_price_indices_for_date_60_multiplier")
