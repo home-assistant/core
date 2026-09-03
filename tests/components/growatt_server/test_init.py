@@ -841,6 +841,67 @@ async def test_migrate_failure_returns_false(
     assert "Migration will retry on next restart" in caplog.text
 
 
+async def test_migrate_transient_error_defers_to_setup_retry(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+) -> None:
+    """Test a transient 507 error during migration defers to setup-retry.
+
+    Unlike other migration failures (which land in MIGRATION_ERROR with no
+    automatic retry), a transient server error should leave the entry on
+    1.0 and let async_setup_entry retry plant_id resolution, benefiting
+    from the automatic setup-retry backoff.
+    """
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="plant_default",
+        version=1,
+        minor_version=0,
+    )
+
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": SERVER_TEMPORARILY_UNAVAILABLE_CODE,
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Migration is deferred, not failed: entry retries via setup, not restart
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 0
+    assert mock_config_entry.data[CONF_PLANT_ID] == DEFAULT_PLANT_ID
+
+    # Simulate the server recovering on the next setup-retry attempt
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "RESOLVED_PLANT_789", "plantName": "My Plant"}]
+    }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.minor_version == 1
+    assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
+
+
 @pytest.mark.usefixtures("mock_growatt_classic_api")
 async def test_migrate_already_migrated(
     hass: HomeAssistant,
