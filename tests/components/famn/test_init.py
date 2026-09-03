@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 from . import setup_integration
 from .conftest import SPACE_ID
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 pytestmark = [pytest.mark.usefixtures("mock_famn")]
 
@@ -155,7 +155,7 @@ async def test_task_list_pagination(
 ) -> None:
     """Test that all pages of chore lists are fetched."""
     page = TaskListPaginateResponse.from_dict(
-        load_json_object_fixture("task_lists.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "task_lists.json", DOMAIN)
     )
     page.total_pages = 2
     empty = TaskListPaginateResponse(items=[], total_pages=1)

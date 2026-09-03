@@ -4,26 +4,49 @@ import re
 from unittest.mock import AsyncMock
 
 from famn_sdk import ApiError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.famn.coordinator import SCAN_INTERVAL
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
+    NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .conftest import SPACE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "notify.home_assistant_family"
+MEMBER_ENTITY_ID = "notify.home_assistant_emma"
 
 pytestmark = [pytest.mark.usefixtures("mock_famn")]
+
+
+async def test_title_capability_is_advertised(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that both notify entities report that they accept a title."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id in (ENTITY_ID, MEMBER_ENTITY_ID):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_SUPPORTED_FEATURES] & NotifyEntityFeature.TITLE, (
+            f"{entity_id} forwards a title but does not advertise it"
+        )
 
 
 async def test_send_message(
@@ -123,3 +146,27 @@ async def test_send_message_error(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MESSAGE: "Test"},
             blocking=True,
         )
+
+
+async def test_member_entity_unavailable_when_member_leaves(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_space_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a member's notify entity goes unavailable when they leave."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(MEMBER_ENTITY_ID).state == STATE_UNKNOWN
+
+    # Emma leaves the space, so there is no phone left to push to.
+    mock_space_api.get_space_members_endpoint.return_value = [
+        member
+        for member in mock_space_api.get_space_members_endpoint.return_value
+        if member.display_name != "Emma"
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MEMBER_ENTITY_ID).state == STATE_UNAVAILABLE

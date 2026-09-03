@@ -4,13 +4,14 @@ from typing import TYPE_CHECKING, override
 
 from famn_sdk import ApiError, NotifySpaceRequest, SpaceMember
 
-from homeassistant.components.notify import NotifyEntity
+from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FamnConfigEntry
+from .coordinator import FamnConfigEntry, FamnScoresCoordinator
 from .entity import famn_device_info
 
 PARALLEL_UPDATES = 0
@@ -41,7 +42,7 @@ async def async_setup_entry(
         }
         if new_members := set(members) - known_members:
             async_add_entities(
-                FamnMemberNotifyEntity(entry, members[account_id])
+                FamnMemberNotifyEntity(scores, members[account_id])
                 for account_id in new_members
             )
             known_members.update(new_members)
@@ -50,70 +51,91 @@ async def async_setup_entry(
     add_member_entities()
 
 
-class FamnNotifyEntity(NotifyEntity):
-    """Send a notification to every member of the paired Famn space.
+async def _async_notify(
+    entry: FamnConfigEntry, message: str, title: str | None, account_id: str | None
+) -> None:
+    """Send a message via Famn, to one member or the whole space.
 
-    The message is pushed to each family member's phone and lands in the
-    Famn app's notification inbox, attributed to this Home Assistant
-    pairing. Famn rate-limits the device, so a runaway automation cannot
-    spam the family.
+    The message reaches the recipients' phones and lands in the Famn app's
+    notification inbox, attributed to this Home Assistant pairing.
     """
+    scores = entry.runtime_data.scores
+
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+
+    try:
+        await scores.auth.async_ensure_token_valid()
+        await scores.space_api.notify_space_endpoint(
+            entry.unique_id,
+            body=NotifySpaceRequest(
+                title=title or "Home Assistant",
+                message=message,
+                account_id=account_id,
+            ),
+        )
+    except ApiError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="notify_failed",
+        ) from err
+
+
+class FamnNotifyEntity(NotifyEntity):
+    """Send a notification to every member of the paired Famn space."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "family"
+    # Famn shows the title as the heading of the notification in its inbox.
+    _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(self, entry: FamnConfigEntry) -> None:
-        """Initialize the notify entity."""
+        """Initialize the family notify entity."""
         self._entry = entry
-        self._attr_unique_id = f"{entry.unique_id}_notify"
+        self._attr_unique_id = f"{entry.unique_id}_family"
         self._attr_device_info = famn_device_info(entry)
-
-    async def _async_notify(
-        self, message: str, title: str | None, account_id: str | None
-    ) -> None:
-        """Send the message via Famn, to one member or the whole space."""
-        scores = self._entry.runtime_data.scores
-
-        if TYPE_CHECKING:
-            assert self._entry.unique_id is not None
-
-        try:
-            await scores.auth.async_ensure_token_valid()
-            await scores.space_api.notify_space_endpoint(
-                self._entry.unique_id,
-                body=NotifySpaceRequest(
-                    title=title or "Home Assistant",
-                    message=message,
-                    account_id=account_id,
-                ),
-            )
-        except ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="notify_failed",
-            ) from err
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message to the family's phones."""
-        await self._async_notify(message, title, None)
+        await _async_notify(self._entry, message, title, None)
 
 
-class FamnMemberNotifyEntity(FamnNotifyEntity):
+class FamnMemberNotifyEntity(CoordinatorEntity[FamnScoresCoordinator], NotifyEntity):
     """Send a notification to one member of the paired Famn space."""
 
-    _attr_translation_key = None
+    _attr_has_entity_name = True
+    _attr_supported_features = NotifyEntityFeature.TITLE
 
-    def __init__(self, entry: FamnConfigEntry, member: SpaceMember) -> None:
+    def __init__(self, coordinator: FamnScoresCoordinator, member: SpaceMember) -> None:
         """Initialize the member notify entity."""
-        super().__init__(entry)
+        super().__init__(coordinator)
+
+        entry = coordinator.config_entry
         if TYPE_CHECKING:
             assert member.account_id is not None
+
+        self._entry = entry
         self._account_id = member.account_id
-        self._attr_unique_id = f"{entry.unique_id}_notify_{member.account_id}"
+        self._attr_unique_id = f"{entry.unique_id}_{member.account_id}"
+        # Named after the member, so no translation key applies here.
         self._attr_name = member.display_name or member.account_id
+        self._attr_device_info = famn_device_info(entry)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the member is still part of the Famn space.
+
+        A member who left has no phone to reach any more, so the entity goes
+        unavailable rather than pushing to a stale account.
+        """
+        return super().available and any(
+            member.account_id == self._account_id
+            for member in self.coordinator.data.members
+        )
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message to this member's phone."""
-        await self._async_notify(message, title, self._account_id)
+        await _async_notify(self._entry, message, title, self._account_id)

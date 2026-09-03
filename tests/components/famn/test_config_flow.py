@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from .conftest import DEVICE_ID, PAIRING_SECRET, SPACE_ID
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 pytestmark = [pytest.mark.usefixtures("mock_setup_entry", "mock_device_api")]
 
@@ -117,7 +117,7 @@ async def test_missing_pairing_secret(
     hass: HomeAssistant, mock_device_api: AsyncMock
 ) -> None:
     """Test the flow aborts when the pairing response contains no secret."""
-    pairing = load_json_object_fixture("pairing.json", DOMAIN)
+    pairing = await async_load_json_object_fixture(hass, "pairing.json", DOMAIN)
     pairing["qrUrl"] = pairing["verificationUrl"]
     mock_device_api.start_device_pairing_endpoint.return_value = (
         StartDevicePairingResponse.from_dict(pairing)
@@ -175,7 +175,11 @@ async def test_incomplete_token_response(
     mock_device_api: AsyncMock,
     pairing_approved: asyncio.Event,
 ) -> None:
-    """Test the flow rejects an approved response with missing fields."""
+    """Test the flow rejects an approved response with missing fields.
+
+    The pairing was approved, so this is a failure to set up rather than a
+    code that expired before anyone got to it.
+    """
     mock_device_api.pairing_result = DeviceTokenResponse(
         status="approved", access_token="token-without-the-rest"
     )
@@ -184,7 +188,7 @@ async def test_incomplete_token_response(
     result = await _submit_and_approve(hass, result, pairing_approved)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "pairing_timeout"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_poll_transient_error_retries(
@@ -194,7 +198,7 @@ async def test_poll_transient_error_retries(
 ) -> None:
     """Test that transient poll errors are retried with backoff."""
     approved = DeviceTokenResponse.from_dict(
-        load_json_object_fixture("device_token.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "device_token.json", DOMAIN)
     )
 
     async def _poll(**kwargs: object) -> DeviceTokenResponse:
@@ -281,7 +285,7 @@ async def test_reauth_wrong_space(
     """Test re-pairing against a different Famn space is rejected."""
     mock_config_entry.add_to_hass(hass)
 
-    tokens = load_json_object_fixture("device_token.json", DOMAIN)
+    tokens = await async_load_json_object_fixture(hass, "device_token.json", DOMAIN)
     tokens["device"]["relationId"] = "99999999-9999-4999-8999-999999999999"
     mock_device_api.pairing_result = DeviceTokenResponse.from_dict(tokens)
 

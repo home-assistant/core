@@ -43,6 +43,10 @@ class FamnPairingExpired(Exception):
     """Raised when the pairing expired before the user approved it."""
 
 
+class FamnPairingIncomplete(Exception):
+    """Raised when an approved pairing response is missing required fields."""
+
+
 def _pairing_secret(pairing: StartDevicePairingResponse) -> str | None:
     """Extract the pairing secret from the pairing response.
 
@@ -136,12 +140,16 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # The QR encodes the deep link exactly as Famn returned it,
         # including the pairing secret, mirroring the QR the Famn app scans
-        # on other paired devices.
+        # on other paired devices. Either link may carry the secret, which is
+        # what `_pairing_secret` accepts, so fall back rather than render an
+        # empty code.
         data_schema = vol.Schema(
             {
                 vol.Optional("qr_code"): QrCodeSelector(
                     config=QrCodeSelectorConfig(
-                        data=self._pairing.qr_url or "",
+                        data=self._pairing.qr_url
+                        or self._pairing.verification_url
+                        or "",
                         scale=5,
                         error_correction_level=QrErrorCorrectionLevel.QUARTILE,
                     )
@@ -232,7 +240,9 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if tokens.status == "approved":
                 if not _is_complete(tokens):
-                    raise FamnPairingExpired
+                    # Approved, so nothing expired — Famn just did not send
+                    # everything the pairing needs.
+                    raise FamnPairingIncomplete
                 self._tokens = tokens
                 self._secret = None
                 return
