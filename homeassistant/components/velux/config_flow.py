@@ -4,13 +4,15 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from pyvlx import PyVLX, PyVLXException
+from pyvlx.discovery import sanitize_hostname
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 
@@ -128,6 +130,32 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    def _is_already_configured_without_unique_id(self, host: str) -> bool:
+        """Checks if a config entry already exists for the given host without a unique_id configured.
+
+        If yes, it updates the entry with the unique_id and discovery data and returns True.
+        If no, it returns False.
+        """
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            LOGGER.warning(
+                "Checking existing config entry for conf_host %s: unique_id=%s (host=%s)",
+                entry.data[CONF_HOST],
+                entry.unique_id,
+                host,
+            )
+            if entry.data[CONF_HOST] == host and entry.unique_id is None:
+                LOGGER.warning(
+                    "Config entry for host %s exists without unique_id, updating entry",
+                    host,
+                )
+                self.hass.config_entries.async_update_entry(
+                    entry=entry,
+                    unique_id=entry.data.get(CONF_NAME),
+                    data={**entry.data, **self.discovery_data},
+                )
+                return True
+        return False
+
     @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -140,24 +168,39 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             "LAN_", ""
         )
 
+        LOGGER.warning("Discovered Velux device via DHCP: %s", self.discovery_data)
         await self.async_set_unique_id(self.discovery_data[CONF_NAME])
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.discovery_data[CONF_HOST]}
         )
 
         # Abort if config_entry already exists without unique_id configured.
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_HOST] == self.discovery_data[CONF_HOST]
-                and entry.unique_id is None
-                and entry.state is ConfigEntryState.LOADED
-            ):
-                self.hass.config_entries.async_update_entry(
-                    entry=entry,
-                    unique_id=self.discovery_data[CONF_NAME],
-                    data={**entry.data, **self.discovery_data},
-                )
-                return self.async_abort(reason="already_configured")
+        if self._is_already_configured_without_unique_id(
+            self.discovery_data[CONF_HOST]
+        ):
+            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
+        return await self.async_step_discovery_confirm()
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery by zeroconf."""
+        self.discovery_data[CONF_HOST] = discovery_info.host
+        self.discovery_data[CONF_NAME] = sanitize_hostname(discovery_info.name)
+        LOGGER.warning("Discovered Velux device via zeroconf: %s", self.discovery_data)
+
+        self.context["title_placeholders"] = {CONF_NAME: self.discovery_data[CONF_NAME]}
+        await self.async_set_unique_id(self.discovery_data[CONF_NAME])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.discovery_data[CONF_HOST]}
+        )
+        # Abort if config_entry already exists without unique_id configured.
+        if self._is_already_configured_without_unique_id(
+            self.discovery_data[CONF_HOST]
+        ):
+            return self.async_abort(reason="already_configured")
         self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
         return await self.async_step_discovery_confirm()
 
