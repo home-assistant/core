@@ -34,12 +34,15 @@ ATTR_TIMEOUT = "timeout"
 
 _ENTRY_SCHEMA = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str})
 
+# The selectors in services.yaml only bound the UI, not a scripted call.
+_POWER_RANGE = vol.All(int, vol.Range(min=-100000, max=100000))
+
 SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
         vol.Required(ATTR_MODE): vol.In(
             [mode.name.lower() for mode in FeedinLimitationMode]
         ),
-        vol.Required(ATTR_MAX_POWER): cv.positive_int,
+        vol.Required(ATTR_MAX_POWER): vol.All(cv.positive_int, vol.Range(max=100000)),
     }
 )
 
@@ -52,7 +55,7 @@ SET_ACTIVE_POWER_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
 
 SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        vol.Required(ATTR_TIMEOUT): cv.positive_int,
+        vol.Required(ATTR_TIMEOUT): vol.All(cv.positive_int, vol.Range(max=65535)),
         vol.Required(ATTR_ACTION): vol.In(
             [action.name.lower() for action in PassiveModeTimeoutAction]
         ),
@@ -61,9 +64,9 @@ SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
 
 SET_PASSIVE_MODE_POWER_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        vol.Required(ATTR_GRID_POWER): int,
-        vol.Required(ATTR_BATTERY_POWER_MIN): int,
-        vol.Required(ATTR_BATTERY_POWER_MAX): int,
+        vol.Required(ATTR_GRID_POWER): _POWER_RANGE,
+        vol.Required(ATTR_BATTERY_POWER_MIN): _POWER_RANGE,
+        vol.Required(ATTR_BATTERY_POWER_MAX): _POWER_RANGE,
     }
 )
 
