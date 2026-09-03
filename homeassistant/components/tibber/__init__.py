@@ -20,7 +20,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -114,13 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
             translation_key="data_api_reauth_required",
         )
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
     try:

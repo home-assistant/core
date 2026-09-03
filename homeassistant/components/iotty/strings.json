@@ -19,10 +19,5 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
     }
-  },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    }
   }
 }
