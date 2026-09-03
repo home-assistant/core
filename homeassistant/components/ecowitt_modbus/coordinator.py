@@ -11,6 +11,7 @@ from propcache.api import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -129,6 +130,19 @@ class EcowittDataUpdateCoordinator(DataUpdateCoordinator[EcowittDevice]):
 
         self._check_serial_number()
 
+    @property
+    def _wrong_device_issue_id(self) -> str:
+        """The repair issue tracking an identity mismatch found after setup.
+
+        Distinct from the ``ConfigEntryError`` ``_check_serial_number`` raises:
+        that error only reaches the user when it happens during setup. Raised
+        from a scheduled update instead, ``DataUpdateCoordinator`` catches it
+        and leaves the entry loaded with its entities unavailable -- true, but
+        silent -- so a repair issue is what actually tells the user there is
+        something to fix.
+        """
+        return f"wrong_device_{self.config_entry.entry_id}"
+
     @override
     async def _async_update_data(self) -> EcowittDevice:
         try:
@@ -140,5 +154,20 @@ class EcowittDataUpdateCoordinator(DataUpdateCoordinator[EcowittDevice]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        self._check_serial_number()
+        try:
+            self._check_serial_number()
+        except ConfigEntryError:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self._wrong_device_issue_id,
+                is_fixable=False,
+                is_persistent=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="wrong_device_at_runtime",
+                translation_placeholders={"name": self.config_entry.title},
+            )
+            raise
+
+        ir.async_delete_issue(self.hass, DOMAIN, self._wrong_device_issue_id)
         return self.device

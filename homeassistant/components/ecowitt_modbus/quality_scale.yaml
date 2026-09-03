@@ -82,14 +82,7 @@ rules:
       Every entity but UV index derives its icon from a device class. UV index
       has no matching device class, and the sensor default suits it.
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: >-
-      The failures this integration can hit are a device that stops answering
-      and a device that answers as something else. The first is transient and
-      already shown by entity unavailability; the second is raised as a
-      config-entry error pointing at the reconfigure flow. Neither is a
-      condition a repair issue could add fixable detail to.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: One fixed sensor array per config entry; nothing to detect as stale.

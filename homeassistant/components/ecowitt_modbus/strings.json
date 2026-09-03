@@ -105,6 +105,12 @@
       "message": "The sensor at this address reports serial number {found}, but this entry was set up for {expected}."
     }
   },
+  "issues": {
+    "wrong_device_at_runtime": {
+      "title": "{name} is now a different sensor",
+      "description": "The address configured for {name} now answers as a different sensor array than this entry was set up for. Its entities are unavailable until you reconfigure this entry with the address of the original sensor, or point it at the new one."
+    }
+  },
   "selector": {
     "model": {
       "options": {
