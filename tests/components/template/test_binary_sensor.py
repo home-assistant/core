@@ -601,13 +601,22 @@ async def test_delay_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
 
 
 @pytest.mark.parametrize(
-    ("advanced_input", "expected_advanced_options"),
+    ("advanced_input", "expected_advanced_options", "expected_state"),
     [
-        ({"delay_on": {"seconds": 5}}, {"delay_on": {"seconds": 5.0}}),
-        ({"delay_off": {"minutes": 1}}, {"delay_off": {"minutes": 1.0}}),
+        (
+            {"delay_on": {"seconds": 5}},
+            {"delay_on": {"seconds": 5.0}},
+            STATE_UNKNOWN,
+        ),
+        (
+            {"delay_off": {"minutes": 1}},
+            {"delay_off": {"minutes": 1.0}},
+            STATE_ON,
+        ),
         (
             {"delay_on": {"seconds": 5}, "delay_off": {"minutes": 1}},
             {"delay_on": {"seconds": 5.0}, "delay_off": {"minutes": 1.0}},
+            STATE_UNKNOWN,
         ),
     ],
 )
@@ -615,6 +624,7 @@ async def test_config_flow_binary_sensor_delay_options(
     hass: HomeAssistant,
     advanced_input: dict[str, Any],
     expected_advanced_options: dict[str, Any],
+    expected_state: str,
 ) -> None:
     """Test delay options in the binary sensor config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -664,10 +674,7 @@ async def test_config_flow_binary_sensor_delay_options(
         "additional_options": expected_advanced_options,
     }
     state = hass.states.get("binary_sensor.my_template")
-    if "delay_on" in expected_advanced_options:
-        assert state.state == "unknown"
-    else:
-        assert state.state == "on"
+    assert state.state == expected_state
 
 
 async def test_config_flow_preview_binary_sensor_delay(

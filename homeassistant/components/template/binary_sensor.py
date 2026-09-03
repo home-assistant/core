@@ -225,6 +225,12 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
 
+    @override
+    def _call_on_remove_callbacks(self):
+        if self._delay_cancel:
+            self._delay_cancel()
+        return super()._call_on_remove_callbacks()
+
 
 @dataclass
 class AutoOffExtraStoredData(ExtraStoredData):
