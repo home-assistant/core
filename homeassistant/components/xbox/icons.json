@@ -17,6 +17,12 @@
       }
     },
     "sensor": {
+      "current_achievements": {
+        "default": "mdi:trophy-variant-outline"
+      },
+      "current_gamerscore": {
+        "default": "mdi:alpha-g-circle"
+      },
       "follower": {
         "default": "mdi:account-arrow-left"
       },
@@ -45,12 +51,18 @@
       "last_online": {
         "default": "mdi:account-clock"
       },
+      "last_time_played": {
+        "default": "mdi:history"
+      },
       "now_playing": {
         "default": "mdi:microsoft-xbox-controller",
         "state": {
           "unavailable": "mdi:microsoft-xbox-controller-off",
           "unknown": "mdi:microsoft-xbox-controller-off"
         }
+      },
+      "progress": {
+        "default": "mdi:percent"
       },
       "status": {
         "default": "mdi:message-text-outline"
