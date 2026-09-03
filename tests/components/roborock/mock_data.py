@@ -1,5 +1,7 @@
 """Mock data for Roborock tests."""
 
+from copy import deepcopy
+
 from PIL import Image
 from roborock.data import (
     B01Props,
@@ -9,6 +11,8 @@ from roborock.data import (
     Consumable,
     DnDTimer,
     HomeData,
+    HomeDataDevice,
+    HomeDataProduct,
     HomeDataScene,
     MultiMapsList,
     NetworkInfo,
@@ -1407,6 +1411,39 @@ ROOM_MAPPING = {
 }
 
 HOME_DATA: HomeData = HomeData.from_dict(HOME_DATA_RAW)
+
+
+def _raw_zeo_product() -> dict:
+    """Return the raw Zeo product dict from the home data."""
+    return next(
+        product for product in HOME_DATA_RAW["products"] if product["id"] == "zeo_id"
+    )
+
+
+def _raw_zeo_device() -> dict:
+    """Return the raw Zeo device dict from the home data."""
+    devices = HOME_DATA_RAW["devices"] + HOME_DATA_RAW["receivedDevices"]
+    return next(device for device in devices if device["duid"] == "zeo_duid")
+
+
+# A second Zeo washing machine whose product schema does not advertise the
+# delay-start countdown data point (DP 217), used to assert the delay-start
+# number entity is only created when the schema supports it.
+ZEO_NO_COUNTDOWN_PRODUCT_RAW = deepcopy(_raw_zeo_product())
+ZEO_NO_COUNTDOWN_PRODUCT_RAW["id"] = "zeo_no_countdown_id"
+ZEO_NO_COUNTDOWN_PRODUCT_RAW["name"] = "Zeo One No Countdown"
+ZEO_NO_COUNTDOWN_PRODUCT_RAW["schema"] = [
+    schema for schema in ZEO_NO_COUNTDOWN_PRODUCT_RAW["schema"] if schema["id"] != "217"
+]
+
+ZEO_NO_COUNTDOWN_DEVICE_RAW = deepcopy(_raw_zeo_device())
+ZEO_NO_COUNTDOWN_DEVICE_RAW["duid"] = "zeo_no_countdown_duid"
+ZEO_NO_COUNTDOWN_DEVICE_RAW["name"] = "Zeo One No Countdown"
+ZEO_NO_COUNTDOWN_DEVICE_RAW["sn"] = "zeo_no_countdown_sn"
+ZEO_NO_COUNTDOWN_DEVICE_RAW["productId"] = "zeo_no_countdown_id"
+
+ZEO_NO_COUNTDOWN_PRODUCT = HomeDataProduct.from_dict(ZEO_NO_COUNTDOWN_PRODUCT_RAW)
+ZEO_NO_COUNTDOWN_DEVICE = HomeDataDevice.from_dict(ZEO_NO_COUNTDOWN_DEVICE_RAW)
 
 CLEAN_RECORD = CleanRecord.from_dict(
     {
