@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not register any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not register any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: This is a cloud service without local discovery.
+  discovery:
+    status: exempt
+    comment: This is a cloud service without local discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: This is a cloud service without physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: A single service device represents the paired Famn space.
+  entity-category:
+    status: exempt
+    comment: The provided entities are primary entities.
+  entity-device-class:
+    status: exempt
+    comment: Todo entities have no device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are primary and enabled by default.
+  entity-translations:
+    status: exempt
+    comment: Entities are named after the user-defined Famn chore lists.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Todo entities use the platform default icon.
+  reconfiguration-flow:
+    status: exempt
+    comment: There is nothing to reconfigure; re-pairing is handled by the reauth flow.
+  repair-issues:
+    status: exempt
+    comment: No repairable issues are raised by this integration.
+  stale-devices:
+    status: exempt
+    comment: The single service device is removed with the config entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

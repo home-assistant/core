@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001",
+      "name": "Weekly chores",
+      "icon": "broom",
+      "taskType": "chores",
+      "spaceId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "updatedAt": "2026-08-11T18:30:00Z"
+    },
+    {
+      "id": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1002",
+      "name": "Garden",
+      "icon": "flower",
+      "taskType": "chores",
+      "spaceId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "updatedAt": "2026-08-10T12:00:00Z"
+    },
+    {
+      "id": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1003",
+      "name": "Todos",
+      "icon": "check",
+      "taskType": "todos",
+      "spaceId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "updatedAt": "2026-08-11T08:00:00Z"
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "total": 3,
+  "totalPages": 1
+}

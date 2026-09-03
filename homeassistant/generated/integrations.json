@@ -2041,6 +2041,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "famn": {
+      "name": "Famn",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "fastdotcom": {
       "name": "Fast.com",
       "integration_type": "service",

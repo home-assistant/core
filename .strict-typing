@@ -209,6 +209,7 @@ homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.evohome.*
 homeassistant.components.faa_delays.*
+homeassistant.components.famn.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*

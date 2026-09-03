@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'chore_lists': list([
+      dict({
+        'items': list([
+          dict({
+            'description': 'Bins are picked up Wednesday morning',
+            'id': '8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5001',
+            'nextOccurrence': '2026-08-12T18:00:00+00:00',
+            'recurringRule': 'FREQ=WEEKLY;BYDAY=TU',
+            'sortOrder': 1,
+            'taskListId': '3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001',
+            'title': 'Take out the trash',
+          }),
+          dict({
+            'dueDate': '2026-08-13T16:00:00+00:00',
+            'id': '8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5002',
+            'sortOrder': 2,
+            'taskListId': '3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001',
+            'title': 'Vacuum the living room',
+          }),
+        ]),
+        'task_list': dict({
+          'icon': 'broom',
+          'id': '3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001',
+          'name': 'Weekly chores',
+          'spaceId': '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+          'taskType': 'chores',
+          'updatedAt': '2026-08-11T18:30:00+00:00',
+        }),
+      }),
+      dict({
+        'items': list([
+          dict({
+            'id': '8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5003',
+            'sortOrder': 1,
+            'taskListId': '3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1002',
+            'title': 'Water the plants',
+          }),
+        ]),
+        'task_list': dict({
+          'icon': 'flower',
+          'id': '3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1002',
+          'name': 'Garden',
+          'spaceId': '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+          'taskType': 'chores',
+          'updatedAt': '2026-08-10T12:00:00+00:00',
+        }),
+      }),
+    ]),
+  })
+# ---
