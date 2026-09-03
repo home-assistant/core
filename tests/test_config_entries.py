@@ -7306,16 +7306,21 @@ def test_raise_trying_to_add_same_config_entry_twice(
     ],
 )
 @pytest.mark.parametrize(
-    ("source", "reason"),
+    ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful"),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+        (config_entries.SOURCE_REAUTH, "reauth_successful", None),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_and_reload(
     hass: HomeAssistant,
     source: str,
     reason: str,
+    translation_domain: str | None,
     expected_title: str,
     expected_unique_id: str,
     expected_data: dict[str, Any],
@@ -7379,6 +7384,7 @@ async def test_update_entry_and_reload(
     else:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
+        assert result.get("translation_domain") == translation_domain
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
@@ -7447,16 +7453,21 @@ async def test_update_entry_and_reload_with_listener_logs(
 
 
 @pytest.mark.parametrize(
-    ("source", "reason"),
+    ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful"),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+        (config_entries.SOURCE_REAUTH, "reauth_successful", None),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_without_reload(
     hass: HomeAssistant,
     source: str,
     reason: str,
+    translation_domain: str | None,
 ) -> None:
     """Test updating an entry without reloading."""
     entry = MockConfigEntry(
@@ -7518,6 +7529,7 @@ async def test_update_entry_without_reload(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert result.get("translation_domain") == translation_domain
     # Assert entry is not reloaded
     assert len(comp.async_setup_entry.mock_calls) == 1
     assert len(comp.async_unload_entry.mock_calls) == 0
