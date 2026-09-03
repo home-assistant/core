@@ -50,6 +50,7 @@ def mock_roomba() -> Generator[AsyncMock]:
                 "softwareVer": "3.2.1",
                 "hardwareRev": "1.0",
                 "bin": {"present": True, "full": False},
+                "signal": {"rssi": -47, "snr": 21, "noise": -68},
             }
         }
     }
