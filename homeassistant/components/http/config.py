@@ -37,9 +37,11 @@ from .const import (
     DEFAULT_CORS,
     DOMAIN,
     ENV_SETUP_PORT,
+    ENV_SUPERVISOR,
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
+    SUPERVISOR_DEFAULT_PORT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,12 +50,14 @@ _LOGGER = logging.getLogger(__name__)
 def default_server_port() -> int:
     """Return the default HTTP server port.
 
-    The built-in default port can be overridden via the
-    ``SETUP_PORT`` environment variable. An invalid value is ignored in favor
-    of the built-in default.
+    Under Supervisor the default is port 80, since Supervisor fronts Core on
+    the standard HTTP port; otherwise the default is ``SERVER_PORT``. The
+    default can be overridden via the ``SETUP_PORT`` environment variable; an
+    invalid value is ignored in favor of the default.
     """
+    default = SUPERVISOR_DEFAULT_PORT if ENV_SUPERVISOR in os.environ else SERVER_PORT
     if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
-        return SERVER_PORT
+        return default
     try:
         return cast(int, cv.port(env_value))
     except vol.Invalid:
@@ -61,9 +65,9 @@ def default_server_port() -> int:
             "Invalid port %r in %s environment variable; falling back to %s",
             env_value,
             ENV_SETUP_PORT,
-            SERVER_PORT,
+            default,
         )
-        return SERVER_PORT
+        return default
 
 
 STORAGE_KEY: Final = DOMAIN
@@ -115,6 +119,7 @@ class ActiveConfigType(StrEnum):
     STABLE = "stable"
     PENDING = "pending"
     DEFAULT = "default"
+    DEFAULT_LEGACY_PORT = "default_legacy_port"
 
 
 class _HTTPStoreData(TypedDict):
@@ -145,10 +150,8 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-        vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
-            cv.ensure_list, [_ip_network_str]
-        ),
+        vol.Optional(CONF_USE_X_FORWARDED_FOR): cv.boolean,
+        vol.Optional(CONF_TRUSTED_PROXIES): vol.All(cv.ensure_list, [_ip_network_str]),
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
@@ -181,6 +184,15 @@ def _strip_meta(config: ConfData) -> ConfData:
     )
 
 
+# Last-resort fallback on the previous default port, tried when the default
+# config cannot be bound. Identical to _DEFAULT_CONFIG apart from the port, and
+# only distinct from it when the default port differs from SERVER_PORT - i.e.
+# under Supervisor (default 80) or when SETUP_PORT overrides the default.
+_DEFAULT_CONFIG_LEGACY_PORT: Final[ConfData] = cast(
+    ConfData, {**_DEFAULT_CONFIG, CONF_SERVER_PORT: SERVER_PORT}
+)
+
+
 async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData:
     """Load the HTTP config to apply on this startup.
 
@@ -209,6 +221,7 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
                 hass,
                 DOMAIN,
                 "yaml_still_present_after_migration",
+                breaks_in_ha_version="2027.2.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="yaml_still_present_after_migration",
@@ -218,14 +231,17 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
             ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml_import_error")
             ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml")
             ir.async_delete_issue(hass, DOMAIN, "yaml_still_present_after_migration")
+    elif yaml_conf is None:
+        # No YAML config to migrate: the stored config is already the source
+        # of truth. Synthesizing a default config here would stage it as a
+        # pending trial whenever the built-in default differs from stable
+        # (e.g. after the Supervisor default port changed), restarting Home
+        # Assistant to revert the never-promoted trial five minutes later.
+        await store.async_mark_yaml_migration_done()
     else:
         # Migrate YAML to storage and use it directly for this start. The
         # migration function also marks the migration as done so future
         # starts will ignore any remaining YAML.
-        conf_in_yaml = yaml_conf is not None
-        if yaml_conf is None:
-            yaml_conf = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
-
         try:
             await store.async_migrate_yaml(yaml_conf)
         except Exception:
@@ -234,22 +250,22 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
                 hass,
                 DOMAIN,
                 "deprecated_yaml_import_error",
+                breaks_in_ha_version="2027.2.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="deprecated_yaml_import_error",
             )
         else:
             conf = await store.async_activate_config()
-            if conf_in_yaml:
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "deprecated_yaml",
-                    breaks_in_ha_version="2027.6.0",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="deprecated_yaml",
-                )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_yaml",
+                breaks_in_ha_version="2027.2.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+            )
 
     if store.active_config_type is ActiveConfigType.PENDING:
         _LOGGER.info("Using pending HTTP config")
@@ -446,10 +462,23 @@ class HTTPConfigStore:
 
         await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
 
+    async def async_mark_yaml_migration_done(self) -> None:
+        """Mark the YAML migration as done without migrating anything.
+
+        Used when there is no YAML config to migrate; the stored config
+        stays the source of truth.
+        """
+        await self.async_load()
+        self._yaml_migration_done = True
+        await self._async_persist()
+
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
-        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
+        validated_config = cast(
+            ConfData,
+            HTTP_STORAGE_SCHEMA({CONF_SERVER_PORT: SERVER_PORT, **config}),
+        )
         if self._stable_differs_only_by_lost_proxy_masks(validated_config):
             # Releases up to 2026.7.1 dropped the network mask when storing
             # trusted proxies, and the v1->v2 store migration turned those
@@ -565,41 +594,63 @@ class HTTPConfigStore:
         if failed_type is ActiveConfigType.DEFAULT:
             # Never record the error on the shared default config.
             failed_config = _DEFAULT_CONFIG
+        elif failed_type is ActiveConfigType.DEFAULT_LEGACY_PORT:
+            failed_config = _DEFAULT_CONFIG_LEGACY_PORT
         else:
             failed_config = self._stable
             # In-memory only: _async_persist never saves an error on stable.
             failed_config[HTTP_CONFIG_ERROR] = ERROR_APPLY_FAILED
             failed_config[HTTP_CONFIG_ERROR_MESSAGE] = str(err)
 
+        # Determine the next config in the recovery fallback chain. Peer
+        # certificate verification never accepts an unverified fallback.
+        next_config: ConfData | None = None
+        next_type: ActiveConfigType | None = None
         if (
-            # In normal mode, fail setup so recovery mode can take over with a
-            # reachable configuration.
-            not self._hass.config.recovery_mode
-            # The chain is exhausted; nothing left to fall back to.
-            or failed_type is ActiveConfigType.DEFAULT
-            # With peer certificate verification configured, connections must
-            # never be accepted without a verified client certificate; there is
-            # no acceptable fallback config.
-            or CONF_SSL_PEER_CERTIFICATE in failed_config
+            self._hass.config.recovery_mode
+            and CONF_SSL_PEER_CERTIFICATE not in failed_config
         ):
-            # An unusable SSL configuration already carries a descriptive
-            # HomeAssistantError.
+            if failed_type not in (
+                ActiveConfigType.DEFAULT,
+                ActiveConfigType.DEFAULT_LEGACY_PORT,
+            ):
+                next_config = _DEFAULT_CONFIG.copy()
+                next_type = ActiveConfigType.DEFAULT
+            elif (
+                failed_type is ActiveConfigType.DEFAULT
+                and ENV_SUPERVISOR in os.environ
+                # _DEFAULT_CONFIG depends on environment variables
+                and _DEFAULT_CONFIG[CONF_SERVER_PORT] != SERVER_PORT
+            ):
+                # Under Supervisor the previous default port (8123) is still
+                # exposed; try it before giving up so the recovery UI stays
+                # reachable when the new default port cannot be bound.
+                next_config = _DEFAULT_CONFIG_LEGACY_PORT.copy()
+                next_type = ActiveConfigType.DEFAULT_LEGACY_PORT
+
+        if next_config is None:
+            # In normal mode, fail setup so recovery mode can take over with a
+            # reachable configuration. In recovery mode, the fallback chain is
+            # exhausted. An unusable SSL configuration already carries a
+            # descriptive HomeAssistantError.
             if isinstance(err, HomeAssistantError):
                 raise err
             raise HomeAssistantError(
                 f"Failed to create HTTP server at port {failed_config[CONF_SERVER_PORT]}: {err}"
             ) from err
 
-        # The config cannot be applied in recovery mode; fall back to the
-        # default config so the recovery UI stays reachable.
         _LOGGER.error(
             "The HTTP configuration could not be applied in recovery mode, "
-            "falling back to the default configuration: %s",
+            "falling back to %s: %s",
+            "the default configuration"
+            if next_type is ActiveConfigType.DEFAULT
+            else f"the previous default port {SERVER_PORT}",
             err,
         )
-        self._active_config_type = ActiveConfigType.DEFAULT
+        assert next_type is not None
+        self._active_config_type = next_type
         # Copied so the caller cannot mutate the shared default config.
-        return _DEFAULT_CONFIG.copy()
+        return next_config
 
 
 class _HTTPStore(Store[_HTTPStoreData]):

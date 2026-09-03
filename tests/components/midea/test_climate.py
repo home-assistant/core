@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
-from midealocal.devices.c3.const import DeviceAttributes as C3Attributes
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
@@ -44,7 +45,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.midea.climate import FAN_FULL_SPEED, FAN_SILENT
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -1460,6 +1461,7 @@ async def test_climate_state_snapshot(
 ) -> None:
     """Test async_setup_entry creates entities for each device type."""
     config_entry = mock_config_entry(device)
-    await setup_integration(hass, config_entry, device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, config_entry, device)
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

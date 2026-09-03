@@ -8,6 +8,7 @@ import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests import Response
@@ -33,7 +34,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SoCoMockFactory
+from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -97,7 +98,10 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_upnp_disabled_discovery(
-    hass: HomeAssistant, config_entry: MockConfigEntry, soco: MockSoCo
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
 ) -> None:
     """Test issue creation when discovery processing fails with 403."""
 
@@ -115,7 +119,6 @@ async def test_upnp_disabled_discovery(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(
             sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
@@ -126,6 +129,7 @@ async def test_upnp_disabled_discovery(
 
 async def test_upnp_disabled_manual_hosts(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     soco_factory: SoCoMockFactory,
 ) -> None:
     """Test issue creation when manual host processing fails with 403."""
@@ -144,7 +148,6 @@ async def test_upnp_disabled_manual_hosts(
     ):
         await _setup_hass(hass)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(
         sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
     )
@@ -605,6 +608,70 @@ async def test_async_poll_manual_hosts_6(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled manual-host speakers are not pinged on heartbeat."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco.renderingControl = Mock()
+    soco.renderingControl.GetVolume = Mock()
+
+    await _setup_hass(hass)
+
+    assert "media_player.living_room" in entity_registry.entities
+
+    # Mark the speaker unavailable via ZGS event with VanishedDevices.
+    async def fire_vanish_event():
+        subscription = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = await subscription.wait_for_callback_to_be_set()
+        zgs_with_vanished = f"""<ZoneGroupState>
+            <ZoneGroups>
+                <ZoneGroup Coordinator="{soco.uid}" ID="{soco.uid}:1384750254">
+                    <ZoneGroupMember UUID="{soco.uid}" Location="http://192.168.4.2:1400/xml/device_description.xml" ZoneName="Living Room"/>
+                </ZoneGroup>
+            </ZoneGroups>
+            <VanishedDevices>
+                <ZoneGroupMember UUID="{soco.uid}" Reason="powered off" ZoneName="Living Room"/>
+            </VanishedDevices>
+        </ZoneGroupState>"""
+        event = SonosMockEvent(
+            soco, soco.zoneGroupTopology, {"ZoneGroupState": zgs_with_vanished}
+        )
+        sub_callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    await fire_vanish_event()
+
+    # Verify the speaker is marked unavailable.
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Now disable the device.
+    entry = hass.config_entries.async_entries(sonos.DOMAIN)[0]
+    device = device_registry.async_get_device_by_identifier(
+        (sonos.DOMAIN, soco.uid), entry.entry_id
+    )
+    assert device is not None
+    device_registry.async_update_device(
+        device.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    # SonosSpeaker.ping uses RenderingControl.GetVolume under the hood.
+    soco.renderingControl.GetVolume.reset_mock()
+    with freeze_time(dt_util.utcnow()) as freezer:
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The disabled speaker should not have been pinged.
+    soco.renderingControl.GetVolume.assert_not_called()
+
+
 async def test_async_poll_manual_hosts_7(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -722,3 +789,44 @@ async def test_ipv6_not_supported(
         await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
+
+
+async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no exception when a discovery event arrives after entry unload.
+
+    Exercises the scenario where async_add_speakers is called after the entry
+    has been unloaded. The _stop_event guard in _add_speaker must detect that
+    the entry is inactive and skip speaker creation without raising an exception.
+    """
+    new_soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.99", "New Room")
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # Fire a ZGS discovery event for the new speaker after the entry is
+    # unloaded. This simulates a late-arriving network event.
+    subscription = soco.zoneGroupTopology.subscribe.return_value
+    sub_callback = await subscription.wait_for_callback_to_be_set()
+    with (
+        patch.object(
+            MockSoCo,
+            "visible_zones",
+            new_callable=PropertyMock,
+            return_value={soco, new_soco},
+        ),
+        caplog.at_level(logging.DEBUG),
+    ):
+        caplog.clear()
+        sub_callback(SonosMockEvent(soco, soco.zoneGroupTopology, {}))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert any(
+        "Config entry unloaded while adding speaker" in message
+        for message in caplog.messages
+    )

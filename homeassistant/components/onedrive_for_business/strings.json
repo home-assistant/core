@@ -3,19 +3,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "connection_error": "[%key:component::onedrive::config::abort::connection_error%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_drive": "[%key:component::onedrive::config::abort::wrong_drive%]"
     },
     "create_entry": {
@@ -96,11 +88,11 @@
     "authentication_failed": {
       "message": "[%key:component::onedrive::exceptions::authentication_failed::message%]"
     },
+    "connection_error": {
+      "message": "[%key:component::onedrive::config::abort::connection_error%]"
+    },
     "failed_to_get_folder": {
       "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "update_failed": {
       "message": "[%key:component::onedrive::exceptions::update_failed::message%]"

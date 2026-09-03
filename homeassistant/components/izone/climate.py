@@ -1,6 +1,7 @@
 """Support for the iZone HVAC."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any, override
 
 from pizone import Controller, Zone
@@ -25,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -34,6 +35,8 @@ from homeassistant.helpers.typing import VolDictType
 from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .entity import IZoneCoordinatorEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
@@ -50,7 +53,10 @@ IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
 IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
     vol.Required(ATTR_AIRFLOW): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100), msg="invalid airflow"
+        vol.Coerce(float),
+        vol.In(range(0, 101, 5)),
+        vol.Coerce(int),
+        msg="invalid airflow",
     ),
 }
 
@@ -91,6 +97,8 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Initialise ControllerDevice."""
         super().__init__(coordinator)
         controller = coordinator.controller
+        self._unknown_fan_logged = False
+        self._unknown_mode_logged = False
 
         self._attr_supported_features = (
             ClimateEntityFeature.FAN_MODE
@@ -177,11 +185,25 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         if not self.controller.is_on:
             return HVACMode.OFF
-        if (mode := self.controller.mode) is Controller.Mode.FREE_AIR:
+        try:
+            mode = self.controller.mode
+        except ValueError as err:
+            if not self._unknown_mode_logged:
+                _LOGGER.warning(
+                    "Unknown SysMode from iZone controller %s (%s); "
+                    "HVAC mode unavailable. Please open an issue at "
+                    "https://github.com/home-assistant/core/issues "
+                    "and attach diagnostics",
+                    self.controller.device_uid,
+                    err,
+                )
+                self._unknown_mode_logged = True
+            return None
+        if mode is Controller.Mode.FREE_AIR:
             return HVACMode.FAN_ONLY
         for key, value in self._state_to_pizone.items():
             if value is mode:
@@ -214,7 +236,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.controller.mode is Controller.Mode.FREE_AIR:
+        if self.controller.free_air:
             return self.controller.temp_supply
         return self.controller.temp_return
 
@@ -266,7 +288,21 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return _IZONE_FAN_TO_HA[self.controller.fan]
+        try:
+            return _IZONE_FAN_TO_HA[self.controller.fan]
+        except ValueError as err:
+            if not self._unknown_fan_logged:
+                _LOGGER.warning(
+                    "Unknown SysFan from iZone controller %s (%s); "
+                    "reporting fan_mode unknown. Please open an issue at "
+                    "https://github.com/home-assistant/core/issues "
+                    "and attach diagnostics",
+                    self.controller.device_uid,
+                    err,
+                )
+                self._unknown_fan_logged = True
+            # Display-only; omit from fan_modes so it cannot be selected.
+            return "unknown"
 
     @property
     @override
@@ -370,7 +406,11 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
             manufacturer="IZone",
             model=zone.type.name.title(),
             name=zone.name.title(),
-            via_device=(DOMAIN, controller_entity.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, controller_entity.unique_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property

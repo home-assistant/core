@@ -3,25 +3,26 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "Wrong account: The credentials provided do not match this Monzo account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
+    "progress": {
+      "wait_for_approval": "Open the Monzo app and approve the request from Home Assistant. Setup will continue automatically once access is approved."
+    },
     "step": {
-      "await_approval_confirmation": {
-        "data": {
-          "confirm": "I've approved"
-        },
-        "description": "Before proceeding, open your Monzo app and approve the request from Home Assistant.",
-        "title": "Confirm in Monzo app"
+      "approval_timeout": {
+        "data": {},
+        "description": "Approval was not received from Monzo. Approve the request in the Monzo app, then try again.",
+        "title": "Approval timed out"
+      },
+      "connection_error": {
+        "data": {},
+        "description": "Home Assistant could not check whether access was approved. Check your internet connection and try again.",
+        "title": "Connection error"
       },
       "pick_implementation": {
         "data": {
@@ -39,6 +40,11 @@
     }
   },
   "entity": {
+    "event": {
+      "transaction": {
+        "name": "Transaction"
+      }
+    },
     "sensor": {
       "balance": {
         "name": "Balance"
@@ -46,14 +52,94 @@
       "pot_balance": {
         "name": "[%key:component::monzo::entity::sensor::balance::name%]"
       },
+      "spend_today": {
+        "name": "Spent today"
+      },
       "total_balance": {
         "name": "Total balance"
       }
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "account_selected_as_pot": {
+      "message": "{device_name} is an account, not a pot. Choose a Monzo pot in the Pot field."
+    },
+    "authentication_expired": {
+      "message": "Authentication with Monzo has expired. Reauthentication has been started."
+    },
+    "different_entries": {
+      "message": "The selected account and pot must belong to the same Monzo connection."
+    },
+    "invalid_account": {
+      "message": "The selected device ({device_name}) is not an account belonging to this Monzo connection."
+    },
+    "invalid_api_response": {
+      "message": "The Monzo API returned an invalid response."
+    },
+    "invalid_api_response_with_details": {
+      "message": "The Monzo API returned an invalid response. Enable debug logging for details."
+    },
+    "invalid_device": {
+      "message": "The selected Monzo device could not be found."
+    },
+    "invalid_pot": {
+      "message": "The selected device ({device_name}) is not a pot belonging to this Monzo connection."
+    },
+    "invalid_transfer_account": {
+      "message": "{device_name} does not support pot transfers. Choose a different Monzo account."
+    },
+    "pot_account_mismatch": {
+      "message": "{pot_name} belongs to {pot_account_name}, not {account_name}. Choose its associated Monzo account, or choose a pot belonging to {account_name}."
+    },
+    "pot_selected_as_account": {
+      "message": "{device_name} is a pot, not an account. Choose a Monzo account in the Account field."
+    },
+    "transfer_failed": {
+      "message": "The money could not be transferred. Try again later."
+    },
+    "transfer_rejected": {
+      "message": "Monzo rejected the transfer for {account_name} (account type: {account_type}): {reason}. If the reason does not explain why this account cannot be used for pot transfers, report an issue with the Monzo integration and include these details."
+    },
+    "transfer_status_unknown": {
+      "message": "Home Assistant could not confirm whether the transfer completed. Check your Monzo balance before trying again."
+    }
+  },
+  "services": {
+    "deposit_into_pot": {
+      "description": "Moves money from a Monzo account into a pot.",
+      "fields": {
+        "account": {
+          "description": "The account to move money from.",
+          "name": "From account"
+        },
+        "amount": {
+          "description": "The amount of money to move.",
+          "name": "Amount"
+        },
+        "pot": {
+          "description": "The pot to move money into.",
+          "name": "To pot"
+        }
+      },
+      "name": "Deposit into pot"
+    },
+    "withdraw_from_pot": {
+      "description": "Moves money from a Monzo pot into an account.",
+      "fields": {
+        "account": {
+          "description": "The account to move money into.",
+          "name": "To account"
+        },
+        "amount": {
+          "description": "[%key:component::monzo::services::deposit_into_pot::fields::amount::description%]",
+          "name": "[%key:component::monzo::services::deposit_into_pot::fields::amount::name%]"
+        },
+        "pot": {
+          "description": "The pot to move money from.",
+          "name": "From pot"
+        }
+      },
+      "name": "Withdraw from pot"
     }
   }
 }

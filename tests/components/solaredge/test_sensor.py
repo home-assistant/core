@@ -11,7 +11,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import DOMAIN, INVENTORY_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import SITE_ID
@@ -469,6 +469,27 @@ async def test_storage_data_service_multi_battery(
     assert bat2_soc is not None
     assert float(hass.states.get(bat2_charge).state) == 700.0
     assert float(hass.states.get(bat2_soc).state) == 80.0
+
+
+@pytest.mark.usefixtures("recorder_mock", "solaredge_api")
+async def test_battery_device_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the battery device is linked to the site device via via_device_id."""
+    await setup_integration(hass, mock_config_entry)
+
+    site_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SITE_ID), mock_config_entry.entry_id
+    )
+    assert site_device is not None
+
+    battery_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SITE_ID}_BAT001"), mock_config_entry.entry_id
+    )
+    assert battery_device is not None
+    assert battery_device.via_device_id == site_device.id
 
 
 async def test_storage_service_not_created_when_inventory_has_no_batteries(

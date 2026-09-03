@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 
 from .typing import DiscoveryInfoType
 
@@ -73,7 +73,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
                     has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
-                return self.async_abort(reason="no_devices_found")
+                return self.async_abort(
+                    reason="no_devices_found",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             # Cancel the discovered one.
             for flow in in_progress:
@@ -259,7 +262,10 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             self.hass
         ):
             if not async_is_connected(self.hass):
-                return self.async_abort(reason="cloud_not_connected")
+                return self.async_abort(
+                    reason="cloud_not_connected",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True

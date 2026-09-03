@@ -1,5 +1,4 @@
 """Support for Traccar device tracking."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
@@ -9,7 +8,6 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityStateAttribute,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -18,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, TRACKER_UPDATE
+from . import DOMAIN, TRACKER_UPDATE, TraccarConfigEntry
 from .const import (
     ATTR_ALTITUDE,
     ATTR_BEARING,
@@ -70,7 +68,7 @@ EVENTS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TraccarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure a dispatcher connection based on a config entry."""
@@ -78,24 +76,22 @@ async def async_setup_entry(
     @callback
     def _receive_data(device, latitude, longitude, battery, accuracy, attrs):
         """Receive set location."""
-        if device in hass.data[DOMAIN]["devices"]:
+        if device in entry.runtime_data:
             return
 
-        hass.data[DOMAIN]["devices"].add(device)
+        entry.runtime_data.add(device)
 
         async_add_entities(
             [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
         )
 
-    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
-        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
-    )
+    entry.async_on_unload(async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data))
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+        for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
         for identifier in device.identifiers
     }
     if not dev_ids:
@@ -103,7 +99,7 @@ async def async_setup_entry(
 
     entities = []
     for dev_id in dev_ids:
-        hass.data[DOMAIN]["devices"].add(dev_id)
+        entry.runtime_data.add(dev_id)
         entity = TraccarEntity(dev_id, None, None, None, None, None)
         entities.append(entity)
 

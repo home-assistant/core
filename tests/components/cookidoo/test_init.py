@@ -240,6 +240,73 @@ async def test_migration_from(
     )
 
 
+@pytest.mark.usefixtures("mock_cookidoo_client")
+async def test_migration_from_partial_duplicate_unique_ids(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration handles stale entities when the target unique_id exists."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_ENTRY_MIGRATION,
+        title="MIGRATION_TEST with duplicate target unique_id",
+        version=1,
+        minor_version=2,
+        unique_id="old_ciam_sub_uuid",
+        entry_id=OLD_ENTRY_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "old_ciam_sub_uuid")},
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain=Platform.TODO,
+        unique_id="old_ciam_sub_uuid_ingredients",
+        device_id=device.id,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain=Platform.BUTTON,
+        unique_id="old_ciam_sub_uuid_todo_clear",
+        device_id=device.id,
+    )
+    existing_button_entity = entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain=Platform.BUTTON,
+        unique_id=f"{TEST_UUID}_todo_clear",
+        device_id=device.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == TEST_UUID
+
+    assert entity_registry.async_get_entity_id(
+        Platform.TODO, DOMAIN, f"{TEST_UUID}_ingredients"
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, f"{TEST_UUID}_todo_clear"
+        )
+        == existing_button_entity.entity_id
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "old_ciam_sub_uuid_todo_clear"
+        )
+        is None
+    )
+
+
 @pytest.mark.parametrize(
     (
         "from_version",

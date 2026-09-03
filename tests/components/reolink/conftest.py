@@ -98,6 +98,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.is_battery = False
+    host_mock.is_dual_lens = False
     host_mock.mac_address = TEST_MAC
     host_mock.uid = TEST_UID
     host_mock.onvif_enabled = True
@@ -199,6 +200,14 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.hub_visitor_tone_id.return_value = 1
     host_mock.recording_packing_time_list = ["30 Minutes", "60 Minutes"]
     host_mock.recording_packing_time = "60 Minutes"
+    host_mock.work_mode_battery_list.return_value = ["custom", "smart", "power_saving"]
+    host_mock.work_mode_battery.return_value = "custom"
+    host_mock.work_mode_powered_list.return_value = [
+        "alarm_based",
+        "continuous",
+        "custom",
+    ]
+    host_mock.work_mode_powered.return_value = "continuous"
 
     # Baichuan
     host_mock.baichuan = MagicMock()
@@ -237,6 +246,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.audio_noise_reduction.return_value = 50
     host_mock.baichuan.cry_sensitivity.return_value = 3
     host_mock.baichuan.ir_brightness.return_value = 100
+    host_mock.baichuan.pre_record_fps_list.return_value = ["1", "3", "5"]
     host_mock.baichuan.pre_record_time.return_value = 10
     host_mock.baichuan.pre_record_battery_stop.return_value = 10
     host_mock.whiteled_brightness.return_value = None
