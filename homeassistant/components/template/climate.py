@@ -408,6 +408,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_temperature_unit = (
             config.get(CONF_TEMPERATURE_UNIT) or hass.config.units.temperature_unit
         )
+        self._attr_target_humidity_step = config.get(CONF_TARGET_HUMIDITY_STEP)
         self._attr_target_temperature_step = config.get(CONF_TARGET_TEMPERATURE_STEP)
 
         # Only set these options when it exists in the configuration in order
@@ -419,19 +420,16 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             ("_attr_min_humidity", CONF_MIN_HUMIDITY),
             ("_attr_precision", CONF_PRECISION),
         ):
-            if option_value := config.get(option):
+            if (option_value := config.get(option)) is not None:
                 setattr(attr, option, option_value)
 
         self._attr_hvac_mode = None
         self._attr_hvac_modes = []
 
-        self._last_on: HVACMode | None = None
-
         # Setup HVAC Mode
         self.setup_state_template(
             "_attr_hvac_mode",
             tcv.strenum(self, CONF_HVAC_MODE, HVACMode),
-            self._update_hvac_mode,
         )
         self.setup_template(
             CONF_HVAC_MODES,
@@ -536,15 +534,11 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         if (
             CONF_TARGET_TEMPERATURE_HIGH in self._templates
             and CONF_TARGET_TEMPERATURE_LOW in self._templates
+            and SET_TEMPERATURE_ACTION in self._action_scripts
         ):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
-
-    def _update_hvac_mode(self, render) -> None:
-        self._attr_hvac_mode = render
-        if render is not None and render != HVACMode.OFF:
-            self._last_on = render
 
     def _update_hvac_modes(self, render) -> None:
         if isinstance(render, list):
@@ -573,27 +567,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 float(result), self._attr_target_temperature_step
             )
 
-    def _update_optimistic_hvac(self, hvac_mode: HVACMode | None) -> None:
-        self._attr_hvac_mode = hvac_mode
-        self.async_write_ha_state()
-
-    @override
-    async def async_turn_off(self) -> None:
-        """Turn the climate off."""
-        if self._attr_hvac_mode is None:
-            return
-
-        if self._attr_hvac_mode != HVACMode.OFF:
-            self._last_on = self._attr_hvac_mode
-
-        await self.async_set_hvac_mode(HVACMode.OFF)
-
-    @override
-    async def async_turn_on(self) -> None:
-        """Turn the climate on."""
-        if (last_on := self._last_on) is not None:
-            await self.async_set_hvac_mode(last_on)
-
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -605,7 +578,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             )
 
         if self._attr_assumed_state:
-            self._update_optimistic_hvac(hvac_mode)
+            self._attr_hvac_mode = hvac_mode
+            self.async_write_ha_state()
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -682,48 +656,40 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         """Set one or more target temperatures."""
         common_params: dict[str, Any] = {}
         write_state = False
-        if (attr := kwargs.get(ATTR_TEMPERATURE)) is not None and (
-            temperature := tcv.number(
-                self,
-                f"{SET_TEMPERATURE_ACTION} {ATTR_TEMPERATURE}",
-                self._attr_min_temp,
-                self._attr_max_temp,
-            )(attr)
-        ) is not None:
-            common_params["temperature"] = temperature
-            if self._attr_assumed_state:
-                self._attr_target_temperature = temperature
-                write_state = True
 
-        if (attr := kwargs.get(ATTR_TARGET_TEMP_HIGH)) and (
-            target_temp_high := tcv.number(
-                self,
-                f"{SET_TEMPERATURE_ACTION} {ATTR_TARGET_TEMP_HIGH}",
-                self._attr_min_temp,
-                self._attr_max_temp,
-            )(attr)
-        ) is not None:
-            common_params["target_temp_high"] = target_temp_high
-            if self._attr_assumed_state:
-                self._attr_target_temperature_high = target_temp_high
-                write_state = True
-
-        if (attr := kwargs.get(ATTR_TARGET_TEMP_LOW)) and (
-            target_temp_low := tcv.number(
-                self,
-                f"{SET_TEMPERATURE_ACTION} {ATTR_TARGET_TEMP_LOW}",
-                self._attr_min_temp,
-                self._attr_max_temp,
-            )(attr)
-        ) is not None:
-            common_params["target_temp_low"] = target_temp_low
-            if self._attr_assumed_state:
-                self._attr_target_temperature_low = target_temp_low
-                write_state = True
+        for attr, param, prop in (
+            (
+                ATTR_TEMPERATURE,
+                "temperature",
+                "_attr_target_temperature",
+            ),
+            (
+                ATTR_TARGET_TEMP_HIGH,
+                "target_temp_high",
+                "_attr_target_temperature_high",
+            ),
+            (
+                ATTR_TARGET_TEMP_LOW,
+                "target_temp_low",
+                "_attr_target_temperature_low",
+            ),
+        ):
+            if (value := kwargs.get(attr)) is not None and (
+                validated := tcv.number(
+                    self,
+                    f"{SET_TEMPERATURE_ACTION} {attr}",
+                    self._attr_min_temp,
+                    self._attr_max_temp,
+                )(value)
+            ) is not None:
+                common_params[param] = validated
+                if self._attr_assumed_state:
+                    setattr(self, prop, validated)
+                    write_state = True
 
         breadcrumb = f"{SET_TEMPERATURE_ACTION} {ATTR_HVAC_MODE}"
-        if (attr := kwargs.get(ATTR_HVAC_MODE)) and (
-            hvac_mode := tcv.strenum(self, breadcrumb, HVACMode)(attr)
+        if (hvac_value := kwargs.get(ATTR_HVAC_MODE)) and (
+            hvac_mode := tcv.strenum(self, breadcrumb, HVACMode)(hvac_value)
         ) is not None:
             if hvac_mode in self._attr_hvac_modes:
                 common_params["hvac_mode"] = hvac_mode
@@ -781,7 +747,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_fan_modes = extra_data.fan_modes
         self._attr_hvac_action = extra_data.hvac_action
         self._attr_hvac_mode = extra_data.hvac_mode
-        self._attr_hvac_modes = extra_data.hvac_modes or []
+        self._update_hvac_modes(extra_data.hvac_modes or [])
         self._attr_preset_mode = extra_data.preset_mode
         self._attr_preset_modes = extra_data.preset_modes
         self._attr_swing_mode = extra_data.swing_mode
