@@ -462,7 +462,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self.setup_template(
                 option,
                 attr,
-                tcv.number(self, option, self._attr_min_temp, self._attr_max_temp),
+                tcv.number(self, option, self.min_temp, self.max_temp),
                 on_update=on_update,
             )
 
@@ -685,8 +685,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 validated := tcv.number(
                     self,
                     f"{SET_TEMPERATURE_ACTION} {attr}",
-                    self._attr_min_temp,
-                    self._attr_max_temp,
+                    self.min_temp,
+                    self.max_temp,
                 )(value)
             ) is not None:
                 common_params[param] = validated

@@ -76,6 +76,11 @@ SET_TEMPERATURE_ACTION = make_test_action(
     },
 )
 
+MINIMUM_REQUIREMENTS = {
+    "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+    **SET_HVAC_MODE_ACTION,
+}
+
 
 @pytest.fixture
 async def setup_base_climate(
@@ -120,7 +125,7 @@ async def setup_single_attribute_climate(
 
 @pytest.mark.parametrize(
     ("attribute", "extra_config"),
-    [("current_humidity", {})],
+    [("current_humidity", MINIMUM_REQUIREMENTS)],
 )
 @pytest.mark.parametrize(
     "style",
@@ -154,7 +159,7 @@ async def test_humidity_template(hass: HomeAssistant, expected: Any) -> None:
 
 @pytest.mark.parametrize(
     ("attribute", "extra_config"),
-    [("current_temperature", {})],
+    [("current_temperature", MINIMUM_REQUIREMENTS)],
 )
 @pytest.mark.parametrize(
     "style",
