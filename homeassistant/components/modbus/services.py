@@ -40,7 +40,12 @@ if TYPE_CHECKING:
 
 def _get_hubs(hass: HomeAssistant) -> dict[str, ModbusHub]:
     """Return the configured Modbus hubs, raising if Modbus is not set up."""
-    if (hubs := hass.data.get(DATA_MODBUS_HUBS)) is None:
+    # The hubs are stored before their setup is awaited, and a failed hub setup
+    # leaves them behind, so their presence alone does not mean they are usable.
+    if (
+        DOMAIN not in hass.config.components
+        or (hubs := hass.data.get(DATA_MODBUS_HUBS)) is None
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_loaded",
@@ -96,7 +101,7 @@ async def _async_stop_hub(service: ServiceCall) -> None:
 async def _async_reload_config(call: ServiceCall) -> None:
     """Reload Modbus."""
     hass = call.hass
-    if DATA_MODBUS_HUBS not in hass.data:
+    if DOMAIN not in hass.config.components or DATA_MODBUS_HUBS not in hass.data:
         LOGGER.error("Modbus cannot reload, because it was never loaded")
         return
     hubs = hass.data[DATA_MODBUS_HUBS]
