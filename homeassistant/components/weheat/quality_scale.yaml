@@ -76,11 +76,7 @@ rules:
       While unlikely to happen. Check if it is easily integrated.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      The cooling start conditions are the closest thing to a noisy set, but they
-      are why someone looks at a heat pump that is not cooling, so they are on.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: done

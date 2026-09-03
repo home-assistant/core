@@ -69,6 +69,7 @@ def _cooling_start_condition(condition: str) -> WeHeatBinarySensorEntityDescript
         translation_key=f"cooling_start_condition_{condition}",
         key=f"cooling_start_condition_{condition}",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: (
             status.cooling_start_conditions[condition]
             if status.cooling_start_conditions is not None
