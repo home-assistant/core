@@ -13,12 +13,19 @@ from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.components.zwave_js.trigger import TRIGGERS
+from homeassistant.components.zwave_js.triggers.event import (
+    _OPTIONS_SCHEMA_DICT as EVENT_OPTIONS_SCHEMA_DICT,
+)
 from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
+from homeassistant.components.zwave_js.triggers.value_updated import (
+    _OPTIONS_SCHEMA_DICT as VALUE_UPDATED_OPTIONS_SCHEMA_DICT,
+)
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, trigger
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY
@@ -1495,3 +1502,46 @@ async def test_zwave_js_old_syntax(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(zwavejs_value_updated) == 1
+
+
+@pytest.mark.usefixtures("integration")
+async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
+    """Test the command class options and translations match the CommandClass enum."""
+    expected = {str(cc.value) for cc in CommandClass}
+
+    descriptions = await trigger.async_get_all_descriptions(hass)
+    options = descriptions[f"{DOMAIN}.value_updated"]["fields"]["command_class"][
+        "selector"
+    ]["select"]["options"]
+    assert len(options) == len(expected)
+    assert set(options) == expected
+
+    translations = await async_get_translations(hass, "en", "selector", {DOMAIN})
+    prefix = f"component.{DOMAIN}.selector.command_class.options."
+    assert {
+        key.removeprefix(prefix) for key in translations if key.startswith(prefix)
+    } == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_type", "options_schema"),
+    [
+        pytest.param(f"{DOMAIN}.event", EVENT_OPTIONS_SCHEMA_DICT, id="event"),
+        pytest.param(
+            f"{DOMAIN}.value_updated",
+            VALUE_UPDATED_OPTIONS_SCHEMA_DICT,
+            id="value_updated",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("integration")
+async def test_trigger_description_fields_match_schema(
+    hass: HomeAssistant, trigger_type: str, options_schema: dict[vol.Marker, object]
+) -> None:
+    """Test the described fields match the trigger's options schema."""
+    descriptions = await trigger.async_get_all_descriptions(hass)
+    fields = descriptions[trigger_type]["fields"]
+    assert set(fields) == {str(key) for key in options_schema}
+    assert {name for name, field in fields.items() if field["required"]} == {
+        str(key) for key in options_schema if isinstance(key, vol.Required)
+    }
