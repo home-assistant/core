@@ -5,26 +5,48 @@ from dataclasses import dataclass
 
 from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_private_key
 from iseo_argo_ble import IseoClient
+import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_platform_entity_service
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADMIN_USER_SUBTYPE,
+    ATTR_ENABLED,
     CONF_ADMIN_PRIV_SCALAR,
     CONF_ADMIN_UUID,
     CONF_PRIV_SCALAR,
     DEFAULT_USER_SUBTYPE,
     DOMAIN,
     PLATFORMS,
+    SERVICE_SET_CREDENTIAL_ENABLED,
 )
 from .coordinator import IseoUserCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the integration's actions."""
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_CREDENTIAL_ENABLED,
+        # Suspending or restoring a credential changes who can get into the
+        # house, so it is kept to administrators.
+        admin_only=True,
+        entity_domain=BINARY_SENSOR_DOMAIN,
+        schema={vol.Required(ATTR_ENABLED): cv.boolean},
+        func="async_set_enabled",
+    )
+    return True
 
 
 @dataclass

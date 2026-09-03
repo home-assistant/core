@@ -38,26 +38,26 @@
     }
   },
   "entity": {
-    "switch": {
-      "user_account": {
+    "binary_sensor": {
+      "credential_account": {
         "name": "{name} (account)"
       },
-      "user_fingerprint": {
+      "credential_fingerprint": {
         "name": "{name} (fingerprint)"
       },
-      "user_invitation": {
+      "credential_invitation": {
         "name": "{name} (invitation)"
       },
-      "user_other": {
+      "credential_other": {
         "name": "{name}"
       },
-      "user_phone": {
+      "credential_phone": {
         "name": "{name} (phone)"
       },
-      "user_pin": {
+      "credential_pin": {
         "name": "{name} (PIN)"
       },
-      "user_rfid": {
+      "credential_rfid": {
         "name": "{name} (card)"
       }
     }
@@ -77,6 +77,18 @@
     },
     "lock_rejected_identity": {
       "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
+    }
+  },
+  "services": {
+    "set_credential_enabled": {
+      "description": "Lets a credential enrolled on the lock open the door, or stops it doing so. The credential stays on the lock either way. Only administrators can run this action.",
+      "fields": {
+        "enabled": {
+          "description": "Whether the credential may open the lock.",
+          "name": "Enabled"
+        }
+      },
+      "name": "Set credential enabled"
     }
   }
 }

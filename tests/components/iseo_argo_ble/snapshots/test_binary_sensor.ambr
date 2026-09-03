@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[switch.iseo_lock_33333333_phone-entry]
+# name: test_entities[binary_sensor.iseo_lock_33333333_phone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11,9 +11,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.iseo_lock_33333333_phone',
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.iseo_lock_33333333_phone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,25 +31,25 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'user_phone',
+    'translation_key': 'credential_phone',
     'unique_id': 'aa:bb:cc:dd:ee:ff_user_17_3333333333333333333333333333cccc',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.iseo_lock_33333333_phone-state]
+# name: test_entities[binary_sensor.iseo_lock_33333333_phone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ISEO Lock 33333333 (phone)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.iseo_lock_33333333_phone',
+    'entity_id': 'binary_sensor.iseo_lock_33333333_phone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[switch.iseo_lock_alice_card-entry]
+# name: test_entities[binary_sensor.iseo_lock_alice_card-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -61,9 +61,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.iseo_lock_alice_card',
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.iseo_lock_alice_card',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,25 +81,25 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'user_rfid',
+    'translation_key': 'credential_rfid',
     'unique_id': 'aa:bb:cc:dd:ee:ff_user_16_1111111111111111111111111111aaaa',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.iseo_lock_alice_card-state]
+# name: test_entities[binary_sensor.iseo_lock_alice_card-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ISEO Lock Alice (card)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.iseo_lock_alice_card',
+    'entity_id': 'binary_sensor.iseo_lock_alice_card',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[switch.iseo_lock_bob_pin-entry]
+# name: test_entities[binary_sensor.iseo_lock_bob_pin-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -111,9 +111,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.iseo_lock_bob_pin',
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.iseo_lock_bob_pin',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -131,18 +131,18 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'user_pin',
+    'translation_key': 'credential_pin',
     'unique_id': 'aa:bb:cc:dd:ee:ff_user_18_2222222222222222222222222222bbbb',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.iseo_lock_bob_pin-state]
+# name: test_entities[binary_sensor.iseo_lock_bob_pin-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ISEO Lock Bob (PIN)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.iseo_lock_bob_pin',
+    'entity_id': 'binary_sensor.iseo_lock_bob_pin',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

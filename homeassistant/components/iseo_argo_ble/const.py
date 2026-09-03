@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 
 DOMAIN = "iseo_argo_ble"
-PLATFORMS: list[Platform] = [Platform.LOCK, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
 
 # Config entry keys (CONF_ADDRESS and CONF_UUID come from homeassistant.const)
 CONF_PRIV_SCALAR = "priv_scalar"
@@ -12,6 +12,10 @@ CONF_ADMIN_PRIV_SCALAR = "admin_priv_scalar"
 
 # Config flow field: opt in to enrolling the admin identity
 CONF_ENABLE_ADMIN = "enable_admin"
+
+# Action changing who may open the lock; administrators only
+SERVICE_SET_CREDENTIAL_ENABLED = "set_credential_enabled"
+ATTR_ENABLED = "enabled"
 
 # Default user subtype (gateway)
 DEFAULT_USER_SUBTYPE: int = 17  # UserSubType.BT_GATEWAY
