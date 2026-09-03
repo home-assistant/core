@@ -115,6 +115,15 @@ async def test_device_diagnostics_retains_unknown_program(
         assert result["miele_data"]["unknown_program_ids"] == [
             {"value_raw": 99999, "value_localized": "Mystery drink"}
         ]
+
+        config_result = await get_diagnostics_for_config_entry(
+            hass, hass_client, mock_config_entry
+        )
+        assert config_result["miele_data"]["unknown_program_ids"] == {
+            "**REDACTED_bd62a0d31ec35172": [
+                {"value_raw": 99999, "value_localized": "Mystery drink"}
+            ]
+        }
         mock_miele_client.get_programs.assert_not_awaited()
     finally:
         completed_warnings.discard(warning)
