@@ -171,14 +171,6 @@ def mock_abrp_client(
     mock_abrp_vehicles: list[AbrpVehicle],
 ) -> Generator[AsyncMock]:
     """Patch the ``aioabrp.AbrpClient`` boundary with configurable mocks."""
-    seed_responses: dict[int, Telemetry | BaseException] = {}
-
-    async def _seed(self: Any, vehicle_id: int) -> Telemetry:
-        outcome = seed_responses.get(vehicle_id, Telemetry())
-        if isinstance(outcome, BaseException):
-            raise outcome
-        return outcome
-
     display_responses: dict[str, VehicleModelDisplay | BaseException] = {}
 
     async def _display(self: Any, typecode: str) -> VehicleModelDisplay:
@@ -200,13 +192,7 @@ def mock_abrp_client(
             autospec=True,
             side_effect=_display,
         ),
-        patch(
-            "aioabrp.AbrpClient.async_get_current_telemetry",
-            autospec=True,
-            side_effect=_seed,
-        ),
     ):
-        mock_client.seed_responses = seed_responses
         mock_client.display_responses = display_responses
         yield mock_client
 

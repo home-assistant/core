@@ -128,7 +128,6 @@ async def test_cold_install_lazy_create_preserved(
     fake_stream: Any,
 ) -> None:
     """Cold install: no registry, no seed, no frame → no entity yet; frame creates."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(hass, config_entry_with_vehicles)
 
@@ -150,7 +149,6 @@ async def test_restart_eager_create_from_registry(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """Prior voltage registry entry → entity eager-created BEFORE any frame."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -184,7 +182,6 @@ async def test_restore_native_value_then_optional_frame(
     expected_state: str,
 ) -> None:
     """Restored native_value persists; a live voltage frame overrides it."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -211,7 +208,6 @@ async def test_restore_last_reported_at_round_trips_as_datetime(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """Restored ISO ``last_reported_at`` parses back to ``datetime`` on the entity."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -236,7 +232,6 @@ async def test_malformed_restored_stamp_omits_attribute(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """Malformed stamp → ``last_reported_at`` ABSENT from attributes (not None)."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -262,7 +257,6 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     fake_stream: Any,
 ) -> None:
     """Stamp refreshes only on frames whose batch carries the voltage metric."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -316,7 +310,6 @@ async def test_provider_attribute_appears_from_live_frame(
     fake_stream: Any,
 ) -> None:
     """A live frame carrying a provider exposes ``state.attributes["provider"]``."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(hass, config_entry_with_vehicles)
 
@@ -338,7 +331,6 @@ async def test_provider_attribute_absent_when_live_frame_lacks_provider(
     fake_stream: Any,
 ) -> None:
     """No prior + frame without a provider → ``provider`` key absent."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(hass, config_entry_with_vehicles)
 
@@ -358,7 +350,6 @@ async def test_provider_attribute_restored_from_recorder_when_no_live_frame(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """Restored ``provider`` surfaces even before any live frame arrives."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -387,7 +378,6 @@ async def test_provider_per_attribute_live_wins_over_restored(
     fake_stream: Any,
 ) -> None:
     """Live and restored attributes compose per-attribute, not whole-mapping."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -440,7 +430,6 @@ async def test_provider_attribute_absent_when_restored_value_malformed(
     restored_provider: Any,
 ) -> None:
     """Malformed restored ``provider`` → attribute OMITTED entirely on the entity."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -467,7 +456,6 @@ async def test_vehicle_absent_from_garage_skips_eager_create_with_restore_cache(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """Registry + recorder hold a voltage row but the garage is empty → skip."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
     # The vehicle was removed from the ABRP garage since the last run.
     mock_abrp_client.return_value = []
     entry = config_entry_with_vehicles
@@ -502,7 +490,6 @@ async def test_restored_native_value_rejected_when_malformed(
     bad_native_value: Any,
 ) -> None:
     """Malformed restored ``native_value`` + no live frame → entity unavailable."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -526,7 +513,6 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """Eager-create probe filters on ``config_entry_id``, skipping foreign rows."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     # Same OIDC sub so unique_id collides, but a different entry_id.
     foreign_entry = MockConfigEntry(
@@ -577,7 +563,6 @@ async def test_repeated_garage_vehicle_restores_one_entity_per_metric(
     preseed_registry_keys: list[str],
 ) -> None:
     """A garage repeating a vehicle must not rebuild its restored sensors twice."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
     mock_abrp_client.return_value = [
         AbrpVehicle(
             vehicle_id=MOCK_VEHICLE_ID,

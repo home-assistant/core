@@ -58,7 +58,6 @@ async def test_stream_only_metric_creates_entity(
     fake_stream: Any,
 ) -> None:
     """The seed is empty; a power frame arrives over the stream."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -84,7 +83,6 @@ async def test_post_setup_frame_creates_entity(
     fake_stream: Any,
 ) -> None:
     """The seed is empty; voltage arrives only after setup completes."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -120,7 +118,6 @@ async def test_lazy_create_idempotent_on_repeated_frames(
     fake_stream: Any,
 ) -> None:
     """Two consecutive non-null power frames must create exactly one power entity."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -173,8 +170,6 @@ async def test_multi_vehicle_entity_isolation(
 ) -> None:
     """Voltage arriving for vehicle A must not create a voltage entity for vehicle B."""
     entry = config_entry_with_vehicles
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = Telemetry()
 
     await _lazy_setup(hass, entry)
 
@@ -197,7 +192,6 @@ async def test_absent_metric_entities_not_created(
     mock_abrp_client: AsyncMock,
 ) -> None:
     """An empty seed with no stream frames must produce zero telemetry entities."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -215,7 +209,6 @@ async def test_soe_sensor_lazy_creates_on_first_frame(
     fake_stream: Any,
 ) -> None:
     """An ``soe`` frame lazy-creates the SoE sensor; native Wh, display kWh."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -243,7 +236,6 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
     fake_stream: Any,
 ) -> None:
     """An ``odometer`` frame lazy-creates the odometer sensor; native m, display km."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -274,7 +266,6 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
     fake_stream: Any,
 ) -> None:
     """A ``calibrated_ref_cons`` frame lazy-creates the ref-consumption sensor."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -313,7 +304,6 @@ async def test_battery_capacity_sensor_lazy_creates_static(
     fake_stream: Any,
 ) -> None:
     """A ``battery_capacity`` frame lazy-creates the capacity sensor as STATIC."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -351,7 +341,6 @@ async def test_soh_sensor_lazy_creates_on_first_frame(
     fake_stream: Any,
 ) -> None:
     """A ``soh`` frame lazy-creates the State-of-Health sensor (percent)."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -385,7 +374,6 @@ async def test_battery_temperature_sensor_stays_primary_category(
     fake_stream: Any,
 ) -> None:
     """Battery Temperature stays primary (``entity_category is None``)."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -420,7 +408,6 @@ async def test_soh_above_100_percent_surfaces_uncapped(
     fake_stream: Any,
 ) -> None:
     """A post-recalibration SoH overshoot (> 100%) surfaces uncapped."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -443,7 +430,6 @@ async def test_battery_capacity_recalibration_jump_updates_state(
     fake_stream: Any,
 ) -> None:
     """A capacity recalibration jump is reflected in ``state.state``."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -478,8 +464,6 @@ async def test_new_sensor_multi_vehicle_isolation(
 ) -> None:
     """A metric frame for vehicle A must not create the entity on vehicle B."""
     entry = config_entry_with_vehicles
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = Telemetry()
 
     await _lazy_setup(hass, entry)
 
