@@ -6,13 +6,6 @@
     }),
     'devices': list([
       dict({
-        'binary_sensors': dict({
-        }),
-        'buttons': list([
-          'mute',
-          'ptz_up',
-          'restart_device',
-        ]),
         'channel_id': None,
         'device_id': 'd1',
         'identifier': 'd1',
@@ -20,27 +13,12 @@
         'manufacturer': 'Imou',
         'model': 'm1',
         'product_id': None,
-        'selects': dict({
-        }),
-        'sensors': dict({
-          'status': dict({
-            'state': 'online',
-            'state_variant': 'enum',
-          }),
-        }),
         'sw_version': '1.0',
-        'switches': dict({
-        }),
       }),
     ]),
     'entry': dict({
-      'data': dict({
-        'api_url': 'sg',
-        'app_id': 'test_app_id',
-        'app_secret': '**REDACTED**',
-      }),
-      'title': 'Imou',
-      'unique_id': 'test_app_id',
+      'api_url': 'sg',
+      'app_id': 'test_app_id',
     }),
   })
 # ---

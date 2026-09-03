@@ -15,7 +15,7 @@ async def test_config_entry_diagnostics(
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Diagnostics include the redacted entry and current devices."""
+    """Diagnostics include the region, App ID, and current devices."""
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
         == snapshot
