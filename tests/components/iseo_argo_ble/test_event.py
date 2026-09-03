@@ -42,6 +42,7 @@ LOCK_ENTITY_ID = "lock.iseo_lock"
 CODE_OPENED = 8
 CODE_WRONG_PIN = 5
 CODE_HARDWARE_FAULT = 90
+CODE_NOT_YET_VALID = 51
 CODE_IGNORED = 3
 
 
@@ -119,7 +120,9 @@ async def test_door_open_reports_the_log_entry(
 
     opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
     mock_iseo_client.gw_read_unread_logs.return_value = [
-        _log_entry(CODE_OPENED, opened_at, extra_description="Federico")
+        _log_entry(
+            CODE_OPENED, opened_at, extra_description="Federico", user_info="ab12cd34"
+        )
     ]
 
     await _open_the_door(hass, freezer, mock_iseo_client)
@@ -128,6 +131,7 @@ async def test_door_open_reports_the_log_entry(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_EVENT_TYPE] == "opened"
     assert state.attributes["opened_by"] == "Federico"
+    assert state.attributes["credential_id"] == "ab12cd34"
     assert state.attributes["event_code"] == CODE_OPENED
     assert state.attributes["description"] == "Door Open"
     assert state.attributes["occurred_at"] == opened_at.isoformat()
@@ -444,3 +448,49 @@ async def test_failed_read_reports_nothing(
     await _open_the_door(hass, freezer, mock_iseo_client)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_nameless_entry_does_not_pass_off_a_uuid_as_a_name(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the credential's UUID is reported as an id, not as who opened.
+
+    The lock puts the name in extra_description and the UUID in user_info, so
+    falling back to the latter would show a hex string where a name belongs.
+    """
+    await setup_integration(hass, mock_config_entry)
+    mock_iseo_client.gw_read_unread_logs.return_value = [
+        _log_entry(
+            CODE_OPENED,
+            datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC),
+            user_info="1111111111111111111111111111aaaa",
+        )
+    ]
+
+    await _open_the_door(hass, freezer, mock_iseo_client)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["opened_by"] is None
+    assert state.attributes["credential_id"] == "1111111111111111111111111111aaaa"
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_credential_not_yet_valid_is_access_denied(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test "Not yet valid" is a denial, like expired and out-of-schedule."""
+    await setup_integration(hass, mock_config_entry)
+    mock_iseo_client.gw_read_unread_logs.return_value = [
+        _log_entry(CODE_NOT_YET_VALID, datetime(2026, 9, 2, 9, 0, tzinfo=UTC))
+    ]
+
+    await _open_the_door(hass, freezer, mock_iseo_client)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_EVENT_TYPE] == "access_denied"
