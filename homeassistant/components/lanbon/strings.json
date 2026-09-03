@@ -16,12 +16,18 @@
         "data": {
           "token": "Token"
         },
+        "data_description": {
+          "token": "Paste the token shown on the device after Open Integration is enabled."
+        },
         "description": "Add {name} at {host}. Paste the token from the device screen.",
         "title": "Discovered {name}"
       },
       "reauth_confirm": {
         "data": {
           "token": "Token"
+        },
+        "data_description": {
+          "token": "Paste the current token shown on the device."
         },
         "description": "Token was rejected. Enter the current token from the device.",
         "title": "Reauthenticate {name}"
@@ -31,6 +37,11 @@
           "host": "Host",
           "port": "Port",
           "token": "Token"
+        },
+        "data_description": {
+          "host": "LAN IP of the panel, not the Home Assistant address.",
+          "port": "Local API port. Default is 8765.",
+          "token": "Paste the token shown on the device after Open Integration is enabled."
         },
         "description": "Enter the gateway IP and the Bearer token shown on the device after Open Integration is enabled. Token is not in mDNS."
       }
