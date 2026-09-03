@@ -30,6 +30,18 @@
       },
       "name": "Lawn mower is encountering an error"
     },
+    "is_idle": {
+      "description": "Tests if one or more lawn mowers are idle.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::lawn_mower::common::condition_for_name%]"
+        }
+      },
+      "name": "Lawn mower is idle"
+    },
     "is_mowing": {
       "description": "Tests if one or more lawn mowers are mowing.",
       "fields": {
@@ -100,6 +112,18 @@
   },
   "title": "Lawn mower",
   "triggers": {
+    "became_idle": {
+      "description": "Triggers when one or more lawn mowers become idle.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::lawn_mower::common::trigger_for_name%]"
+        }
+      },
+      "name": "Lawn mower became idle"
+    },
     "errored": {
       "description": "Triggers when one or more lawn mowers encounter an error.",
       "fields": {
