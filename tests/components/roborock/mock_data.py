@@ -1426,9 +1426,7 @@ def _raw_zeo_device() -> dict:
     return next(device for device in devices if device["duid"] == "zeo_duid")
 
 
-# A second Zeo washing machine whose product schema does not advertise the
-# delay-start countdown data point (DP 217), used to assert the delay-start
-# number entity is only created when the schema supports it.
+# A second Zeo washing machine whose product schema omits the countdown DP 217.
 ZEO_NO_COUNTDOWN_PRODUCT_RAW = deepcopy(_raw_zeo_product())
 ZEO_NO_COUNTDOWN_PRODUCT_RAW["id"] = "zeo_no_countdown_id"
 ZEO_NO_COUNTDOWN_PRODUCT_RAW["name"] = "Zeo One No Countdown"
