@@ -69,25 +69,18 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             report = await self._retry_failed(report)
             if not report.updated:
                 errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                        translation_placeholders={"name": self.name},
-                    )
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="no_component_answered",
-                    translation_placeholders={"name": self.name},
-                ) from ExceptionGroup("all components failed to refresh", errors)
+                cause = (
+                    ExceptionGroup("all components failed to refresh", errors)
+                    if errors
+                    else None
+                )
+                # pylint: disable-next=home-assistant-exception-not-translated
+                raise UpdateFailed("No component answered") from cause
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            # pylint: disable-next=home-assistant-exception-not-translated
+            raise UpdateFailed(f"Modbus error: {err}") from err
         else:
             return report
 
