@@ -1,6 +1,7 @@
 """The tests for sensor recorder platform."""
 
-from collections.abc import Iterable
+import asyncio
+from collections.abc import Callable, Iterable
 import datetime
 from datetime import timedelta
 import math
@@ -15,7 +16,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import (
+    Recorder,
+    websocket_api as recorder_websocket_api,
+)
 from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -177,6 +181,193 @@ def test_converters_align_with_sensor() -> None:
 
     for unit_class in UNIT_SCHEMA.schema:
         assert any(c for c in UNIT_CONVERTERS.values() if unit_class == c.UNIT_CLASS)
+
+
+def statistics_query_key() -> recorder_websocket_api._StatisticsQueryKey:
+    """Return a statistics query key for tests."""
+    now = dt_util.utcnow()
+    return recorder_websocket_api._StatisticsQueryKey(
+        start_time=now - timedelta(hours=1),
+        end_time=now,
+        statistic_ids=frozenset(("sensor.power",)),
+        period="hour",
+        units=frozenset(),
+        types=frozenset(("mean", "sum")),
+    )
+
+
+async def test_coalesce_in_flight_statistics_queries(hass: HomeAssistant) -> None:
+    """Test identical in-flight statistics queries share their result."""
+    query_key = statistics_query_key()
+    result_future = hass.loop.create_future()
+    retry_future = hass.loop.create_future()
+    result_futures = iter((result_future, retry_future))
+    create_calls = 0
+
+    def create_result_future() -> asyncio.Future[bytes]:
+        nonlocal create_calls
+        create_calls += 1
+        return next(result_futures)
+
+    first_task = hass.async_create_task(
+        recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, create_result_future
+        )
+    )
+    await asyncio.sleep(0)
+    second_task = hass.async_create_task(
+        recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, create_result_future
+        )
+    )
+    await asyncio.sleep(0)
+
+    assert create_calls == 1
+    result_future.set_result(b'{"sensor.power":[]}')
+    assert await asyncio.gather(first_task, second_task) == [
+        b'{"sensor.power":[]}',
+        b'{"sensor.power":[]}',
+    ]
+    assert (
+        query_key not in hass.data[recorder_websocket_api._IN_FLIGHT_STATISTICS_QUERIES]
+    )
+
+    retry_future.set_result(b'{"sensor.power":[{"mean":1}]}')
+    assert (
+        await recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, create_result_future
+        )
+        == b'{"sensor.power":[{"mean":1}]}'
+    )
+    assert create_calls == 2
+
+
+async def test_cancelled_statistics_request_does_not_cancel_shared_query(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling one waiter does not cancel the shared query."""
+    query_key = statistics_query_key()
+    result_future = hass.loop.create_future()
+
+    first_task = hass.async_create_task(
+        recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, lambda: result_future
+        )
+    )
+    await asyncio.sleep(0)
+    second_task = hass.async_create_task(
+        recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, lambda: result_future
+        )
+    )
+    await asyncio.sleep(0)
+
+    first_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await first_task
+
+    assert not result_future.cancelled()
+    result_future.set_result(b'{"sensor.power":[]}')
+    assert await second_task == b'{"sensor.power":[]}'
+
+
+async def test_failed_statistics_query_is_retried(hass: HomeAssistant) -> None:
+    """Test a failed shared statistics query is removed."""
+    query_key = statistics_query_key()
+    failed_future = hass.loop.create_future()
+    failed_task = hass.async_create_task(
+        recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, lambda: failed_future
+        )
+    )
+    await asyncio.sleep(0)
+
+    failed_future.set_exception(RuntimeError("query failed"))
+    with pytest.raises(RuntimeError, match="query failed"):
+        await failed_task
+
+    retry_future = hass.loop.create_future()
+    retry_future.set_result(b'{"sensor.power":[]}')
+    assert (
+        await recorder_websocket_api._async_get_or_create_statistics_result(
+            hass, query_key, lambda: retry_future
+        )
+        == b'{"sensor.power":[]}'
+    )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_coalesce_in_flight_statistics_queries_across_users(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test users can share an identical in-flight statistics query."""
+    first_client = await hass_ws_client()
+    second_client = await hass_ws_client(hass, hass_read_only_access_token)
+    now = dt_util.utcnow()
+    command = {
+        "type": "recorder/statistics_during_period",
+        "start_time": (now - timedelta(hours=1)).isoformat(),
+        "end_time": now.isoformat(),
+        "statistic_ids": ["sensor.power"],
+        "period": "hour",
+        "types": ["mean"],
+    }
+    result_future = hass.loop.create_future()
+    both_requests_started = asyncio.Event()
+    original_get_result = recorder_websocket_api._async_get_or_create_statistics_result
+    request_count = 0
+
+    async def track_get_result(
+        hass_: HomeAssistant,
+        query_key: recorder_websocket_api._StatisticsQueryKey,
+        create_result_future: Callable[[], asyncio.Future[bytes]],
+    ) -> bytes:
+        nonlocal request_count
+        request_count += 1
+        if request_count == 2:
+            both_requests_started.set()
+        return await original_get_result(hass_, query_key, create_result_future)
+
+    recorder_instance = recorder.get_instance(hass)
+    with (
+        patch.object(
+            recorder_instance,
+            "async_add_executor_job",
+            return_value=result_future,
+        ) as add_executor_job,
+        patch.object(
+            recorder_websocket_api,
+            "_async_get_or_create_statistics_result",
+            side_effect=track_get_result,
+        ),
+    ):
+        await first_client.send_json({**command, "id": 11})
+        await second_client.send_json({**command, "id": 22})
+        await asyncio.wait_for(both_requests_started.wait(), 1)
+
+        assert add_executor_job.call_count == 1
+        result_future.set_result(b'{"sensor.power":[{"mean":12.5}]}')
+        responses = await asyncio.gather(
+            first_client.receive_json(), second_client.receive_json()
+        )
+
+    assert responses == [
+        {
+            "id": 11,
+            "type": "result",
+            "success": True,
+            "result": {"sensor.power": [{"mean": 12.5}]},
+        },
+        {
+            "id": 22,
+            "type": "result",
+            "success": True,
+            "result": {"sensor.power": [{"mean": 12.5}]},
+        },
+    ]
+    assert not hass.data[recorder_websocket_api._IN_FLIGHT_STATISTICS_QUERIES]
 
 
 @pytest.mark.usefixtures("recorder_mock")
