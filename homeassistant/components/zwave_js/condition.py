@@ -2,6 +2,7 @@
 
 import abc
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Unpack, override
 
 import voluptuous as vol
@@ -51,6 +52,7 @@ from .const import (
 from .helpers import (
     async_bypass_dynamic_config_validation,
     async_get_node_from_device_id,
+    get_zwave_js_config_entry_id,
     get_zwave_value_from_config,
     node_status_matches,
     value_matches_state,
@@ -99,10 +101,18 @@ def _condition_schema(options_schema_dict: dict[vol.Marker, Any]) -> vol.Schema:
     )
 
 
+@dataclass(slots=True)
+class _ResolvedNodes:
+    """Z-Wave nodes resolved from a target."""
+
+    nodes: set[ZwaveNode] = field(default_factory=set)
+    unresolved: int = 0
+
+
 @callback
 def _async_nodes_from_selection(
     hass: HomeAssistant, selected: SelectedEntities
-) -> set[ZwaveNode]:
+) -> _ResolvedNodes:
     """Map selected entities and devices to Z-Wave nodes."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -111,19 +121,24 @@ def _async_nodes_from_selection(
         entry = ent_reg.async_get(entity_id)
         if entry and entry.platform == DOMAIN and entry.device_id:
             device_ids.add(entry.device_id)
-    nodes: set[ZwaveNode] = set()
+    resolved = _ResolvedNodes()
     for device_id in device_ids:
-        try:
-            nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
-        except ValueError:
+        device = dev_reg.async_get(device_id, include_child_devices=False)
+        if device is None or get_zwave_js_config_entry_id(hass, device) is None:
             continue
-    return nodes
+        try:
+            node = async_get_node_from_device_id(hass, device_id, dev_reg)
+        except ValueError:
+            resolved.unresolved += 1
+        else:
+            resolved.nodes.add(node)
+    return resolved
 
 
 @callback
 def _async_resolve_nodes(
     hass: HomeAssistant, target_selection: TargetSelection
-) -> set[ZwaveNode]:
+) -> _ResolvedNodes:
     """Resolve a target selection to Z-Wave nodes."""
     return _async_nodes_from_selection(
         hass,
@@ -169,9 +184,10 @@ class _ZwaveNodeCondition(Condition):
         ):
             return config
 
-        if not (nodes := _async_nodes_from_selection(hass, selected)):
+        resolved = _async_nodes_from_selection(hass, selected)
+        if not resolved.nodes:
             raise vol.Invalid("No nodes found for the given target")
-        cls._validate_nodes(nodes, config[CONF_OPTIONS])
+        cls._validate_nodes(resolved.nodes, config[CONF_OPTIONS])
         return config
 
     @classmethod
@@ -194,12 +210,14 @@ class _ZwaveNodeCondition(Condition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test the condition against all targeted nodes."""
-        if not (nodes := _async_resolve_nodes(self._hass, self._target_selection)):
+        resolved = _async_resolve_nodes(self._hass, self._target_selection)
+        if not resolved.nodes:
             return False
-        combine: Callable[[Iterable[object]], bool] = (
-            all if self._options[ATTR_BEHAVIOR] == BEHAVIOR_ALL else any
-        )
-        return combine(self._node_matches(node) for node in nodes)
+        behavior_all = self._options[ATTR_BEHAVIOR] == BEHAVIOR_ALL
+        if behavior_all and resolved.unresolved:
+            return False
+        combine: Callable[[Iterable[object]], bool] = all if behavior_all else any
+        return combine(self._node_matches(node) for node in resolved.nodes)
 
 
 class NodeStatusCondition(_ZwaveNodeCondition):

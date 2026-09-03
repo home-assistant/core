@@ -290,6 +290,34 @@ async def test_value_missing_on_node(
         )
 
 
+async def test_value_property_key_zero(
+    hass: HomeAssistant,
+    client: MagicMock,
+    bulb_6_multi_color: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a property key of 0 is not treated as an absent property key."""
+    checker = await _checker(
+        hass,
+        {
+            "condition": f"{DOMAIN}.value",
+            "target": {
+                "device_id": _device_id(
+                    device_registry, client, bulb_6_multi_color, integration
+                )
+            },
+            "options": {
+                "command_class": 51,
+                "property": "currentColor",
+                "property_key": 0,
+                "value": 255,
+            },
+        },
+    )
+    assert checker.async_check() is True
+
+
 async def test_no_nodes_resolved(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -455,6 +483,39 @@ async def test_check_false_when_nodes_disappear(
     assert checker.async_check() is True
     await hass.config_entries.async_unload(integration.entry_id)
     assert checker.async_check() is False
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected"),
+    [("any", True), ("all", False)],
+)
+async def test_partially_unresolved_target(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    behavior: str,
+    expected: bool,
+) -> None:
+    """Test a targeted Z-Wave node that cannot be resolved fails an all behavior."""
+    target = {
+        "device_id": [
+            _device_id(device_registry, client, lock_schlage_be469, integration),
+            _device_id(device_registry, client, multisensor_6, integration),
+        ]
+    }
+    del client.driver.controller.nodes[multisensor_6.node_id]
+    checker = await _checker(
+        hass,
+        {
+            "condition": f"{DOMAIN}.node_status",
+            "target": target,
+            "options": {"behavior": behavior, "status": "alive"},
+        },
+    )
+    assert checker.async_check() is expected
 
 
 async def test_config_parameter_missing_on_node(

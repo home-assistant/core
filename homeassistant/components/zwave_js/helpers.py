@@ -490,9 +490,9 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     endpoint = None
     if config.get(ATTR_ENDPOINT):
         endpoint = config[ATTR_ENDPOINT]
-    property_key = None
-    if config.get(ATTR_PROPERTY_KEY):
-        property_key = config[ATTR_PROPERTY_KEY]
+    property_key = config.get(ATTR_PROPERTY_KEY)
+    if property_key == "":
+        property_key = None
     value_id = get_value_id_str(
         node,
         config[ATTR_COMMAND_CLASS],
@@ -516,7 +516,9 @@ def value_matches_state(value: ZwaveValue, expected: Any) -> bool:
     return expected in (current, value.metadata.states.get(str(current), current))
 
 
-def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
+def get_zwave_js_config_entry_id(
+    hass: HomeAssistant, device: dr.DeviceEntry
+) -> str | None:
     """Find zwave_js config entry from a device."""
     for entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(entry_id)
@@ -540,7 +542,7 @@ def async_get_node_status_sensor_entity_id(
     if not (device := dev_reg.async_get(device_id, include_child_devices=False)):
         raise HomeAssistantError("Invalid Device ID provided")
 
-    if not (entry_id := _zwave_js_config_entry(hass, device)):
+    if not (entry_id := get_zwave_js_config_entry_id(hass, device)):
         return None
 
     entry = hass.config_entries.async_get_entry(entry_id)

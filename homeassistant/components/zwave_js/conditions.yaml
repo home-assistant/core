@@ -47,11 +47,9 @@ config_parameter:
           mode: box
     bitmask:
       required: false
-      example: 1
+      example: "0x1"
       selector:
-        number:
-          min: 0
-          mode: box
+        text:
     endpoint:
       required: false
       default: 0

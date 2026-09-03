@@ -16,7 +16,7 @@
           "name": "[%key:component::zwave_js::common::condition_behavior_name%]"
         },
         "bitmask": {
-          "description": "Bitmask of a partial parameter, if the parameter is split into parts.",
+          "description": "Bitmask of a partial parameter, as a number or hexadecimal string, if the parameter is split into parts.",
           "name": "Bitmask"
         },
         "endpoint": {
