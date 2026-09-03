@@ -658,6 +658,9 @@
     "rate_limited": {
       "message": "Growatt API rate limited, will retry: {error}"
     },
+    "server_temporarily_unavailable": {
+      "message": "Growatt server temporarily unavailable, will retry: {message}"
+    },
     "token_auth_required": {
       "message": "This action requires token authentication (V1 API)."
     },

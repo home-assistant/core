@@ -41,7 +41,7 @@ PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 # Growatt Classic API error codes
 LOGIN_INVALID_AUTH_CODE = "502"
-LOGIN_FAILED = "507"
+SERVER_TEMPORARILY_UNAVAILABLE_CODE = "507"
 
 
 # Config flow error types (also used as abort reasons)

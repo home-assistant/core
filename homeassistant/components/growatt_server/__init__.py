@@ -21,7 +21,7 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - V1 API: catch GrowattV1ApiError with error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE
   → raise ConfigEntryAuthFailed
-- Classic API: msg == LOGIN_FAILED (507, transient server error)
+- Classic API: msg == SERVER_TEMPORARILY_UNAVAILABLE_CODE (507, transient server error)
   → raise ConfigEntryNotReady (setup retries automatically)
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
@@ -57,9 +57,9 @@ from .const import (
     DEPRECATED_URLS,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
-    LOGIN_FAILED,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    SERVER_TEMPORARILY_UNAVAILABLE_CODE,
     SUPPORTED_DEVICE_TYPES,
     V1_DEVICE_TYPES,
 )
@@ -266,10 +266,10 @@ def _login_classic_api(
                 translation_domain=DOMAIN,
                 translation_key="invalid_credentials",
             )
-        if msg == LOGIN_FAILED:
+        if msg == SERVER_TEMPORARILY_UNAVAILABLE_CODE:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="login_failed",
+                translation_key="server_temporarily_unavailable",
                 translation_placeholders={"message": msg},
             )
         raise ConfigEntryError(
