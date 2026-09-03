@@ -115,7 +115,8 @@
         }
       },
       "cooling_conditions_met": {
-        "name": "Cooling conditions met"
+        "name": "Cooling conditions met",
+        "unit_of_measurement": "of 9"
       },
       "cooling_pause_reason": {
         "name": "Cooling pause reason",

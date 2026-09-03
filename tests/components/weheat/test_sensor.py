@@ -1,5 +1,7 @@
 """Tests for the weheat sensor platform."""
 
+import json
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
+from homeassistant.components import weheat
 from homeassistant.components.weheat.sensor import COOLING_CONDITIONS_NOT_COUNTED
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -358,3 +361,20 @@ async def test_offline_heat_pump_keeps_its_last_values(
 
     assert hass.states.get("sensor.test_model_water_inlet_temperature").state == "11"
     assert hass.states.get("sensor.test_model_electricity_used").state == "28689"
+
+
+def test_the_unit_says_how_many_conditions_are_counted() -> None:
+    """Test the total in the sensor unit is the number of conditions counted.
+
+    The unit carries the total so the state reads the way the portal shows it,
+    which means a condition added to the library has to be reflected there.
+    """
+    strings = json.loads((Path(weheat.__file__).parent / "strings.json").read_text())
+    counted = len(HeatPump.COOLING_START_CONDITION_BITS) - len(
+        COOLING_CONDITIONS_NOT_COUNTED
+    )
+
+    assert (
+        strings["entity"]["sensor"]["cooling_conditions_met"]["unit_of_measurement"]
+        == f"of {counted}"
+    )

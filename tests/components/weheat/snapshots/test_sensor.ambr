@@ -549,7 +549,7 @@
     'supported_features': 0,
     'translation_key': 'cooling_conditions_met',
     'unique_id': '0000-1111-2222-3333_cooling_conditions_met',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'of 9',
   })
 # ---
 # name: test_all_entities[sensor.test_model_cooling_conditions_met-state]
@@ -557,6 +557,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling conditions met',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'of 9',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_cooling_conditions_met',
