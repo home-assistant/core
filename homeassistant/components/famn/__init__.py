@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FamnConfigEntry) -> bool
 
     # Push updates; cancelled by the config entry on unload. Setup does not
     # depend on it succeeding — the coordinators' polling covers outages.
-    realtime = FamnRealtime(hass, entry)
+    realtime = FamnRealtime(hass, entry, client)
     entry.async_create_background_task(hass, realtime.async_run(), "famn-realtime")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

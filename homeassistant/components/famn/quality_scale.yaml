@@ -23,7 +23,10 @@ rules:
     comment: This integration does not register any triggers.
   entity-event-setup:
     status: exempt
-    comment: Entities do not subscribe to events.
+    comment: >-
+      No entity subscribes to events of its own; the ones that follow a
+      coordinator do so through CoordinatorEntity. The platform-level
+      listeners that add entities are unsubscribed through the config entry.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -78,12 +81,17 @@ rules:
     status: exempt
     comment: All entities are primary and enabled by default.
   entity-translations:
-    status: exempt
-    comment: Entities are named after the user-defined Famn chore lists.
+    status: done
+    comment: >-
+      The sensors and the family notify entity use translation keys. The
+      calendar, todo and per-member entities are named after user-created
+      Famn objects, which have no key to translate.
   exception-translations: done
   icon-translations:
-    status: exempt
-    comment: Todo entities use the platform default icon.
+    status: done
+    comment: >-
+      The sensors declare icons in icons.json. The calendar, todo and notify
+      entities use their platform default.
   reconfiguration-flow:
     status: exempt
     comment: There is nothing to reconfigure; re-pairing is handled by the reauth flow.
