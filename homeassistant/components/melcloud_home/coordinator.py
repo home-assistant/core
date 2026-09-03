@@ -207,7 +207,7 @@ class MelCloudHomeTelemetryCoordinator(
             MelCloudHomeConnectionError,
             MelCloudHomeTimeoutError,
         ):
-            _LOGGER.warning("Failed to fetch outdoor temperature for %s:", unit_id)
+            _LOGGER.warning("Failed to fetch outdoor temperature for %s", unit_id)
             return None
 
     @override
