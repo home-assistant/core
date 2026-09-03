@@ -1,8 +1,6 @@
 """Switch entities from LOIP components with type=switch."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiolanbon import LanbonError
 
@@ -73,6 +71,7 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
             self._attr_name = component.name or self._component_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return True when the device and component are online and enabled."""
         device, component = self._pair()
@@ -86,6 +85,7 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the on/off state."""
         _device, component = self._pair()
@@ -93,10 +93,12 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
             return None
         return bool(component.state.get("on"))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._set_on(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._set_on(False)
@@ -113,6 +115,8 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
             raise HomeAssistantError(str(err)) from err
         await self.coordinator.async_request_refresh()
 
+    @override
     def _handle_coordinator_update(self) -> None:
+        """Refresh the entity name from the latest snapshot."""
         self._sync_name()
         super()._handle_coordinator_update()

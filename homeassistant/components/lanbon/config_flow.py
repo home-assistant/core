@@ -1,9 +1,6 @@
 """Config flow: manual + mDNS. Token is typed by the user, never taken from TXT."""
 
-from __future__ import annotations
-
-import logging
-from typing import Any
+from typing import Any, override
 
 from aiolanbon import (
     LanbonAuthError,
@@ -22,8 +19,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_GATEWAY_ID, CONF_SCHEME, DEFAULT_PORT, DOMAIN
 from .mdns import gateway_from_zeroconf
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ApiDisabled(Exception):
@@ -56,6 +51,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._title: str = "LANBON"
 
     def _placeholders(self) -> dict[str, str]:
+        """Placeholders for discovery and reauth form text."""
         return {
             "name": self._title,
             "host": self._host or "",
@@ -80,10 +76,6 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "api_disabled"
             return None
         except (LanbonConnectionError, LanbonTimeoutError, OSError, TimeoutError):
-            errors["base"] = "cannot_connect"
-            return None
-        except Exception:
-            _LOGGER.exception("LANBON connect failed")
             errors["base"] = "cannot_connect"
             return None
 
@@ -118,6 +110,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -142,6 +135,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -190,6 +184,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_reauth(
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:

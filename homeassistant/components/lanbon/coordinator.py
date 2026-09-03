@@ -1,11 +1,10 @@
 """Coordinator: aiolanbon only. Poll revision; apply WebSocket events in memory."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import replace
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiolanbon import (
     LanbonAuthError,
@@ -30,6 +29,7 @@ _POLL = timedelta(seconds=15)
 
 
 def _patch_state_changed(snap: DeviceSnapshot, event: Event) -> DeviceSnapshot | None:
+    """Apply a state_changed event onto a snapshot copy."""
     if event.type != "state_changed" or not event.revision:
         return None
     if not event.device_id or not event.component_id or not event.state:
@@ -50,6 +50,7 @@ def _patch_state_changed(snap: DeviceSnapshot, event: Event) -> DeviceSnapshot |
 
 
 def _patch_availability(snap: DeviceSnapshot, event: Event) -> DeviceSnapshot | None:
+    """Apply an availability_changed event onto a snapshot copy."""
     if event.type != "availability_changed" or not event.revision:
         return None
     if not event.device_id or event.online is None:
@@ -68,6 +69,7 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, client: LanbonClient
     ) -> None:
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -83,30 +85,38 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         self._refresh_dirty = False
         self._refresh_task: asyncio.Task | None = None
 
+    @override
     async def _async_setup(self) -> None:
+        """Read gateway info and whether events WebSocket is advertised."""
         self.info = await self.client.get_info()
         self._use_ws = bool(self.info.events_websocket)
 
+    @override
     async def _async_update_data(self) -> DeviceSnapshot:
+        """GET /devices, using If-None-Match when a revision is already known."""
         try:
             if self.info is None:
                 await self._async_setup()
             snap = await self.client.get_devices(if_none_match=self._etag)
-            if snap is None:
-                if self.data is None:
-                    raise UpdateFailed("empty snapshot")
-                return self.data
-            self._etag = snap.revision
-            return snap
         except LanbonAuthError as err:
             raise ConfigEntryAuthFailed("unauthorized") from err
         except (LanbonConnectionError, LanbonTimeoutError, LanbonError) as err:
             raise UpdateFailed(type(err).__name__) from err
+        if snap is None:
+            if self.data is None:
+                raise UpdateFailed("empty snapshot")
+            return self.data
+        self._etag = snap.revision
+        return snap
 
+    @override
     async def async_config_entry_first_refresh(self) -> None:
+        """Refresh once, then start the events task when the gateway supports it."""
         await super().async_config_entry_first_refresh()
         if self._use_ws:
-            self._events_task = self.config_entry.async_create_background_task(
+            entry = self.config_entry
+            assert entry is not None
+            self._events_task = entry.async_create_background_task(
                 self.hass, self._events_loop(), name="lanbon-loip-events"
             )
 
@@ -166,7 +176,7 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             raise
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except (LanbonConnectionError, LanbonTimeoutError, LanbonError, OSError):
             _LOGGER.debug("events loop ended; stay on polling")
             self._use_ws = False
         finally:

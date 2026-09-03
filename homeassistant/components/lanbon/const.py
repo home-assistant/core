@@ -1,7 +1,5 @@
 """Constants for the LANBON LOIP integration."""
 
-from __future__ import annotations
-
 DOMAIN = "lanbon"
 DEFAULT_PORT = 8765
 MANUFACTURER = "LANBON"

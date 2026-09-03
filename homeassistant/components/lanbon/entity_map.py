@@ -1,7 +1,5 @@
 """Map LOIP components to Home Assistant entities by capability."""
 
-from __future__ import annotations
-
 from aiolanbon.models import Component, Device, DeviceSnapshot
 
 

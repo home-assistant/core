@@ -1,7 +1,5 @@
 """Zeroconf properties to LOIP discovery. Token is never read."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiolanbon.discovery import discovered_from_mdns, parse_mdns_txt

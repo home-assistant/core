@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "LANBON",
         "description": "Enter the gateway IP and the Bearer token shown on the device after Open Integration is enabled. Token is not in mDNS.",
         "data": {
           "host": "Host",

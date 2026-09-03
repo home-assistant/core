@@ -1,7 +1,5 @@
 """LANBON LOIP integration setup. I/O goes only through aiolanbon."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
@@ -12,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_GATEWAY_ID, CONF_SCHEME, DOMAIN
+from .const import CONF_GATEWAY_ID, CONF_SCHEME
 from .coordinator import LanbonCoordinator
 
 _LOGGER = logging.getLogger(__name__)
