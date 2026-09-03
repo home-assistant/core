@@ -114,6 +114,9 @@
           "water_to_air": "Air not warmer than water"
         }
       },
+      "cooling_conditions_met": {
+        "name": "Cooling conditions met"
+      },
       "cooling_pause_reason": {
         "name": "Cooling pause reason",
         "state": {

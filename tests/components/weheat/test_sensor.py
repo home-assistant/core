@@ -34,7 +34,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 32), (True, 39)])
+@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 33), (True, 40)])
 async def test_create_entities(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
@@ -95,6 +95,12 @@ async def test_cooling_blocked_by(
     [
         # the demand condition goes back to unmet as soon as cooling acts on it
         ("cooling_blocked_by", "cooling_start_conditions", _start_conditions("demand")),
+        # the pause reason is latched the same way
+        (
+            "cooling_pause_reason",
+            "cooling_pause_reason",
+            HeatPump.CoolingPauseReason.WATER_TEMPERATURE_BELOW_SETPOINT,
+        ),
         # the stop reason is why the last cycle ended, so it survives into the next
         (
             "cooling_stop_reason",
@@ -122,6 +128,57 @@ async def test_stale_cooling_reasons_are_not_reported_while_cooling(
     assert hass.states.get(f"sensor.test_model_{sensor}").state == "none"
 
 
+@pytest.mark.parametrize(
+    ("target", "expected"),
+    [
+        pytest.param(55, "55", id="a_real_target"),
+        # a heat pump with DHW control off says so with a zero
+        pytest.param(0, STATE_UNKNOWN, id="no_target"),
+    ],
+)
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_dhw_target_temperature(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    target: int,
+    expected: str,
+) -> None:
+    """Test a target of zero is reported as no target rather than as freezing."""
+    mock_weheat_heat_pump.dhw_target_temperature = target
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_dhw_target_temperature").state == expected
+
+
+@pytest.mark.parametrize(
+    ("unmet", "expected"),
+    [
+        pytest.param((), "11", id="all_met"),
+        pytest.param(("demand",), "10", id="one_unmet"),
+        # the payload that reported two at once
+        pytest.param(("outside_air_temperature", "exponential_backoff"), "9", id="two"),
+    ],
+)
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_cooling_conditions_met(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    unmet: tuple[str, ...],
+    expected: str,
+) -> None:
+    """Test how many start conditions are met is reported alongside the blocker."""
+    mock_weheat_heat_pump.cooling_start_conditions = _start_conditions(*unmet)
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_cooling_conditions_met").state == expected
+
+
 @pytest.mark.usefixtures("mock_weheat_discover")
 async def test_unreported_start_conditions_create_no_sensor(
     hass: HomeAssistant,
@@ -135,6 +192,7 @@ async def test_unreported_start_conditions_create_no_sensor(
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.test_model_cooling_blocked_by") is None
+    assert hass.states.get("sensor.test_model_cooling_conditions_met") is None
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")

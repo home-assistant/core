@@ -513,6 +513,59 @@
     'state': 'demand',
   })
 # ---
+# name: test_all_entities[sensor.test_model_cooling_conditions_met-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_cooling_conditions_met',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling conditions met',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooling conditions met',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_conditions_met',
+    'unique_id': '0000-1111-2222-3333_cooling_conditions_met',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_conditions_met-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling conditions met',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_conditions_met',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_cooling_pause_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

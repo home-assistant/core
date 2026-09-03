@@ -74,6 +74,17 @@ def _does_cooling(status: HeatPump) -> bool:
     return status.cooling_activity is not None
 
 
+def _dhw_target_temperature(status: HeatPump) -> float | None:
+    """Return the DHW target temperature, if the heat pump has one.
+
+    A heat pump with DHW control off reports a target of zero, which is how it
+    says there is no target: zero is not a temperature it would ever aim for,
+    since that would freeze the vessel.
+    """
+    target = status.dhw_target_temperature
+    return target or None
+
+
 def _is_cooling(status: HeatPump) -> bool:
     """Return whether the heat pump is running a cooling cycle right now."""
     return status.heat_pump_state is HeatPump.State.COOLING
@@ -261,6 +272,16 @@ SENSORS = [
         ),
     ),
     WeHeatSensorEntityDescription(
+        translation_key="cooling_conditions_met",
+        key="cooling_conditions_met",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: (
+            sum(status.cooling_start_conditions.values())
+            if status.cooling_start_conditions is not None
+            else None
+        ),
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="cooling_blocked_by",
         key="cooling_blocked_by",
         device_class=SensorDeviceClass.ENUM,
@@ -289,7 +310,9 @@ SENSORS = [
         options=[reason.name.lower() for reason in HeatPump.CoolingPauseReason],
         value_fn=(
             lambda status: (
-                status.cooling_pause_reason.name.lower()
+                "none"
+                if _is_cooling(status)
+                else status.cooling_pause_reason.name.lower()
                 if status.cooling_pause_reason is not None
                 else None
             )
@@ -347,7 +370,8 @@ DHW_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
-        value_fn=lambda status: status.dhw_target_temperature,
+        supported_fn=lambda status: status.dhw_target_temperature is not None,
+        value_fn=_dhw_target_temperature,
     ),
     WeHeatSensorEntityDescription(
         translation_key="dhw_control_method",
