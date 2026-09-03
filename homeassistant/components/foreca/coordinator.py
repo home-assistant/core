@@ -96,8 +96,8 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
                 f"Error communicating with the Foreca API: {err}"
             ) from err
 
-        # Air quality is optional: not every location has AQ data, and the
-        # weather entity must not go unavailable because of it.
+        # Air quality must never fail the weather update: it is a separate
+        # product on the account and can be missing from the plan.
         air_quality: AirQualityForecast | None = None
         air_quality_daily: list[AirQualityDailyForecast] = []
         try:
