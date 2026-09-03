@@ -18,7 +18,11 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -187,10 +191,31 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._device_name},
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Offer to enrol the admin identity on an entry that does not have one."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        self._device_name = reconfigure_entry.title
+        self.context["title_placeholders"] = {"name": self._device_name}
+
+        if CONF_ADMIN_UUID in reconfigure_entry.data:
+            return self.async_abort(reason="admin_already_enabled")
+
+        self._address = reconfigure_entry.data[CONF_ADDRESS]
+        self._uuid_hex = reconfigure_entry.data[CONF_UUID]
+        self._priv_scalar = reconfigure_entry.data[CONF_PRIV_SCALAR]
+        self._gw_priv = await self.hass.async_add_executor_job(
+            ec.derive_private_key, int(self._priv_scalar, 16), ec.SECP224R1()
+        )
+
+        return await self.async_step_gw_register()
+
     async def async_step_gw_register(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Register the gateway and enable log notifications (requires Master Card)."""
+        reconfiguring = self.source == SOURCE_RECONFIGURE
         errors: dict[str, str] = {}
         if user_input is not None:
             if not (
@@ -202,8 +227,11 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 # The Master Card scan authorises a single session, so the admin
                 # identity has to be enrolled alongside the gateway one or not
-                # at all.
-                enable_admin: bool = user_input[CONF_ENABLE_ADMIN]
+                # at all. Reconfiguring only ever enrols it — an entry that
+                # already has one aborts before reaching this step.
+                enable_admin: bool = (
+                    True if reconfiguring else user_input[CONF_ENABLE_ADMIN]
+                )
                 if self._admin_priv is not None:
                     # An earlier attempt already offered this identity to the
                     # lock, which is sent it before acknowledging it — so the
@@ -239,6 +267,8 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                         else None,
                         admin_identity_priv=self._admin_priv if enable_admin else None,
                     )
+                    if reconfiguring:
+                        return self._async_update_iseo_entry()
                     return self._async_create_iseo_entry(with_admin=enable_admin)
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
@@ -251,7 +281,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gw_register",
-            data_schema=vol.Schema(
+            data_schema=None
+            if reconfiguring
+            else vol.Schema(
                 {
                     vol.Required(CONF_ENABLE_ADMIN, default=True): BooleanSelector(),
                 }
@@ -272,4 +304,14 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._device_name or f"ISEO Lock ({self._address})",
             data=data,
+        )
+
+    def _async_update_iseo_entry(self) -> ConfigFlowResult:
+        """Add the admin identity to the config entry being reconfigured."""
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            data_updates={
+                CONF_ADMIN_UUID: self._admin_uuid_hex,
+                CONF_ADMIN_PRIV_SCALAR: self._admin_priv_scalar,
+            },
         )

@@ -70,7 +70,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entities use the default platform icons; only the action has an icon.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.

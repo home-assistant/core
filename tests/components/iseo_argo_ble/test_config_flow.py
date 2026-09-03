@@ -447,6 +447,98 @@ async def test_gw_register_unknown_error(
     assert result3["errors"] == {"base": "unknown"}
 
 
+@pytest.fixture
+def _patch_reconfigure_identity() -> Generator[None]:
+    """Patch identity generation for a reconfigure flow.
+
+    Unlike initial setup, reconfigure only ever generates one identity — the
+    admin one — since the gateway identity is reused from the existing entry.
+    """
+    admin_priv = MagicMock()
+    admin_priv.private_numbers.return_value = MagicMock(private_value=12345679)
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.config_flow._generate_identity",
+            return_value=admin_priv,
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.config_flow.uuid_module.uuid4",
+            return_value=uuid.UUID(MOCK_ADMIN_UUID_HEX),
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.config_flow.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("_patch_reconfigure_identity")
+async def test_reconfigure_enrols_admin_identity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test reconfigure enrols the admin identity on an entry that lacks one."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "gw_register"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == original_data | {
+        CONF_ADMIN_UUID: MOCK_ADMIN_UUID_HEX,
+        CONF_ADMIN_PRIV_SCALAR: MOCK_GENERATED_ADMIN_PRIV_SCALAR,
+    }
+
+    call_kwargs = mock_iseo_client.setup_gateway.call_args.kwargs
+    assert call_kwargs["admin_uuid_bytes"] == bytes.fromhex(MOCK_ADMIN_UUID_HEX)
+    assert call_kwargs["admin_identity_priv"] is not None
+
+
+async def test_reconfigure_aborts_if_admin_already_enabled(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the entry already has an admin identity."""
+    mock_admin_config_entry.add_to_hass(hass)
+
+    result = await mock_admin_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "admin_already_enabled"
+
+
+@pytest.mark.usefixtures("_patch_reconfigure_identity")
+async def test_reconfigure_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test reconfigure surfaces a connection error without touching the entry."""
+    mock_iseo_client.setup_gateway.side_effect = IseoConnectionError
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "gw_register"
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert mock_config_entry.data == original_data
+
+
 async def test_discover_locks(hass: HomeAssistant) -> None:
     """Test the _discover_locks helper function."""
     non_iseo_info = BluetoothServiceInfoBleak(
