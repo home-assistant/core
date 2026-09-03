@@ -80,6 +80,16 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         ),
     ),
     TransmissionSensorEntityDescription(
+        key="download_dir_free_space",
+        translation_key="download_dir_free_space",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.download_dir_free_space,
+    ),
+    TransmissionSensorEntityDescription(
         key="active_torrents",
         translation_key="active_torrents",
         val_func=lambda coordinator: coordinator.data.active_torrent_count,

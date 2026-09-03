@@ -112,7 +112,7 @@ async def test_ws_device_remove(
 
     # Ask to remove existing device
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, mock_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify device entry is removed

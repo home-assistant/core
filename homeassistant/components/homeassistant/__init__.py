@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     ATTR_ELEVATION,
     ATTR_ENTITY_ID,
@@ -391,7 +392,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 domain, SERVICE_RELOAD, context=call.context, blocking=True
             )
             for domain, domain_services in services.items()
-            if domain != "notify" and SERVICE_RELOAD in domain_services
+            if domain != NOTIFY_DOMAIN and SERVICE_RELOAD in domain_services
         ] + [
             hass.services.async_call(
                 domain, service, context=call.context, blocking=True
