@@ -206,7 +206,6 @@ async def test_no_images(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    mock_media_source,
 ) -> None:
     """Test when there are no images in the media folder."""
     config_entry = config_entry_from_uri(MOCK_MEDIA_DIR_URI_EMPTY)
