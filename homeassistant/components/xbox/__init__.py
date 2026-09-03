@@ -95,7 +95,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) ->
     when the friend subentries actually changed.
     """
     if entry.runtime_data.subentries != _subentry_snapshot(entry):
-        await hass.config_entries.async_reload(entry.entry_id)
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
