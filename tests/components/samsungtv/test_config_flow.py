@@ -30,8 +30,11 @@ from homeassistant.components.samsungtv.const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
@@ -281,6 +284,92 @@ async def test_user_encrypted_websocket(
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
     assert result4["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_user_websocket_k_series_encrypted_fallback(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
+    """Test a 2016 K-series set falls back to encrypted pairing (#177252).
+
+    Its REST device info selects the websocket method, but the token handshake
+    times out (RESULT_CANNOT_CONNECT) because it only pairs via the encrypted
+    CloudPINPage flow.
+    """
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UN55KU6290.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError("timed out"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+            autospec=True,
+        ) as authenticator_mock,
+    ):
+        authenticator_mock.return_value.try_pin.side_effect = [
+            None,
+            "037739871315caef138547b03e348b72",
+        ]
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "encrypted_pairing"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={CONF_PIN: "invalid"}
+        )
+        assert result3["step_id"] == "encrypted_pairing"
+        assert result3["errors"] == {"base": "invalid_pin"}
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert result4["data"][CONF_MODEL] == "UN55KU6290"
+    assert result4["data"][CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
+    assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
+    assert result4["data"][CONF_SESSION_ID] == "1"
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_user_websocket_k_series_stays_on_websocket(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
+    """Test a K-series set that pairs over websocket is not pushed to encrypted.
+
+    Regression guard for #70708 (UE32K5600): the encrypted fallback must only
+    trigger when the websocket pairing genuinely fails to connect.
+    """
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UN55KU6290.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_METHOD] == METHOD_WEBSOCKET
+    assert result2["data"][CONF_MODEL] == "UN55KU6290"
+    assert result2["data"][CONF_PORT] == 8002
 
 
 @pytest.mark.usefixtures("rest_api_failing")
