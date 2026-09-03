@@ -260,7 +260,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         while result is None:
             if attempts == 30:
                 break
-            if attempts > 1:
+            if attempts > 0:
                 await asyncio.sleep(0.5)
             attempts += 1
             try:
