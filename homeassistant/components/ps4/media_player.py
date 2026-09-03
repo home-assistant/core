@@ -186,7 +186,7 @@ class PS4Device(MediaPlayerEntity):
                         self._attr_source = self._attr_media_title
                         self._attr_media_content_type = None
                         # Get data from PS Store.
-                        self.hass.async_create_background_task(
+                        self.hass.create_task(
                             self.async_get_title_data(title_id, name),
                             "ps4.media_player-get_title_data",
                         )

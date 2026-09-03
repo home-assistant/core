@@ -894,6 +894,58 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     assert actual_values == expected_values
 
 
+@pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+@pytest.mark.parametrize(
+    ("extra_config", "active_value", "recovered_value"),
+    [
+        pytest.param({}, "5.00", "1.00", id="no_time_window"),
+        pytest.param(
+            {"time_window": {"seconds": 60}}, "0.83", "0.17", id="time_window"
+        ),
+    ],
+)
+async def test_total_increasing_reset_while_unavailable(
+    hass: HomeAssistant,
+    bad_state: str,
+    extra_config: dict[str, Any],
+    active_value: str,
+    recovered_value: str,
+) -> None:
+    """Test derivative recovers when a total_increasing source resets while unavailable.
+
+    Regression test for a total_increasing source (e.g. a daily energy sensor)
+    that briefly goes unavailable/unknown around midnight and returns with its
+    value reset to 0. The derivative must report a zero rate of change on the
+    reset sample and must not stay stuck in the unavailable/unknown state until
+    the next state change is received, regardless of the configured time window.
+    The first normal sample after the reset must produce a sensible positive
+    rate again, proving the source value was re-baselined to the post-reset
+    value rather than the stale pre-reset one.
+    """
+    times = [0, 10, 20, 30, 40]
+    values = [0, 50, bad_state, 0, 10]
+    expected_states = ["0.00", active_value, bad_state, "0.00", recovered_value]
+
+    _config, entity_id = await _setup_sensor(
+        hass, {"unit_time": UnitOfTime.SECONDS} | extra_config
+    )
+
+    base_time = dt_util.utcnow()
+    with freeze_time(base_time) as freezer:
+        for time, value, expected in zip(times, values, expected_states, strict=True):
+            freezer.move_to(base_time + timedelta(seconds=time))
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING},
+            )
+            await hass.async_block_till_done()
+
+            state = hass.states.get("sensor.power")
+            assert state is not None
+            assert state.state == expected
+
+
 async def test_device_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
