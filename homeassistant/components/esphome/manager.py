@@ -133,8 +133,8 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        # The library drops the declaration for keyless and zero-PSK
-        # clients; the MAC gate is ours, a route needs a MAC unique id
+        # The library drops the declaration without a real key; the MAC
+        # gate is ours, a route needs a MAC unique id
         outgoing_connection_target=declare_outgoing_target
         and _has_mac_unique_id(entry),
     )
@@ -597,8 +597,7 @@ class ESPHomeManager:
         the next reload or restart.
         """
         entry = self.entry
-        # Read the flag off the client so the route matches what the hello
-        # actually declared, not a later snapshot of the entry data
+        # Read the flag off the client so the route matches the hello
         if not self.cli.outgoing_connection_target:
             _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
             return
@@ -612,8 +611,7 @@ class ESPHomeManager:
             _LOGGER.exception("%s: Could not set up dial-in routing", entry.title)
             return
         if unregister is not None:
-            # async_on_unload also runs when setup fails or is cancelled,
-            # so a route can never outlive its ReconnectLogic
+            # async_on_unload also runs when setup fails or is cancelled
             entry.async_on_unload(unregister)
 
     async def _on_connect(self) -> None:

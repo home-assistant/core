@@ -98,10 +98,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 @pytest.fixture(autouse=True)
 def mock_outgoing_connection_server() -> Generator[MagicMock]:
-    """Patch the shared dial-in listener so tests never bind a real socket.
-
-    spec pins the synchronous start/close/register contract.
-    """
+    """Patch the shared dial-in listener so tests never bind a real socket."""
     server = MagicMock(spec=OutgoingConnectionServer)
     with patch(
         "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
@@ -211,8 +208,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
         mock_client.timezone = timezone
-        # Mirror the real constructor: the declaration is dropped without
-        # a real key
+        # Mirror the real constructor's gate on a real key
         mock_client.outgoing_connection_target = (
             outgoing_connection_target
             and bool(noise_psk)

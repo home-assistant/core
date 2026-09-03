@@ -32,10 +32,8 @@ def async_register_outgoing_target(
 ) -> CALLBACK_TYPE | None:
     """Route dial-ins from this MAC to the reconnect logic.
 
-    The library manages the listener's lifecycle: the first registration
-    opens it, the last unregistration closes it and frees the port, and a
-    bind failure is logged and retried on a later registration. Returns
-    the unregister callback, or None during shutdown.
+    The library manages the listener lifecycle. Returns the unregister
+    callback, or None during shutdown.
     """
     if hass.is_stopping:
         return None
