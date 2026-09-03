@@ -39,8 +39,7 @@
     "location": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
       "entry_type": "Location",
       "error": {

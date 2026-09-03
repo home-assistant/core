@@ -39,8 +39,7 @@
     "list": {
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "entry_not_loaded": "The Remember The Milk account must be loaded before adding or renaming a list.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "The Remember The Milk account must be loaded before adding or renaming a list."
       },
       "entry_type": "List",
       "error": {

@@ -3841,7 +3841,10 @@ class ConfigSubentryFlow(
             data=data,
             data_updates=data_updates,
         )
-        return self.async_abort(reason="reconfigure_successful")
+        return self.async_abort(
+            reason="reconfigure_successful",
+            translation_domain=HOMEASSISTANT_DOMAIN,
+        )
 
     @callback
     def async_update_reload_and_abort(
@@ -3877,7 +3880,10 @@ class ConfigSubentryFlow(
             if entry.update_listeners:
                 raise ValueError("Cannot update and reload entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        return self.async_abort(reason="reconfigure_successful")
+        return self.async_abort(
+            reason="reconfigure_successful",
+            translation_domain=HOMEASSISTANT_DOMAIN,
+        )
 
     @property
     def _entry_id(self) -> str:
