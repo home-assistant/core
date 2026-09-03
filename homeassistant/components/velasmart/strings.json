@@ -5,6 +5,7 @@
       "reauth_successful": "Reauthentication successful"
     },
     "error": {
+      "cannot_connect": "Cannot connect to the VelaSmart cloud",
       "invalid_auth": "Invalid username or password",
       "unknown": "Unexpected error"
     },

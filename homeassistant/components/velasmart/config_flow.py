@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from velasmart import VelaSmartApiClient, VelaSmartApiError
+from velasmart import VelaSmartApiAuthError, VelaSmartApiClient, VelaSmartApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -32,8 +32,10 @@ class VelaSmartConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 await self._async_validate(user_input)
-            except VelaSmartApiError:
+            except VelaSmartApiAuthError:
                 errors["base"] = "invalid_auth"
+            except VelaSmartApiError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error validating VelaSmart credentials")
                 errors["base"] = "unknown"
@@ -66,8 +68,10 @@ class VelaSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._async_validate(user_input)
-            except VelaSmartApiError:
+            except VelaSmartApiAuthError:
                 errors["base"] = "invalid_auth"
+            except VelaSmartApiError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error validating VelaSmart credentials")
                 errors["base"] = "unknown"
