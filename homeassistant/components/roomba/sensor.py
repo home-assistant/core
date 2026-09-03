@@ -33,6 +33,11 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[IRobotEntity], StateType]
 
+    # IRobotEntity.new_state_filter drops messages whose only reported key is
+    # "signal", so that a Wi-Fi update does not wake every entity. Sensors that
+    # actually read "signal" have to opt back in or they never refresh.
+    refresh_on_signal: bool = False
+
 
 DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
@@ -149,6 +154,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        refresh_on_signal=True,
         value_fn=lambda self: self.vacuum_state.get("signal", {}).get("rssi"),
     ),
 ]
@@ -191,6 +197,13 @@ class RoombaSensor(IRobotEntity, SensorEntity):
         """Initialize Roomba sensor."""
         super().__init__(roomba, blid)
         self.entity_description = entity_description
+
+    @override
+    def new_state_filter(self, new_state):
+        """Also accept Wi-Fi only messages for sensors that read them."""
+        if self.entity_description.refresh_on_signal and "signal" in new_state:
+            return True
+        return super().new_state_filter(new_state)
 
     @property
     @override
