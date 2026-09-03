@@ -182,8 +182,6 @@ value_updated:
             - "161"
             - "162"
             - "163"
-            - "239"
-            - "61696"
     property:
       required: true
       example: currentValue

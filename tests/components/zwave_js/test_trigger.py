@@ -11,6 +11,7 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
+from homeassistant.components.zwave_js.config_validation import COMMAND_CLASS_MARKERS
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.components.zwave_js.trigger import TRIGGERS
 from homeassistant.components.zwave_js.triggers.event import (
@@ -1507,7 +1508,7 @@ async def test_zwave_js_old_syntax(
 @pytest.mark.usefixtures("integration")
 async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
     """Test the command class options and translations match the CommandClass enum."""
-    expected = {str(cc.value) for cc in CommandClass}
+    expected = {str(cc.value) for cc in CommandClass if cc not in COMMAND_CLASS_MARKERS}
 
     descriptions = await trigger.async_get_all_descriptions(hass)
     options = descriptions[f"{DOMAIN}.value_updated"]["fields"]["command_class"][
@@ -1521,6 +1522,28 @@ async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
     assert {
         key.removeprefix(prefix) for key in translations if key.startswith(prefix)
     } == expected
+
+
+@pytest.mark.parametrize("command_class", sorted(COMMAND_CLASS_MARKERS))
+@pytest.mark.usefixtures("lock_schlage_be469", "integration")
+async def test_value_updated_rejects_command_class_markers(
+    hass: HomeAssistant, command_class: CommandClass
+) -> None:
+    """Test the command class markers are rejected by the value_updated trigger."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.value_updated",
+                    "options": {
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "command_class": command_class.value,
+                        "property": "latchStatus",
+                    },
+                }
+            ],
+        )
 
 
 @pytest.mark.parametrize(
