@@ -367,6 +367,18 @@ async def async_get_custom_components(
     return comps_or_future
 
 
+@callback
+def async_clear_custom_components_cache(hass: HomeAssistant) -> None:
+    """Clear the cached list of custom integrations.
+
+    The next call to async_get_custom_components scans the custom_components
+    directory again, which is what makes a freshly downloaded integration
+    visible. Safe to call when nothing is cached, and when the list is still
+    being built: whoever is waiting for that gets the result it was promised.
+    """
+    hass.data.pop(DATA_CUSTOM_COMPONENTS, None)
+
+
 async def async_get_config_flows(
     hass: HomeAssistant,
     type_filter: Literal["device", "helper", "hub", "service"] | None = None,

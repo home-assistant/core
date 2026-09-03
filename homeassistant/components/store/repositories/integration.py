@@ -4,7 +4,10 @@ import re
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.loader import async_get_custom_components
+from homeassistant.loader import (
+    async_clear_custom_components_cache,
+    async_get_custom_components,
+)
 
 from ..const import DOMAIN
 from ..enums import HacsCategory, HacsDispatchEvent, RepositoryFile
@@ -205,7 +208,7 @@ class HacsIntegrationRepository(HacsRepository):
     async def reload_custom_components(self) -> None:
         """Reload custom_components (and config flows)in HA."""
         self.logger.info("Reloading custom_component cache")
-        del self.hacs.hass.data["custom_components"]
+        async_clear_custom_components_cache(self.hacs.hass)
         await async_get_custom_components(self.hacs.hass)
         self.logger.info("Custom_component cache reloaded")
 

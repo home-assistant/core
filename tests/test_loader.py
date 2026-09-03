@@ -878,6 +878,50 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
+async def test_clear_custom_components_cache(hass: HomeAssistant) -> None:
+    """Verify that clearing the cache makes the next call scan again."""
+    integration = _get_test_integration(hass, "test_1", False)
+
+    with patch("homeassistant.loader._get_custom_components") as mock_get:
+        mock_get.return_value = {"test_1": integration}
+
+        assert await loader.async_get_custom_components(hass) == mock_get.return_value
+
+        loader.async_clear_custom_components_cache(hass)
+
+        assert await loader.async_get_custom_components(hass) == mock_get.return_value
+        assert mock_get.call_count == 2
+
+
+async def test_clear_custom_components_cache_without_a_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Verify that clearing an empty cache is a no-op."""
+    loader.async_clear_custom_components_cache(hass)
+
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_clear_custom_components_cache_while_it_is_built(
+    hass: HomeAssistant,
+) -> None:
+    """Verify that a caller waiting for the list still gets its result."""
+    integration = _get_test_integration(hass, "test_1", False)
+    scan: asyncio.Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = scan
+
+    waiting = hass.async_create_task(loader.async_get_custom_components(hass))
+    await asyncio.sleep(0)
+
+    loader.async_clear_custom_components_cache(hass)
+    scan.set_result({"test_1": integration})
+
+    assert await waiting == {"test_1": integration}
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_component_overwriting_core(hass: HomeAssistant) -> None:
     """Test loading a custom component that overwrites a core component."""
     # First load the core 'light' component
