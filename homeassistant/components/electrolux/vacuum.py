@@ -1,5 +1,7 @@
 """RVC entity for Electrolux Integration."""
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import logging
 from typing import Any, override
 
@@ -12,6 +14,7 @@ from electrolux_group_developer_sdk.client.appliances.rvc_appliance import RVCAp
 from homeassistant.components.vacuum import (
     Segment,
     StateVacuumEntity,
+    StateVacuumEntityDescription,
     VacuumActivity,
     VacuumEntityFeature,
 )
@@ -60,6 +63,211 @@ ELECTROLUX_TO_HA_FAN_MODES: dict[str | int, str] = {
 
 HA_TO_ELECTROLUX_MODES = {v: k for k, v in ELECTROLUX_TO_HA_FAN_MODES.items()}
 
+CLEAN_ZONES_COMMAND = "clean_zones"
+
+
+@dataclass(frozen=True, kw_only=True)
+class ElectroluxVacuumDescription[T: RVCAppliance](StateVacuumEntityDescription):
+    """Custom sensor description for Electrolux vacuums."""
+
+    additional_supported_features: VacuumEntityFeature | None = None
+    exists_fn: Callable[[T], bool] = lambda *args: True
+    get_segments_fn: (
+        Callable[[ApplianceClient, str], Awaitable[list[Segment]]] | None
+    ) = None
+    clean_segments_command_fn: Callable[[T, str, list[str]], dict[str, Any]] | None = (
+        None
+    )
+    clean_zones_command_fn: (
+        Callable[[T, dict[str, Any]], dict[str, Any] | None] | None
+    ) = None
+
+
+def _is_700series_vacuum(appliance_data: RVCAppliance) -> bool:
+    """Check if the appliance is a 700series vacuum."""
+    return appliance_data.appliance.applianceType == "700series"
+
+
+def _is_purei9_vacuum(appliance_data: RVCAppliance) -> bool:
+    """Check if the appliance is a PUREi9 vacuum."""
+    return appliance_data.appliance.applianceType == "PUREi9"
+
+
+def _is_gordias_vacuum(appliance_data: RVCAppliance) -> bool:
+    """Check if the appliance is a Gordias vacuum."""
+    return appliance_data.appliance.applianceType == "Gordias"
+
+
+def _is_cybele_vacuum(appliance_data: RVCAppliance) -> bool:
+    """Check if the appliance is a Cybele vacuum."""
+    return appliance_data.appliance.applianceType == "Cybele"
+
+
+async def _get_interactive_maps_segments(
+    client: ApplianceClient, appliance_id: str
+) -> list[Segment]:
+    segments: list[Segment] = []
+    interactive_maps = await client.get_interactive_maps(appliance_id)
+    for interactive_map in interactive_maps:
+        map_id = interactive_map.get("id")
+        map_name = interactive_map.get("name")
+        zones = interactive_map.get("zones", [])
+        for zone in zones:
+            zone_id = zone.get("id")
+            zone_name = zone.get("name")
+            segments.append(
+                Segment(id=f"{map_id}_{zone_id}", name=f"{map_name}: {zone_name}")
+            )
+
+    return segments
+
+
+async def _get_memory_maps_segments(
+    client: ApplianceClient, appliance_id: str
+) -> list[Segment]:
+    segments: list[Segment] = []
+    memory_maps = await client.get_memory_maps(appliance_id)
+    for memory_map in memory_maps:
+        map_id = memory_map.get("id")
+        map_name = memory_map.get("name")
+        rooms = memory_map.get("rooms", [])
+        for room in rooms:
+            room_id = room.get("id")
+            room_name = room.get("name")
+            segments.append(
+                Segment(id=f"{map_id}_{room_id}", name=f"{map_name}: {room_name}")
+            )
+
+    return segments
+
+
+def _get_clean_segments_command_purei9(
+    appliance_data: RVCAppliance, map_id: str, zone_ids: list[str]
+) -> dict[str, Any]:
+    return appliance_data.get_start_zone_cleaning_command(map_id, zone_ids)
+
+
+def _get_clean_segments_command_gordias(
+    appliance_data: RVCAppliance, map_id: str, zone_ids: list[str]
+) -> dict[str, Any]:
+    int_map_id = int(map_id)
+    room_ids = [int(zone_id) for zone_id in zone_ids]
+    return appliance_data.get_gordias_start_room_cleaning_command(int_map_id, room_ids)
+
+
+def _get_clean_segments_command_cybele(
+    appliance_data: RVCAppliance, map_id: str, zone_ids: list[str]
+) -> dict[str, Any]:
+    int_map_id = int(map_id)
+    room_ids_names = [(int(zone_id), "") for zone_id in zone_ids]
+    return appliance_data.get_cybele_start_room_cleaning_command(
+        int_map_id,
+        room_ids_names,
+        global_settings_cleaning=True,
+    )
+
+
+def _get_clean_command_purei9(
+    appliance_data: RVCAppliance, params: dict[str, Any]
+) -> dict[str, Any] | None:
+    map_id = params.get("map_id")
+    zone_ids = params.get("zone_ids", []) if params else []
+    power_mode = params.get("power_mode", 2)
+
+    if not map_id:
+        _LOGGER.warning("Map id is missing")
+        return {}
+
+    return appliance_data.get_start_zone_cleaning_command(map_id, zone_ids, power_mode)
+
+
+def _get_clean_command_gordias(
+    appliance_data: RVCAppliance, params: dict[str, Any]
+) -> dict[str, Any] | None:
+
+    map_id = params.get("map_id")
+    room_ids = params.get("room_ids", []) if params else []
+    sweep_mode = params.get("sweepMode", 0)
+    vacuum_mode = params.get("vacuumMode", "standard")
+    water_pump_rate = params.get("waterPumpRate", "off")
+    repetitions = params.get("numberOfCleaningRepetitions", 1)
+
+    if not map_id:
+        _LOGGER.warning("Map id is missing")
+        return None
+
+    return appliance_data.get_gordias_start_room_cleaning_command(
+        map_id,
+        room_ids,
+        sweep_mode,
+        vacuum_mode,
+        water_pump_rate,
+        repetitions,
+    )
+
+
+def _get_clean_command_cybele(
+    appliance_data: RVCAppliance, params: dict[str, Any]
+) -> dict[str, Any] | None:
+
+    map_id = params.get("map_id")
+    room_ids_names = params.get("room_ids_names", []) if params else []
+    global_settings_cleaning = params.get("globalSettingsCleaning", True)
+    cleaning_type = params.get("cleaningType", "vacuum")
+    vacuum_mode = params.get("vacuumMode", "standard")
+    water_pump_rate = params.get("waterPumpRate", "off")
+    repetitions = params.get("numberOfCleaningRepetitions", 1)
+
+    if not map_id:
+        _LOGGER.warning("Map id is missing")
+        return None
+    return appliance_data.get_cybele_start_room_cleaning_command(
+        map_id,
+        room_ids_names,
+        global_settings_cleaning,
+        cleaning_type,
+        vacuum_mode,
+        water_pump_rate,
+        repetitions,
+    )
+
+
+VACUUM_DESCRIPTIONS: tuple[ElectroluxVacuumDescription, ...] = (
+    ElectroluxVacuumDescription(
+        key="700series", translation_key="rvc", exists_fn=_is_700series_vacuum
+    ),
+    ElectroluxVacuumDescription(
+        key="purei9",
+        translation_key="rvc",
+        exists_fn=_is_purei9_vacuum,
+        get_segments_fn=_get_interactive_maps_segments,
+        clean_segments_command_fn=_get_clean_segments_command_purei9,
+        clean_zones_command_fn=_get_clean_command_purei9,
+        additional_supported_features=VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.CLEAN_AREA,
+    ),
+    ElectroluxVacuumDescription(
+        key="gordias",
+        translation_key="rvc",
+        exists_fn=_is_gordias_vacuum,
+        get_segments_fn=_get_memory_maps_segments,
+        clean_segments_command_fn=_get_clean_segments_command_gordias,
+        clean_zones_command_fn=_get_clean_command_gordias,
+        additional_supported_features=VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.CLEAN_AREA,
+    ),
+    ElectroluxVacuumDescription(
+        key="cybele",
+        translation_key="rvc",
+        exists_fn=_is_cybele_vacuum,
+        get_segments_fn=_get_memory_maps_segments,
+        clean_segments_command_fn=_get_clean_segments_command_cybele,
+        clean_zones_command_fn=_get_clean_command_cybele,
+        additional_supported_features=VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.CLEAN_AREA,
+    ),
+)
+
 
 def build_entities_for_appliance(
     appliance_data: ApplianceData,
@@ -71,9 +279,14 @@ def build_entities_for_appliance(
     entities: list[ElectroluxBaseEntity] = []
 
     if isinstance(appliance_data, RVCAppliance):
-        entities.append(
-            RvcEntity(appliance_data=appliance_data, coordinator=coordinator)
+        entities.extend(
+            RvcEntity(appliance_data, coordinator, description)
+            for description in VACUUM_DESCRIPTIONS
+            if description.exists_fn(appliance_data)
         )
+        # entities.append(
+        #     RvcEntity(appliance_data=appliance_data, coordinator=coordinator)
+        # )
 
     return entities
 
@@ -100,21 +313,22 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.FAN_SPEED
     )
+    _entity_description: ElectroluxVacuumDescription[RVCAppliance]
 
     def __init__(
         self,
         appliance_data: RVCAppliance,
         coordinator: ElectroluxDataUpdateCoordinator,
+        description: ElectroluxVacuumDescription[RVCAppliance],
     ) -> None:
         """Initialize the climate device."""
         super().__init__(appliance_data, coordinator, "rvc")
+        self._entity_description = description
         self._attr_name = None
         self._model = self._appliance_data.appliance.applianceType
 
-        if self._model in ["PUREi9", "Gordias", "Cybele"]:
-            self._attr_supported_features |= (
-                VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.CLEAN_AREA
-            )
+        if description.additional_supported_features:
+            self._attr_supported_features |= description.additional_supported_features
         self._attr_fan_speed_list = self._get_available_modes()
         self._attr_fan_speed = None
         self._attr_activity = VacuumActivity.IDLE
@@ -207,15 +421,14 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments for the vacuum cleaner."""
-        if self._model == "PUREi9":
-            return await _get_interactive_maps_segments(
-                self.coordinator.client, self._appliance_id
+        description = self._entity_description
+        if description.get_segments_fn is None:
+            raise ServiceValidationError(
+                "The robot vacuum does not support segment retrieval"
             )
-        if self._model in ["Gordias", "Cybele"]:
-            return await _get_memory_maps_segments(
-                self.coordinator.client, self._appliance_id
-            )
-        return []
+        return await description.get_segments_fn(
+            self.coordinator.client, self._appliance_id
+        )
 
     @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
@@ -229,30 +442,16 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
                 "Can't perform cleaning command: segments from multiple maps selected"
             )
         map_id = map_id_set.pop()
-
         zone_ids = [segment_id[len(map_id) + 1 :] for segment_id in segment_ids]
-        if self._model == "PUREi9":
-            command = self._appliance_data.get_start_zone_cleaning_command(
-                map_id, zone_ids
-            )
-        elif self._model == "Gordias":
-            int_map_id = int(map_id)
-            room_ids = [int(zone_id) for zone_id in zone_ids]
-            command = self._appliance_data.get_gordias_start_room_cleaning_command(
-                int_map_id, room_ids
-            )
-        elif self._model == "Cybele":
-            int_map_id = int(map_id)
-            room_ids_names = [(int(zone_id), "") for zone_id in zone_ids]
-            command = self._appliance_data.get_cybele_start_room_cleaning_command(
-                int_map_id,
-                room_ids_names,
-                global_settings_cleaning=True,
-            )
-        else:
+
+        description = self._entity_description
+        if description.clean_segments_command_fn is None:
             raise ServiceValidationError(
                 "The robot vacuum does not support segment cleaning"
             )
+        command = description.clean_segments_command_fn(
+            self._appliance_data, map_id, zone_ids
+        )
 
         await self.send_device_command(command)
 
@@ -267,104 +466,23 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
 
         _LOGGER.debug("Received send_command: %s, params: %s", command, params)
 
+        description = self._entity_description
+        if description.clean_zones_command_fn is None:
+            raise ServiceValidationError(
+                "The robot vacuum does not support sending custom commands"
+            )
+
+        if command != CLEAN_ZONES_COMMAND:
+            raise ServiceValidationError(
+                f"Unknown command: {command}. The supported command for Electrolux vacuums is: {CLEAN_ZONES_COMMAND}"
+            )
+
         if not isinstance(params, dict):
             raise ServiceValidationError("Incorrect parameters provided")
 
-        device_command: dict[str, Any] | None = None
-
-        if command == "clean_zones":
-            map_id = params.get("map_id")
-            zone_ids = params.get("zone_ids", []) if params else []
-            power_mode = params.get("power_mode", 2)
-            if map_id:
-                device_command = self._appliance_data.get_start_zone_cleaning_command(
-                    map_id, zone_ids, power_mode
-                )
-            else:
-                _LOGGER.warning("Map id is missing")
-        elif command == "clean_gordias_rooms":
-            map_id = params.get("map_id")
-            room_ids = params.get("room_ids", []) if params else []
-            sweep_mode = params.get("sweepMode", 0)
-            vacuum_mode = params.get("vacuumMode", "standard")
-            water_pump_rate = params.get("waterPumpRate", "off")
-            repetitions = params.get("numberOfCleaningRepetitions", 1)
-            if map_id:
-                device_command = (
-                    self._appliance_data.get_gordias_start_room_cleaning_command(
-                        map_id,
-                        room_ids,
-                        sweep_mode,
-                        vacuum_mode,
-                        water_pump_rate,
-                        repetitions,
-                    )
-                )
-            else:
-                _LOGGER.warning("Map id is missing")
-
-        elif command == "clean_cybele_rooms":
-            map_id = params.get("map_id")
-            room_ids_names = params.get("room_ids_names", []) if params else []
-            global_settings_cleaning = params.get("globalSettingsCleaning", True)
-            cleaning_type = params.get("cleaningType", "vacuum")
-            vacuum_mode = params.get("vacuumMode", "standard")
-            water_pump_rate = params.get("waterPumpRate", "off")
-            repetitions = params.get("numberOfCleaningRepetitions", 1)
-            if map_id:
-                device_command = (
-                    self._appliance_data.get_cybele_start_room_cleaning_command(
-                        map_id,
-                        room_ids_names,
-                        global_settings_cleaning,
-                        cleaning_type,
-                        vacuum_mode,
-                        water_pump_rate,
-                        repetitions,
-                    )
-                )
-            else:
-                _LOGGER.warning("Map id is missing")
-        else:
-            _LOGGER.warning("Unknown command: %s", command)
+        device_command = description.clean_zones_command_fn(
+            self._appliance_data, params
+        )
 
         if device_command:
             await self.send_device_command(device_command)
-
-
-async def _get_interactive_maps_segments(
-    client: ApplianceClient, appliance_id: str
-) -> list[Segment]:
-    segments: list[Segment] = []
-    interactive_maps = await client.get_interactive_maps(appliance_id)
-    for interactive_map in interactive_maps:
-        map_id = interactive_map.get("id")
-        map_name = interactive_map.get("name")
-        zones = interactive_map.get("zones", [])
-        for zone in zones:
-            zone_id = zone.get("id")
-            zone_name = zone.get("name")
-            segments.append(
-                Segment(id=f"{map_id}_{zone_id}", name=f"{map_name}: {zone_name}")
-            )
-
-    return segments
-
-
-async def _get_memory_maps_segments(
-    client: ApplianceClient, appliance_id: str
-) -> list[Segment]:
-    segments: list[Segment] = []
-    memory_maps = await client.get_memory_maps(appliance_id)
-    for memory_map in memory_maps:
-        map_id = memory_map.get("id")
-        map_name = memory_map.get("name")
-        rooms = memory_map.get("rooms", [])
-        for room in rooms:
-            room_id = room.get("id")
-            room_name = room.get("name")
-            segments.append(
-                Segment(id=f"{map_id}_{room_id}", name=f"{map_name}: {room_name}")
-            )
-
-    return segments
