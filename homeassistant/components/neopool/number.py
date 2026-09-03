@@ -297,9 +297,10 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     def _decode_raw(self) -> float | None:
         """Decode the current coordinator-data value for this entity."""
         if (flag := self.entity_description.masked_flag) is not None:
-            return decode_masked_flag(flag, self.coordinator.data)
-        raw = self.coordinator.data.get(self._data_key)
-        return raw if isinstance(raw, (int, float)) else None
+            raw = decode_masked_flag(flag, self.coordinator.data)
+        else:
+            raw = self.coordinator.data.get(self._data_key)
+        return float(raw) if isinstance(raw, (int, float)) else None
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -405,12 +406,20 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 except (NeoPoolError, OSError, TimeoutError) as err:
                     # Roll the optimistic value back to the register reading and
                     # report the failure to the awaiting caller.
-                    self._report_write_failure(future, pending, err)
+                    self._report_write_failure(
+                        future,
+                        pending,
+                        HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="modbus_communication_error",
+                            translation_placeholders={"error": str(err)},
+                        ),
+                    )
                     resolved = True
                     return
                 except Exception as err:  # noqa: BLE001
                     # An unexpected write error must still reach the blocking
-                    # caller as a failure, never resolve as a silent success.
+                    # caller as a failure, unchanged so the real cause shows.
                     self._report_write_failure(future, pending, err)
                     resolved = True
                     return
@@ -428,7 +437,8 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     self.coordinator.request_refresh_with_followup()
                 except Exception as err:  # noqa: BLE001
                     # A merge/refresh error after the device write must reach the
-                    # caller as a failure, not fall through to a success result.
+                    # caller as a failure, unchanged: the write itself succeeded,
+                    # so do not mislabel it as a communication error.
                     self._report_write_failure(future, pending, err)
                     resolved = True
                     return
@@ -460,18 +470,17 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         self,
         future: asyncio.Future[None] | None,
         batch_value: float,
-        err: Exception,
+        exc: Exception,
     ) -> None:
-        """Roll the optimistic value back and fail the awaiting caller."""
+        """Roll the optimistic value back and fail the awaiting caller.
+
+        The caller passes the exception to surface: a translated
+        communication error for expected client failures, or the original
+        exception for anything unexpected so the real cause is not masked.
+        """
         self._clear_pending_if_current(batch_value)
         if future is not None and not future.done():
-            future.set_exception(
-                HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="modbus_communication_error",
-                    translation_placeholders={"error": str(err)},
-                )
-            )
+            future.set_exception(exc)
 
     @callback
     def _clear_pending_if_current(self, batch_value: float) -> None:

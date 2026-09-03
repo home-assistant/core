@@ -652,7 +652,8 @@ async def test_unexpected_write_error_reaches_caller(
 
     A raise outside the device-error set must not resolve the coalesce future as
     a success: the caller would otherwise see a successful service call while the
-    value never reached the device. The failure surfaces as HomeAssistantError.
+    value never reached the device. It surfaces unchanged, not relabeled as a
+    communication error.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=ValueError("boom"))
     await setup_integration(hass, mock_config_entry_number)
@@ -661,10 +662,8 @@ async def test_unexpected_write_error_reaches_caller(
 
     task = _set_value_nowait(hass, ph1_entity_id, 7.5)
     await _flush(hass, freezer)
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(ValueError, match="boom"):
         await task
-
-    assert err.value.translation_key == "modbus_communication_error"
 
 
 async def test_post_write_merge_failure_reaches_caller(
@@ -677,7 +676,8 @@ async def test_post_write_merge_failure_reaches_caller(
 
     The device write succeeds, but merging the result into the coordinator
     raises. The flush must not fall through to a success result: the failure
-    surfaces to the blocking caller as HomeAssistantError.
+    surfaces unchanged, not relabeled as a communication error, since the write
+    itself succeeded.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
@@ -694,10 +694,8 @@ async def test_post_write_merge_failure_reaches_caller(
         side_effect=RuntimeError("merge boom"),
     ):
         await _flush(hass, freezer)
-        with pytest.raises(HomeAssistantError) as err:
+        with pytest.raises(RuntimeError, match="merge boom"):
             await task
-
-    assert err.value.translation_key == "modbus_communication_error"
 
 
 async def test_optimistic_value_survives_overlapping_flush(
