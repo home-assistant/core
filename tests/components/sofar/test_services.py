@@ -192,11 +192,11 @@ async def test_action_rejected_when_unsupported(
         )
 
 
-async def test_invalid_action_value_is_a_service_error(
+async def test_max_power_not_a_multiple_of_100_is_a_service_error(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test the library's ValueError surfaces as a ServiceValidationError."""
-    with pytest.raises(ServiceValidationError):
+    """Test a non-multiple-of-100 max_power is rejected before writing."""
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_FEED_IN_LIMIT,
@@ -207,6 +207,7 @@ async def test_invalid_action_value_is_a_service_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "max_power_not_a_multiple_of_100"
 
 
 async def test_write_failure_is_a_home_assistant_error(
