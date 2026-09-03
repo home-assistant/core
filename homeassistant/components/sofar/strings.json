@@ -47,6 +47,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "active_power_limit_enabled": {
+        "name": "Active power limit enabled"
+      },
       "fault_ac_output": {
         "name": "AC output fault"
       },
