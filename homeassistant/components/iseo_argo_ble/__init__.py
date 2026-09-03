@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_USER_SUBTYPE,
     DOMAIN,
     PLATFORMS,
+    SERVICE_DELETE_CREDENTIAL,
     SERVICE_SET_CREDENTIAL_ENABLED,
 )
 from .coordinator import IseoUserCoordinator
@@ -45,6 +46,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_domain=BINARY_SENSOR_DOMAIN,
         schema={vol.Required(ATTR_ENABLED): cv.boolean},
         func="async_set_enabled",
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_DELETE_CREDENTIAL,
+        # Removing a credential cannot be undone from Home Assistant: the
+        # person has to enrol theirs again with the Master Card.
+        admin_only=True,
+        entity_domain=BINARY_SENSOR_DOMAIN,
+        schema=None,
+        func="async_delete_credential",
     )
     return True
 

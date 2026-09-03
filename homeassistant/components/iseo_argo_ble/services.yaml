@@ -8,3 +8,9 @@ set_credential_enabled:
       required: true
       selector:
         boolean:
+
+delete_credential:
+  target:
+    entity:
+      integration: iseo_argo_ble
+      domain: binary_sensor

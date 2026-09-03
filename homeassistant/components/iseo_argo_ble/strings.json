@@ -80,6 +80,10 @@
     }
   },
   "services": {
+    "delete_credential": {
+      "description": "Removes a credential from the lock for good. Whoever held it has to be enrolled again with the Master Card, so suspend it instead if you only want to stop it temporarily. Only administrators can run this action.",
+      "name": "Delete credential"
+    },
     "set_credential_enabled": {
       "description": "Lets a credential enrolled on the lock open the door, or stops it doing so. The credential stays on the lock either way. Only administrators can run this action.",
       "fields": {

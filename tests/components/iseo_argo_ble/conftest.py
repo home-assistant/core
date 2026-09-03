@@ -130,6 +130,7 @@ def mock_iseo_client() -> Generator[MagicMock]:
         client.update_ble_device = MagicMock()
         client.read_users = AsyncMock(return_value=list(MOCK_USERS))
         client.set_user_disabled = AsyncMock(return_value=None)
+        client.erase_user_by_uuid = AsyncMock(return_value=None)
         yield client
 
 

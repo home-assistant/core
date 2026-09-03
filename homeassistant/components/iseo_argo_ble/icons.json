@@ -1,5 +1,8 @@
 {
   "services": {
+    "delete_credential": {
+      "service": "mdi:account-remove"
+    },
     "set_credential_enabled": {
       "service": "mdi:account-lock-open"
     }
