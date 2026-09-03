@@ -25,6 +25,9 @@ from .entity import IndiAllSkyEntity
 PARALLEL_UPDATES = 0
 
 
+_UNSUPPORTED_TEMPERATURE = -273.15
+
+
 @dataclass(frozen=True, kw_only=True)
 class IndiAllSkySensorEntityDescription(SensorEntityDescription):
     """Class describing INDI Allsky sensor entities."""
@@ -78,7 +81,11 @@ SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.exposure.temp if data.exposure else None,
+        value_fn=lambda data: (
+            data.exposure.temp
+            if data.exposure and data.exposure.temp != _UNSUPPORTED_TEMPERATURE
+            else None
+        ),
     ),
 )
 

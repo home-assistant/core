@@ -43,15 +43,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         )
         self.latest_exposure: ExposureData | None = None
 
-        def _disconnect_on_unload() -> None:
-            """Schedule client disconnect during entry unload."""
-            hass.async_create_task(self.client.disconnect())
-
         unsub = self.client.register_callback(
             "exposure_complete", self._handle_exposure_complete
         )
         entry.async_on_unload(unsub)
-        entry.async_on_unload(_disconnect_on_unload)
+        entry.async_on_unload(self.client.disconnect)
 
         super().__init__(
             hass,
@@ -72,6 +68,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         try:
             await self.client.fetch_image("latestimage")
         except IndiAllSkyError as err:
-            raise UpdateFailed(f"Error fetching latest image: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
 
         return IndiAllSkyData(exposure=self.latest_exposure)

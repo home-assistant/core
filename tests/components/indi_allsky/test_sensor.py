@@ -6,7 +6,7 @@ from aioindiallsky import ExposureData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -15,7 +15,9 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("mock_indi_allsky_client")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_indi_allsky_client"
+)
 async def test_sensor_setup_and_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -74,7 +76,7 @@ async def test_sensor_updates(
 
     state = hass.states.get("sensor.indi_allsky_temperature")
     assert state is not None
-    assert state.state == "-273.15"
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.indi_allsky_sky_quality")
     assert state is not None
