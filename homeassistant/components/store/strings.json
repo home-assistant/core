@@ -43,6 +43,23 @@
       }
     }
   },
+  "exceptions": {
+    "device_of_the_store": {
+      "message": "Cannot remove the service of the Community store itself."
+    },
+    "device_without_a_repository": {
+      "message": "Cannot remove service {device_id}, it does not belong to a repository in the Community store."
+    },
+    "download_failed": {
+      "message": "Downloading {repository} failed: {error}"
+    },
+    "repository_still_downloaded": {
+      "message": "Cannot remove the service for {repository}, it is still downloaded."
+    },
+    "version_already_downloaded": {
+      "message": "Version {version} of {repository} is already downloaded."
+    }
+  },
   "issues": {
     "removed": {
       "description": "Because {reason}, `{name}` has been removed from the Community store. Please visit the [Community store panel](/store/repository/{repositry_id}) to remove it.",

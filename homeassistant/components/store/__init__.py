@@ -249,17 +249,24 @@ async def async_remove_config_entry_device(
 
     if repository_id is None:
         raise HomeAssistantError(
-            f"Cannot remove service {device_entry.id}, no valid HACS repository identifier found."
+            translation_domain=DOMAIN,
+            translation_key="device_without_a_repository",
+            translation_placeholders={"device_id": device_entry.id},
         )
 
     if repository_id == HACS_SYSTEM_ID:
-        raise HomeAssistantError("Cannot remove the service for HACS itself.")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_of_the_store",
+        )
 
     if hacs.repositories.is_downloaded(repository_id) and (
         repository := hacs.repositories.get_by_id(repository_id)
     ):
         raise HomeAssistantError(
-            f"Cannot remove service for {repository.data.full_name}, it is still downloaded in HACS."
+            translation_domain=DOMAIN,
+            translation_key="repository_still_downloaded",
+            translation_placeholders={"repository": repository.data.full_name},
         )
 
     return True

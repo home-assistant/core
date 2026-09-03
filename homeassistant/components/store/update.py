@@ -9,6 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import StoreConfigEntry
+from .const import DOMAIN
 from .entity import HacsRepositoryEntity
 from .enums import HacsCategory, HacsDispatchEvent
 from .exceptions import HacsException
@@ -93,14 +94,25 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         to_download = version or self.latest_version
         if to_download == self.installed_version:
             raise HomeAssistantError(
-                f"Version {self.installed_version} of {self.repository.data.full_name} is already downloaded"
+                translation_domain=DOMAIN,
+                translation_key="version_already_downloaded",
+                translation_placeholders={
+                    "repository": self.repository.data.full_name,
+                    "version": self.installed_version,
+                },
             )
+
         try:
-            await self.repository.async_download_repository(
-                ref=version or self.latest_version
-            )
+            await self.repository.async_download_repository(ref=to_download)
         except HacsException as exception:
-            raise HomeAssistantError(exception) from exception
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="download_failed",
+                translation_placeholders={
+                    "error": str(exception),
+                    "repository": self.repository.data.full_name,
+                },
+            ) from exception
 
     @override
     async def async_release_notes(self) -> str | None:

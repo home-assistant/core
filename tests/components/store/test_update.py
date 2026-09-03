@@ -292,7 +292,10 @@ async def test_install_version_without_a_manifest(
 
     with pytest.raises(
         HomeAssistantError,
-        match="The version 3.0.0 for this integration can not be used with HACS.",
+        match=re.escape(
+            f"Downloading {REPOSITORY_INTEGRATION} failed: The version 3.0.0 "
+            "for this integration can not be used with HACS."
+        ),
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -319,7 +322,10 @@ async def test_install_version_requiring_a_newer_core(
 
     with pytest.raises(
         HomeAssistantError,
-        match="This version requires Home Assistant 9999.99.99 or newer.",
+        match=re.escape(
+            f"Downloading {REPOSITORY_INTEGRATION} failed: This version requires "
+            "Home Assistant 9999.99.99 or newer."
+        ),
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -349,8 +355,9 @@ async def test_install_download_failure(
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            f"Downloading {REPOSITORY_INTEGRATION} with version 2.0.0 failed with"
-            " (Could not download, see log for details)"
+            f"Downloading {REPOSITORY_INTEGRATION} failed: Downloading "
+            f"{REPOSITORY_INTEGRATION} with version 2.0.0 failed with "
+            "(Could not download, see log for details)"
         ),
     ):
         await hass.services.async_call(

@@ -215,27 +215,27 @@ async def test_stored_repository_ids(
     [
         pytest.param(
             {("other_domain", "123456"), ("another_domain", "789")},
-            "no valid HACS repository identifier found",
+            "it does not belong to a repository in the Community store",
             id="other_domains_only",
         ),
         pytest.param(
             set(),
-            "no valid HACS repository identifier found",
+            "it does not belong to a repository in the Community store",
             id="no_identifiers",
         ),
         pytest.param(
             {(DOMAIN,), (DOMAIN, "123", "extra"), "not_a_tuple"},
-            "no valid HACS repository identifier found",
+            "it does not belong to a repository in the Community store",
             id="malformed_identifiers",
         ),
         pytest.param(
             {(DOMAIN, HACS_SYSTEM_ID)},
-            "Cannot remove the service for HACS itself",
+            "Cannot remove the service of the Community store itself",
             id="system_device",
         ),
         pytest.param(
             {("other_domain", "789"), (DOMAIN, HACS_SYSTEM_ID)},
-            "Cannot remove the service for HACS itself",
+            "Cannot remove the service of the Community store itself",
             id="system_device_among_others",
         ),
     ],
@@ -293,7 +293,10 @@ async def test_remove_device_still_downloaded(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Cannot remove service for {REPOSITORY_INTEGRATION}",
+        match=(
+            f"Cannot remove the service for {REPOSITORY_INTEGRATION}, "
+            "it is still downloaded"
+        ),
     ):
         await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
 
