@@ -40,7 +40,7 @@ habluetooth==6.26.11
 hass-nabucasa==2.7.0
 hassil==3.12.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260826.2
+home-assistant-frontend==20260826.4
 home-assistant-intents==2026.8.28
 httpx==0.28.1
 ifaddr==0.2.0
@@ -72,7 +72,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.5
+uv==0.12.6
 webrtc-models==0.3.0
 yarl==1.24.5
 zeroconf==0.151.1

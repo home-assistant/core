@@ -138,22 +138,22 @@
   },
   "exceptions": {
     "get_image_failed": {
-      "message": "Could not get a snapshot from Imou: {error}"
+      "message": "Could not get a snapshot from Imou"
     },
     "get_stream_failed": {
-      "message": "Could not get the live stream URL from Imou: {error}"
+      "message": "Could not get the live stream URL from Imou"
     },
     "invalid_auth": {
       "message": "Imou rejected the App ID and App secret"
     },
     "press_button_failed": {
-      "message": "Imou rejected the button press: {error}"
+      "message": "Imou rejected the button press"
     },
     "select_option_failed": {
-      "message": "Imou rejected the new option: {error}"
+      "message": "Imou rejected the new option"
     },
     "switch_operation_failed": {
-      "message": "Imou rejected the switch change: {error}"
+      "message": "Imou rejected the switch change"
     }
   },
   "selector": {
