@@ -23,7 +23,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.const import CONF_ADDRESS, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -94,9 +94,8 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
             user.user_type, "credential_other"
         )
         # Credentials enrolled without a name are only identifiable by UUID.
-        self._attr_translation_placeholders = {
-            "name": user.name.strip() or user.uuid_hex[:8]
-        }
+        self._credential_name = user.name.strip() or user.uuid_hex[:8]
+        self._attr_translation_placeholders = {"name": self._credential_name}
         self._attr_unique_id = (
             f"{entry.unique_id}_user_{user.user_type}_{user.uuid_hex}"
         )
@@ -159,10 +158,22 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         try:
             async with entry.runtime_data.ble_lock:
                 self.coordinator.client.update_ble_device(ble_device)
-                yield self.coordinator.client
-                # Targeting several credentials runs this once per entity, so
-                # keep the mutex while the lock closes the admin session.
-                await asyncio.sleep(ADMIN_SETTLE_DELAY)
+                try:
+                    yield self.coordinator.client
+                finally:
+                    # Always wait, failure included: the lock needs the same
+                    # moment to close the session either way, and targeting
+                    # several credentials runs this once per entity.
+                    await asyncio.sleep(ADMIN_SETTLE_DELAY)
+        except ValueError as err:
+            # The lock no longer lists this credential — it was removed in the
+            # Argo app since the list was read.
+            self._forget_credential()
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="credential_not_on_lock",
+                translation_placeholders={"name": self._credential_name},
+            ) from err
         except IseoAuthError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -198,6 +209,14 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 subtype=self._inner_subtype,
             )
 
+        self._forget_credential()
+
+    def _forget_credential(self) -> None:
+        """Drop the credential from the cached list and remove its entity.
+
+        Neither comes back on its own: the credential is gone from the lock,
+        and the list is only re-read when the config entry reloads.
+        """
         self.coordinator.async_set_updated_data(
             [
                 user

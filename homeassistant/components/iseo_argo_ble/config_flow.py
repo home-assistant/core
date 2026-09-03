@@ -88,6 +88,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._gw_priv: ec.EllipticCurvePrivateKey | None = None
         self._admin_uuid_hex: str = ""
         self._admin_priv_scalar: str = ""
+        self._admin_priv: ec.EllipticCurvePrivateKey | None = None
 
     @override
     async def async_step_user(
@@ -202,14 +203,19 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 # The Master Card scan authorises a single session, so the admin
                 # identity has to be enrolled alongside the gateway one or not
                 # at all.
-                admin_priv: ec.EllipticCurvePrivateKey | None = None
-                if user_input[CONF_ENABLE_ADMIN]:
-                    admin_priv = await self.hass.async_add_executor_job(
+                enable_admin: bool = user_input[CONF_ENABLE_ADMIN]
+                if enable_admin and self._admin_priv is None:
+                    # Generated once and reused by every retry, like the gateway
+                    # identity. The lock is sent the identity before it
+                    # acknowledges it, so a failure here may still have stored
+                    # it; a fresh identity each time would strand those on the
+                    # lock, taking up slots nobody holds the key to.
+                    self._admin_priv = await self.hass.async_add_executor_job(
                         _generate_identity
                     )
                     self._admin_uuid_hex = uuid_module.uuid4().bytes.hex()
                     self._admin_priv_scalar = hex(
-                        admin_priv.private_numbers().private_value
+                        self._admin_priv.private_numbers().private_value
                     )
 
                 assert self._gw_priv is not None
@@ -224,11 +230,11 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     await client.setup_gateway(
                         name="Home Assistant",
                         admin_uuid_bytes=bytes.fromhex(self._admin_uuid_hex)
-                        if admin_priv is not None
+                        if enable_admin
                         else None,
-                        admin_identity_priv=admin_priv,
+                        admin_identity_priv=self._admin_priv if enable_admin else None,
                     )
-                    return self._async_create_iseo_entry()
+                    return self._async_create_iseo_entry(with_admin=enable_admin)
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
                 except IseoAuthError as exc:
@@ -237,11 +243,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 except Exception:
                     _LOGGER.exception("Unexpected error during gateway setup")
                     errors["base"] = "unknown"
-
-                # A retry generates a fresh admin identity; drop the one the
-                # lock did not take.
-                self._admin_uuid_hex = ""
-                self._admin_priv_scalar = ""
 
         return self.async_show_form(
             step_id="gw_register",
@@ -253,14 +254,14 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _async_create_iseo_entry(self) -> ConfigFlowResult:
+    def _async_create_iseo_entry(self, *, with_admin: bool) -> ConfigFlowResult:
         """Create the final config entry."""
         data: dict[str, Any] = {
             CONF_ADDRESS: self._address,
             CONF_UUID: self._uuid_hex,
             CONF_PRIV_SCALAR: self._priv_scalar,
         }
-        if self._admin_uuid_hex:
+        if with_admin:
             data[CONF_ADMIN_UUID] = self._admin_uuid_hex
             data[CONF_ADMIN_PRIV_SCALAR] = self._admin_priv_scalar
         return self.async_create_entry(

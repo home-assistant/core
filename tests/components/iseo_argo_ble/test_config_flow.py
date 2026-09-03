@@ -231,14 +231,15 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("_patch_identity")
-async def test_gw_register_retry_after_failure_drops_admin_identity(
+async def test_gw_register_retry_reuses_the_admin_identity(
     hass: HomeAssistant,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test a retry without user management does not keep the admin identity.
+    """Test a retry enrols the same administrator identity, not a fresh one.
 
-    The first attempt generates one, but the lock never enrolled it, so it must
-    not end up in the config entry.
+    The lock is sent the identity before it acknowledges it, so a failure may
+    still have stored it. Generating a new one per attempt would strand those
+    on the lock, holding slots nobody has the key to.
     """
     mock_iseo_client.setup_gateway.side_effect = [IseoConnectionError, None]
 
@@ -259,6 +260,47 @@ async def test_gw_register_retry_after_failure_drops_admin_identity(
         result2["flow_id"], user_input={CONF_ENABLE_ADMIN: True}
     )
     assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={CONF_ENABLE_ADMIN: True}
+    )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["data"] == ENTRY_DATA_WITH_ADMIN
+    # Both attempts offered the lock the same administrator identity.
+    first, second = mock_iseo_client.setup_gateway.call_args_list
+    assert (
+        first.kwargs["admin_uuid_bytes"]
+        == second.kwargs["admin_uuid_bytes"]
+        == bytes.fromhex(MOCK_ADMIN_UUID_HEX)
+    )
+
+
+@pytest.mark.usefixtures("_patch_identity")
+async def test_gw_register_retry_without_admin_stores_no_admin_identity(
+    hass: HomeAssistant,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test turning user management off on a retry leaves it out of the entry."""
+    mock_iseo_client.setup_gateway.side_effect = [IseoConnectionError, None]
+
+    with patch(
+        "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=MOCK_SERVICE_INFO,
+        )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={CONF_ENABLE_ADMIN: True}
+    )
     assert result3["errors"] == {"base": "cannot_connect"}
 
     result4 = await hass.config_entries.flow.async_configure(

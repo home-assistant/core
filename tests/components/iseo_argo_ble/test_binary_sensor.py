@@ -30,7 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -176,6 +176,50 @@ async def test_set_credential_enabled_error(
         await _set_enabled(hass, ALICE_ENTITY_ID, False)
 
     assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_set_credential_enabled_when_gone_from_the_lock(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a credential removed in the Argo app is reported, not leaked.
+
+    The library raises ValueError when the cached credential is no longer on
+    the lock, which would otherwise surface as an unhandled error.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    mock_iseo_client.set_user_disabled.side_effect = ValueError("not found on lock")
+
+    with pytest.raises(ServiceValidationError):
+        await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    # The stale credential is dropped rather than left showing a state the
+    # lock does not have.
+    assert entity_registry.async_get(ALICE_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_settle_is_kept_when_a_write_fails(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the lock still gets its settle time after a failed write."""
+    await setup_integration(hass, mock_admin_config_entry)
+    mock_iseo_client.set_user_disabled.side_effect = IseoConnectionError("no link")
+
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.binary_sensor.asyncio.sleep"
+        ) as mock_sleep,
+        pytest.raises(HomeAssistantError),
+    ):
+        await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    mock_sleep.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_iseo_client", "mock_derive_private_key")
