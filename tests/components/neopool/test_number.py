@@ -530,33 +530,49 @@ async def test_optimistic_state_rolls_back_on_write_failure(
     assert float(state.state) == 7.0
 
 
-@pytest.mark.parametrize(
-    ("write_error", "expect_raise"),
-    [
-        pytest.param(None, False, id="success"),
-        pytest.param(NeoPoolConnectionError("boom"), True, id="failure"),
-    ],
-)
-async def test_coalesced_callers_all_receive_same_outcome(
+async def test_coalesced_callers_all_succeed_together(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    write_error: Exception | None,
-    expect_raise: bool,
 ) -> None:
-    """Every caller in one debounce window observes the single coalesced write.
+    """Three quick set_value calls collapse to one write and all callers succeed.
 
-    Three quick set_value calls collapse to one write of the last value. All
-    three blocking callers await the same future, so they all succeed together
-    or all raise together.
+    Every caller awaits the same coalesce future, so the single write of the
+    last value resolves them together.
     """
-    if write_error is None:
-        mock_neopool_client.async_set_setpoint = AsyncMock(
-            return_value={"MBF_PAR_PH1": 750}
-        )
-    else:
-        mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=write_error)
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_PH1": 750}
+    )
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    tasks = [_set_value_nowait(hass, ph1_entity_id, value) for value in (7.0, 7.2, 7.5)]
+    await _flush(hass, freezer)
+    results = await asyncio.gather(*tasks)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.PH_MAX, 750
+    )
+    assert results == [None, None, None]
+
+
+async def test_coalesced_callers_all_raise_together(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed coalesced write raises for every caller in the debounce window.
+
+    All three blocking callers await the shared future, so the single write's
+    device error surfaces to each of them.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        side_effect=NeoPoolConnectionError("boom")
+    )
     await setup_integration(hass, mock_config_entry_number)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
@@ -566,14 +582,10 @@ async def test_coalesced_callers_all_receive_same_outcome(
     await _flush(hass, freezer)
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # One coalesced write of the last value satisfies every caller.
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.PH_MAX, 750
     )
-    if expect_raise:
-        assert all(isinstance(r, HomeAssistantError) for r in results)
-    else:
-        assert results == [None, None, None]
+    assert all(isinstance(r, HomeAssistantError) for r in results)
 
 
 async def test_write_queued_during_flush_gets_its_own_outcome(
@@ -964,6 +976,59 @@ async def test_inflight_write_skips_coordinator_on_remove(
     await task
     mock_neopool_client.async_set_setpoint.assert_awaited_once()
     mock_update.assert_not_called()
+
+
+async def test_queued_flush_aborts_after_lock_when_removed(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A second batch waiting on the flush lock skips its write once removed.
+
+    The second batch has detached its own future, so unload cannot cancel it;
+    once it acquires the lock it must see the removal flag and skip the client
+    call instead of writing on a closing connection.
+    """
+    in_write = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _blocking_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        in_write.set()
+        await release.wait()
+        return {"MBF_PAR_PH1": value}
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_blocking_setpoint)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    # First write enters the library call and blocks there, holding the lock.
+    first = _set_value_nowait(hass, ph1_entity_id, 7.0)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # A second value arrives and its flush fires; it blocks on the flush lock.
+    second = _set_value_nowait(hass, ph1_entity_id, 8.0)
+    await _let_park(hass)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await _let_park(hass)
+
+    # Unload, then release the first write so the second batch takes the lock.
+    await hass.config_entries.async_unload(mock_config_entry_number.entry_id)
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await first
+    await second
+
+    # Only the first write ran; the second aborted after acquiring the lock.
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.PH_MAX, 700
+    )
 
 
 @pytest.mark.usefixtures("mock_neopool_client")

@@ -302,16 +302,6 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         return raw if isinstance(raw, (int, float)) else None
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Run when the entity is added to hass."""
-        await super().async_added_to_hass()
-
-        val = self._decode_raw()
-        self._attr_native_value = float(val) if isinstance(val, (int, float)) else None
-
-        self.async_write_ha_state()
-
-    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel a pending write when removed."""
         self._removing = True
@@ -381,6 +371,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             # Serialize flushes so a later batch cannot overlap this write and
             # resolve out of order.
             async with self._flush_lock:
+                if self._abort_if_removing(future):
+                    resolved = True
+                    return
                 client = self.coordinator.client
                 desc = self.entity_description
                 raw = round(pending * desc.scale)
@@ -421,13 +414,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     self._report_write_failure(future, pending, err)
                     resolved = True
                     return
-                if self._removing:
-                    # Removed mid-write: the client may be closing, leave the
-                    # coordinator alone. The caller treats cancellation as a
-                    # clean exit, so release its future that way; _write_future
-                    # is already detached, so removal cannot cancel it for us.
-                    if future is not None and not future.done():
-                        future.cancel()
+                if self._abort_if_removing(future):
                     resolved = True
                     return
                 try:
@@ -453,6 +440,20 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             # batch rather than letting a blocking caller read a false success.
             if not resolved and future is not None and not future.done():
                 future.cancel()  # pragma: no cover - task cancel is non-deterministic
+
+    @callback
+    def _abort_if_removing(self, future: asyncio.Future[None] | None) -> bool:
+        """Skip the write when the entity is being removed.
+
+        The client is closing, so leave the coordinator alone. This batch
+        detached its future, so removal cannot cancel it for us; release it as
+        a clean exit instead.
+        """
+        if not self._removing:
+            return False
+        if future is not None and not future.done():
+            future.cancel()
+        return True
 
     @callback
     def _report_write_failure(
@@ -488,14 +489,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the actual number value."""
-        # While a debounced write is pending, surface the requested value so the
-        # UI reflects it optimistically instead of the stale coordinator value.
         if self._pending_value is not None:
             return self._pending_value
-        raw = self._decode_raw()
-        if raw is None:
-            return self._attr_native_value
-        return float(raw)
+        return self._decode_raw()
 
     @property
     @override
