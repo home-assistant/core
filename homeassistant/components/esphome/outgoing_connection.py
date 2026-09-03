@@ -10,6 +10,7 @@ from aioesphomeapi import (
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.singleton import singleton
 from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,15 +26,17 @@ _KEY_OUTGOING_CONNECTION_MANAGER: HassKey[_OutgoingConnectionManager] = HassKey(
 class _Registration:
     """One MAC registration; unregisters exactly once."""
 
-    __slots__ = ("_mac", "_manager", "_unregister")
+    __slots__ = ("_mac", "_manager", "_server", "_unregister")
 
     def __init__(
         self,
         manager: _OutgoingConnectionManager,
+        server: OutgoingConnectionServer,
         mac: str,
         unregister: CALLBACK_TYPE,
     ) -> None:
         self._manager = manager
+        self._server = server
         self._mac = mac
         self._unregister: CALLBACK_TYPE | None = unregister
 
@@ -43,14 +46,15 @@ class _Registration:
         if (unregister := self._unregister) is None:
             return
         self._unregister = None
-        self._manager.async_remove_registration(self._mac, unregister)
+        self._manager.async_remove_registration(self._server, self._mac, unregister)
 
 
 class _OutgoingConnectionManager:
     """Owns the shared dial-in listener for this Home Assistant instance.
 
-    Fully synchronous: the library binds and closes without awaiting, so
-    there are no suspension points here and therefore no races to manage.
+    Fully synchronous: the library binds without awaiting and guarantees the
+    port is free when close() returns, so there are no suspension points
+    here, no races to manage, and a replacement listener can always bind.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -58,8 +62,8 @@ class _OutgoingConnectionManager:
         self._server: OutgoingConnectionServer | None = None
         self._registrations = 0
         self._remove_stop_listener: CALLBACK_TYPE | None = None
-        self._last_bind_warning = -_BIND_WARN_INTERVAL
-        self._bind_failed = False
+        # None until a bind fails; holds the last warning time after
+        self._last_bind_warning: float | None = None
 
     @callback
     def async_register(
@@ -80,9 +84,8 @@ class _OutgoingConnectionManager:
             except OSError as err:
                 self._async_log_bind_failure(err)
                 return None
-            if self._bind_failed:
-                self._bind_failed = False
-                self._last_bind_warning = -_BIND_WARN_INTERVAL
+            if self._last_bind_warning is not None:
+                self._last_bind_warning = None
                 _LOGGER.info(
                     "Listening for ESPHome outgoing connections on port %s",
                     DEFAULT_OUTGOING_CONNECTION_PORT,
@@ -100,11 +103,15 @@ class _OutgoingConnectionManager:
                 self._async_close_server()
             raise
         self._registrations += 1
-        return _Registration(self, mac, unregister).async_unregister
+        return _Registration(self, server, mac, unregister).async_unregister
 
     @callback
-    def async_remove_registration(self, mac: str, unregister: CALLBACK_TYPE) -> None:
+    def async_remove_registration(
+        self, server: OutgoingConnectionServer, mac: str, unregister: CALLBACK_TYPE
+    ) -> None:
         """Remove one route; called at most once per registration."""
+        if server is not self._server:
+            return  # that listener is already gone, along with its routes
         failed = False
         try:
             unregister()
@@ -138,6 +145,7 @@ class _OutgoingConnectionManager:
     def _async_close_server(self) -> None:
         server = self._server
         self._server = None
+        self._registrations = 0
         if (remove := self._remove_stop_listener) is not None:
             self._remove_stop_listener = None
             remove()
@@ -152,10 +160,10 @@ class _OutgoingConnectionManager:
     def _async_log_bind_failure(self, err: OSError) -> None:
         # One warning per failure window, not one per registered device;
         # info after that so a deliberate retry still reports its outcome
-        self._bind_failed = True
         now = self._hass.loop.time()
+        last = self._last_bind_warning
         level = logging.INFO
-        if now - self._last_bind_warning >= _BIND_WARN_INTERVAL:
+        if last is None or now - last >= _BIND_WARN_INTERVAL:
             self._last_bind_warning = now
             level = logging.WARNING
         _LOGGER.log(
@@ -170,6 +178,12 @@ class _OutgoingConnectionManager:
         )
 
 
+@singleton(_KEY_OUTGOING_CONNECTION_MANAGER)
+@callback
+def _async_get_manager(hass: HomeAssistant) -> _OutgoingConnectionManager:
+    return _OutgoingConnectionManager(hass)
+
+
 @callback
 def async_register_outgoing_target(
     hass: HomeAssistant, mac: str, reconnect_logic: ReconnectLogic
@@ -179,8 +193,4 @@ def async_register_outgoing_target(
     Returns the unregister callback, or None when the listening port cannot
     be bound. The last unregistration stops the listener and frees the port.
     """
-    if (manager := hass.data.get(_KEY_OUTGOING_CONNECTION_MANAGER)) is None:
-        manager = hass.data[_KEY_OUTGOING_CONNECTION_MANAGER] = (
-            _OutgoingConnectionManager(hass)
-        )
-    return manager.async_register(mac, reconnect_logic)
+    return _async_get_manager(hass).async_register(mac, reconnect_logic)

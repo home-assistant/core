@@ -16,6 +16,7 @@ from aioesphomeapi import (
     EntityState,
     HomeassistantServiceCall,
     LogLevel,
+    OutgoingConnectionServer,
     ReconnectLogic,
     UserService,
     VoiceAssistantAnnounceFinished,
@@ -96,8 +97,11 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 @pytest.fixture(autouse=True)
 def mock_outgoing_connection_server() -> Generator[MagicMock]:
-    """Patch the shared dial-in listener so tests never bind a real socket."""
-    server = MagicMock()
+    """Patch the shared dial-in listener so tests never bind a real socket.
+
+    spec pins the synchronous start/close/register/discard contract.
+    """
+    server = MagicMock(spec=OutgoingConnectionServer)
     with patch(
         "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
         return_value=server,

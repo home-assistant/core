@@ -1221,6 +1221,11 @@ class ESPHomeManager:
 
         await reconnect_logic.start()
 
+        # After start(), the last call that can raise, so a failed setup
+        # cannot leak the route; before the BLE wait below so a dial-in can
+        # satisfy the first connect during a short wake window
+        self._async_register_outgoing_target(reconnect_logic)
+
         # Wait for a cached BLE proxy to register its scanner before finishing setup.
         if (
             device_info := entry_data.device_info
@@ -1235,11 +1240,6 @@ class ESPHomeManager:
                     "%s: Timed out waiting for Bluetooth scanner to register",
                     self.host,
                 )
-
-        # Last so a failed setup cannot leak the route: the device may open
-        # the TCP connection to us when it cannot be reached, and a dial-in
-        # for this MAC is handed to the reconnect logic
-        self._async_register_outgoing_target(reconnect_logic)
 
 
 @callback

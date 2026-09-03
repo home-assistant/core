@@ -179,7 +179,7 @@ async def test_outgoing_connection_listener_restarts_after_last_unload(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
 ) -> None:
-    """A new entry after the last unload waits out the stop and rebinds."""
+    """A new entry after the last unload rebinds the listener."""
     entry = _make_entry()
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
@@ -284,7 +284,6 @@ async def test_outgoing_connection_unregister_error_contained(
     unregister = async_register_outgoing_target(hass, MAC, MagicMock())
     assert unregister is not None
     unregister()
-    await hass.async_block_till_done()
     assert "Error removing the dial-in route" in caplog.text
     mock_server.discard.assert_called_once_with(MAC)
     # The last registration is gone, so the listener stops on the normal path
@@ -325,12 +324,34 @@ async def test_outgoing_connection_unregister_error_spares_survivors(
     assert second is not None
 
     first()
-    await hass.async_block_till_done()
     assert "Error removing the dial-in route" in caplog.text
     mock_server.discard.assert_called_once_with(MAC)
     # The shared listener survives for the remaining registration
     mock_server.close.assert_not_called()
 
     second()
-    await hass.async_block_till_done()
+    mock_server.close.assert_called_once()
+
+
+async def test_outgoing_connection_discard_failure_stops_shared_listener(
+    hass: HomeAssistant,
+    mock_server: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """When even discard fails the routes are unknowable; all is torn down."""
+    bad_unregister = MagicMock(side_effect=RuntimeError("boom"))
+    good_unregister = MagicMock()
+    mock_server.register.side_effect = [bad_unregister, good_unregister]
+    mock_server.discard.side_effect = RuntimeError("boom2")
+    first = async_register_outgoing_target(hass, MAC, MagicMock())
+    second = async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
+    assert first is not None
+    assert second is not None
+
+    first()
+    assert "Error discarding the dial-in route" in caplog.text
+    assert "1 other device(s) will not receive dial-ins" in caplog.text
+    mock_server.close.assert_called_once()
+    # The survivor's unregister is a no-op against the gone listener
+    second()
     mock_server.close.assert_called_once()
