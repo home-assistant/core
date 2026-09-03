@@ -1080,12 +1080,9 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     assert not async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.value_updated",
-            "options": {
-                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
-            },
+            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
         },
     )
 
@@ -1120,64 +1117,103 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.value_updated",
-            "options": {
-                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
-            },
+            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.value_updated",
-            "options": {
-                "device_id": device.id,
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
-                "from": "ajar",
-            },
+            "device_id": [device.id],
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+            "from": "ajar",
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.event",
-            "options": {
-                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                "event_source": "node",
-                "event": "interview stage completed",
-            },
+            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
+            "event_source": "node",
+            "event": "interview stage completed",
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.event",
-            "options": {
-                "device_id": device.id,
-                "event_source": "node",
-                "event": "interview stage completed",
-                "event_data": {"stageName": "ProtocolInfo"},
-            },
+            "device_id": [device.id],
+            "event_source": "node",
+            "event": "interview stage completed",
+            "event_data": {"stageName": "ProtocolInfo"},
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.event",
-            "options": {
-                "config_entry_id": integration.entry_id,
-                "event_source": "controller",
-                "event": "nvm convert progress",
-            },
+            "config_entry_id": integration.entry_id,
+            "event_source": "controller",
+            "event": "nvm convert progress",
         },
     )
+
+
+@pytest.mark.parametrize(
+    ("config_key", "driver", "expected"),
+    [
+        pytest.param("loaded_device", MagicMock(), False, id="loaded_device"),
+        pytest.param("loaded_entity", MagicMock(), False, id="loaded_entity"),
+        pytest.param("unloaded_device", MagicMock(), True, id="unloaded_device"),
+        pytest.param(
+            "unloaded_entry", MagicMock(), True, id="unloaded_config_entry_id"
+        ),
+        pytest.param("nothing", MagicMock(), False, id="nothing_referenced"),
+        pytest.param("loaded_device", None, True, id="loaded_device_driver_not_ready"),
+        pytest.param("nothing", None, False, id="nothing_referenced_driver_not_ready"),
+    ],
+)
+async def test_bypass_dynamic_config_validation_scoped(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    config_key: str,
+    driver: MagicMock | None,
+    expected: bool,
+) -> None:
+    """Test the bypass check only considers config entries referenced by the config."""
+    lock_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert lock_device
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://test2.org"}, unique_id="other"
+    )
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={(DOMAIN, "other-node")}
+    )
+    assert other_entry.state is not ConfigEntryState.LOADED
+
+    configs = {
+        "loaded_device": {"device_id": [lock_device.id]},
+        "loaded_entity": {"entity_id": [SCHLAGE_BE469_LOCK_ENTITY]},
+        "unloaded_device": {"device_id": [other_device.id]},
+        "unloaded_entry": {"config_entry_id": other_entry.entry_id},
+        "nothing": {},
+    }
+
+    with patch.object(client, "driver", driver):
+        assert (
+            async_bypass_dynamic_config_validation(hass, configs[config_key])
+            is expected
+        )
 
 
 async def test_server_reconnect_event(
