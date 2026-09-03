@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
