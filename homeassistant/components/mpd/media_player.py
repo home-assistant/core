@@ -32,10 +32,9 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import DEFAULT_PORT, DOMAIN, LOGGER
 
 DEFAULT_NAME = "MPD"
-DEFAULT_PORT = 6600
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
