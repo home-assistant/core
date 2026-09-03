@@ -193,8 +193,12 @@ async def test_action_rejected_when_unsupported(
         )
 
 
+@pytest.mark.parametrize(
+    "max_power",
+    [pytest.param(3050, id="int"), pytest.param(3000.9, id="fractional")],
+)
 async def test_max_power_not_a_multiple_of_100_is_a_service_error(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, init_integration: MockConfigEntry, max_power: float
 ) -> None:
     """Test a non-multiple-of-100 max_power is rejected before writing."""
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -204,7 +208,7 @@ async def test_max_power_not_a_multiple_of_100_is_a_service_error(
             {
                 ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
                 ATTR_MODE: "disabled",
-                ATTR_MAX_POWER: 3050,
+                ATTR_MAX_POWER: max_power,
             },
             blocking=True,
         )
