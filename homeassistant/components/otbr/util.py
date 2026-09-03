@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
 import logging
+import math
 import random
 from typing import TYPE_CHECKING, Any, Concatenate, cast
 
@@ -24,6 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -49,11 +51,17 @@ class IssuedTimestamps:
     Kept on disk, not only in memory: a pending dataset takes its delay to
     reach every router on the mesh, and a restart inside that window must not
     let the next migration hand out the stamp again.
+
+    The record also remembers until when the issued dataset is propagating.
+    A newer stamp alone does not protect the mesh in that window: a second
+    migration handed to a router that has not learned the first dataset yet
+    supersedes it, and devices that only ever received the first one switch
+    to a different network than the rest.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the record."""
-        self._store = Store[dict[str, list[int]]](
+        self._store = Store[dict[str, dict[str, Any]]](
             hass,
             ISSUED_TIMESTAMPS_STORAGE_VERSION,
             ISSUED_TIMESTAMPS_STORAGE_KEY,
@@ -62,27 +70,67 @@ class IssuedTimestamps:
             atomic_writes=True,
         )
         self._issued: dict[str, tuple[int, int]] = {}
+        self._until: dict[str, float] = {}
 
     async def async_load(self) -> None:
         """Load what was issued before the last restart."""
         if data := await self._store.async_load():
-            self._issued = {
-                xpan: (seconds, ticks) for xpan, (seconds, ticks) in data.items()
-            }
+            for xpan, record in data.items():
+                seconds, ticks = record["timestamp"]
+                self._issued[xpan] = (seconds, ticks)
+                self._until[xpan] = record["until"]
 
     def get(self, extended_pan_id: str) -> tuple[int, int]:
         """Return the newest timestamp issued for a network."""
         return self._issued.get(extended_pan_id, (0, 0))
 
-    async def async_set(self, extended_pan_id: str, timestamp: tuple[int, int]) -> None:
+    def seconds_in_flight(self, extended_pan_id: str) -> int:
+        """Return how long the dataset issued for a network keeps propagating.
+
+        Zero once its delay has expired, or when nothing was issued.
+        """
+        remaining = self._until.get(extended_pan_id, 0) - dt_util.utcnow().timestamp()
+        return max(0, math.ceil(remaining))
+
+    def record(self, extended_pan_id: str) -> tuple[tuple[int, int], float] | None:
+        """Return what is recorded for a network, to hand to async_restore."""
+        if extended_pan_id not in self._issued:
+            return None
+        return (self._issued[extended_pan_id], self._until[extended_pan_id])
+
+    async def async_set(
+        self, extended_pan_id: str, timestamp: tuple[int, int], *, until: float
+    ) -> None:
         """Record a timestamp about to be issued for a network.
 
         Written through before the caller hands the dataset to the router:
         delaying the save would reopen the window this record exists to close.
         """
         self._issued[extended_pan_id] = timestamp
+        self._until[extended_pan_id] = until
+        await self._async_save()
+
+    async def async_restore(
+        self, extended_pan_id: str, record: tuple[tuple[int, int], float] | None
+    ) -> None:
+        """Put back what record() returned, when the issued dataset never left.
+
+        A router that refused the write leaves no migration under way; the
+        window recorded for it would only refuse every retry until it expired.
+        """
+        if record is None:
+            self._issued.pop(extended_pan_id, None)
+            self._until.pop(extended_pan_id, None)
+        else:
+            self._issued[extended_pan_id], self._until[extended_pan_id] = record
+        await self._async_save()
+
+    async def _async_save(self) -> None:
         await self._store.async_save(
-            {xpan: list(stamp) for xpan, stamp in self._issued.items()}
+            {
+                xpan: {"timestamp": list(stamp), "until": self._until[xpan]}
+                for xpan, stamp in self._issued.items()
+            }
         )
 
 
