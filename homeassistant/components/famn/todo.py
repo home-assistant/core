@@ -23,7 +23,10 @@ from .const import DOMAIN, TASK_TYPE_TODOS
 from .coordinator import FamnChoresCoordinator, FamnConfigEntry, FamnShoppingCoordinator
 from .entity import FamnEntity, famn_device_info
 
-PARALLEL_UPDATES = 0
+# Both update paths read an item from coordinator data, edit a copy and PUT
+# the whole thing back, so concurrent calls on one item would let the later
+# response undo the earlier one. Serialize them.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

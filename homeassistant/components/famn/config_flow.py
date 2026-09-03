@@ -47,16 +47,18 @@ class FamnPairingIncomplete(Exception):
     """Raised when an approved pairing response is missing required fields."""
 
 
-def _pairing_secret(pairing: StartDevicePairingResponse) -> str | None:
-    """Extract the pairing secret from the pairing response.
+def _pairing_link(pairing: StartDevicePairingResponse) -> tuple[str, str] | None:
+    """Return the deep link that carries the pairing secret, and the secret.
 
-    The secret is never returned as its own field: it is embedded as the
-    `s` query parameter of the QR deep link. It must be kept in memory
-    only and never logged or persisted.
+    The secret is never returned as its own field: it is embedded as the `s`
+    query parameter of a deep link, and Famn may put it on either the QR
+    link or the verification link. The link is returned alongside it so that
+    the QR encodes the one that can actually approve the pairing. The secret
+    must be kept in memory only and never logged or persisted.
     """
     for url in (pairing.qr_url, pairing.verification_url):
         if url and (secret := parse_qs(urlparse(url).query).get("s")):
-            return secret[0]
+            return url, secret[0]
     return None
 
 
@@ -84,6 +86,7 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._client: ApiClient | None = None
         self._pairing: StartDevicePairingResponse | None = None
+        self._qr_url: str | None = None
         self._secret: str | None = None
         self._tokens: DeviceTokenResponse | None = None
 
@@ -125,10 +128,10 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Could not start pairing with Famn")
                 return self.async_abort(reason="cannot_connect")
 
-            self._secret = _pairing_secret(self._pairing)
-            if self._secret is None:
+            if (link := _pairing_link(self._pairing)) is None:
                 LOGGER.error("Famn pairing response did not contain a secret")
                 return self.async_abort(reason="cannot_connect")
+            self._qr_url, self._secret = link
 
         # Poll in the background already while the QR is on screen, so the
         # flow finishes right away if the user approved before submitting.
@@ -138,18 +141,15 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_wait()
 
-        # The QR encodes the deep link exactly as Famn returned it,
-        # including the pairing secret, mirroring the QR the Famn app scans
-        # on other paired devices. Either link may carry the secret, which is
-        # what `_pairing_secret` accepts, so fall back rather than render an
-        # empty code.
+        # The QR encodes the deep link exactly as Famn returned it, including
+        # the pairing secret, mirroring the QR the Famn app scans on other
+        # paired devices. It is the link the secret was found on, so scanning
+        # it always approves the pairing.
         data_schema = vol.Schema(
             {
                 vol.Optional("qr_code"): QrCodeSelector(
                     config=QrCodeSelectorConfig(
-                        data=self._pairing.qr_url
-                        or self._pairing.verification_url
-                        or "",
+                        data=self._qr_url or "",
                         scale=5,
                         error_correction_level=QrErrorCorrectionLevel.QUARTILE,
                     )
@@ -181,6 +181,7 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
         if (exception := self.pair_task.exception()) is not None:
             self.pair_task = None
             self._pairing = None
+            self._qr_url = None
             self._secret = None
             if isinstance(exception, FamnPairingExpired):
                 return self.async_show_progress_done(next_step_id="timeout")

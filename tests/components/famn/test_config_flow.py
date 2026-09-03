@@ -113,6 +113,31 @@ async def test_start_pairing_error(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_qr_uses_the_link_holding_the_secret(
+    hass: HomeAssistant, mock_device_api: AsyncMock
+) -> None:
+    """Test that the QR encodes whichever link carries the pairing secret.
+
+    Famn may put the secret on the verification link instead of the QR link.
+    Encoding a secret-less link would render a QR that cannot approve.
+    """
+    pairing = await async_load_json_object_fixture(hass, "pairing.json", DOMAIN)
+    pairing["verificationUrl"] = pairing["qrUrl"]
+    pairing["qrUrl"] = "https://famn.app/link?p=2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5001"
+    mock_device_api.start_device_pairing_endpoint.return_value = (
+        StartDevicePairingResponse.from_dict(pairing)
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    selector = result["data_schema"].schema["qr_code"]
+    assert selector.config["data"] == pairing["verificationUrl"]
+    assert PAIRING_SECRET in selector.config["data"]
+
+
 async def test_missing_pairing_secret(
     hass: HomeAssistant, mock_device_api: AsyncMock
 ) -> None:

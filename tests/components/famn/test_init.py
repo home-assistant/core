@@ -9,7 +9,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.famn.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.famn.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
@@ -17,7 +19,11 @@ from homeassistant.util import dt as dt_util
 from . import setup_integration
 from .conftest import SPACE_ID
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 pytestmark = [pytest.mark.usefixtures("mock_famn")]
 
@@ -203,3 +209,36 @@ async def test_rotation_survives_cancellation(
     await hass.async_block_till_done()
 
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "rotated-refresh-token"
+
+
+async def test_transient_rotation_error_is_mapped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a failing token rotation is reported as a fetch failure.
+
+    Rotation is part of fetching, so a Famn outage should read as one rather
+    than as an unexpected exception with a traceback on every retry.
+    """
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_device_api.rotate_device_refresh_token_endpoint.side_effect = ApiError(
+        500, "boom"
+    )
+    caplog.clear()
+
+    # Move past the token's renewal deadline so the next refresh rotates.
+    freezer.move_to("2026-08-12T12:09:00Z")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "Unexpected error fetching" not in caplog.text
+    assert "Error fetching" in caplog.text
+    assert (
+        hass.states.get("todo.home_assistant_weekly_chores").state == STATE_UNAVAILABLE
+    )

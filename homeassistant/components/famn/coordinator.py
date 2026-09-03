@@ -110,12 +110,11 @@ class FamnChoresCoordinator(DataUpdateCoordinator[dict[str, FamnChoreList]]):
     @override
     async def _async_update_data(self) -> dict[str, FamnChoreList]:
         """Fetch the chore lists and their open items."""
-        await self.auth.async_ensure_token_valid()
-
         if TYPE_CHECKING:
             assert self.config_entry.unique_id is not None
 
         try:
+            await self.auth.async_ensure_token_valid()
             task_lists = await self._async_fetch_task_lists(self.config_entry.unique_id)
             return {
                 task_list.id: FamnChoreList(
@@ -185,13 +184,12 @@ class FamnCalendarsCoordinator(DataUpdateCoordinator[dict[str, FamnCalendarData]
     @override
     async def _async_update_data(self) -> dict[str, FamnCalendarData]:
         """Fetch the calendars and their upcoming occurrences."""
-        await self.auth.async_ensure_token_valid()
-
         if TYPE_CHECKING:
             assert self.config_entry.unique_id is not None
 
         now = dt_util.utcnow()
         try:
+            await self.auth.async_ensure_token_valid()
             calendars = await self._async_fetch_calendars(self.config_entry.unique_id)
             return {
                 str(calendar.id): FamnCalendarData(
@@ -249,11 +247,13 @@ class FamnCalendarsCoordinator(DataUpdateCoordinator[dict[str, FamnCalendarData]
 
 
 class FamnScoresCoordinator(DataUpdateCoordinator[FamnScoreData]):
-    """Coordinator fetching the space's XP leaderboard.
+    """Coordinator fetching the space's roster, XP leaderboard and season.
 
-    The leaderboard embeds member display names, so no separate member
-    lookup is needed. Members without XP this season are absent from it —
-    Famn's seasons reset weekly.
+    Both the roster and the leaderboard are fetched, because they answer
+    different questions: the roster decides which members exist at all,
+    while the leaderboard holds the XP. Famn's seasons reset weekly and
+    drop everyone on zero, so a member can be on the roster and absent
+    from the leaderboard.
     """
 
     config_entry: FamnConfigEntry
@@ -275,13 +275,12 @@ class FamnScoresCoordinator(DataUpdateCoordinator[FamnScoreData]):
     @override
     async def _async_update_data(self) -> FamnScoreData:
         """Fetch the leaderboard and season summary."""
-        await self.auth.async_ensure_token_valid()
-
         if TYPE_CHECKING:
             assert self.config_entry.unique_id is not None
         space_id = self.config_entry.unique_id
 
         try:
+            await self.auth.async_ensure_token_valid()
             return FamnScoreData(
                 members=await self.space_api.get_space_members_endpoint(space_id),
                 leaderboard=await self.space_api.get_space_score_leaderboard_endpoint(
@@ -324,12 +323,11 @@ class FamnShoppingCoordinator(DataUpdateCoordinator[dict[str, FamnShoppingList]]
     @override
     async def _async_update_data(self) -> dict[str, FamnShoppingList]:
         """Fetch the shopping lists and their open items."""
-        await self.auth.async_ensure_token_valid()
-
         if TYPE_CHECKING:
             assert self.config_entry.unique_id is not None
 
         try:
+            await self.auth.async_ensure_token_valid()
             lists = await self.list_api.get_lists_endpoint(
                 space_id=self.config_entry.unique_id,
                 list_type=SHOPPING_LIST_TYPES,
@@ -382,13 +380,12 @@ class FamnMealPlanCoordinator(DataUpdateCoordinator[list[MealSlot]]):
     @override
     async def _async_update_data(self) -> list[MealSlot]:
         """Fetch the meal slots for the coming week."""
-        await self.auth.async_ensure_token_valid()
-
         if TYPE_CHECKING:
             assert self.config_entry.unique_id is not None
 
         today = dt_util.now().date()
         try:
+            await self.auth.async_ensure_token_valid()
             response = await self.meal_planner_api.get_meal_slots_endpoint(
                 space_id=self.config_entry.unique_id,
                 from_date=today.isoformat(),
