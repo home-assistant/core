@@ -51,7 +51,7 @@ _ACCESS_LOG_DEBOUNCE = 5
 # outside these groups (door closed, mode changes, enrolments) are read and
 # discarded — they are not access events. See the library's event code table.
 _OPEN_EVENT_CODES = frozenset({7, 8, 32, 33, 34, 45, 75, 102, 103})
-_ACCESS_DENIED_EVENT_CODES = frozenset({5, 44, 52, 53, 68, 77, 86, 88, 89, 99})
+_ACCESS_DENIED_EVENT_CODES = frozenset({5, 44, 51, 52, 53, 68, 77, 86, 88, 89, 99})
 _FAULT_EVENT_CODES = frozenset({21, 61, 90})
 
 _EVENT_TYPE_CODES = (
@@ -408,12 +408,12 @@ class IseoLockEntity(LockEntity):
                 {
                     "event_code": entry.event_code,
                     "description": describe_event(entry.event_code),
-                    # The lock records the opener across two free-form fields;
-                    # which one carries a readable name depends on the
-                    # credential, so prefer the description and fall back.
-                    "opened_by": entry.extra_description.strip()
-                    or entry.user_info.strip()
-                    or None,
+                    # The lock puts the opener's name in extra_description and
+                    # their credential's UUID in user_info. Falling back to the
+                    # UUID would put a 32-character hex string where a name
+                    # belongs, so the two are reported separately.
+                    "opened_by": entry.extra_description.strip() or None,
+                    "credential_id": entry.user_info.strip() or None,
                     "occurred_at": entry.timestamp.isoformat(),
                 },
             )
