@@ -24,6 +24,12 @@
   },
   "entity": {
     "sensor": {
+      "api_requests_this_month": {
+        "name": "API requests this month"
+      },
+      "api_requests_today": {
+        "name": "API requests today"
+      },
       "aqi_co": {
         "name": "Carbon monoxide AQI"
       },
@@ -94,11 +100,17 @@
           "snow": "Snow"
         }
       },
+      "snow_accumulation_today": {
+        "name": "Snow accumulation today"
+      },
       "snow_depth": {
         "name": "Snow depth"
       },
       "solar_radiation": {
         "name": "Solar radiation"
+      },
+      "solar_radiation_today": {
+        "name": "Solar radiation today"
       },
       "sunshine_duration": {
         "name": "Sunshine duration"

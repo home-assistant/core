@@ -54,6 +54,8 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast:
         native_wind_speed=day.max_wind_speed,
         native_wind_gust_speed=day.max_wind_gust,
         wind_bearing=day.wind_dir,
+        native_pressure=day.pressure,
+        native_dew_point=day.max_dew_point,
         uv_index=day.uv_index,
     )
 
@@ -72,6 +74,8 @@ def _hourly_to_forecast(hour: HourlyForecast) -> Forecast:
         wind_bearing=hour.wind_dir,
         humidity=hour.rel_humidity,
         cloud_coverage=_as_percentage(hour.cloudiness),
+        native_pressure=hour.pressure,
+        native_dew_point=hour.dew_point,
         uv_index=hour.uv_index,
     )
 

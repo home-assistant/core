@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfEnergy,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
@@ -216,6 +217,22 @@ SENSORS: tuple[ForecaSensorDescription, ...] = (
         value_fn=_confidence,
     ),
     ForecaSensorDescription(
+        key="solar_radiation_today",
+        translation_key="solar_radiation_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_display_precision=0,
+        value_fn=_today(lambda day: day.solar_radiation_sum),
+    ),
+    ForecaSensorDescription(
+        key="snow_accumulation_today",
+        translation_key="snow_accumulation_today",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        suggested_display_precision=1,
+        value_fn=_today(lambda day: day.snow_accum),
+    ),
+    ForecaSensorDescription(
         key="precipitation_forecast_average",
         suggested_display_precision=1,
         translation_key="precipitation_forecast_average",
@@ -236,6 +253,25 @@ SENSORS: tuple[ForecaSensorDescription, ...] = (
         translation_key="precipitation_start",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_nowcast_start,
+    ),
+    ForecaSensorDescription(
+        key="api_requests_today",
+        translation_key="api_requests_today",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            None
+            if data.usage is None
+            else data.usage.hits_on(dt_util.utcnow().strftime("%Y-%m-%d"))
+        ),
+    ),
+    ForecaSensorDescription(
+        key="api_requests_this_month",
+        translation_key="api_requests_this_month",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: None if data.usage is None else data.usage.hits,
     ),
     ForecaSensorDescription(
         key="observation_station",

@@ -143,3 +143,21 @@ async def test_dry_nowcast_has_no_start_time(
         hass.states.get("sensor.helsinki_precipitation_start").state
         == STATE_UNAVAILABLE
     )
+
+
+async def test_usage_failure_does_not_break_the_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the weather data survives the usage endpoint failing."""
+    mock_foreca_client.usage_month.side_effect = ForecaError("no usage for you")
+    await init_integration(hass, mock_config_entry)
+
+    weather = hass.states.get("weather.helsinki")
+    assert weather is not None
+    assert weather.state == "partlycloudy"
+
+    state = hass.states.get("sensor.helsinki_api_requests_today")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

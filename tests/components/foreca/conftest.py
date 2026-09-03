@@ -12,6 +12,8 @@ from pyforeca import (
     Location,
     MinutelyForecast,
     Observation,
+    UsageDay,
+    UsageMonth,
 )
 import pytest
 
@@ -133,6 +135,14 @@ MINUTELY = [
     MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.2),
 ]
 
+USAGE = UsageMonth(
+    hits=44,
+    daily=[
+        UsageDay(date="2026-09-01", hits=23),
+        UsageDay(date="2026-09-03", hits=21),
+    ],
+)
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -174,6 +184,7 @@ def mock_foreca_client() -> Generator[MagicMock]:
         client.air_quality_daily = AsyncMock(return_value=AIR_QUALITY_DAILY)
         client.observation_latest = AsyncMock(return_value=OBSERVATION)
         client.forecast_minutely = AsyncMock(return_value=MINUTELY)
+        client.usage_month = AsyncMock(return_value=USAGE)
         yield client
 
 

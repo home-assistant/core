@@ -15,6 +15,7 @@ from pyforeca import (
     HourlyForecast,
     MinutelyForecast,
     Observation,
+    UsageMonth,
     format_location,
 )
 
@@ -25,6 +26,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DAILY_PERIODS, DOMAIN, HOURLY_PERIODS, UPDATE_INTERVAL
 
@@ -44,6 +46,7 @@ class ForecaWeatherData:
     air_quality_daily: list[AirQualityDailyForecast]
     observation: Observation | None
     minutely: list[MinutelyForecast]
+    usage: UsageMonth | None
 
 
 class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
@@ -108,6 +111,13 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
         except ForecaError as err:
             _LOGGER.warning("Air quality data unavailable: %s", err)
 
+        # Usage counts are account telemetry, not weather: never fail the update.
+        usage: UsageMonth | None = None
+        try:
+            usage = await self.client.usage_month(dt_util.utcnow().strftime("%Y-%m"))
+        except ForecaError as err:
+            _LOGGER.debug("Usage counts unavailable: %s", err)
+
         return ForecaWeatherData(
             current=current,
             hourly=hourly,
@@ -116,4 +126,5 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             air_quality_daily=air_quality_daily,
             observation=observation,
             minutely=minutely,
+            usage=usage,
         )
