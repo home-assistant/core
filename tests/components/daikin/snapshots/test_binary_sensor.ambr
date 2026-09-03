@@ -5,7 +5,7 @@
       'en_demand': '1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control',
       'max_pow': '50',
-      'mode': '0',
+      'dmd_mode': '0',
       'scdl_per_day': '4',
     }),
     'context': <ANY>,
