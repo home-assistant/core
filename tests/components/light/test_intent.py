@@ -5,15 +5,22 @@ import pytest
 from homeassistant.components import light
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
-from homeassistant.helpers.intent import MatchFailedError, async_handle
+from homeassistant.helpers.intent import (
+    MatchFailedError,
+    MatchFailedReason,
+    async_handle,
+)
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from .common import MockLight
+
+from tests.common import async_mock_service, setup_test_component_platform
 
 ASSISTANT = "conversation"
+DIMMABLE_ATTRIBUTES = {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]}
 
 
 async def test_intent_set_color(hass: HomeAssistant) -> None:
@@ -171,4 +178,113 @@ async def test_intent_set_without_name_or_area_all_unexposed(
             assistant=ASSISTANT,
         )
 
+    assert not calls
+
+
+@pytest.mark.parametrize(
+    ("brightness_step", "expected_step_pct"),
+    [
+        pytest.param("up", 10, id="up"),
+        pytest.param("down", -10, id="down"),
+        pytest.param(25, 25, id="increase_by_amount"),
+        pytest.param(-25, -25, id="decrease_by_amount"),
+    ],
+)
+async def test_intent_set_brightness_relative(
+    hass: HomeAssistant, brightness_step: str | int, expected_step_pct: int
+) -> None:
+    """Test increasing and decreasing the brightness of a light by name."""
+    hass.states.async_set("light.test", "on", DIMMABLE_ATTRIBUTES)
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {
+            "name": {"value": "test"},
+            "brightness_step": {"value": brightness_step},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == light.DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data.get(ATTR_ENTITY_ID) == ["light.test"]
+    assert call.data.get(light.ATTR_BRIGHTNESS_STEP_PCT) == expected_step_pct
+
+
+async def test_intent_set_brightness_relative_includes_off_lights(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test lights that are off are adjusted too, coming up from zero brightness."""
+    kitchen = area_registry.async_create("Kitchen")
+    for unique_id, state in (("l1", "on"), ("l2", "off")):
+        entry = entity_registry.async_get_or_create("light", "test", unique_id)
+        entity_registry.async_update_entity(entry.entity_id, area_id=kitchen.id)
+        hass.states.async_set(entry.entity_id, state, DIMMABLE_ATTRIBUTES)
+
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {"area": {"value": "Kitchen"}, "brightness_step": {"value": 10}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["light.test_l1", "light.test_l2"]
+    assert calls[0].data.get(light.ATTR_BRIGHTNESS_STEP_PCT) == 10
+
+
+async def test_intent_set_brightness_relative_from_off(hass: HomeAssistant) -> None:
+    """Test increasing brightness in a dark room brings the light up from zero."""
+    entity = MockLight("Test", STATE_OFF, {ColorMode.BRIGHTNESS})
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+    await intent.async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {"name": {"value": "Test"}, "brightness_step": {"value": 10}},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes[light.ATTR_BRIGHTNESS] == round(255 * 0.1)
+
+
+async def test_intent_set_brightness_relative_skips_onoff_lights(
+    hass: HomeAssistant,
+) -> None:
+    """Test lights without brightness support are not adjusted."""
+    hass.states.async_set(
+        "light.test", "on", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.ONOFF]}
+    )
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    with pytest.raises(MatchFailedError) as err:
+        await async_handle(
+            hass,
+            "test",
+            intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+            {"name": {"value": "test"}, "brightness_step": {"value": "up"}},
+        )
+
+    assert err.value.result.no_match_reason == MatchFailedReason.FEATURE
     assert not calls
