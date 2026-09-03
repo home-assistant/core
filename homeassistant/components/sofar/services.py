@@ -42,7 +42,11 @@ SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
         vol.Required(ATTR_MODE): vol.In(
             [mode.name.lower() for mode in FeedinLimitationMode]
         ),
-        vol.Required(ATTR_MAX_POWER): vol.All(cv.positive_int, vol.Range(max=100000)),
+        # Kept fractional so the multiple-of-100 check below sees the real
+        # value; cv.positive_int would truncate 3000.9 into a valid 3000.
+        vol.Required(ATTR_MAX_POWER): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=100000)
+        ),
     }
 )
 
@@ -120,7 +124,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             device.feed_in.async_write_limit(
-                FeedinLimitationMode[call.data[ATTR_MODE].upper()], max_power
+                FeedinLimitationMode[call.data[ATTR_MODE].upper()], int(max_power)
             ),
         )
 
