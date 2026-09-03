@@ -163,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
     entry.runtime_data = xiaomi_gateway
 
     async with data.setup_lock:
-        if data.multicast is None:
+        if (multicast := data.multicast) is None:
             multicast = AsyncXiaomiGatewayMulticast(
                 interface=entry.data[CONF_INTERFACE]
             )
@@ -183,10 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
                 EVENT_HOMEASSISTANT_STOP, stop_xiaomi
             )
 
-    assert data.multicast is not None
-    data.multicast.register_gateway(
-        entry.data[CONF_HOST], xiaomi_gateway.multicast_callback
-    )
+    multicast.register_gateway(entry.data[CONF_HOST], xiaomi_gateway.multicast_callback)
     _LOGGER.debug(
         "Gateway with host '%s' connected, listening for broadcasts",
         entry.data[CONF_HOST],
