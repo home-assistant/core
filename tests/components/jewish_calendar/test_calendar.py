@@ -30,6 +30,8 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import GetCalendarEvents
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 # Entity IDs for the three calendars
@@ -113,11 +115,6 @@ async def test_timed_event_format(hass: HomeAssistant, get_calendar_events) -> N
         )
 
 
-# ─── Language ────────────────────────────────────────────────────────
-# Summaries and descriptions are produced by py-libhdate, which renders
-# them in the language configured for the integration.
-
-
 @pytest.mark.freeze_time("2024-01-15 12:00:00")
 @pytest.mark.parametrize("location_data", ["Jerusalem"], indirect=True)
 @pytest.mark.parametrize(
@@ -189,7 +186,7 @@ async def test_timed_event_format(hass: HomeAssistant, get_calendar_events) -> N
 @pytest.mark.usefixtures("setup")
 async def test_events_use_configured_language(
     hass: HomeAssistant,
-    get_calendar_events,
+    get_calendar_events: GetCalendarEvents,
     entity_id: str,
     query_date: dt.datetime,
     summary: str,
