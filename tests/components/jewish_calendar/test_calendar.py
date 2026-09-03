@@ -113,6 +113,95 @@ async def test_timed_event_format(hass: HomeAssistant, get_calendar_events) -> N
         )
 
 
+# ─── Language ────────────────────────────────────────────────────────
+# Summaries and descriptions are produced by py-libhdate, which renders
+# them in the language configured for the integration.
+
+
+@pytest.mark.freeze_time("2024-01-15 12:00:00")
+@pytest.mark.parametrize("location_data", ["Jerusalem"], indirect=True)
+@pytest.mark.parametrize(
+    (
+        "calendar_events",
+        "entity_id",
+        "query_date",
+        "language",
+        "summary",
+        "description",
+    ),
+    [
+        pytest.param(
+            {CONF_DAILY_EVENTS: [DailyCalendarEventType.SHKIA]},
+            DAILY_EVENTS,
+            dt.datetime(2024, 1, 15),
+            "en",
+            "Shkia",
+            "Shkia: 16:57",
+            id="zman-english",
+        ),
+        pytest.param(
+            {CONF_DAILY_EVENTS: [DailyCalendarEventType.SHKIA]},
+            DAILY_EVENTS,
+            dt.datetime(2024, 1, 15),
+            "fr",
+            "Coucher du soleil",
+            "Coucher du soleil : 16:57",
+            id="zman-french",
+        ),
+        pytest.param(
+            {CONF_DAILY_EVENTS: [DailyCalendarEventType.SHKIA]},
+            DAILY_EVENTS,
+            dt.datetime(2024, 1, 15),
+            "he",
+            "שקיעה",
+            "שקיעה: 16:57",
+            id="zman-hebrew",
+        ),
+        pytest.param(
+            {CONF_YEARLY_EVENTS: [YearlyCalendarEventType.WEEKLY_PORTION]},
+            YEARLY_EVENTS,
+            dt.datetime(2024, 1, 13),
+            "en",
+            "Vaera",
+            "Parshat Hashavua: Vaera",
+            id="weekly-portion-english",
+        ),
+        pytest.param(
+            {CONF_YEARLY_EVENTS: [YearlyCalendarEventType.WEEKLY_PORTION]},
+            YEARLY_EVENTS,
+            dt.datetime(2024, 1, 13),
+            "fr",
+            "Va'era",
+            "Parashat HaShavoua : Va'era",
+            id="weekly-portion-french",
+        ),
+        pytest.param(
+            {CONF_YEARLY_EVENTS: [YearlyCalendarEventType.WEEKLY_PORTION]},
+            YEARLY_EVENTS,
+            dt.datetime(2024, 1, 13),
+            "he",
+            "וארא",
+            "פרשת השבוע: וארא",
+            id="weekly-portion-hebrew",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup")
+async def test_events_use_configured_language(
+    hass: HomeAssistant,
+    get_calendar_events,
+    entity_id: str,
+    query_date: dt.datetime,
+    summary: str,
+    description: str,
+) -> None:
+    """Test event text is rendered in the configured language."""
+    events = await get_calendar_events(hass, entity_id, query_date)
+    assert len(events) == 1
+    assert events[0]["summary"] == summary
+    assert events[0]["description"] == description
+
+
 # ─── Daily Events ────────────────────────────────────────────────────
 # The daily events calendar produces the Hebrew date and configured
 # halachic times for each day. Times differ by location and timezone.
