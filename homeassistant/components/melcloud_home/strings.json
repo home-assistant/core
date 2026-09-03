@@ -126,6 +126,9 @@
       "energy_consumed": {
         "name": "Energy consumed (monthly)"
       },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "room_temperature": {
         "name": "Room temperature"
       },

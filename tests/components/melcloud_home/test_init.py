@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.components.melcloud_home.coordinator import (
-    ENERGY_UPDATE_INTERVAL,
+    TELEMETRY_UPDATE_INTERVAL,
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -216,27 +216,27 @@ async def test_energy_update_cycle_fails(
 ) -> None:
     """Test that a failing energy fetch clears the value without unloading the entry."""
     await setup_integration(hass, mock_config_entry)
-    energy_coordinator = mock_config_entry.runtime_data.energy_coordinator
+    telemetry_coordinator = mock_config_entry.runtime_data.telemetry_coordinator
 
-    assert energy_coordinator.data["ata-unit-uuid-1"] is not None
-    assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["ata-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["atw-unit-uuid-1"] is not None
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
-    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert energy_coordinator.data["ata-unit-uuid-1"] is None
-    assert energy_coordinator.data["atw-unit-uuid-1"] is None
+    assert telemetry_coordinator.data.energy["ata-unit-uuid-1"] is None
+    assert telemetry_coordinator.data.energy["atw-unit-uuid-1"] is None
 
     # Demonstrate a recovery
     mock_melcloud_client.get_energy_telemetry.side_effect = None
-    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert energy_coordinator.data["ata-unit-uuid-1"] is not None
-    assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["ata-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["atw-unit-uuid-1"] is not None
 
 
 @pytest.mark.parametrize(
@@ -258,11 +258,13 @@ async def test_energy_telemetry_fetch_failure(
     await setup_integration(hass, mock_config_entry)
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
-    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.runtime_data.energy_coordinator.last_update_success is True
+    assert (
+        mock_config_entry.runtime_data.telemetry_coordinator.last_update_success is True
+    )
     assert mock_config_entry.runtime_data.coordinator.last_update_success is True
 
 
@@ -274,19 +276,19 @@ async def test_energy_telemetry_fetch_failure(
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
     ],
 )
-async def test_energy_coordinator_context_fetch_failure(
+async def test_telemetry_coordinator_context_fetch_failure(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test that a failing energy coordinator refresh doesn't affect the main coordinator."""
+    """Test that a failing telemetry coordinator refresh doesn't affect the main coordinator."""
     await setup_integration(hass, mock_config_entry)
 
     # Split the margin so the main coordinator's rescheduled refresh doesn't land
-    # exactly on the energy coordinator's, which would make both fail below.
-    freezer.tick(ENERGY_UPDATE_INTERVAL - UPDATE_INTERVAL / 2)
+    # exactly on the telemetry coordinator's, which would make both fail below.
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - UPDATE_INTERVAL / 2)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
