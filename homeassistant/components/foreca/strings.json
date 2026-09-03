@@ -56,6 +56,36 @@
           "low": "Low"
         }
       },
+      "observation_station": {
+        "name": "Observation station"
+      },
+      "observed_humidity": {
+        "name": "Observed humidity"
+      },
+      "observed_pressure": {
+        "name": "Observed pressure"
+      },
+      "observed_snow_depth": {
+        "name": "Observed snow depth"
+      },
+      "observed_temperature": {
+        "name": "Observed temperature"
+      },
+      "observed_wind_gust_speed": {
+        "name": "Observed wind gust speed"
+      },
+      "observed_wind_speed": {
+        "name": "Observed wind speed"
+      },
+      "precipitation_forecast_average": {
+        "name": "Precipitation forecast average"
+      },
+      "precipitation_forecast_total": {
+        "name": "Precipitation forecast total"
+      },
+      "precipitation_start": {
+        "name": "Precipitation start"
+      },
       "precipitation_type": {
         "name": "Precipitation type",
         "state": {

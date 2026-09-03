@@ -13,6 +13,8 @@ from pyforeca import (
     ForecaAuthError,
     ForecaError,
     HourlyForecast,
+    MinutelyForecast,
+    Observation,
     format_location,
 )
 
@@ -40,6 +42,8 @@ class ForecaWeatherData:
     daily: list[DailyForecast]
     air_quality: AirQualityForecast | None
     air_quality_daily: list[AirQualityDailyForecast]
+    observation: Observation | None
+    minutely: list[MinutelyForecast]
 
 
 class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
@@ -80,6 +84,8 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             daily = await self.client.forecast_daily(
                 self.location, periods=DAILY_PERIODS, dataset="full"
             )
+            observation = await self.client.observation_latest(self.location)
+            minutely = await self.client.forecast_minutely(self.location)
         except ForecaAuthError as err:
             raise ConfigEntryAuthFailed("API key was rejected") from err
         except ForecaError as err:
@@ -108,4 +114,6 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             daily=daily,
             air_quality=air_quality,
             air_quality_daily=air_quality_daily,
+            observation=observation,
+            minutely=minutely,
         )

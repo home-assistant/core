@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from pyforeca import ForecaError
+from pyforeca import ForecaError, MinutelyForecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -93,3 +93,53 @@ async def test_sensors_unavailable_without_forecast_steps(
         state = hass.states.get(entity_id)
         assert state is not None, entity_id
         assert state.state == STATE_UNAVAILABLE, entity_id
+
+
+async def test_no_station_or_nowcast_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test observation and nowcast sensors go unavailable where Foreca has no data."""
+    mock_foreca_client.observation_latest.return_value = None
+    mock_foreca_client.forecast_minutely.return_value = []
+    await init_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "sensor.helsinki_observation_station",
+        "sensor.helsinki_observed_temperature",
+        "sensor.helsinki_precipitation_forecast_average",
+        "sensor.helsinki_precipitation_forecast_total",
+        "sensor.helsinki_precipitation_start",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None, entity_id
+        assert state.state == STATE_UNAVAILABLE, entity_id
+
+    weather = hass.states.get("weather.helsinki")
+    assert weather is not None
+    assert weather.state == "partlycloudy"
+
+
+async def test_dry_nowcast_has_no_start_time(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test a nowcast with no rain reports zero totals and no start time."""
+    mock_foreca_client.forecast_minutely.return_value = [
+        MinutelyForecast(time=f"2026-09-01T17:{minute:02d}+03:00", precip_rate=0.0)
+        for minute in range(10)
+    ]
+    await init_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.helsinki_precipitation_forecast_average").state == "0.0"
+    )
+    assert (
+        hass.states.get("sensor.helsinki_precipitation_forecast_total").state == "0.0"
+    )
+    assert (
+        hass.states.get("sensor.helsinki_precipitation_start").state
+        == STATE_UNAVAILABLE
+    )

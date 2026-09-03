@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyforeca"],
   "quality_scale": "bronze",
-  "requirements": ["pyforeca==0.1.0"]
+  "requirements": ["pyforeca==0.2.0"]
 }

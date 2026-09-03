@@ -10,6 +10,8 @@ from pyforeca import (
     DailyForecast,
     HourlyForecast,
     Location,
+    MinutelyForecast,
+    Observation,
 )
 import pytest
 
@@ -104,6 +106,33 @@ AIR_QUALITY_DAILY = [
     AirQualityDailyForecast(date="2026-09-04", aqi=31, pollutant="Ozone"),
 ]
 
+OBSERVATION = Observation(
+    time="2026-09-01T16:50+03:00",
+    station="Helsinki Kaisaniemi",
+    distance="1 km N",
+    elevation=4,
+    latitude=60.18,
+    longitude=24.94,
+    symbol="d000",
+    temperature=18.0,
+    feels_like_temp=18.0,
+    rel_humidity=71,
+    pressure=1006.0,
+    visibility=38150,
+    wind_speed=5.0,
+    wind_dir=216,
+    wind_dir_str="SW",
+    wind_gust=9.0,
+    snow_depth=0.0,
+)
+
+MINUTELY = [
+    MinutelyForecast(time="2026-09-01T17:00+03:00", precip_rate=0.0),
+    MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
+    MinutelyForecast(time="2026-09-01T17:02+03:00", precip_rate=0.6),
+    MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.2),
+]
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -143,6 +172,8 @@ def mock_foreca_client() -> Generator[MagicMock]:
         client.forecast_daily = AsyncMock(return_value=DAILY)
         client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
         client.air_quality_daily = AsyncMock(return_value=AIR_QUALITY_DAILY)
+        client.observation_latest = AsyncMock(return_value=OBSERVATION)
+        client.forecast_minutely = AsyncMock(return_value=MINUTELY)
         yield client
 
 

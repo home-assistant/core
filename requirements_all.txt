@@ -2247,7 +2247,7 @@ pyflic==2.0.4
 pyfnip==0.2
 
 # homeassistant.components.foreca
-pyforeca==0.1.0
+pyforeca==0.2.0
 
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.14
