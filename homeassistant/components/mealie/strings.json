@@ -7,7 +7,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."
@@ -16,7 +15,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ingress_url": "Ingress URLs are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie app.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "mealie_version": "Minimum required version is v2.0.0. Please upgrade Mealie and then retry.",
+      "mealie_version": "Minimum required version is v3.2.0. Please upgrade Mealie and then retry.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

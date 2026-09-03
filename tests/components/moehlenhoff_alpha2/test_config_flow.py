@@ -60,9 +60,15 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
         partialmethod(mock_update_data, hass),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data={"host": MOCK_BASE_HOST},
-            context={"source": config_entries.SOURCE_USER},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": MOCK_BASE_HOST},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
