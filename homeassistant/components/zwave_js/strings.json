@@ -627,9 +627,7 @@
         "160": "IR Repeater (160)",
         "161": "Authentication (161)",
         "162": "Authentication Media Write (162)",
-        "163": "Generic Schedule (163)",
-        "239": "Support/Control Mark (239)",
-        "61696": "Security Scheme 0 Mark (61696)"
+        "163": "Generic Schedule (163)"
       }
     },
     "event_source": {
