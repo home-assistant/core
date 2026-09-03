@@ -14,7 +14,7 @@ PLATFORMS: Final = [Platform.DEVICE_TRACKER]
 
 # Tracked devices are keyed by MAC across every config entry, so the registry
 # is shared rather than owned by any one entry.
-NMAP_TRACKED_DEVICES: HassKey[NmapTrackedDevices] = HassKey(DOMAIN)
+NMAP_TRACKER_DATA: HassKey[NmapTrackedDevices] = HassKey(DOMAIN)
 
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL: Final = "home_interval"
