@@ -622,7 +622,9 @@ class ESPHomeManager:
             _LOGGER.exception("%s: Could not set up dial-in routing", entry.title)
             return
         if unregister is not None:
-            self.entry_data.cleanup_callbacks.append(unregister)
+            # async_on_unload also runs when setup fails or is cancelled,
+            # so a route can never outlive its ReconnectLogic
+            entry.async_on_unload(unregister)
 
     async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
