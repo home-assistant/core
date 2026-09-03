@@ -181,6 +181,8 @@ ATTR_TWIST_ASSIST = "twist_assist"
 
 ADDON_SLUG = "core_zwave_js"
 
+NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
+
 # Sensor entity description constants
 ENTITY_DESC_KEY_BATTERY_LIST_STATE = "battery_list_state"
 ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY = "battery_maximum_capacity"

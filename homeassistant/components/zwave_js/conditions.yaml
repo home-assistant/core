@@ -1,0 +1,214 @@
+# Describes the format for available Z-Wave JS conditions
+
+.target: &target
+  entity:
+    - integration: zwave_js
+  device:
+    - integration: zwave_js
+
+.behavior: &behavior
+  required: true
+  default: any
+  selector:
+    automation_behavior:
+      mode: condition
+
+.value: &value
+  required: true
+  example: 255
+  selector:
+    object:
+
+node_status:
+  target: *target
+  fields:
+    behavior: *behavior
+    status:
+      required: true
+      selector:
+        select:
+          translation_key: node_status
+          options:
+            - alive
+            - asleep
+            - awake
+            - dead
+
+config_parameter:
+  target: *target
+  fields:
+    behavior: *behavior
+    parameter:
+      required: true
+      example: 3
+      selector:
+        number:
+          min: 0
+          mode: box
+    bitmask:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          mode: box
+    endpoint:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          mode: box
+    value: *value
+
+value:
+  target: *target
+  fields:
+    behavior: *behavior
+    command_class:
+      required: true
+      selector:
+        select:
+          translation_key: command_class
+          sort: true
+          options:
+            - "0"
+            - "32"
+            - "33"
+            - "34"
+            - "35"
+            - "37"
+            - "38"
+            - "39"
+            - "40"
+            - "41"
+            - "43"
+            - "44"
+            - "45"
+            - "48"
+            - "49"
+            - "50"
+            - "51"
+            - "52"
+            - "53"
+            - "54"
+            - "55"
+            - "57"
+            - "58"
+            - "59"
+            - "60"
+            - "61"
+            - "62"
+            - "63"
+            - "64"
+            - "65"
+            - "66"
+            - "67"
+            - "68"
+            - "69"
+            - "70"
+            - "71"
+            - "72"
+            - "73"
+            - "74"
+            - "75"
+            - "76"
+            - "77"
+            - "78"
+            - "79"
+            - "80"
+            - "81"
+            - "82"
+            - "83"
+            - "84"
+            - "85"
+            - "86"
+            - "87"
+            - "88"
+            - "89"
+            - "90"
+            - "91"
+            - "92"
+            - "93"
+            - "94"
+            - "95"
+            - "96"
+            - "97"
+            - "98"
+            - "99"
+            - "100"
+            - "102"
+            - "103"
+            - "104"
+            - "105"
+            - "106"
+            - "107"
+            - "108"
+            - "109"
+            - "110"
+            - "111"
+            - "112"
+            - "113"
+            - "114"
+            - "115"
+            - "116"
+            - "117"
+            - "118"
+            - "119"
+            - "120"
+            - "121"
+            - "122"
+            - "123"
+            - "124"
+            - "125"
+            - "126"
+            - "128"
+            - "129"
+            - "130"
+            - "132"
+            - "133"
+            - "134"
+            - "135"
+            - "136"
+            - "137"
+            - "138"
+            - "139"
+            - "140"
+            - "142"
+            - "143"
+            - "144"
+            - "145"
+            - "146"
+            - "147"
+            - "148"
+            - "152"
+            - "154"
+            - "155"
+            - "156"
+            - "157"
+            - "158"
+            - "159"
+            - "160"
+            - "161"
+            - "162"
+            - "163"
+            - "239"
+            - "61696"
+    property:
+      required: true
+      example: currentValue
+      selector:
+        text:
+    endpoint:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          mode: box
+    property_key:
+      required: false
+      example: 1
+      selector:
+        text:
+    value: *value

@@ -1,4 +1,84 @@
 {
+  "common": {
+    "condition_behavior_description": "Whether any or every targeted node must match.",
+    "condition_behavior_name": "Condition passes if",
+    "condition_endpoint_description": "Endpoint of the value.",
+    "condition_endpoint_name": "Endpoint",
+    "condition_value_description": "The value to compare with, either the raw value or its state label.",
+    "condition_value_name": "Value"
+  },
+  "conditions": {
+    "config_parameter": {
+      "description": "Tests if a configuration parameter on one or more Z-Wave JS nodes has the given value.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::zwave_js::common::condition_behavior_description%]",
+          "name": "[%key:component::zwave_js::common::condition_behavior_name%]"
+        },
+        "bitmask": {
+          "description": "Bitmask of a partial parameter, if the parameter is split into parts.",
+          "name": "Bitmask"
+        },
+        "endpoint": {
+          "description": "[%key:component::zwave_js::common::condition_endpoint_description%]",
+          "name": "[%key:component::zwave_js::common::condition_endpoint_name%]"
+        },
+        "parameter": {
+          "description": "Number of the configuration parameter.",
+          "name": "Parameter"
+        },
+        "value": {
+          "description": "[%key:component::zwave_js::common::condition_value_description%]",
+          "name": "[%key:component::zwave_js::common::condition_value_name%]"
+        }
+      },
+      "name": "Z-Wave JS configuration parameter"
+    },
+    "node_status": {
+      "description": "Tests if one or more Z-Wave JS nodes have the given status.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::zwave_js::common::condition_behavior_description%]",
+          "name": "[%key:component::zwave_js::common::condition_behavior_name%]"
+        },
+        "status": {
+          "description": "The node status to test for.",
+          "name": "Status"
+        }
+      },
+      "name": "Z-Wave JS node status"
+    },
+    "value": {
+      "description": "Tests if a Z-Wave value on one or more nodes equals the given value.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::zwave_js::common::condition_behavior_description%]",
+          "name": "[%key:component::zwave_js::common::condition_behavior_name%]"
+        },
+        "command_class": {
+          "description": "Command class of the value.",
+          "name": "Command class"
+        },
+        "endpoint": {
+          "description": "[%key:component::zwave_js::common::condition_endpoint_description%]",
+          "name": "[%key:component::zwave_js::common::condition_endpoint_name%]"
+        },
+        "property": {
+          "description": "Property of the value.",
+          "name": "Property"
+        },
+        "property_key": {
+          "description": "Property key of the value.",
+          "name": "Property key"
+        },
+        "value": {
+          "description": "[%key:component::zwave_js::common::condition_value_description%]",
+          "name": "[%key:component::zwave_js::common::condition_value_name%]"
+        }
+      },
+      "name": "Z-Wave JS value"
+    }
+  },
   "config": {
     "abort": {
       "addon_already_configured": "A configuration entry using the Z-Wave JS app already exists. Reconfigure or migrate that entry instead.",
@@ -563,6 +643,14 @@
       "options": {
         "existing": "It already exists",
         "new": "It's new"
+      }
+    },
+    "node_status": {
+      "options": {
+        "alive": "Alive",
+        "asleep": "Asleep",
+        "awake": "Awake",
+        "dead": "Dead"
       }
     }
   },
