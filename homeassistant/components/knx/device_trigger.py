@@ -2,7 +2,7 @@
 
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -30,11 +30,11 @@ TRIGGER_TELEGRAM: Final = "telegram"
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): TRIGGER_TELEGRAM,
+        probatio.Required(CONF_TYPE): TRIGGER_TELEGRAM,
         **TELEGRAM_TRIGGER_SCHEMA,
     }
 )
-_TELEGRAM_OPTIONS_SCHEMA: Final = vol.Schema(TELEGRAM_TRIGGER_SCHEMA)
+_TELEGRAM_OPTIONS_SCHEMA: Final = probatio.Schema(TELEGRAM_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(
@@ -61,7 +61,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     project = hass.data[KNX_MODULE_KEY].project
     options = [
@@ -69,9 +69,9 @@ async def async_get_trigger_capabilities(
         for ga in project.group_addresses.values()
     ]
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
+                probatio.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -79,19 +79,19 @@ async def async_get_trigger_capabilities(
                         options=options,
                     ),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_KNX_GROUP_VALUE_WRITE, default=True
                 ): selector.BooleanSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_KNX_GROUP_VALUE_RESPONSE, default=True
                 ): selector.BooleanSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_KNX_GROUP_VALUE_READ, default=True
                 ): selector.BooleanSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_KNX_INCOMING, default=True
                 ): selector.BooleanSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_KNX_OUTGOING, default=True
                 ): selector.BooleanSelector(),
             }
@@ -113,7 +113,7 @@ async def async_attach_trigger(
 
     try:
         telegram_options = _TELEGRAM_OPTIONS_SCHEMA(telegram_options)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
             translation_key="device_trigger_invalid_config",

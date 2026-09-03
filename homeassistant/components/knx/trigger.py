@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any, Final, cast, override
 
-import voluptuous as vol
+import probatio
 from xknx.dpt import DPTBase
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import DeviceGroupAddress, parse_device_group_address
@@ -37,24 +37,24 @@ CONF_KNX_INCOMING: Final = "incoming"
 CONF_KNX_OUTGOING: Final = "outgoing"
 
 
-TELEGRAM_TRIGGER_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(CONF_KNX_DESTINATION, default=list): vol.All(
-        cv.ensure_list, [ga_validator]
+TELEGRAM_TRIGGER_SCHEMA: dict[probatio.Marker, Any] = {
+    probatio.Required(CONF_KNX_DESTINATION, default=list): probatio.All(
+        probatio.EnsureList(), [ga_validator]
     ),
-    vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
 }
 # the DPT type is exclusive to the telegram trigger, the above are used
 # in device triggers too
-_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Optional(CONF_TYPE, default=None): vol.Any(dpt_base_type_validator, None),
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Optional(CONF_TYPE, default=None): probatio.Maybe(dpt_base_type_validator),
     **TELEGRAM_TRIGGER_SCHEMA,
 }
-_TELEGRAM_TRIGGER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_OPTIONS, default=dict): _OPTIONS_SCHEMA_DICT}
+_TELEGRAM_TRIGGER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): _OPTIONS_SCHEMA_DICT}
 )
 
 
