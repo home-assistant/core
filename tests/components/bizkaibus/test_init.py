@@ -11,6 +11,7 @@ from homeassistant.components.bizkaibus.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -28,7 +29,7 @@ async def test_setup_entry_creates_sensors(
                 line=SimpleNamespace(id="A", route="Route A"),
                 nearestArrival=SimpleNamespace(GetUTC=arrival_time.isoformat),
                 nextArrival=SimpleNamespace(
-                    GetUTC=lambda: arrival_time.replace(minute=15).isoformat()
+                    GetUTC=arrival_time.replace(minute=15).isoformat
                 ),
             ),
             "B": SimpleNamespace(
@@ -107,10 +108,21 @@ async def test_unload_entry(
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
         mock_api_class.return_value.GetTimetable = AsyncMock(
-            return_value=SimpleNamespace(name=None, arrivals={})
+            return_value=SimpleNamespace(
+                name=None,
+                arrivals={
+                    "A": SimpleNamespace(
+                        line=SimpleNamespace(id="A", route="Route A"),
+                        nearestArrival=None,
+                        nextArrival=None,
+                    )
+                },
+            )
         )
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        assert hass.states.get("sensor.mock_title_a_route_a") is not None
         assert await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert hass.states.get("sensor.mock_title_a_route_a").state == STATE_UNAVAILABLE

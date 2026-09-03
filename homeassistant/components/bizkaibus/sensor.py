@@ -157,4 +157,6 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
     @override
     def available(self) -> bool:
         """Return if sensor is available."""
-        return self.coordinator.data is not None
+        return (
+            self.coordinator.last_update_success and self.coordinator.data is not None
+        )

@@ -11,7 +11,7 @@ from homeassistant.components.bizkaibus.const import (
     CONF_STOP_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -278,7 +278,10 @@ async def test_reconfigure_step(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reconfigure", "entry_id": config_entry.entry_id},
+            context={
+                "source": SOURCE_RECONFIGURE,
+                "entry_id": config_entry.entry_id,
+            },
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_STOP_ID: "0232"}
@@ -376,10 +379,10 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
 
 async def test_import_flow(hass: HomeAssistant) -> None:
     """Test importing a stop creates a config entry."""
-    with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
-        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=None)
+    with patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup:
+        mock_setup.return_value = True
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "import"}, data={CONF_STOP_ID: "1234"}
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_STOP_ID: "1234"}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -390,7 +393,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 async def test_import_flow_without_stop_id(hass: HomeAssistant) -> None:
     """Test importing without a stop ID is rejected."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data={}
+        DOMAIN, context={"source": SOURCE_IMPORT}, data={}
     )
 
     assert result["type"] is FlowResultType.ABORT
