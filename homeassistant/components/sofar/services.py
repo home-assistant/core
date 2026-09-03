@@ -108,11 +108,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def _handle_set_feed_in_limit(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "feed_in")
         device = entry.runtime_data.readings.device
+        max_power = call.data[ATTR_MAX_POWER]
+        if max_power % 100:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="max_power_not_a_multiple_of_100",
+            )
         await _write(
             entry,
             device.feed_in.async_write_limit(
-                FeedinLimitationMode[call.data[ATTR_MODE].upper()],
-                call.data[ATTR_MAX_POWER],
+                FeedinLimitationMode[call.data[ATTR_MODE].upper()], max_power
             ),
         )
 

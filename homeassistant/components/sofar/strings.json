@@ -572,6 +572,9 @@
     "invalid_action_value": {
       "message": "The provided value is not valid for this action."
     },
+    "max_power_not_a_multiple_of_100": {
+      "message": "Maximum power must be a multiple of 100 W."
+    },
     "modbus_error": {
       "message": "{error}"
     },
