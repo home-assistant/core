@@ -794,12 +794,12 @@ _POLAR_TRIGGER_CASES = [
     (
         "sun.polar_night_started",
         datetime(2015, 10, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 10, 28, 10, 41, 13, tzinfo=dt_util.UTC),
+        datetime(2015, 10, 27, 10, 41, 18, tzinfo=dt_util.UTC),
     ),
     (
         "sun.polar_night_ended",
         datetime(2015, 2, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 2, 15, 11, 11, 34, tzinfo=dt_util.UTC),
+        datetime(2015, 2, 16, 11, 11, 31, tzinfo=dt_util.UTC),
     ),
 ]
 
@@ -912,8 +912,8 @@ def test_next_polar_transition_large_before_offset() -> None:
     observer = astral.Observer(*_SVALBARD[:2], 0)
     now = datetime(2015, 2, 27, 12, tzinfo=dt_util.UTC)
     # The 2015-04-18 crossing's fire (60 days earlier) is already past, so the
-    # next fire derives from the 2016-04-17 22:56:39 solar-midnight crossing.
-    expected = datetime(2016, 2, 17, 22, 56, 39, tzinfo=dt_util.UTC)
+    # next fire derives from the 2016-04-18 22:56:27 solar-midnight crossing.
+    expected = datetime(2016, 2, 18, 22, 56, 27, tzinfo=dt_util.UTC)
     result = _next_polar_transition(
         observer, "midnight", now, target_above=True, offset=timedelta(days=-60)
     )

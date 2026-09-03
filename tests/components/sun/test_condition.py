@@ -1859,14 +1859,14 @@ async def test_midnight_sun_polar_night_condition(
         # Polar night ends at this solar noon (crosses above).
         (
             "sun.is_polar_night",
-            datetime(2015, 2, 15, 11, 11, 34, tzinfo=dt_util.UTC),
+            datetime(2015, 2, 16, 11, 11, 31, tzinfo=dt_util.UTC),
             True,
             False,
         ),
         # Polar night starts at this solar noon (crosses below).
         (
             "sun.is_polar_night",
-            datetime(2015, 10, 28, 10, 41, 13, tzinfo=dt_util.UTC),
+            datetime(2015, 10, 27, 10, 41, 18, tzinfo=dt_util.UTC),
             False,
             True,
         ),
