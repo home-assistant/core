@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from youless_api import YoulessAPI
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import YouLessConfigEntry, YouLessCoordinator
@@ -34,7 +36,7 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
     """Describes a YouLess sensor entity."""
 
     device_group: str
-    value_func: Callable[[YoulessAPI], float | str | None]
+    value_func: Callable[[YoulessAPI], datetime | float | str | None]
 
 
 SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
@@ -240,6 +242,19 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         value_func=(
             lambda device: device.peak_power.value if device.peak_power else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
+        key="month_peak_time",
+        device_group="power",
+        translation_key="month_peak_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_func=(
+            lambda device: (
+                device.peak_power_time.replace(tzinfo=dt_util.get_default_time_zone())
+                if device.peak_power_time
+                else None
+            )
         ),
     ),
     YouLessSensorEntityDescription(
