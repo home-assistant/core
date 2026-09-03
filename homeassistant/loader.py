@@ -370,6 +370,8 @@ async def async_get_config_flows(
             flows.update(type_flows)
 
     for integration in integrations.values():
+        # the custom integration replaces the built-in one with the same domain
+        flows.discard(integration.domain)
         if not integration.config_flow:
             continue
         # custom integrations report a finer grained integration_type than the

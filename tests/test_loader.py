@@ -922,6 +922,38 @@ async def test_get_config_flows_type_filter(
         assert await loader.async_get_config_flows(hass, type_filter) == expected
 
 
+async def test_get_config_flows_custom_overrides_core(hass: HomeAssistant) -> None:
+    """Verify a custom integration replaces the built-in flow it shadows.
+
+    The custom integration is the one that gets loaded, so the built-in flow it
+    overrides must not stay behind in its original bucket.
+    """
+    # shadows a core helper domain, but reports itself as a hub
+    shadowing_hub = _get_test_integration(hass, "core_helper", True)
+    # shadows a core integration domain and has no config flow at all
+    shadowing_without_flow = _get_test_integration(hass, "core_integration", False)
+
+    with (
+        patch("homeassistant.loader.async_get_custom_components") as mock_get,
+        patch.object(
+            loader,
+            "FLOWS",
+            {"integration": ["core_integration"], "helper": ["core_helper"]},
+        ),
+    ):
+        mock_get.return_value = {
+            "core_helper": shadowing_hub,
+            "core_integration": shadowing_without_flow,
+        }
+        # the shadowed helper moved to the integration bucket, it is not in both
+        assert await loader.async_get_config_flows(hass, "helper") == set()
+        assert await loader.async_get_config_flows(hass, "integration") == {
+            "core_helper"
+        }
+        # the override without a config flow no longer exposes the built-in one
+        assert await loader.async_get_config_flows(hass) == {"core_helper"}
+
+
 async def test_get_zeroconf(hass: HomeAssistant) -> None:
     """Verify that custom components with zeroconf are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
