@@ -204,12 +204,17 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 # identity has to be enrolled alongside the gateway one or not
                 # at all.
                 enable_admin: bool = user_input[CONF_ENABLE_ADMIN]
-                if enable_admin and self._admin_priv is None:
-                    # Generated once and reused by every retry, like the gateway
-                    # identity. The lock is sent the identity before it
-                    # acknowledges it, so a failure here may still have stored
-                    # it; a fresh identity each time would strand those on the
-                    # lock, taking up slots nobody holds the key to.
+                if self._admin_priv is not None:
+                    # An earlier attempt already offered this identity to the
+                    # lock, which is sent it before acknowledging it — so the
+                    # lock may hold it even though that attempt failed. Keep
+                    # offering the same one and keep its key: generating another
+                    # or dropping this one would leave a credential on the lock
+                    # that nobody can use, and that only the Argo app can
+                    # remove. Re-offering it is harmless, as the lock stores
+                    # credentials by UUID.
+                    enable_admin = True
+                elif enable_admin:
                     self._admin_priv = await self.hass.async_add_executor_job(
                         _generate_identity
                     )

@@ -278,11 +278,15 @@ async def test_gw_register_retry_reuses_the_admin_identity(
 
 
 @pytest.mark.usefixtures("_patch_identity")
-async def test_gw_register_retry_without_admin_stores_no_admin_identity(
+async def test_gw_register_keeps_an_offered_identity_when_retried_without_admin(
     hass: HomeAssistant,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test turning user management off on a retry leaves it out of the entry."""
+    """Test an identity already offered to the lock is kept, toggle or not.
+
+    The failed attempt may have stored it, so dropping its key would leave a
+    credential on the lock that only the Argo app can remove.
+    """
     mock_iseo_client.setup_gateway.side_effect = [IseoConnectionError, None]
 
     with patch(
@@ -308,7 +312,10 @@ async def test_gw_register_retry_without_admin_stores_no_admin_identity(
     )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["data"] == ENTRY_DATA_WITHOUT_ADMIN
+    assert result4["data"] == ENTRY_DATA_WITH_ADMIN
+    assert mock_iseo_client.setup_gateway.call_args.kwargs[
+        "admin_uuid_bytes"
+    ] == bytes.fromhex(MOCK_ADMIN_UUID_HEX)
 
 
 @pytest.mark.usefixtures("_patch_identity")
