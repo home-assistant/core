@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
     MOCK_MEDIA_DIR_URI_1,
+    MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
 )
@@ -41,8 +42,18 @@ def _data_from_uris(uris: list[str]) -> dict:
     }
 
 
+@pytest.mark.parametrize(
+    ("uris", "expected_title"),
+    [
+        ([MOCK_MEDIA_DIR_URI_1], "My pictures collection"),
+        ([MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_2], "My pictures collection"),
+        ([MOCK_MEDIA_DIR_URI_2, MOCK_MEDIA_DIR_URI_1], "Three pictures collection"),
+    ],
+)
 @pytest.mark.usefixtures("mock_media_source")
-async def test_config_flow(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_config_flow(
+    hass: HomeAssistant, mock_setup_entry, uris: list[str], expected_title: str
+) -> None:
     """Test the config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -51,8 +62,7 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
-    data = _data_from_uris([MOCK_MEDIA_DIR_URI_1])
-    expected_title = "My pictures collection"
+    data = _data_from_uris(uris)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
