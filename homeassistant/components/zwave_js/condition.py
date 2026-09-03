@@ -37,7 +37,7 @@ from homeassistant.helpers.target import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .config_validation import BITMASK_SCHEMA, COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
+from .config_validation import BITMASK_SCHEMA, COMMAND_CLASS_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
@@ -60,6 +60,9 @@ from .helpers import (
 
 CONF_STATUS = "status"
 
+# Conditions compare against state labels, so strings must be kept as given
+_CONDITION_VALUE_SCHEMA = vol.Any(bool, int, float, dict, cv.string)
+
 _BEHAVIOR_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
         [BEHAVIOR_ANY, BEHAVIOR_ALL]
@@ -77,7 +80,7 @@ _VALUE_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
     vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
     vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Required(ATTR_VALUE): VALUE_SCHEMA,
+    vol.Required(ATTR_VALUE): _CONDITION_VALUE_SCHEMA,
 }
 
 _CONFIG_PARAMETER_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
@@ -87,7 +90,7 @@ _CONFIG_PARAMETER_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
         vol.Coerce(int), BITMASK_SCHEMA
     ),
     vol.Optional(ATTR_ENDPOINT, default=0): vol.Coerce(int),
-    vol.Required(ATTR_VALUE): VALUE_SCHEMA,
+    vol.Required(ATTR_VALUE): _CONDITION_VALUE_SCHEMA,
 }
 
 

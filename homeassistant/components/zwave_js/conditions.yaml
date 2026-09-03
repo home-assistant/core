@@ -5,6 +5,7 @@
     - integration: zwave_js
   device:
     - integration: zwave_js
+  primary_entities_only: false
 
 .behavior: &behavior
   required: true

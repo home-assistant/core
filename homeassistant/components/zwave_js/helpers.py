@@ -511,9 +511,13 @@ def node_status_matches(node: ZwaveNode, status: str) -> bool:
 
 
 def value_matches_state(value: ZwaveValue, expected: Any) -> bool:
-    """Return whether a value equals the expected raw value or state label."""
+    """Return whether a value matches the expected raw value, string form or label."""
     current = value.value
-    return expected in (current, value.metadata.states.get(str(current), current))
+    return expected in (
+        current,
+        str(current),
+        value.metadata.states.get(str(current), current),
+    )
 
 
 def get_zwave_js_config_entry_id(

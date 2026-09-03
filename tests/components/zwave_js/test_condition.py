@@ -118,6 +118,73 @@ async def test_condition_by_device_and_entity(
 
 
 @pytest.mark.parametrize(
+    ("node_name", "condition_type", "options", "expected"),
+    [
+        pytest.param(
+            "iblinds_v3",
+            "config_parameter",
+            {"parameter": 3, "value": "Enable"},
+            True,
+            id="config_parameter_label_match",
+        ),
+        pytest.param(
+            "iblinds_v3",
+            "config_parameter",
+            {"parameter": 3, "value": "Disable"},
+            False,
+            id="config_parameter_label_mismatch",
+        ),
+        pytest.param(
+            "iblinds_v3",
+            "value",
+            {"command_class": 112, "property": 3, "value": "0"},
+            True,
+            id="value_raw_string_form",
+        ),
+        pytest.param(
+            "gdc_zw062",
+            "value",
+            {
+                "command_class": 102,
+                "property": "signalingState",
+                "property_key": 1,
+                "value": "On",
+            },
+            True,
+            id="value_on_label",
+        ),
+    ],
+)
+async def test_condition_value_state_labels(
+    hass: HomeAssistant,
+    client: MagicMock,
+    iblinds_v3: Node,
+    gdc_zw062: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    node_name: str,
+    condition_type: str,
+    options: dict[str, Any],
+    expected: bool,
+) -> None:
+    """Test state labels and raw string values are compared without coercion."""
+    nodes = {"iblinds_v3": iblinds_v3, "gdc_zw062": gdc_zw062}
+    checker = await _checker(
+        hass,
+        {
+            "condition": f"{DOMAIN}.{condition_type}",
+            "target": {
+                "device_id": _device_id(
+                    device_registry, client, nodes[node_name], integration
+                )
+            },
+            "options": options,
+        },
+    )
+    assert checker.async_check() is expected
+
+
+@pytest.mark.parametrize(
     ("behavior", "target_kind", "expected"),
     [
         pytest.param("any", "two_nodes", True, id="any_one_alive"),
@@ -546,7 +613,9 @@ async def test_condition_description_fields_match_schema(
     """Test the described fields and required flags match the options schema."""
     schema = CONDITIONS[condition_type].options_schema_dict
     descriptions = await condition.async_get_all_descriptions(hass)
-    fields = descriptions[f"{DOMAIN}.{condition_type}"]["fields"]
+    description = descriptions[f"{DOMAIN}.{condition_type}"]
+    assert description["target"]["primary_entities_only"] is False
+    fields = description["fields"]
     assert set(fields) == {str(key) for key in schema}
     assert {name for name, field in fields.items() if field["required"]} == {
         str(key) for key in schema if isinstance(key, vol.Required)
