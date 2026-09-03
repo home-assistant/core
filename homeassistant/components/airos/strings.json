@@ -6,7 +6,6 @@
       "discovery_failed": "Unable to start discovery, check logs for details",
       "listen_error": "Unable to start listening for devices",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "Re-authentication should be used for the same device not a new one"
     },

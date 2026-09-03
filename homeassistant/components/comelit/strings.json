@@ -7,7 +7,6 @@
       "invalid_pin": "The provided PIN is invalid. It must be a 4-10 digit number.",
       "invalid_vedo_auth": "The provided VEDO PIN is incorrect or VEDO alarm is not enabled on this device.",
       "invalid_vedo_pin": "The provided VEDO PIN is invalid. It must be a 4-10 digit number.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

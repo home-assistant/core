@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
       "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Home integration.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

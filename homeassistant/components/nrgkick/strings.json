@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "json_api_disabled": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants.",
       "no_serial_number": "Device does not provide a serial number",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device does not match the previous device"
     },
