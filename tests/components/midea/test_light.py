@@ -256,6 +256,22 @@ async def test_light_color_mode_fallbacks(
     assert (ATTR_EFFECT in state.attributes) == expected_has_effect
 
 
+async def test_light_effect_none_when_device_reports_non_string(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test effect is reported as None when the device value is not a string."""
+    device = _x13_device()
+    device.attributes[X13Attributes.effect] = 0
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.LIGHT]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_light"]
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.attributes[ATTR_EFFECT] is None
+
+
 async def test_light_not_created_for_other_device_type(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
