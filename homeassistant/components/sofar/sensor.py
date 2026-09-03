@@ -7,6 +7,7 @@ from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -1445,11 +1446,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="feed_in",
         translation_key="feedin_limitation_mode",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "disabled",
-            "enabled_feed_in_limitation",
-            "enabled_3_phase_limit",
-        ],
+        options=[mode.name.lower() for mode in FeedinLimitationMode],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1484,7 +1481,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="passive",
         translation_key="passive_mode_timeout_action",
         device_class=SensorDeviceClass.ENUM,
-        options=["force_standby", "return_to_previous_mode"],
+        options=[action.name.lower() for action in PassiveModeTimeoutAction],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
