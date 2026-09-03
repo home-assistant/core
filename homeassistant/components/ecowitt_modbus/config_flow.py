@@ -170,7 +170,9 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await _async_probe(self.hass, self._model, user_input)
             except NotThisDeviceError:
                 errors["base"] = "wrong_model"
-            except ModbusError, HomeAssistantError:
+            except ModbusError:
+                errors["base"] = "cannot_connect"
+            except HomeAssistantError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -220,7 +222,9 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await _async_probe(self.hass, model, user_input)
             except NotThisDeviceError:
                 errors["base"] = "wrong_model"
-            except ModbusError, HomeAssistantError:
+            except ModbusError:
+                errors["base"] = "cannot_connect"
+            except HomeAssistantError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
