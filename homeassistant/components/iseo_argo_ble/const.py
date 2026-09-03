@@ -15,6 +15,7 @@ CONF_ENABLE_ADMIN = "enable_admin"
 
 # Action changing who may open the lock; administrators only
 SERVICE_SET_CREDENTIAL_ENABLED = "set_credential_enabled"
+SERVICE_DELETE_CREDENTIAL = "delete_credential"
 ATTR_ENABLED = "enabled"
 
 # Seconds to keep holding the BLE mutex after an admin session. The lock needs

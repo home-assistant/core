@@ -19,6 +19,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.iseo_argo_ble.const import (
     ATTR_ENABLED,
     DOMAIN,
+    SERVICE_DELETE_CREDENTIAL,
     SERVICE_SET_CREDENTIAL_ENABLED,
 )
 from homeassistant.const import (
@@ -194,6 +195,63 @@ async def test_set_credential_enabled_without_ble_device(
         pytest.raises(HomeAssistantError),
     ):
         await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+
+async def _delete_credential(hass: HomeAssistant, entity_id: str) -> None:
+    """Call the delete credential action."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DELETE_CREDENTIAL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_delete_credential(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test deleting a credential erases it and drops the sensor."""
+    await setup_integration(hass, mock_admin_config_entry)
+    assert entity_registry.async_get(ALICE_ENTITY_ID) is not None
+
+    await _delete_credential(hass, ALICE_ENTITY_ID)
+
+    mock_iseo_client.erase_user_by_uuid.assert_called_once_with(
+        uuid_bytes=bytes.fromhex("1111111111111111111111111111aaaa"),
+        user_type=USER_TYPE_RFID,
+        subtype=None,
+    )
+    assert hass.states.get(ALICE_ENTITY_ID) is None
+    assert entity_registry.async_get(ALICE_ENTITY_ID) is None
+    # The other credentials are untouched.
+    assert hass.states.get(BOB_ENTITY_ID) is not None
+
+
+@pytest.mark.parametrize(
+    "error",
+    [IseoAuthError("rejected"), IseoConnectionError("no link"), TimeoutError],
+)
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_delete_credential_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test a failed delete is reported and keeps the sensor."""
+    await setup_integration(hass, mock_admin_config_entry)
+    mock_iseo_client.erase_user_by_uuid.side_effect = error
+
+    with pytest.raises(HomeAssistantError):
+        await _delete_credential(hass, ALICE_ENTITY_ID)
+
+    assert entity_registry.async_get(ALICE_ENTITY_ID) is not None
+    assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")

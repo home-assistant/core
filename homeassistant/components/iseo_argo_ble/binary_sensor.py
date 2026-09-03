@@ -1,6 +1,8 @@
 """ISEO Argo BLE lock credential sensors."""
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import replace
 from typing import cast, override
 
@@ -12,6 +14,7 @@ from iseo_argo_ble import (
     USER_TYPE_PIN,
     USER_TYPE_RFID,
     IseoAuthError,
+    IseoClient,
     IseoConnectionError,
     UserEntry,
 )
@@ -21,6 +24,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.const import CONF_ADDRESS, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -84,6 +88,7 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         entry = coordinator.config_entry
         self._uuid_hex = user.uuid_hex
         self._user_type = user.user_type
+        self._inner_subtype = user.inner_subtype
 
         self._attr_translation_key = USER_TYPE_TRANSLATION_KEYS.get(
             user.user_type, "credential_other"
@@ -135,8 +140,9 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         Reload the config entry to pick up credentials changed elsewhere.
         """
 
-    async def async_set_enabled(self, enabled: bool) -> None:
-        """Let this credential open the lock, or stop it doing so."""
+    @asynccontextmanager
+    async def _admin_session(self) -> AsyncIterator[IseoClient]:
+        """Hold the BLE mutex for one admin operation on this credential."""
         entry = self.coordinator.config_entry
         address = entry.data[CONF_ADDRESS]
         if not (
@@ -153,12 +159,8 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         try:
             async with entry.runtime_data.ble_lock:
                 self.coordinator.client.update_ble_device(ble_device)
-                await self.coordinator.client.set_user_disabled(
-                    uuid_hex=self._uuid_hex,
-                    user_type=self._user_type,
-                    disabled=not enabled,
-                )
-                # Targeting several credentials calls this once per entity, so
+                yield self.coordinator.client
+                # Targeting several credentials runs this once per entity, so
                 # keep the mutex while the lock closes the admin session.
                 await asyncio.sleep(ADMIN_SETTLE_DELAY)
         except IseoAuthError as err:
@@ -172,7 +174,38 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 translation_key="cannot_connect",
             ) from err
 
+    async def async_set_enabled(self, enabled: bool) -> None:
+        """Let this credential open the lock, or stop it doing so."""
+        async with self._admin_session() as client:
+            await client.set_user_disabled(
+                uuid_hex=self._uuid_hex,
+                user_type=self._user_type,
+                disabled=not enabled,
+            )
+
         self._apply_to_cached_users(disabled=not enabled)
+
+    async def async_delete_credential(self) -> None:
+        """Remove this credential from the lock for good.
+
+        There is no undo from Home Assistant: whoever held it has to be
+        enrolled again with the Master Card.
+        """
+        async with self._admin_session() as client:
+            await client.erase_user_by_uuid(
+                uuid_bytes=bytes.fromhex(self._uuid_hex),
+                user_type=self._user_type,
+                subtype=self._inner_subtype,
+            )
+
+        self.coordinator.async_set_updated_data(
+            [
+                user
+                for user in self.coordinator.data
+                if user.uuid_hex != self._uuid_hex or user.user_type != self._user_type
+            ]
+        )
+        er.async_get(self.hass).async_remove(self.entity_id)
 
     def _apply_to_cached_users(self, *, disabled: bool) -> None:
         """Patch the cached credential list rather than re-reading it.
