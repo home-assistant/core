@@ -30,6 +30,8 @@ CURRENT = CurrentWeather(
     wind_dir=210,
     wind_gust=8.0,
     precip_prob=5,
+    precip_rate=0.0,
+    thunder_prob=8,
     cloudiness=40,
     uv_index=2,
     pressure=1013.2,
@@ -50,6 +52,9 @@ HOURLY = [
         rel_humidity=70,
         cloudiness=60,
         uv_index=1,
+        precip_type="rain",
+        solar_radiation=141.0,
+        snow_depth=0.0,
     )
 ]
 
@@ -65,6 +70,8 @@ DAILY = [
         max_wind_gust=11.0,
         wind_dir=225,
         uv_index=3,
+        sunhours=6.4,
+        confidence="g",
     ),
     DailyForecast(
         date="2026-09-03",

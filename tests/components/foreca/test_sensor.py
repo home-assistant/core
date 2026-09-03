@@ -71,3 +71,25 @@ async def test_air_quality_failure_keeps_weather(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_sensors_unavailable_without_forecast_steps(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test sensors read from forecast steps go unavailable when the API returns none."""
+    mock_foreca_client.forecast_hourly.return_value = []
+    mock_foreca_client.forecast_daily.return_value = []
+    await init_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "sensor.helsinki_precipitation_type",
+        "sensor.helsinki_solar_radiation",
+        "sensor.helsinki_snow_depth",
+        "sensor.helsinki_sunshine_duration",
+        "sensor.helsinki_forecast_confidence",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None, entity_id
+        assert state.state == STATE_UNAVAILABLE, entity_id

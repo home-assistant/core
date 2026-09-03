@@ -315,6 +315,69 @@
     'state': 'Ozone',
   })
 # ---
+# name: test_sensors[sensor.helsinki_forecast_confidence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'good',
+        'normal',
+        'low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_forecast_confidence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Forecast confidence',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Forecast confidence',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'forecast_confidence',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-forecast_confidence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_forecast_confidence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Forecast confidence',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'good',
+        'normal',
+        'low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_forecast_confidence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
 # name: test_sensors[sensor.helsinki_nitrogen_dioxide_aqi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -531,6 +594,246 @@
     'state': '11',
   })
 # ---
+# name: test_sensors[sensor.helsinki_precipitation_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_precipitation_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Precipitation intensity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
+    'original_icon': None,
+    'original_name': 'Precipitation intensity',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01JZ4Q1F0RECA0000000000000-precipitation_intensity',
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_precipitation_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Precipitation intensity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_precipitation_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_precipitation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'rain',
+        'mixed',
+        'snow',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_precipitation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Precipitation type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Precipitation type',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precipitation_type',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-precipitation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_precipitation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Precipitation type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'rain',
+        'mixed',
+        'snow',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_precipitation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rain',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_snow_depth-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_snow_depth',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Snow depth',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Snow depth',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'snow_depth',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-snow_depth',
+    'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_snow_depth-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Snow depth',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.CENTIMETERS: 'cm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_snow_depth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_solar_radiation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_solar_radiation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Solar radiation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
+    'original_name': 'Solar radiation',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'solar_radiation',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-solar_radiation',
+    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_solar_radiation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'irradiance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Solar radiation',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_solar_radiation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '141.0',
+  })
+# ---
 # name: test_sensors[sensor.helsinki_sulphur_dioxide_aqi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -583,5 +886,116 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_sunshine_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_sunshine_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunshine duration',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Sunshine duration',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunshine_duration',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-sunshine_duration',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_sunshine_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Sunshine duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_sunshine_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.4',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_thunderstorm_probability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_thunderstorm_probability',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thunderstorm probability',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thunderstorm probability',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thunderstorm_probability',
+    'unique_id': '01JZ4Q1F0RECA0000000000000-thunderstorm_probability',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_thunderstorm_probability-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Thunderstorm probability',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_thunderstorm_probability',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
   })
 # ---

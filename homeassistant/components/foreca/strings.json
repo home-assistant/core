@@ -24,14 +24,58 @@
   },
   "entity": {
     "sensor": {
-      "dominant_pollutant": { "name": "Dominant pollutant" },
-      "aqi_day": { "name": "Air quality index day {forecast_day}" },
-      "aqi_co": { "name": "Carbon monoxide AQI" },
-      "aqi_no2": { "name": "Nitrogen dioxide AQI" },
-      "aqi_o3": { "name": "Ozone AQI" },
-      "aqi_so2": { "name": "Sulphur dioxide AQI" },
-      "aqi_pm10": { "name": "PM10 AQI" },
-      "aqi_pm2p5": { "name": "PM2.5 AQI" }
+      "aqi_co": {
+        "name": "Carbon monoxide AQI"
+      },
+      "aqi_day": {
+        "name": "Air quality index day {forecast_day}"
+      },
+      "aqi_no2": {
+        "name": "Nitrogen dioxide AQI"
+      },
+      "aqi_o3": {
+        "name": "Ozone AQI"
+      },
+      "aqi_pm10": {
+        "name": "PM10 AQI"
+      },
+      "aqi_pm2p5": {
+        "name": "PM2.5 AQI"
+      },
+      "aqi_so2": {
+        "name": "Sulphur dioxide AQI"
+      },
+      "dominant_pollutant": {
+        "name": "Dominant pollutant"
+      },
+      "forecast_confidence": {
+        "name": "Forecast confidence",
+        "state": {
+          "good": "Good",
+          "normal": "Normal",
+          "low": "Low"
+        }
+      },
+      "precipitation_type": {
+        "name": "Precipitation type",
+        "state": {
+          "rain": "Rain",
+          "mixed": "Mixed",
+          "snow": "Snow"
+        }
+      },
+      "snow_depth": {
+        "name": "Snow depth"
+      },
+      "solar_radiation": {
+        "name": "Solar radiation"
+      },
+      "sunshine_duration": {
+        "name": "Sunshine duration"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      }
     }
   }
 }
