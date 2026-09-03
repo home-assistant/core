@@ -115,22 +115,23 @@ async def async_setup_entry(
     """Set up number platform."""
     coordinator = entry.runtime_data
     entity_registry = er.async_get(hass)
-    registered_entries = er.async_entries_for_config_entry(
-        entity_registry, coordinator.config_entry.entry_id
-    )
-    for registry_entry in registered_entries:
-        unique_id = registry_entry.unique_id
-        parts = unique_id.split("_", 2)
-        if len(parts) != 3 or parts[2] != WORK_AREA_NUMBER_TYPES[0].key:
+    registered_entries = {
+        registry_entry.unique_id: registry_entry
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, coordinator.config_entry.entry_id
+        )
+    }
+    description = WORK_AREA_NUMBER_TYPES[0]
+    for mower_id, mower_data in coordinator.data.items():
+        work_areas = mower_data.work_areas
+        if work_areas is None:
             continue
-        mower_id, work_area_id = parts[:2]
-        if mower_id not in coordinator.data or not work_area_id.isdigit():
-            continue
-        work_areas = coordinator.data[mower_id].work_areas
-        if work_areas is None or int(work_area_id) not in work_areas:
-            continue
-        if not WORK_AREA_NUMBER_TYPES[0].exists_fn(work_areas[int(work_area_id)]):
-            entity_registry.async_remove(registry_entry.entity_id)
+        for work_area_id, work_area in work_areas.items():
+            if description.exists_fn(work_area):
+                continue
+            unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+            if registry_entry := registered_entries.get(unique_id):
+                entity_registry.async_remove(registry_entry.entity_id)
 
     entities: list[NumberEntity] = []
     for mower_id in coordinator.data:
