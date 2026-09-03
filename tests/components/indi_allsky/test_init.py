@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aioindiallsky import IndiAllSkyConnectionError
+from aioindiallsky import ExposureData, IndiAllSkyConnectionError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -17,6 +17,7 @@ async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_indi_allsky_client: AsyncMock,
+    mock_exposure_data: ExposureData,
 ) -> None:
     """Test successful setup and unload of entry."""
     await setup_integration(hass, mock_config_entry)
@@ -24,6 +25,13 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_indi_allsky_client.connect.assert_awaited_once()
     mock_indi_allsky_client.listen.assert_called_once_with(auto_reconnect=True)
+
+    coordinator = mock_config_entry.runtime_data
+    for callback in mock_indi_allsky_client.callbacks.get("exposure_complete", []):
+        callback(mock_exposure_data)
+    await hass.async_block_till_done()
+
+    assert coordinator.data.exposure == mock_exposure_data
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

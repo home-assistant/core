@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import IndiAllSkyConfigEntry, IndiAllSkyDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.CAMERA, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.CAMERA]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> bool:
