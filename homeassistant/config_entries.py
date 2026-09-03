@@ -3527,7 +3527,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 are overridden
             options: replace the entry options with new options
             reason: set the reason for the abort, defaults to
-                `reauth_successful` or `reconfigure_successful` based on flow source
+                `reauth_successful` or `reconfigure_successful` based on flow source.
+                A custom reason requires a matching strings.json entry
 
         Returns:
             ConfigFlowResult: The result of the config flow.
@@ -3542,10 +3543,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
         translation_domain: str | None = None
         if reason is UNDEFINED:
-            reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
                 translation_domain = HOMEASSISTANT_DOMAIN
+            else:
+                reason = "reauth_successful"
         return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
@@ -3572,7 +3574,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 are overridden
             options: replace the entry options with new options
             reason: set the reason for the abort, defaults to
-                `reauth_successful` or `reconfigure_successful` based on flow source
+                `reauth_successful` or `reconfigure_successful` based on flow source.
+                A custom reason requires a matching strings.json entry
             reload_even_if_entry_is_unchanged: set this to `False` if the entry
                 should not be reloaded if it is unchanged
 
@@ -3598,10 +3601,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         translation_domain: str | None = None
         if reason is UNDEFINED:
-            reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
                 translation_domain = HOMEASSISTANT_DOMAIN
+            else:
+                reason = "reauth_successful"
         return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
