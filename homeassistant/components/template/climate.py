@@ -537,10 +537,12 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 self._attr_supported_features |= supported_feature
 
         if (
-            CONF_TARGET_TEMPERATURE_HIGH in self._templates
-            and CONF_TARGET_TEMPERATURE_LOW in self._templates
-            and SET_TEMPERATURE_ACTION in self._action_scripts
-        ):
+            (
+                CONF_TARGET_TEMPERATURE_HIGH in self._templates
+                and CONF_TARGET_TEMPERATURE_LOW in self._templates
+            )
+            or self._attr_assumed_state
+        ) and SET_TEMPERATURE_ACTION in self._action_scripts:
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
