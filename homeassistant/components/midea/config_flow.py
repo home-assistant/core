@@ -718,6 +718,40 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_create_midea_entry(user_input)
         return self._show_manually_form(user_input, error)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow reconfiguration of a Midea config entry."""
+        entry = self._get_reconfigure_entry()
+        error = None
+        if user_input is not None:
+            devices = await self.hass.async_add_executor_job(
+                lambda: discover(
+                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
+                ),
+            )
+            if len(devices) == 0:
+                error = "invalid_device_ip"
+            elif entry.data[CONF_DEVICE_ID] not in devices:
+                error = "invalid_device_id_for_ip"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_IP_ADDRESS,
+                        default=(user_input or entry.data)[CONF_IP_ADDRESS],
+                    ): str
+                }
+            ),
+            errors={"base": error} if error else None,
+        )
+
     def _show_manually_form(
         self,
         user_input: dict[str, Any] | None,
