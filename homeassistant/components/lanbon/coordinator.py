@@ -88,7 +88,16 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
     @override
     async def _async_setup(self) -> None:
         """Read gateway info and whether events WebSocket is advertised."""
-        self.info = await self.client.get_info()
+        try:
+            self.info = await self.client.get_info()
+        except LanbonAuthError as err:
+            raise ConfigEntryAuthFailed("unauthorized") from err
+        except (
+            LanbonConnectionError,
+            LanbonTimeoutError,
+            LanbonError,
+        ) as err:
+            raise UpdateFailed(type(err).__name__) from err
         self._use_ws = bool(self.info.events_websocket)
 
     @override
