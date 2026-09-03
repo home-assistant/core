@@ -23,7 +23,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.translation import async_get_translations
 
-from .common import SCHLAGE_BE469_LOCK_ENTITY
+from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
 
 from tests.common import MockConfigEntry
 
@@ -556,7 +556,7 @@ async def test_condition_description_fields_match_schema(
 @pytest.mark.usefixtures("integration")
 async def test_value_command_class_options(hass: HomeAssistant) -> None:
     """Test the value condition's command class options match the CommandClass enum."""
-    expected = {str(cc.value) for cc in CommandClass}
+    expected = {str(cc.value) for cc in CommandClass if cc not in COMMAND_CLASS_MARKERS}
     descriptions = await condition.async_get_all_descriptions(hass)
     options = descriptions[f"{DOMAIN}.value"]["fields"]["command_class"]["selector"][
         "select"

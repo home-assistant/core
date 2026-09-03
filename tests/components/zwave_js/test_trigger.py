@@ -42,7 +42,7 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import SCHLAGE_BE469_LOCK_ENTITY
+from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
@@ -1521,7 +1521,7 @@ async def test_zwave_js_old_syntax(
 @pytest.mark.usefixtures("integration")
 async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
     """Test the command class options and translations match the CommandClass enum."""
-    expected = {str(cc.value) for cc in CommandClass}
+    expected = {str(cc.value) for cc in CommandClass if cc not in COMMAND_CLASS_MARKERS}
 
     descriptions = await trigger.async_get_all_descriptions(hass)
     options = descriptions[f"{DOMAIN}.value_updated"]["fields"]["command_class"][
