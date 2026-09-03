@@ -398,8 +398,8 @@ def _normalize_states(
 
         if convert is not None:
             if (converted_fstate := convert(fstate)) is None:
-                # Exclude states which can't be converted, e.g. zero has no
-                # representation in an inverse unit such as kWh/100km
+                # Exclude states which can't be converted, e.g. converting 0
+                # between kWh/100km and km/kWh would divide by zero
                 continue
             fstate = converted_fstate
 
