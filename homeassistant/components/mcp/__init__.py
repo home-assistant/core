@@ -1,17 +1,15 @@
 """The Model Context Protocol integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
-from .const import CONF_ACCESS_TOKEN, CONF_AUTHORIZATION_URL, CONF_TOKEN_URL, DOMAIN
+from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import ModelContextProtocolCoordinator, TokenManager
 from .types import ModelContextProtocolConfigEntry
 
@@ -42,14 +40,11 @@ async def async_get_config_entry_implementation(
 async def _create_token_manager(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
 ) -> TokenManager | None:
-    """Create a OAuth token manager for the config entry if the server requires authentication."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    """Create a OAuth token manager for the config entry.
+
+    Returns None if the server does not require authentication.
+    """
+    implementation = await async_get_config_entry_implementation(hass, entry)
     if not implementation:
         return None
 
@@ -70,11 +65,12 @@ async def async_setup_entry(
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
     await coordinator.async_config_entry_first_refresh()
 
+    api_id = f"{DOMAIN}-{entry.data.get(CONF_SLUG, entry.entry_id)}"
     unsub = llm.async_register_api(
         hass,
         ModelContextProtocolAPI(
             hass=hass,
-            id=f"{DOMAIN}-{entry.entry_id}",
+            id=api_id,
             name=entry.title,
             coordinator=coordinator,
         ),
@@ -99,6 +95,7 @@ class ModelContextProtocolAPI(llm.API):
 
     coordinator: ModelContextProtocolCoordinator
 
+    @override
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:

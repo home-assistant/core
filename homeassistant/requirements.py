@@ -1,7 +1,5 @@
 """Module to handle installing requirements."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import contextlib
@@ -33,7 +31,7 @@ DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
 }
 DEPRECATED_PACKAGES: dict[str, tuple[str, str]] = {
     # old_package_name: (reason, breaks_in_ha_version)
-    "pyserial-asyncio": ("should be replaced by pyserial-asyncio-fast", "2026.7"),
+    "pyserial-asyncio": ("should be replaced by serialx", "2027.2"),
 }
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +65,7 @@ async def async_process_requirements(
     """Install the requirements for a component or platform.
 
     This method is a coroutine. It will raise RequirementsNotFound
-    if an requirement can't be satisfied.
+    if a requirement can't be satisfied.
     """
     await _async_get_manager(hass).async_process_requirements(
         name, requirements, is_built_in
@@ -254,7 +252,7 @@ class RequirementsManager:
         """Install the requirements for a component or platform.
 
         This method is a coroutine. It will raise RequirementsNotFound
-        if an requirement can't be satisfied.
+        if a requirement can't be satisfied.
         """
         if DEPRECATED_PACKAGES or self.hass.config.skip_pip_packages:
             all_requirements = {

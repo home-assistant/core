@@ -1,10 +1,8 @@
 """Support for KNX fan entities."""
 
-from __future__ import annotations
-
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 from xknx.devices import Fan as XknxFan
@@ -12,7 +10,7 @@ from xknx.telegram.address import parse_device_group_address
 
 from homeassistant import config_entries
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import (
@@ -27,7 +25,12 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, FanConf
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import FanSchema
 from .storage.const import (
@@ -62,7 +65,8 @@ def async_migrate_yaml_uids(
             break
     else:
         _LOGGER.info(
-            "No YAML entry found to migrate fan entity '%s' unique_id from '%s'. Removing entry",
+            "No YAML entry found to migrate fan entity '%s'"
+            " unique_id from '%s'. Removing entry",
             none_entity_id,
             invalid_uid,
         )
@@ -82,7 +86,8 @@ def async_migrate_yaml_uids(
             new_uid,
         )
     except ValueError:
-        # New unique_id already exists - remove invalid entry. User might have changed YAML
+        # New unique_id already exists - remove invalid
+        # entry. User might have changed YAML
         _LOGGER.info(
             "Failed to migrate fan entity '%s' unique_id from '%s' to '%s'. "
             "Removing the invalid entry",
@@ -117,7 +122,7 @@ async def async_setup_entry(
             KnxYamlFan(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.FAN):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.FAN):
         entities.extend(
             KnxUiFan(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -138,11 +143,13 @@ class _KnxFan(FanEntity):
             return math.ceil(percentage_to_ranged_value(self._step_range, percentage))
         return percentage
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self._device.set_speed(self._get_knx_speed(percentage))
 
     @cached_property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         flags = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
@@ -153,6 +160,7 @@ class _KnxFan(FanEntity):
         return flags
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if self._device.current_speed is None:
@@ -165,6 +173,7 @@ class _KnxFan(FanEntity):
         return self._device.current_speed
 
     @cached_property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         if self._step_range is None:
@@ -172,10 +181,12 @@ class _KnxFan(FanEntity):
         return int_states_in_range(self._step_range)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the current fan state of the device."""
         return self._device.is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -186,15 +197,18 @@ class _KnxFan(FanEntity):
         speed = self._get_knx_speed(percentage) if percentage is not None else None
         await self._device.turn_on(speed)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._device.turn_off()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._device.set_oscillation(oscillating)
 
     @property
+    @override
     def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._device.current_oscillation
@@ -224,13 +238,10 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                str(self._device.speed.group_address)
-                if self._device.speed.group_address
-                else str(self._device.switch.group_address)
+            unique_id=build_yaml_unique_id(
+                self._device.speed.group_address or self._device.switch.group_address
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None

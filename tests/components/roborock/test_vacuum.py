@@ -1,10 +1,12 @@
 """Tests for Roborock vacuums."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
+from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
@@ -19,6 +21,7 @@ from homeassistant.components.roborock.services import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+    SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
 )
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -45,11 +48,12 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, set_trait_attributes
 from .mock_data import STATUS
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
@@ -140,6 +144,29 @@ async def test_commands(
     )
     assert vacuum_command.send.call_count == 1
     assert vacuum_command.send.call_args == call(command, params=called_params)
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        ENTITY_ID,
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_set_fan_speed_invalid(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test calling set_fan_speed with an invalid mode."""
+    with pytest.raises(ServiceValidationError, match="Invalid fan speed: some-mode"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, "fan_speed": "some-mode"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -293,13 +320,70 @@ async def test_goto_not_supported(
         )
 
 
+async def test_zoned_cleaning(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    vacuum_command: Mock,
+) -> None:
+    """Test cleaning specific zones."""
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            "x1": 28582,
+            "y1": 21363,
+            "x2": 27425,
+            "y2": 22816,
+            "repeats": 0,
+        },
+        blocking=True,
+    )
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == (
+        call(RoborockCommand.APP_ZONED_CLEAN, params=[[28582, 21363, 27425, 22816, 0]])
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_zoned_cleaning_not_supported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test that unsupported vacuums raise ServiceNotSupported for zoned cleaning."""
+    with pytest.raises(
+        ServiceNotSupported,
+        match="does not support action roborock.set_vacuum_zoned_cleaning",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "x1": 28582,
+                "y1": 21363,
+                "x2": 27425,
+                "y2": 22816,
+                "repeats": 0,
+            },
+            blocking=True,
+        )
+
+
 async def test_get_current_position(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that the service for getting the current position outputs the correct coordinates."""
+    """Test get current position outputs the correct coordinates."""
     fake_vacuum.v1_properties.map_content.map_data.vacuum_position = Point(x=123, y=456)
 
     response = await hass.services.async_call(
@@ -322,7 +406,7 @@ async def test_get_current_position_no_map_data(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that the service for getting the current position handles no map data error."""
+    """Test get current position handles no map data error."""
     fake_vacuum.v1_properties.map_content.map_data = None
 
     with (
@@ -344,7 +428,7 @@ async def test_get_current_position_no_robot_position(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that the service for getting the current position handles no robot position error."""
+    """Test get current position handles no robot position error."""
     fake_vacuum.v1_properties.map_content.map_data.vacuum_position = None
 
     with (
@@ -506,12 +590,13 @@ async def test_clean_segments_mixed_maps(
     entity_registry: er.EntityRegistry,
     vacuum_command: Mock,
 ) -> None:
-    """Test that clean_area service cleans only current-map segments when given segments from multiple maps."""
+    """Test clean_area only cleans current-map segments."""
     entity_registry.async_update_entity_options(
         ENTITY_ID,
         VACUUM_DOMAIN,
         {
-            # area_1 maps to segments from both maps; only map 1 (Downstairs) is current.
+            # area_1 maps to segments from both maps; only map 1
+            # (Downstairs) is current.
             "area_mapping": {"area_1": ["0_16", "1_17"]},
             "last_seen_segments": [
                 {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
@@ -527,7 +612,8 @@ async def test_clean_segments_mixed_maps(
         blocking=True,
     )
 
-    # Only the segment from the current map (map 1) is cleaned; segment from map 0 is ignored.
+    # Only the segment from the current map (map 1) is cleaned;
+    # segment from map 0 is ignored.
     assert vacuum_command.send.call_count == 1
     assert vacuum_command.send.call_args == call(
         RoborockCommand.APP_SEGMENT_CLEAN,
@@ -539,9 +625,10 @@ async def test_segments_changed_issue(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that a repair issue is created when segments change after area mapping is configured."""
+    """Test repair issue created when segments change after mapping."""
     entity_entry = entity_registry.async_get(ENTITY_ID)
     assert entity_entry is not None
     entity_registry.async_update_entity_options(
@@ -557,15 +644,46 @@ async def test_segments_changed_issue(
         },
     )
 
-    coordinator = setup_entry.runtime_data.v1[0]
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(VACUUM_DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
+
+
+async def test_segments_changed_issue_no_map_info(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test no repair issue is created when map info is not loaded/empty."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_99", "name": "Old room", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    # Map info not loaded
+    fake_vacuum.v1_properties.home.home_map_info = None
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    issue_id = f"segments_changed_{entity_entry.id}"
+    issue = issue_registry.async_get_issue(VACUUM_DOMAIN, issue_id)
+    assert issue is None
 
 
 @pytest.fixture(name="q7_vacuum_api", autouse=False)
@@ -775,6 +893,26 @@ async def test_q7_activity_none_status(
     assert vacuum.state == "unknown"
 
 
+async def test_q7_working_sleep_is_paused(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test a cleaning job that fell asleep is reported as paused."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties._props_data.status = (
+        WorkStatusMapping.WORKING_SLEEP
+    )
+
+    coordinator = setup_entry.runtime_data.b01_q7[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == "paused"
+
+
 @pytest.fixture(name="q10_vacuum_api", autouse=False)
 def fake_q10_vacuum_api_fixture(
     fake_q10_vacuum: FakeDevice,
@@ -789,6 +927,7 @@ def fake_q10_vacuum_api_fixture(
         api.vacuum.stop_clean.side_effect = send_message_exception
         api.vacuum.return_to_dock.side_effect = send_message_exception
         api.vacuum.set_fan_level.side_effect = send_message_exception
+        api.vacuum.clean_segments.side_effect = send_message_exception
         api.command.send.side_effect = send_message_exception
     return api
 
@@ -878,25 +1017,6 @@ async def test_q10_set_fan_speed_command(
     )
     assert q10_vacuum_api.vacuum.set_fan_level.call_count == 1
     assert q10_vacuum_api.vacuum.set_fan_level.call_args[0] == (YXFanLevel.QUIET,)
-
-
-async def test_q10_set_invalid_fan_speed(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    q10_vacuum_api: Mock,
-) -> None:
-    """Test that setting an invalid fan speed raises an error."""
-    vacuum = hass.states.get(Q10_ENTITY_ID)
-    assert vacuum
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "invalid_speed"},
-            blocking=True,
-        )
-    assert q10_vacuum_api.vacuum.set_fan_level.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -1063,3 +1183,100 @@ async def test_q10_ha_refresh(
 
     # Verify that refresh was called
     fake_q10_vacuum.b01_q10_properties.refresh.assert_called()
+
+
+async def test_q10_get_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns rooms from the Q10 map."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q10_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "segments": [
+            {"id": "9", "name": "Bedroom", "group": None},
+            {"id": "10", "name": "Living Room", "group": None},
+        ]
+    }
+
+
+async def test_q10_get_segments_no_rooms(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns empty list when no map has been received."""
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.map.rooms = []
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q10_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"segments": []}
+
+
+async def test_q10_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that clean_area service calls clean_segments with the correct room ids."""
+    entity_registry.async_update_entity_options(
+        Q10_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"bedroom": ["9"]},
+            "last_seen_segments": [
+                {"id": "9", "name": "Bedroom", "group": None},
+                {"id": "10", "name": "Living Room", "group": None},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+        blocking=True,
+    )
+
+    assert q10_vacuum_api.vacuum.clean_segments.call_count == 1
+    assert q10_vacuum_api.vacuum.clean_segments.call_args == call([9])
+
+
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_q10_clean_segments_failed(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that a clean_segments failure raises HomeAssistantError."""
+    entity_registry.async_update_entity_options(
+        Q10_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"bedroom": ["9"]},
+            "last_seen_segments": [
+                {"id": "9", "name": "Bedroom", "group": None},
+            ],
+        },
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+            blocking=True,
+        )

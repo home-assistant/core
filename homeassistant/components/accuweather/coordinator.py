@@ -1,13 +1,11 @@
 """The AccuWeather coordinator."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -64,7 +62,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
         """Initialize."""
         self.accuweather = accuweather
         self.location_key = accuweather.location_key
-        name = config_entry.data[CONF_NAME]
+        name = config_entry.data.get(CONF_NAME) or config_entry.title
 
         if TYPE_CHECKING:
             assert self.location_key is not None
@@ -79,6 +77,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
             update_interval=UPDATE_INTERVAL_OBSERVATION,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
@@ -122,7 +121,7 @@ class AccuWeatherForecastDataUpdateCoordinator(
         self.accuweather = accuweather
         self.location_key = accuweather.location_key
         self._fetch_method = fetch_method
-        name = config_entry.data[CONF_NAME]
+        name = config_entry.data.get(CONF_NAME) or config_entry.title
 
         if TYPE_CHECKING:
             assert self.location_key is not None
@@ -137,6 +136,7 @@ class AccuWeatherForecastDataUpdateCoordinator(
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update forecast data via library."""
         try:

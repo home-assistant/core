@@ -1,7 +1,5 @@
 """Support for Wireless Sensor Tags."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -12,8 +10,8 @@ from wirelesstagpy.binaryevent import BinaryEvent
 from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -29,6 +27,12 @@ if TYPE_CHECKING:
     from .switch import WirelessTagSwitch
 
 _LOGGER = logging.getLogger(__name__)
+
+# wirelesstagpy exposes the capacitive sensor under the "humidity" arm/disarm
+# endpoints (ArmCapSensor). Water tags report that same sensor as "moisture"
+# and have no dedicated arm_moisture/disarm_moisture method, so map it back to
+# the shared endpoint.
+ARM_KEY_OVERRIDES = {"moisture": "humidity"}
 
 NOTIFICATION_ID = "wirelesstag_notification"
 NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
@@ -65,15 +69,19 @@ class WirelessTagPlatform:
 
     def arm(self, switch: WirelessTagSwitch) -> None:
         """Arm entity sensor monitoring."""
-        func_name = f"arm_{switch.entity_description.key}"
-        if (arm_func := getattr(self.api, func_name)) is not None:
-            arm_func(switch.tag_id, switch.tag_manager_mac)
+        self._set_monitoring(switch, "arm")
 
     def disarm(self, switch: WirelessTagSwitch) -> None:
         """Disarm entity sensor monitoring."""
-        func_name = f"disarm_{switch.entity_description.key}"
-        if (disarm_func := getattr(self.api, func_name)) is not None:
-            disarm_func(switch.tag_id, switch.tag_manager_mac)
+        self._set_monitoring(switch, "disarm")
+
+    def _set_monitoring(self, switch: WirelessTagSwitch, action: str) -> None:
+        """Arm or disarm monitoring for the switch's sensor."""
+        key = ARM_KEY_OVERRIDES.get(
+            switch.entity_description.key, switch.entity_description.key
+        )
+        func = getattr(self.api, f"{action}_{key}")
+        func(switch.tag_id, switch.tag_manager_mac)
 
     def start_monitoring(self) -> None:
         """Start monitoring push events."""
@@ -113,7 +121,16 @@ class WirelessTagPlatform:
                         str(ex),
                     )
 
+        def _stop_monitoring(_event: Event) -> None:
+            """Stop cloud push monitoring on Home Assistant shutdown."""
+            self.stop_monitoring()
+
         self.api.start_monitoring(push_callback)
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_monitoring)
+
+    def stop_monitoring(self) -> None:
+        """Stop monitoring push events."""
+        self.api.stop_monitoring()
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:

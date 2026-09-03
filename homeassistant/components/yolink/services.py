@@ -32,21 +32,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_speaker_hub_play_call(service_call: ServiceCall) -> None:
         """Handle Speaker Hub audio play call."""
         service_data = service_call.data
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(service_data[ATTR_TARGET_DEVICE])
-        if device_entry is not None:
-            for entry_id in device_entry.config_entries:
-                if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-                    continue
-                if entry.domain == DOMAIN:
-                    break
-            if entry is None or entry.state != ConfigEntryState.LOADED:
+        device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+            hass, service_data[ATTR_TARGET_DEVICE], domain=DOMAIN
+        )
+        if device is not None:
+            if (
+                config_entry is None
+                or config_entry.state is not ConfigEntryState.LOADED
+            ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_config_entry",
                 )
-            home_store = hass.data[DOMAIN][entry.entry_id]
-            for identifier in device_entry.identifiers:
+            home_store = config_entry.runtime_data
+            for identifier in device.identifiers:
                 if (
                     device_coordinator := home_store.device_coordinators.get(
                         identifier[1]

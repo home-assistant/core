@@ -31,8 +31,10 @@ from homeassistant.components.homeassistant_hardware.util import (
     get_z2m_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,
+    humanize_rpi_firmware_version,
     probe_silabs_firmware_info,
     probe_silabs_firmware_type,
+    rpi_firmware_release_url,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -219,7 +221,7 @@ async def test_guess_hardware_owners_z2m(
             return_value=None,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
             return_value=multipan_addon_manager,
         ),
         patch(
@@ -290,7 +292,7 @@ async def test_guess_hardware_owners_otbr(hass: HomeAssistant) -> None:
             return_value=otbr_addon_fw_info,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
             return_value=multipan_addon_manager,
         ),
         patch(
@@ -334,7 +336,7 @@ async def test_guess_hardware_owners_multipan(hass: HomeAssistant) -> None:
             return_value=None,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
             return_value=multipan_addon_manager,
         ),
         patch(
@@ -1039,3 +1041,46 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
         call().__aenter__(ANY),
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        (None, None),
+        ("1778498402", "2026-05-11"),
+        ("1778498402-abcdef", "2026-05-11 (VL805 abcdef)"),
+        ("unknown", "unknown"),
+    ],
+    ids=["none", "timestamp", "timestamp_with_vl805", "non_numeric_fallback"],
+)
+def test_humanize_rpi_firmware_version(
+    version: str | None, expected: str | None
+) -> None:
+    """Test rendering raw Raspberry Pi firmware versions as readable strings."""
+    assert humanize_rpi_firmware_version(version) == expected
+
+
+@pytest.mark.parametrize(
+    ("board", "expected"),
+    [
+        (
+            "rpi4-64",
+            "https://github.com/raspberrypi/rpi-eeprom/blob/master/"
+            "firmware-2711/release-notes.md",
+        ),
+        (
+            "rpi5-64",
+            "https://github.com/raspberrypi/rpi-eeprom/blob/master/"
+            "firmware-2712/release-notes.md",
+        ),
+        # The Yellow's SoC (CM4 vs CM5) is unknown, so it gets the generic index.
+        (
+            "yellow",
+            "https://github.com/raspberrypi/rpi-eeprom/blob/master/releases.md",
+        ),
+    ],
+    ids=["rpi4", "rpi5", "yellow_fallback"],
+)
+def test_rpi_firmware_release_url(board: str, expected: str) -> None:
+    """Test the per-SoC firmware release notes URL."""
+    assert rpi_firmware_release_url(board) == expected

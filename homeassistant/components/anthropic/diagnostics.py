@@ -1,17 +1,14 @@
 """Diagnostics support for Anthropic."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from anthropic import __title__, __version__
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PROMPT
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
-    CONF_PROMPT,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
     CONF_WEB_SEARCH_REGION,

@@ -1,7 +1,5 @@
 """Component to create an interface to a Pilight daemon."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import functools
@@ -100,6 +98,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             pilight_client.send_code(message_data)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except OSError:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 

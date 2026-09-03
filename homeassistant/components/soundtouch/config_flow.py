@@ -1,6 +1,6 @@
 """Config flow for Bose SoundTouch integration."""
 
-from typing import Any
+from typing import Any, override
 
 from libsoundtouch import soundtouch_device
 from requests import RequestException
@@ -24,6 +24,7 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self.host: str | None = None
         self.name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -51,6 +52,7 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

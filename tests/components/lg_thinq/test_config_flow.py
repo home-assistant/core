@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.lg_thinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
@@ -21,11 +23,9 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow(
-    hass: HomeAssistant,
-    mock_config_thinq_api: AsyncMock,
-    mock_uuid: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_thinq_api: AsyncMock, mock_uuid: AsyncMock
 ) -> None:
     """Test that an thinq entry is normally created."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +55,13 @@ async def test_config_flow_invalid_pat(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]
@@ -73,17 +79,21 @@ async def test_config_flow_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_config_flow(
-    hass: HomeAssistant,
-    mock_config_thinq_api: AsyncMock,
-    mock_uuid: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_thinq_api: AsyncMock, mock_uuid: AsyncMock
 ) -> None:
     """Test that a thinq entry is normally created."""
     result = await hass.config_entries.flow.async_init(

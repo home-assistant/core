@@ -12,9 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_flipr_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_flipr_client: AsyncMock) -> None:
     """Test the full flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -27,7 +26,14 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "dummylogin",
             CONF_PASSWORD: "dummypass",
         },
@@ -51,9 +57,9 @@ async def test_full_flow(
         (ConnectionError, {"base": "cannot_connect"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_flipr_client: AsyncMock,
     exception: Exception,
     expected: dict[str, str],
@@ -64,7 +70,14 @@ async def test_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "nada",
             CONF_PASSWORD: "nadap",
         },
@@ -92,8 +105,9 @@ async def test_errors(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_flipr_found(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_flipr_client: AsyncMock
+    hass: HomeAssistant, mock_flipr_client: AsyncMock
 ) -> None:
     """Test the case where there is no flipr found."""
 
@@ -102,11 +116,19 @@ async def test_no_flipr_found(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "nada",
             CONF_PASSWORD: "nadap",
         },
     )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_flipr_id_found"}
@@ -117,7 +139,14 @@ async def test_no_flipr_found(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "dummylogin",
             CONF_PASSWORD: "dummypass",
         },

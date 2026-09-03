@@ -1,12 +1,9 @@
 """The exceptions used by Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Sequence
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientResponse, ClientResponseError, RequestInfo
+from aiohttp import ClientError, ClientResponse, ClientResponseError, RequestInfo
 from multidict import MultiMapping
 
 from .util.event_type import EventType
@@ -38,6 +35,9 @@ class HomeAssistantError(Exception):
 
     _message: str | None = None
     generate_message: bool = False
+    translation_domain: str | None = None
+    translation_key: str | None = None
+    translation_placeholders: dict[str, str] | None = None
 
     def __init__(
         self,
@@ -56,12 +56,13 @@ class HomeAssistantError(Exception):
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
 
+    @override
     def __str__(self) -> str:
         """Return exception message.
 
-        If no message was passed to `__init__`, the exception message is generated from
-        the translation_key. The message will be in English, regardless of the configured
-        language.
+        If no message was passed to `__init__`, the exception message
+        is generated from the translation_key. The message will be in
+        English, regardless of the configured language.
         """
 
         if self._message:
@@ -129,11 +130,13 @@ class TemplateError(HomeAssistantError):
             super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
-@dataclass(slots=True)
 class ConditionError(HomeAssistantError):
     """Error during condition evaluation."""
 
-    type: str
+    def __init__(self, type: str) -> None:
+        """Initialize condition error."""
+        super().__init__()
+        self.type = type
 
     @staticmethod
     def _indent(indent: int, message: str) -> str:
@@ -144,34 +147,56 @@ class ConditionError(HomeAssistantError):
         """Yield an indented representation."""
         raise NotImplementedError
 
+    @override
     def __str__(self) -> str:
         """Return string representation."""
         return "\n".join(list(self.output(indent=0)))
 
 
-@dataclass(slots=True)
 class ConditionErrorMessage(ConditionError):
     """Condition error message."""
 
-    # A message describing this error
-    message: str
+    def __init__(self, type: str, message: str) -> None:
+        """Initialize condition error with a message.
 
+        Args:
+            message: A message describing the error.
+        """
+        super().__init__(type)
+        self.message = message
+
+    @override
     def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
 
-@dataclass(slots=True)
 class ConditionErrorIndex(ConditionError):
     """Condition error with index."""
 
-    # The zero-based index of the failed condition, for conditions with multiple parts
-    index: int
-    # The total number of parts in this condition, including non-failed parts
-    total: int
-    # The error that this error wraps
-    error: ConditionError
+    def __init__(
+        self,
+        type: str,
+        *,
+        index: int,
+        total: int,
+        error: ConditionError,
+    ) -> None:
+        """Initialize condition error with index.
 
+        Args:
+            index: The zero-based index of the failed condition,
+                for conditions with multiple parts.
+            total: The total number of parts in this condition,
+                including non-failed parts.
+            error: The error that this error wraps.
+        """
+        super().__init__(type)
+        self.index = index
+        self.total = total
+        self.error = error
+
+    @override
     def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         if self.total > 1:
@@ -184,13 +209,19 @@ class ConditionErrorIndex(ConditionError):
         yield from self.error.output(indent + 1)
 
 
-@dataclass(slots=True)
 class ConditionErrorContainer(ConditionError):
     """Condition error with subconditions."""
 
-    # List of ConditionErrors that this error wraps
-    errors: Sequence[ConditionError]
+    def __init__(self, type: str, *, errors: Sequence[ConditionError]) -> None:
+        """Initialize condition error container.
 
+        Args:
+            errors: List of ConditionErrors that this error wraps.
+        """
+        super().__init__(type)
+        self.errors = errors
+
+    @override
     def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         for item in self.errors:
@@ -200,6 +231,7 @@ class ConditionErrorContainer(ConditionError):
 class IntegrationError(HomeAssistantError):
     """Base class for platform and config entry exceptions."""
 
+    @override
     def __str__(self) -> str:
         """Return a human readable error."""
         return super().__str__() or str(self.__cause__)
@@ -221,8 +253,20 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
-    """Error to indicate that the OAuth 2.0 flow could not refresh token."""
+class OAuth2TokenRequestBaseError(ConfigEntryNotReady):
+    """Base class for the errors a failed OAuth 2.0 token request raises.
+
+    Catch this to handle every token request failure; the subclasses differ in
+    whether a status was received and what should happen to the config entry.
+    """
+
+
+class OAuth2TokenRequestError(ClientResponseError, OAuth2TokenRequestBaseError):
+    """Error to indicate that the OAuth 2.0 flow could not refresh token.
+
+    Inherits ConfigEntryNotReady so setup retries without the integration having to
+    map it. Catch it explicitly to handle it differently.
+    """
 
     def __init__(
         self,
@@ -243,7 +287,7 @@ class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
             message=message,
             headers=headers,
         )
-        HomeAssistantError.__init__(self)
+        OAuth2TokenRequestBaseError.__init__(self)
         self.domain = domain
         self.translation_domain = "homeassistant"
         self.translation_key = "oauth2_helper_refresh_failed"
@@ -251,8 +295,29 @@ class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
         self.generate_message = True
 
 
+class OAuth2TokenRequestConnectionError(ClientError, OAuth2TokenRequestBaseError):
+    """Recoverable error to indicate the token request yielded no usable token.
+
+    Covers a request that never got a response and one whose response could not
+    be used, neither of which has a status to tell the causes apart.
+    """
+
+    def __init__(self, *, domain: str) -> None:
+        """Initialize OAuth2TokenRequestConnectionError."""
+        OAuth2TokenRequestBaseError.__init__(self)
+        self.domain = domain
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_transient"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
 class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
-    """Recoverable error to indicate flow could not refresh token."""
+    """Recoverable error to indicate flow could not refresh token.
+
+    Inherits ConfigEntryNotReady so setup retries without the integration having to
+    map it. Catch it explicitly to handle it differently.
+    """
 
     def __init__(self, *, domain: str, **kwargs: Any) -> None:
         """Initialize OAuth2RefreshTokenTransientError."""
@@ -263,10 +328,11 @@ class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
         self.generate_message = True
 
 
-class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
+class OAuth2TokenRequestReauthError(OAuth2TokenRequestError, ConfigEntryAuthFailed):
     """Non recoverable error to indicate the flow could not refresh token.
 
-    Re-authentication is required.
+    Inherits ConfigEntryAuthFailed so setup starts reauth without the integration
+    having to map it. Catch it explicitly to handle it differently.
     """
 
     def __init__(self, *, domain: str, **kwargs: Any) -> None:
@@ -276,6 +342,38 @@ class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
         self.translation_key = "oauth2_helper_reauth_required"
         self.translation_placeholders = {"domain": domain}
         self.generate_message = True
+
+
+class ImplementationUnavailableError(ConfigEntryNotReady):
+    """Raised when an underlying OAuth 2.0 implementation is unavailable.
+
+    Inherits ConfigEntryNotReady so setup retries without the integration having to
+    map it. Catch it explicitly to handle it differently.
+    """
+
+    def __init__(self, *args: object) -> None:
+        """Initialize the error."""
+        super().__init__(
+            *args,
+            translation_domain="homeassistant",
+            translation_key="oauth2_implementation_unavailable",
+        )
+
+
+class UnknownImplementationError(ConfigEntryAuthFailed, ValueError):
+    """Raised when a config entry references an implementation that is not registered.
+
+    Also a ValueError so callers catching that keep working. Inherits
+    ConfigEntryAuthFailed because the user has to link the account again.
+    """
+
+    def __init__(self, *args: object) -> None:
+        """Initialize the error."""
+        super().__init__(
+            *args,
+            translation_domain="homeassistant",
+            translation_key="oauth2_unknown_implementation",
+        )
 
 
 class InvalidStateError(HomeAssistantError):

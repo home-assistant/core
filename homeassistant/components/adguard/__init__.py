@@ -1,7 +1,5 @@
 """Support for AdGuard Home."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
@@ -19,9 +17,9 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -122,8 +120,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@callback
+def _async_migrate_device_identifiers(
+    hass: HomeAssistant, entry: AdGuardConfigEntry
+) -> None:
+    """Migrate devices identified by host, port and base path to the entry ID.
+
+    Those identifiers had four parts, while the device registry only supports two.
+    """
+    device_registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, entry.entry_id)}
+    migrated = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.identifiers == identifiers:
+            continue
+
+        # Downgrading recreates the old device, leaving a duplicate behind. Its
+        # entities move back to the migrated device when the platforms set up.
+        if migrated is not None:
+            device_registry.async_remove_device(device.id)
+            continue
+
+        device_registry.async_update_device(device.id, new_identifiers=identifiers)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
+    _async_migrate_device_identifiers(hass, entry)
+
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
         entry.data[CONF_HOST],

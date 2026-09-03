@@ -1,20 +1,20 @@
 """The Aladdin Connect Genie integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     device_registry as dr,
-)
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
 )
 
 from . import api
@@ -28,27 +28,19 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AladdinConnectConfigEntry
 ) -> bool:
     """Set up Aladdin Connect Genie from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(err) from err
+    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
         raise ConfigEntryNotReady from err
 
     client = AladdinConnectClient(
@@ -110,6 +102,4 @@ def remove_stale_devices(
                 break
 
         if device_id and device_id not in all_device_ids:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)

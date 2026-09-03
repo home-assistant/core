@@ -1,0 +1,105 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "This CentriConnect/MyPropane device does not match the existing device ID. Please make sure you entered the credentials correctly."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:component::centriconnect::config::step::user::data::password%]",
+          "username": "[%key:component::centriconnect::config::step::user::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::centriconnect::config::step::user::data_description::password%]",
+          "username": "[%key:component::centriconnect::config::step::user::data_description::username%]"
+        },
+        "description": "[%key:component::centriconnect::config::step::user::description%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:component::centriconnect::config::step::user::data::password%]",
+          "username": "[%key:component::centriconnect::config::step::user::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::centriconnect::config::step::user::data_description::password%]",
+          "username": "[%key:component::centriconnect::config::step::user::data_description::username%]"
+        },
+        "description": "[%key:component::centriconnect::config::step::user::description%]"
+      },
+      "user": {
+        "data": {
+          "device_id": "Device ID",
+          "password": "Device Authentication Code",
+          "username": "User ID"
+        },
+        "data_description": {
+          "device_id": "Your CentriConnect/MyPropane device ID",
+          "password": "Your CentriConnect/MyPropane device authentication code",
+          "username": "Your CentriConnect/MyPropane user ID"
+        },
+        "description": "Enter your CentriConnect/MyPropane device credentials."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert status",
+        "state": {
+          "critical_level": "Critical level",
+          "low_level": "Low level",
+          "no_alert": "No alert"
+        }
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "lte_signal_level": {
+        "name": "LTE signal level"
+      },
+      "lte_signal_strength": {
+        "name": "LTE signal strength"
+      },
+      "solar_level": {
+        "name": "Solar level"
+      },
+      "solar_voltage": {
+        "name": "Solar voltage"
+      },
+      "tank_level": {
+        "name": "Tank level"
+      },
+      "tank_remaining_volume": {
+        "name": "Tank remaining volume"
+      },
+      "tank_size": {
+        "name": "Tank size"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with device: {error}"
+    },
+    "entry_setup_failed": {
+      "message": "Could not fetch device info"
+    },
+    "unexpected_response": {
+      "message": "Unexpected response: {error}"
+    }
+  }
+}

@@ -1,7 +1,5 @@
 """Test area template functions."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -275,7 +273,7 @@ async def test_area_entities(
     )
 
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_light"])
+    assert_result_info(info, ["light.hue_5678", "light.sensor_fake_hue_light"])
     assert info.rate_limit is None
 
 
@@ -312,3 +310,67 @@ async def test_area_devices(
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_area_functions_with_child_devices(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area functions resolve child devices by effective area."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    garage = area_registry.async_get_or_create("Garage")
+    garden = area_registry.async_get_or_create("Garden")
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent.id, area_id=garage.id)
+    inheriting_child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    overriding_child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_2")},
+        parent_device_id=parent.id,
+        name="Outlet 2",
+    )
+    device_registry.async_update_child_device(overriding_child.id, area_id=garden.id)
+    entity_entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=config_entry,
+        device_id=inheriting_child.id,
+        suggested_object_id="outlet_1",
+    )
+
+    # area_id resolves a child device by its effective area
+    info = render_to_info(hass, f"{{{{ area_id('{inheriting_child.id}') }}}}")
+    assert_result_info(info, garage.id)
+    info = render_to_info(hass, f"{{{{ area_id('{overriding_child.id}') }}}}")
+    assert_result_info(info, garden.id)
+    # And for an entity on an inheriting child device
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, garage.id)
+
+    # area_name resolves a child device by its effective area
+    info = render_to_info(hass, f"{{{{ area_name('{inheriting_child.id}') }}}}")
+    assert_result_info(info, "Garage")
+
+    # area_devices includes child devices by effective area
+    info = render_to_info(hass, f"{{{{ area_devices('{garage.id}') }}}}")
+    assert_result_info(info, [parent.id, inheriting_child.id])
+    info = render_to_info(hass, f"{{{{ area_devices('{garden.id}') }}}}")
+    assert_result_info(info, [overriding_child.id])
+
+    # area_entities includes entities on child devices in the area
+    info = render_to_info(hass, f"{{{{ area_entities('{garage.id}') }}}}")
+    assert_result_info(info, [entity_entry.entity_id])

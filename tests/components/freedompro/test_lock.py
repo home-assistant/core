@@ -19,7 +19,10 @@ from .conftest import get_states_response_for_uid
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-uid = "2WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*2VAS3HTWINNZ5N6HVEIPDJ6NX85P2-AM-GSYWUCNPU0"
+uid = (
+    "2WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+    "-LQ*2VAS3HTWINNZ5N6HVEIPDJ6NX85P2-AM-GSYWUCNPU0"
+)
 
 
 async def test_lock_get_state(
@@ -30,7 +33,9 @@ async def test_lock_get_state(
 ) -> None:
     """Test states of the lock."""
 
-    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
+    device = device_registry.async_get_device_by_identifier(
+        ("freedompro", uid), init_integration.entry_id
+    )
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"

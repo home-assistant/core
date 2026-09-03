@@ -145,7 +145,8 @@ async def _async_migrate_entries(
                 continue
             if device == "pump" and source_index is None:
                 _LOGGER.debug(
-                    "Unable to parse 'source_index' from existing unique_id for pump entity '%s'",
+                    "Unable to parse 'source_index' from existing"
+                    " unique_id for pump entity '%s'",
                     source_key,
                 )
                 continue
@@ -160,7 +161,8 @@ async def _async_migrate_entries(
                 entry.domain, entry.platform, new_unique_id
             ):
                 _LOGGER.debug(
-                    "Cannot migrate '%s' to unique_id '%s', already exists for entity '%s'. Aborting",
+                    "Cannot migrate '%s' to unique_id '%s',"
+                    " already exists for entity '%s'. Aborting",
                     entry.unique_id,
                     new_unique_id,
                     existing_entity_id,

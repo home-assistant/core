@@ -1,7 +1,5 @@
 """Handles Hue resource of type `device` mapping to Home Assistant device."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aiohue.v2 import HueBridgeV2
@@ -20,7 +18,6 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -51,7 +48,11 @@ async def async_setup_devices(bridge: HueBridge):
                 name=hue_resource.metadata.name,
                 model=hue_resource.type.value.replace("_", " ").title(),
                 manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-                via_device=(DOMAIN, api.config.bridge_device.id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, api.config.bridge_device.id),
+                    config_entry_id=entry.entry_id,
+                ),
                 suggested_area=hue_resource.metadata.name
                 if hue_resource.type == ResourceTypes.ROOM
                 else None,
@@ -70,7 +71,13 @@ async def async_setup_devices(bridge: HueBridge):
         if hue_resource.id == api.config.bridge_device.id:
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
-            params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
+            # The bridge device is always registered first (see sort below), so
+            # its id can be resolved here for the via_device link.
+            params["via_device_id"] = dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, api.config.bridge_device.id),
+                config_entry_id=entry.entry_id,
+            )
         zigbee = dev_controller.get_zigbee_connectivity(hue_resource.id)
         if zigbee and zigbee.mac_address:
             params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}
@@ -80,7 +87,9 @@ async def async_setup_devices(bridge: HueBridge):
     @callback
     def remove_device(hue_device_id: str) -> None:
         """Remove device from registry."""
-        if device := dev_reg.async_get_device(identifiers={(DOMAIN, hue_device_id)}):
+        if device := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, hue_device_id), entry.entry_id
+        ):
             # note: removal of any underlying entities is handled by core
             dev_reg.async_remove_device(device.id)
 

@@ -1,5 +1,7 @@
 """The Homee binary sensor platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -154,6 +156,7 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
 
 
 async def add_binary_sensor_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
@@ -161,7 +164,7 @@ async def add_binary_sensor_entities(
     """Add homee binary sensor entities."""
     async_add_entities(
         HomeeBinarySensor(
-            attribute, config_entry, BINARY_SENSOR_DESCRIPTIONS[attribute.type]
+            hass, attribute, config_entry, BINARY_SENSOR_DESCRIPTIONS[attribute.type]
         )
         for node in nodes
         for attribute in node.attributes
@@ -177,7 +180,7 @@ async def async_setup_entry(
     """Add the homee platform for the binary sensor component."""
 
     await setup_homee_platform(
-        add_binary_sensor_entities, async_add_entities, config_entry
+        hass, add_binary_sensor_entities, async_add_entities, config_entry
     )
 
 
@@ -186,17 +189,19 @@ class HomeeBinarySensor(HomeeEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize a Homee binary sensor entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
 
         self.entity_description = description
         self._attr_translation_key = description.key
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self._attribute.current_value)

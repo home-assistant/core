@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'sabbath',
       ]),
@@ -44,8 +44,8 @@
 # name: test_select_states[platforms0-freezer][select.freezer_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'sabbath',
       ]),
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'sabbath',
       ]),
@@ -103,8 +103,8 @@
 # name: test_select_states[platforms0-freezer][select.refrigerator_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'sabbath',
       ]),

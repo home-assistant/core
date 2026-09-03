@@ -22,6 +22,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{username}",
+    "progress": {
+      "login": "Logging in and scanning for Alexa devices. This can take several minutes if you have many devices linked to your Amazon account."
+    },
     "step": {
       "reauth_confirm": {
         "data": {
@@ -58,12 +61,37 @@
     }
   },
   "entity": {
+    "event": {
+      "voice_event": {
+        "name": "Voice event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    },
     "notify": {
       "announce": {
         "name": "Announce"
       },
       "speak": {
         "name": "Speak"
+      }
+    },
+    "select": {
+      "default_device": {
+        "name": "Default device"
+      },
+      "dropin": {
+        "name": "Drop In",
+        "state": {
+          "all": "Allow drop in from anyone",
+          "home": "Allow drop in from household members",
+          "off": "Don't allow drop in"
+        }
       }
     },
     "sensor": {
@@ -81,8 +109,22 @@
       }
     },
     "switch": {
+      "announcements": {
+        "name": "Announcements"
+      },
+      "communications": {
+        "name": "Communications"
+      },
       "do_not_disturb": {
         "name": "Do not disturb"
+      }
+    },
+    "todo": {
+      "shop": {
+        "name": "Shopping list"
+      },
+      "todo": {
+        "name": "To-do list"
       }
     }
   },
@@ -93,23 +135,23 @@
     "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
     },
-    "config_entry_not_found": {
-      "message": "Config entry not found: {device_id}"
-    },
     "device_serial_number_missing": {
       "message": "Device serial number missing: {device_id}"
     },
-    "entry_not_loaded": {
-      "message": "Entry not loaded: {entry}"
-    },
-    "invalid_device_id": {
-      "message": "Invalid device ID specified: {device_id}"
+    "invalid_auth": {
+      "message": "Invalid authentication credentials: {error}"
     },
     "invalid_info_skill_value": {
       "message": "Invalid info skill {info_skill} specified"
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "select_option_not_found": {
+      "message": "Selected option not found: {option}"
+    },
+    "unknown_exception": {
+      "message": "Unknown error occurred: {error}"
     }
   },
   "selector": {

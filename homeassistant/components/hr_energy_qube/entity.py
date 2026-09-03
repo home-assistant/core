@@ -1,7 +1,5 @@
 """Base entity for Qube Heat Pump."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,5 +28,5 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Qube",
             model="Heat Pump",
-            sw_version=entry.runtime_data.sw_version,
+            sw_version=coordinator.sw_version,
         )

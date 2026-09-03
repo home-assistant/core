@@ -1,8 +1,6 @@
 """Config flow for Plaato."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
@@ -15,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -44,6 +42,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._init_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -61,6 +60,8 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),
@@ -105,7 +106,10 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
             except cloud.CloudNotConnected:
-                return self.async_abort(reason="cloud_not_connected")
+                return self.async_abort(
+                    reason="cloud_not_connected",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             self._init_info[CONF_WEBHOOK_ID] = webhook_id
             self._init_info[CONF_CLOUDHOOK] = cloudhook
 
@@ -181,6 +185,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PlaatoOptionsFlowHandler:
@@ -210,6 +215,8 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Polling interval is user-configurable, which is no longer allowed
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

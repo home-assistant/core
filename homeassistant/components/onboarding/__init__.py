@@ -1,16 +1,13 @@
 """Support to help onboard new users."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from . import views
 from .const import (
@@ -47,6 +44,7 @@ class OnboardingStoreData(TypedDict):
 class OnboardingStorage(Store[OnboardingStoreData]):
     """Store onboarding data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -64,7 +62,6 @@ class OnboardingStorage(Store[OnboardingStoreData]):
         return old_data
 
 
-@bind_hass
 @callback
 def async_is_onboarded(hass: HomeAssistant) -> bool:
     """Return if Home Assistant has been onboarded."""
@@ -72,7 +69,6 @@ def async_is_onboarded(hass: HomeAssistant) -> bool:
     return data is None or data.onboarded is True
 
 
-@bind_hass
 @callback
 def async_is_user_onboarded(hass: HomeAssistant) -> bool:
     """Return if a user has been created as part of onboarding."""

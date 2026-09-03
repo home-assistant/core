@@ -1,6 +1,6 @@
 """The Nibe Heat Pump sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from nibe.coil_groups import UNIT_COILGROUPS, UnitCoilGroup
 from nibe.exceptions import CoilNotFoundException
@@ -49,6 +49,7 @@ class NibeAlarmResetButton(CoordinatorEntity[CoilCoordinator], ButtonEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-alarm_reset"
         self._attr_device_info = coordinator.device_info
 
+    @override
     async def async_press(self) -> None:
         """Execute the command."""
         await self.coordinator.async_write_coil(self._reset_coil, 0)
@@ -56,6 +57,7 @@ class NibeAlarmResetButton(CoordinatorEntity[CoilCoordinator], ButtonEntity):
         await self.coordinator.async_read_coil(self._alarm_coil)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if coil := self.coordinator.data.get(self._alarm_coil.address):

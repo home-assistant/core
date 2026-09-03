@@ -68,7 +68,8 @@ async def test_light_device_association(
     assert device_entry.name == mock_light.name
 
 
-# This test is not light specific, it just uses the light platform to test the base entity class.
+# This test is not light specific, it just uses the light platform
+# to test the base entity class.
 async def test_entity_callbacks(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

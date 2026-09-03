@@ -1,11 +1,10 @@
 """Support for monitoring an OpenEVSE Charger."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
@@ -45,6 +44,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN, INTEGRATION_TITLE
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
@@ -52,6 +52,29 @@ from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+
+STATUS_OPTIONS: list[str] = [
+    "charging",
+    "connected",
+    "diode_check_failed",
+    "disabled",
+    "gfci_fault",
+    "gfci_self_test_failure",
+    "no_ground",
+    "not_connected",
+    "over_temperature",
+    "sleeping",
+    "stuck_relay",
+    "vent_required",
+]
+
+
+def _map_status(status: str | None) -> str | None:
+    """Map raw status string to enum option."""
+    if status is not None and (slug := slugify(status)) in STATUS_OPTIONS:
+        return slug
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -66,7 +89,9 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda ev: ev.status,
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_OPTIONS,
+        value_fn=lambda ev: _map_status(ev.status),
     ),
     OpenEVSESensorDescription(
         key="service_level",
@@ -77,7 +102,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
             "1": "level_1",
             "2": "level_2",
             "a": "automatic",
-        }.get(ev.service_level.lower()),
+        }.get(str(ev.service_level).lower()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -101,7 +126,8 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="charging_current",
         translation_key="charging_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charging_current,
@@ -117,7 +143,8 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="charging_power",
         translation_key="charging_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.MILLIWATT,
+        suggested_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charging_power,
@@ -460,6 +487,7 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.charger)

@@ -1,7 +1,5 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging
@@ -10,12 +8,17 @@ import shutil
 
 from velbusaio.controller import Velbus
 from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.helpers import get_property_key_map
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -89,6 +92,47 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
 
+async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
+    """Ensure property entity unique_ids use {serial}-{property_key} format."""
+    ent_reg = er.async_get(hass)
+
+    property_key_map = await hass.async_add_executor_job(get_property_key_map)
+    for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
+        if not entry.original_name:
+            continue
+        property_key = property_key_map.get(entry.original_name)
+        if property_key is None:
+            continue
+        # Derive the serial from the entity's own unique_id, not from the device
+        # registry, which another integration could overwrite. The program select
+        # historically used `{serial}-{channel}-program_select`; every other property
+        # uses channel number 0 (`{serial}-0`). Regular channels are always >=1, so a
+        # `-0` suffix and the `-program_select` suffix only ever belong to properties.
+        if entry.unique_id.endswith("-program_select"):
+            serial = entry.unique_id.removesuffix("-program_select").rsplit("-", 1)[0]
+        elif entry.unique_id.endswith("-0"):
+            serial = entry.unique_id.removesuffix("-0")
+        else:
+            continue
+
+        expected_unique_id = f"{serial}-{property_key}"
+        if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
+            # Target unique_id already exists (created by new code) — remove stale entry
+            _LOGGER.debug(
+                "Removing stale entity %s with outdated unique_id %s",
+                entry.entity_id,
+                entry.unique_id,
+            )
+            ent_reg.async_remove(entry.entity_id)
+        else:
+            _LOGGER.debug(
+                "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
+            )
+            ent_reg.async_update_entity(
+                entry.entity_id, new_unique_id=expected_unique_id
+            )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
     async_setup_services(hass)
@@ -110,10 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
             translation_key="connection_failed",
         ) from error
 
+    _migrate_device_identifiers(hass, entry.entry_id)
+    # Migrate unique ids before the bus scan to preserve entity history
+    await _migrate_property_unique_ids(hass, entry.entry_id)
+
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
-
-    _migrate_device_identifiers(hass, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -135,6 +181,26 @@ async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> N
     )
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a Velbus device and its sub-devices.
+
+    Sub-devices are removed along with their parent. If the device is still
+    on the bus, it may be recreated when the integration is reloaded or
+    started again.
+    """
+    if config_entry.entry_id not in device_entry.config_entries:
+        return False
+    dev_reg = dr.async_get(hass)
+    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+        if sub_device.via_device_id == device_entry.id:
+            dev_reg.async_remove_device(sub_device.id)
+    return True
+
+
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
 ) -> bool:
@@ -143,7 +209,8 @@ async def async_migrate_entry(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    # This is the config entry migration for swapping the usb unique id to the serial number
+    # This is the config entry migration for swapping the
+    # usb unique id to the serial number
     # migrate from 2.1 to 2.2
     if (
         config_entry.version < 3

@@ -7,11 +7,13 @@
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
+    for: &condition_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .temperature_units: &temperature_units
   - "°C"
@@ -32,6 +34,7 @@ is_operation_mode:
   target: *condition_water_heater_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     operation_mode:
       context:
         filter_target: target
@@ -48,6 +51,7 @@ is_target_temperature:
   target: *condition_water_heater_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

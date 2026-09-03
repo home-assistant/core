@@ -514,7 +514,11 @@ async def test_set_temperature_lock(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change settings while manual access for telephone, app, or user interface is disabled on the device",
+        match=(
+            "Can't change settings while manual access for"
+            " telephone, app, or user interface is disabled"
+            " on the device"
+        ),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -572,7 +576,11 @@ async def test_set_hvac_mode_lock(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change settings while manual access for telephone, app, or user interface is disabled on the device",
+        match=(
+            "Can't change settings while manual access for"
+            " telephone, app, or user interface is disabled"
+            " on the device"
+        ),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -619,7 +627,9 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change settings while holiday or summer mode is active on the device",
+        match=(
+            "Can't change settings while holiday or summer mode is active on the device"
+        ),
     ):
         await hass.services.async_call(
             "climate",
@@ -629,7 +639,9 @@ async def test_holidy_summer_mode(
         )
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change settings while holiday or summer mode is active on the device",
+        match=(
+            "Can't change settings while holiday or summer mode is active on the device"
+        ),
     ):
         await hass.services.async_call(
             "climate",
@@ -653,7 +665,9 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change settings while holiday or summer mode is active on the device",
+        match=(
+            "Can't change settings while holiday or summer mode is active on the device"
+        ),
     ):
         await hass.services.async_call(
             "climate",
@@ -663,7 +677,9 @@ async def test_holidy_summer_mode(
         )
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change settings while holiday or summer mode is active on the device",
+        match=(
+            "Can't change settings while holiday or summer mode is active on the device"
+        ),
     ):
         await hass.services.async_call(
             "climate",

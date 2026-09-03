@@ -193,6 +193,6 @@ async def test_entity_category_config_raises_error(
     state2 = hass.states.get("binary_sensor.test2")
     assert state2 is None
     assert (
-        "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
-        in caplog.text
+        "Entity binary_sensor.test2 cannot be added as the"
+        " entity category is set to config" in caplog.text
     )

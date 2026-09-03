@@ -68,7 +68,7 @@ async def test_disconnected_device_sensor_not_registered(
     mock_omada_site_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that if the gateway is not connected to the controller, gateway entities are not created."""
+    """Test gateway entities are not created when gateway is not connected."""
 
     await _set_test_device_status(
         hass,

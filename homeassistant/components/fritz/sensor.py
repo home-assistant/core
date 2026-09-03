@@ -1,12 +1,11 @@
 """AVM FRITZ!Box binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
+from typing import override
 
+from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 
@@ -28,42 +27,27 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DSL_CONNECTION, UPTIME_DEVIATION
+from .const import DSL_CONNECTION, LOGGER
 from .coordinator import FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 from .models import ConnectionInfo
-
-_LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
-def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
-    """Calculate uptime with deviation."""
-    delta_uptime = utcnow() - timedelta(seconds=seconds_uptime)
-
-    if (
-        not last_value
-        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
-    ):
-        return delta_uptime
-
-    return last_value
-
-
 def _retrieve_device_uptime_state(
-    status: FritzStatus, last_value: datetime
+    status: FritzStatus, last_value: datetime | None
 ) -> datetime:
     """Return uptime from device."""
-    return _uptime_calculation(status.device_uptime, last_value)
+    return utcnow() - timedelta(seconds=status.device_uptime)
 
 
 def _retrieve_connection_uptime_state(
     status: FritzStatus, last_value: datetime | None
 ) -> datetime:
     """Return uptime from connection."""
-    return _uptime_calculation(status.connection_uptime, last_value)
+    return utcnow() - timedelta(seconds=status.connection_uptime)
 
 
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
@@ -158,11 +142,11 @@ def _is_suitable_cpu_temperature(status: FritzStatus) -> bool:
     """Return whether the CPU temperature sensor is suitable."""
     try:
         cpu_temp = status.get_cpu_temperatures()[0]
-    except RequestException, IndexError:
-        _LOGGER.debug("CPU temperature not supported by the device")
+    except RequestException, IndexError, FritzConnectionException:
+        LOGGER.debug("CPU temperature not supported by the device")
         return False
     if cpu_temp == 0:
-        _LOGGER.debug("CPU temperature returns 0°C, treating as not supported")
+        LOGGER.debug("CPU temperature returns 0°C, treating as not supported")
         return False
     return True
 
@@ -200,7 +184,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
     FritzConnectionSensorEntityDescription(
         key="connection_uptime",
         translation_key="connection_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),
@@ -307,8 +291,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
 DEVICE_SENSOR_TYPES: tuple[FritzDeviceSensorEntityDescription, ...] = (
     FritzDeviceSensorEntityDescription(
         key="device_uptime",
-        translation_key="device_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
     ),
@@ -331,7 +314,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up FRITZ!Box sensors")
+    LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper = entry.runtime_data
 
     connection_info = await avm_wrapper.async_get_connection_info()
@@ -363,6 +346,7 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data["entity_states"].get(self.entity_description.key)

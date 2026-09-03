@@ -1,10 +1,8 @@
 """Switch platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, override
 
 from unifi_access_api import EmergencyStatus, UnifiAccessError
 
@@ -73,14 +71,17 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the switch is on."""
         return self.entity_description.value_fn(self.coordinator.data.emergency)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_emergency(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_emergency(False)

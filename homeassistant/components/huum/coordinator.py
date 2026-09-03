@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for Huum."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
@@ -49,6 +48,7 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> HuumStatusResponse:
         """Get the latest status data."""
 

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
 
@@ -34,6 +35,17 @@ class MonarchMoneyCashflowSensorEntityDescription(SensorEntityDescription):
     """Describe a cashflow sensor entity."""
 
     summary_fn: Callable[[MonarchCashflowSummary], StateType]
+
+
+def _account_owner_name(account: MonarchAccount) -> str | None:
+    """Return the account owner's display name."""
+    if not account.account_owner:
+        return None
+    for key in ("displayName", "name"):
+        owner_name = account.account_owner.get(key)
+        if owner_name and (owner_name := owner_name.strip()):
+            return owner_name
+    return None
 
 
 # These sensors include assets like a boat that might have value
@@ -69,6 +81,15 @@ MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda account: account.last_update,
+    ),
+)
+
+MONARCH_MONEY_OWNER_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
+    MonarchMoneyAccountSensorEntityDescription(
+        key="owner",
+        translation_key="owner",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_account_owner_name,
     ),
 )
 
@@ -146,6 +167,15 @@ async def async_setup_entry(
             sensor_description,
             account,
         )
+        for account in mm_coordinator.accounts
+        for sensor_description in MONARCH_MONEY_OWNER_SENSORS
+    )
+    entity_list.extend(
+        MonarchMoneySensor(
+            mm_coordinator,
+            sensor_description,
+            account,
+        )
         for account in mm_coordinator.value_accounts
         for sensor_description in MONARCH_MONEY_VALUE_SENSORS
     )
@@ -159,6 +189,7 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     entity_description: MonarchMoneyCashflowSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.summary_fn(self.summary_data)
@@ -170,13 +201,15 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     entity_description: MonarchMoneyAccountSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.account_data)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
-        """Return the picture of the account as provided by monarch money if it exists."""
+        """Return the picture of the account if it exists."""
         if self.entity_description.picture_fn is not None:
             return self.entity_description.picture_fn(self.account_data)
         return None

@@ -1,7 +1,5 @@
 """Preference management for camera component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Final, cast

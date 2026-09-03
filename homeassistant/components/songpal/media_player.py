@@ -1,10 +1,9 @@
 """Support for Songpal-enabled (Sony) media devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 import logging
+from typing import override
 
 from songpal import (
     ConnectChange,
@@ -121,10 +120,12 @@ class SongpalEntity(MediaPlayerEntity):
         self._active_sound_mode = None
         self._sound_modes = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to hass."""
         await self.async_activate_websocket()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await self._dev.stop_listen_notifications()
@@ -159,6 +160,11 @@ class SongpalEntity(MediaPlayerEntity):
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
         _LOGGER.debug("Activating websocket connection")
+
+        # Narrowed once here rather than at each call site: the entity is only
+        # ever added from async_setup_entry, so the platform always has an entry.
+        entry = self.platform.config_entry
+        assert entry is not None
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
@@ -217,7 +223,11 @@ class SongpalEntity(MediaPlayerEntity):
                     # back from a disconnected state.
                     await self.async_update_ha_state(force_refresh=True)
 
-            self.hass.loop.create_task(self._dev.listen_notifications())
+            entry.async_create_background_task(
+                self.hass,
+                self._dev.listen_notifications(),
+                "songpal-listen-notifications",
+            )
             _LOGGER.warning(
                 "[%s(%s)] Connection reestablished", self.name, self._dev.endpoint
             )
@@ -233,14 +243,18 @@ class SongpalEntity(MediaPlayerEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-        self.hass.loop.create_task(self._dev.listen_notifications())
+        entry.async_create_background_task(
+            self.hass, self._dev.listen_notifications(), "songpal-listen-notifications"
+        )
 
     @property
+    @override
     def unique_id(self):
         """Return a unique ID."""
         return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         connections = set()
@@ -318,6 +332,7 @@ class SongpalEntity(MediaPlayerEntity):
             _LOGGER.error("Unable to update: %s", ex)
             self._attr_available = False
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select source."""
         for out in self._sources.values():
@@ -328,10 +343,12 @@ class SongpalEntity(MediaPlayerEntity):
         _LOGGER.error("Unable to find output: %s", source)
 
     @property
+    @override
     def source_list(self):
         """Return list of available sources."""
         return [src.title for src in self._sources.values()]
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         for mode in self._sound_modes.values():
@@ -342,10 +359,12 @@ class SongpalEntity(MediaPlayerEntity):
         _LOGGER.error("Unable to find sound mode: %s", sound_mode)
 
     @property
+    @override
     def sound_mode_list(self) -> list[str] | None:
         """Return list of available sound modes.
 
-        When active mode is None it means that sound mode is unavailable on the sound bar.
+        When active mode is None it means that sound mode is
+        unavailable on the sound bar.
         Can be due to incompatible sound bar or the sound bar is in a mode that does not
         support sound mode changes.
         """
@@ -354,6 +373,7 @@ class SongpalEntity(MediaPlayerEntity):
         return [sound_mode.title for sound_mode in self._sound_modes.values()]
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return current state."""
         if self._state:
@@ -361,28 +381,33 @@ class SongpalEntity(MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
+    @override
     def source(self):
         """Return currently active source."""
         # Avoid a KeyError when _active_source is not (yet) populated
         return getattr(self._active_source, "title", None)
 
     @property
+    @override
     def sound_mode(self) -> str | None:
         """Return currently active sound_mode."""
         active_sound_mode = self._sound_modes.get(self._active_sound_mode)
         return active_sound_mode.title if active_sound_mode else None
 
     @property
+    @override
     def volume_level(self):
         """Return volume level."""
         return self._volume / self._volume_max
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         volume = int(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         try:
@@ -395,6 +420,7 @@ class SongpalEntity(MediaPlayerEntity):
                 return
             raise
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the device off."""
         try:
@@ -407,6 +433,7 @@ class SongpalEntity(MediaPlayerEntity):
                 return
             raise
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the device."""
         _LOGGER.debug("Set mute: %s", mute)

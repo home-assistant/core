@@ -1,11 +1,9 @@
 """Update coordinators for Yardian."""
 
-from __future__ import annotations
-
-import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import override
 
 from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 from pyyardian.typing import OperationInfo
@@ -40,15 +38,18 @@ class YardianCoordinatorData:
     oper_info: OperationInfo
 
 
+type YardianConfigEntry = ConfigEntry[YardianUpdateCoordinator]
+
+
 class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
     """Coordinator for Yardian API calls."""
 
-    config_entry: ConfigEntry
+    config_entry: YardianConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: YardianConfigEntry,
         controller: AsyncYardianClient,
     ) -> None:
         """Initialize Yardian API communication."""
@@ -78,6 +79,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             serial_number=self._serial,
         )
 
+    @override
     async def _async_update_data(self) -> YardianCoordinatorData:
         """Fetch data from Yardian device."""
         _LOGGER.debug(
@@ -86,11 +88,8 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             type(self.controller).__name__,
         )
         try:
-            async with asyncio.timeout(10):
-                # Fetch device state and operation info; specific exceptions are
-                # handled by the outer block to avoid double-logging.
-                dev_state = await self.controller.fetch_device_state()
-                oper_info = await self.controller.fetch_oper_info()
+            dev_state = await self.controller.fetch_device_state()
+            oper_info = await self.controller.fetch_oper_info()
 
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e

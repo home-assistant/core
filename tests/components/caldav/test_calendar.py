@@ -3,14 +3,17 @@
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
+import logging
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
+from caldav.lib.error import NotFoundError
 from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -349,8 +352,9 @@ def get_api_events(
     async def api_call(entity_id: str) -> dict[str, Any]:
         client = await hass_client()
         response = await client.get(
-            # The start/end times are arbitrary since they are ignored by `_mock_calendar`
-            # which just returns all events for the calendar.
+            # The start/end times are arbitrary since they are
+            # ignored by `_mock_calendar` which just returns all
+            # events for the calendar.
             f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
         )
         assert response.status == HTTPStatus.OK
@@ -375,6 +379,44 @@ def _mock_calendar(name: str, supported_components: list[str] | None = None) -> 
     calendar.name = name
     calendar.get_supported_components = MagicMock(return_value=supported_components)
     return calendar
+
+
+async def _get_api_events_for_vevent(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    vevent: str,
+    uid: str,
+) -> list[dict[str, Any]]:
+    """Set up a calendar holding a single VEVENT and return its events from the API.
+
+    Used by tests that assert on how one specific VEVENT property is parsed,
+    which the shared EVENTS series cannot express: it is fixed at 18 entries
+    that other tests count on.
+    """
+    calendar = Mock()
+    calendar.name = "Example"
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar.search = MagicMock(
+        return_value=[Event(None, "0.ics", vevent, calendar, uid)]
+    )
+
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient"
+    ) as mock_client:
+        mock_client.return_value.principal.return_value.calendars.return_value = [
+            calendar
+        ]
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": CALDAV_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}?start=2017-11-27&end=2017-11-28"
+    )
+    assert response.status == HTTPStatus.OK
+    return await response.json()
 
 
 @pytest.fixture(name="config")
@@ -432,7 +474,9 @@ async def test_setup_component_config(
     await setup_platform_cb()
 
     all_calendar_entities = hass.states.async_entity_ids("calendar")
-    assert all_calendar_entities == expected_entities
+    # Entities are added after a concurrent first refresh, so order is not
+    # guaranteed; assert on the set of created entities instead.
+    assert sorted(all_calendar_entities) == sorted(expected_entities)
 
 
 @pytest.mark.parametrize("tz", [UTC])
@@ -730,7 +774,10 @@ async def test_all_day_event(
     freezer: FrozenDateTimeFactory,
     target_datetime: datetime.datetime,
 ) -> None:
-    """Test that the event lasting the whole day is returned, if it's early in the local day."""
+    """Test that the event lasting the whole day is returned.
+
+    Specifically when it's early in the local day.
+    """
     freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
@@ -910,7 +957,10 @@ async def test_event_rrule_all_day_early(
     freezer: FrozenDateTimeFactory,
     target_datetime: datetime.datetime,
 ) -> None:
-    """Test that the recurring all day event is returned early in the local day, and not on the first occurrence."""
+    """Test recurring all day event is returned early in the day.
+
+    Verifies it's not returned on the first occurrence.
+    """
     freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
@@ -1063,11 +1113,82 @@ async def test_get_events_custom_calendars(
             "summary": "This is a normal event",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "uid": None,
+            "uid": "0",
             "recurrence_id": None,
             "rrule": None,
+            "status": None,
         }
     ]
+
+
+async def test_get_events_with_recurrence_id(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that uid and recurrence_id are populated from VEVENT data."""
+    vevent_with_recurrence_id = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:original-event-uid
+RECURRENCE-ID:20171127T170000Z
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T180000Z
+DTEND:20171127T190000Z
+SUMMARY:Modified occurrence
+LOCATION:Hamburg
+DESCRIPTION:This occurrence was moved
+END:VEVENT
+END:VCALENDAR"""
+    events = await _get_api_events_for_vevent(
+        hass, hass_client, vevent_with_recurrence_id, "original-event-uid"
+    )
+
+    assert len(events) == 1
+    assert events[0]["uid"] == "original-event-uid"
+    assert events[0]["recurrence_id"] == "2017-11-27 17:00:00+00:00"
+    assert events[0]["summary"] == "Modified occurrence"
+
+
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:status-event-uid
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+SUMMARY:This is an event with a status
+LOCATION:Hamburg
+DESCRIPTION:Surprisingly rainy
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR"""
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_status"),
+    [
+        pytest.param("TENTATIVE", "tentative", id="tentative"),
+        pytest.param("CONFIRMED", "confirmed", id="confirmed"),
+        pytest.param("Tentative", "tentative", id="mixed_case"),
+        pytest.param("CANCELLED", None, id="cancelled_is_not_reported"),
+        pytest.param("X-VENDOR-SPECIFIC", None, id="unsupported_value"),
+    ],
+)
+async def test_get_events_with_status(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    status: str,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is populated from VEVENT data."""
+    events = await _get_api_events_for_vevent(
+        hass, hass_client, ICS_WITH_STATUS.format(status=status), "status-event-uid"
+    )
+
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status
 
 
 @pytest.mark.parametrize(
@@ -1143,7 +1264,10 @@ async def test_config_entry_supported_components(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test that calendars are only created for VEVENT types when using a config entry."""
+    """Test calendars are only created for VEVENT types.
+
+    This applies when using a config entry.
+    """
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -1260,3 +1384,85 @@ async def test_add_vevent(
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(KeyError(), id="key_error"),
+        pytest.param(NotFoundError(), id="not_found_error"),
+    ],
+)
+async def test_missing_supported_components(
+    hass: HomeAssistant,
+    calendars: list[Mock],
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+) -> None:
+    """Test setup works when calendar raises on get_supported_components."""
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
+    calendars[0].get_supported_components.side_effect = exception
+    await setup_platform_cb()
+
+    assert hass.states.get(TEST_ENTITY)
+
+    warning_msg = (
+        "CalDAV server does not report supported components for calendar Example, "
+        "assuming it supports the requested component 'VEVENT'"
+    )
+    assert warning_msg in caplog.text
+
+    # Clear caplog and call async_get_calendars again to verify
+    # warning is not logged again
+    caplog.clear()
+    client = MagicMock()
+    client.principal().calendars.return_value = calendars
+
+    await async_get_calendars(hass, client, "VEVENT")
+    assert warning_msg not in caplog.text
+
+    # Verify that querying a *different* component for the same
+    # calendar DOES log the warning again because de-duplication
+    # is keyed by (url, component).
+    vjournal_warning = (
+        "CalDAV server does not report supported components for calendar Example. "
+        "Not assuming support for requested component 'VJOURNAL'"
+    )
+    await async_get_calendars(hass, client, "VJOURNAL")
+    assert vjournal_warning in caplog.text
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(KeyError(), id="key_error"),
+        pytest.param(NotFoundError(), id="not_found_error"),
+    ],
+)
+async def test_missing_supported_components_not_assumed(
+    hass: HomeAssistant,
+    calendars: list[Mock],
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+) -> None:
+    """Test get_calendars excludes calendars when components unavailable."""
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
+    calendars[0].get_supported_components.side_effect = exception
+    client = MagicMock()
+    client.principal().calendars.return_value = calendars
+
+    returned_calendars = await async_get_calendars(hass, client, "VJOURNAL")
+
+    assert len(returned_calendars) == 0
+    warning_msg = (
+        "CalDAV server does not report supported components for calendar Example. "
+        "Not assuming support for requested component 'VJOURNAL'"
+    )
+    assert warning_msg in caplog.text
+
+    # Clear caplog and call async_get_calendars again to verify
+    # warning is not logged again
+    caplog.clear()
+    await async_get_calendars(hass, client, "VJOURNAL")
+    assert warning_msg not in caplog.text

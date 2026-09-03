@@ -32,8 +32,10 @@ async def set_utc(hass: HomeAssistant) -> None:
         ("Midnight", "sensor.islamic_prayer_times_midnight_time"),
     ],
 )
-# In our example data, Islamic midnight occurs at 00:44 (yesterday's times, occurs today) and 00:45 (today's times, occurs tomorrow),
-# hence we check that the times roll over at exactly the desired minute
+# In our example data, Islamic midnight occurs at 00:44
+# (yesterday's times, occurs today) and 00:45 (today's times,
+# occurs tomorrow), hence we check that the times roll over at
+# exactly the desired minute
 @pytest.mark.parametrize(
     ("offset", "prayer_times"),
     [

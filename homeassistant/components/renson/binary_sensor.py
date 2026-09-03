@@ -1,8 +1,7 @@
 """Binary sensors for renson."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_CONTROL_FIELD,
@@ -115,6 +114,7 @@ class RensonBinarySensor(RensonEntity, BinarySensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         all_data = self.coordinator.data

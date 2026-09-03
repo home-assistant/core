@@ -39,7 +39,8 @@ SHARK_METADATA_DICT = [
     }
 ]
 
-# Dummy shark.properties_full for testing.  NB: this only includes those properties in the tests
+# Dummy shark.properties_full for testing.
+# NB: this only includes those properties in the tests
 SHARK_PROPERTIES_DICT = {
     "Battery_Capacity": {"base_type": "integer", "read_only": True, "value": 50},
     "Charging_Status": {"base_type": "boolean", "read_only": True, "value": 0},

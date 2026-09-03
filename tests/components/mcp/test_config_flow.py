@@ -9,9 +9,11 @@ import pytest
 import respx
 
 from homeassistant import config_entries
+from homeassistant.components.mcp.auth import AuthenticateHeader
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
+    CONF_SLUG,
     CONF_TOKEN_URL,
     DOMAIN,
 )
@@ -19,6 +21,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .conftest import (
     AUTH_DOMAIN,
@@ -67,6 +70,13 @@ SCOPES = ["read", "write"]
 CALLBACK_PATH = "/auth/external/callback"
 OAUTH_CALLBACK_URL = f"https://example.com{CALLBACK_PATH}"
 OAUTH_CODE = "abcd"
+ADDON_NAME = "Example MCP Server"
+ADDON_DISCOVERY_INFO = HassioServiceInfo(
+    config={"addon": ADDON_NAME, CONF_URL: MCP_SERVER_URL},
+    name=ADDON_NAME,
+    slug="example_mcp_server",
+    uuid="1234",
+)
 OAUTH_TOKEN_PAYLOAD = {
     "refresh_token": "mock-refresh-token",
     "access_token": "mock-access-token",
@@ -219,9 +229,8 @@ async def test_input_form_validation_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_unique_url(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_unique_url(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
     """Test that the same url cannot be configured twice."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -251,10 +260,9 @@ async def test_unique_url(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_server_missing_capbilities(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
+    hass: HomeAssistant, mock_mcp_client: Mock
 ) -> None:
     """Test we handle different client library errors."""
     result = await hass.config_entries.flow.async_init(
@@ -277,12 +285,11 @@ async def test_server_missing_capbilities(
 
 
 @respx.mock
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_oauth_discovery_flow_without_credentials(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
+    hass: HomeAssistant, mock_mcp_client: Mock
 ) -> None:
-    """Test for an OAuth discoveryflow for an MCP server where the user has not yet entered credentials."""
+    """Test OAuth discoveryflow when user has no credentials yet."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -302,8 +309,8 @@ async def test_oauth_discovery_flow_without_credentials(
         },
     )
 
-    # The config flow will abort and the user will be taken to the application credentials UI
-    # to enter their credentials.
+    # The config flow will abort and the user will be taken to the
+    # application credentials UI to enter their credentials.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
@@ -334,7 +341,9 @@ async def perform_oauth_flow(
     assert result["url"] == (
         f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={OAUTH_CALLBACK_URL}"
-        f"&state={state}{scope_param}"
+        f"&state={state}"
+        # Asked for so the server hands back a refresh token
+        f"&access_type=offline&prompt=consent{scope_param}"
     )
 
     client = await hass_client_no_auth()
@@ -481,7 +490,9 @@ async def test_authentication_flow(
             SCOPES_SUPPORTED,
         ),
         (
-            'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery" scope="read write"',
+            'Bearer error="invalid_token",'
+            ' resource_metadata="https://example.com/custom-discovery"'
+            ' scope="read write"',
             "https://example.com/custom-discovery",
             ["read", "write"],
         ),
@@ -508,8 +519,9 @@ async def test_authentication_discovery_via_header(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
-    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    # MCP Server returns 401 when first trying to connect via config
+    # flow validate_input. The response value has a WWW-Authenticate
+    # header with a full URL for the resource metadata.
     mock_mcp_client.side_effect = httpx.HTTPStatusError(
         "Authentication required",
         request=None,
@@ -582,7 +594,7 @@ async def test_authentication_discovery_via_header(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 @pytest.mark.parametrize(
     ("resource_metadata"),
@@ -616,7 +628,6 @@ async def test_authentication_discovery_via_header(
 )
 async def test_invalid_protected_resource_metadata(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -628,8 +639,9 @@ async def test_invalid_protected_resource_metadata(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
-    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    # MCP Server returns 401 when first trying to connect via config
+    # flow validate_input. The response value has a WWW-Authenticate
+    # header with a full URL for the resource metadata.
     resource_metadata_url = "https://example.com/custom-discovery"
     mock_mcp_client.side_effect = httpx.HTTPStatusError(
         "Authentication required",
@@ -637,7 +649,10 @@ async def test_invalid_protected_resource_metadata(
         response=httpx.Response(
             401,
             headers={
-                "WWW-Authenticate": f'Bearer error="invalid_token", resource_metadata="{resource_metadata_url}"',
+                "WWW-Authenticate": (
+                    'Bearer error="invalid_token",'
+                    f' resource_metadata="{resource_metadata_url}"'
+                ),
             },
         ),
     )
@@ -676,11 +691,10 @@ async def test_invalid_protected_resource_metadata(
         (Exception, "unknown"),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_oauth_discovery_failure(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -722,11 +736,10 @@ async def test_oauth_discovery_failure(
         (Exception, "unknown"),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_authentication_flow_server_failure_abort(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -780,11 +793,10 @@ async def test_authentication_flow_server_failure_abort(
     assert result["reason"] == expected_error
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_authentication_flow_server_missing_tool_capabilities(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -891,4 +903,448 @@ async def test_reauth_flow(
     token.pop("expires_at")
     assert token == OAUTH_TOKEN_PAYLOAD
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_upgrade_to_oauth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth flow upgrading a no-auth entry to OAuth."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    auth_header = AuthenticateHeader(
+        resource_metadata_url="https://example.com/custom-discovery",
+        scopes=SCOPES_SUPPORTED,
+    )
+
+    # Start reauth flow passing auth_header
+    config_entry.async_start_reauth(hass, data={"auth_header": auth_header})
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    # Mock discovery URLs (bypassing connection validation)
+    respx.get("https://example.com/custom-discovery").mock(
+        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    # Click Submit on reauth_confirm
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Flow should proceed to credentials choice
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "next_step_id": "pick_implementation",
+        },
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=SCOPES_SUPPORTED,
+    )
+
+    # Verify we can connect to the server now with the token
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    # Return success for validation in async_oauth_create_entry
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert config_entry.unique_id is None
+    assert config_entry.title == TEST_API_NAME
+    data = {**config_entry.data}
+    token = data.pop(CONF_TOKEN)
+    assert data == {
+        "auth_implementation": AUTH_DOMAIN,
+        CONF_URL: MCP_SERVER_URL,
+        CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+        CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: SCOPES_SUPPORTED,
+    }
+    assert token
+    token.pop("expires_at")
+    assert token == OAUTH_TOKEN_PAYLOAD
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_upgrade_to_oauth_no_auth_header(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth flow upgrading a no-auth entry to OAuth when no auth header is passed (fallback)."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Start reauth flow without passing auth_header
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    # Mock discovery on the default server URL (since there is no auth_header)
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    # Click Submit on reauth_confirm
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Flow should proceed directly to credentials choice menu (without validate_input)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_missing_implementation(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth recovers when the stored implementation was removed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "removed",
+            CONF_URL: MCP_SERVER_URL,
+            CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+            CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        },
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Instead of erroring out, the user can pick or create credentials again
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=SCOPES,
+    )
+
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # The entry now points at an implementation that exists again
+    assert config_entry.data["auth_implementation"] == AUTH_DOMAIN
+    assert config_entry.data[CONF_TOKEN]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_hassio_discovery_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test the discovery flow for an MCP server provided by an app."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": ADDON_NAME}
+
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_API_NAME
+    assert result["data"] == {
+        CONF_URL: MCP_SERVER_URL,
+        CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+    }
+    # The discovery uuid lets Supervisor remove the entry with the app
+    assert result["result"]
+    assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({}, id="missing_url"),
+        pytest.param({CONF_URL: "not a url"}, id="invalid_url"),
+        pytest.param({CONF_URL: "http://[::1/mcp"}, id="unparsable_url"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_invalid_url(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
+    """Test an app that sends discovery info without a usable URL."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=config,
+            name=ADDON_NAME,
+            slug="example_mcp_server",
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+@pytest.mark.parametrize(
+    "entry_url",
+    [
+        pytest.param("http://1.1.1.1:9999/mcp", id="app_moved"),
+        pytest.param(MCP_SERVER_URL, id="app_restarted"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_updates_url(
+    hass: HomeAssistant, entry_url: str
+) -> None:
+    """Test discovery of an already configured app keeps its entry up to date."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ADDON_DISCOVERY_INFO.uuid,
+        data={CONF_URL: entry_url},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == {CONF_URL: MCP_SERVER_URL}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test the discovered MCP server is already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        (httpx.TimeoutException("Some timeout"), "timeout_connect"),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            "cannot_connect",
+        ),
+        (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_mcp_client_error(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    side_effect: Exception,
+    expected_reason: str,
+) -> None:
+    """Test the discovered MCP server cannot be reached."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+    mock_mcp_client.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_missing_capabilities(
+    hass: HomeAssistant, mock_mcp_client: Mock
+) -> None:
+    """Test the discovered MCP server does not support tools."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    response.capabilities.tools = None
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_capabilities"
+
+
+@respx.mock
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_requires_authentication(
+    hass: HomeAssistant, mock_mcp_client: Mock
+) -> None:
+    """Test the discovered MCP server continues into the OAuth flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # The user is taken to the application credentials UI to enter credentials.
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_hassio_discovery_authentication_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test an OAuth flow for a discovered MCP server keeps the discovery uuid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        scopes=SCOPES,
+    )
+
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"]
+    assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1

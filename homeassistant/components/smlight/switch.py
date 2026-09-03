@@ -1,11 +1,9 @@
 """Support for SLZB-06 switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmlight import Sensors, SettingsEvent
 from pysmlight.const import Settings
@@ -96,6 +94,7 @@ class SmSwitch(SmEntity, SwitchEntity):
 
         self._page, self._toggle = description.setting.value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -117,15 +116,18 @@ class SmSwitch(SmEntity, SwitchEntity):
                 self.entity_description.setting, event.setting[self._toggle]
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.set_smlight(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.set_smlight(False)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.entity_description.state_fn(self.coordinator.data.sensors)

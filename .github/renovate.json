@@ -6,8 +6,13 @@
     "pep621",
     "pip_requirements",
     "pre-commit",
+    "dockerfile",
+    "npm",
+    "custom.regex",
     "homeassistant-manifest"
   ],
+
+  "ignorePaths": ["**/node_modules/**"],
 
   "pre-commit": {
     "enabled": true
@@ -20,11 +25,34 @@
     ]
   },
 
+  "dockerfile": {
+    "managerFilePatterns": ["/^Dockerfile$/"]
+  },
+
   "homeassistant-manifest": {
     "managerFilePatterns": [
       "/^homeassistant/components/[^/]+/manifest\\.json$/"
     ]
   },
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update ruff required-version in pyproject.toml",
+      "managerFilePatterns": ["/^pyproject\\.toml$/"],
+      "matchStrings": ["required-version = \">=(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ruff",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "Update go2rtc RECOMMENDED_VERSION in const.py alongside the Dockerfile pin",
+      "managerFilePatterns": ["/^homeassistant/components/go2rtc/const\\.py$/"],
+      "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ghcr.io/alexxit/go2rtc",
+      "datasourceTemplate": "docker"
+    }
+  ],
 
   "minimumReleaseAge": "7 days",
   "prConcurrentLimit": 10,
@@ -79,6 +107,52 @@
       "labels": ["dependency", "core"]
     },
     {
+      "description": "Common Python utilities (allowlisted)",
+      "matchPackageNames": [
+        "astral",
+        "atomicwrites-homeassistant",
+        "audioop-lts",
+        "awesomeversion",
+        "bcrypt",
+        "ciso8601",
+        "cronsim",
+        "defusedxml",
+        "fnv-hash-fast",
+        "getmac",
+        "ical",
+        "ifaddr",
+        "lru-dict",
+        "mutagen",
+        "propcache",
+        "pyserial",
+        "python-slugify",
+        "PyTurboJPEG",
+        "securetar",
+        "standard-aifc",
+        "standard-telnetlib",
+        "ulid-transform",
+        "unidiff",
+        "url-normalize",
+        "xmltodict"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Home Assistant ecosystem packages (core-maintained, no cooldown)",
+      "matchPackageNames": [
+        "hassil",
+        "home-assistant-bluetooth",
+        "home-assistant-frontend",
+        "home-assistant-intents",
+        "infrared-protocols",
+        "rf-protocols"
+      ],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency", "core"]
+    },
+    {
       "description": "Test dependencies (allowlisted)",
       "matchPackageNames": [
         "pytest",
@@ -110,6 +184,15 @@
       "labels": ["dependency"]
     },
     {
+      "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
       "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
       "matchPackageNames": ["/^types-/"],
       "matchUpdateTypes": ["patch"],
@@ -125,6 +208,13 @@
         "zizmorcore/zizmor-pre-commit"
       ],
       "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Docker allowlist (ghcr.io exposes no release timestamps so the global cooldown needs to be bypassed)",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "enabled": true,
+      "minimumReleaseAge": null,
       "labels": ["dependency"]
     },
     {
@@ -156,6 +246,12 @@
       "matchPackageNames": ["pylint", "astroid"],
       "groupName": "pylint",
       "groupSlug": "pylint"
+    },
+    {
+      "description": "Group go2rtc Dockerfile pin with const.py RECOMMENDED_VERSION into one PR",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "groupName": "go2rtc",
+      "groupSlug": "go2rtc"
     }
   ]
 }

@@ -1,10 +1,8 @@
 """Support for Neato sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
@@ -74,6 +72,7 @@ class NeatoSensor(NeatoEntity, SensorEntity):
         _LOGGER.debug("self._state=%s", self._state)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state."""
         if self._state is not None:

@@ -1,7 +1,5 @@
 """Custom actions (previously known as services) for the Music Assistant integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from music_assistant_models.enums import MediaType, QueueOption
@@ -11,6 +9,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
+from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -38,6 +37,7 @@ from .const import (
     ATTR_LIMIT,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
+    ATTR_MESSAGE,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
@@ -51,11 +51,13 @@ from .const import (
     ATTR_SEARCH_NAME,
     ATTR_SOURCE_PLAYER,
     ATTR_TRACKS,
+    ATTR_TTS_ENTITY_ID,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import get_music_assistant_client
+from .helpers import catch_user_not_found, get_music_assistant_client
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -103,6 +105,7 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_SEARCH_ALBUM): cv.string,
                 vol.Optional(ATTR_LIMIT, default=5): vol.Coerce(int),
                 vol.Optional(ATTR_LIBRARY_ONLY, default=False): cv.boolean,
+                vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -122,6 +125,7 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_ORDER_BY): cv.string,
                 vol.Optional(ATTR_ALBUM_TYPE): list[MediaType],
                 vol.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
+                vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -140,6 +144,7 @@ def register_actions(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_ARTIST): cv.string,
             vol.Optional(ATTR_ALBUM): cv.string,
             vol.Optional(ATTR_RADIO_MODE): vol.Coerce(bool),
+            vol.Optional(ATTR_USERNAME): cv.string,
         },
         func="_async_handle_play_media",
     )
@@ -148,12 +153,22 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_ANNOUNCEMENT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={
-            vol.Required(ATTR_URL): cv.string,
-            vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
-            vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
-            vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
-        },
+        schema=vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional(ATTR_URL): cv.string,
+                    vol.Inclusive(ATTR_MESSAGE, "spoken_announcement"): cv.string,
+                    vol.Inclusive(ATTR_TTS_ENTITY_ID, "spoken_announcement"): vol.All(
+                        cv.entity_id, cv.entity_domain(TTS_DOMAIN)
+                    ),
+                    vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
+                    vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
+                    vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
+                }
+            ),
+            cv.has_at_least_one_key(ATTR_URL, ATTR_MESSAGE),
+            cv.has_at_most_one_key(ATTR_URL, ATTR_MESSAGE),
+        ),
         func="_async_handle_play_announcement",
     )
     service.async_register_platform_entity_service(
@@ -184,18 +199,21 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_name = call.data[ATTR_SEARCH_NAME]
     search_artist = call.data.get(ATTR_SEARCH_ARTIST)
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
+    search_username = call.data.get(ATTR_USERNAME)
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
     elif search_album:
         search_name = f"{search_album} - {search_name}"
     elif search_artist:
         search_name = f"{search_artist} - {search_name}"
-    search_results = await mass.music.search(
-        search_query=search_name,
-        media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
-        limit=call.data[ATTR_LIMIT],
-        library_only=call.data[ATTR_LIBRARY_ONLY],
-    )
+    with catch_user_not_found(search_username):
+        search_results = await mass.music.search(
+            search_query=search_name,
+            media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
+            limit=call.data[ATTR_LIMIT],
+            library_only=call.data[ATTR_LIBRARY_ONLY],
+            user=search_username,
+        )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {
             ATTR_ARTISTS: [
@@ -238,12 +256,14 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     limit = call.data.get(ATTR_LIMIT, DEFAULT_LIMIT)
     offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
     order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
+    username = call.data.get(ATTR_USERNAME)
     base_params = {
         "favorite": call.data.get(ATTR_FAVORITE),
         "search": call.data.get(ATTR_SEARCH),
         "limit": limit,
         "offset": offset,
         "order_by": order_by,
+        "user": username,
     }
     library_result: (
         list[Album]
@@ -254,38 +274,39 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
         | list[Audiobook]
         | list[Podcast]
     )
-    if media_type == MediaType.ALBUM:
-        library_result = await mass.music.get_library_albums(
-            **base_params,
-            album_types=call.data.get(ATTR_ALBUM_TYPE),
-        )
-    elif media_type == MediaType.ARTIST:
-        library_result = await mass.music.get_library_artists(
-            **base_params,
-            album_artists_only=bool(call.data.get(ATTR_ALBUM_ARTISTS_ONLY)),
-        )
-    elif media_type == MediaType.TRACK:
-        library_result = await mass.music.get_library_tracks(
-            **base_params,
-        )
-    elif media_type == MediaType.RADIO:
-        library_result = await mass.music.get_library_radios(
-            **base_params,
-        )
-    elif media_type == MediaType.PLAYLIST:
-        library_result = await mass.music.get_library_playlists(
-            **base_params,
-        )
-    elif media_type == MediaType.AUDIOBOOK:
-        library_result = await mass.music.get_library_audiobooks(
-            **base_params,
-        )
-    elif media_type == MediaType.PODCAST:
-        library_result = await mass.music.get_library_podcasts(
-            **base_params,
-        )
-    else:
-        raise ServiceValidationError(f"Unsupported media type {media_type}")
+    with catch_user_not_found(username):
+        if media_type == MediaType.ALBUM:
+            library_result = await mass.music.get_library_albums(
+                **base_params,
+                album_types=call.data.get(ATTR_ALBUM_TYPE),
+            )
+        elif media_type == MediaType.ARTIST:
+            library_result = await mass.music.get_library_artists(
+                **base_params,
+                album_artists_only=bool(call.data.get(ATTR_ALBUM_ARTISTS_ONLY)),
+            )
+        elif media_type == MediaType.TRACK:
+            library_result = await mass.music.get_library_tracks(
+                **base_params,
+            )
+        elif media_type == MediaType.RADIO:
+            library_result = await mass.music.get_library_radios(
+                **base_params,
+            )
+        elif media_type == MediaType.PLAYLIST:
+            library_result = await mass.music.get_library_playlists(
+                **base_params,
+            )
+        elif media_type == MediaType.AUDIOBOOK:
+            library_result = await mass.music.get_library_audiobooks(
+                **base_params,
+            )
+        elif media_type == MediaType.PODCAST:
+            library_result = await mass.music.get_library_podcasts(
+                **base_params,
+            )
+        else:
+            raise ServiceValidationError(f"Unsupported media type {media_type}")
 
     response: ServiceResponse = LIBRARY_RESULTS_SCHEMA(
         {

@@ -46,7 +46,7 @@ async def test_setting_value(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.backyard_party_mode",
+            ATTR_ENTITY_ID: "select.backyard_backyard_party_mode",
             ATTR_OPTION: "master",
         },
         blocking=True,
@@ -59,7 +59,7 @@ async def test_setting_value(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.backyard_party_mode",
+            ATTR_ENTITY_ID: "select.backyard_backyard_party_mode",
             ATTR_OPTION: "off",
         },
         blocking=True,

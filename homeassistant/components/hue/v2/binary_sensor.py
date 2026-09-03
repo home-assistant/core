@@ -1,8 +1,7 @@
 """Support for Hue binary sensors."""
 
-from __future__ import annotations
-
 from functools import partial
+from typing import override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
@@ -20,9 +19,11 @@ from aiohue.v2.controllers.sensors import (
 )
 from aiohue.v2.models.camera_motion import CameraMotion
 from aiohue.v2.models.contact import Contact, ContactState
+from aiohue.v2.models.convenience_area_motion import ConvenienceAreaMotion
 from aiohue.v2.models.entertainment_configuration import EntertainmentStatus
 from aiohue.v2.models.grouped_motion import GroupedMotion
 from aiohue.v2.models.motion import Motion
+from aiohue.v2.models.motion_area_configuration import MotionAreaHealth
 from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.security_area_motion import SecurityAreaMotion
 from aiohue.v2.models.tamper import Tamper, TamperState
@@ -71,11 +72,13 @@ def _resource_valid(resource: SensorType, controller: ControllerType) -> bool:
             ResourceTypes.SERVICE_GROUP,
         ):
             return False
-        # guard against GroupedMotion without parent (should not happen, but just in case)
+        # guard against GroupedMotion without parent
+        # (should not happen, but just in case)
         if not (parent := controller.get_parent(resource.id)):
             return False
-        # filter out GroupedMotion sensors that have only one member, because Hue creates one
-        # default grouped Motion sensor per zone/room, which is not useful to expose in HA
+        # filter out GroupedMotion sensors that have only one member,
+        # because Hue creates one default grouped Motion sensor per
+        # zone/room, which is not useful to expose in HA
         if len(parent.children) <= 1:
             return False
     # default/other checks can go here (none for now)
@@ -126,7 +129,7 @@ async def async_setup_entry(
     register_items(api.sensors.security_area_motion, HueMotionAwareSensor)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Motion sensor."""
 
@@ -140,6 +143,7 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.enabled:
@@ -152,7 +156,7 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
         return motion_feature.motion
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueGroupedMotionSensor(HueMotionSensor):
     """Representation of a Hue Grouped Motion sensor."""
 
@@ -175,30 +179,48 @@ class HueGroupedMotionSensor(HueMotionSensor):
         )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueMotionAwareSensor(HueMotionSensor):
     """Representation of a Motion sensor based on Hue Motion Aware.
 
-    Note that we only create sensors for the SecurityAreaMotion resource
-    and not for the ConvenienceAreaMotion resource, because the latter
-    does not have a state when it's not directly controlling lights.
-    The SecurityAreaMotion resource is always available with a state, allowing
-    Home Assistant users to actually use it as a motion sensor in their HA automations.
+    A MotionAware zone owns both a ConvenienceAreaMotion and a SecurityAreaMotion
+    service, and which of the two carries the motion state depends on how the zone
+    is set up in the Hue app. The source is therefore resolved from the zone, and
+    the state is unknown while neither service reports a valid one.
     """
 
     controller: SecurityAreaMotionController
     resource: SecurityAreaMotion
 
     entity_description = BinarySensorEntityDescription(
-        key="motion_sensor",
-        device_class=BinarySensorDeviceClass.MOTION,
-        has_entity_name=False,
+        key="motion_sensor", device_class=BinarySensorDeviceClass.MOTION
     )
 
     @property
+    @override
     def name(self) -> str:
         """Return sensor name."""
         return self.controller.get_motion_area_configuration(self.resource.id).name
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        zone = self._motion_area_configuration
+        # switching a zone off leaves the `enabled` flag of its services untouched,
+        # so the zone is the only reliable signal that it stopped reporting motion
+        if not zone.enabled or zone.health == MotionAreaHealth.NOT_RUNNING:
+            return None
+        # either service can be the one reporting a zone, with the other left holding
+        # a reading that no longer changes, so take the first that has a valid one.
+        # The convenience service comes first because a zone that is bound to lights
+        # reports on that service.
+        for source in (self._convenience_service, self.resource):
+            if source is None or not source.enabled or source.motion is None:
+                continue
+            if (value := source.motion.value) is not None:
+                return value
+        return None
 
     def __init__(
         self,
@@ -218,6 +240,7 @@ class HueMotionAwareSensor(HueMotionSensor):
             identifiers={(DOMAIN, self.hue_group.id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -227,9 +250,35 @@ class HueMotionAwareSensor(HueMotionSensor):
                 self._handle_event, self._motion_area_configuration.id
             )
         )
+        # zones that are bound to lights report their motion on the convenience service
+        if (service_id := self._convenience_service_id) is not None:
+            self.async_on_remove(
+                self.bridge.api.sensors.convenience_area_motion.subscribe(
+                    self._handle_event, service_id
+                )
+            )
+
+    @property
+    def _convenience_service_id(self) -> str | None:
+        """Return the id of this zone's ConvenienceAreaMotion service, if it has one."""
+        return next(
+            (
+                service.rid
+                for service in self._motion_area_configuration.services
+                if service.rtype == ResourceTypes.CONVENIENCE_AREA_MOTION
+            ),
+            None,
+        )
+
+    @property
+    def _convenience_service(self) -> ConvenienceAreaMotion | None:
+        """Return this zone's ConvenienceAreaMotion resource, if the bridge has it."""
+        if (service_id := self._convenience_service_id) is None:
+            return None
+        return self.bridge.api.sensors.convenience_area_motion.get(service_id)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
 
@@ -239,21 +288,37 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     entity_description = BinarySensorEntityDescription(
         key="entertainment_active_sensor",
         device_class=BinarySensorDeviceClass.RUNNING,
-        has_entity_name=False,
+        has_entity_name=True,
+        translation_key="entertainment_area",
     )
 
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: EntertainmentConfigurationController,
+        resource: EntertainmentConfiguration,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(bridge, controller, resource)
+        self._attr_translation_placeholders = {"area_name": resource.metadata.name}
+
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.resource.status == EntertainmentStatus.ACTIVE
 
-    @property
-    def name(self) -> str:
-        """Return sensor name."""
-        return self.resource.metadata.name
+    @callback
+    @override
+    def on_update(self) -> None:
+        """Call on update event."""
+        self._attr_translation_placeholders = {"area_name": self.resource.metadata.name}
+        # the entity name is cached, invalidate it so a rename
+        # of the entertainment area in the Hue app is picked up
+        self.__dict__.pop("name", None)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueContactSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Contact sensor."""
 
@@ -267,6 +332,7 @@ class HueContactSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.enabled:
@@ -275,7 +341,7 @@ class HueContactSensor(HueBaseEntity, BinarySensorEntity):
         return self.resource.contact_report.state != ContactState.CONTACT
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Tamper sensor."""
 
@@ -290,6 +356,7 @@ class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.tamper_reports:

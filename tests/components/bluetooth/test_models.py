@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration models."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import bleak
@@ -226,7 +224,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
 async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
     hass: HomeAssistant,
 ) -> None:
-    """Test we switch to the next available proxy when one runs out of connections with no scanners."""
+    """Test switching proxy when out of connections, no scanners."""
     manager = _get_manager()
 
     switchbot_proxy_device_no_connection_slot = generate_ble_device(
@@ -494,10 +492,10 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
-async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available_macos(
+async def test_ble_device_proxy_client_out_of_connections_best_available_macos(
     hass: HomeAssistant,
 ) -> None:
-    """Test we switch to the next available proxy when one runs out of connections on MacOS."""
+    """Test switching proxy when out of connections on MacOS."""
     manager = _get_manager()
 
     switchbot_proxy_device_no_connection_slot = generate_ble_device(

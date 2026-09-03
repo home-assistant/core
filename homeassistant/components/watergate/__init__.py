@@ -1,7 +1,5 @@
 """The Watergate integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
@@ -35,7 +33,9 @@ WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
 
 PLATFORMS: list[Platform] = [
     Platform.EVENT,
+    Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.VALVE,
 ]
 

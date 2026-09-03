@@ -1,10 +1,8 @@
 """Button platform for Tessie integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.tessie import Vehicle
 
@@ -37,6 +35,14 @@ DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
     TessieButtonEntityDescription(
         key="enable_keyless_driving",
         func=lambda api: api.remote_start(),
+    ),
+    TessieButtonEntityDescription(
+        key="enable_keep_accessory_power_mode",
+        func=lambda api: api.enable_keep_accessory_power_mode(),
+    ),
+    TessieButtonEntityDescription(
+        key="disable_keep_accessory_power_mode",
+        func=lambda api: api.disable_keep_accessory_power_mode(),
     ),
     TessieButtonEntityDescription(key="boombox", func=lambda api: api.remote_boombox()),
 )
@@ -71,6 +77,7 @@ class TessieButtonEntity(TessieEntity, ButtonEntity):
         super().__init__(vehicle, description.key)
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.run(self.entity_description.func(self.api))

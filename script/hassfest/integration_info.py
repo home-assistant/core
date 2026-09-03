@@ -1,7 +1,5 @@
 """Write integration constants."""
 
-from __future__ import annotations
-
 from .model import Config, Integration, IntegrationType
 from .serializer import format_python
 

@@ -1,7 +1,5 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from http import HTTPStatus
@@ -396,7 +394,9 @@ async def handle_webhook(
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
 
-    if not (device := device_registry.async_get(device_id)):
+    if not (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ):
         return Response(
             text=f"Device not found: {device_id}",
             status=HTTPStatus.BAD_REQUEST,
@@ -435,15 +435,14 @@ def _get_media_event_data(
     event_file_path: str,
     event_file_type: int,
 ) -> dict[str, str]:
-    config_entry_id = next(iter(device.config_entries), None)
-    if (
-        not config_entry_id
-        or not (entry := hass.config_entries.async_get_entry(config_entry_id))
-        or entry.state != ConfigEntryState.LOADED
-    ):
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
         return {}
+    config_entry_id = config_entry.entry_id
 
-    coordinator: MotionEyeUpdateCoordinator = entry.runtime_data
+    coordinator: MotionEyeUpdateCoordinator = config_entry.runtime_data
     client = coordinator.client
 
     for identifier in device.identifiers:
@@ -464,7 +463,10 @@ def _get_media_event_data(
     # The file_path in the event is the full local filesystem path to the
     # media. To convert that to the media path that motionEye will
     # understand, we need to strip the root directory from the path.
-    if os.path.commonprefix([root_directory, event_file_path]) != root_directory:
+    try:
+        if os.path.commonpath([root_directory, event_file_path]) != root_directory:
+            return {}
+    except ValueError:
         return {}
 
     file_path = "/" + os.path.relpath(event_file_path, root_directory)

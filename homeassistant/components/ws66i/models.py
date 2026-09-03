@@ -1,10 +1,10 @@
 """The ws66i integration models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from pyws66i import WS66i
+
+from homeassistant.config_entries import ConfigEntry
 
 from .coordinator import Ws66iDataUpdateCoordinator
 
@@ -27,3 +27,6 @@ class Ws66iData:
     sources: SourceRep
     coordinator: Ws66iDataUpdateCoordinator
     zones: list[int]
+
+
+type Ws66iConfigEntry = ConfigEntry[Ws66iData]

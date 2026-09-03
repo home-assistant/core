@@ -1,7 +1,5 @@
 """Lannouncer platform for notify component."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA

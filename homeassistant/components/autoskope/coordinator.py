@@ -1,8 +1,7 @@
 """Data update coordinator for the Autoskope integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth, Vehicle
@@ -38,6 +37,7 @@ class AutoskopeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Vehicle]:
         """Fetch data from API endpoint."""
         try:

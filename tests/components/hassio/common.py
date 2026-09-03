@@ -1,7 +1,5 @@
 """Provide common test tools for hassio."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 import logging
 from types import MethodType
@@ -122,6 +120,7 @@ def mock_addon_info(
         supervisor_api=False,
         supervisor_role="default",
         icon=False,
+        auto_update=False,
     )
     addon_info.name = "test"
     addon_info.to_dict = MethodType(
@@ -195,6 +194,9 @@ def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | N
 
     async def set_addon_options(slug: str, options: AddonsOptions) -> None:
         """Mock set add-on options."""
+        # The Supervisor replaces the add-on options with the new config,
+        # so mirror that instead of merging.
+        addon_options.clear()
         addon_options.update(options.config)
 
     return set_addon_options

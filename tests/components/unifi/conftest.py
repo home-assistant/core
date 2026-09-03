@@ -1,13 +1,11 @@
 """Fixtures for UniFi Network methods."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any, Protocol
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiounifi.models.message import MessageKey
 import orjson
@@ -69,10 +67,18 @@ class WebsocketMessageMock(Protocol):
 @pytest.fixture(autouse=True, name="mock_discovery")
 def fixture_discovery():
     """No real network traffic allowed."""
-    with patch(
-        "homeassistant.components.unifi.config_flow._async_discover_unifi",
-        return_value=None,
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.unifi.config_flow._async_discover_unifi",
+            return_value=None,
+        ) as mock,
+        patch(
+            "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
+            return_value=MagicMock(
+                async_scan=AsyncMock(return_value=[]), found_devices=[]
+            ),
+        ),
+    ):
         yield mock
 
 
@@ -173,6 +179,7 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     firewall_policy_payload: list[dict[str, Any]],
+    object_oriented_network_config_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
     traffic_route_payload: list[dict[str, Any]],
@@ -214,6 +221,10 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/dpigroup", dpi_group_payload)
         mock_get_request(
             f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
+        )
+        mock_get_request(
+            f"/v2/api/site/{site_id}/object-oriented-network-configs",
+            object_oriented_network_config_payload,
         )
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
@@ -260,6 +271,12 @@ def fixture_dpi_group_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="firewall_policy_payload")
 def firewall_policy_payload_data() -> list[dict[str, Any]]:
     """Firewall policy data."""
+    return []
+
+
+@pytest.fixture(name="object_oriented_network_config_payload")
+def object_oriented_network_config_payload_data() -> list[dict[str, Any]]:
+    """Object-oriented network config data."""
     return []
 
 

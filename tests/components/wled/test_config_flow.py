@@ -105,7 +105,7 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
 async def test_full_reconfigure_flow_connection_error_and_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
-    """Test we show user form on WLED connection error and allows user to change host."""
+    """Test user form on WLED connection error allows host change."""
     mock_config_entry.add_to_hass(hass)
 
     # Mock connection error
@@ -229,7 +229,13 @@ async def test_form_submission_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=CONFIG,
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -299,7 +305,13 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("type") is FlowResultType.ABORT

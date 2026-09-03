@@ -1,21 +1,20 @@
 """Provide entity classes for group entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Collection, Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    ATTR_GROUP_ENTITIES,
     STATE_OFF,
     STATE_ON,
+    EntityCapabilityAttribute,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -41,7 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
-    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES})
+    _unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_ID, EntityCapabilityAttribute.GROUP_ENTITIES}
+    )
 
     _attr_should_poll = False
     _entity_ids: list[str]
@@ -76,6 +77,7 @@ class GroupEntity(Entity):
             self.hass, self._entity_ids, async_state_changed_listener
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entity_ids:
@@ -128,7 +130,7 @@ class GroupEntity(Entity):
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
-            if state.attributes.get(ATTR_ASSUMED_STATE):
+            if state.attributes.get(EntityStateAttribute.ASSUMED_STATE):
                 self._attr_assumed_state = True
                 return
 
@@ -232,6 +234,7 @@ class Group(Entity):
         mode: bool | None,
         object_id: str | None,
         order: int | None,
+        context: Context | None,
     ) -> Group:
         """Initialize a group.
 
@@ -248,6 +251,9 @@ class Group(Entity):
             order=order,
         )
 
+        if context is not None:
+            group.async_set_context(context)
+
         # If called before the platform async_setup is called (test cases)
         await async_get_component(hass).async_add_entities([group])
         return group
@@ -257,6 +263,7 @@ class Group(Entity):
         self._attr_name = value
 
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the group."""
         return self._state
@@ -266,6 +273,7 @@ class Group(Entity):
         self._attr_icon = value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes for the group."""
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
@@ -275,6 +283,7 @@ class Group(Entity):
         return data
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Test if any member has an assumed state."""
         return self._assumed_state
@@ -379,6 +388,7 @@ class Group(Entity):
         self._state = None
         self._async_update_group_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle addition to Home Assistant."""
         self._registry = self.hass.data[REG_KEY]
@@ -386,6 +396,7 @@ class Group(Entity):
         self.async_on_remove(start.async_at_start(self.hass, self._async_start))
         self.async_on_remove(self._async_deregister)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""
         self._async_stop()
@@ -426,7 +437,9 @@ class Group(Entity):
         domain = new_state.domain
         state = new_state.state
         registry = self._registry
-        self._assumed[entity_id] = bool(new_state.attributes.get(ATTR_ASSUMED_STATE))
+        self._assumed[entity_id] = bool(
+            new_state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
+        )
 
         if domain not in registry.on_states_by_domain:
             # Handle the group of a group case
@@ -458,11 +471,12 @@ class Group(Entity):
             return
 
         if tr_state is None or (
-            self._assumed_state and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
+            self._assumed_state
+            and not tr_state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
         ):
             self._assumed_state = self.mode(self._assumed.values())
 
-        elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
+        elif tr_state.attributes.get(EntityStateAttribute.ASSUMED_STATE):
             self._assumed_state = True
 
         num_on_states = len(self._on_states)

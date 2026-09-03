@@ -1,14 +1,12 @@
 """Home Assistant Cast platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
-from homeassistant.components.cast.home_assistant_cast import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.cast.home_assistant_cast import (  # pylint: disable=home-assistant-component-root-import
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,
     NO_URL_AVAILABLE_ERROR,

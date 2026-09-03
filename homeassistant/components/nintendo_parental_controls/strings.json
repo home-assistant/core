@@ -47,6 +47,9 @@
       }
     },
     "sensor": {
+      "player_playing_time": {
+        "name": "{nickname} used screen time"
+      },
       "playing_time": {
         "name": "Used screen time"
       },
@@ -84,11 +87,17 @@
     "config_entry_not_found": {
       "message": "Config entry not found."
     },
-    "device_not_found": {
-      "message": "Device not found."
-    },
     "invalid_device": {
       "message": "The specified device is not a Nintendo device."
+    },
+    "invalid_entity": {
+      "message": "The selected sensor is invalid, make sure you are selecting a Nintendo Parental Controls sensor."
+    },
+    "invalid_pin_length": {
+      "message": "The PIN code must be a 4 to 8-digit number between 0000 and 99999999."
+    },
+    "invalid_player": {
+      "message": "The selected sensor is not a player sensor entity. Make sure you have selected the used screen time sensor for a specific player."
     },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
@@ -103,15 +112,52 @@
       "fields": {
         "bonus_time": {
           "description": "The amount of bonus time to add in minutes. Maximum is 30 minutes, minimum is 5.",
-          "name": "Bonus Time"
+          "name": "Bonus time"
         },
         "device_id": {
           "description": "The ID of the device to add bonus time to.",
-          "example": "1234567890abcdef",
           "name": "Device"
         }
       },
-      "name": "Add Bonus Time"
+      "name": "Add bonus time"
+    },
+    "device_usage_report": {
+      "description": "Retrieves today's application usage details for a device.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the device to get usage details for.",
+          "name": "Device"
+        }
+      },
+      "name": "Get device usage report"
+    },
+    "player_usage_report": {
+      "description": "Retrieves today's application usage details for a specific player.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the device to get player usage details for.",
+          "name": "Device"
+        },
+        "entity_id": {
+          "description": "The player entity to get usage for.",
+          "name": "Player"
+        }
+      },
+      "name": "Get player usage report"
+    },
+    "update_pin_code": {
+      "description": "Updates the PIN code for the selected Nintendo Switch.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the device to update the PIN code for.",
+          "name": "Device"
+        },
+        "pin": {
+          "description": "The new PIN code. Enter a 4 to 8-digit PIN between 0000 and 99999999.",
+          "name": "PIN"
+        }
+      },
+      "name": "Update PIN code"
     }
   }
 }

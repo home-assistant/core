@@ -120,7 +120,7 @@ async def test_ignored(
 async def test_name_translation_availability(
     hass: HomeAssistant,
 ) -> None:
-    """Verify, that the list of available translation keys is reflected in strings.json."""
+    """Verify available translation keys are in strings.json."""
     # verify, that PLAYER_OPTIONS_TRANSLATION_KEYS_text matches strings.json
     translations = await async_get_translations(
         hass, language=LOCALE_EN, category="entity", integrations=[DOMAIN]

@@ -1,10 +1,8 @@
 """Support for Renault number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from renault_api.kamereon.models import (
     KamereonVehicleBatterySocData,
@@ -113,10 +111,12 @@ class RenaultNumberEntity[T: KamereonVehicleDataAttributes](
     entity_description: RenaultNumberEntityDescription[T]
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self.entity_description.value_fn(self)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.update_fn(self, value)

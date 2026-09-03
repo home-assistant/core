@@ -7,17 +7,10 @@ import pytest
 
 from homeassistant.components.namecheapdns.const import DOMAIN, UPDATE_URL
 from homeassistant.components.namecheapdns.helpers import AuthFailed
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_USER,
-    ConfigEntryState,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_USER_INPUT
 
@@ -85,71 +78,6 @@ async def test_form_errors(
     assert result["title"] == "home.example.com"
     assert result["data"] == TEST_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("mock_namecheap")
-async def test_import(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test import flow."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=TEST_USER_INPUT,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "home.example.com"
-    assert result["data"] == TEST_USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN,
-        issue_id=f"deprecated_yaml_{DOMAIN}",
-    )
-
-
-async def test_import_exception(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
-    mock_namecheap: AsyncMock,
-) -> None:
-    """Test import flow failed."""
-    mock_namecheap.side_effect = [False]
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=TEST_USER_INPUT,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "update_failed"
-
-    assert len(mock_setup_entry.mock_calls) == 0
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_yaml_import_issue_error",
-    )
-
-
-@pytest.mark.usefixtures("mock_namecheap")
-async def test_init_import_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test yaml triggers import flow."""
-
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {DOMAIN: TEST_USER_INPUT},
-    )
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("mock_namecheap")
@@ -315,7 +243,11 @@ async def test_initiate_reauth_flow(
     aioclient_mock.get(
         UPDATE_URL,
         params=TEST_USER_INPUT,
-        text="<interface-response><ErrCount>1</ErrCount><errors><Err1>Passwords do not match</Err1></errors></interface-response>",
+        text=(
+            "<interface-response><ErrCount>1</ErrCount><errors>"
+            "<Err1>Passwords do not match</Err1>"
+            "</errors></interface-response>"
+        ),
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

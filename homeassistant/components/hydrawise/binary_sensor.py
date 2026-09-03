@@ -1,10 +1,9 @@
 """Support for Hydrawise sprinkler binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pydrawise import Controller, Zone
 import voluptuous as vol
@@ -22,6 +21,8 @@ from homeassistant.helpers.typing import VolDictType
 from .const import SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -150,11 +151,13 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
 
     entity_description: HydrawiseBinarySensorEntityDescription
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_on = self.entity_description.value_fn(self)
 
     @property
+    @override
     def available(self) -> bool:
         """Set the entity availability."""
         if self.entity_description.always_available:

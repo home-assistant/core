@@ -1,16 +1,21 @@
 """Test text trigger."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
 from homeassistant.components.text.const import DOMAIN
+from homeassistant.components.text.trigger import TRIGGERS
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     BasicTriggerStateDescription,
+    TargetSupport,
     arm_trigger,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -126,15 +131,39 @@ async def target_input_texts(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, INPUT_TEXT_DOMAIN)
 
 
-@pytest.mark.parametrize("trigger_key", ["text.changed"])
-async def test_text_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "changed": TargetSupport.STANDARD,
+}
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("text.changed", None, False, False),
+    ],
+)
+async def test_text_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the text triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that text triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -177,7 +206,6 @@ async def test_text_state_trigger(
         calls.clear()
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(INPUT_TEXT_DOMAIN),
@@ -192,7 +220,7 @@ async def test_input_text_state_trigger(
     trigger: str,
     states: list[BasicTriggerStateDescription],
 ) -> None:
-    """Test that the `text.changed` trigger fires when any input_text entity's state changes."""
+    """Test text.changed trigger fires on any input_text state change."""
     calls: list[str] = []
     other_entity_ids = set(target_input_texts["included_entities"]) - {entity_id}
 

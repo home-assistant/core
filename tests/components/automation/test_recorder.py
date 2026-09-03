@@ -1,7 +1,5 @@
 """The tests for automation recorder."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components import automation

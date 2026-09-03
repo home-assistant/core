@@ -1,13 +1,10 @@
 """Support for Google Sheets."""
 
-from __future__ import annotations
-
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
-from gspread import Client
+from gspread import Client, Spreadsheet, Worksheet
 from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 import voluptuous as vol
@@ -23,6 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
@@ -57,21 +55,26 @@ get_SHEET_SERVICE_SCHEMA = vol.All(
 )
 
 
+def _get_worksheet(sheet: Spreadsheet, name: str | None) -> Worksheet:
+    """Return the requested worksheet, or the first one when none was given.
+
+    Looking the name up eagerly would fetch the document metadata even when a
+    worksheet was requested and the first one is discarded.
+    """
+    if name is None:
+        return sheet.sheet1
+
+    return sheet.worksheet(name)
+
+
 def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     """Run append in the executor."""
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
-    try:
-        sheet = client.open_by_key(entry.unique_id)
-    except RefreshError:
-        entry.async_start_reauth(call.hass)
-        raise
-    except APIError as ex:
-        raise HomeAssistantError("Failed to write data") from ex
-
-    worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-    columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
+    sheet = client.open_by_key(entry.unique_id)
+    worksheet = _get_worksheet(sheet, call.data.get(WORKSHEET))
+    columns: list[str] = next(iter(worksheet.get_values("1:1")), [])
     add_created_column = call.data[ADD_CREATED_COLUMN]
-    now = str(datetime.now())
+    now = str(dt_util.now())
     rows = []
     for d in call.data[DATA]:
         row_data = ({"created": now} | d) if add_created_column else d
@@ -90,15 +93,8 @@ def _get_from_sheet(
 ) -> JsonObjectType:
     """Run get in the executor."""
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
-    try:
-        sheet = client.open_by_key(entry.unique_id)
-    except RefreshError:
-        entry.async_start_reauth(call.hass)
-        raise
-    except APIError as ex:
-        raise HomeAssistantError("Failed to retrieve data") from ex
-
-    worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+    sheet = client.open_by_key(entry.unique_id)
+    worksheet = _get_worksheet(sheet, call.data.get(WORKSHEET))
     all_values = worksheet.get_values()
     return {"range": all_values[-call.data[ROWS] :]}
 
@@ -109,7 +105,15 @@ async def _async_append_to_sheet(call: ServiceCall) -> None:
         call.hass, DOMAIN, call.data[DATA_CONFIG_ENTRY]
     )
     await entry.runtime_data.async_ensure_token_valid()
-    await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
+    try:
+        await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
+    except RefreshError:
+        entry.async_start_reauth(call.hass)
+        raise
+    except APIError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="append_failed"
+        ) from ex
 
 
 async def _async_get_from_sheet(call: ServiceCall) -> ServiceResponse:
@@ -118,7 +122,15 @@ async def _async_get_from_sheet(call: ServiceCall) -> ServiceResponse:
         call.hass, DOMAIN, call.data[DATA_CONFIG_ENTRY]
     )
     await entry.runtime_data.async_ensure_token_valid()
-    return await call.hass.async_add_executor_job(_get_from_sheet, call, entry)
+    try:
+        return await call.hass.async_add_executor_job(_get_from_sheet, call, entry)
+    except RefreshError:
+        entry.async_start_reauth(call.hass)
+        raise
+    except APIError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="get_failed"
+        ) from ex
 
 
 @callback

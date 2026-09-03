@@ -1,9 +1,7 @@
 """Reusable utilities for the Bond component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientResponseError
 from bond_async import Action, Bond, BondType
@@ -34,6 +32,7 @@ class BondDevice:
         self._attrs = attrs or {}
         self._supported_actions: set[str] = set(self._attrs.get("actions", []))
 
+    @override
     def __repr__(self) -> str:
         """Return readable representation of a bond device."""
         return {
@@ -130,6 +129,10 @@ class BondDevice:
     def supports_set_brightness(self) -> bool:
         """Return True if this device supports setting a light brightness."""
         return self._has_any_action({Action.SET_BRIGHTNESS})
+
+    def supports_set_color_temp(self) -> bool:
+        """Return True if this device supports setting a light color temperature."""
+        return self._has_any_action({Action.SET_COLOR_TEMP})
 
 
 class BondHub:

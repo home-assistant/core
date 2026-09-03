@@ -1,9 +1,10 @@
 """Base class for pilight."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -91,12 +92,15 @@ class PilightBaseDevice(RestoreEntity):
 
         self._brightness: int | None = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
-            self._brightness = state.attributes.get("brightness")
+            self._brightness = state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
+            )
 
     def _handle_code(self, call):
         """Check if received code by the pilight-daemon.

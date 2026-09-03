@@ -1,10 +1,8 @@
 """History stats data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
@@ -93,13 +91,25 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         self._track_events_listener = async_track_state_change_event(
             self.hass, [self._history_stats.entity_id], self._async_update_from_event
         )
+        self.hass.async_create_task(self._async_poll_after_start())
+
+    async def _async_poll_after_start(self) -> None:
+        """Once we subscribe to tracking events at start, check the entity state one time."""
+        new_state = self.hass.states.get(self._history_stats.entity_id)
+        if new_state:
+            self.async_set_updated_data(
+                await self._history_stats.async_update(new_state)
+            )
 
     async def _async_update_from_event(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Process an update from an event."""
-        self.async_set_updated_data(await self._history_stats.async_update(event))
+        self.async_set_updated_data(
+            await self._history_stats.async_update(event.data["new_state"])
+        )
 
+    @override
     async def _async_update_data(self) -> HistoryStatsState:
         """Fetch update the history stats state."""
         try:
@@ -107,6 +117,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         except (TemplateError, TypeError, ValueError) as ex:
             raise UpdateFailed(ex) from ex
 
+    @override
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
         log_failures = not self._preview

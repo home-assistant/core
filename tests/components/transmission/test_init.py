@@ -80,6 +80,32 @@ async def test_setup_failed_auth_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    ("version"),
+    [
+        ("v1.0.0-RC2"),
+        ("v0.1.0"),
+        ("v1.9.0"),
+        ("3.0.0"),
+        ("3.0.0 (123798)"),
+    ],
+)
+async def test_setup_failed_too_old(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    version: str,
+) -> None:
+    """Test setup of Transmission entry with too old version of Transmission."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_transmission_client.return_value.server_version = version
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_setup_failed_unexpected_error(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,

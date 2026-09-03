@@ -130,8 +130,9 @@ class MockCometBlueBleakClient(CometBlueBleakClient):
         if char_specifier not in WRITEABLE_CHARACTERISTICS:
             raise BleakCharacteristicNotFoundError(char_specifier)
         data = bytearray(data)
-        # when writing temperature it is possible that 128 will be sent, meaning "no change"
-        # we have to restore the original value in this case to keep tests working
+        # when writing temperature it is possible that 128
+        # will be sent, meaning "no change"; we have to restore
+        # the original value in this case to keep tests working
         if char_specifier in WRITEABLE_CHARACTERISTICS_ALLOW_UNCHANGED:
             for i, byte in enumerate(data):
                 if byte == 128:

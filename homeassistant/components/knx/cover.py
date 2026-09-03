@@ -1,14 +1,14 @@
 """Support for KNX cover entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover
 
 from homeassistant import config_entries
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
@@ -17,8 +17,9 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -26,10 +27,16 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import CoverSchema
 from .storage.const import (
@@ -67,7 +74,7 @@ async def async_setup_entry(
             KnxYamlCover(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.COVER):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.COVER):
         entities.extend(
             KnxUiCover(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -76,20 +83,20 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class _KnxCover(CoverEntity):
+class _KnxCover(CoverEntity, RestoreEntity):
     """Representation of a KNX cover."""
 
     _device: XknxCover
 
     def init_base(self) -> None:
         """Initialize common attributes - may be based on xknx device instance."""
-        _supports_tilt = False
         self._attr_supported_features = (
             CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN
         )
         if self._device.supports_position or self._device.supports_stop:
             # when stop is supported, xknx travelcalculator can set position
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+        _supports_tilt = False
         if self._device.step.writable:
             _supports_tilt = True
             self._attr_supported_features |= (
@@ -107,7 +114,41 @@ class _KnxCover(CoverEntity):
 
         self._attr_device_class = CoverDeviceClass.BLIND if _supports_tilt else None
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore last known position and tilt.
+
+        For readable group addresses this bridges the gap until the bus read
+        response arrives; for non-readable ones it is the only source of state.
+        """
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is None or (
+            last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            return
+        if (position := last_state.attributes.get(ATTR_CURRENT_POSITION)) is not None:
+            # In KNX 0 is open, 100 is closed.
+            self._device.travelcalculator.set_position(100 - position)
+        if (
+            tilt_position := last_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+        ) is not None:
+            self._device.angle.value = 100 - tilt_position
+
     @property
+    @override
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        # Without a known position or movement value, the position is only
+        # read from the restored state in the travelcalculator. This prevents
+        # out-of-sync positions from disabling controls in the UI.
+        return (
+            self._device.position_current.value is None
+            and self._device.position_target.value is None
+            and self._device.updown.value is None
+        )
+
+    @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover.
 
@@ -119,6 +160,7 @@ class _KnxCover(CoverEntity):
         return None
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         # state shall be "unknown" when xknx travelcalculator is not initialized
@@ -127,44 +169,53 @@ class _KnxCover(CoverEntity):
         return self._device.is_closed()
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._device.is_opening()
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._device.is_closing()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._device.set_down()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._device.set_up()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         knx_position = 100 - kwargs[ATTR_POSITION]
         await self._device.set_position(knx_position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._device.stop()
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if (angle := self._device.current_angle()) is not None:
             return 100 - angle
         return None
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
         await self._device.set_angle(knx_tilt_position)
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if self._device.angle.writable:
@@ -172,6 +223,7 @@ class _KnxCover(CoverEntity):
         else:
             await self._device.set_short_up()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if self._device.angle.writable:
@@ -179,6 +231,7 @@ class _KnxCover(CoverEntity):
         else:
             await self._device.set_short_down()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self._device.stop()
@@ -208,15 +261,15 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             invert_updown=config[CoverConf.INVERT_UPDOWN],
             invert_position=config[CoverConf.INVERT_POSITION],
             invert_angle=config[CoverConf.INVERT_ANGLE],
+            sync_state=config[CONF_SYNC_STATE],
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.updown.group_address}_"
-                f"{self._device.position_target.group_address}"
+            unique_id=build_yaml_unique_id(
+                self._device.updown.group_address,
+                self._device.position_target.group_address,
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self.init_base()
         if custom_device_class := config.get(CONF_DEVICE_CLASS):

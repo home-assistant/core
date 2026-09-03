@@ -20,11 +20,13 @@ from homeassistant.components.frontend import (
     CONF_GITHUB_TOKEN,
     CONF_THEMES,
     CONFIG_SCHEMA,
+    DATA_PANELS,
     DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
     add_extra_js_url,
+    async_panel_exists,
     async_register_built_in_panel,
     async_remove_panel,
     remove_extra_js_url,
@@ -84,7 +86,7 @@ async def frontend(hass: HomeAssistant, ignore_frontend_deps: None) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         {},
     )
 
@@ -94,7 +96,7 @@ async def frontend_themes(hass: HomeAssistant) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         CONFIG_THEMES,
     )
 
@@ -141,7 +143,7 @@ async def mock_http_client_with_extra_js(
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         {
             DOMAIN: {
                 CONF_EXTRA_MODULE_URL: ["/local/my_module.js"],
@@ -246,7 +248,7 @@ async def test_themes_persist(
         },
     }
 
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
     themes_ws_client = await hass_ws_client(hass)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
@@ -499,7 +501,7 @@ async def test_themes_reload_themes(
             {
                 "invalid0": "blue",
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -510,13 +512,13 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "expected a dictionary",
+            "expected a mapping",
         ),
         (
             {
                 "invalid2": None,
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -536,7 +538,7 @@ async def test_themes_reload_themes(
                     "modes": None,
                 }
             },
-            "string value is None for dictionary value",
+            "string value is None",
             None,
         ),
         (
@@ -546,7 +548,7 @@ async def test_themes_reload_themes(
                     "modes": {"light": {}, "dank": {}},
                 }
             },
-            "extra keys not allowed.*dank",
+            "not a valid option.*dank",
             None,
         ),
     ],
@@ -743,6 +745,35 @@ async def test_get_panels(
     # Remove again, without warning
     async_remove_panel(hass, "map", warn_if_unknown=False)
     assert "Removing unknown panel map" not in caplog.text
+
+
+@pytest.mark.usefixtures("frontend")
+async def test_async_panel_exists(hass: HomeAssistant) -> None:
+    """Test async_panel_exists helper."""
+    assert async_panel_exists(hass, "test_panel") is False
+
+    async_register_built_in_panel(hass, "test_panel")
+    assert async_panel_exists(hass, "test_panel") is True
+
+    async_remove_panel(hass, "test_panel")
+    assert async_panel_exists(hass, "test_panel") is False
+
+
+async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:
+    """Test that the collision error says which component holds the URL path.
+
+    The path is often claimed by a dashboard or a custom panel rather than by
+    the integration that fails, and the failure takes that integration down,
+    so the message has to point at the holder.
+    """
+    async_register_built_in_panel(hass, "lovelace", frontend_url_path="todo")
+
+    with pytest.raises(ValueError, match="Overwriting panel todo owned by lovelace"):
+        async_register_built_in_panel(hass, "todo", frontend_url_path="todo")
+
+    # Registering with update=True stays allowed.
+    async_register_built_in_panel(hass, "todo", frontend_url_path="todo", update=True)
+    assert hass.data[DATA_PANELS]["todo"].component_name == "todo"
 
 
 async def test_get_panels_non_admin(
@@ -945,13 +976,24 @@ async def test_get_version(
     ("from_url", "to_url", "expected_status"),
     [
         ("/.well-known/change-password", "/profile", 302),
-        ("/developer-tools", "/config/developer-tools", 301),
-        ("/developer-tools/yaml", "/config/developer-tools/yaml", 301),
-        ("/developer-tools/state", "/config/developer-tools/state", 301),
-        ("/developer-tools/action", "/config/developer-tools/action", 301),
-        ("/developer-tools/template", "/config/developer-tools/template", 301),
-        ("/developer-tools/event", "/config/developer-tools/event", 301),
-        ("/developer-tools/debug", "/config/developer-tools/debug", 301),
+        ("/developer-tools", "/config/tools", 301),
+        ("/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/developer-tools/state", "/config/tools/state", 301),
+        ("/developer-tools/action", "/config/tools/action", 301),
+        ("/developer-tools/template", "/config/tools/template", 301),
+        ("/developer-tools/event", "/config/tools/event", 301),
+        ("/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/developer-tools/assist", "/config/tools/assist", 301),
+        ("/developer-tools/debug", "/config/tools/debug", 301),
+        ("/config/developer-tools", "/config/tools", 301),
+        ("/config/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/config/developer-tools/state", "/config/tools/state", 301),
+        ("/config/developer-tools/action", "/config/tools/action", 301),
+        ("/config/developer-tools/template", "/config/tools/template", 301),
+        ("/config/developer-tools/event", "/config/tools/event", 301),
+        ("/config/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/config/developer-tools/assist", "/config/tools/assist", 301),
+        ("/config/developer-tools/debug", "/config/tools/debug", 301),
         ("/shopping-list", "/todo", 301),
     ],
 )
@@ -985,6 +1027,20 @@ async def test_manifest_json(hass: HomeAssistant, mock_http_client: TestClient) 
 
     json = await resp.json()
     assert json["theme_color"] != DEFAULT_THEME_COLOR
+
+
+async def test_manifest_json_cors(mock_http_client: TestClient) -> None:
+    """Test manifest.json is readable cross-origin.
+
+    The landing page detects Core availability by reading manifest.json
+    cross-origin when its request is redirected from the legacy HTTP port
+    to the default port.
+    """
+    resp = await mock_http_client.get(
+        "/manifest.json", headers={"Origin": "http://example.local:8123"}
+    )
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "http://example.local:8123"
 
 
 async def test_static_path_cache(mock_http_client: TestClient) -> None:
@@ -1104,7 +1160,7 @@ async def test_www_local_dir(
 
     await hass.async_add_executor_job(_create_www_and_x_txt)
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
     resp = await client.get("/local/x.txt")
     assert resp.status == HTTPStatus.OK
@@ -1145,7 +1201,7 @@ async def test_setup_with_development_pr_and_token(
     mock_github_api,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that setup succeeds when both development_pr and github_token are provided."""
+    """Test setup with both development_pr and github_token."""
     hass.config.config_dir = str(tmp_path)
 
     aioclient_mock.get(
@@ -1325,7 +1381,7 @@ async def test_update_panel_persists(
         },
     }
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 1, "type": "get_panels"})
@@ -1439,7 +1495,7 @@ async def test_panels_config_invalid_storage(
         "data": "not_a_dict",
     }
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert "Ignoring invalid panel storage data" in caplog.text
 
     client = await hass_ws_client(hass)

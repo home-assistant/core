@@ -1,11 +1,9 @@
 """Config flow for Comelit integration."""
 
-from __future__ import annotations
-
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -22,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import _LOGGER, CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
+from .const import CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN, LOGGER
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
@@ -70,7 +68,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth(
             translation_domain=DOMAIN,
             translation_key="cannot_authenticate",
-            translation_placeholders={"error": repr(err)},
         ) from err
     finally:
         await api.logout()
@@ -94,7 +91,9 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Comelit."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -119,7 +118,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidVedoAuth:
             errors["base"] = "invalid_vedo_auth"
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
@@ -162,7 +161,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidPin:
                 errors["base"] = "invalid_pin"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -215,7 +214,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidVedoAuth:
                 errors["base"] = "invalid_vedo_auth"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 data_updates = {

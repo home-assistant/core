@@ -1,8 +1,7 @@
 """Support for Webmin sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -238,6 +237,7 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]
@@ -265,6 +265,7 @@ class WebminFSSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return the state of the sensor."""
         return self.coordinator.data["disk_fs"][self.entity_description.mountpoint][

@@ -1,9 +1,8 @@
 """Coordinator for Aladdin Connect integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
@@ -40,6 +39,7 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[dict[str, GarageDoor]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, GarageDoor]:
         """Fetch data from the Aladdin Connect API."""
         try:

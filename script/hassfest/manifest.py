@@ -1,7 +1,5 @@
 """Manifest validation."""
 
-from __future__ import annotations
-
 from enum import StrEnum, auto
 import json
 from pathlib import Path
@@ -73,6 +71,7 @@ NO_IOT_CLASS = [
     "device_tracker",
     "diagnostics",
     "door",
+    "doorbell",
     "downloader",
     "ffmpeg",
     "file_upload",
@@ -103,6 +102,7 @@ NO_IOT_CLASS = [
     "logbook",
     "logger",
     "lovelace",
+    "map_tiles",
     "media_source",
     "moisture",
     "motion",
@@ -127,6 +127,7 @@ NO_IOT_CLASS = [
     "temperature",
     "timer",
     "trace",
+    "vibration",
     "web_rtc",
     "webhook",
     "websocket_api",

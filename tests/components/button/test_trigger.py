@@ -1,14 +1,19 @@
 """Test button trigger."""
 
+from typing import Any
+
 import pytest
 
+from homeassistant.components.button.trigger import TRIGGERS
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -16,23 +21,66 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_buttons(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple button entities associated with different targets."""
-    return await target_entities(hass, "button")
+async def target_entities_indirect(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> dict[str, list[str]]:
+    """Create multiple entities associated with different targets."""
+    return await target_entities(hass, request.param)
 
 
-@pytest.mark.parametrize("trigger_key", ["button.pressed"])
-async def test_button_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the button triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "pressed": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("button"),
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("button.pressed", None, False, False),
+    ],
+)
+async def test_button_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that button triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
+@pytest.mark.parametrize(
+    (
+        "target_entities_indirect",
+        "trigger_target_config",
+        "entity_id",
+        "entities_in_target",
+    ),
+    [
+        *[
+            ("button", config, entity_id, entities)
+            for (config, entity_id, entities) in parametrize_target_entities("button")
+        ],
+        *[
+            ("input_button", config, entity_id, entities)
+            for (config, entity_id, entities) in parametrize_target_entities(
+                "input_button"
+            )
+        ],
+    ],
+    indirect=["target_entities_indirect"],
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
@@ -147,7 +195,7 @@ async def test_button_triggers_gated_by_labs_flag(
 )
 async def test_button_state_trigger(
     hass: HomeAssistant,
-    target_buttons: dict[str, list[str]],
+    target_entities_indirect: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -156,10 +204,10 @@ async def test_button_state_trigger(
 ) -> None:
     """Test that the button state trigger fires when targeted button state changes."""
     calls: list[str] = []
-    other_entity_ids = set(target_buttons["included_entities"]) - {entity_id}
+    other_entity_ids = set(target_entities_indirect["included_entities"]) - {entity_id}
 
     # Set all buttons, including the tested button, to the initial state
-    for eid in target_buttons["included_entities"]:
+    for eid in target_entities_indirect["included_entities"]:
         set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 

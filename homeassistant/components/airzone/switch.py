@@ -1,9 +1,7 @@
 """Support for the Airzone switch."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.const import API_ON, AZD_ON, AZD_ZONES
 
@@ -77,6 +75,7 @@ class AirzoneBaseSwitch(AirzoneEntity, SwitchEntity):
     entity_description: AirzoneSwitchDescription
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
@@ -110,11 +109,13 @@ class AirzoneZoneSwitch(AirzoneZoneEntity, AirzoneBaseSwitch):
 
         self._async_update_attrs()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         param = self.entity_description.api_param
         await self._async_update_hvac_params({param: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         param = self.entity_description.api_param

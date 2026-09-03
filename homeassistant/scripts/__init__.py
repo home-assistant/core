@@ -1,7 +1,5 @@
 """Home Assistant command line scripts."""
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 from collections.abc import Sequence
@@ -10,7 +8,6 @@ import logging
 import os
 import sys
 
-from homeassistant import runner
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
@@ -60,8 +57,6 @@ def run(args: list[str]) -> int:
         if not install_package(req, **_pip_kwargs):
             print("Aborting script, could not install dependency", req)
             return 1
-
-    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))  # type: ignore[deprecated]
 
     return script.run(args[1:])
 

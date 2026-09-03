@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
@@ -35,6 +35,18 @@ REAUTH_SCHEMA = vol.Schema(
 )
 
 
+def _get_bridge_info(data: dict[str, Any]) -> dict[str, Any]:
+    """Get Nuki bridge info."""
+    bridge = NukiBridge(
+        data[CONF_HOST],
+        data[CONF_TOKEN],
+        data[CONF_PORT],
+        data.get(CONF_ENCRYPT_TOKEN, True),
+        DEFAULT_TIMEOUT,
+    )
+    return bridge.info()
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -42,16 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     try:
-        bridge = await hass.async_add_executor_job(
-            NukiBridge,
-            data[CONF_HOST],
-            data[CONF_TOKEN],
-            data[CONF_PORT],
-            data.get(CONF_ENCRYPT_TOKEN, True),
-            DEFAULT_TIMEOUT,
-        )
-
-        info = await hass.async_add_executor_job(bridge.info)
+        info = await hass.async_add_executor_job(_get_bridge_info, data)
     except InvalidCredentialsException as err:
         raise InvalidAuth from err
     except RequestException as err:
@@ -68,12 +71,14 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_schema: vol.Schema | None = None
         self._data: Mapping[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

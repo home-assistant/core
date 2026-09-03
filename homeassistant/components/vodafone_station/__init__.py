@@ -6,9 +6,8 @@ from aiovodafone.models import get_device_type
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import _LOGGER, CONF_DEVICE_DETAILS, DEVICE_TYPE, DEVICE_URL
+from .const import CONF_DEVICE_DETAILS, DEVICE_TYPE, DEVICE_URL, LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
-from .utils import async_client_session
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -21,13 +20,12 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Set up Vodafone Station platform."""
-    session = await async_client_session(hass)
+
     coordinator = VodafoneStationRouter(
         hass,
         entry,
-        session,
     )
-
+    await coordinator.initialize_api()
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -39,10 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Migrate old entry."""
+
     if entry.version == 1 and entry.minor_version == 1:
-        _LOGGER.debug(
-            "Migrating from version %s.%s", entry.version, entry.minor_version
-        )
+        LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
         jar = CookieJar(unsafe=True, quote_cookie=False)
         session = ClientSession(cookie_jar=jar)
@@ -70,7 +67,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -
             entry, data=new_data, version=1, minor_version=2
         )
 
-        _LOGGER.info(
+        LOGGER.info(
             "Migration to version %s.%s successful", entry.version, entry.minor_version
         )
 

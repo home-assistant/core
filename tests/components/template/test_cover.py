@@ -9,8 +9,10 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
+from homeassistant.components.template.cover import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -35,6 +37,11 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -42,6 +49,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry
@@ -49,15 +58,16 @@ from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_POSITION_ENTITY_ID = "sensor.test_position"
+TEST_TILT_POSITION_ENTITY_ID = "sensor.test_tilt_position"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_COVER = TemplatePlatformSetup(
     cover.DOMAIN,
-    "covers",
     "test_template_cover",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
         TEST_POSITION_ENTITY_ID,
+        TEST_TILT_POSITION_ENTITY_ID,
         TEST_AVAILABILITY_ENTITY,
     ),
 )
@@ -110,9 +120,6 @@ async def setup_position_cover(
     config: ConfigType,
 ):
     """Do setup of cover integration using a state template."""
-    position_option = (
-        "position_template" if style == ConfigurationStyle.LEGACY else "position"
-    )
     await setup_entity(
         hass,
         TEST_COVER,
@@ -120,7 +127,7 @@ async def setup_position_cover(
         count,
         config,
         extra_config={
-            position_option: position_template,
+            "position": position_template,
             **SET_COVER_POSITION,
         },
     )
@@ -170,7 +177,7 @@ async def setup_empty_action(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("set_state", "test_state", "text"),
@@ -206,7 +213,7 @@ async def test_template_state_text(
 @pytest.mark.parametrize(("count", "config"), [(1, COVER_ACTIONS)])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "expected"),
@@ -251,7 +258,6 @@ async def test_template_state_states(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "position_template"),
         (ConfigurationStyle.MODERN, "position"),
         (ConfigurationStyle.TRIGGER, "position"),
     ],
@@ -323,7 +329,6 @@ async def test_template_state_text_with_position(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "position_template"),
         (ConfigurationStyle.MODERN, "position"),
         (ConfigurationStyle.TRIGGER, "position"),
     ],
@@ -356,7 +361,7 @@ async def test_template_state_text_ignored_if_none_or_empty(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("position", "expected"),
@@ -397,7 +402,7 @@ async def test_template_position(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_cover")
 async def test_template_not_optimistic(
@@ -438,10 +443,6 @@ async def test_template_not_optimistic(
     ("style", "attribute"),
     [
         (
-            ConfigurationStyle.LEGACY,
-            "tilt_template",
-        ),
-        (
             ConfigurationStyle.MODERN,
             "tilt",
         ),
@@ -478,10 +479,6 @@ async def test_template_tilt(hass: HomeAssistant, tilt_position: float | None) -
     ("style", "attribute"),
     [
         (
-            ConfigurationStyle.LEGACY,
-            "position_template",
-        ),
-        (
             ConfigurationStyle.MODERN,
             "position",
         ),
@@ -515,34 +512,28 @@ async def test_position_out_of_bounds(hass: HomeAssistant) -> None:
     ("style", "config", "error"),
     [
         (
-            ConfigurationStyle.LEGACY,
-            {},
-            "Invalid config for 'cover' from integration 'template'",
-        ),
-        (
-            ConfigurationStyle.LEGACY,
-            OPEN_COVER,
-            "Invalid config for 'cover' from integration 'template'",
-        ),
-        (
             ConfigurationStyle.MODERN,
             {},
-            "Invalid config for 'template': must contain at least one of open_cover, set_cover_position.",
+            "Invalid config for 'template': must contain at least one"
+            " of open_cover, set_cover_position.",
         ),
         (
             ConfigurationStyle.MODERN,
             OPEN_COVER,
-            "Invalid config for 'template': some but not all values in the same group of inclusion 'open_or_close'",
+            "Invalid config for 'template': some but not all values"
+            " in the same group of inclusion 'open_or_close'",
         ),
         (
             ConfigurationStyle.TRIGGER,
             {},
-            "Invalid config for 'template': must contain at least one of open_cover, set_cover_position.",
+            "Invalid config for 'template': must contain at least one"
+            " of open_cover, set_cover_position.",
         ),
         (
             ConfigurationStyle.TRIGGER,
             OPEN_COVER,
-            "Invalid config for 'template': some but not all values in the same group of inclusion 'open_or_close'",
+            "Invalid config for 'template': some but not all values"
+            " in the same group of inclusion 'open_or_close'",
         ),
     ],
 )
@@ -563,7 +554,7 @@ async def test_template_open_or_position(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_position_cover")
 async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -592,7 +583,7 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_cover")
 async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -625,7 +616,7 @@ async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) 
 @pytest.mark.parametrize(("count", "config"), [(1, SET_COVER_POSITION)])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_cover")
 async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -662,7 +653,7 @@ async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> No
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("service", "options", "tilt_position"),
@@ -701,7 +692,7 @@ async def test_set_tilt_position(
 @pytest.mark.parametrize(("count", "config"), [(1, SET_COVER_POSITION)])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_cover")
 async def test_set_position_optimistic(
@@ -743,7 +734,10 @@ async def test_set_position_optimistic(
             ConfigurationStyle.TRIGGER,
             {
                 **SET_COVER_POSITION,
-                "picture": "{{ 'foo.png' if is_state('sensor.test_state', 'open') else 'bar.png' }}",
+                "picture": (
+                    "{{ 'foo.png' if is_state('sensor.test_state',"
+                    " 'open') else 'bar.png' }}"
+                ),
             },
         ),
     ],
@@ -783,7 +777,7 @@ async def test_non_optimistic_template_with_optimistic_state(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_position_cover")
 async def test_set_tilt_position_optimistic(
@@ -830,7 +824,6 @@ async def test_set_tilt_position_optimistic(
 @pytest.mark.parametrize(
     ("style", "attribute", "initial_expected_state"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template", ""),
         (ConfigurationStyle.MODERN, "icon", ""),
         (ConfigurationStyle.TRIGGER, "icon", None),
     ],
@@ -863,7 +856,6 @@ async def test_icon_template(
 @pytest.mark.parametrize(
     ("style", "attribute", "initial_expected_state"),
     [
-        (ConfigurationStyle.LEGACY, "entity_picture_template", ""),
         (ConfigurationStyle.MODERN, "picture", ""),
         (ConfigurationStyle.TRIGGER, "picture", None),
     ],
@@ -896,7 +888,6 @@ async def test_entity_picture_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -918,7 +909,6 @@ async def test_availability_template(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -940,7 +930,7 @@ async def test_invalid_availability_template_keeps_component_available(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_cover")
 async def test_device_class(hass: HomeAssistant) -> None:
@@ -955,7 +945,7 @@ async def test_device_class(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_cover")
 async def test_invalid_device_class(hass: HomeAssistant) -> None:
@@ -967,7 +957,7 @@ async def test_invalid_device_class(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("config", [COVER_ACTIONS])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
@@ -998,7 +988,7 @@ async def test_nested_unique_id(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_cover")
 async def test_state_gets_lowercased(hass: HomeAssistant) -> None:
@@ -1020,14 +1010,17 @@ async def test_state_gets_lowercased(hass: HomeAssistant) -> None:
         (
             1,
             "{{ states.sensor.test_state.state }}",
-            "mdi:window-shutter{{ '-open' if is_state('cover.test_template_cover', 'open') else '' }}",
+            (
+                "mdi:window-shutter{{ '-open'"
+                " if is_state('cover.test_template_cover', 'open')"
+                " else '' }}"
+            ),
         )
     ],
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template"),
         (ConfigurationStyle.MODERN, "icon"),
         (ConfigurationStyle.TRIGGER, "icon"),
     ],
@@ -1045,7 +1038,7 @@ async def test_self_referencing_icon_with_no_template_is_not_a_loop(
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("script", "supported_feature"),
@@ -1120,3 +1113,323 @@ async def test_flow_preview(
     )
 
     assert state["state"] == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "position": "{{ states('sensor.test_position') | float(None) }}",
+            "set_cover_position": [],
+            "tilt": "{{ states('sensor.test_tilt_position') | float(None) }}",
+            "set_cover_tilt_position": [],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+        "final_state",
+    ),
+    [
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 10,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            CoverState.OPEN,
+            {
+                "current_position": 10,
+                "current_tilt_position": 10,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 10,
+                "current_cover_tilt_position": 10,
+                "is_opening": True,
+                "is_closing": False,
+            },
+            CoverState.OPENING,
+            {
+                "current_position": 10,
+                "current_tilt_position": 10,
+            },
+            CoverState.OPENING,
+        ),
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 10,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": True,
+            },
+            CoverState.CLOSING,
+            {
+                "current_position": 10,
+                "current_tilt_position": 10,
+            },
+            CoverState.CLOSING,
+        ),
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            CoverState.CLOSED,
+            {
+                "current_position": 0,
+                "current_tilt_position": 10,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            # Missing Key
+            CoverState.OPEN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    config: ConfigType,
+    style: ConfigurationStyle,
+    saved_state: CoverState | str,
+    saved_extra_data: dict | None,
+    initial_state: CoverState | str,
+    initial_attributes: ConfigType,
+    final_state: CoverState | str,
+) -> None:
+    """Test restoring trigger template weather."""
+
+    restored_attributes = {  # These should be ignored
+        "current_position": 5,
+        "current_tilt_position": 5,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_COVER,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_COVER,
+        style,
+        config,
+        "states('sensor.test_position') | float(0) > 50",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_COVER,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(hass, "sensor.test_position", "75")
+    await async_trigger(hass, "sensor.test_tilt_position", "75")
+
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.state == final_state
+    assert state.attributes["current_position"] == 75
+    assert state.attributes["current_tilt_position"] == 75
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_COVER, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_COVER, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_COVER, style, {"state": "{{ 'open' }}", **COVER_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: CoverEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        0,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_COVER,
+        style,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: CoverEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        1,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_COVER.entity_id}: {attribute}"
+    assert error in caplog.text

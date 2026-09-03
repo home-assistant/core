@@ -1,7 +1,5 @@
 """Home Assistant module to handle restoring backups."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import json
@@ -62,7 +60,10 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
 
 
 def _clear_configuration_directory(config_dir: Path, keep: Iterable[str]) -> None:
-    """Delete all files and directories in the config directory except entries in the keep list."""
+    """Delete all files and directories in the config dir.
+
+    Entries in the keep list are preserved.
+    """
     keep_paths = [config_dir.joinpath(path) for path in keep]
     entries_to_remove = sorted(
         entry for entry in config_dir.iterdir() if entry not in keep_paths
@@ -91,8 +92,7 @@ def _extract_backup(
     ):
         ostf.tar.extractall(
             path=Path(tempdir, "extracted"),
-            members=securetar.secure_path(ostf.tar),
-            filter="fully_trusted",
+            filter="tar",
         )
         backup_meta_file = Path(tempdir, "extracted", "backup.json")
         backup_meta = json.loads(backup_meta_file.read_text(encoding="utf8"))
@@ -103,7 +103,8 @@ def _extract_backup(
             )
         ) > HA_VERSION:
             raise ValueError(
-                f"You need at least Home Assistant version {backup_meta_version} to restore this backup"
+                f"You need at least Home Assistant version"
+                f" {backup_meta_version} to restore this backup"
             )
 
         with securetar.SecureTarFile(
@@ -117,8 +118,7 @@ def _extract_backup(
         ) as istf:
             istf.extractall(
                 path=Path(tempdir, "homeassistant"),
-                members=securetar.secure_path(istf),
-                filter="fully_trusted",
+                filter="tar",
             )
             if restore_content.restore_homeassistant:
                 keep = list(KEEP_BACKUPS)

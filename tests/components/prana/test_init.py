@@ -13,7 +13,7 @@ from tests.common import SnapshotAssertion
 async def test_async_setup_entry_and_unload_entry(
     hass: HomeAssistant, mock_config_entry, mock_prana_api
 ) -> None:
-    """async_setup_entry should create coordinator, refresh it, store runtime_data and forward setups."""
+    """Test async_setup_entry creates coordinator and forwards."""
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -35,8 +35,8 @@ async def test_device_info_registered(
     """Device info from the API should be registered on the device registry."""
     await async_init_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
 
     assert device is not None

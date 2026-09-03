@@ -1,6 +1,6 @@
 """Support for Modern Forms Binary Sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
@@ -20,15 +20,18 @@ async def async_setup_entry(
     """Set up Modern Forms binary sensors."""
     coordinator = entry.runtime_data
 
-    binary_sensors: list[ModernFormsBinarySensor] = [
-        ModernFormsFanSleepTimerActive(entry.entry_id, coordinator),
-    ]
+    binary_sensors: list[ModernFormsBinarySensor] = []
 
-    # Only setup light sleep timer sensor if light unit installed
-    if coordinator.data.info.light_type:
+    if coordinator.data.has_sleep_timer():
         binary_sensors.append(
-            ModernFormsLightSleepTimerActive(entry.entry_id, coordinator)
+            ModernFormsFanSleepTimerActive(entry.entry_id, coordinator)
         )
+
+        # Only setup light sleep timer sensor if light unit installed
+        if coordinator.data.info.light_type:
+            binary_sensors.append(
+                ModernFormsLightSleepTimerActive(entry.entry_id, coordinator)
+            )
 
     async_add_entities(binary_sensors)
 
@@ -66,6 +69,7 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the timer."""
         return not (
@@ -97,6 +101,7 @@ class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the timer."""
         return not (

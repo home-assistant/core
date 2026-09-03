@@ -1,14 +1,12 @@
 """Handle the frontend for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from functools import lru_cache, partial
 import logging
 import os
 import pathlib
 import shutil
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -34,7 +32,7 @@ from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
 from .pr_download import download_pr_artifact
@@ -354,7 +352,6 @@ class Panel:
         return response
 
 
-@bind_hass
 @callback
 def async_register_built_in_panel(
     hass: HomeAssistant,
@@ -385,15 +382,17 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if not update and panel.frontend_url_path in panels:
-        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
+    if not update and (existing := panels.get(panel.frontend_url_path)) is not None:
+        raise ValueError(
+            f"Overwriting panel {panel.frontend_url_path} owned by"
+            f" {existing.component_name}"
+        )
 
     panels[panel.frontend_url_path] = panel
 
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
-@bind_hass
 @callback
 def async_remove_panel(
     hass: HomeAssistant, frontend_url_path: str, *, warn_if_unknown: bool = True
@@ -407,6 +406,12 @@ def async_remove_panel(
         return
 
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
+
+
+@callback
+def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
+    """Return if a panel is registered for the given frontend URL path."""
+    return frontend_url_path in hass.data.get(DATA_PANELS, {})
 
 
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
@@ -507,7 +512,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to download PR #%s: %s, falling back to the integrated frontend",
+                "Failed to download PR #%s: %s, falling back"
+                " to the integrated frontend",
                 dev_pr_number,
                 err,
             )
@@ -555,19 +561,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Shopping list panel was replaced by todo panel in 2023.11
     hass.http.register_redirect("/shopping-list", "/todo")
 
-    # Developer tools moved to config panel in 2026.2
-    for url in (
-        "/developer-tools",
-        "/developer-tools/yaml",
-        "/developer-tools/state",
-        "/developer-tools/action",
-        "/developer-tools/template",
-        "/developer-tools/event",
-        "/developer-tools/statistics",
-        "/developer-tools/assist",
-        "/developer-tools/debug",
+    # Developer tools moved to config in 2026.2 and was renamed to
+    # "Tools" (/config/tools) in 2026.8. Redirect both the original
+    # top-level URLs and the 2026.2 config URLs to the new location.
+    for suffix in (
+        "",
+        "/yaml",
+        "/state",
+        "/action",
+        "/template",
+        "/event",
+        "/statistics",
+        "/assist",
+        "/debug",
     ):
-        hass.http.register_redirect(url, f"/config{url}")
+        hass.http.register_redirect(
+            f"/developer-tools{suffix}", f"/config/tools{suffix}"
+        )
+        hass.http.register_redirect(
+            f"/config/developer-tools{suffix}", f"/config/tools{suffix}"
+        )
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
@@ -597,6 +610,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "home",
         sidebar_icon="mdi:home",
         sidebar_title="home",
+        show_in_sidebar=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "maintenance",
+        sidebar_icon="mdi:wrench",
+        sidebar_title="maintenance",
         show_in_sidebar=False,
     )
 
@@ -775,6 +795,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         self._template_cache: jinja2.Template | None = None
 
     @cached_property
+    @override
     def canonical(self) -> str:
         """Return resource's canonical path."""
         return "/"
@@ -784,10 +805,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)
 
+    @override
     def url_for(self, **kwargs: str) -> URL:
         """Construct url for resource with additional params."""
         return URL("/")
 
+    @override
     async def resolve(
         self, request: web.Request
     ) -> tuple[web_urldispatcher.UrlMappingMatchInfo | None, set[str]]:
@@ -808,17 +831,20 @@ class IndexView(web_urldispatcher.AbstractResource):
 
         return web_urldispatcher.UrlMappingMatchInfo({}, self._route), {"GET"}
 
+    @override
     def add_prefix(self, prefix: str) -> None:
         """Add a prefix to processed URLs.
 
         Required for subapplications support.
         """
 
+    @override
     def get_info(self) -> dict[str, list[str]]:  # type: ignore[override]
         """Return a dict with additional info useful for introspection."""
         panels = self.hass.data[DATA_PANELS]
         return {"panels": list(panels)}
 
+    @override
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
         return False
@@ -869,10 +895,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         response.enable_compression()
         return response
 
+    @override
     def __len__(self) -> int:
         """Return length of resource."""
         return 1
 
+    @override
     def __iter__(self) -> Iterator[web_urldispatcher.ResourceRoute]:
         """Iterate over routes."""
         return iter([self._route])
@@ -882,6 +910,10 @@ class ManifestJSONView(HomeAssistantView):
     """View to return a manifest.json."""
 
     requires_auth = False
+    # The landing page detects Core availability by reading this public
+    # resource cross-origin when its request is redirected from the legacy
+    # HTTP port to the default port.
+    cors_allowed = True
     url = "/manifest.json"
     name = "manifestjson"
 

@@ -1,7 +1,5 @@
 """Helper functions for mysensors package."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable
 from enum import IntEnum
@@ -24,7 +22,6 @@ from .const import (
     ATTR_NODE_ID,
     DOMAIN,
     FLAT_PLATFORM_TYPES,
-    MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_DISCOVERY,
     MYSENSORS_NODE_DISCOVERY,
     TYPE_TO_PLATFORMS,
@@ -33,6 +30,7 @@ from .const import (
     SensorType,
     ValueType,
 )
+from .models import MySensorsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMAS: Registry[
@@ -59,22 +57,29 @@ def discover_mysensors_platform(
 
 @callback
 def discover_mysensors_node(
-    hass: HomeAssistant, gateway_id: GatewayId, node_id: int
+    hass: HomeAssistant, entry: MySensorsConfigEntry, node_id: int
 ) -> None:
     """Discover a MySensors node."""
-    discovered_nodes = hass.data[DOMAIN].setdefault(
-        MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
-    )
+    discovered_nodes = entry.runtime_data.discovered_nodes
 
     if node_id not in discovered_nodes:
         discovered_nodes.add(node_id)
         async_dispatcher_send(
             hass,
-            MYSENSORS_NODE_DISCOVERY.format(gateway_id),
+            MYSENSORS_NODE_DISCOVERY.format(entry.entry_id),
             {
-                ATTR_GATEWAY_ID: gateway_id,
+                ATTR_GATEWAY_ID: entry.entry_id,
                 ATTR_NODE_ID: node_id,
             },
+        )
+
+
+@callback
+def remove_node_dev_ids(entry: MySensorsConfigEntry, node_id: int) -> None:
+    """Remove all discovered dev ids belonging to a node."""
+    for dev_ids in entry.runtime_data.discovered_dev_ids.values():
+        dev_ids.difference_update(
+            {dev_id for dev_id in dev_ids if dev_id[1] == node_id}
         )
 
 
@@ -157,7 +162,10 @@ def invalid_msg(
     """Return a message for an invalid child during schema validation."""
     presentation = gateway.const.Presentation
     set_req = gateway.const.SetReq
-    return f"{presentation(child.type).name} requires value_type {set_req[value_type_name].name}"
+    return (
+        f"{presentation(child.type).name} requires"
+        f" value_type {set_req[value_type_name].name}"
+    )
 
 
 def validate_set_msg(

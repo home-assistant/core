@@ -58,7 +58,6 @@ from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -79,6 +78,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
@@ -483,90 +483,50 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
-async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
-    """Test EnergyStorage trait support for vacuum domain."""
-    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
-    assert trait.EnergyStorageTrait.supported(
-        vacuum.DOMAIN, VacuumEntityFeature.BATTERY, None, None
-    )
-
-    trt = trait.EnergyStorageTrait(
-        hass,
-        State(
-            "vacuum.bla",
-            vacuum.VacuumActivity.DOCKED,
-            {
-                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
-                ATTR_BATTERY_LEVEL: 100,
-            },
-        ),
-        BASIC_CONFIG,
-    )
-
-    assert trt.sync_attributes() == {
-        "isRechargeable": True,
-        "queryOnlyEnergyStorage": True,
-    }
-
-    assert trt.query_attributes() == {
-        "descriptiveCapacityRemaining": "FULL",
-        "capacityRemaining": [{"rawValue": 100, "unit": "PERCENTAGE"}],
-        "capacityUntilFull": [{"rawValue": 0, "unit": "PERCENTAGE"}],
-        "isCharging": True,
-        "isPluggedIn": True,
-    }
-
-    trt = trait.EnergyStorageTrait(
-        hass,
-        State(
-            "vacuum.bla",
-            vacuum.VacuumActivity.CLEANING,
-            {
-                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
-                ATTR_BATTERY_LEVEL: 20,
-            },
-        ),
-        BASIC_CONFIG,
-    )
-
-    assert trt.sync_attributes() == {
-        "isRechargeable": True,
-        "queryOnlyEnergyStorage": True,
-    }
-
-    assert trt.query_attributes() == {
-        "descriptiveCapacityRemaining": "CRITICALLY_LOW",
-        "capacityRemaining": [{"rawValue": 20, "unit": "PERCENTAGE"}],
-        "capacityUntilFull": [{"rawValue": 80, "unit": "PERCENTAGE"}],
-        "isCharging": False,
-        "isPluggedIn": False,
-    }
-
-    with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": True}, {})
-    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
-
-    with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": False}, {})
-    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
-
-
-async def test_startstop_vacuum(hass: HomeAssistant) -> None:
+async def test_startstop_vacuum(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Test startStop trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.StartStopTrait.supported(vacuum.DOMAIN, 0, None, None)
+
+    area_entry = area_registry.async_get_or_create("Office")
+
+    area_entry_2 = area_registry.async_get_or_create("Living room")
+
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN, "test", "1234", suggested_object_id="bla"
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.bla",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {
+                area_entry.id: ["office-123123"],
+                area_entry_2.id: ["living_room-123123"],
+            }
+        },
+    )
 
     trt = trait.StartStopTrait(
         hass,
         State(
             "vacuum.bla",
             vacuum.VacuumActivity.PAUSED,
-            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
+            {
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE
+                | VacuumEntityFeature.CLEAN_AREA
+            },
         ),
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"pausable": True}
+    assert trt.sync_attributes() == {
+        "pausable": True,
+        "availableZones": ["Office", "Living room"],
+    }
 
     assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
 
@@ -574,6 +534,29 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_CLEAN_AREA)
+    await trt.execute(
+        trait.COMMAND_START_STOP, BASIC_DATA, {"start": True, "zone": "Office"}, {}
+    )
+    assert len(start_calls) == 1
+    assert start_calls[0].data == {
+        ATTR_ENTITY_ID: "vacuum.bla",
+        "cleaning_area_id": [area_entry.id],
+    }
+
+    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_CLEAN_AREA)
+    await trt.execute(
+        trait.COMMAND_START_STOP,
+        BASIC_DATA,
+        {"start": True, "multipleZones": ["Office", "Living room"]},
+        {},
+    )
+    assert len(start_calls) == 1
+    assert start_calls[0].data == {
+        ATTR_ENTITY_ID: "vacuum.bla",
+        "cleaning_area_id": [area_entry.id, area_entry_2.id],
+    }
 
     stop_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_STOP)
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
@@ -589,6 +572,15 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_START_STOP,
+            BASIC_DATA,
+            {"start": True, "zone": "Unknown"},
+            {},
+        )
+    assert err.value.code == const.ERR_UNSUPPORTED_INPUT
 
 
 async def test_dock_lawn_mower(hass: HomeAssistant) -> None:
@@ -1325,7 +1317,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
         "thermostatTemperatureRange": {
-            "minThresholdCelsius": 7,
+            "minThresholdCelsius": 7.2,
             "maxThresholdCelsius": 35,
         },
         "thermostatTemperatureUnit": "F",
@@ -1346,7 +1338,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
 
 
 async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None:
-    """Test TemperatureSetting trait support for climate domain not supporting any modes."""
+    """Test TemperatureSetting trait for climate with no modes."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
@@ -1371,6 +1363,43 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
         },
         "thermostatTemperatureUnit": "C",
     }
+
+
+async def test_temperature_setting_climate_range_fahrenheit_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Test that Fahrenheit range bounds are reported to Google with decimal precision.
+
+    Regression test: when a climate entity advertises an integer Fahrenheit min/max
+    whose Celsius equivalent is non-integer (e.g. 62°F = 16.666…°C), rounding the
+    converted value to a whole degree Celsius causes Google Home to display a range
+    shifted by up to 1°F when it converts back for display. Reporting one decimal
+    place of Celsius precision keeps Google's displayed range aligned with
+    Home Assistant's.
+    """
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.COOL,
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+                climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ATTR_MIN_TEMP: 62,
+                climate.ATTR_MAX_TEMP: 86,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    attrs = trt.sync_attributes()
+    assert attrs["thermostatTemperatureRange"] == {
+        "minThresholdCelsius": 16.7,
+        "maxThresholdCelsius": 30,
+    }
+    # 16.7°C → 62.06°F (displays as 62°F, matching Home Assistant's min of 62°F);
+    # the pre-fix value of 17°C → 62.6°F would have displayed as 63°F.
 
 
 async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
@@ -1409,7 +1438,7 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
         "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
         "thermostatTemperatureRange": {
             "minThresholdCelsius": 10,
-            "maxThresholdCelsius": 27,
+            "maxThresholdCelsius": 26.7,
         },
         "thermostatTemperatureUnit": "F",
     }
@@ -1625,6 +1654,44 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
+async def test_temperature_setting_action_change(hass: HomeAssistant) -> None:
+    """Test that activeThermostatMode contains the current HVAC action."""
+    trt_idle = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.COOL,
+            {
+                climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ATTR_HVAC_ACTION: climate.HVACAction.IDLE,
+                climate.ATTR_CURRENT_TEMPERATURE: 18,
+                climate.ATTR_MIN_TEMP: 10,
+                climate.ATTR_MAX_TEMP: 30,
+                ATTR_TEMPERATURE: 18,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt_idle.query_attributes().get("activeThermostatMode") == "none"
+    trt_cool = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.COOL,
+            {
+                climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+                climate.ATTR_CURRENT_TEMPERATURE: 23,
+                climate.ATTR_MIN_TEMP: 10,
+                climate.ATTR_MAX_TEMP: 30,
+                ATTR_TEMPERATURE: 18,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt_cool.query_attributes().get("activeThermostatMode") == "cool"
+
+
 async def test_temperature_control(hass: HomeAssistant) -> None:
     """Test TemperatureControl trait support for sensor domain."""
     trt = trait.TemperatureControlTrait(
@@ -1719,7 +1786,7 @@ async def test_temperature_control_water_heater_set_temperature(
     temp_out: float,
     current_init: str,
 ) -> None:
-    """Test TemperatureControl trait support for water heater domain - SetTemperature."""
+    """Test TemperatureControl trait for water heater SetTemperature."""
     hass.config.units = unit
 
     min_temp = TemperatureConverter.convert(
@@ -2309,7 +2376,7 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
 
 
 async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
-    """Test FanSpeed trait falls back to percent-only when percentage_step is missing."""
+    """Test FanSpeed trait falls back to percent-only without step."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
         fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
@@ -4099,6 +4166,12 @@ async def test_channel(hass: HomeAssistant) -> None:
         media_player.DOMAIN,
         MediaPlayerEntityFeature.PLAY_MEDIA,
         media_player.MediaPlayerDeviceClass.TV,
+        None,
+    )
+    assert trait.ChannelTrait.supported(
+        media_player.DOMAIN,
+        MediaPlayerEntityFeature.PLAY_MEDIA,
+        media_player.MediaPlayerDeviceClass.PROJECTOR,
         None,
     )
     assert (

@@ -15,12 +15,12 @@ from homeassistant.components.devolo_home_network.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
-from .const import PLCNET
+from .const import PLCNET, PLCNET_MISSING_DATA_RATE
 from .mock import MockDevice
 
 from tests.common import async_fire_time_changed
@@ -59,9 +59,7 @@ async def test_sensor_setup(
     assert entity_registry.async_get(
         f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
-    assert entity_registry.async_get(
-        f"{SENSOR_DOMAIN}.{device_name}_last_restart_of_the_device"
-    ).disabled
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.{device_name}_uptime").disabled
 
 
 @pytest.mark.parametrize(
@@ -86,10 +84,10 @@ async def test_sensor_setup(
             "1",
         ),
         (
-            "last_restart_of_the_device",
+            "uptime",
             "async_uptime",
             SHORT_UPDATE_INTERVAL,
-            "2023-01-13T11:58:50+00:00",
+            "2023-01-13T11:58:20+00:00",
         ),
     ],
 )
@@ -145,18 +143,24 @@ async def test_update_plc_phyrates(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
+    """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensors."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id_downlink = f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
-    entity_id_uplink = f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    entity_id_downlink = (
+        f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_"
+        f"{PLCNET.devices[1].user_device_name}"
+    )
+    entity_id_uplink = (
+        f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_"
+        f"{PLCNET.devices[1].user_device_name}"
+    )
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id_downlink) == snapshot
     assert entity_registry.async_get(entity_id_downlink) == snapshot
-    assert hass.states.get(entity_id_downlink) == snapshot
-    assert entity_registry.async_get(entity_id_downlink) == snapshot
+    assert hass.states.get(entity_id_uplink) == snapshot
+    assert entity_registry.async_get(entity_id_uplink) == snapshot
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
@@ -189,10 +193,53 @@ async def test_update_plc_phyrates(
     assert state.state == str(PLCNET.data_rates[0].tx_rate)
 
 
+async def test_update_plc_phyrates_missing_data_rate(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test plc_downlink_phyrate and plc_uplink_phyrate sensors on a lost PLC link."""
+    entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
+    entity_id_downlink = (
+        f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_"
+        f"{PLCNET.devices[1].user_device_name}"
+    )
+    entity_id_uplink = (
+        f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_"
+        f"{PLCNET.devices[1].user_device_name}"
+    )
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id_downlink) == snapshot
+    assert entity_registry.async_get(entity_id_downlink) == snapshot
+    assert hass.states.get(entity_id_uplink) == snapshot
+    assert entity_registry.async_get(entity_id_uplink) == snapshot
+
+    # Emulate the PLC link to the peer getting lost
+    mock_device.plcnet.async_get_network_overview = AsyncMock(
+        return_value=PLCNET_MISSING_DATA_RATE
+    )
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_downlink)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get(entity_id_uplink)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_update_last_update_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice
 ) -> None:
-    """Test getting the last update state with wrong password triggers the reauth flow."""
+    """Test getting last update state with wrong password triggers reauth flow."""
     entry = configure_integration(hass)
     mock_device.device.async_uptime.side_effect = DevicePasswordProtected
 

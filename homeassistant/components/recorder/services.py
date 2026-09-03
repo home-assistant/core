@@ -1,7 +1,5 @@
 """Support for recorder services."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import cast
 
@@ -102,7 +100,8 @@ async def _async_handle_purge_service(service: ServiceCall) -> None:
 
 async def _async_handle_purge_entities_service(service: ServiceCall) -> None:
     """Handle calls to the purge entities service."""
-    entity_ids = await async_extract_entity_ids(service)
+    # Keep group entities as purge targets instead of expanding them to their members.
+    entity_ids = await async_extract_entity_ids(service, expand_group=False)
     domains = service.data.get(ATTR_DOMAINS, [])
     keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
     entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])

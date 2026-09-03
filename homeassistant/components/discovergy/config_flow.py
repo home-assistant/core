@@ -1,10 +1,8 @@
 """Config flow for Discovergy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
@@ -58,6 +56,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:

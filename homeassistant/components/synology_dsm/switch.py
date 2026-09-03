@@ -1,15 +1,14 @@
 """Support for Synology DSM switch."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -74,10 +73,12 @@ class SynoDSMSurveillanceHomeModeToggle(
         self._version = version
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return self.coordinator.data["switches"][self.entity_description.key]  # type: ignore[no-any-return]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Home mode."""
         if TYPE_CHECKING:
@@ -90,6 +91,7 @@ class SynoDSMSurveillanceHomeModeToggle(
         await self._api.dsm.surveillance_station.set_home_mode(True)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Home mode."""
         if TYPE_CHECKING:
@@ -103,11 +105,13 @@ class SynoDSMSurveillanceHomeModeToggle(
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._api.surveillance_station) and super().available
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         if TYPE_CHECKING:
@@ -125,5 +129,9 @@ class SynoDSMSurveillanceHomeModeToggle(
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._version,
-            via_device=(DOMAIN, self._api.information.serial),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._api.information.serial),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )

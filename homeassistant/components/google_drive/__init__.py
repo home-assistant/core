@@ -1,7 +1,5 @@
 """The Google Drive integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from google_drive_api.exceptions import GoogleDriveApiError
@@ -12,7 +10,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -31,20 +28,15 @@ _PLATFORMS = (Platform.SENSOR,)
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) -> bool:
     """Set up Google Drive from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     auth = AsyncConfigEntryAuth(
         async_get_clientsession(hass),
         OAuth2Session(hass, entry, implementation),
     )
 
-    # Test we can refresh the token and raise ConfigEntryAuthFailed or ConfigEntryNotReady if not
+    # Test we can refresh the token and raise
+    # ConfigEntryAuthFailed or ConfigEntryNotReady if not
     await auth.async_get_access_token()
 
     client = DriveClient(await instance_id.async_get(hass), auth)

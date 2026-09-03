@@ -2,12 +2,11 @@
 
 from typing import Any, NotRequired, TypedDict
 
-import voluptuous as vol
+import probatio
 from xknx import XKNX
 from xknx.dpt import DPTBase
 from xknx.telegram.address import parse_device_group_address
 
-from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -19,10 +18,6 @@ from ..expose import KnxExposeEntity, KnxExposeOptions
 from .entity_store_validation import validate_config_store_data
 from .knx_selector import GASelector
 
-type KNXExposeStoreModel = dict[
-    str, list[KNXExposeStoreOptionModel]  # entity_id: configuration
-]
-
 
 class KNXExposeStoreOptionModel(TypedDict):
     """Represent KNX entity state expose configuration for an entity."""
@@ -31,51 +26,72 @@ class KNXExposeStoreOptionModel(TypedDict):
     attribute: NotRequired[str]
     cooldown: NotRequired[float]
     default: NotRequired[Any]
+    send_on_init: NotRequired[bool]
     periodic_send: NotRequired[float]
     respond_to_read: NotRequired[bool]
     value_template: NotRequired[str]
+
+
+class KNXExposeStoreConfigModel(TypedDict):
+    """Represent stored KNX expose configuration with metadata."""
+
+    options: list[KNXExposeStoreOptionModel]
+    notes: NotRequired[str]
+
+
+type KNXExposeStoreModel = dict[str, KNXExposeStoreConfigModel]  # dict[entity_id: conf]
 
 
 class KNXExposeDataModel(TypedDict):
     """Represent a loaded KNX expose config for validation."""
 
     entity_id: str
-    options: list[KNXExposeStoreOptionModel]
+    data: KNXExposeStoreConfigModel
 
 
 def validate_expose_template_no_coerce(value: str) -> str:
-    """Validate a value is a valid expose template without coercing it to a Template object."""
+    """Validate an expose template without coercing to Template."""
     temp = cv.template(value)  # validate template
     if temp.is_static:
-        raise vol.Invalid(
-            "Static templates are not supported. Template should start with '{{' and end with '}}'"
+        raise probatio.Invalid(
+            "Static templates are not supported."
+            " Template should start with '{{'"
+            " and end with '}}'"
         )
     return value  # return original string for storage and later template creation
 
 
-EXPOSE_OPTION_SCHEMA = vol.Schema(
+EXPOSE_OPTION_SCHEMA = probatio.Schema(
     {
-        vol.Required("ga"): GASelector(
+        probatio.Required("ga"): GASelector(
             state=False,
             passive=False,
             write_required=True,
             dpt=["numeric", "enum", "complex", "string"],
         ),
-        vol.Optional("attribute"): str,
-        vol.Optional("default"): object,
-        vol.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
-        vol.Optional("periodic_send"): cv.positive_float,
-        vol.Optional("respond_to_read"): bool,
-        vol.Optional("value_template"): validate_expose_template_no_coerce,
+        probatio.Optional("attribute"): str,
+        probatio.Optional("default"): object,
+        probatio.Optional(
+            "cooldown"
+        ): cv.positive_float,  # frontend renders to duration
+        probatio.Optional("send_on_init"): bool,
+        probatio.Optional("periodic_send"): cv.positive_float,
+        probatio.Optional("respond_to_read"): bool,
+        probatio.Optional("value_template"): validate_expose_template_no_coerce,
     }
 )
 
-EXPOSE_CONFIG_SCHEMA = vol.Schema(
+EXPOSE_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(),
-        vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
+        probatio.Required("entity_id"): selector.EntitySelector(),
+        probatio.Required("data"): probatio.Schema(
+            {
+                probatio.Required("options"): [EXPOSE_OPTION_SCHEMA],
+                probatio.Optional("notes"): str,
+            }
+        ),
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 
@@ -99,6 +115,7 @@ def _store_to_expose_option(
         attribute=config.get("attribute"),
         cooldown=config.get("cooldown", 0),
         default=config.get("default"),
+        send_on_init=config.get("send_on_init", False),
         periodic_send=config.get("periodic_send", 0),
         respond_to_read=config.get("respond_to_read", True),
         value_template=value_template,
@@ -135,13 +152,13 @@ class ExposeController:
         hass: HomeAssistant,
         xknx: XKNX,
         entity_id: str,
-        expose_config: list[KNXExposeStoreOptionModel],
+        expose_config: KNXExposeStoreConfigModel,
     ) -> None:
         """Update entity expose configuration for an entity."""
         self.remove_entity_expose(entity_id)
 
         expose_options = [
-            _store_to_expose_option(hass, config) for config in expose_config
+            _store_to_expose_option(hass, config) for config in expose_config["options"]
         ]
         expose = KnxExposeEntity(hass, xknx, entity_id, expose_options)
         self._entity_exposes[entity_id] = expose

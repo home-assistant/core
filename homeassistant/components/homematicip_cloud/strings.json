@@ -37,6 +37,31 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "chamber_degraded": {
+        "name": "Chamber degraded"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
+      "raining": {
+        "name": "Raining"
+      }
+    },
+    "event": {
+      "button": {
+        "name": "Button {channel}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "short_release": "Short release"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "optical_signal_light": {
         "state_attributes": {
@@ -52,6 +77,21 @@
       }
     },
     "sensor": {
+      "channel_1_temperature": {
+        "name": "Channel 1 temperature"
+      },
+      "channel_2_temperature": {
+        "name": "Channel 2 temperature"
+      },
+      "delta_temperature": {
+        "name": "Delta temperature"
+      },
+      "duty_cycle": {
+        "name": "Duty cycle"
+      },
+      "heating": {
+        "name": "Heating"
+      },
       "smoke_detector_alarm_counter": {
         "name": "Alarm counter"
       },
@@ -67,10 +107,24 @@
       "smoke_detector_test_counter": {
         "name": "Test counter"
       },
+      "tilt_angle": {
+        "name": "Tilt angle"
+      },
       "tilt_state": {
         "state": {
           "neutral": "Neutral",
           "non_neutral": "Non-neutral",
+          "tilted": "Tilted"
+        }
+      },
+      "today_rain": {
+        "name": "Today rain"
+      },
+      "window_state": {
+        "name": "Window state",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
           "tilted": "Tilted"
         }
       }
@@ -79,6 +133,12 @@
   "exceptions": {
     "access_point_not_found": {
       "message": "No matching access point found for access point ID {id}"
+    },
+    "alarm_activation_blocked": {
+      "message": "The alarm system was not armed because the following devices report a problem: {devices}"
+    },
+    "alarm_activation_failed": {
+      "message": "The alarm system did not accept the requested state"
     }
   },
   "services": {

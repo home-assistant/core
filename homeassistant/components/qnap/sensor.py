@@ -1,9 +1,7 @@
 """Support for QNAP NAS Sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -133,7 +131,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_tx",
         translation_key="network_tx",
-        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -144,7 +142,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_rx",
         translation_key="network_rx",
-        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -336,6 +334,7 @@ class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self.entity_description.key == "cpu_temp":
@@ -350,6 +349,7 @@ class QNAPMemorySensor(QNAPSensor):
     """A QNAP sensor that monitors memory stats."""
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         free = float(self.coordinator.data["system_stats"]["memory"]["free"])
@@ -376,6 +376,7 @@ class QNAPNetworkSensor(QNAPSensor):
     monitor_device: str
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         nic = self.coordinator.data["system_stats"]["nics"][self.monitor_device]
@@ -402,6 +403,7 @@ class QNAPSystemSensor(QNAPSensor):
     """A QNAP sensor that monitors overall system health."""
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self.entity_description.key == "status":
@@ -429,6 +431,7 @@ class QNAPDriveSensor(QNAPSensor):
     monitor_device: str
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         data = self.coordinator.data["smart_drive_health"][self.monitor_device]
@@ -442,6 +445,7 @@ class QNAPDriveSensor(QNAPSensor):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
@@ -461,6 +465,7 @@ class QNAPVolumeSensor(QNAPSensor):
     monitor_device: str
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         data = self.coordinator.data["volumes"][self.monitor_device]

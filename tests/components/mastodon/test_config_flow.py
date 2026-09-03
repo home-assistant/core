@@ -18,11 +18,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_mastodon_client: AsyncMock) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -51,10 +48,9 @@ async def test_full_flow(
     assert result["result"].unique_id == "trwnh_mastodon_social"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_with_path(
-    hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_mastodon_client: AsyncMock
 ) -> None:
     """Test full flow, where a path is accidentally specified."""
     result = await hass.config_entries.flow.async_init(
@@ -84,10 +80,9 @@ async def test_full_flow_with_path(
     assert result["result"].unique_id == "trwnh_mastodon_social"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_fallback_to_instance_v1(
-    hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_mastodon_client: AsyncMock
 ) -> None:
     """Test full flow where instance_v2 fails and falls back to instance_v1."""
     mock_mastodon_client.instance_v2.side_effect = MastodonNotFoundError(
@@ -132,10 +127,10 @@ async def test_full_flow_fallback_to_instance_v1(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -176,10 +171,10 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -206,10 +201,10 @@ async def test_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow."""
@@ -229,10 +224,10 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "token2"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_wrong_account(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with wrong account."""
@@ -263,10 +258,10 @@ async def test_reauth_flow_wrong_account(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_exceptions(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -298,10 +293,10 @@ async def test_reauth_flow_exceptions(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -328,10 +323,10 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "access_token2"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_wrong_account(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow with wrong account."""
@@ -366,10 +361,10 @@ async def test_reconfigure_flow_wrong_account(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_exceptions(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,

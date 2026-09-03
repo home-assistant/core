@@ -1,7 +1,5 @@
 """The nut component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
@@ -29,6 +27,34 @@ from .coordinator import NutConfigEntry, NutCoordinator, NutRuntimeData
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
+    """Return the outlet numbers reported by the device.
+
+    Use ``outlet.count`` when the device reports it. Otherwise fall back to
+    discovering outlets from ``outlet.<n>.*`` status keys, so devices that
+    expose switchable outlets without reporting a count are still detected.
+    """
+    if (num_outlets := status.get("outlet.count")) is not None:
+        try:
+            count = int(num_outlets)
+        except ValueError:
+            _LOGGER.debug("Invalid outlet.count value: %s", num_outlets)
+        else:
+            return set(range(1, count + 1))
+
+    outlet_numbers: set[int] = set()
+    prefix = "outlet."
+    for key in status:
+        rest = key.removeprefix(prefix)
+        if rest == key:
+            continue
+        number = rest.split(".", 1)[0]
+        if number.isdigit() and int(number) > 0:
+            outlet_numbers.add(int(number))
+
+    return outlet_numbers
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
@@ -81,16 +107,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
-        # Dynamically add outlet integration commands
+        # Dynamically add outlet integration commands for every detected outlet
         additional_integration_commands = set()
-        if (num_outlets := status.get("outlet.count")) is not None:
-            for outlet_num in range(1, int(num_outlets) + 1):
-                outlet_num_str: str = str(outlet_num)
-                additional_integration_commands |= {
-                    f"outlet.{outlet_num_str}.load.cycle",
-                    f"outlet.{outlet_num_str}.load.on",
-                    f"outlet.{outlet_num_str}.load.off",
-                }
+        for outlet_num in outlet_numbers_from_status(status):
+            additional_integration_commands |= {
+                f"outlet.{outlet_num}.load.cycle",
+                f"outlet.{outlet_num}.load.on",
+                f"outlet.{outlet_num}.load.off",
+            }
 
         valid_integration_commands = (
             INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
@@ -144,7 +168,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove NUT config entry from a device."""
     return not any(
@@ -153,6 +177,14 @@ async def async_remove_config_entry_device(
         if identifier[0] == DOMAIN
         and identifier[1] in config_entry.runtime_data.unique_id
     )
+
+
+def _strip_optional(value: str | None) -> str | None:
+    """Strip whitespace from an optional string value."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
 
 
 def _manufacturer_from_status(status: dict[str, str]) -> str | None:
@@ -277,15 +309,17 @@ class PyNUTData:
         if not self._status:
             return None
 
-        manufacturer = _manufacturer_from_status(self._status)
-        model = _model_from_status(self._status)
-        model_id: str | None = self._status.get("device.part")
-        firmware = _firmware_from_status(self._status)
-        serial = _serial_from_status(self._status)
-        mac_address: str | None = self._status.get("device.macaddr")
+        manufacturer = _strip_optional(_manufacturer_from_status(self._status))
+        model = _strip_optional(_model_from_status(self._status))
+        model_id: str | None = _strip_optional(self._status.get("device.part"))
+        firmware = _strip_optional(_firmware_from_status(self._status))
+        serial = _strip_optional(_serial_from_status(self._status))
+        mac_address = _strip_optional(self._status.get("device.macaddr"))
         if mac_address is not None:
-            mac_address = format_mac(mac_address.rstrip().replace(" ", ":"))
-        device_location: str | None = self._status.get("device.location")
+            mac_address = format_mac(mac_address.replace(" ", ":"))
+        device_location: str | None = _strip_optional(
+            self._status.get("device.location")
+        )
         return NUTDeviceInfo(
             manufacturer,
             model,

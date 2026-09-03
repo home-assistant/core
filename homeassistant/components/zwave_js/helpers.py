@@ -1,7 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
@@ -258,7 +256,7 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
 
 
 def get_home_and_node_id_from_device_entry(
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> tuple[str, int] | None:
     """Get home ID and node ID for Z-Wave device registry entry.
 
@@ -289,7 +287,7 @@ def async_get_node_from_device_id(
     if not dev_reg:
         dev_reg = dr.async_get(hass)
 
-    if not (device_entry := dev_reg.async_get(device_id)):
+    if not (device_entry := dev_reg.async_get(device_id, include_child_devices=False)):
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
@@ -307,7 +305,7 @@ def async_get_node_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client
@@ -326,6 +324,19 @@ def async_get_node_from_device_id(
         raise ValueError(f"Node for device {device_id} can't be found")
 
     return driver.controller.nodes[node_id]
+
+
+@callback
+def async_get_config_entry_from_node(
+    hass: HomeAssistant, node: ZwaveNode
+) -> ZwaveJSConfigEntry:
+    """Get the config entry from a Z-Wave JS node."""
+    return next(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state is ConfigEntryState.LOADED
+        and entry.runtime_data.client is node.client
+    )
 
 
 async def async_get_provisioning_entry_from_device_id(
@@ -355,7 +366,7 @@ async def async_get_provisioning_entry_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client
@@ -420,11 +431,13 @@ def async_get_nodes_from_area_id(
             if entity.platform == DOMAIN and entity.device_id is not None
         }
     )
-    # Add devices in an area that are Z-Wave JS devices
+    # Add devices in an area that are Z-Wave JS devices. Child devices are skipped
+    # since a child device is not a Z-Wave JS node.
     nodes.update(
         async_get_node_from_device_id(hass, device.id, dev_reg)
         for device in dr.async_entries_for_area(dev_reg, area_id)
-        if any(
+        if not isinstance(device, dr.ChildDeviceEntry)
+        and any(
             cast(
                 ZwaveJSConfigEntry,
                 hass.config_entries.async_get_entry(config_entry_id),
@@ -512,7 +525,7 @@ def async_get_node_status_sensor_entity_id(
         ent_reg = er.async_get(hass)
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    if not (device := dev_reg.async_get(device_id)):
+    if not (device := dev_reg.async_get(device_id, include_child_devices=False)):
         raise HomeAssistantError("Invalid Device ID provided")
 
     if not (entry_id := _zwave_js_config_entry(hass, device)):
@@ -572,12 +585,12 @@ def get_value_state_schema(
             return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            return vol.In({int(k): v for k, v in value.metadata.states.items()})
+            return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
         return None
 
     if value.metadata.states:
-        return vol.In({int(k): v for k, v in value.metadata.states.items()})
+        return vol.In({str(int(k)): v for k, v in value.metadata.states.items()})
 
     return vol.All(
         vol.Coerce(int),

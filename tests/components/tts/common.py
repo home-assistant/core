@@ -1,7 +1,5 @@
 """Provide common tests tools for tts."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -124,6 +122,11 @@ async def retrieve_media(
     await hass.async_block_till_done()
     client = await hass_client()
     req = await client.get(url)
+
+    # The HTTP response returns once the audio is streamed, but the
+    # background task that loads the cache (and writes it to disk) may
+    # still be in flight. Wait for it to avoid lingering tasks.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     return req.status
 

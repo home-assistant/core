@@ -63,7 +63,14 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data=None,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -80,12 +87,23 @@ async def test_urlize_plain_host(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert user_input[CONF_URL] == f"http://{host}/"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # The form comes back offering the URL the plain host was turned into
+    schema = result["data_schema"].schema
+    url_key = next(key for key in schema if key == CONF_URL)
+    assert url_key.default() == f"http://{host}/"
 
 
 async def test_already_configured(
@@ -113,7 +131,14 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data=FIXTURE_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FIXTURE_USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -142,9 +167,15 @@ async def test_connection_errors(
     """Test we show user form on various errors."""
     requests_mock.request(ANY, ANY, exc=exception)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=FIXTURE_USER_INPUT | data_patch,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FIXTURE_USER_INPUT | data_patch,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -181,35 +212,55 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
     [
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_USERNAME: "incorrect_username"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.PASSWORD_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_PASSWORD: "incorrect_password"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_PWD_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_USERNAME: "invalid_auth"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_OVERRUN}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_PWD_OVERRUN}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {"base": "login_attempts_exceeded"},
         ),
         (
             {
-                "text": f"<error><code>{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {"base": "response_error"},
@@ -236,7 +287,14 @@ async def test_login_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data={**FIXTURE_USER_INPUT, **fixture_override},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**FIXTURE_USER_INPUT, **fixture_override},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -266,7 +324,14 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-            data=user_input,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
         )
         await hass.async_block_till_done()
 
@@ -343,7 +408,9 @@ async def test_ssdp(
         ssdp_st="upnp:rootdevice",
         ssdp_location=f"{url}:60957/rootDesc.xml",
         upnp={
-            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            ATTR_UPNP_DEVICE_TYPE: (
+                "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+            ),
             ATTR_UPNP_MANUFACTURER: "Huawei",
             ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
             ATTR_UPNP_MODEL_NAME: "Huawei router",
@@ -361,6 +428,7 @@ async def test_ssdp(
 
     for k, v in expected_result.items():
         assert result[k] == v  # type: ignore[literal-required] # expected is a subset
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if result.get("data_schema"):
         assert result["data_schema"] is not None
         assert result["data_schema"]({})[CONF_URL] == url + "/"

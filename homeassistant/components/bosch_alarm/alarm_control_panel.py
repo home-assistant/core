@@ -1,6 +1,6 @@
 """Support for Bosch Alarm Panel."""
 
-from __future__ import annotations
+from typing import override
 
 from bosch_alarm_mode2 import Panel
 
@@ -26,9 +26,11 @@ async def async_setup_entry(
 
     async_add_entities(
         AreaAlarmControlPanel(
+            hass,
             panel,
             area_id,
             config_entry.unique_id or config_entry.entry_id,
+            config_entry.entry_id,
         )
         for area_id in panel.areas
     )
@@ -48,12 +50,22 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_name = None
 
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        area_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Initialise a Bosch Alarm control panel entity."""
-        super().__init__(panel, area_id, unique_id, True, False, True)
+        super().__init__(
+            hass, panel, area_id, unique_id, config_entry_id, True, False, True
+        )
         self._attr_unique_id = self._area_unique_id
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
         if self._area.is_triggered():
@@ -70,14 +82,17 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMED_AWAY
         return None
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm this panel."""
         await self.panel.area_disarm(self._area_id)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.panel.area_arm_part(self._area_id)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.panel.area_arm_all(self._area_id)

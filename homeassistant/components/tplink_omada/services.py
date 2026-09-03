@@ -6,6 +6,7 @@ from tplink_omada_client.exceptions import OmadaClientException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
@@ -15,7 +16,6 @@ from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MAC = "mac"
 
 
@@ -25,19 +25,27 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
             call.data[ATTR_CONFIG_ENTRY_ID]
         )
         if not entry:
-            raise ServiceValidationError("Specified TP-Link Omada controller not found")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="controller_not_found",
+            )
     else:
-        # Assume first loaded entry if none specified (for backward compatibility/99% use case)
+        # Assume first loaded entry if none specified
+        # (for backward compatibility/99% use case)
         entries = call.hass.config_entries.async_entries(DOMAIN)
         if len(entries) == 0:
-            raise ServiceValidationError("No active TP-Link Omada controllers found")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_controllers",
+            )
         entry = entries[0]
 
     entry = cast(ConfigEntry[OmadaSiteController], entry)
 
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
-            "The TP-Link Omada integration is not currently available"
+            translation_domain=DOMAIN,
+            translation_key="controller_unavailable",
         )
     return entry.runtime_data
 
@@ -63,7 +71,11 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
     try:
         await controller.omada_client.reconnect_client(mac)
     except OmadaClientException as ex:
-        raise HomeAssistantError(f"Failed to reconnect client with MAC {mac}") from ex
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="reconnect_failed",
+            translation_placeholders={"mac": mac},
+        ) from ex
 
 
 SERVICES = [

@@ -1,6 +1,6 @@
 """Support for HomeWizard select platform."""
 
-from __future__ import annotations
+from typing import override
 
 from homewizard_energy.models import Batteries
 
@@ -64,6 +64,7 @@ class HomeWizardBatteryModeSelectEntity(HomeWizardEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return (
@@ -73,6 +74,7 @@ class HomeWizardBatteryModeSelectEntity(HomeWizardEntity, SelectEntity):
         )
 
     @homewizard_exception_handler
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.coordinator.api.batteries(Batteries.Mode(option))

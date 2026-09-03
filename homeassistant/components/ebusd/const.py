@@ -1,7 +1,5 @@
 """Constants for ebus component."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorDeviceClass

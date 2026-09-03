@@ -1,12 +1,12 @@
 """Support for Litter-Robot switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from functools import partial
+from typing import Any, Generic, override
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot5, Robot
+from pylitterbot.sleep_schedule import DayOfWeek
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -14,13 +14,32 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+from .entity import (
+    LitterRobotEntity,
+    _WhiskerEntityT,
+    raise_update_failed,
+    whisker_command,
+)
 
 PARALLEL_UPDATES = 1
 
 
+def _lr5_sleep_day_enabled(robot: LitterRobot5, *, day: DayOfWeek) -> bool:
+    """Return whether a day's sleep schedule is enabled."""
+    if (schedule := robot.sleep_schedule) is None:
+        return False
+    return (entry := schedule.get_day(day)) is not None and entry.is_enabled
+
+
+async def _lr5_set_sleep_day_enabled(
+    robot: LitterRobot5, value: bool, *, day: DayOfWeek
+) -> bool:
+    """Enable or disable a day's sleep schedule, preserving its times."""
+    return await robot.set_sleep_mode(value, day_of_week=day)
+
+
 @dataclass(frozen=True, kw_only=True)
-class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEntityT]):
+class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot switch entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
@@ -48,6 +67,16 @@ SWITCH_MAP: dict[type[Robot], tuple[RobotSwitchEntityDescription, ...]] = {
         NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION,
     ),
     LitterRobot3: (NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION,),
+    LitterRobot5: tuple(
+        RobotSwitchEntityDescription[LitterRobot5](
+            key=f"sleep_mode_{day.name.lower()}",
+            translation_key=f"sleep_mode_{day.name.lower()}",
+            entity_registry_enabled_default=False,
+            set_fn=partial(_lr5_set_sleep_day_enabled, day=day),
+            value_fn=partial(_lr5_sleep_day_enabled, day=day),
+        )
+        for day in DayOfWeek
+    ),
     Robot: (  # type: ignore[type-abstract]  # only used for isinstance check
         RobotSwitchEntityDescription[LitterRobot | FeederRobot](
             key="panel_lock_enabled",
@@ -95,16 +124,21 @@ class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
     entity_description: RobotSwitchEntityDescription[_WhiskerEntityT]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value_fn(self.robot)
 
     @whisker_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.entity_description.set_fn(self.robot, True)
+        if not await self.entity_description.set_fn(self.robot, True):
+            raise_update_failed(self.entity_id)
 
     @whisker_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.entity_description.set_fn(self.robot, False)
+        if not await self.entity_description.set_fn(self.robot, False):
+            raise_update_failed(self.entity_id)

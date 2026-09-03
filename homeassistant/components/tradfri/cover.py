@@ -1,9 +1,7 @@
 """Support for IKEA Tradfri covers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
 
@@ -57,16 +55,19 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
         self._device_control = self._device.blind_control
         self._device_data = self._device_control.blinds[0]
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self.coordinator.data.blind_control.blinds[0]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         return {"model": self._device.device_info.model_number}
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -76,24 +77,28 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
             return None
         return 100 - cast(int, self._device_data.current_cover_position)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if not self._device_control:
             return
         await self._api(self._device_control.set_state(100 - kwargs[ATTR_POSITION]))
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if not self._device_control:
             return
         await self._api(self._device_control.set_state(0))
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if not self._device_control:
             return
         await self._api(self._device_control.set_state(100))
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if not self._device_control:
@@ -101,6 +106,7 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
         await self._api(self._device_control.trigger_blind())
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0

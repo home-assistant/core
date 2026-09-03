@@ -1,7 +1,5 @@
 """Tests for the UniFi Access select platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,6 +14,7 @@ from unifi_access_api import (
     UnifiAccessError,
 )
 
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -95,7 +94,7 @@ async def test_select_option_calls_api(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        Platform.SELECT,
+        SELECT_DOMAIN,
         "select_option",
         {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": "keep_lock"},
         blocking=True,
@@ -118,7 +117,7 @@ async def test_select_schedule_option_does_not_call_api(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        Platform.SELECT,
+        SELECT_DOMAIN,
         "select_option",
         {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": "schedule"},
         blocking=True,
@@ -231,7 +230,7 @@ async def test_select_option_raises_on_api_error(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            Platform.SELECT,
+            SELECT_DOMAIN,
             "select_option",
             {
                 "entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY,

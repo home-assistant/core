@@ -1,9 +1,7 @@
 """Switch platform for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from jvcprojector import Command, command as cmd
 
@@ -69,14 +67,17 @@ class JvcProjectorSwitchEntity(JvcProjectorEntity, SwitchEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self.coordinator.data.get(self.command.name) == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.device.set(self.command, STATE_ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.device.set(self.command, STATE_OFF)

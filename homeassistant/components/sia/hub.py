@@ -1,7 +1,5 @@
 """The sia hub."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 import logging
 from typing import Any
@@ -53,7 +51,7 @@ class SIAHub:
 
     @callback
     def async_setup_hub(self) -> None:
-        """Add a device to the device_registry, register shutdown listener, load reactions."""
+        """Add a device to the device_registry, register shutdown listener."""
         self.update_accounts()
         device_registry = dr.async_get(self._hass)
         for acc in self._accounts:
@@ -76,10 +74,14 @@ class SIAHub:
             await self.sia_client.async_stop()
 
     async def async_create_and_fire_event(self, event: SIAEvent) -> None:
-        """Create a event on HA dispatcher and then on HA's bus, with the data from the SIAEvent.
+        """Create an event on HA dispatcher and then on HA's bus.
 
-        The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.
-
+        The created event is handled by default for only a
+        small subset for each platform (there are about 320
+        SIA Codes defined, only 22 of those are used in the
+        alarm_control_panel), a user can choose to build other
+        automation or even entities on the same event for SIA
+        codes not handled by the built-in platforms.
         """
         _LOGGER.debug(
             "Adding event to dispatch and bus for code %s for port %s and account %s",
@@ -111,7 +113,8 @@ class SIAHub:
         if self.sia_client is not None:
             self.sia_client.accounts = self.sia_accounts
             return
-        # the new client class method creates a subclass based on protocol, hence the type ignore
+        # the new client class method creates a subclass
+        # based on protocol, hence the type ignore
         self.sia_client = SIAClient(
             host="",
             port=self._port,
@@ -121,7 +124,7 @@ class SIAHub:
         )
 
     def _load_options(self) -> None:
-        """Store attributes to avoid property call overhead since they are called frequently."""
+        """Store attributes to avoid property call overhead."""
         options = dict(self._entry.options)
         for acc in self._accounts:
             acc_id = acc[CONF_ACCOUNT]
@@ -137,11 +140,12 @@ class SIAHub:
     ) -> None:
         """Handle signals of config entry being updated.
 
-        First, update the accounts, this will reflect any changes with ignore_timestamps.
-        Second, unload underlying platforms, and then setup platforms, this reflects any changes in number of zones.
-
+        First, update the accounts, this will reflect any
+        changes with ignore_timestamps. Second, unload
+        underlying platforms, and then setup platforms, this
+        reflects any changes in number of zones.
         """
-        if config_entry.state != ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             return
         config_entry.runtime_data.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

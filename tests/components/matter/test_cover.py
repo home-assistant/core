@@ -4,11 +4,13 @@ from math import floor
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import CoverEntityFeature, CoverState
+from homeassistant.components.matter.cover import STATE_WRITE_DEBOUNCE_COOLDOWN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -18,6 +20,20 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+from tests.common import async_fire_time_changed
+
+
+async def trigger_subscription_callback_debounced(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+) -> None:
+    """Trigger subscription callbacks and wait for the debounced state write."""
+    await trigger_subscription_callback(hass, client)
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -113,6 +129,7 @@ async def test_cover_lift(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test window covering devices with lift and position aware lift features."""
     await hass.services.async_call(
@@ -134,14 +151,14 @@ async def test_cover_lift(
     matter_client.send_device_command.reset_mock()
 
     set_node_attribute(matter_node, 1, 258, 10, 0b001010)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSING
 
     set_node_attribute(matter_node, 1, 258, 10, 0b000101)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -159,26 +176,27 @@ async def test_cover_lift_only(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test window covering devices with lift feature and without position aware lift feature."""
+    """Test window covering with lift but without position aware lift."""
 
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
 
     set_node_attribute(matter_node, 1, 258, 65529, [0, 1, 2])
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION == 0
 
     set_node_attribute(matter_node, 1, 258, 65529, [0, 1, 2, 5])
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -196,6 +214,7 @@ async def test_cover_position_aware_lift(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test window covering devices with position aware lift features."""
 
@@ -212,7 +231,7 @@ async def test_cover_position_aware_lift(
     for position in (0, 9999):
         set_node_attribute(matter_node, 1, 258, 14, position)
         set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-        await trigger_subscription_callback(hass, matter_client)
+        await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
         state = hass.states.get(entity_id)
         assert state
@@ -221,7 +240,49 @@ async def test_cover_position_aware_lift(
 
     set_node_attribute(matter_node, 1, 258, 14, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 0
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_split_attribute_updates(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test state writes are debounced to coalesce split attribute updates."""
+
+    set_node_attribute(matter_node, 1, 258, 14, 9900)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+    # the device reports it stopped moving, while the final position
+    # arrives as a separate attribute update slightly later
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
     await trigger_subscription_callback(hass, matter_client)
+
+    # the intermittent state (stopped at 1% open) is not written
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -242,6 +303,7 @@ async def test_cover_tilt(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test window covering devices with tilt and position aware tilt features."""
 
@@ -263,16 +325,16 @@ async def test_cover_tilt(
     )
     matter_client.send_device_command.reset_mock()
 
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     set_node_attribute(matter_node, 1, 258, 10, 0b100010)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSING
 
     set_node_attribute(matter_node, 1, 258, 10, 0b010001)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -290,11 +352,12 @@ async def test_cover_tilt_only(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test window covering devices with tilt feature and without position aware tilt feature."""
+    """Test window covering with tilt but without position aware tilt."""
 
     set_node_attribute(matter_node, 1, 258, 65529, [0, 1, 2])
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -304,7 +367,7 @@ async def test_cover_tilt_only(
     )
 
     set_node_attribute(matter_node, 1, 258, 65529, [0, 1, 2, 8])
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -325,6 +388,7 @@ async def test_cover_position_aware_tilt(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test window covering devices with position aware tilt feature."""
 
@@ -341,7 +405,7 @@ async def test_cover_position_aware_tilt(
     for tilt_position in (0, 9999, 10000):
         set_node_attribute(matter_node, 1, 258, 15, tilt_position)
         set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-        await trigger_subscription_callback(hass, matter_client)
+        await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
         state = hass.states.get(entity_id)
         assert state
@@ -355,6 +419,7 @@ async def test_cover_full_features(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test window covering devices with all the features."""
     entity_id = "cover.mock_full_window_covering"
@@ -373,7 +438,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, 10000)
     set_node_attribute(matter_node, 1, 258, 15, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -382,7 +447,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, 5000)
     set_node_attribute(matter_node, 1, 258, 15, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -391,7 +456,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, 10000)
     set_node_attribute(matter_node, 1, 258, 15, 5000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -400,7 +465,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, 5000)
     set_node_attribute(matter_node, 1, 258, 15, 5000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
@@ -409,7 +474,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, 5000)
     set_node_attribute(matter_node, 1, 258, 15, None)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.OPEN
@@ -417,7 +482,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 15, 5000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
@@ -425,7 +490,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, 10000)
     set_node_attribute(matter_node, 1, 258, 15, None)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSED
@@ -433,7 +498,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 15, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
@@ -441,7 +506,7 @@ async def test_cover_full_features(
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 15, None)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"

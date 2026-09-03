@@ -1,10 +1,8 @@
 """Adds config flow for Trafikverket Ferry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
@@ -99,6 +97,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -109,13 +108,13 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
             api_key: str = user_input[CONF_API_KEY]
             ferry_from: str = user_input[CONF_FROM]
             ferry_to: str = user_input.get(CONF_TO, "")
-            ferry_time: str = user_input[CONF_TIME]
+            ferry_time: str | None = user_input.get(CONF_TIME)
             weekdays: list[str] = user_input[CONF_WEEKDAY]
 
             name = f"{ferry_from}"
             if ferry_to:
                 name = name + f" to {ferry_to}"
-            if ferry_time != "00:00:00":
+            if ferry_time and ferry_time != "00:00:00":
                 name = name + f" at {ferry_time!s}"
 
             try:

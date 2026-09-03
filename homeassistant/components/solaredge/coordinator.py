@@ -1,14 +1,12 @@
 """Provides the data update coordinators for SolarEdge."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any, override
 
 from aiosolaredge import SolarEdge
-from solaredge_web import EnergyData, SolarEdgeWeb, TimeUnit
+from solaredge_web import EnergyData, SolarEdgeWeb
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -18,6 +16,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
+    async_list_statistic_ids,
     get_last_statistics,
     statistics_during_period,
 )
@@ -25,7 +24,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util, snakecase
+from homeassistant.util import dt as dt_util, slugify, snakecase
 from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import (
@@ -38,6 +37,7 @@ from .const import (
     MODULE_STATISTICS_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
+    STORAGE_DATA_UPDATE_DELAY,
 )
 
 if TYPE_CHECKING:
@@ -92,10 +92,12 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
     """Get and update the latest overview data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return OVERVIEW_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -116,7 +118,8 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 data = value
             self.data[key] = data
 
-        # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
+        # Sanity check the energy values. SolarEdge API sometimes
+        # reports "lifetimedata" of zero,
         # while values for last Year, Month and Day energy are still OK.
         # See https://github.com/home-assistant/core/issues/59285 .
         if set(energy_keys).issubset(self.data.keys()):
@@ -135,10 +138,12 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     """Get and update the latest details data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return DETAILS_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
 
@@ -179,10 +184,12 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
     """Get and update the latest inventory data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return INVENTORY_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -217,16 +224,17 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         self.unit = None
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return ENERGY_DETAILS_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            now = datetime.now()
-            today = date.today()
-            midnight = datetime.combine(today, datetime.min.time())
+            now = dt_util.now()
+            midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
             data = await self.api.get_energy_details(
                 self.site_id,
                 midnight,
@@ -283,10 +291,12 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         self.unit = None
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return POWER_FLOW_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -322,16 +332,100 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 export = key.lower() in power_to
                 if self.data[key]:
                     self.data[key] *= -1 if export else 1
-                self.attributes[key]["flow"] = "export" if export else "import"
+                self.data["grid_flow_direction"] = "export" if export else "import"
 
             if key == "STORAGE":
                 charge = key.lower() in power_to
                 if self.data[key]:
                     self.data[key] *= -1 if charge else 1
-                self.attributes[key]["flow"] = "charge" if charge else "discharge"
-                self.attributes[key]["soc"] = value["chargeLevel"]
+                self.data["storage_flow_direction"] = (
+                    "charge" if charge else "discharge"
+                )
+                self.data["storage_level"] = value["chargeLevel"]
 
         LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)
+
+
+class SolarEdgeStorageDataService(SolarEdgeDataService):
+    """Get and update the latest storage data."""
+
+    @property
+    @override
+    def update_interval(self) -> timedelta:
+        """Update interval."""
+        return STORAGE_DATA_UPDATE_DELAY
+
+    @override
+    async def async_update_data(self) -> None:
+        """Update the data from the SolarEdge Monitoring API."""
+        now = dt_util.now()
+        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        data = await self.api.get_storage_data(
+            self.site_id,
+            start_of_day,
+            now,
+        )
+        storage_data = data.get("storageData")
+        if storage_data is None:
+            raise UpdateFailed("Storage data not available from API")
+
+        batteries = storage_data.get("batteries")
+        if batteries is None:
+            raise UpdateFailed("Battery data not available from API")
+
+        self.data = {}
+        self.attributes = {}
+
+        if not batteries:
+            LOGGER.debug("No batteries found in storage data")
+            return
+
+        # Aggregate totals across all batteries
+        total_charge_energy = 0.0
+        total_discharge_energy = 0.0
+
+        for battery in batteries:
+            serial = battery.get("serialNumber")
+            if not serial:
+                LOGGER.debug("Skipping battery without serialNumber")
+                continue
+
+            telemetries = battery.get("telemetries", [])
+
+            if not telemetries:
+                continue
+
+            latest = telemetries[-1]
+
+            # Per-battery current values
+            self.data[f"{serial}_state_of_charge"] = latest.get(
+                "batteryPercentageState"
+            )
+            self.data[f"{serial}_power"] = latest.get("power")
+
+            # Compute daily charge/discharge delta from lifetime counters
+            if len(telemetries) >= 2:
+                first = telemetries[0]
+                charge_energy = latest.get("lifeTimeEnergyCharged", 0.0) - first.get(
+                    "lifeTimeEnergyCharged", 0.0
+                )
+                discharge_energy = latest.get(
+                    "lifeTimeEnergyDischarged", 0.0
+                ) - first.get("lifeTimeEnergyDischarged", 0.0)
+            else:
+                charge_energy = 0.0
+                discharge_energy = 0.0
+
+            total_charge_energy += charge_energy
+            total_discharge_energy += discharge_energy
+
+            self.data[f"{serial}_charge_energy"] = charge_energy
+            self.data[f"{serial}_discharge_energy"] = discharge_energy
+
+        self.data["charge_energy"] = total_charge_energy
+        self.data["discharge_energy"] = total_discharge_energy
+
+        LOGGER.debug("Updated SolarEdge storage data: %s", self.data)
 
 
 class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
@@ -362,6 +456,8 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         )
         self.site_id = config_entry.data[CONF_SITE_ID]
         self.title = config_entry.title
+        self._serial_to_legacy_id: dict[str, str] = {}
+        self._legacy_id_map_initialized = False
 
         @callback
         def _dummy_listener() -> None:
@@ -371,14 +467,15 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         # Needed because there are no sensors added.
         self.async_add_listener(_dummy_listener)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint and update statistics."""
-        equipment: dict[int, dict[str, Any]] = await self.api.async_get_equipment()
-        # We fetch last week's data from the API and refresh every 12h so we overwrite recent
-        # statistics. This is intended to allow adding any corrected/updated data from the API.
-        energy_data_list: list[EnergyData] = await self.api.async_get_energy_data(
-            TimeUnit.WEEK
-        )
+        equipment: dict[str, dict[str, Any]] = await self.api.async_get_equipment()
+        await self._async_build_legacy_id_map(equipment)
+        # We fetch last week's data from the API and refresh
+        # every 12h so we overwrite recent statistics. This is
+        # intended to allow adding any corrected/updated data.
+        energy_data_list: list[EnergyData] = await self.api.async_get_energy_data()
         if not energy_data_list:
             LOGGER.warning(
                 "No data received from SolarEdge API for site: %s", self.site_id
@@ -391,9 +488,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             ),
         )
         for equipment_id, equipment_data in equipment.items():
-            display_name = equipment_data.get(
-                "displayName", f"Equipment {equipment_id}"
-            )
+            display_name = equipment_data.get("name", f"Equipment {equipment_id}")
             statistic_id = self.get_statistic_id(equipment_id)
             statistic_metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.ARITHMETIC,
@@ -406,30 +501,19 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             )
             statistic_sum = last_sums[statistic_id]
             statistics = []
-            current_hour_sum = 0.0
-            current_hour_count = 0
             for energy_data in energy_data_list:
                 start_time = energy_data.start_time.replace(
                     tzinfo=dt_util.get_default_time_zone()
                 )
                 value = energy_data.values.get(equipment_id, 0.0)
-                current_hour_sum += value
-                current_hour_count += 1
-                if start_time.minute != 45:
-                    continue
-                # API returns data every 15 minutes; aggregate to 1-hour statistics
-                # when we reach the energy_data for the last 15 minutes of the hour.
-                current_avg = current_hour_sum / current_hour_count
-                statistic_sum += current_avg
+                statistic_sum += value
                 statistics.append(
                     StatisticData(
-                        start=start_time - timedelta(minutes=45),
-                        state=current_avg,
+                        start=start_time,
+                        state=value,
                         sum=statistic_sum,
                     )
                 )
-                current_hour_sum = 0.0
-                current_hour_count = 0
             LOGGER.debug(
                 "Adding %s statistics for %s %s",
                 len(statistics),
@@ -438,12 +522,90 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             )
             async_add_external_statistics(self.hass, statistic_metadata, statistics)
 
-    def get_statistic_id(self, equipment_id: int) -> str:
-        """Return the statistic ID for this equipment_id."""
+    async def _async_build_legacy_id_map(
+        self, equipment: dict[str, dict[str, Any]]
+    ) -> None:
+        """Build a map from serial numbers to legacy numeric statistic IDs.
+
+        The old API returned numeric equipment IDs; the new API returns serials.
+        To preserve existing statistics, we map each serial's name (the last
+        part after splitting by space, e.g. "1.1.1") to the old statistic ID
+        by matching the statistic name. This runs once per coordinator lifecycle.
+        """
+        if self._legacy_id_map_initialized:
+            return
+
+        all_stats = await async_list_statistic_ids(self.hass)
+
+        prefix = f"{DOMAIN}:{self.site_id}_"
+        # Map the short name (e.g. "1.1.1") to the old numeric statistic ID.
+        # Multiple numeric IDs may share the same name, e.g. after a module
+        # replacement; those matches are ambiguous and skipped.
+        name_to_legacy: dict[str, str] = {}
+        ambiguous_names: set[str] = set()
+        for stat in all_stats:
+            stat_id = stat["statistic_id"]
+            if not stat_id.startswith(prefix):
+                continue
+            suffix = stat_id[len(prefix) :]
+            if not suffix.isdigit():
+                continue
+            name = stat.get("name", "")
+            # Use the last part after splitting by space (e.g. "solaredge 1.1.1" -> "1.1.1").
+            short_name = name.rsplit(" ", 1)[-1] if name else ""
+            if not short_name:
+                continue
+            if short_name in name_to_legacy:
+                del name_to_legacy[short_name]
+                ambiguous_names.add(short_name)
+            elif short_name not in ambiguous_names:
+                name_to_legacy[short_name] = stat_id
+
+        self._legacy_id_map_initialized = True
+
+        if not name_to_legacy and not ambiguous_names:
+            return
+
+        # Map each serial to its old statistic ID via the equipment name.
+        for serial, data in equipment.items():
+            name = data.get("name", "")
+            short_name = name.rsplit(" ", 1)[-1] if name else ""
+            if not short_name:
+                continue
+            if short_name in ambiguous_names:
+                LOGGER.warning(
+                    "Skipping legacy statistics migration for %s %s: multiple "
+                    "numeric statistics share the name %s, so the match is "
+                    "ambiguous",
+                    self.site_id,
+                    name,
+                    short_name,
+                )
+                continue
+            if short_name in name_to_legacy:
+                self._serial_to_legacy_id[serial] = name_to_legacy[short_name]
+
+        if self._serial_to_legacy_id:
+            LOGGER.debug(
+                "Mapped %s legacy SolarEdge statistics to serials for site %s",
+                len(self._serial_to_legacy_id),
+                self.site_id,
+            )
+
+    def get_statistic_id(self, equipment_id: int | str) -> str:
+        """Return the statistic ID for this equipment_id.
+
+        If a legacy numeric ID exists for this serial, reuse it for backward
+        compatibility. Otherwise, create a new serial-based ID.
+        """
+        if isinstance(equipment_id, str) and equipment_id in self._serial_to_legacy_id:
+            return self._serial_to_legacy_id[equipment_id]
+        if isinstance(equipment_id, str):
+            equipment_id = slugify(equipment_id)
         return f"{DOMAIN}:{self.site_id}_{equipment_id}"
 
     async def _async_get_last_sums(
-        self, equipment_ids: Iterable[int], start_time: datetime
+        self, equipment_ids: Iterable[int | str], start_time: datetime
     ) -> dict[str, float]:
         """Get the last sum from the recorder before start_time for each statistic."""
         start = start_time - timedelta(hours=1)
@@ -466,9 +628,10 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             if statistic_id in current_stats:
                 statistic_sum = current_stats[statistic_id][0]["sum"]
             else:
-                # If no statistics found right before start_time, try to get the last statistic
-                # but use it only if it's before start_time.
-                # This is needed if the integration hasn't run successfully for at least a week.
+                # If no statistics found right before start_time,
+                # try to get the last statistic but use it only
+                # if it's before start_time. This is needed if
+                # the integration hasn't run for at least a week.
                 last_stat = await get_instance(self.hass).async_add_executor_job(
                     get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
                 )

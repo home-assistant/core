@@ -1,7 +1,5 @@
 """Support for Netgear routers."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_PORT, CONF_SSL
@@ -76,6 +74,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         coordinator_link=coordinator_link,
     )
 
+    # Register the router device before platforms so tracked devices can always
+    # resolve it as their via_device parent, regardless of platform setup order.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **router.device_info
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -96,9 +100,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> 
             if device_entry.via_device_id is None:
                 router_id = device_entry.id
                 continue  # do not remove the router itself
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
         # Remove entities that are no longer tracked
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -110,9 +112,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: NetgearConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: NetgearConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a device from a config entry."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     router = config_entry.runtime_data.router
 
     device_mac = None

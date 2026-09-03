@@ -1,12 +1,10 @@
 """Support for Cover devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -25,11 +23,12 @@ from homeassistant.const import (
     SERVICE_TOGGLE_COVER_TILT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .condition import make_cover_is_closed_condition, make_cover_is_open_condition
@@ -38,12 +37,15 @@ from .const import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_IS_CLOSED,
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DOMAIN,
     INTENT_CLOSE_COVER,
     INTENT_OPEN_COVER,
     CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
@@ -67,6 +69,7 @@ __all__ = [
     "ATTR_CURRENT_TILT_POSITION",
     "ATTR_IS_CLOSED",
     "ATTR_POSITION",
+    "ATTR_SPEED",
     "ATTR_TILT_POSITION",
     "DEVICE_CLASSES",
     "DEVICE_CLASSES_SCHEMA",
@@ -77,8 +80,10 @@ __all__ = [
     "PLATFORM_SCHEMA_BASE",
     "CoverDeviceClass",
     "CoverEntity",
+    "CoverEntityCapabilityAttribute",
     "CoverEntityDescription",
     "CoverEntityFeature",
+    "CoverEntityStateAttribute",
     "CoverState",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",
@@ -87,7 +92,9 @@ __all__ = [
 ]
 
 
-@bind_hass
+@deprecated_function(
+    "hass.states.is_state(entity_id, 'closed')", breaks_in_ha_version="2027.10"
+)
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(entity_id, CoverState.CLOSED)
@@ -102,11 +109,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, None, "async_open_cover", [CoverEntityFeature.OPEN]
+        SERVICE_OPEN_COVER,
+        {vol.Optional(ATTR_SPEED): cv.string},
+        "async_handle_open_cover",
+        [CoverEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, None, "async_close_cover", [CoverEntityFeature.CLOSE]
+        SERVICE_CLOSE_COVER,
+        {vol.Optional(ATTR_SPEED): cv.string},
+        "async_handle_close_cover",
+        [CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
@@ -114,9 +127,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
-            )
+            ),
+            vol.Optional(ATTR_SPEED): cv.string,
         },
-        "async_set_cover_position",
+        "async_handle_set_cover_position",
         [CoverEntityFeature.SET_POSITION],
     )
 
@@ -196,6 +210,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "is_opening",
     "is_closing",
     "is_closed",
+    "supported_speeds",
 }
 
 
@@ -211,8 +226,15 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_is_opening: bool | None = None
     _attr_state: None = None
     _attr_supported_features: CoverEntityFeature | None
+    _attr_supported_speeds: list[str] | None = None
 
     _cover_is_last_toggle_direction_open = True
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS,
+        }
+    )
 
     @cached_property
     def current_cover_position(self) -> int | None:
@@ -231,6 +253,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_current_cover_tilt_position
 
     @cached_property
+    @override
     def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -241,6 +264,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the cover."""
         if self.is_opening:
@@ -257,21 +281,23 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data: dict[str, Any] = {}
 
-        data[ATTR_IS_CLOSED] = self.is_closed
+        data[CoverEntityStateAttribute.IS_CLOSED] = self.is_closed
 
         if (current := self.current_cover_position) is not None:
-            data[ATTR_CURRENT_POSITION] = current
+            data[CoverEntityStateAttribute.CURRENT_POSITION] = current
 
         if (current_tilt := self.current_cover_tilt_position) is not None:
-            data[ATTR_CURRENT_TILT_POSITION] = current_tilt
+            data[CoverEntityStateAttribute.CURRENT_TILT_POSITION] = current_tilt
 
         return data
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if (features := self._attr_supported_features) is not None:
@@ -280,6 +306,9 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
+
+        if self.supported_speeds:
+            supported_features |= CoverEntityFeature.SPEED
 
         if self.current_cover_position is not None:
             supported_features |= CoverEntityFeature.SET_POSITION
@@ -308,6 +337,73 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._attr_is_closed
+
+    @cached_property
+    def supported_speeds(self) -> list[str] | None:
+        """Return the list of speeds supported for open/close/set_position operations.
+
+        None or an empty list means speed selection is not supported.
+        """
+        return self._attr_supported_speeds
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any] | None:
+        """Return capability attributes."""
+
+        if speeds := self.supported_speeds:
+            return {CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: speeds}
+        return None
+
+    @final
+    def _valid_speed_or_raise(self, speed: str, supported: list[str]) -> None:
+        """Raise ServiceValidationError if speed is not in the supported list."""
+        if speed not in supported:
+            supported_str = ", ".join(supported)
+            raise ServiceValidationError(
+                translation_key="not_valid_speed",
+                translation_domain=DOMAIN,
+                translation_placeholders={
+                    "speed": speed,
+                    "supported_speeds": supported_str,
+                },
+            )
+
+    @final
+    async def async_handle_open_cover(self, **kwargs: Any) -> None:
+        """Validate speed and open the cover."""
+        call_kwargs = kwargs
+        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+            if speeds := self.supported_speeds:
+                self._valid_speed_or_raise(speed, speeds)
+            else:
+                call_kwargs = dict(kwargs)
+                call_kwargs.pop(ATTR_SPEED)
+        await self.async_open_cover(**call_kwargs)
+
+    @final
+    async def async_handle_close_cover(self, **kwargs: Any) -> None:
+        """Validate speed and close the cover."""
+        call_kwargs = kwargs
+        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+            if speeds := self.supported_speeds:
+                self._valid_speed_or_raise(speed, speeds)
+            else:
+                call_kwargs = dict(kwargs)
+                call_kwargs.pop(ATTR_SPEED)
+        await self.async_close_cover(**call_kwargs)
+
+    @final
+    async def async_handle_set_cover_position(self, **kwargs: Any) -> None:
+        """Validate speed and move the cover to a specific position."""
+        call_kwargs = kwargs
+        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+            if speeds := self.supported_speeds:
+                self._valid_speed_or_raise(speed, speeds)
+            else:
+                call_kwargs = dict(kwargs)
+                call_kwargs.pop(ATTR_SPEED)
+        await self.async_set_cover_position(**call_kwargs)
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -432,9 +528,13 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # * fully open but do not report `current_cover_position`
         # * stopped partially open
         # * either opening or closing, but do not report them
-        # If we previously reported opening/closing, we should move in the opposite direction.
-        # Otherwise, we must assume we are (partially) open and should always close.
-        # Note: _cover_is_last_toggle_direction_open will always remain True if we never report opening/closing.
+        # If we previously reported opening/closing, we should
+        # move in the opposite direction.
+        # Otherwise, we must assume we are (partially) open
+        # and should always close.
+        # Note: _cover_is_last_toggle_direction_open will
+        # always remain True if we never report
+        # opening/closing.
         return (
             fns["close"] if self._cover_is_last_toggle_direction_open else fns["open"]
         )

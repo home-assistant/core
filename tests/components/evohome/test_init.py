@@ -1,7 +1,5 @@
 """The tests for Evohome."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from unittest.mock import Mock, patch

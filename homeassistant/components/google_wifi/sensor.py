@@ -1,10 +1,8 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
+from typing import override
 
 import requests
 import voluptuous as vol
@@ -26,21 +24,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_CURRENT_VERSION = "current_version"
-ATTR_LAST_RESTART = "last_restart"
-ATTR_LOCAL_IP = "local_ip"
-ATTR_NEW_VERSION = "new_version"
-ATTR_STATUS = "status"
-ATTR_UPTIME = "uptime"
-
-DEFAULT_HOST = "testwifi.here"
-DEFAULT_NAME = "google_wifi"
-
-ENDPOINT = "/api/v1/status"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
+from .const import (
+    ATTR_CURRENT_VERSION,
+    ATTR_LAST_RESTART,
+    ATTR_LOCAL_IP,
+    ATTR_NEW_VERSION,
+    ATTR_STATUS,
+    ATTR_UPTIME,
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    ENDPOINT,
+    LOGGER,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,6 +60,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         sensor_key="updateNewVersion",
         icon="mdi:update",
     ),
+    # deprecated: The uptime sensor is deprecated and will be removed in 2027.4.0. Use last_restart instead.
     GoogleWifiSensorEntityDescription(
         key=ATTR_UPTIME,
         primary_key="system",
@@ -90,9 +87,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         icon="mdi:google",
     ),
 )
-
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
-
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -124,40 +119,10 @@ def setup_platform(
     add_entities(entities, True)
 
 
-class GoogleWifiSensor(SensorEntity):
-    """Representation of a Google Wifi sensor."""
-
-    entity_description: GoogleWifiSensorEntityDescription
-
-    def __init__(
-        self,
-        api: GoogleWifiAPI,
-        name: str,
-        description: GoogleWifiSensorEntityDescription,
-    ) -> None:
-        """Initialize a Google Wifi sensor."""
-        self.entity_description = description
-        self._api = api
-        self._attr_name = f"{name}_{description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return availability of Google Wifi API."""
-        return self._api.available
-
-    def update(self) -> None:
-        """Get the latest data from the Google Wifi API."""
-        self._api.update()
-        if self.available:
-            self._attr_native_value = self._api.data[self.entity_description.key]
-        else:
-            self._attr_native_value = None
-
-
 class GoogleWifiAPI:
     """Get the latest data and update the states."""
 
-    def __init__(self, host, conditions):
+    def __init__(self, host, conditions) -> None:
         """Initialize the data object."""
         uri = "http://"
         resource = f"{uri}{host}{ENDPOINT}"
@@ -184,8 +149,8 @@ class GoogleWifiAPI:
             self.raw_data = response.json()
             self.data_format()
             self.available = True
-        except ValueError, requests.exceptions.ConnectionError:
-            _LOGGER.warning("Unable to fetch data from Google Wifi")
+        except ValueError, requests.exceptions.RequestException:
+            LOGGER.warning("Unable to fetch data from Google Wifi")
             self.available = False
             self.raw_data = None
 
@@ -220,7 +185,7 @@ class GoogleWifiAPI:
 
                     self.data[attr_key] = sensor_value
             except KeyError:
-                _LOGGER.error(
+                LOGGER.error(
                     (
                         "Router does not support %s field. "
                         "Please remove %s from monitored_conditions"
@@ -229,3 +194,34 @@ class GoogleWifiAPI:
                     attr_key,
                 )
                 self.data[attr_key] = None
+
+
+class GoogleWifiSensor(SensorEntity):
+    """Representation of a Google Wifi sensor."""
+
+    entity_description: GoogleWifiSensorEntityDescription
+
+    def __init__(
+        self,
+        api: GoogleWifiAPI,
+        name: str,
+        description: GoogleWifiSensorEntityDescription,
+    ) -> None:
+        """Initialize a Google Wifi sensor."""
+        self.entity_description = description
+        self._api = api
+        self._attr_name = f"{name}_{description.key}"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return availability of Google Wifi API."""
+        return self._api.available
+
+    def update(self) -> None:
+        """Get the latest data from the Google Wifi API."""
+        self._api.update()
+        if self.available:
+            self._attr_native_value = self._api.data[self.entity_description.key]
+        else:
+            self._attr_native_value = None

@@ -60,7 +60,7 @@ async def test_light_state_temperature(
 @pytest.mark.parametrize(
     ("device_fixtures", "state_variant"), [("light-strip", "state-color-temperature")]
 )
-@pytest.mark.usefixtures("state_variant", "device_fixtures", "init_integration")
+@pytest.mark.usefixtures("state_variant", "device_fixtures")
 async def test_light_change_state_temperature(
     hass: HomeAssistant,
     mock_elgato: MagicMock,
@@ -145,7 +145,6 @@ async def test_light_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> None:
     """Test identifying an Elgato Light."""
     await hass.services.async_call(

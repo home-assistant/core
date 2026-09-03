@@ -1,7 +1,5 @@
 """HTTP endpoints for conversation integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
@@ -184,7 +182,7 @@ async def websocket_list_sentences(
 async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Return intents that would be matched by the default agent for a list of sentences."""
+    """Return intents matched by the default agent for a list of sentences."""
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
 

@@ -300,6 +300,38 @@ def test_device_selector_schema_error(schema) -> None:
         (
             {
                 "filter": [
+                    {
+                        "device": {
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        }
+                    }
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "domain": "binary_sensor",
+                        "device": {
+                            "integration": "zha",
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        },
+                    },
+                    {
+                        "device": {
+                            "integration": "matter",
+                            "manufacturer": "other-mock-manuf",
+                            "model": "other-mock-model",
+                            "model_id": "other-mock-model_id",
+                        },
+                    },
                     {"unit_of_measurement": "baguette"},
                 ]
             },
@@ -341,6 +373,10 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"unit_of_measurement": ["currywurst", "bratwurst"]},
         # Invalid unit_of_measurement
         {"filter": [{"unit_of_measurement": 42}]},
+        # Device properties must be grouped under the device key
+        {"filter": [{"manufacturer": "mock-manuf"}]},
+        {"filter": [{"model": "mock-model"}]},
+        {"filter": [{"model_id": "mock-model_id"}]},
         # reorder can only be used when multiple is true
         {"reorder": True},
         {"reorder": True, "multiple": False},
@@ -978,12 +1014,34 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
     assert choose_selector.serialize() == snapshot
 
     # Test with Selector object instances
-    choose_selector_objects = selector.ChooseSelector(
+    nested_choose = selector.ChooseSelector(
         {
             "choices": {
                 "text_choice": {"selector": selector.TextSelector({"multiline": True})},
                 "number_choice": {
                     "selector": selector.NumberSelector({"min": 0, "max": 100})
+                },
+            }
+        }
+    )
+    nested_obj = selector.ObjectSelector(
+        {
+            "fields": {
+                "choose": {
+                    "required": True,
+                    "selector": nested_choose,
+                },
+            }
+        }
+    )
+    choose_selector_objects = selector.ChooseSelector(
+        {
+            "choices": {
+                "text_choice": {
+                    "selector": selector.TextSelector({"multiline": True}),
+                },
+                "number_choice": {
+                    "selector": selector.NumberSelector({"min": 0, "max": 100}),
                 },
                 "object_choice": {
                     "selector": selector.ObjectSelector(
@@ -997,36 +1055,7 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
                                     "selector": selector.NumberSelector({}),
                                 },
                                 "object": {
-                                    "selector": selector.ObjectSelector(
-                                        {
-                                            "fields": {
-                                                "choose": {
-                                                    "required": True,
-                                                    "selector": selector.ChooseSelector(
-                                                        {
-                                                            "choices": {
-                                                                "text_choice": {
-                                                                    "selector": selector.TextSelector(
-                                                                        {
-                                                                            "multiline": True
-                                                                        }
-                                                                    )
-                                                                },
-                                                                "number_choice": {
-                                                                    "selector": selector.NumberSelector(
-                                                                        {
-                                                                            "min": 0,
-                                                                            "max": 100,
-                                                                        }
-                                                                    )
-                                                                },
-                                                            }
-                                                        }
-                                                    ),
-                                                },
-                                            }
-                                        }
-                                    ),
+                                    "selector": nested_obj,
                                 },
                             },
                             "multiple": False,
@@ -1125,6 +1154,33 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
+        (None, ("/dev/ttyUSB0", "/dev/ttyACM1", "COM3"), (None, 1, True)),
+        ({}, ("/dev/ttyUSB0",), (None,)),
+        (
+            {
+                "extra_recommended_domains": [
+                    "homeassistant_yellow",
+                    "homeassistant_sky_connect",
+                ]
+            },
+            ("/dev/ttyUSB0",),
+            (None,),
+        ),
+        ({"extra_recommended_domains": []}, ("/dev/ttyUSB0",), (None,)),
+    ],
+)
+def test_serial_port_selector_schema(
+    schema: dict | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test serial port selector."""
+    _test_selector("serial_port", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
         ({}, ({"entity_id": ["sensor.abc123"]},), ("abc123", None)),
         ({"entity": {}}, (), ()),
         ({"entity": {"domain": "light"}}, (), ()),
@@ -1169,6 +1225,24 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
             (),
             (),
         ),
+        (
+            {"primary_entities_only": True},
+            (),
+            (),
+        ),
+        (
+            {"primary_entities_only": False},
+            (),
+            (),
+        ),
+        (
+            {
+                "entity": {"domain": "light"},
+                "primary_entities_only": True,
+            },
+            (),
+            (),
+        ),
     ],
 )
 def test_target_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -1183,6 +1257,46 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections) ->
 def test_action_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test action sequence selector."""
     _test_selector("action", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"mode": "trigger"},
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
+        ),
+        (
+            {"mode": "condition"},
+            ("all", "any"),
+            ("first", "each", "last", "invalid", None),
+        ),
+        (
+            {"mode": "trigger", "translation_key": "trigger_behavior"},
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
+        ),
+    ],
+)
+def test_automation_behavior_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test automation behavior selector."""
+    _test_selector("automation_behavior", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {},
+        {"mode": "invalid_mode"},
+    ],
+)
+def test_automation_behavior_selector_schema_error(schema) -> None:
+    """Test automation behavior selector config schema errors."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"automation_behavior": schema})
 
 
 @pytest.mark.parametrize(
@@ -1257,7 +1371,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
 
 
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
-    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+    """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
     selector_type = "object"
     schema = {
@@ -1281,6 +1395,12 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    selector_instance(
+        [
+            {"name": "Test 1", "percentage": 50},
+            {"name": "Test 2", "percentage": 70},
+        ]
+    )
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
@@ -1551,6 +1671,38 @@ def test_select_selector_schema_error(schema) -> None:
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
+            {"domain": "sensor"},
+            ("battery", "humidity", "temperature"),
+            ("cat", 0, None, ["temperature"]),
+        ),
+        (
+            {"domain": "binary_sensor"},
+            ("door", "smoke", "gas"),
+            ("cat", 0, None, ["gas"]),
+        ),
+        (
+            {"domain": "switch"},
+            ("outlet", "switch"),
+            ("cat", 0, None, ["outlet"]),
+        ),
+        (
+            {"domain": "sensor", "multiple": True},
+            (["temperature"], ["temperature", "humidity"], []),
+            ("battery", "beer", 0, None, "temperature", ["dog"]),
+        ),
+    ],
+)
+def test_device_class_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test device class selector."""
+    _test_selector("device_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
             {"entity_id": "sensor.abc"},
             ("friendly_name", "device_class"),
             (None,),
@@ -1696,21 +1848,7 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test media selector."""
-
-    def drop_metadata(data):
-        """Drop metadata key from the input."""
-        if isinstance(data, list):
-            return [drop_metadata(item) for item in data]
-        data.pop("metadata", None)
-        return data
-
-    _test_selector(
-        "media",
-        schema,
-        valid_selections,
-        invalid_selections,
-        drop_metadata,
-    )
+    _test_selector("media", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -1724,6 +1862,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                         "entity_id": "sensor.abc",
                         "media_content_id": "abc",
                         "media_content_type": "def",
+                        "metadata": {},
                     },
                     {
                         "entity_id": "sensor.def",
@@ -1736,6 +1875,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "entity_id": "sensor.abc",
                     "media_content_id": "abc",
                     "media_content_type": "def",
+                    "metadata": {},
                 },
             ),
             (
@@ -1765,6 +1905,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                     {
                         "media_content_id": "ghi",
                         "media_content_type": "jkl",
+                        "metadata": {},
                     },
                 ],
             ),
@@ -1787,19 +1928,18 @@ def test_media_selector_schema_multiple(
 ) -> None:
     """Test media selector with multiple selections."""
 
-    def drop_metadata(data, root=True):
+    def ensure_list(data):
         if isinstance(data, list):
-            return [drop_metadata(item, False) for item in data]
-        data.pop("metadata", None)
+            return data
         # Multiple=true wraps single values in list.
-        return [data] if root and schema.get("multiple") else data
+        return [data] if schema.get("multiple") else data
 
     _test_selector(
         "media",
         schema,
         valid_selections,
         invalid_selections,
-        drop_metadata,
+        ensure_list,
     )
 
 

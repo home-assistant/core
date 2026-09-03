@@ -1,7 +1,5 @@
 """Script to check the configuration file."""
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 from collections import OrderedDict
@@ -16,7 +14,7 @@ from unittest.mock import patch
 from annotatedyaml import loader as yaml_loader
 from annotatedyaml.loader import Secrets
 
-from homeassistant import core, loader
+from homeassistant import core, loader, runner
 from homeassistant.config import get_default_config_dir
 from homeassistant.config_entries import ConfigEntries
 from homeassistant.exceptions import HomeAssistantError
@@ -267,7 +265,9 @@ def check(config_dir, secrets=False):
 
     try:
         with patch.object(yaml_loader, "Secrets", secrets_proxy):
-            res["components"] = asyncio.run(async_check_config(config_dir))
+            res["components"] = asyncio.run(
+                async_check_config(config_dir), loop_factory=runner.create_event_loop
+            )
         res["secret_cache"] = {
             str(key): val for key, val in res["secret_cache"].items()
         }
@@ -302,6 +302,8 @@ async def async_check_config(config_dir):
     hass = core.HomeAssistant(config_dir)
     loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
+    # The device registry migration waits for the config entries to load
+    await hass.config_entries.async_initialize()
     dr.async_setup(hass)
     await ar.async_load(hass)
     await dr.async_load(hass)

@@ -1,6 +1,6 @@
 """Support for VELUX KLF 200 gateway button."""
 
-from __future__ import annotations
+from typing import override
 
 from pyvlx import Node, PyVLX, PyVLXException
 
@@ -24,12 +24,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button entities for the Velux integration."""
+    pyvlx = config_entry.runtime_data.pyvlx
     entities: list[ButtonEntity] = [
-        VeluxGatewayRebootButton(config_entry.entry_id, config_entry.runtime_data)
+        VeluxGatewayRebootButton(config_entry.entry_id, pyvlx)
     ]
     entities.extend(
-        VeluxIdentifyButton(node, config_entry.entry_id)
-        for node in config_entry.runtime_data.nodes
+        VeluxIdentifyButton(hass, node, config_entry.entry_id)
+        for node in pyvlx.nodes
         if isinstance(node, Node)
     )
     async_add_entities(entities)
@@ -41,12 +42,13 @@ class VeluxIdentifyButton(VeluxEntity, ButtonEntity):
     _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, node: Node, config_entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux identify button."""
-        super().__init__(node, config_entry_id)
+        super().__init__(hass, node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_identify"
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_press(self) -> None:
         """Identify the physical device."""
         await self.node.wink()
@@ -67,6 +69,7 @@ class VeluxGatewayRebootButton(ButtonEntity):
             identifiers={(DOMAIN, f"gateway_{config_entry_id}")},
         )
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press - reboot the gateway."""
         try:

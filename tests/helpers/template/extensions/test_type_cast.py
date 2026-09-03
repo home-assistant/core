@@ -1,7 +1,5 @@
 """Test type casting functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import math
 
 import pytest

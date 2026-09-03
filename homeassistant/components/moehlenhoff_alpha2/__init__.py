@@ -1,7 +1,5 @@
 """Support for the Moehlenhoff Alpha2."""
 
-from __future__ import annotations
-
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant.const import CONF_HOST, Platform

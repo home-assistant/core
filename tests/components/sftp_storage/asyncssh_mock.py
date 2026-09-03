@@ -1,7 +1,5 @@
 """Mock classes for asyncssh module."""
 
-from __future__ import annotations
-
 import json
 from typing import Self
 from unittest.mock import AsyncMock

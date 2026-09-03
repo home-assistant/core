@@ -1,7 +1,5 @@
 """Test fixtures for rainbird."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from http import HTTPStatus
 import json

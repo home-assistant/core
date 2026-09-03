@@ -1,9 +1,7 @@
 """Support for Ubiquiti mFi switches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
 import requests
@@ -90,16 +88,19 @@ class MfiSwitch(SwitchEntity):
         self._target_state: bool | None = None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of the device."""
         return self._port.ident
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._port.label
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the device is on."""
         return self._port.output
@@ -111,11 +112,13 @@ class MfiSwitch(SwitchEntity):
             self._port.data["output"] = float(self._target_state)
             self._target_state = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.control(True)
         self._target_state = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.control(False)

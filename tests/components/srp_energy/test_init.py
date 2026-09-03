@@ -1,15 +1,20 @@
 """Tests for Srp Energy component Init."""
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
-async def test_setup_entry(hass: HomeAssistant, init_integration) -> None:
+async def test_setup_entry(
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration
+) -> None:
     """Test setup entry."""
     assert init_integration.state is ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant, init_integration) -> None:
+async def test_unload_entry(
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration
+) -> None:
     """Test being able to unload an entry."""
     assert init_integration.state is ConfigEntryState.LOADED
 

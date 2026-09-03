@@ -1,9 +1,7 @@
 """Support for buttons which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -23,11 +21,12 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import validators as tcv
 from .const import CONF_PRESS, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 
@@ -38,12 +37,18 @@ DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_PRESS,)
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
 BUTTON_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
-).extend(make_template_entity_common_modern_schema(BUTTON_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        BUTTON_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
+)
 
 BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
@@ -93,6 +98,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
 
     _attr_should_poll = False
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     def __init__(
         self,
@@ -112,6 +118,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if script := self._action_scripts.get(CONF_PRESS):

@@ -1,10 +1,8 @@
 """Support for Tasmota Camera."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from hatasmota import camera as tasmota_camera
@@ -76,6 +74,7 @@ class TasmotaCamera(
         super().__init__(**kwds)
         Camera.__init__(self)
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -99,6 +98,7 @@ class TasmotaCamera(
 
         return None
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: aiohttp.web.Request
     ) -> aiohttp.web.StreamResponse | None:

@@ -22,5 +22,17 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mac_filter": "Clients to track"
+        },
+        "data_description": {
+          "mac_filter": "Select specific clients to track. If none are selected, all clients will be tracked."
+        }
+      }
+    }
   }
 }

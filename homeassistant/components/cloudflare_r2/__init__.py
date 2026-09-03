@@ -1,11 +1,10 @@
 """The Cloudflare R2 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
 from aiobotocore.client import AioBaseClient as S3Client
+from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import (
     ClientError,
@@ -45,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
             endpoint_url=data.get(CONF_ENDPOINT_URL),
             aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=data[CONF_ACCESS_KEY_ID],
+            config=AioConfig(warm_up_loader_caches=True),
         ).__aenter__()
         await client.head_bucket(Bucket=data[CONF_BUCKET])
     except ClientError as err:

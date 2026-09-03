@@ -1,7 +1,5 @@
 """The File Upload integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -38,7 +36,11 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
 
-    File is removed at the end of the context.
+    File is removed at the end of the context. Should be run on the executor thread pool.
+    Create a wrapper function and call that wrapper function using
+    hass.async_add_executor_job. Running this function directly by scheduling an executor
+    job will result in loop blocking teardown code not running on the executor but
+    rather in the loop.
     """
     if DOMAIN not in hass.data:
         raise ValueError("File does not exist")
@@ -76,7 +78,8 @@ class FileUploadData:
             """Create temporary directory."""
             temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
 
-            # If it exists, it's an old one and Home Assistant didn't shut down correctly.
+            # If it exists, it's an old one and Home Assistant
+            # didn't shut down correctly.
             if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 
@@ -173,27 +176,37 @@ class FileUploadView(HomeAssistantView):
 
         fut: asyncio.Future[None] | None = None
         try:
-            fut = hass.async_add_executor_job(_sync_queue_consumer)
-            megabytes_sending = 0
-            while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-                megabytes_sending += 1
-                if megabytes_sending % 5 != 0:
-                    queue.put_nowait((chunk, None))
-                    continue
+            try:
+                fut = hass.async_add_executor_job(_sync_queue_consumer)
+                chunks_sent = 0
+                while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
+                    chunks_sent += 1
+                    if chunks_sent % 5 != 0:
+                        queue.put_nowait((chunk, None))
+                        continue
 
-                chunk_future = hass.loop.create_future()
-                queue.put_nowait((chunk, chunk_future))
-                await asyncio.wait(
-                    (fut, chunk_future), return_when=asyncio.FIRST_COMPLETED
-                )
-                if fut.done():
-                    # The executor job failed
-                    break
-
-            queue.put_nowait(None)  # terminate queue consumer
-        finally:
-            if fut is not None:
-                await fut
+                    chunk_future = hass.loop.create_future()
+                    queue.put_nowait((chunk, chunk_future))
+                    await asyncio.wait(
+                        (fut, chunk_future), return_when=asyncio.FIRST_COMPLETED
+                    )
+                    if fut.done():
+                        # The executor job failed
+                        break
+            finally:
+                # Always terminate the queue consumer, also if the stream raised or
+                # the task was cancelled.
+                queue.put_nowait(None)
+                if fut is not None:
+                    await fut
+        except Exception, asyncio.CancelledError:
+            # Upload failed: the consumer has finished and closed the file (inner
+            # finally above), so removing the directory now cannot race the writer.
+            # ignore_errors covers a failure that happened before the dir was created.
+            await hass.async_add_executor_job(
+                lambda: shutil.rmtree(file_dir, ignore_errors=True)
+            )
+            raise
 
         file_upload_data.files[file_id] = filename
 

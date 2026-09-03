@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN] = config[DOMAIN]
+    hass.data[DATA_CONFIG] = config[DOMAIN]
     return True
 
 
@@ -75,7 +75,7 @@ async def handle_webhook(
 
 async def verify_webhook(hass, token=None, timestamp=None, signature=None):
     """Verify webhook was signed by Mailgun."""
-    if DOMAIN not in hass.data:
+    if DATA_CONFIG not in hass.data:
         _LOGGER.warning("Cannot validate Mailgun webhook, missing API Key")
         return True
 
@@ -83,7 +83,7 @@ async def verify_webhook(hass, token=None, timestamp=None, signature=None):
         return False
 
     hmac_digest = hmac.new(
-        key=bytes(hass.data[DOMAIN][CONF_API_KEY], "utf-8"),
+        key=bytes(hass.data[DATA_CONFIG][CONF_API_KEY], "utf-8"),
         msg=bytes(f"{timestamp}{token}", "utf-8"),
         digestmod=hashlib.sha256,
     ).hexdigest()

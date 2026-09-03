@@ -1,10 +1,8 @@
 """Config flow for the Google Weather integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from google_weather_api import GoogleWeatherApi, GoogleWeatherApiError
 import voluptuous as vol
@@ -72,6 +70,8 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
     """Return the schema for a location with default values from the hass config."""
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=hass.config.location_name): str,
             vol.Required(
                 CONF_LOCATION,
@@ -97,7 +97,8 @@ def _is_location_already_configured(
                 continue
             # A more accurate way is to use the haversine formula, but for simplicity
             # we use a simple distance check. The epsilon value is small anyway.
-            # This is mostly to capture cases where the user has slightly moved the location pin.
+            # This is mostly to capture cases where the user
+            # has slightly moved the location pin.
             if (
                 abs(subentry.data[CONF_LATITUDE] - new_data[CONF_LATITUDE]) <= epsilon
                 and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE])
@@ -112,6 +113,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -216,6 +218,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -236,7 +239,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the location step."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}

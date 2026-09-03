@@ -1,7 +1,5 @@
 """Handle MySensors gateways."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
@@ -19,7 +17,6 @@ from homeassistant.components.mqtt import (
     async_publish,
     async_subscribe,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -38,10 +35,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
-    DOMAIN,
-    MYSENSORS_GATEWAY_START_TASK,
     ConfGatewayType,
-    GatewayId,
 )
 from .handler import HANDLERS
 from .helpers import (
@@ -50,6 +44,7 @@ from .helpers import (
     validate_child,
     validate_node,
 )
+from .models import MySensorsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,7 +120,7 @@ async def try_connect(
 
 
 async def setup_gateway(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: MySensorsConfigEntry
 ) -> BaseAsyncGateway | None:
     """Set up the Gateway for the given ConfigEntry."""
 
@@ -134,7 +129,7 @@ async def setup_gateway(
         gateway_type=entry.data[CONF_GATEWAY_TYPE],
         device=entry.data[CONF_DEVICE],
         version=entry.data[CONF_VERSION],
-        event_callback=_gw_callback_factory(hass, entry.entry_id),
+        event_callback=_gw_callback_factory(hass, entry),
         persistence_file=entry.data.get(
             CONF_PERSISTENCE_FILE, f"mysensors_{entry.entry_id}.json"
         ),
@@ -233,23 +228,22 @@ async def _get_gateway(
     return gateway
 
 
-async def finish_setup(
-    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
-) -> None:
+async def finish_setup(hass: HomeAssistant, entry: MySensorsConfigEntry) -> None:
     """Load any persistent devices and platforms and start gateway."""
-    await _discover_persistent_devices(hass, entry, gateway)
-    await _gw_start(hass, entry, gateway)
+    await _discover_persistent_devices(hass, entry)
+    await _gw_start(hass, entry)
 
 
 async def _discover_persistent_devices(
-    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
+    hass: HomeAssistant, entry: MySensorsConfigEntry
 ) -> None:
     """Discover platforms for devices loaded via persistence file."""
+    gateway = entry.runtime_data.gateway
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
         if not validate_node(gateway, node_id):
             continue
-        discover_mysensors_node(hass, entry.entry_id, node_id)
+        discover_mysensors_node(hass, entry, node_id)
         node: Sensor = gateway.sensors[node_id]
         for child in node.children.values():  # child is of type ChildSensor
             validated = validate_child(entry.entry_id, gateway, node_id, child)
@@ -260,22 +254,18 @@ async def _discover_persistent_devices(
         discover_mysensors_platform(hass, entry.entry_id, platform, dev_ids)
 
 
-async def gw_stop(
-    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
-) -> None:
+async def gw_stop(entry: MySensorsConfigEntry) -> None:
     """Stop the gateway."""
-    connect_task = hass.data[DOMAIN].pop(
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id), None
-    )
+    connect_task = entry.runtime_data.gateway_start_task
+    entry.runtime_data.gateway_start_task = None
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()
-    await gateway.stop()
+    await entry.runtime_data.gateway.stop()
 
 
-async def _gw_start(
-    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
-) -> None:
+async def _gw_start(hass: HomeAssistant, entry: MySensorsConfigEntry) -> None:
     """Start the gateway."""
+    gateway = entry.runtime_data.gateway
     gateway_ready = asyncio.Event()
 
     def gateway_connected(_: BaseAsyncGateway) -> None:
@@ -284,13 +274,11 @@ async def _gw_start(
 
     gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
-    hass.data[DOMAIN][MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)] = (
-        asyncio.create_task(gateway.start())
-    )  # store the connect task so it can be cancelled in gw_stop
+    entry.runtime_data.gateway_start_task = asyncio.create_task(gateway.start())
 
     async def stop_this_gw(_: Event) -> None:
         """Stop the gateway."""
-        await gw_stop(hass, entry, gateway)
+        await gw_stop(entry)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
@@ -311,7 +299,7 @@ async def _gw_start(
 
 
 def _gw_callback_factory(
-    hass: HomeAssistant, gateway_id: GatewayId
+    hass: HomeAssistant, entry: MySensorsConfigEntry
 ) -> Callable[[Message], None]:
     """Return a new callback for the gateway."""
 
@@ -330,6 +318,6 @@ def _gw_callback_factory(
         if msg_handler is None:
             return
 
-        msg_handler(hass, gateway_id, msg)
+        msg_handler(hass, entry, msg)
 
     return mysensors_callback

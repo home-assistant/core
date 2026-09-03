@@ -1,7 +1,5 @@
 """Support for Epson projector."""
 
-from __future__ import annotations
-
 from epson_projector.const import CMODE_LIST_SET
 import voluptuous as vol
 

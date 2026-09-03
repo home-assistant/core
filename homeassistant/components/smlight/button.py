@@ -1,10 +1,9 @@
 """Support for SLZB buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pysmlight.web import CmdWrapper
 
@@ -19,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -130,6 +129,16 @@ class SmButton(SmEntity, ButtonEntity):
         button = f"_{idx}" if idx else ""
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}{button}"
 
+        if (
+            idx < len(coordinator.data.info.radios)
+            and coordinator.data.info.radios[idx].zb_type in ZWAVE_TYPES
+        ):
+            if description.key == "zigbee_restart":
+                self._attr_translation_key = "z_wave_restart"
+            elif description.key == "zigbee_flash_mode":
+                self._attr_translation_key = "z_wave_flash_mode"
+
+    @override
     async def async_press(self) -> None:
         """Trigger button press."""
         await self.entity_description.press_fn(self.coordinator.client.cmds, self.idx)

@@ -30,7 +30,7 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "DrNykterstein"
     assert result["data"] == {CONF_API_TOKEN: "my_secret_token"}
-    assert result["result"].unique_id == "drnykterstien"
+    assert result["result"].unique_id == "drnykterstein"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

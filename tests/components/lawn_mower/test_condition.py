@@ -4,14 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.lawn_mower.condition import CONDITIONS
 from homeassistant.components.lawn_mower.const import LawnMowerActivity
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -26,24 +29,47 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "lawn_mower")
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_docked": TargetSupport.STANDARD,
+    "is_encountering_an_error": TargetSupport.STANDARD,
+    "is_mowing": TargetSupport.STANDARD,
+    "is_paused": TargetSupport.STANDARD,
+    "is_returning": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
-    "condition",
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "lawn_mower.is_docked",
-        "lawn_mower.is_encountering_an_error",
-        "lawn_mower.is_mowing",
-        "lawn_mower.is_paused",
-        "lawn_mower.is_returning",
+        ("lawn_mower.is_docked", {}, True, True),
+        ("lawn_mower.is_encountering_an_error", {}, True, True),
+        ("lawn_mower.is_mowing", {}, True, True),
+        ("lawn_mower.is_paused", {}, True, True),
+        ("lawn_mower.is_returning", {}, True, True),
     ],
 )
-async def test_lawn_mower_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_lawn_mower_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the lawn mower conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that lawn_mower conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),
@@ -101,7 +127,6 @@ async def test_lawn_mower_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),

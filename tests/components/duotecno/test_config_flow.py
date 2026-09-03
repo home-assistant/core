@@ -94,7 +94,7 @@ async def test_invalid(
     }
 
 
-async def test_already_setup(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_already_setup(hass: HomeAssistant) -> None:
     """Test duoteco flow - already setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,

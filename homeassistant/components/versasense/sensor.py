@@ -1,8 +1,7 @@
 """Support for VersaSense sensor peripheral."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
@@ -66,26 +65,31 @@ class VSensor(SensorEntity):
         self.consumer = consumer
 
     @property
+    @override
     def unique_id(self):
         """Return the unique id of the sensor."""
         return f"{self._parent_mac}/{self._identifier}/{self._measurement}"
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return self._available

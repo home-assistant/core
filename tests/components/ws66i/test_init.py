@@ -71,7 +71,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN][config_entry.entry_id]
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch.object(MockWs66i, "close") as method_call:
         await hass.config_entries.async_unload(config_entry.entry_id)
@@ -79,4 +79,4 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
 
         assert method_call.called
 
-    assert not hass.data[DOMAIN]
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

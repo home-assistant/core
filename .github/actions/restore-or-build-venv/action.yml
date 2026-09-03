@@ -1,0 +1,125 @@
+name: Set up Python and restore or build the venv
+description: >-
+  Sets up uv and the managed interpreter, then restores the full venv from the
+  cache. On a miss it rebuilds the venv from requirements instead of
+  hard-failing, so jobs survive a transient miss when the entry is evicted under
+  the repo cache size limit. Only the prepare job sets save to true and writes
+  the cache, so the validating jobs add no extra cache pressure.
+
+inputs:
+  python-version:
+    description: The Python version uv should install and use.
+    required: true
+  uv-version:
+    description: The uv version setup-uv should install.
+    required: true
+  python-cache-key:
+    description: The shared python_cache_key from the info job.
+    required: true
+  uv-cache-dir:
+    description: The uv cache directory (env.UV_CACHE_DIR from the caller).
+    required: true
+  apt-cache-version:
+    description: The apt cache version (env.APT_CACHE_VERSION from the caller).
+    required: true
+  save:
+    description: Whether to save the rebuilt venv and uv cache. Only the prepare job should.
+    default: "false"
+
+outputs:
+  python-version:
+    description: The Python version uv reports as installed.
+    value: ${{ steps.python.outputs.python-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up uv and managed Python
+      id: python
+      uses: ./.github/actions/setup-uv-python
+      with:
+        uv-version: ${{ inputs.uv-version }}
+        python-version: ${{ inputs.python-version }}
+    - name: Restore full Python virtual environment
+      id: cache-venv
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: venv
+        key: >-
+          ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+          inputs.python-cache-key }}
+    - name: Generate partial uv restore key
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      id: generate-uv-key
+      shell: bash
+      env:
+        RUNNER_OS: ${{ runner.os }}
+        RUNNER_ARCH: ${{ runner.arch }}
+        PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
+        HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt', 'homeassistant/package_constraints.txt') }}
+      run: |
+        partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
+        echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
+        echo "full_key=${partial_key}${HASH_FILES}" >> $GITHUB_OUTPUT
+    - name: Restore uv wheel cache
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.uv-cache-dir }}
+        key: ${{ steps.generate-uv-key.outputs.full_key }}
+        restore-keys: ${{ steps.generate-uv-key.outputs.partial_key }}
+    # Only runs on a cache miss when the venv is rebuilt. Composite steps cannot
+    # set timeout-minutes, so a stuck apt download is bounded by the job-level
+    # timeout instead of a per-step cap.
+    - name: Install additional OS dependencies
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      uses: ./.github/actions/cache-apt-packages
+      with:
+        packages: >-
+          bluez
+          ffmpeg
+          libturbojpeg
+          libxml2-utils
+          libavcodec-dev
+          libavdevice-dev
+          libavfilter-dev
+          libavformat-dev
+          libavutil-dev
+          libswresample-dev
+          libswscale-dev
+          libudev-dev
+        version: ${{ inputs.apt-cache-version }}
+        execute_install_scripts: true
+    - name: Create Python virtual environment
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      id: create-venv
+      shell: bash
+      env:
+        PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
+      run: |
+        uv venv venv --python "${PYTHON_VERSION}"
+        . venv/bin/activate
+        python --version
+        uv pip install -r requirements.txt
+        uv pip install -r requirements_all.txt -r requirements_test.txt
+        uv pip install -e . --config-settings editable_mode=compat
+    - name: Prune uv cache
+      if: inputs.save == 'true' && steps.cache-venv.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        . venv/bin/activate
+        uv cache prune --ci
+    - name: Save uv wheel cache
+      if: inputs.save == 'true' && steps.cache-venv.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.uv-cache-dir }}
+        key: ${{ steps.generate-uv-key.outputs.full_key }}
+    - name: Save full Python virtual environment
+      if: always() && inputs.save == 'true' && steps.create-venv.outcome == 'success'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: venv
+        key: >-
+          ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+          inputs.python-cache-key }}

@@ -1,9 +1,8 @@
 """Support for Autarco sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from autarco import Battery, Inverter, Solar
 
@@ -243,6 +242,7 @@ class AutarcoBatterySensorEntity(AutarcoSensorBase):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         assert self.coordinator.data.battery is not None
@@ -273,6 +273,7 @@ class AutarcoSolarSensorEntity(AutarcoSensorBase):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.solar)
@@ -303,6 +304,7 @@ class AutarcoInverterSensorEntity(AutarcoSensorBase):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(

@@ -28,11 +28,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_account_mismatch": "The reconfiguration account does not match the original account",
@@ -104,6 +99,9 @@
       "climate_state_is_preconditioning": {
         "name": "Preconditioning"
       },
+      "climate_state_is_rear_defroster_on": {
+        "name": "Rear defroster"
+      },
       "components_grid_services_enabled": {
         "name": "Grid services enabled"
       },
@@ -169,9 +167,6 @@
       },
       "offroad_lightbar_present": {
         "name": "Offroad lightbar"
-      },
-      "passenger_seat_belt": {
-        "name": "Passenger seat belt"
       },
       "pin_to_drive_enabled": {
         "name": "PIN to Drive enabled"
@@ -308,6 +303,9 @@
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
       },
+      "tonneau": {
+        "name": "Tonneau"
+      },
       "vehicle_state_ft": {
         "name": "Frunk"
       },
@@ -363,6 +361,24 @@
       }
     },
     "select": {
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler front left",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler front right",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
         "state": {
@@ -575,8 +591,11 @@
         "name": "Consumer imported from solar"
       },
       "credit_balance": {
-        "name": "Teslemetry credits",
+        "name": "Teslemetry command credits",
         "unit_of_measurement": "credits"
+      },
+      "credit_quota": {
+        "name": "Teslemetry command quota used"
       },
       "cruise_follow_distance": {
         "name": "Cruise follow distance"
@@ -876,6 +895,9 @@
       "lateral_acceleration": {
         "name": "Lateral acceleration"
       },
+      "lifetime_energy_gained_regen": {
+        "name": "Lifetime energy gained regen"
+      },
       "lifetime_energy_used": {
         "name": "Lifetime energy used"
       },
@@ -896,6 +918,9 @@
       },
       "longitudinal_acceleration": {
         "name": "Longitudinal acceleration"
+      },
+      "miles_since_reset": {
+        "name": "Miles since reset"
       },
       "module_temp_max": {
         "name": "Module temperature maximum"
@@ -967,6 +992,9 @@
           "off": "[%key:common::state::off%]",
           "start_at": "Start at"
         }
+      },
+      "self_driving_miles_since_reset": {
+        "name": "Self-driving miles since reset"
       },
       "sentry_mode": {
         "name": "Sentry mode",
@@ -1110,6 +1138,9 @@
     "auth_failed_invalid_token": {
       "message": "Access token is invalid, please reauthenticate"
     },
+    "auth_failed_login_required": {
+      "message": "Login is no longer valid, please reauthenticate"
+    },
     "auth_failed_migration": {
       "message": "Failed to migrate to OAuth, please reauthenticate"
     },
@@ -1134,17 +1165,11 @@
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature"
     },
-    "invalid_device": {
-      "message": "Invalid device ID: {device_id}"
-    },
     "missing_scope": {
       "message": "Missing required scope: {scope}"
     },
     "no_cable": {
-      "message": "Charge cable will lock automatically when connected"
-    },
-    "no_config_entry_for_device": {
-      "message": "No config entry for device ID: {device_id}"
+      "message": "Insert cable to lock, charge cable will lock automatically when connected"
     },
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
@@ -1158,9 +1183,6 @@
     "not_ready_connection_error": {
       "message": "Unable to connect to Teslemetry"
     },
-    "oauth_implementation_not_available": {
-      "message": "OAuth implementation not available, try reauthenticating"
-    },
     "set_scheduled_charging_time": {
       "message": "Scheduled charging time is required when enabling"
     },
@@ -1170,11 +1192,17 @@
     "set_scheduled_departure_preconditioning": {
       "message": "Preconditioning departure time is required when enabling"
     },
+    "stream_disconnected": {
+      "message": "Disconnected from the Teslemetry stream"
+    },
     "token_data_malformed": {
       "message": "Token data malformed, try reauthenticating"
     },
     "update_failed": {
-      "message": "Error fetching data from Teslemetry API"
+      "message": "Error fetching data from Teslemetry API: {message}"
+    },
+    "update_failed_insufficient_credits": {
+      "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"
@@ -1184,6 +1212,36 @@
     },
     "wake_up_timeout": {
       "message": "Timed out trying to wake up vehicle"
+    }
+  },
+  "issues": {
+    "key": {
+      "fix_flow": {
+        "error": {
+          "not_resolved": "The virtual key still appears to be unpaired. Please complete the pairing at {link}, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
+            "title": "[%key:component::teslemetry::issues::key::title%]"
+          }
+        }
+      },
+      "title": "Pair the virtual key for {vehicle}"
+    },
+    "streaming_toggle": {
+      "fix_flow": {
+        "error": {
+          "not_resolved": "Data streaming still appears to be disabled. Please enable \"Allow Third-Party App Data Streaming\" in the vehicle's Safety settings, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot receive streaming data from {vehicle} because the \"Allow Third-Party App Data Streaming\" toggle is disabled. This option is only available on older Model S and Model X vehicles with Intel-based computers.\n\n1. In {vehicle}, open Controls > Safety.\n2. Enable **Allow Third-Party App Data Streaming**.\n3. Select **Submit** below to re-check.",
+            "title": "[%key:component::teslemetry::issues::streaming_toggle::title%]"
+          }
+        }
+      },
+      "title": "Enable data streaming for {vehicle}"
     }
   },
   "selector": {

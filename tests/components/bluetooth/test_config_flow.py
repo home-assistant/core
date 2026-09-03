@@ -1,5 +1,6 @@
 """Test the bluetooth config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
@@ -10,14 +11,15 @@ from homeassistant.components.bluetooth import HaBluetoothConnector
 from homeassistant.components.bluetooth.const import (
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_MODE,
     CONF_PASSIVE,
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
 )
+from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import area_registry as ar, device_registry as dr
@@ -347,10 +349,11 @@ async def test_async_step_integration_discovery_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize("mode", ["auto", "active", "passive"])
 @pytest.mark.usefixtures(
     "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
 )
-async def test_options_flow_linux(hass: HomeAssistant) -> None:
+async def test_options_flow_linux(hass: HomeAssistant, mode: str) -> None:
     """Test options on Linux."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -370,32 +373,50 @@ async def test_options_flow_linux(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_PASSIVE: True,
-        },
+        user_input={CONF_MODE: mode},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PASSIVE] is True
+    assert result["data"][CONF_MODE] == mode
+    assert result["data"][CONF_PASSIVE] is (mode == "passive")
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Verify we can change it to False
+
+@pytest.mark.parametrize(
+    ("options", "expected_default"),
+    [
+        ({}, "auto"),
+        ({CONF_PASSIVE: True}, "passive"),
+        ({CONF_PASSIVE: False}, "active"),
+        ({CONF_MODE: "passive"}, "passive"),
+    ],
+    ids=["fresh", "legacy_passive_true", "legacy_passive_false", "explicit_mode"],
+)
+@pytest.mark.usefixtures(
+    "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
+async def test_options_flow_default_reflects_existing_options(
+    hass: HomeAssistant, options: dict[str, Any], expected_default: str
+) -> None:
+    """Options form preselects the current mode, including legacy CONF_PASSIVE."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options=options,
+        unique_id="00:00:00:00:00:01",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_PASSIVE: False,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PASSIVE] is False
+    schema = result["data_schema"].schema
+    mode_key = next(k for k in schema if k == CONF_MODE)
+    assert mode_key.default() == expected_default
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -604,11 +625,80 @@ async def test_async_step_integration_discovery_remote_adapter(
     assert new_entry is not None
     assert new_entry.state is config_entries.ConfigEntryState.LOADED
 
-    ble_device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
     )
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
+    assert ble_device_entry.area_id == area_entry.id
+
+    await hass.config_entries.async_unload(new_entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    cancel_scanner()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_child_source(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test remote adapter whose source is a child device.
+
+    A child device can't be a via device, so the scanner is linked to the child's
+    parent, while still inheriting the source's (inherited) effective area.
+    """
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+    manager = _get_manager()
+    area_entry = area_registry.async_get_or_create("test")
+    cancel_scanner = manager.async_register_scanner(scanner)
+    parent_device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+        suggested_area=area_entry.id,
+    )
+    child_device_entry = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB-child")},
+        parent_device_id=parent_device_entry.id,
+        name="child",
+    )
+    # The child inherits its parent's area rather than owning one.
+    assert child_device_entry.area_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: child_device_entry.id,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    new_entry_id: str = result["result"].entry_id
+    new_entry = hass.config_entries.async_get_entry(new_entry_id)
+    assert new_entry is not None
+    assert new_entry.state is config_entries.ConfigEntryState.LOADED
+
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
+    )
+    assert ble_device_entry is not None
+    # A child device can't be a via device, so the parent is used instead.
+    assert ble_device_entry.via_device_id == parent_device_entry.id
+    # The scanner still inherits the source child's effective (parent) area.
     assert ble_device_entry.area_id == area_entry.id
 
     await hass.config_entries.async_unload(new_entry.entry_id)

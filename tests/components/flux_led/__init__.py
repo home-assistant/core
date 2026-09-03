@@ -1,7 +1,5 @@
 """Tests for the flux_led integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from contextlib import contextmanager

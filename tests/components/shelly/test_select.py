@@ -112,7 +112,7 @@ async def test_rpc_remove_virtual_enum_when_mode_label(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual enum will be removed if the mode has been changed to a label."""
+    """Test virtual enum removal when mode changes to label."""
     config = deepcopy(mock_rpc_device.config)
     config["enum:200"] = {
         "name": None,
@@ -150,7 +150,7 @@ async def test_rpc_remove_virtual_enum_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual enum will be removed if it has been removed from the device configuration."""
+    """Test virtual enum removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -173,11 +173,13 @@ async def test_rpc_remove_virtual_enum_when_orphaned(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for select.test_name_enum_203 of Test name",
+            "Device communication error occurred while calling action"
+            " for select.test_name_enum_203 of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for select.test_name_enum_203 of Test name",
+            "RPC call error occurred while calling action"
+            " for select.test_name_enum_203 of Test name",
         ),
     ],
 )

@@ -39,11 +39,62 @@
 # name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'AQI Safety',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AQI Safety',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aqi_safety',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.arida_stavern_tank_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.arida_stavern_tank_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tank full',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Tank full',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tankfull',
+    'unique_id': 'tuya.8u5ftxkt52smougescfault_FULL',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.arida_stavern_tank_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arida Stavern  Tank full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.arida_stavern_tank_full',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -90,8 +141,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Boîte aux lettres - arrière Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boîte aux lettres - arrière Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boite_aux_lettres_arriere_door',
@@ -141,8 +192,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.c30_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'C30 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C30 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.c30_charging',
@@ -192,7 +243,7 @@
 # name: test_platform_setup_and_discovery[binary_sensor.cat_feeder_feeding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cat Feeder Feeding',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cat Feeder Feeding',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cat_feeder_feeding',
@@ -242,8 +293,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.cleverio_pf100_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Cleverio PF100 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cleverio PF100 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cleverio_pf100_charging',
@@ -293,8 +344,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.d825a_i_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'D825A I Tank full',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D825A I Tank full',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.d825a_i_tank_full',
@@ -344,8 +395,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifer Defrost',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifer Defrost',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dehumidifer_defrost',
@@ -395,11 +446,62 @@
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifer Tank full',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifer Tank full',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dehumidifer_tank_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_temperature_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dehumidifer_temperature_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature error',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Temperature error',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_error',
+    'unique_id': 'tuya.ifzgvpgoodrfw2akscfault_E1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_temperature_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifer Temperature error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dehumidifer_temperature_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -446,8 +548,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Defrost',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Defrost',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dehumidifier_defrost',
@@ -497,11 +599,113 @@
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Tank full',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Tank full',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dehumidifier_tank_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_temperature_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dehumidifier_temperature_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature error',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Temperature error',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_error',
+    'unique_id': 'tuya.ilms5pwjzzsxuxmvscfault_E1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_temperature_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier  Temperature error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dehumidifier_temperature_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_temperature_error_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dehumidifier_temperature_error_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature error',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Temperature error',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_error',
+    'unique_id': 'tuya.2myxayqtud9aqbizscfault_E1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_temperature_error_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Temperature error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dehumidifier_temperature_error_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -548,11 +752,419 @@
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_wet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifier Wet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Wet',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dehumidifier_wet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_coil_freeze_defrost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_coil_freeze_defrost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Coil freeze/defrost',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Coil freeze/defrost',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'coil_freeze',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_COIL',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_coil_freeze_defrost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Coil freeze/defrost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_coil_freeze_defrost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_filter_cleaning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_filter_cleaning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filter cleaning',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Filter cleaning',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_cleaning',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_Cleaning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_filter_cleaning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Filter cleaning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_filter_cleaning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_high_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_high_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'High temperature',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'High temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'high_temp',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_CH',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_high_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge High temperature',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_high_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low humidity',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Low humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_humidity',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_LO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Low humidity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low temperature',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Low temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_temp',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_CL',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Low temperature',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_low_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_motor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_motor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Motor fault',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motor_fault',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_MOTOR',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_motor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Motor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_motor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_tank_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_tank_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tank full',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Tank full',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tankfull',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_FULL',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_tank_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Tank full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_tank_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature error',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Temperature error',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_error',
+    'unique_id': 'tuya.ake0bre784zriw0uscfault_E1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Temperature error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -599,8 +1211,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Door Garage  Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door Garage  Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door_garage_door',
@@ -608,6 +1220,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dryfix_temperature_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dryfix_temperature_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature error',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Temperature error',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_error',
+    'unique_id': 'tuya.hz4pau766eavmxhqscfault_E1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dryfix_temperature_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DryFix Temperature error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryfix_temperature_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-entry]
@@ -650,8 +1313,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Fenêtre cuisine Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenêtre cuisine Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fenetre_cuisine_door',
@@ -701,8 +1364,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Fenêtre cuisine Tamper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenêtre cuisine Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fenetre_cuisine_tamper',
@@ -752,8 +1415,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Garage Contact Sensor Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Contact Sensor Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garage_contact_sensor_door',
@@ -803,8 +1466,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gas sensor Gas',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor Gas',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gas_sensor_gas',
@@ -854,8 +1517,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Gateway Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_problem',
@@ -905,8 +1568,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.home_gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Home Gateway Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Gateway Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_gateway_problem',
@@ -956,8 +1619,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Human presence Office Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Human presence Office Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.human_presence_office_occupancy',
@@ -1007,8 +1670,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.inondation_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Inondation Moisture',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inondation Moisture',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.inondation_moisture',
@@ -1058,8 +1721,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.kattenbak_bag_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Kattenbak Bag full',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kattenbak Bag full',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kattenbak_bag_full',
@@ -1109,11 +1772,62 @@
 # name: test_platform_setup_and_discovery[binary_sensor.kattenbak_cover_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Kattenbak Cover off',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kattenbak Cover off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kattenbak_cover_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.living_room_dehumidifier_temperature_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.living_room_dehumidifier_temperature_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature error',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Temperature error',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_error',
+    'unique_id': 'tuya.g1qorlffoy2iyo9bscfault_E1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.living_room_dehumidifier_temperature_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room dehumidifier Temperature error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.living_room_dehumidifier_temperature_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1160,8 +1874,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mesh-Gateway Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mesh-Gateway Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mesh_gateway_problem',
@@ -1211,8 +1925,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Motion sensor lidl zigbee Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor lidl zigbee Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
@@ -1262,8 +1976,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Motion sensor lidl zigbee Tamper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor lidl zigbee Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_tamper',
@@ -1313,8 +2027,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.pir_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'PIR Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PIR Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pir_motion',
@@ -1364,8 +2078,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'PIR outside stairs Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PIR outside stairs Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pir_outside_stairs_motion',
@@ -1415,8 +2129,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'rat trap hedge Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'rat trap hedge Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.rat_trap_hedge_motion',
@@ -1466,8 +2180,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'rat trap hedge Tamper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'rat trap hedge Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.rat_trap_hedge_tamper',
@@ -1517,8 +2231,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Rauchmelder Alexsandro  Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rauchmelder Alexsandro  Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.rauchmelder_alexsandro_smoke',
@@ -1568,8 +2282,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Rauchmelder Drucker Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rauchmelder Drucker Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.rauchmelder_drucker_smoke',
@@ -1619,8 +2333,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.siren_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Siren Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.siren_charging',
@@ -1670,8 +2384,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.siren_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Siren Tamper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.siren_tamper',
@@ -1721,7 +2435,7 @@
 # name: test_platform_setup_and_discovery[binary_sensor.smart_thermostats_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'smart thermostats Valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'smart thermostats Valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_thermostats_valve',
@@ -1771,8 +2485,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.smogo_safety-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Smogo Safety',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smogo Safety',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smogo_safety',
@@ -1822,8 +2536,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Smoke Alarm Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Alarm Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_alarm_smoke',
@@ -1873,8 +2587,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': ' Smoke detector upstairs  Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: ' Smoke detector upstairs  Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector_upstairs_smoke',
@@ -1924,8 +2638,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Soil moisture sensor #1 Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soil moisture sensor #1 Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.soil_moisture_sensor_1_occupancy',
@@ -1975,8 +2689,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Steel cage door Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Steel cage door Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steel_cage_door_door',
@@ -2026,8 +2740,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Tournesol Moisture',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tournesol Moisture',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.tournesol_moisture',
@@ -2077,8 +2791,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'WIFI Smoke alarm Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WIFI Smoke alarm Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.wifi_smoke_alarm_smoke',
@@ -2128,8 +2842,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.window_downstairs_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Window downstairs Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window downstairs Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window_downstairs_door',
@@ -2179,8 +2893,8 @@
 # name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'X5 Zigbee Gateway Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X5 Zigbee Gateway Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',

@@ -1,7 +1,5 @@
 """Constants for Scrape integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from homeassistant.const import Platform
@@ -14,7 +12,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORMS = [Platform.SENSOR]
 
-CONF_ADVANCED = "advanced"
+CONF_ADDITIONAL = "additional"
 CONF_AUTH = "auth"
 CONF_ENCODING = "encoding"
 CONF_SELECT = "select"

@@ -1,8 +1,7 @@
 """Pytest fixtures and shared setup for the WiiM integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
+from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -22,6 +21,16 @@ from homeassistant.components.wiim import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_local_ip() -> Generator[AsyncMock]:
+    """Mock the route lookup that picks the UPnP event callback address."""
+    with patch(
+        "homeassistant.components.wiim.util.async_get_local_ip",
+        return_value=(AddressFamily.AF_INET, "192.168.1.10"),
+    ) as mock_get_local_ip:
+        yield mock_get_local_ip
 
 
 @pytest.fixture
@@ -52,6 +61,8 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_create:
         mock = mock_create.return_value
+        # Expose the factory so tests can assert its call kwargs.
+        mock.create_mock = mock_create
         mock.udn = "uuid:test-udn-1234"
         mock.name = "Test WiiM Device"
         mock.model_name = "WiiM Pro"
@@ -61,6 +72,11 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.http_api_url = "http://192.168.1.100:8080"
         mock.presentation_url = "http://192.168.1.100:8080/web_interface"
         mock.available = True
+
+        def set_available(available: bool) -> None:
+            mock.available = available
+
+        mock.set_available = MagicMock(side_effect=set_available)
         mock.model = "WiiM Pro"
         mock.volume = 50
         mock.is_muted = False
@@ -127,6 +143,7 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.async_get_queue_snapshot = AsyncMock(
             return_value=WiimQueueSnapshot(items=())
         )
+        mock.as_diagnostics = MagicMock()
         mock.build_loop_mode = MagicMock(
             return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
         )

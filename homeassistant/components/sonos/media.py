@@ -1,7 +1,5 @@
 """Support for media metadata handling."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 

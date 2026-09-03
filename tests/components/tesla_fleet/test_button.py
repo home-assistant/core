@@ -68,6 +68,30 @@ async def test_press(
         command.assert_called_once()
 
 
+async def test_homelink_no_location(
+    hass: HomeAssistant, normal_config_entry: MockConfigEntry
+) -> None:
+    """Test pressing homelink without vehicle location raises a translated error."""
+    await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
+
+    coordinator = normal_config_entry.runtime_data.vehicles[0].coordinator
+    coordinator.data.pop("drive_state_latitude", None)
+    coordinator.data.pop("drive_state_longitude", None)
+
+    with (
+        patch("tesla_fleet_api.tesla.VehicleFleet.trigger_homelink") as command,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_homelink"]},
+            blocking=True,
+        )
+    assert error.value.translation_key == "homelink_no_location"
+    command.assert_not_called()
+
+
 async def test_press_signing_error(
     hass: HomeAssistant, normal_config_entry: MockConfigEntry, mock_products: AsyncMock
 ) -> None:

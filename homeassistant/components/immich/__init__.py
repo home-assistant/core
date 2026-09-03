@@ -1,7 +1,5 @@
 """The Immich integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -18,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up immich integration."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

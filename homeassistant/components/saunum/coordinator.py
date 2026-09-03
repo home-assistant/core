@@ -1,9 +1,7 @@
 """Coordinator for Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysaunum import SaunumClient, SaunumData, SaunumException
 
@@ -39,6 +37,7 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> SaunumData:
         """Fetch data from the sauna controller."""
         try:

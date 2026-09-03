@@ -29,23 +29,33 @@
       }),
       'week_plan': list([
         dict({
+          'customer_recipe_ids': list([
+          ]),
           'id': '2025-03-04',
           'recipes': list([
             dict({
               'id': 'r1',
+              'image': 'https://assets.tmecosys.com/image/upload/t_web_large/r1.jpg',
               'name': 'Waffles',
+              'thumbnail': 'https://assets.tmecosys.com/image/upload/t_web_thumbnail/r1.jpg',
               'total_time': 1500,
+              'url': 'https://cookidoo.ch/recipes/recipe/de-CH/r1',
             }),
           ]),
           'title': '2025-03-04',
         }),
         dict({
+          'customer_recipe_ids': list([
+          ]),
           'id': '2025-03-05',
           'recipes': list([
             dict({
               'id': 'r2',
+              'image': 'https://assets.tmecosys.com/image/upload/t_web_large/r2.jpg',
               'name': 'Mint Tea',
+              'thumbnail': 'https://assets.tmecosys.com/image/upload/t_web_thumbnail/r2.jpg',
               'total_time': 1500,
+              'url': 'https://cookidoo.ch/recipes/recipe/de-CH/r2',
             }),
           ]),
           'title': '2025-03-05',
@@ -60,6 +70,7 @@
     }),
     'user': dict({
       'description': None,
+      'id': 'sub_uuid',
       'picture': None,
       'username': 'username_1234',
     }),

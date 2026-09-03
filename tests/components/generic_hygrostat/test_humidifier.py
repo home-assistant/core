@@ -1272,6 +1272,48 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_humidity_change_dry_trigger_off_not_long_enough_keep_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Test a keep-alive interval does not bypass the minimum cycle duration."""
+    calls = await _setup_switch(hass, True)
+    # Settle on a humidity that asks for no change, so the device is left running
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Dry enough to want the dehumidifier off, but it only just came on
+    _setup_sensor(hass, 30)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_humidity_change_dry_trigger_on_not_long_enough_keep_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Test a keep-alive interval does not bypass the minimum cycle duration."""
+    calls = await _setup_switch(hass, False)
+    # Settle on a humidity that asks for no change, so the device is left stopped
+    _setup_sensor(hass, 35)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Wet enough to want the dehumidifier on, but it only just went off
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 @pytest.fixture
 async def setup_comp_8(hass: HomeAssistant) -> None:
     """Initialize components."""
@@ -1365,7 +1407,7 @@ async def test_float_tolerance_values(hass: HomeAssistant) -> None:
 
 
 async def test_float_tolerance_values_2(hass: HomeAssistant) -> None:
-    """Test if dehumidifier turns off when oudside of floating point tolerance values."""
+    """Test dehumidifier turns off outside of floating point tolerance."""
     assert await async_setup_component(
         hass,
         HUMIDIFIER_DOMAIN,
@@ -1856,7 +1898,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("switch.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     helper_config_entry = MockConfigEntry(
         data={},
@@ -1864,7 +1906,7 @@ async def test_device_id(
         options={
             "device_class": "humidifier",
             "dry_tolerance": 2.0,
-            "humidifier": "switch.test_source",
+            "humidifier": source_entity.entity_id,
             "name": "Test",
             "target_sensor": ENT_SENSOR,
             "wet_tolerance": 4.0,
@@ -1876,6 +1918,50 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    helper_entity = entity_registry.async_get("humidifier.test")
+    helper_entity = entity_registry.async_get("humidifier.mock_title_test")
     assert helper_entity is not None
     assert helper_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured hygrostat."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("switch", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": source_entity.entity_id,
+                "target_sensor": ENT_SENSOR,
+                "unique_id": "generic_hygrostat_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    helper_entity = entity_registry.async_get("humidifier.test")
+    assert helper_entity is not None
+    assert helper_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text

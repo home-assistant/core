@@ -1,0 +1,40 @@
+{
+  "property": {
+    "ventilation": {
+      "fanSpeed": {
+        "mode": ["r", "w"],
+        "type": "range",
+        "value": {
+          "r": {
+            "max": 5,
+            "min": 0,
+            "step": 1
+          },
+          "w": {
+            "max": 5,
+            "min": 0,
+            "step": 1
+          }
+        }
+      }
+    },
+    "lamp": {
+      "lampBrightness": {
+        "mode": ["r", "w"],
+        "type": "range",
+        "value": {
+          "r": {
+            "max": 2,
+            "min": 0,
+            "step": 1
+          },
+          "w": {
+            "max": 2,
+            "min": 0,
+            "step": 1
+          }
+        }
+      }
+    }
+  }
+}

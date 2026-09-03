@@ -1,9 +1,7 @@
 """Support for RESTful binary sensors."""
 
-from __future__ import annotations
-
 import logging
-import ssl
+from typing import override
 from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
@@ -14,33 +12,28 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_ICON,
-    CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
-    CONF_AVAILABILITY,
-    CONF_PICTURE,
     ManualTriggerEntity,
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import DEFAULT_BINARY_SENSOR_NAME
 from .data import RestData
-from .entity import RestEntity
+from .entity import (
+    RestEntity,
+    async_get_config_rest_data_and_coordinator,
+    async_get_trigger_entity_config,
+)
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,14 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = vol.All(
     BINARY_SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA}),
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
-)
-
-TRIGGER_ENTITY_OPTIONS = (
-    CONF_AVAILABILITY,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_PICTURE,
-    CONF_UNIQUE_ID,
 )
 
 
@@ -66,38 +51,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the REST binary sensor."""
-    # Must update the sensor now (including fetching the rest resource) to
-    # ensure it's updating its state.
-    if discovery_info is not None:
-        conf, coordinator, rest = await async_get_config_and_coordinator(
-            hass, BINARY_SENSOR_DOMAIN, discovery_info
-        )
-    else:
-        conf = config
-        coordinator = None
-        rest = create_rest_data_from_config(hass, conf)
-        await rest.async_update(log_errors=False)
 
-    if rest.data is None:
-        if rest.last_exception:
-            if isinstance(rest.last_exception, ssl.SSLError):
-                _LOGGER.error(
-                    "Error connecting %s failed with %s",
-                    rest.url,
-                    rest.last_exception,
-                )
-                return
-            raise PlatformNotReady from rest.last_exception
-        raise PlatformNotReady
-
-    name = conf.get(CONF_NAME) or Template(DEFAULT_BINARY_SENSOR_NAME, hass)
-
-    trigger_entity_config = {CONF_NAME: name}
-
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in conf:
-            continue
-        trigger_entity_config[key] = conf[key]
+    conf, rest, coordinator = await async_get_config_rest_data_and_coordinator(
+        hass, config, BINARY_SENSOR_DOMAIN, discovery_info
+    )
+    trigger_entity_config = async_get_trigger_entity_config(
+        hass, conf, DEFAULT_BINARY_SENSOR_NAME
+    )
 
     async_add_entities(
         [
@@ -136,12 +96,14 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
         self._value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
         available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
         return bool(available1 and available2)
 
+    @override
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         if self.rest.data is None:

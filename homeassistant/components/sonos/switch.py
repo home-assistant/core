@@ -1,10 +1,8 @@
 """Entity representing a Sonos Alarm."""
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from soco.alarms import Alarm
 from soco.exceptions import SoCoSlaveException, SoCoUPnPException
@@ -12,6 +10,7 @@ from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import ATTR_TIME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,6 +24,7 @@ from .const import (
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
+    SOURCE_TV,
 )
 from .entity import SonosEntity, SonosPollingEntity
 from .helpers import SonosConfigEntry, soco_error
@@ -49,6 +49,8 @@ ATTR_STATUS_LIGHT = "status_light"
 ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
+ATTR_TV_AUTOPLAY = "tv_autoplay"
+ATTR_TV_UNGROUP_AUTOPLAY = "ungroup_on_autoplay"
 
 ALL_FEATURES = (
     ATTR_TOUCH_CONTROLS,
@@ -71,6 +73,8 @@ POLL_REQUIRED = (
 )
 
 WEEKEND_DAYS = (0, 6)
+
+_TV_SOURCE = (("Source", SOURCE_TV),)
 
 # Mapping of model names to feature attributes that need to be substituted.
 # This is used to handle differences in attributes across Sonos models.
@@ -119,11 +123,52 @@ async def async_setup_entry(
                 features.append(feature_type)
         return features
 
-    async def _async_create_switches(speaker: SonosSpeaker) -> None:
-        entities = []
-        available_features = await hass.async_add_executor_job(
-            available_soco_attributes, speaker
+    def _get_tv_autoplay_state(speaker: SonosSpeaker) -> str | None:
+        """Return initial TV autoplay RoomUUID, or None if not supported."""
+        try:
+            result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
+        except (SoCoUPnPException, SoCoSlaveException, OSError) as err:
+            _LOGGER.debug(
+                "Unable to read %s state for %s: %s",
+                ATTR_TV_AUTOPLAY,
+                speaker.zone_name,
+                err,
+            )
+            return None
+        return result.get("RoomUUID")
+
+    def _get_tv_ungroup_autoplay_state(speaker: SonosSpeaker) -> bool | None:
+        """Return initial TV ungroup-on-autoplay state, or None if not supported."""
+        try:
+            result = speaker.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
+        except (SoCoUPnPException, SoCoSlaveException, OSError) as err:
+            _LOGGER.debug(
+                "Unable to read %s state for %s: %s",
+                ATTR_TV_UNGROUP_AUTOPLAY,
+                speaker.zone_name,
+                err,
+            )
+            return None
+        # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+        return result.get("IncludeLinkedZones") == "0"
+
+    def _get_switch_state(
+        speaker: SonosSpeaker,
+    ) -> tuple[list[str], str | None, bool | None]:
+        """Return all switch state for entity creation."""
+        return (
+            available_soco_attributes(speaker),
+            _get_tv_autoplay_state(speaker),
+            _get_tv_ungroup_autoplay_state(speaker),
         )
+
+    async def _async_create_switches(speaker: SonosSpeaker) -> None:
+        entities: list[SonosPollingEntity] = []
+        (
+            available_features,
+            initial_autoplay,
+            initial_ungroup,
+        ) = await hass.async_add_executor_job(_get_switch_state, speaker)
         for feature_type in available_features:
             attribute_key = MODEL_FEATURE_SUBSTITUTIONS.get(
                 speaker.model_name.upper(), {}
@@ -142,6 +187,31 @@ async def async_setup_entry(
                     config_entry=config_entry,
                 )
             )
+
+        if initial_autoplay is not None:
+            speaker.tv_autoplay = initial_autoplay
+            _LOGGER.debug(
+                "Creating %s switch on %s",
+                ATTR_TV_AUTOPLAY,
+                speaker.zone_name,
+            )
+            entities.append(
+                SonosTVAutoplaySwitchEntity(speaker=speaker, config_entry=config_entry)
+            )
+
+        if initial_ungroup is not None:
+            speaker.tv_ungroup_autoplay = initial_ungroup
+            _LOGGER.debug(
+                "Creating %s switch on %s",
+                ATTR_TV_UNGROUP_AUTOPLAY,
+                speaker.zone_name,
+            )
+            entities.append(
+                SonosTVUngroupAutoplaySwitchEntity(
+                    speaker=speaker, config_entry=config_entry
+                )
+            )
+
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -174,28 +244,33 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
             self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Handle polling for subscription-based switches when subscription fails."""
         if not self.should_poll:
             await self.hass.async_add_executor_job(self.poll_state)
 
     @soco_error()
+    @override
     def poll_state(self) -> None:
         """Poll the current state of the switch."""
         state = getattr(self.soco, self.attribute_key)
         setattr(self.speaker, self.attribute_key, state)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self.needs_coordinator and not self.speaker.is_coordinator:
             return cast(bool, getattr(self.speaker.coordinator, self.attribute_key))
         return cast(bool, getattr(self.speaker, self.attribute_key))
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.send_command(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.send_command(False)
@@ -211,6 +286,146 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
             setattr(soco, self.attribute_key, enable)
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
+
+
+class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
+    """Representation of a Sonos TV autoplay switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = ATTR_TV_AUTOPLAY
+    _attr_should_poll = True
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the switch."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_AUTOPLAY}"
+
+    @soco_error()
+    @override
+    def poll_state(self) -> None:
+        """Poll the current TV autoplay state from the device."""
+        result = self.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
+        self.speaker.tv_autoplay = result.get("RoomUUID")
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return super().available and self.speaker.tv_autoplay is not None
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return True if TV autoplay is enabled."""
+        if self.speaker.tv_autoplay is None:
+            return None
+        return bool(self.speaker.tv_autoplay)
+
+    @override
+    def turn_on(self, **kwargs: Any) -> None:
+        """Enable TV autoplay."""
+        self._send_command(True)
+
+    @override
+    def turn_off(self, **kwargs: Any) -> None:
+        """Disable TV autoplay."""
+        self._send_command(False)
+
+    @soco_error()
+    def _send_command(self, enable: bool) -> None:
+        """Enable or disable TV autoplay on the device."""
+        room_uuid = self.soco.uid if enable else ""
+        try:
+            self.soco.deviceProperties.SetAutoplayRoomUUID(
+                [("RoomUUID", room_uuid), *_TV_SOURCE]
+            )
+        except SoCoUPnPException as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="toggle_failed",
+                translation_placeholders={"entity_id": self.entity_id},
+            ) from exc
+        self.poll_state()
+        # Refresh ungroup state: the device may change it as a side effect
+        # (e.g. disabling TV autoplay automatically disables ungroup on autoplay).
+        try:
+            result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
+            self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
+        except SoCoUPnPException as exc:
+            _LOGGER.debug(
+                "Could not refresh %s state: %s", ATTR_TV_UNGROUP_AUTOPLAY, exc
+            )
+        self.speaker.write_entity_states()
+
+
+class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
+    """Representation of a Sonos TV ungroup-on-autoplay switch.
+
+    When enabled, the speaker leaves its group when it detects TV audio and
+    takes over playback alone. The device manages the dependency with TV autoplay
+    and will reflect the correct state via polling.
+    """
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = ATTR_TV_UNGROUP_AUTOPLAY
+    _attr_should_poll = True
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the switch."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    @soco_error()
+    @override
+    def poll_state(self) -> None:
+        """Poll the current ungroup-on-autoplay state from the device."""
+        result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
+        linked_zones = result.get("IncludeLinkedZones")
+        if linked_zones is None:
+            self.speaker.tv_ungroup_autoplay = None
+            return
+        # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+        self.speaker.tv_ungroup_autoplay = linked_zones == "0"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return super().available and self.speaker.tv_ungroup_autoplay is not None
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return True if ungroup on autoplay is enabled."""
+        return self.speaker.tv_ungroup_autoplay
+
+    @override
+    def turn_on(self, **kwargs: Any) -> None:
+        """Enable ungroup on autoplay."""
+        self._send_command(True)
+
+    @override
+    def turn_off(self, **kwargs: Any) -> None:
+        """Disable ungroup on autoplay."""
+        self._send_command(False)
+
+    @soco_error()
+    def _send_command(self, enable: bool) -> None:
+        """Enable or disable ungroup on autoplay on the device."""
+        try:
+            self.soco.deviceProperties.SetAutoplayLinkedZones(
+                # enable=True (ungroup) → IncludeLinkedZones=0
+                # (don't include linked zones)
+                [("IncludeLinkedZones", "0" if enable else "1"), *_TV_SOURCE]
+            )
+        except SoCoUPnPException as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="toggle_failed",
+                translation_placeholders={"entity_id": self.entity_id},
+            ) from exc
+        self.poll_state()
+        self.speaker.write_entity_states()
 
 
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
@@ -229,6 +444,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle switch setup when added to hass."""
         await super().async_added_to_hass()
@@ -259,6 +475,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return (
@@ -266,6 +483,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             f" {str(self.alarm.start_time)[:5]}"
         )
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
         alarms: SonosAlarms = self.config_entry.runtime_data.alarms[self.household_id]
@@ -338,16 +556,19 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether this alarm is available."""
         return (self.alarm is not None) and self.speaker.available
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return state of Sonos alarm switch."""
         return self.alarm.enabled
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Sonos alarm switch."""
         return {
@@ -361,10 +582,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
         }
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn alarm switch on."""
         self._handle_switch_on_off(turn_on=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn alarm switch off."""
         self._handle_switch_on_off(turn_on=False)

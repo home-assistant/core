@@ -1,11 +1,9 @@
 """The met_eireann component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import meteireann
 
@@ -70,6 +68,7 @@ class MetEireannUpdateCoordinator(DataUpdateCoordinator[MetEireannWeatherData]):
         )
         self._weather_data = MetEireannWeatherData(config_entry.data, raw_weather_data)
 
+    @override
     async def _async_update_data(self) -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
         try:

@@ -1,9 +1,8 @@
 """Helpers for the cloud component."""
 
-from __future__ import annotations
-
 from collections import deque
 import logging
+from typing import override
 
 from homeassistant.core import HomeAssistant
 
@@ -18,6 +17,7 @@ class FixedSizeQueueLogHandler(logging.Handler):
         super().__init__()
         self._records: deque[logging.LogRecord] = deque(maxlen=self.MAX_RECORDS)
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         """Store log message."""
         self._records.append(record)

@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
+from google.auth.exceptions import RefreshError
 from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
@@ -235,7 +236,7 @@ async def test_setup_oauth_reauth_error(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_async_start_reauth.assert_called_once_with(hass)
+    mock_async_start_reauth.assert_called_once_with(hass, None, None)
 
 
 async def test_setup_oauth_transient_error(
@@ -268,13 +269,13 @@ async def test_setup_oauth_transient_error(
 @pytest.mark.parametrize(
     ("add_created_column_param", "expected_row"),
     [
-        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
         ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
-        ({}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
     ],
     ids=["created_column_true", "created_column_false", "created_column_default"],
 )
-@freeze_time("2024-01-15 12:30:45.123456")
+@freeze_time("2024-01-15 04:30:45.123456-08:00")
 async def test_append_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -312,6 +313,43 @@ async def test_append_sheet(
         assert rows_data[0] == expected_row
 
 
+@freeze_time("2024-01-15 12:30:45.123456")
+async def test_append_sheet_created_column_uses_configured_time_zone(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the created column follows the time zone configured in Home Assistant.
+
+    Home Assistant never changes the process time zone, so the machine the
+    installation happens to run on must not decide what is written here.
+    """
+    await hass.config.async_set_time_zone("Australia/Sydney")
+    await setup_integration()
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo", "created"]]
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_APPEND_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                DATA: {"foo": "bar"},
+                ADD_CREATED_COLUMN: True,
+            },
+            blocking=True,
+        )
+
+        rows_data = mock_worksheet.append_rows.call_args[0][0]
+        assert rows_data[0] == ["bar", "2024-01-15 23:30:45.123456+11:00"]
+        mock_worksheet.get_values.assert_called_once_with("1:1")
+
+
 async def test_get_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -326,7 +364,8 @@ async def test_get_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
-        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+        worksheet = mock_client.return_value.open_by_key.return_value.worksheet
+        worksheet.return_value.get_values.return_value = [
             ["col1", "col2"],
             ["a", "b"],
             ["c", "d"],
@@ -370,6 +409,142 @@ async def test_append_sheet_multiple_rows(
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 8
+
+
+async def test_append_sheet_defaults_to_first_worksheet(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test append to sheet without naming a worksheet."""
+    await setup_integration()
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        sheet = mock_client.return_value.open_by_key.return_value
+        sheet.sheet1.get_values.return_value = [["foo"]]
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_APPEND_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                DATA: {"foo": "bar"},
+            },
+            blocking=True,
+        )
+
+    sheet.worksheet.assert_not_called()
+    sheet.sheet1.append_rows.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(SERVICE_APPEND_SHEET, {DATA: {"foo": "bar"}}, id="append_sheet"),
+        pytest.param(SERVICE_GET_SHEET, {ROWS: 2}, id="get_sheet"),
+    ],
+)
+async def test_refresh_error_starts_reauth(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test an expired token while calling the API starts reauthentication."""
+    await setup_integration()
+
+    with (
+        patch(
+            "homeassistant.components.google_sheets.services.Client.request",
+            side_effect=RefreshError,
+        ),
+        pytest.raises(RefreshError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {DATA_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            blocking=True,
+            return_response=service == SERVICE_GET_SHEET,
+        )
+
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    "failing_call",
+    [
+        pytest.param("get_values", id="read_columns"),
+        pytest.param("update_cell", id="add_column"),
+        pytest.param("append_rows", id="append_rows"),
+    ],
+)
+async def test_append_sheet_api_error_while_writing(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    failing_call: str,
+) -> None:
+    """Test append to sheet reports a failing write as a HomeAssistantError."""
+    await setup_integration()
+
+    response = Response()
+    response.status_code = 503
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo"]]
+        setattr(mock_worksheet, failing_call, Mock(side_effect=APIError(response)))
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_APPEND_SHEET,
+                {
+                    DATA_CONFIG_ENTRY: config_entry.entry_id,
+                    WORKSHEET: "Sheet1",
+                    DATA: {"foo": "bar", "new_column": "baz"},
+                },
+                blocking=True,
+            )
+
+
+async def test_get_sheet_api_error_while_reading(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test get sheet reports a failing read as a HomeAssistantError."""
+    await setup_integration()
+
+    response = Response()
+    response.status_code = 503
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.side_effect = APIError(response)
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_SHEET,
+                {
+                    DATA_CONFIG_ENTRY: config_entry.entry_id,
+                    WORKSHEET: "Sheet1",
+                    ROWS: 2,
+                },
+                blocking=True,
+                return_response=True,
+            )
 
 
 async def test_append_sheet_api_error(
@@ -549,7 +724,7 @@ async def test_get_sheet_invalid_worksheet(
         mock_client.return_value.open_by_key.return_value.worksheet.side_effect = (
             APIError(Response())
         )
-        with pytest.raises(APIError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_GET_SHEET,

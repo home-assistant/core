@@ -1,8 +1,6 @@
 """Support for KNX switch entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import Switch as XknxSwitch
 
@@ -10,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -33,7 +30,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import SwitchSchema
 from .storage.const import CONF_ENTITY, CONF_GA_SWITCH
@@ -63,7 +65,7 @@ async def async_setup_entry(
             KnxYamlSwitch(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.SWITCH):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.SWITCH):
         entities.extend(
             KnxUiSwitch(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -77,24 +79,26 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
 
     _device: XknxSwitch
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.switch.readable and (
-            last_state := await self.async_get_last_state()
-        ):
+        if last_state := await self.async_get_last_state():
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.switch.value = last_state.state == STATE_ON
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return bool(self._device.state)
+        return self._device.state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._device.set_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._device.set_off()
@@ -113,13 +117,13 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
             group_address=config[KNX_ADDRESS],
             group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
             respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
             invert=config[SwitchSchema.CONF_INVERT],
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.switch.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.switch.group_address),
+            entity_config=config,
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 

@@ -1,67 +1,19 @@
 """Tests for Apple TV keyboard services."""
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
-from pyatv.const import DeviceModel, KeyboardFocusState, Protocol
+from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 import pytest
 
 from homeassistant.components.apple_tv.const import ATTR_TEXT, DOMAIN
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_ADDRESS, CONF_NAME
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .common import create_conf, mrp_service
-
 from tests.common import MockConfigEntry
 
-
-@pytest.fixture
-def mock_atv() -> AsyncMock:
-    """Create a mock Apple TV interface with keyboard support."""
-    atv = AsyncMock()
-    atv.close = MagicMock()
-    atv.features = MagicMock()
-    atv.keyboard = AsyncMock()
-    atv.push_updater = MagicMock()
-    atv.keyboard.text_focus_state = KeyboardFocusState.Focused
-    atv.device_info.model = DeviceModel.Gen4K
-    atv.device_info.raw_model = "AppleTV6,2"
-    atv.device_info.version = "15.0"
-    atv.device_info.mac = "AA:BB:CC:DD:EE:FF"
-    return atv
-
-
-@pytest.fixture
-async def mock_config_entry(
-    hass: HomeAssistant,
-    mock_async_zeroconf: MagicMock,
-    mock_atv: AsyncMock,
-) -> MockConfigEntry:
-    """Set up Apple TV integration with mocked pyatv."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Living Room",
-        unique_id="mrpid",
-        data={
-            CONF_ADDRESS: "127.0.0.1",
-            CONF_NAME: "Living Room",
-            "credentials": {str(Protocol.MRP.value): "mrp_creds"},
-            "identifiers": ["mrpid"],
-        },
-    )
-    entry.add_to_hass(hass)
-
-    scan_result = create_conf("127.0.0.1", "Living Room", mrp_service())
-
-    with (
-        patch("homeassistant.components.apple_tv.scan", return_value=[scan_result]),
-        patch("homeassistant.components.apple_tv.connect", return_value=mock_atv),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    return entry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_set_keyboard_text(

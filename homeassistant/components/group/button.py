@@ -1,8 +1,6 @@
 """Platform allowing several button entities to be grouped into one single button."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -113,6 +111,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
+    @override
     async def async_press(self) -> None:
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
@@ -124,6 +123,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the button group state."""
         # Set group as unavailable if all members are unavailable or missing

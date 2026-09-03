@@ -1,8 +1,6 @@
 """Support for XS1 climate devices."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xs1_api_client.api_constants import ActuatorType
 from xs1_api_client.device.actuator import XS1Actuator
@@ -64,11 +62,13 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         self.sensor = sensor
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         return self.device.name()
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.sensor is None:
@@ -77,15 +77,18 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         return self.sensor.value()
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return self.device.unit()
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the current target temperature."""
         return self.device.new_value()
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -95,9 +98,11 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         if self.sensor is not None:
             self.schedule_update_ha_state()
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
+    @override
     async def async_update(self) -> None:
         """Also update the sensor when available."""
         await super().async_update()

@@ -27,7 +27,7 @@ SUBSET_ROOMS = (TEST_ROOM_B_ID, TEST_ROOM_C_ID)
 
 @dataclass
 class CommandTestParameters:
-    """Dataclass of parameters representing the command config parameters and expected result state.
+    """Command config parameters and expected result state.
 
     Switches behavior based on `room_id` and `expected_event_room_data`.
     """

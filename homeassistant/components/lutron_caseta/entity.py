@@ -1,11 +1,11 @@
 """Component for interacting with a Lutron Caseta system."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import ATTR_SUGGESTED_AREA
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -21,7 +21,9 @@ class LutronCasetaEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device: dict[str, Any], data: LutronCasetaData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: dict[str, Any], data: LutronCasetaData
+    ) -> None:
         """Set up the base class.
 
         [:param]device the device metadata
@@ -56,13 +58,18 @@ class LutronCasetaEntity(Entity):
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
-            via_device=(DOMAIN, self._bridge_device["serial"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, self._bridge_device["serial"]),
+                config_entry_id=data.config_entry_id,
+            ),
             configuration_url=CONFIG_URL,
         )
         if area != UNASSIGNED_AREA:
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self._handle_bridge_update)
@@ -88,11 +95,13 @@ class LutronCasetaEntity(Entity):
         return self._device["serial"]
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of the device (serial)."""
         return str(self._handle_none_serial(self.serial))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {

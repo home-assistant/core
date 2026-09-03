@@ -1,9 +1,7 @@
 """Support for Notion binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from aionotion.listener.models import ListenerKind
 
@@ -135,6 +133,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     entity_description: NotionBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.listener.insights.primary.value:

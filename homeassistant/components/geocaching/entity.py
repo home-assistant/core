@@ -29,8 +29,10 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
         super().__init__(coordinator)
         self.cache = cache
 
-        # A device can have multiple entities, and for a cache which requires multiple entities we want to group them together.
-        # Therefore, we create a device for each cache, which holds all related entities.
+        # A device can have multiple entities, and for a cache
+        # which requires multiple entities we want to group them
+        # together. Therefore, we create a device for each cache,
+        # which holds all related entities.
         self._attr_device_info = DeviceInfo(
             name=f"Geocache {cache.name}",
             identifiers={(DOMAIN, cast(str, cache.reference_code))},

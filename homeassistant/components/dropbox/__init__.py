@@ -1,7 +1,5 @@
 """The Dropbox integration."""
 
-from __future__ import annotations
-
 from python_dropbox_api import (
     DropboxAPIClient,
     DropboxAuthException,
@@ -13,26 +11,32 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
 from .auth import DropboxConfigEntryAuth
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH2_SCOPES
 
 type DropboxConfigEntry = ConfigEntry[DropboxAPIClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> bool:
     """Set up Dropbox from a config entry."""
-    try:
-        oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
+    oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
+
+    token = entry.data["token"]
+    if not set(token.get("scope", "").split()).issuperset(OAUTH2_SCOPES):
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+            translation_key="missing_scopes",
+        )
+    if "refresh_token" not in token:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_refresh_token",
+        )
+
     oauth2_session = OAuth2Session(hass, entry, oauth2_implementation)
 
     auth = DropboxConfigEntryAuth(
@@ -44,9 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
     try:
         await client.get_account_info()
     except DropboxAuthException as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from err
     except (DropboxUnknownException, TimeoutError) as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     entry.runtime_data = client
 

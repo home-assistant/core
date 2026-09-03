@@ -1,7 +1,5 @@
 """The Cambridge Audio integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -33,7 +31,9 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Cambridge Audio integration from a config entry."""
 
-    client = StreamMagicClient(entry.data[CONF_HOST], async_get_clientsession(hass))
+    client = StreamMagicClient(
+        entry.data[CONF_HOST], async_get_clientsession(hass), should_close_session=False
+    )
 
     async def _connection_update_callback(
         _client: StreamMagicClient, _callback_type: CallbackType

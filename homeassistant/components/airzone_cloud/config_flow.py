@@ -1,8 +1,6 @@
 """Config flow for Airzone Cloud."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
@@ -79,6 +77,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

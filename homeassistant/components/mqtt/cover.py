@@ -1,10 +1,8 @@
 """Support for MQTT cover devices."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -15,6 +13,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -104,8 +103,8 @@ TILT_FEATURES = (
 
 MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        cover.ATTR_CURRENT_POSITION,
-        cover.ATTR_CURRENT_TILT_POSITION,
+        CoverEntityStateAttribute.CURRENT_POSITION,
+        CoverEntityStateAttribute.CURRENT_TILT_POSITION,
     }
 )
 
@@ -246,10 +245,12 @@ class MqttCover(MqttEntity, CoverEntity):
     _tilt_range: tuple[int, int]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """Set up cover from config."""
         self._pos_range = (config[CONF_POSITION_CLOSED] + 1, config[CONF_POSITION_OPEN])
@@ -457,6 +458,7 @@ class MqttCover(MqttEntity, CoverEntity):
             )
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -481,10 +483,12 @@ class MqttCover(MqttEntity, CoverEntity):
             {"_attr_current_cover_tilt_position"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up.
 
@@ -500,6 +504,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 self._attr_current_cover_position = 100
             self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down.
 
@@ -515,6 +520,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 self._attr_current_cover_position = 0
             self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device.
 
@@ -524,6 +530,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP]
         )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
         tilt_open_position = self._config[CONF_TILT_OPEN_POSITION]
@@ -543,6 +550,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_tilt_position = self._tilt_open_percentage
             self.async_write_ha_state()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
         tilt_closed_position = self._config[CONF_TILT_CLOSED_POSITION]
@@ -564,6 +572,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_tilt_position = self._tilt_closed_percentage
             self.async_write_ha_state()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_percentage = kwargs[ATTR_TILT_POSITION]
@@ -589,12 +598,14 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_tilt_position = tilt_percentage
             self.async_write_ha_state()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop moving the cover tilt."""
         await self.async_publish_with_config(
             self._config[CONF_TILT_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP_TILT]
         )
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percentage = kwargs[ATTR_POSITION]
@@ -624,6 +635,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_position = position_percentage
             self.async_write_ha_state()
 
+    @override
     async def async_toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if (

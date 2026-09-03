@@ -13,11 +13,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_qube_client: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
     """Test successful config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -43,10 +40,10 @@ async def test_full_flow(
         (None, True, None, "not_qube_device"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     connect_side_effect: type[Exception] | None,
     connect_result: bool | None,
     version_result: str | None,
@@ -82,11 +79,9 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
-    hass: HomeAssistant,
-    mock_qube_client: MagicMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_qube_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we abort when device is already configured."""
     mock_config_entry.add_to_hass(hass)

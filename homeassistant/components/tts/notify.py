@@ -1,9 +1,7 @@
 """Support notifications through TTS service."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -64,6 +62,7 @@ class TTSNotificationService(BaseNotificationService):
         self._media_player = config[CONF_MEDIA_PLAYER]
         self._language = config.get(ATTR_LANGUAGE)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Call TTS service to speak the notification."""
         _LOGGER.debug("%s '%s' on %s", self._tts_service, message, self._media_player)

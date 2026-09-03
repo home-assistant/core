@@ -1,7 +1,5 @@
 """Tests for the DLNA DMR media_player module."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
@@ -11,6 +9,7 @@ from unittest.mock import ANY, DEFAULT, Mock, patch
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.exceptions import (
+    UpnpActionResponseError,
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
@@ -45,6 +44,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -353,9 +353,8 @@ async def test_setup_entry_mac_address(
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
     # Check the device registry connections for MAC address
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
@@ -375,9 +374,8 @@ async def test_setup_entry_no_mac_address(
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
     # Check the device registry connections does not include the MAC address
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock_no_mac.entry_id
     )
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
@@ -444,15 +442,15 @@ async def test_available_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     dmr_device_mock: Mock,
+    config_entry_mock: MockConfigEntry,
     mock_entity_id: str,
 ) -> None:
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
     # Device properties are set in dmr_device_mock before the entity gets constructed
@@ -1061,6 +1059,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1074,6 +1073,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1158,6 +1158,7 @@ async def test_browse_media_unfiltered(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1169,6 +1170,7 @@ async def test_browse_media_unfiltered(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1320,7 +1322,7 @@ async def test_unavailable_device(
 
     # Check attributes are unavailable
     attrs = mock_state.attributes
-    for attr in mp.ATTR_TO_PROPERTY:
+    for attr in mp.PROP_TO_ATTR.values():
         assert attr not in attrs
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
@@ -1359,13 +1361,13 @@ async def test_unavailable_device(
             blocking=True,
         )
 
-    # Check hass device information has not been filled in yet
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    # The device is named after the config entry until it can be connected to;
+    # detailed information such as manufacturer is filled in once connected.
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
-    assert device.name is None
+    assert device.name == MOCK_DEVICE_NAME
     assert device.manufacturer is None
 
     # Unload config entry to clean up
@@ -1407,9 +1409,8 @@ async def test_become_available(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Check hass device information has not been filled in yet
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
 
@@ -1448,9 +1449,8 @@ async def test_become_available(
     assert mock_state is not None
     assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
     assert device.manufacturer == "device_manufacturer"
@@ -1938,7 +1938,8 @@ async def test_ssdp_bootid(
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
 
-    # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
+    # Send a new SSDP alive with an incremented boot ID,
+    # device should be dis/reconnected
     await ssdp_callback(
         SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1964,7 +1965,7 @@ async def test_become_unavailable(
     mock_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
-    """Test a device becoming unavailable."""
+    """Test a device becoming unavailable due to a connection error."""
     # Check async_update currently works
     await async_update_entity(hass, mock_entity_id)
     dmr_device_mock.async_update.assert_called_with(do_ping=False)
@@ -1974,13 +1975,17 @@ async def test_become_unavailable(
     dmr_device_mock.async_update.reset_mock()
 
     # Interface service calls should flag that the device is unavailable, but
-    # not disconnect it immediately
-    await hass.services.async_call(
-        mp.DOMAIN,
-        ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
-        blocking=True,
-    )
+    # not disconnect it immediately.
+    # An exception should also be raised to inform the user or automation.
+    with pytest.raises(
+        HomeAssistantError, match="Could not connect .* async_set_volume_level"
+    ):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+            blocking=True,
+        )
 
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
@@ -1998,17 +2003,65 @@ async def test_become_unavailable(
     dmr_device_mock.async_update.reset_mock()
     dmr_device_mock.async_update.side_effect = UpnpConnectionError
 
-    await hass.services.async_call(
-        mp.DOMAIN,
-        ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError, match="Could not connect .* async_set_volume_level"
+    ):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+            blocking=True,
+        )
+
     await async_update_entity(hass, mock_entity_id)
     dmr_device_mock.async_update.assert_called_with(do_ping=True)
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+
+async def test_generic_error(
+    hass: HomeAssistant,
+    mock_entity_id: str,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test when a UpnpError occurs during an action, it is bubbled up to the user.
+
+    The behaviour should be the same as for a UpnpConnectionError.
+    """
+    # Generate a service-specific UpnpError on the next service call. This particular
+    # error simulates trying to play a file that the device does not support.
+    dmr_device_mock.async_play.side_effect = UpnpActionResponseError(
+        status=500, error_code=714, error_desc="Illegal MIME-type"
+    )
+
+    # Interface service calls should flag that the device may be unavailable,
+    # but not disconnect it immediately.
+    # An exception should also be raised to inform the user or automation.
+    with pytest.raises(
+        HomeAssistantError,
+        match="Error when calling device service for action async_media_play: .*Illegal MIME-type",
+    ):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: mock_entity_id},
+            blocking=True,
+        )
+
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == MediaPlayerState.IDLE
+
+    # With a working connection, device should remain available on the next,
+    # update, and any thereafter.
+    for do_ping in (True, False):
+        dmr_device_mock.async_update.reset_mock()
+        await async_update_entity(hass, mock_entity_id)
+        dmr_device_mock.async_update.assert_called_with(do_ping=do_ping)
+        mock_state = hass.states.get(mock_entity_id)
+        assert mock_state is not None
+        assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_poll_availability(
@@ -2082,8 +2135,8 @@ async def test_disappearing_device(
     entity: DlnaDmrEntity = hass.data[mp.DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
-    for attr in mp.ATTR_TO_PROPERTY:
-        value = getattr(entity, attr)
+    for prop in mp.PROP_TO_ATTR:
+        value = getattr(entity, prop)
         assert value is None
 
     # media_image_url is normally hidden by entity_picture, but we want a direct check
@@ -2295,9 +2348,8 @@ async def test_config_update_mac_address(
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     # Check the device registry connections does not include the MAC address
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock_no_mac.entry_id
     )
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
@@ -2315,9 +2367,8 @@ async def test_config_update_mac_address(
     await hass.async_block_till_done()
 
     # Device registry connections should now include the MAC address
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock_no_mac.entry_id
     )
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
@@ -2348,9 +2399,8 @@ async def test_connections_restored(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Check hass device information has not been filled in yet
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
 
@@ -2389,9 +2439,8 @@ async def test_connections_restored(
     assert mock_state is not None
     assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
     previous_connections = device.connections
@@ -2411,9 +2460,8 @@ async def test_connections_restored(
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
 
     # Check hass device information has not been filled in yet
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN), config_entry_mock.entry_id
     )
     assert device is not None
     assert device.connections == previous_connections

@@ -1,7 +1,5 @@
 """Repair flows for the Synology DSM integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import cast
@@ -9,8 +7,11 @@ from typing import cast
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.selector import (
@@ -43,7 +44,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
 
         return self.async_show_menu(
@@ -55,7 +56,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
 
         syno_data = self.entry.runtime_data
@@ -101,7 +102,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
 
     async def async_step_ignore(
         self, _: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
         return self.async_abort(reason="ignored")

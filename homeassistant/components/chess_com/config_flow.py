@@ -1,9 +1,7 @@
 """Config flow for the Chess.com integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from chess_com_api import ChessComClient, NotFoundError
 import voluptuous as vol
@@ -20,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class ChessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Chess.com."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

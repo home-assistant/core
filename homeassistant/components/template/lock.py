@@ -1,28 +1,20 @@
 """Support for locks which integrates with other components."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
+    LockEntityStateAttribute,
     LockState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CODE,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
@@ -30,9 +22,10 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import validators as template_validators
+from . import validators as tcv
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -42,15 +35,13 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_CODE_FORMAT = "code_format"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
@@ -58,11 +49,6 @@ CONF_OPEN = "open"
 
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
-
-LEGACY_FIELDS = {
-    CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 SCRIPT_FIELDS = (
     CONF_LOCK,
@@ -81,22 +67,13 @@ LOCK_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(LOCK_DOMAIN, DEFAULT_NAME).schema
-)
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(attributes=LockEntityStateAttribute)
 
-PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    }
-).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+    make_template_entity_common_schema(
+        LOCK_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
+)
 
 LOCK_CONFIG_ENTRY_SCHEMA = LOCK_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
@@ -118,7 +95,6 @@ async def async_setup_platform(
         TriggerLockEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -153,22 +129,62 @@ def async_create_preview_lock(
     )
 
 
-class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
+@dataclass(kw_only=True)
+class LockExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template lock entities."""
+
+    code_format: str | None
+    is_locked: bool | None
+    is_locking: bool | None
+    is_open: bool | None
+    is_opening: bool | None
+    is_unlocking: bool | None
+    is_jammed: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the lock data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored lock state from a dict."""
+        try:
+            return cls(
+                code_format=restored["code_format"],
+                is_locked=restored["is_locked"],
+                is_locking=restored["is_locking"],
+                is_open=restored["is_open"],
+                is_opening=restored["is_opening"],
+                is_unlocking=restored["is_unlocking"],
+                is_jammed=restored["is_jammed"],
+            )
+        except KeyError:
+            return None
+
+
+class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
     """Representation of a template lock features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_extra_data = LockExtraStoredData
+    _restore_state_properties = ("_attr_is_locked",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._code_format_template_error: TemplateError | None = None
 
         self.setup_state_template(
             "_lock_state",
-            template_validators.strenum(
+            tcv.strenum(
                 self, CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
             ),
             self._set_state,
@@ -218,6 +234,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             self._attr_code_format = render
             self._code_format_template_error = None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         # Check if we need to raise for incorrect code format
@@ -236,6 +253,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         # Check if we need to raise for incorrect code format
@@ -254,6 +272,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the device."""
         # Check if we need to raise for incorrect code format
@@ -284,6 +303,31 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
                     "cause": str(self._code_format_template_error),
                 },
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> LockExtraStoredData:
+        """Return lock specific state data to be restored."""
+        return LockExtraStoredData(
+            code_format=self._attr_code_format,
+            is_locked=self._attr_is_locked,
+            is_locking=self._attr_is_locking,
+            is_open=self._attr_is_open,
+            is_opening=self._attr_is_opening,
+            is_unlocking=self._attr_is_unlocking,
+            is_jammed=self._attr_is_jammed,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: LockExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_code_format = extra_data.code_format
+        self._attr_is_locked = extra_data.is_locked
+        self._attr_is_locking = extra_data.is_locking
+        self._attr_is_open = extra_data.is_open
+        self._attr_is_opening = extra_data.is_opening
+        self._attr_is_unlocking = extra_data.is_unlocking
+        self._attr_is_jammed = extra_data.is_jammed
 
 
 class StateLockEntity(TemplateEntity, AbstractTemplateLock):

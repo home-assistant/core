@@ -11,12 +11,12 @@
   },
   "system_info": {
     "mnf_info": {
-      "mac_eth": "001122334455",
+      "mac_eth": "209727aabbcc",
       "name": "RUTX5000XXXX",
       "hw_ver": "0202",
       "batch": "0024",
       "serial": "1234567890",
-      "mac": "001122334456",
+      "mac": "209727aabbcd",
       "bl_ver": "3.0"
     },
     "static": {

@@ -1,7 +1,5 @@
 """Fixtures for Trafikverket Camera integration tests."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from unittest.mock import patch
 
@@ -26,8 +24,9 @@ async def load_integration_from_entry(
     get_camera: CameraInfoModel,
 ) -> MockConfigEntry:
     """Set up the Trafikverket Camera integration in Home Assistant."""
+    aioclient_mock.get("https://www.testurl.com/test_photo.jpg", content=b"0123456789")
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     config_entry = MockConfigEntry(
@@ -59,17 +58,24 @@ def fixture_get_camera() -> CameraInfoModel:
     return CameraInfoModel(
         camera_name="Test Camera",
         camera_id="1234",
+        camera_group="Test Camera Group",
+        camera_type="Road",
         active=True,
         deleted=False,
         description="Test Camera for testing",
         direction="180",
-        fullsizephoto=True,
+        has_fullsizephoto=True,
+        has_sketchimage=True,
+        icon="12",
         location="Test location",
         modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         photourl="https://www.testurl.com/test_photo.jpg",
+        photourlfullsize="https://www.testurl.com/test_photo_fullsize.jpg",
+        photourlsketch="https://www.testurl.com/test_photo_sketch.jpg",
+        photourlthumbnail="https://www.testurl.com/test_photo_thumbnail.jpg",
         status="Running",
-        camera_type="Road",
+        wgs84="POINT (12.345678 56.789012)",
     )
 
 
@@ -80,17 +86,24 @@ def fixture_get_camera2() -> CameraInfoModel:
     return CameraInfoModel(
         camera_name="Test Camera2",
         camera_id="5678",
+        camera_group="Test Camera Group2",
+        camera_type="Road",
         active=True,
         deleted=False,
         description="Test Camera for testing2",
         direction="180",
-        fullsizephoto=True,
+        has_fullsizephoto=True,
+        has_sketchimage=True,
+        icon="12",
         location="Test location2",
         modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         photourl="https://www.testurl.com/test_photo2.jpg",
+        photourlfullsize="https://www.testurl.com/test_photo2_fullsize.jpg",
+        photourlsketch="https://www.testurl.com/test_photo2_sketch.jpg",
+        photourlthumbnail="https://www.testurl.com/test_photo2_thumbnail.jpg",
         status="Running",
-        camera_type="Road",
+        wgs84="POINT (12.345678 56.789012)",
     )
 
 
@@ -102,32 +115,46 @@ def fixture_get_cameras() -> CameraInfoModel:
         CameraInfoModel(
             camera_name="Test Camera",
             camera_id="1234",
+            camera_group="Test Camera Group",
+            camera_type="Road",
             active=True,
             deleted=False,
             description="Test Camera for testing",
             direction="180",
-            fullsizephoto=True,
-            location="Test location",
+            has_fullsizephoto=True,
+            has_sketchimage=True,
+            icon="12",
+            location="Test location2",
             modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
             phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
             photourl="https://www.testurl.com/test_photo.jpg",
+            photourlfullsize="https://www.testurl.com/test_photo_fullsize.jpg",
+            photourlsketch="https://www.testurl.com/test_photo_sketch.jpg",
+            photourlthumbnail="https://www.testurl.com/test_photo_thumbnail.jpg",
             status="Running",
-            camera_type="Road",
+            wgs84="POINT (13.345678 56.789012)",
         ),
         CameraInfoModel(
             camera_name="Test Camera2",
             camera_id="5678",
+            camera_group="Test Camera Group2",
+            camera_type="Road",
             active=True,
             deleted=False,
             description="Test Camera for testing2",
             direction="180",
-            fullsizephoto=True,
+            has_fullsizephoto=True,
+            has_sketchimage=True,
+            icon="12",
             location="Test location2",
             modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
             phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
             photourl="https://www.testurl.com/test_photo2.jpg",
+            photourlfullsize="https://www.testurl.com/test_photo2_fullsize.jpg",
+            photourlsketch="https://www.testurl.com/test_photo2_sketch.jpg",
+            photourlthumbnail="https://www.testurl.com/test_photo2_thumbnail.jpg",
             status="Running",
-            camera_type="Road",
+            wgs84="POINT (12.345678 56.789012)",
         ),
     ]
 
@@ -139,15 +166,22 @@ def fixture_get_camera_no_location() -> CameraInfoModel:
     return CameraInfoModel(
         camera_name="Test Camera",
         camera_id="1234",
+        camera_group="Test Camera Group",
+        camera_type="Road",
         active=True,
         deleted=False,
         description="Test Camera for testing",
         direction="180",
-        fullsizephoto=True,
-        location=None,
+        has_fullsizephoto=True,
+        has_sketchimage=True,
+        icon="12",
+        location="Test location2",
         modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         photourl="https://www.testurl.com/test_photo.jpg",
+        photourlfullsize="https://www.testurl.com/test_photo_fullsize.jpg",
+        photourlsketch="https://www.testurl.com/test_photo_sketch.jpg",
+        photourlthumbnail="https://www.testurl.com/test_photo_thumbnail.jpg",
         status="Running",
-        camera_type="Road",
+        wgs84="POINT (12.345678 56.789012)",
     )

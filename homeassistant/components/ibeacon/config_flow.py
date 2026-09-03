@@ -1,8 +1,6 @@
 """Config flow for iBeacon Tracker integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -26,6 +24,7 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -40,6 +39,7 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:

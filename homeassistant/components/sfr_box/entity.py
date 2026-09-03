@@ -1,7 +1,5 @@
 """SFR Box base entity."""
 
-from __future__ import annotations
-
 from sfrbox_api.models import SystemInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo

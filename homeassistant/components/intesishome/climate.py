@@ -1,10 +1,7 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
 
-from __future__ import annotations
-
 import logging
-from random import randrange
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
@@ -28,14 +25,14 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +114,7 @@ async def async_setup_platform(
         device_type=device_type,
     )
     try:
-        await controller.poll_status()
+        await controller.connect()
     except IHAuthenticationError:
         _LOGGER.error("Invalid username or password")
         return
@@ -126,6 +123,12 @@ async def async_setup_platform(
         raise PlatformNotReady from ex
 
     if ih_devices := controller.get_devices():
+        # The controller is shared by every entity, so it outlives any one of
+        # them and is only torn down with Home Assistant itself.
+        async def _async_stop_controller(event: Event) -> None:
+            await controller.stop()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_controller)
         async_add_entities(
             [
                 IntesisAC(ih_device_id, device, controller)
@@ -146,7 +149,6 @@ class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
     _attr_preset_modes = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
-    _attr_should_poll = False
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -157,7 +159,6 @@ class IntesisAC(ClimateEntity):
         self._ih_device = ih_device
         self._attr_name = ih_device.get("name")
         self._device_type = controller.device_type
-        self._connected = None
         self._attr_hvac_modes = []
         self._outdoor_temp = None
         self._hvac_mode = None
@@ -207,17 +208,19 @@ class IntesisAC(ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to event updates."""
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
-        await self._controller.add_update_callback(self.async_update_callback)
-        try:
-            await self._controller.connect()
-        except IHConnectionError as ex:
-            _LOGGER.error("Exception connecting to IntesisHome: %s", ex)
-            raise PlatformNotReady from ex
+        self._controller.add_update_callback(self.async_update_callback)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from event updates."""
+        self._controller.remove_update_callback(self.async_update_callback)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attrs = {}
@@ -235,10 +238,12 @@ class IntesisAC(ClimateEntity):
         return attrs
 
     @property
+    @override
     def unique_id(self):
         """Return unique ID for this device."""
         return self._device_id
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
@@ -249,9 +254,11 @@ class IntesisAC(ClimateEntity):
             await self._controller.set_temperature(self._device_id, temperature)
             self._attr_target_temperature = temperature
 
-        # Write updated temperature to HA state to avoid flapping (API confirmation is slow)
+        # Write updated temperature to HA state to avoid
+        # flapping (API confirmation is slow)
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         _LOGGER.debug("Setting %s to %s mode", self._device_type, hvac_mode)
@@ -280,6 +287,7 @@ class IntesisAC(ClimateEntity):
         self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode (from quiet, low, medium, high, auto)."""
         await self._controller.set_fan_speed(self._device_id, fan_mode)
@@ -288,11 +296,13 @@ class IntesisAC(ClimateEntity):
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         ih_preset_mode = MAP_PRESET_MODE_TO_IH.get(preset_mode)
         await self._controller.set_preset_mode(self._device_id, ih_preset_mode)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the vertical vane."""
         if swing_settings := MAP_SWING_TO_IH.get(swing_mode):
@@ -306,7 +316,6 @@ class IntesisAC(ClimateEntity):
     async def async_update(self) -> None:
         """Copy values from controller dictionary to climate device."""
         # Update values from controller's device dictionary
-        self._connected = self._controller.is_connected
         self._attr_current_temperature = self._controller.get_temperature(
             self._device_id
         )
@@ -340,11 +349,8 @@ class IntesisAC(ClimateEntity):
             self._device_id
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Shutdown the controller when the device is being removed."""
-        await self._controller.stop()
-
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon for the current state."""
         if self._power:
@@ -353,28 +359,6 @@ class IntesisAC(ClimateEntity):
 
     async def async_update_callback(self, device_id=None):
         """Let HA know there has been an update from the controller."""
-        # Track changes in connection state
-        if not self._controller.is_connected and self._connected:
-            # Connection has dropped
-            self._connected = False
-            reconnect_minutes = 1 + randrange(10)
-            _LOGGER.error(
-                "Connection to %s API was lost. Reconnecting in %i minutes",
-                self._device_type,
-                reconnect_minutes,
-            )
-            # Schedule reconnection
-
-            async def try_connect(_now):
-                await self._controller.connect()
-
-            async_call_later(self.hass, reconnect_minutes * 60, try_connect)
-
-        if self._controller.is_connected and not self._connected:
-            # Connection has been restored
-            self._connected = True
-            _LOGGER.debug("Connection to %s API was restored", self._device_type)
-
         if not device_id or self._device_id == device_id:
             # Update all devices if no device_id was specified
             _LOGGER.debug(
@@ -385,6 +369,7 @@ class IntesisAC(ClimateEntity):
             self.async_schedule_update_ha_state(True)
 
     @property
+    @override
     def swing_mode(self) -> str:
         """Return current swing mode."""
         if self._vvane == IH_SWING_SWING and self._hvane == IH_SWING_SWING:
@@ -398,11 +383,13 @@ class IntesisAC(ClimateEntity):
         return swing
 
     @property
+    @override
     def available(self) -> bool:
-        """If the device hasn't been able to connect, mark as unavailable."""
-        return self._connected or self._connected is None
+        """Return whether the controller still has a path to the device."""
+        return self._controller.is_available
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current mode of operation if unit is on."""
         if self._power:

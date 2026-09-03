@@ -1,7 +1,7 @@
 """Config flow for Smappee."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmappee import helper, mqtt
 import voluptuous as vol
@@ -31,6 +31,7 @@ class SmappeeFlowHandler(
     ip_address: str  # Set by zeroconf step, used by zeroconf_confirm step
     serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
 
+    @override
     async def async_oauth_create_entry(self, data):
         """Create an entry for the flow."""
 
@@ -38,10 +39,12 @@ class SmappeeFlowHandler(
         return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -107,6 +110,7 @@ class SmappeeFlowHandler(
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -135,7 +139,8 @@ class SmappeeFlowHandler(
                 errors={},
             )
 
-        # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
+        # Environment chosen, request additional host information
+        # for LOCAL or OAuth2 flow for CLOUD
         # Ask for host detail
         if user_input["environment"] == ENV_LOCAL:
             return await self.async_step_local()
@@ -160,7 +165,8 @@ class SmappeeFlowHandler(
         ip_address = user_input["host"]
         serial_number = None
 
-        # Attempt 1: try to use the local api (older generation) to resolve host to serialnumber
+        # Attempt 1: try to use the local api (older generation)
+        # to resolve host to serialnumber
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is not None:
@@ -171,16 +177,19 @@ class SmappeeFlowHandler(
                 if config_item["key"] == "mdnsHostName":
                     serial_number = config_item["value"]
         else:
-            # Attempt 2: try to use the local mqtt broker (newer generation) to resolve host to serialnumber
+            # Attempt 2: try to use the local mqtt broker
+            # (newer generation) to resolve host to serialnumber
             smappee_mqtt = mqtt.SmappeeLocalMqtt()
             connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
                 return self.async_abort(reason="cannot_connect")
 
-            serial_number = await self.hass.async_add_executor_job(
-                smappee_mqtt.start_and_wait_for_config
-            )
-            await self.hass.async_add_executor_job(smappee_mqtt.stop)
+            def _get_config_and_stop() -> str | None:
+                result = smappee_mqtt.start_and_wait_for_config()
+                smappee_mqtt.stop()
+                return result
+
+            serial_number = await self.hass.async_add_executor_job(_get_config_and_stop)
             if serial_number is None:
                 return self.async_abort(reason="cannot_connect")
 

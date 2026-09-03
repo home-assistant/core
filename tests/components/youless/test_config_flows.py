@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
-from homeassistant.components.youless import DOMAIN
+from homeassistant.components.youless.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

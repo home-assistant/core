@@ -1,120 +1,114 @@
 """Test the HTML5 config flow."""
 
-from unittest.mock import patch
+import binascii
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.html5.const import (
     ATTR_VAPID_EMAIL,
-    ATTR_VAPID_PRV_KEY,
     ATTR_VAPID_PUB_KEY,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_CONF, MOCK_CONF_PUB_KEY
+from .conftest import ATTR_VAPID_PRV_KEY, MOCK_CONF, MOCK_CONF_PUB_KEY
 
 
-async def test_step_user_success(hass: HomeAssistant) -> None:
+async def test_step_user_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test a successful user config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.html5.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_CONF.copy(),
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONF
+    )
+    await hass.async_block_till_done()
 
-        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        **MOCK_CONF,
+        ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
+        CONF_NAME: DOMAIN,
+    }
 
-        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["data"] == {
-            ATTR_VAPID_PRV_KEY: MOCK_CONF[ATTR_VAPID_PRV_KEY],
-            ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
-            ATTR_VAPID_EMAIL: MOCK_CONF[ATTR_VAPID_EMAIL],
-            CONF_NAME: DOMAIN,
-        }
-
-        assert mock_setup_entry.call_count == 1
+    assert mock_setup_entry.call_count == 1
 
 
-async def test_step_user_success_generate(hass: HomeAssistant) -> None:
+async def test_step_user_success_generate(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test a successful user config flow, generating a key pair."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.html5.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        conf = {ATTR_VAPID_EMAIL: MOCK_CONF[ATTR_VAPID_EMAIL]}
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
-        )
-
-        await hass.async_block_till_done()
-
-        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["data"][ATTR_VAPID_EMAIL] == MOCK_CONF[ATTR_VAPID_EMAIL]
-
-        assert mock_setup_entry.call_count == 1
-
-
-async def test_step_user_new_form(hass: HomeAssistant) -> None:
-    """Test new user input."""
-
-    with patch(
-        "homeassistant.components.html5.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
-        )
-
-        await hass.async_block_till_done()
-
-        assert result["type"] is data_entry_flow.FlowResultType.FORM
-        assert mock_setup_entry.call_count == 0
-
+        "homeassistant.components.html5.config_flow.vapid_generate_private_key",
+        return_value=MOCK_CONF[ATTR_VAPID_PRV_KEY],
+    ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_CONF
+            result["flow_id"], {ATTR_VAPID_EMAIL: "test@example.com"}
         )
-        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert mock_setup_entry.call_count == 1
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        **MOCK_CONF,
+        ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
+        CONF_NAME: DOMAIN,
+    }
+
+    assert mock_setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize(
-    ("key", "value"),
-    [
-        (ATTR_VAPID_PRV_KEY, "invalid"),
-    ],
-)
+@pytest.mark.parametrize("exception", [ValueError, binascii.Error])
 async def test_step_user_form_invalid_key(
-    hass: HomeAssistant, key: str, value: str
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test invalid user input."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
     with patch(
-        "homeassistant.components.html5.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        bad_conf = MOCK_CONF.copy()
-        bad_conf[key] = value
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=bad_conf
-        )
-
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert mock_setup_entry.call_count == 0
-
+        "homeassistant.components.html5.config_flow.vapid_get_public_key",
+        side_effect=exception,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_CONF
         )
-        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert mock_setup_entry.call_count == 1
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"vapid_prv_key": "invalid_prv_key"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONF
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        **MOCK_CONF,
+        ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
+        CONF_NAME: DOMAIN,
+    }
+    assert mock_setup_entry.call_count == 1

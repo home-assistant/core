@@ -45,12 +45,31 @@
       "webostv.turn_on": "Device is requested to turn on"
     }
   },
+  "entity": {
+    "switch": {
+      "screen": {
+        "name": "Screen"
+      }
+    }
+  },
   "exceptions": {
+    "auth_failed": {
+      "message": "Pairing for {device} failed, make sure to accept the pairing request on your TV."
+    },
     "communication_error": {
       "message": "Communication error while calling {func} for device {name}: {error}"
     },
+    "device_config_entry_not_loaded": {
+      "message": "The LG webOS TV integration for device {device_id} is not loaded."
+    },
+    "device_not_valid": {
+      "message": "Device {device_id} is not a valid LG webOS TV device."
+    },
     "device_off": {
       "message": "Error calling {func} for device {name}: Device is off and cannot be controlled."
+    },
+    "device_unavailable": {
+      "message": "Device {device} is unavailable"
     },
     "invalid_entity_id": {
       "message": "Entity {entity_id} is not a valid webOS TV entity."
@@ -63,6 +82,9 @@
     },
     "notify_icon_not_found": {
       "message": "Icon {icon_path} not found when sending notification for device {name}"
+    },
+    "screen_control_not_supported": {
+      "message": "{name} does not support turning the screen on or off."
     },
     "source_not_found": {
       "message": "Source {source} not found in the sources list for {name}."

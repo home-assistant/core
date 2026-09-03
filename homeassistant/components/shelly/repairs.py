@@ -1,8 +1,6 @@
 """Repairs flow for Shelly."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
@@ -11,8 +9,11 @@ from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -25,6 +26,7 @@ from .const import (
     DOMAIN,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+    RTSP_DISABLED_ISSUE_ID,
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
@@ -32,6 +34,8 @@ from .utils import (
     get_coiot_address,
     get_coiot_port,
     get_device_entry_gen,
+    get_rpc_key_id,
+    get_rpc_key_instances,
     get_rpc_ws_url,
 )
 
@@ -52,10 +56,9 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
 
     if supports_scripts and device.model not in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3):
         firmware = AwesomeVersion(device.shelly["ver"])
-        if (
-            firmware < BLE_SCANNER_MIN_FIRMWARE
-            and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
-        ):
+        if firmware < BLE_SCANNER_MIN_FIRMWARE and entry.options.get(
+            CONF_BLE_SCANNER_MODE
+        ) in (BLEScannerMode.ACTIVE, BLEScannerMode.AUTO):
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -132,6 +135,9 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
 
     device = entry.runtime_data.rpc.device
 
+    if not device.initialized:
+        return
+
     if (
         (ws_config := device.config.get("ws"))
         and ws_config["enable"]
@@ -169,6 +175,9 @@ def async_manage_open_wifi_ap_issue(
 
     device = entry.runtime_data.rpc.device
 
+    if not device.initialized:
+        return
+
     # Check if WiFi AP is enabled and is open (no password)
     if (
         (wifi_config := device.config.get("wifi"))
@@ -195,6 +204,53 @@ def async_manage_open_wifi_ap_issue(
     ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
+@callback
+def async_manage_rtsp_disabled_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the RTSP disabled issue."""
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
+
+    camera_keys = get_rpc_key_instances(device.status, "camera")
+    if not camera_keys:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+
+    disabled = [
+        key
+        for key in camera_keys
+        if key in device.config and not device.config[key]["rtsp"]["enable"]
+    ]
+
+    if disabled:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="rtsp_disabled",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 class ShellyBlockRepairsFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
@@ -208,7 +264,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
@@ -222,7 +278,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         coiot_addr = await get_coiot_address(self.hass)
         coiot_port = get_coiot_port(self.hass)
@@ -238,7 +294,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
         return self.async_abort(reason="issue_ignored")
@@ -253,13 +309,13 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             return await self._async_step_confirm()
@@ -275,7 +331,7 @@ class ShellyRpcRepairsFlow(RepairsFlow):
             description_placeholders=description_placeholders,
         )
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         raise NotImplementedError
 
@@ -283,13 +339,14 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
     """Handler for Firmware Update flow."""
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    @override
+    async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_update_firmware()
 
     async def async_step_update_firmware(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if not self._device.status["sys"]["available_updates"]:
             return self.async_abort(reason="update_not_available")
@@ -304,13 +361,14 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
 class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
     """Handler for Disable Outbound WebSocket flow."""
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    @override
+    async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_disable_outbound_websocket()
 
     async def async_step_disable_outbound_websocket(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         try:
             result = await self._device.ws_setconfig(
@@ -334,7 +392,7 @@ class DisableOpenWiFiApFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
@@ -348,7 +406,7 @@ class DisableOpenWiFiApFlow(RepairsFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         try:
             result = await self._device.wifi_setconfig(ap_enable=False)
@@ -361,7 +419,53 @@ class DisableOpenWiFiApFlow(RepairsFlow):
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
+
+
+class EnableRtspFlow(RepairsFlow):
+    """Handler for Enable RTSP flow."""
+
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+        """Initialize."""
+        self._device = device
+        self.issue_id = issue_id
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step of a fix flow."""
+        try:
+            for key in get_rpc_key_instances(self._device.status, "camera"):
+                if (
+                    key in self._device.config
+                    and not self._device.config[key]["rtsp"]["enable"]
+                ):
+                    await self._device.set_camera_rtsp(get_rpc_key_id(key), True)
+        except DeviceConnectionError, RpcCallError:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
         return self.async_abort(reason="issue_ignored")
@@ -399,5 +503,8 @@ async def async_create_fix_flow(
 
     if "open_wifi_ap" in issue_id:
         return DisableOpenWiFiApFlow(device, issue_id)
+
+    if "rtsp_disabled" in issue_id:
+        return EnableRtspFlow(device, issue_id)
 
     return ConfirmRepairFlow()

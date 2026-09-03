@@ -1,7 +1,7 @@
 """Test the UniFi Protect global services."""
 
-from __future__ import annotations
-
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -35,6 +35,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
+from .conftest import UNIFI_MAC
 from .utils import MockUFPFixture, init_entry
 
 
@@ -46,7 +47,7 @@ async def device_fixture(
 
     await init_entry(hass, ufp, [])
 
-    return list(device_registry.devices.values())[0]
+    return list(device_registry.devices)[0]
 
 
 @pytest.fixture(name="subdevice")
@@ -60,7 +61,7 @@ async def subdevice_fixture(
 
     await init_entry(hass, ufp, [light])
 
-    return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
+    return [d for d in device_registry.devices if d.name != "UnifiProtect"][0]
 
 
 async def test_global_service_bad_device(
@@ -527,7 +528,7 @@ async def test_ptz_goto_home_preset_client_error(
     ufp: MockUFPFixture,
     ptz_camera: Camera,
 ) -> None:
-    """Test ptz_goto_preset service with home preset when ptz_goto_preset_public raises ClientError."""
+    """Test ptz_goto_preset with home preset when it raises ClientError."""
     ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
 
@@ -548,5 +549,27 @@ async def test_ptz_goto_home_preset_client_error(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,
             {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
+        )
+
+
+async def test_public_only_action_rejected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Actions require full access; a public-only device raises cleanly."""
+    await setup_public_only()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert device is not None
+
+    with pytest.raises(HomeAssistantError, match="requires full access"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
             blocking=True,
         )

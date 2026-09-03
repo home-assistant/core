@@ -1,11 +1,9 @@
 """Data update coordinator for Traccar Server."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 from logging import DEBUG as LOG_LEVEL_DEBUG
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 from pytraccar import (
     ApiClient,
@@ -50,6 +48,10 @@ class TraccarServerCoordinatorDataDevice(TypedDict):
 type TraccarServerCoordinatorData = dict[int, TraccarServerCoordinatorDataDevice]
 
 
+_SUBSCRIPTION_FAILURE_LOG_EVERY_N_ATTEMPTS = 30
+_SUBSCRIPTION_RECONNECT_DELAY = 10
+
+
 class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorData]):
     """Class to manage fetching Traccar Server data."""
 
@@ -79,10 +81,15 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self._geofences: list[GeofenceModel] = []
         self._last_event_import: datetime | None = None
         self._should_log_subscription_error: bool = True
+        self._consecutive_subscription_failures: int = 0
 
+    @override
     async def _async_update_data(self) -> TraccarServerCoordinatorData:
         """Fetch data from Traccar Server."""
         LOGGER.debug("Updating device data")
+        get_custom_attrs = (
+            self._return_custom_attributes_if_not_filtered_by_accuracy_configuration
+        )
         data: TraccarServerCoordinatorData = {}
         try:
             (
@@ -120,12 +127,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 )
                 continue
 
-            if (
-                attr
-                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
-                    device, position
-                )
-            ) is None:
+            attr = get_custom_attrs(device, position)
+            if attr is None:
                 self.logger.debug(
                     "Skipping position update %s for %s due to accuracy filter",
                     position["id"],
@@ -148,19 +151,24 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
     async def handle_subscription_data(self, data: SubscriptionData) -> None:
         """Handle subscription data."""
         self.logger.debug("Received subscription data: %s", data)
+        if self._consecutive_subscription_failures:
+            self.logger.info(
+                "Traccar subscription connection restored after %s failed attempt(s)",
+                self._consecutive_subscription_failures,
+            )
+            self._consecutive_subscription_failures = 0
         self._should_log_subscription_error = True
+        get_custom_attrs = (
+            self._return_custom_attributes_if_not_filtered_by_accuracy_configuration
+        )
         update_devices = set()
         for device in data.get("devices") or []:
             if (device_id := device["id"]) not in self.data:
                 self.logger.debug("Device %s not found in data", device_id)
                 continue
 
-            if (
-                attr
-                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
-                    device, self.data[device_id]["position"]
-                )
-            ) is None:
+            attr = get_custom_attrs(device, self.data[device_id]["position"])
+            if attr is None:
                 continue
 
             self.data[device_id]["device"] = device
@@ -176,12 +184,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 )
                 continue
 
-            if (
-                attr
-                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
-                    self.data[device_id]["device"], position
-                )
-            ) is None:
+            attr = get_custom_attrs(self.data[device_id]["device"], position)
+            if attr is None:
                 self.logger.debug(
                     "Skipping position update %s for %s due to accuracy filter",
                     position["id"],
@@ -239,25 +243,60 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             )
 
     async def subscribe(self) -> None:
-        """Subscribe to events."""
-        try:
-            await self.client.subscribe(self.handle_subscription_data)
-        except TraccarAuthenticationException:
-            raise ConfigEntryAuthFailed from None
-        except TraccarException as ex:
-            if self._should_log_subscription_error:
-                self._should_log_subscription_error = False
-                LOGGER.error("Error while subscribing to Traccar: %s", ex)
-            # Retry after 10 seconds
-            await asyncio.sleep(10)
-            await self.subscribe()
+        """Subscribe to events, reconnecting for the life of the config entry."""
+        while True:
+            try:
+                await self.client.subscribe(self.handle_subscription_data)
+            except TraccarAuthenticationException:
+                raise ConfigEntryAuthFailed from None
+            except TraccarException as ex:
+                self._log_subscription_failure(
+                    "Error while subscribing to Traccar", ex, log_traceback=False
+                )
+            except Exception as ex:  # noqa: BLE001 - keep retrying; a dead background task is worse than a logged surprise
+                self._log_subscription_failure(
+                    "Unexpected error while subscribing to Traccar",
+                    ex,
+                    log_traceback=True,
+                )
+            else:
+                self.logger.debug(
+                    "Traccar subscription ended without error, reconnecting"
+                )
+                self._consecutive_subscription_failures = 0
+                self._should_log_subscription_error = True
+
+            await asyncio.sleep(_SUBSCRIPTION_RECONNECT_DELAY)
+
+    def _log_subscription_failure(
+        self, prefix: str, ex: Exception, *, log_traceback: bool
+    ) -> None:
+        """Log a subscription failure, throttling repeats to avoid log spam."""
+        self._consecutive_subscription_failures += 1
+        if self._should_log_subscription_error:
+            self._should_log_subscription_error = False
+            self.logger.error(
+                "%s: %s", prefix, ex, exc_info=ex if log_traceback else None
+            )
+        elif (
+            self._consecutive_subscription_failures
+            % _SUBSCRIPTION_FAILURE_LOG_EVERY_N_ATTEMPTS
+            == 0
+        ):
+            self.logger.warning(
+                "Still unable to (re)connect to Traccar after %s attempts"
+                " (last error: %s)",
+                self._consecutive_subscription_failures,
+                ex,
+                exc_info=ex if log_traceback else None,
+            )
 
     def _return_custom_attributes_if_not_filtered_by_accuracy_configuration(
         self,
         device: DeviceModel,
         position: PositionModel,
     ) -> dict[str, Any] | None:
-        """Return a dictionary of custom attributes if not filtered by accuracy configuration."""
+        """Return custom attributes if not filtered by accuracy."""
         attr = {}
         skip_accuracy_filter = False
 

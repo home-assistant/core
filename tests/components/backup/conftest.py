@@ -1,7 +1,5 @@
 """Test fixtures for the Backup integration."""
 
-from __future__ import annotations
-
 from asyncio import Future
 from collections.abc import Generator
 from pathlib import Path

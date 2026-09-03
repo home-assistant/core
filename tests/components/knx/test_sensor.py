@@ -12,8 +12,19 @@ from homeassistant.components.knx.const import (
     CONF_SYNC_STATE,
 )
 from homeassistant.components.knx.schema import SensorSchema
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN, Platform
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
+    CONF_TYPE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
@@ -24,6 +35,7 @@ from tests.common import (
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
+from tests.typing import WebSocketGenerator
 
 
 async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -91,10 +103,60 @@ async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     knx.assert_state("sensor.test", RESTORED_STATE, **RESTORED_STATE_ATTRIBUTES)
     await knx.assert_telegram_count(0)
 
-    # receiving the restored value from restored source does not trigger state_changed event
+    # receiving the restored value from restored source does not
+    # trigger state_changed event
     events = async_capture_events(hass, "state_changed")
     await knx.receive_write(ADDRESS, RAW_FLOAT_21_0)
     assert not events
+
+
+async def test_sensor_restore_ignores_stale_attributes(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test that restoring doesn't reapply attributes the entity doesn't provide."""
+    fake_state = State(
+        "sensor.test",
+        "ignored in favour of native_value",
+        {
+            ATTR_SOURCE: knx.INDIVIDUAL_ADDRESS,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+            ATTR_UNIT_OF_MEASUREMENT: "W",
+        },
+    )
+    extra_data = {"native_value": "42", "native_unit_of_measurement": None}
+    mock_restore_cache_with_extra_data(hass, [(fake_state, extra_data)])
+
+    await knx.setup_integration(
+        {
+            SensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: "2/2/2",
+                    CONF_TYPE: "2byte_unsigned",  # no unit or device class
+                    CONF_SYNC_STATE: False,
+                },
+            ]
+        }
+    )
+
+    knx.assert_state(
+        "sensor.test",
+        "42",
+        **{ATTR_SOURCE: knx.INDIVIDUAL_ADDRESS},
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_of_measurement=None,
+    )
+    # a new telegram doesn't reintroduce the stale attributes either
+    await knx.receive_write("2/2/2", (0x00, 0x07))
+    knx.assert_state(
+        "sensor.test",
+        "7",
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_of_measurement=None,
+    )
 
 
 async def test_last_reported(
@@ -333,17 +395,25 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
 async def test_sensor_ui_create_attribute_validation(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    create_ui_entity: KnxEntityGenerator,
+    hass_ws_client: WebSocketGenerator,
     knx_config: dict[str, Any],
 ) -> None:
     """Test creating a sensor with invalid unit, state_class or device_class."""
     await knx.setup_integration()
-    with pytest.raises(AssertionError) as err:
-        await create_ui_entity(
-            platform=Platform.SENSOR,
-            entity_data={"name": "test"},
-            knx_data=knx_config,
-        )
-    assert "success" in err.value.args[0]
-    assert "error_base" in err.value.args[0]
-    assert "path" in err.value.args[0]
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SENSOR,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": knx_config,
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"]
+    assert res["result"]["errors"][0]["path"]

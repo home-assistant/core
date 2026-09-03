@@ -1,18 +1,16 @@
 """Provides diagnostics for EcoWitt."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from . import EcowittConfigEntry
 from .const import DOMAIN
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: EcowittConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: EcowittConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     ecowitt = entry.runtime_data

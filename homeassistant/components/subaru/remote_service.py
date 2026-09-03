@@ -4,9 +4,10 @@ import logging
 
 from subarulink.exceptions import SubaruException
 
+from homeassistant.const import SERVICE_UNLOCK
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import SERVICE_REMOTE_START, SERVICE_UNLOCK, VEHICLE_NAME, VEHICLE_VIN
+from .const import SERVICE_REMOTE_START, VEHICLE_NAME, VEHICLE_VIN
 
 _LOGGER = logging.getLogger(__name__)
 

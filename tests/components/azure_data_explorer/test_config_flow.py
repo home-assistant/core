@@ -24,9 +24,17 @@ from .const import BASE_CONFIG
 async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -34,7 +42,7 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         BASE_CONFIG.copy(),
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert (
         result2["title"]
         == "cluster.region.kusto.windows.net / test-database-name (test-table-name)"
@@ -57,11 +65,17 @@ async def test_config_flow_errors(
 ) -> None:
     """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=None,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     # Test error handling with error
@@ -71,7 +85,7 @@ async def test_config_flow_errors(
         result["flow_id"],
         BASE_CONFIG.copy(),
     )
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": expected}
 
     schema = result2["data_schema"]
@@ -99,7 +113,7 @@ async def test_config_flow_errors(
 
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
 
     # Retest error handling if error is corrected and connection is successful
 
@@ -112,4 +126,4 @@ async def test_config_flow_errors(
 
     await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY

@@ -87,7 +87,7 @@ async def test_agents_info(
     assert (
         response["result"]
         == {"agents": [{"agent_id": "backup.local", "name": "local"}]}
-        or config_entry.state == ConfigEntryState.NOT_LOADED
+        or config_entry.state is ConfigEntryState.NOT_LOADED
     )
 
 
@@ -127,7 +127,9 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{TEST_AGENT_ID}": "Remote server error while attempting to list backups: Error message"
+        f"{DOMAIN}.{TEST_AGENT_ID}": (
+            "Remote server error while attempting to list backups: Error message"
+        )
     }
 
 
@@ -151,8 +153,9 @@ async def test_agents_list_backups_include_bad_metadata(
     # Called two times, one for bad backup metadata and once for good
     assert mock_ssh_connection._sftp._mock_open._mock_read.call_count == 2
     assert (
-        "Failed to load backup metadata from file: /backup_location/invalid.metadata.json. Expecting value: line 1 column 1 (char 0)"
-        in caplog.messages
+        "Failed to load backup metadata from file:"
+        " /backup_location/invalid.metadata.json."
+        " Expecting value: line 1 column 1 (char 0)" in caplog.messages
     )
 
 
@@ -207,7 +210,8 @@ async def test_agents_download_fail(
     """Test agent download backup fails."""
     mock_ssh_connection.mock_setup_backup(BACKUP_METADATA)
 
-    # This will cause `FileNotFoundError` exception in `BackupAgentClient.iter_file() method.`
+    # This will cause `FileNotFoundError` exception in
+    # `BackupAgentClient.iter_file() method.`
     mock_ssh_connection._sftp._mock_exists.side_effect = [True, False]
     client = await hass_client()
     resp = await client.get(
@@ -215,7 +219,8 @@ async def test_agents_download_fail(
     )
     assert resp.status == 404
 
-    # This will raise `RuntimeError` causing Internal Server Error, mimicking that the SFTP setup failed.
+    # This will raise `RuntimeError` causing Internal Server Error,
+    # mimicking that the SFTP setup failed.
     mock_ssh_connection._sftp = None
     resp = await client.get(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
@@ -351,7 +356,10 @@ async def test_agents_delete(
             SFTPError(0, "manual"),
             {
                 "agent_errors": {
-                    f"{DOMAIN}.{TEST_AGENT_ID}": f"Failed to delete backup id: {TEST_AGENT_BACKUP.backup_id}: manual"
+                    f"{DOMAIN}.{TEST_AGENT_ID}": (
+                        f"Failed to delete backup id:"
+                        f" {TEST_AGENT_BACKUP.backup_id}: manual"
+                    )
                 }
             },
         ),

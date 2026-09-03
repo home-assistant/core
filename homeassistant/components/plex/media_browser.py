@@ -1,7 +1,5 @@
 """Support to interface with the Plex API."""
 
-from __future__ import annotations
-
 from yarl import URL
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass

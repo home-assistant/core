@@ -1,6 +1,6 @@
 """Support for Peblar numbers."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -70,9 +70,18 @@ class PeblarChargeCurrentLimitNumberEntity(
             coordinator=coordinator,
             description=NumberEntityDescription(key="charge_current_limit"),
         )
+        # Not the user's own charge limit: that is the value being set here,
+        # so using it as the ceiling would ratchet the slider down and never
+        # let it back up. The charger accepts up to its hardware rating, and
+        # reduces anything above the installation limit configured during
+        # commissioning, so the lower of the two is what can actually be set.
         configuration = entry.runtime_data.user_configuration_coordinator.data
-        self._attr_native_max_value = configuration.user_defined_charge_limit_current
+        self._attr_native_max_value = min(
+            entry.runtime_data.system_information.hardware_max_current,
+            configuration.current_control_fixed_charge_current_limit,
+        )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Load the last known state when adding this entity."""
         if (
@@ -92,6 +101,7 @@ class PeblarChargeCurrentLimitNumberEntity(
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update.
 
@@ -114,6 +124,7 @@ class PeblarChargeCurrentLimitNumberEntity(
         super()._handle_coordinator_update()
 
     @peblar_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the current charging value."""
         # If charging is currently disabled (below 6 amps), just set the value

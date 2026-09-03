@@ -1,10 +1,8 @@
 """Config flow for UniFi Access integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
 import voluptuous as vol
@@ -62,6 +60,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -123,6 +122,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -131,10 +131,13 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         source_ip = discovery_info["source_ip"]
         mac = discovery_info["hw_addr"].replace(":", "").upper()
         await self.async_set_unique_id(mac)
+        # A console answers on every VLAN interface but discovery reports only
+        # one of them, so match every address it announced for itself.
+        known_hosts = {source_ip, *discovery_info.get("announced_ips", ())}
         for entry in self._async_current_entries():
             if entry.source == SOURCE_IGNORE:
                 continue
-            if entry.data.get(CONF_HOST) == source_ip:
+            if entry.data.get(CONF_HOST) in known_hosts:
                 if not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=mac)
                 return self.async_abort(reason="already_configured")
@@ -162,7 +165,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=merged_input,
                 )
 
-        name = discovery_info.get("hostname") or discovery_info.get("platform")
+        name = (
+            discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
+        )
         if not name:
             short_mac = discovery_info["hw_addr"].replace(":", "").upper()[-6:]
             name = f"Access {short_mac}"

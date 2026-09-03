@@ -1,16 +1,94 @@
 """The base entity for the rest component."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+import logging
+import ssl
+from typing import override
 
-from homeassistant.core import callback
+from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .data import RestData
+
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+    CONF_STATE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_get_config_rest_data_and_coordinator(
+    hass: HomeAssistant,
+    config: ConfigType,
+    entity_domain: str,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> tuple[ConfigType, RestData, DataUpdateCoordinator[None] | None]:
+    """Get the config, rest data +/- coordinator for sub entity."""
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
+    if discovery_info is not None:
+        conf, coordinator, rest = await async_get_config_and_coordinator(
+            hass, entity_domain, discovery_info
+        )
+    else:
+        conf = config
+        coordinator = None
+        rest = create_rest_data_from_config(hass, conf)
+        await rest.async_update(log_errors=False)
+
+    if rest.data is None:
+        if rest.last_exception:
+            if isinstance(rest.last_exception, ssl.SSLError):
+                _LOGGER.error(
+                    "Error connecting %s failed with %s",
+                    rest.url,
+                    rest.last_exception,
+                )
+                raise HomeAssistantError from rest.last_exception
+            raise PlatformNotReady from rest.last_exception
+        raise PlatformNotReady
+
+    return conf, rest, coordinator
+
+
+def async_get_trigger_entity_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+    default_name: str,
+) -> ConfigType:
+    """Get trigger entity config."""
+
+    trigger_entity_config = {
+        CONF_NAME: config.get(CONF_NAME, Template(default_name, hass))
+    }
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in config:
+            continue
+        trigger_entity_config[key] = config[key]
+    return trigger_entity_config
 
 
 class RestEntity(Entity):
@@ -18,7 +96,7 @@ class RestEntity(Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any] | None,
+        coordinator: DataUpdateCoordinator[None] | None,
         rest: RestData,
         resource_template: Template | None,
         force_update: bool,
@@ -31,12 +109,14 @@ class RestEntity(Entity):
         self._attr_force_update = force_update
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of this sensor."""
         if self._coordinator and not self._coordinator.last_update_success:
             return False
         return self.rest.data is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

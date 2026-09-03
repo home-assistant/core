@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.lock import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -16,9 +17,9 @@ async def test_reproducing_states(
     hass.states.async_set("lock.entity_unlocked", "unlocked", {})
     hass.states.async_set("lock.entity_opened", "open", {})
 
-    lock_calls = async_mock_service(hass, "lock", "lock")
-    unlock_calls = async_mock_service(hass, "lock", "unlock")
-    open_calls = async_mock_service(hass, "lock", "open")
+    lock_calls = async_mock_service(hass, DOMAIN, "lock")
+    unlock_calls = async_mock_service(hass, DOMAIN, "unlock")
+    open_calls = async_mock_service(hass, DOMAIN, "open")
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

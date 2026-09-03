@@ -1,6 +1,6 @@
 """Test data purging."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 import json
 import sqlite3
@@ -33,8 +33,14 @@ from homeassistant.components.recorder.services import (
 )
 from homeassistant.components.recorder.tasks import PurgeTask
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import EVENT_STATE_CHANGED, EVENT_THEMES_UPDATED, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    EVENT_THEMES_UPDATED,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -415,14 +421,69 @@ async def test_purge_old_statistics_runs(
 
     # run purge_old_data()
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
-    assert not finished
-
-    finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
 
     with session_scope(hass=hass) as session:
         statistics_runs = session.query(StatisticsRuns)
         assert statistics_runs.count() == 1
+
+
+async def test_purge_old_statistics_runs_full_batch(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test deleting old statistics runs with a full batch needs another cycle."""
+    await _add_test_statistics_runs(hass)
+
+    # make sure we start with 7 statistics runs
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 7
+
+    purge_before = dt_util.utcnow()
+
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 6),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 6),
+    ):
+        # A full batch of statistics runs means purge may not be done yet
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert not finished
+
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert finished
+
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 1
+
+
+async def test_purge_old_short_term_statistics_full_batch(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test deleting old short term statistics with a full batch needs another cycle."""
+    await _add_test_statistics(hass)
+
+    # make sure we start with 6 short term statistics
+    with session_scope(hass=hass) as session:
+        statistics = session.query(StatisticsShortTerm)
+        assert statistics.count() == 6
+
+    purge_before = dt_util.utcnow()
+
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 5),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 5),
+    ):
+        # A full batch of short term statistics means purge may not be done yet
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert not finished
+
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert finished
+
+    with session_scope(hass=hass) as session:
+        statistics = session.query(StatisticsShortTerm)
+        assert statistics.count() == 0
 
 
 @pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
@@ -484,7 +545,7 @@ async def test_purge_method(
     await async_wait_purge_done(hass)
 
     # run purge method - no service data, use defaults
-    await hass.services.async_call("recorder", "purge")
+    await hass.services.async_call(DOMAIN, "purge")
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
@@ -503,7 +564,7 @@ async def test_purge_method(
         assert statistics.count() == 4
 
     # run purge method - correct service data
-    await hass.services.async_call("recorder", "purge", service_data=service_data)
+    await hass.services.async_call(DOMAIN, "purge", service_data=service_data)
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
@@ -539,7 +600,7 @@ async def test_purge_method(
 
     # run purge method - correct service data, with repack
     service_data["repack"] = True
-    await hass.services.async_call("recorder", "purge", service_data=service_data)
+    await hass.services.async_call(DOMAIN, "purge", service_data=service_data)
     await hass.async_block_till_done()
     await async_wait_purge_done(hass)
     assert (
@@ -554,7 +615,7 @@ async def test_purge_edge_case(
     recorder_mock: Recorder,
     use_sqlite: bool,
 ) -> None:
-    """Test states and events are purged even if they occurred shortly before purge_before."""
+    """Test states and events purged even if shortly before purge_before."""
 
     async def _add_db_entries(hass: HomeAssistant, timestamp: datetime) -> None:
         with session_scope(hass=hass) as session:
@@ -622,7 +683,7 @@ async def test_purge_edge_case(
 
 
 async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -> None:
-    """Test states and events are purged only if they occurred before "now() - keep_days"."""
+    """Test purge only removes entries before now() - keep_days."""
 
     async def _add_db_entries(hass: HomeAssistant, cutoff: datetime, rows: int) -> None:
         timestamp_keep = cutoff
@@ -1212,7 +1273,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
     recorder_mock: Recorder,
     use_sqlite: bool,
 ) -> None:
-    """Test filtered legacy states without state attributes are purged all the way to an empty db."""
+    """Test filtered legacy states without attributes are fully purged."""
     assert recorder_mock.entity_filter("sensor.old_format") is False
 
     def _add_db_entries(hass: HomeAssistant) -> None:
@@ -1380,7 +1441,7 @@ async def test_purge_filtered_events(
 async def test_purge_filtered_events_state_changed(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
-    """Test filtered state_changed events are purged. This should also remove all states."""
+    """Test filtered state_changed events and states are purged."""
     # Assert entity_id is NOT excluded
     assert recorder_mock.entity_filter("sensor.excluded") is False
     assert recorder_mock.entity_filter("sensor.old_format") is False
@@ -1659,6 +1720,121 @@ async def test_purge_entities(hass: HomeAssistant, recorder_mock: Recorder) -> N
 
         states_meta_remain = session.query(StatesMeta)
         assert states_meta_remain.count() == 4
+
+
+async def _setup_removed_group(hass: HomeAssistant) -> None:
+    """Set up nothing: the purged group entity no longer exists."""
+
+
+async def _setup_legacy_group(hass: HomeAssistant) -> None:
+    """Set up a live legacy group state with a wired member."""
+    hass.states.async_set(
+        "group.purge_group", STATE_ON, {ATTR_ENTITY_ID: ["sensor.member"]}
+    )
+
+
+async def _setup_lock_group(hass: HomeAssistant) -> None:
+    """Set up a live lock group backed by helpers.group.GenericGroup."""
+    assert await async_setup_component(
+        hass,
+        "lock",
+        {
+            "lock": {
+                "platform": "group",
+                "entities": ["lock.member"],
+                "name": "Purge group",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+def _count_states_before(session: Session, entity_id: str, cutoff: datetime) -> int:
+    """Count the states recorded before cutoff for entity_id."""
+    return (
+        session.query(States)
+        .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        .filter(StatesMeta.entity_id == entity_id)
+        .filter(States.last_updated_ts < cutoff.timestamp())
+        .count()
+    )
+
+
+@pytest.mark.parametrize(
+    ("setup_group", "group_entity_id", "member_entity_id"),
+    [
+        pytest.param(
+            _setup_removed_group, "group.purge_group", "sensor.member", id="legacy-dead"
+        ),
+        pytest.param(
+            _setup_legacy_group, "group.purge_group", "sensor.member", id="legacy-live"
+        ),
+        pytest.param(
+            _setup_lock_group, "lock.purge_group", "lock.member", id="modern-lock-live"
+        ),
+    ],
+)
+async def test_purge_entities_group_entity_id(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    setup_group: Callable[[HomeAssistant], Awaitable[None]],
+    group_entity_id: str,
+    member_entity_id: str,
+) -> None:
+    """Test purge_entities purges a group entity itself without expanding it."""
+    await setup_group(hass)
+    await async_wait_recording_done(hass)
+
+    # Seeded rows are two days old; live states recorded during setup are newer
+    # than this cutoff, so the assertions only see the seeded rows.
+    cutoff = dt_util.utcnow() - timedelta(days=1)
+    with session_scope(hass=hass) as session:
+        timestamp = dt_util.utcnow() - timedelta(days=2)
+        for event_id in range(1000, 1010):
+            _add_state_with_state_attributes(
+                session, group_entity_id, "purgeme", timestamp, event_id
+            )
+        for event_id in range(2000, 2010):
+            _add_state_with_state_attributes(
+                session, member_entity_id, "keep", timestamp, event_id
+            )
+        for event_id in range(3000, 3010):
+            _add_state_with_state_attributes(
+                session, "sensor.keep", "keep", timestamp, event_id
+            )
+        convert_pending_states_to_meta(recorder_mock, session)
+        convert_pending_events_to_event_types(recorder_mock, session)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        assert _count_states_before(session, group_entity_id, cutoff) == 10
+        assert _count_states_before(session, member_entity_id, cutoff) == 10
+        assert _count_states_before(session, "sensor.keep", cutoff) == 10
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PURGE_ENTITIES, {"entity_id": group_entity_id}
+    )
+    await hass.async_block_till_done()
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        # The group must not be expanded: the member keeps its history and the
+        # group's own history is purged.
+        assert _count_states_before(session, member_entity_id, cutoff) == 10
+        assert _count_states_before(session, group_entity_id, cutoff) == 0
+        # A zero states count can leave an orphaned StatesMeta row, so assert the
+        # group's metadata row is removed too.
+        states_meta_group = session.query(StatesMeta).filter(
+            StatesMeta.entity_id == group_entity_id
+        )
+        assert states_meta_group.count() == 0
+        # An unrelated entity is untouched, i.e. a group id which cannot be
+        # expanded did not result in the whole database being purged.
+        assert _count_states_before(session, "sensor.keep", cutoff) == 10
+        states_meta_remain = session.query(StatesMeta).filter(
+            StatesMeta.entity_id == "sensor.keep"
+        )
+        assert states_meta_remain.count() == 1
 
 
 async def _add_test_states(hass: HomeAssistant, wait_recording_done: bool = True):

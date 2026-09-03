@@ -5,36 +5,47 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, Final, cast
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
+    LoginRequired,
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.teslemetry import Teslemetry
+from tesla_fleet_api.teslemetry import EnergySite, Teslemetry
 from teslemetry_stream import TeslemetryStream
+from teslemetry_stream.const import SseTopic
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import CLIENT_ID, DOMAIN, LOGGER
+from .const import CLIENT_ID, DOMAIN, LOGGER, VEHICLE_ISSUE_LEARN_MORE
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -66,6 +77,19 @@ type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+# Exact SSE topics the integration consumes. An explicit allowlist keeps a
+# new server topic from silently adding traffic or data exposure to HA.
+STREAM_TOPICS: Final = (
+    SseTopic.STATE,
+    SseTopic.VEHICLE_DATA,
+    SseTopic.DATA,
+    SseTopic.CONNECTIVITY,
+    SseTopic.CREDITS,
+    SseTopic.LIVE_STATUS,
+    SseTopic.SITE_INFO,
+    SseTopic.TARIFF_CONTENT_V2,
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
@@ -85,18 +109,32 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
         oauth_session.valid_token,
         oauth_session.token.get("expires_at"),
     )
+    setup_in_progress = (
+        oauth_session.config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+    )
     try:
         await oauth_session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if err.status == 401:
+    except OAuth2TokenRequestReauthError as err:
+        if setup_in_progress:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
             ) from err
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="not_ready_connection_error",
-        ) from err
+        # Not in setup: let the coordinator's own OAuth2TokenRequestError
+        # handling stop polling and (re)start reauth without tearing
+        # down the already-loaded entry.
+        oauth_session.config_entry.async_start_reauth(oauth_session.hass)
+        raise
+    except OAuth2TokenRequestError as err:
+        # Recoverable (e.g. 429/5xx). During setup this backs off via the
+        # normal ConfigEntryNotReady retry; once loaded, let it propagate so
+        # the coordinator treats it as a transient failed update instead.
+        if setup_in_progress:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="not_ready_connection_error",
+            ) from err
+        raise
     except (KeyError, TypeError) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -165,6 +203,63 @@ def _setup_dynamic_discovery(
     )
 
 
+def _async_update_vehicle_repairs(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    vins: set[str],
+    vehicle_metadata: dict[str, Any],
+) -> None:
+    """Create or remove repair issues based on each vehicle's metadata issue."""
+    for vin in vins | set(vehicle_metadata):
+        info = vehicle_metadata.get(vin, {})
+        issue = info.get("issue")
+        for issue_type, learn_more_url in VEHICLE_ISSUE_LEARN_MORE.items():
+            issue_id = f"{issue_type}_{vin}"
+            if vin in vins and info.get("access") and issue == issue_type:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=issue_type,
+                    translation_placeholders={"vehicle": info.get("name") or vin},
+                    learn_more_url=learn_more_url,
+                    data={
+                        "entry_id": entry.entry_id,
+                        "vin": vin,
+                        "issue_type": issue_type,
+                        "vehicle": info.get("name") or vin,
+                    },
+                )
+            else:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+def _setup_vehicle_repairs(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    metadata_coordinator: TeslemetryMetadataCoordinator,
+    vins: set[str],
+    vehicle_metadata: dict[str, Any],
+) -> None:
+    """Track vehicle metadata issues and keep repair issues in sync."""
+
+    _async_update_vehicle_repairs(hass, entry, vins, vehicle_metadata)
+
+    @callback
+    def _handle_metadata_update() -> None:
+        """Re-evaluate vehicle repair issues when metadata changes."""
+        data = metadata_coordinator.data
+        if not data:
+            return
+        _async_update_vehicle_repairs(hass, entry, vins, data["vehicles"])
+
+    entry.async_on_unload(
+        metadata_coordinator.async_add_listener(_handle_metadata_update)
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -174,13 +269,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_key="token_data_malformed",
         )
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="oauth_implementation_not_available",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
 
     session = async_get_clientsession(hass)
@@ -191,15 +280,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         session=session,
         access_token=access_token,
     )
+    # Fetch metadata through the coordinator so it owns the data the platforms
+    # read at setup (e.g. per-vehicle config for seat heaters).
+    metadata_coordinator = TeslemetryMetadataCoordinator(hass, entry, teslemetry)
     try:
-        calls = await asyncio.gather(
-            teslemetry.metadata(),
+        products_call, _ = await asyncio.gather(
             teslemetry.products(),
+            metadata_coordinator.async_config_entry_first_refresh(),
         )
     except InvalidToken as e:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_failed_invalid_token",
+        ) from e
+    except LoginRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_login_required",
         ) from e
     except SubscriptionRequired as e:
         raise ConfigEntryAuthFailed(
@@ -212,11 +309,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_key="not_ready_api_error",
         ) from e
 
-    scopes = calls[0]["scopes"]
-    region = calls[0]["region"]
-    vehicle_metadata = calls[0]["vehicles"]
-    energy_site_metadata = calls[0]["energy_sites"]
-    products = calls[1]["response"]
+    metadata = metadata_coordinator.data
+    scopes = metadata["scopes"]
+    region = metadata["region"]
+    vehicle_metadata = metadata["vehicles"]
+    energy_site_metadata = metadata["energy_sites"]
+    products = products_call["response"]
 
     device_registry = dr.async_get(hass)
 
@@ -224,14 +322,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     vehicles: list[TeslemetryVehicleData] = []
     energysites: list[TeslemetryEnergyData] = []
 
-    # Create the stream (created lazily when first vehicle is found)
+    # Create the stream (created lazily for the first eligible vehicle or
+    # energy site, so energy-only accounts still open the account stream)
     stream: TeslemetryStream | None = None
+
+    def create_stream() -> TeslemetryStream:
+        return TeslemetryStream(
+            session,
+            access_token,
+            server=f"{region.lower()}.teslemetry.com",
+            parse_timestamp=True,
+            manual=True,
+            topics=STREAM_TOPICS,
+        )
 
     # Remember each device identifier we create
     current_devices: set[tuple[str, str]] = set()
 
     # Track known devices for dynamic discovery (based on metadata access state)
-    known_vins, known_site_ids = _get_subscribed_ids_from_metadata(calls[0])
+    known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
 
     for product in products:
         if (
@@ -244,13 +353,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             # Create stream if required (for first vehicle)
             if not stream:
-                stream = TeslemetryStream(
-                    session,
-                    access_token,
-                    server=f"{region.lower()}.teslemetry.com",
-                    parse_timestamp=True,
-                    manual=True,
-                )
+                stream = create_stream()
 
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
@@ -262,7 +365,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
-                configuration_url="https://teslemetry.com/console",
+                configuration_url=f"https://teslemetry.com/console/vehicle/{vin}",
                 name=product["display_name"],
                 model=vehicle.model,
                 model_id=vin[3],
@@ -314,6 +417,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 )
                 continue
 
+            # Create stream if required (for first energy site)
+            if not stream:
+                stream = create_stream()
+
             current_devices.add((DOMAIN, str(site_id)))
             if wall_connector:
                 current_devices |= {
@@ -324,53 +431,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
-                configuration_url="https://teslemetry.com/console",
+                configuration_url=f"https://teslemetry.com/console/energy/{site_id}",
                 name=product.get("site_name", "Energy Site"),
                 serial_number=str(site_id),
             )
 
-            # For initial setup, raise auth errors properly
-            try:
-                live_status = (await energy_site.live_status())["response"]
-            except InvalidToken as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_invalid_token",
-                ) from e
-            except SubscriptionRequired as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_subscription_required",
-                ) from e
-            except Forbidden as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_invalid_token",
-                ) from e
-            except TeslaFleetError as e:
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="not_ready_api_error",
-                ) from e
-
+            (
+                live_coordinator,
+                info_coordinator,
+                history_coordinator,
+            ) = await _async_setup_energy_site(
+                hass,
+                entry,
+                stream,
+                energy_site,
+                product,
+                site_id,
+                powerwall,
+            )
             energysites.append(
                 TeslemetryEnergyData(
                     api=energy_site,
-                    live_coordinator=(
-                        TeslemetryEnergySiteLiveCoordinator(
-                            hass, entry, energy_site, live_status
-                        )
-                        if isinstance(live_status, dict)
-                        else None
-                    ),
-                    info_coordinator=TeslemetryEnergySiteInfoCoordinator(
-                        hass, entry, energy_site, product
-                    ),
-                    history_coordinator=(
-                        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
-                        if powerwall
-                        else None
-                    ),
+                    live_coordinator=live_coordinator,
+                    info_coordinator=info_coordinator,
+                    history_coordinator=history_coordinator,
                     id=site_id,
                     device=device,
                 )
@@ -390,17 +474,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ),
     )
 
-    # Register listeners for polling vehicle sw_version updates
-    for vehicle_data in vehicles:
-        if vehicle_data.poll:
-            entry.async_on_unload(
-                vehicle_data.coordinator.async_add_listener(
-                    create_vehicle_polling_listener(
-                        hass, vehicle_data.vin, vehicle_data.coordinator
-                    )
-                )
-            )
-
     # Setup energy devices with models, versions, and listeners
     for energysite in energysites:
         async_setup_energy_device(hass, entry, energysite, device_registry)
@@ -413,12 +486,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             identifier in current_devices for identifier in device_entry.identifiers
         ):
             LOGGER.debug("Removing stale device %s", device_entry.id)
-            device_registry.async_update_device(
-                device_id=device_entry.id,
-                remove_config_entry_id=entry.entry_id,
-            )
-
-    metadata_coordinator = TeslemetryMetadataCoordinator(hass, entry, teslemetry)
+            device_registry.async_remove_device(device_entry.id)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
@@ -437,11 +505,131 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         known_site_ids,
     )
 
+    _setup_vehicle_repairs(
+        hass,
+        entry,
+        metadata_coordinator,
+        {vehicle.vin for vehicle in vehicles},
+        vehicle_metadata,
+    )
+
     if stream:
         entry.async_on_unload(stream.close)
+        # The stream is the only freshness signal for the energy coordinators, so
+        # a dropped connection must mark their entities unavailable rather than
+        # leaving stale live/info/tariff data available indefinitely.
+        if energysites:
+            entry.async_on_unload(
+                stream.async_add_connection_listener(
+                    create_handle_energy_stream_connection(energysites)
+                )
+            )
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
+
+
+def create_handle_energy_stream_connection(
+    energysites: list[TeslemetryEnergyData],
+) -> Callable[[bool], None]:
+    """Create a stream connection listener for the energy coordinators."""
+
+    @callback
+    def handle_connection(connected: bool) -> None:
+        """Fail stream-driven energy coordinators while the stream is down.
+
+        Each subsequent streamed document restores its coordinator via
+        async_set_updated_data, so no reload is required on reconnect.
+        """
+        if connected:
+            return
+        error = UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="stream_disconnected",
+        )
+        for energysite in energysites:
+            if energysite.live_coordinator is not None:
+                energysite.live_coordinator.async_set_update_error(error)
+            energysite.info_coordinator.async_set_update_error(error)
+
+    return handle_connection
+
+
+async def _async_setup_energy_site(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    stream: TeslemetryStream,
+    energy_site: EnergySite,
+    product: dict[str, Any],
+    site_id: int,
+    powerwall: Any,
+) -> tuple[
+    TeslemetryEnergySiteLiveCoordinator | None,
+    TeslemetryEnergySiteInfoCoordinator,
+    TeslemetryEnergyHistoryCoordinator | None,
+]:
+    """Cold-read live status, build the energy coordinators, and register listeners."""
+    # The stream has no ready boundary, so keep a deterministic REST cold read
+    # for setup auth/error handling before switching to listener-driven updates.
+    try:
+        live_status = (await energy_site.live_status())["response"]
+    except InvalidToken as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_invalid_token",
+        ) from e
+    except LoginRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_login_required",
+        ) from e
+    except SubscriptionRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_subscription_required",
+        ) from e
+    except Forbidden as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_invalid_token",
+        ) from e
+    except TeslaFleetError as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="not_ready_api_error",
+        ) from e
+
+    live_coordinator = (
+        TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
+        if isinstance(live_status, dict)
+        else None
+    )
+    info_coordinator = TeslemetryEnergySiteInfoCoordinator(
+        hass, entry, energy_site, product
+    )
+
+    # Register before stream.listen() so the opening snapshot cannot be missed.
+    stream_energysite = stream.get_energysite(site_id)
+    if live_coordinator is not None:
+        entry.async_on_unload(
+            stream_energysite.listen_LiveStatus(live_coordinator.handle_stream_update)
+        )
+    entry.async_on_unload(
+        stream_energysite.listen_SiteInfo(info_coordinator.handle_site_info)
+    )
+    entry.async_on_unload(
+        stream_energysite.listen_TariffContentV2(
+            info_coordinator.handle_tariff_content_v2
+        )
+    )
+
+    history_coordinator = (
+        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
+        if powerwall
+        else None
+    )
+
+    return live_coordinator, info_coordinator, history_coordinator
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -453,9 +641,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TeslemetryConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
@@ -514,7 +699,7 @@ def async_setup_energy_device(
         *data.get("components_gateways", []),
         *data.get("components_batteries", []),
     ):
-        if part_name := component.get("part_name"):
+        if (part_name := component.get("part_name")) and part_name != "Unknown":
             models.add(part_name)
     if models:
         energysite.device["model"] = ", ".join(sorted(models))
@@ -529,7 +714,7 @@ def async_setup_energy_device(
     entry.async_on_unload(
         energysite.info_coordinator.async_add_listener(
             create_energy_info_listener(
-                hass, energysite.id, energysite.info_coordinator
+                hass, energysite.id, entry.entry_id, energysite.info_coordinator
             )
         )
     )
@@ -548,13 +733,13 @@ async def async_setup_stream(
 
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(
-            create_vehicle_streaming_listener(hass, vehicle.vin)
+            create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)
         )
     )
 
 
 def create_vehicle_streaming_listener(
-    hass: HomeAssistant, vin: str
+    hass: HomeAssistant, vin: str, config_entry_id: str
 ) -> Callable[[str | None], None]:
     """Create a listener for vehicle streaming version updates."""
 
@@ -563,29 +748,15 @@ def create_vehicle_streaming_listener(
         if value is not None:
             # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
             sw_version = value.split(" ")[0]
-            async_update_device_sw_version(hass, vin, sw_version)
+            async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
 
     return handle_version
-
-
-def create_vehicle_polling_listener(
-    hass: HomeAssistant, vin: str, coordinator: TeslemetryVehicleDataCoordinator
-) -> Callable[[], None]:
-    """Create a listener for vehicle polling coordinator updates."""
-
-    def handle_update() -> None:
-        """Handle coordinator update."""
-        if version := coordinator.data.get("vehicle_state_car_version"):
-            # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
-            sw_version = version.split(" ")[0]
-            async_update_device_sw_version(hass, vin, sw_version)
-
-    return handle_update
 
 
 def create_energy_info_listener(
     hass: HomeAssistant,
     site_id: int,
+    config_entry_id: str,
     coordinator: TeslemetryEnergySiteInfoCoordinator,
 ) -> Callable[[], None]:
     """Create a listener for energy site info coordinator updates."""
@@ -593,6 +764,6 @@ def create_energy_info_listener(
     def handle_update() -> None:
         """Handle coordinator update."""
         if version := coordinator.data.get("version"):
-            async_update_device_sw_version(hass, str(site_id), version)
+            async_update_device_sw_version(hass, str(site_id), config_entry_id, version)
 
     return handle_update

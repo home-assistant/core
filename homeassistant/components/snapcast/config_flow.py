@@ -1,9 +1,8 @@
 """Snapcast config flow."""
 
-from __future__ import annotations
-
 import logging
 import socket
+from typing import override
 
 import snapcast.control
 from snapcast.control.server import CONTROL_PORT
@@ -27,6 +26,7 @@ SNAPCAST_SCHEMA = vol.Schema(
 class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
     """Snapcast config flow."""
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle first step."""
         errors = {}

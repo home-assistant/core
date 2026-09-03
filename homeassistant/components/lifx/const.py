@@ -1,7 +1,5 @@
 """Const for LIFX."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -72,4 +70,4 @@ INFRARED_BRIGHTNESS_VALUES_MAP = {
 LIFX_CEILING_PRODUCT_IDS = {176, 177, 201, 202}
 LIFX_128ZONE_CEILING_PRODUCT_IDS = {201, 202}
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)

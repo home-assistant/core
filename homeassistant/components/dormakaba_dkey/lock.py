@@ -1,8 +1,6 @@
 """Dormakaba dKey integration lock platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from py_dormakaba_dkey.commands import UnlockStatus
 
@@ -34,6 +32,7 @@ class DormakabaDkeyLock(DormakabaDkeyEntity, LockEntity):
         super().__init__(coordinator)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_locked = self.coordinator.lock.state.unlock_status in (
@@ -41,10 +40,12 @@ class DormakabaDkeyLock(DormakabaDkeyEntity, LockEntity):
             UnlockStatus.SECURITY_LOCKED,
         )
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.coordinator.lock.lock()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.coordinator.lock.unlock()

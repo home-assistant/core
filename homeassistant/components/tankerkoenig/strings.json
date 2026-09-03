@@ -164,6 +164,9 @@
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to the Tankerkoenig API. Please check your network connection."
+    },
     "invalid_api_key": {
       "message": "The provided API key is invalid. Please check your API key."
     },

@@ -1,9 +1,7 @@
 """Definition of Picnic shopping cart."""
 
-from __future__ import annotations
-
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -17,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CART_DATA, DOMAIN
 from .coordinator import PicnicConfigEntry, PicnicUpdateCoordinator
 from .services import product_search
 
@@ -58,23 +56,27 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of items in cart items."""
         if self.coordinator.data is None:
             return None
 
-        _LOGGER.debug(self.coordinator.data["cart_data"]["items"])
+        cart = self.coordinator.data[CART_DATA]
+        _LOGGER.debug(cart.items)
 
         return [
             TodoItem(
-                summary=f"{article['name']} ({article['unit_quantity']})",
-                uid=f"{item['id']}-{article['id']}",
-                status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
+                summary=f"{article.name} ({article.unit_quantity})",
+                uid=f"{line.id}-{article.id}",
+                # We set 'NEEDS_ACTION' so they count as state
+                status=TodoItemStatus.NEEDS_ACTION,
             )
-            for item in self.coordinator.data["cart_data"]["items"]
-            for article in item["items"]
+            for line in cart.items
+            for article in line.items
         ]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add item to shopping cart."""
         product_id = await self.hass.async_add_executor_job(

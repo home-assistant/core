@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "auth_error": "Authentication error, please try again",
       "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -147,6 +146,80 @@
         "name": "Treble"
       }
     },
+    "select": {
+      "dimmer": {
+        "name": "Dimmer",
+        "state": {
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "equalizer_mode": {
+        "name": "Equalizer mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "Bypass",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
+      "link_audio_delay": {
+        "name": "Link audio delay",
+        "state": {
+          "audio_sync": "Audio synchronization",
+          "audio_sync_off": "Audio synchronization off",
+          "audio_sync_on": "Audio synchronization on",
+          "balanced": "Balanced",
+          "lip_sync": "Lip synchronization"
+        }
+      },
+      "link_audio_quality": {
+        "name": "Link audio quality",
+        "state": {
+          "compressed": "Compressed",
+          "uncompressed": "Uncompressed"
+        }
+      },
+      "link_control": {
+        "name": "Link control",
+        "state": {
+          "speed": "Speed",
+          "stability": "Stability",
+          "standard": "Standard"
+        }
+      },
+      "sleep": {
+        "name": "Sleep timer",
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "30": "30 minutes",
+          "60": "60 minutes",
+          "90": "90 minutes",
+          "120": "120 minutes"
+        }
+      },
+      "surround_decoder_type": {
+        "name": "Surround decoder type",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "dolby_pl": "Dolby ProLogic",
+          "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+          "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+          "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+          "dolby_surround": "Dolby Surround",
+          "dts_neo6_cinema": "DTS Neo:6 Cinema",
+          "dts_neo6_music": "DTS Neo:6 Music",
+          "dts_neural_x": "DTS Neural:X",
+          "toggle": "[%key:common::action::toggle%]"
+        }
+      },
+      "tone_control_mode": {
+        "name": "Tone control mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "Bypass",
+          "manual": "[%key:common::state::manual%]"
+        }
+      }
+    },
     "switch": {
       "adaptive_drc": {
         "name": "Adaptive DRC"
@@ -183,6 +256,14 @@
       "network_name": {
         "name": "Network name"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_username": {
+      "message": "The username {username} does not exist on the Music Assistant server."
+    },
+    "tts_entity_not_available": {
+      "message": "The text-to-speech entity {entity_id} is not available."
     }
   },
   "issues": {
@@ -284,13 +365,22 @@
         "search": {
           "description": "Optional search string to search through this library.",
           "name": "Search"
+        },
+        "username": {
+          "description": "Music Assistant username used for this request. Providing the username will respect the user's configured provider filters.",
+          "name": "Username"
         }
       },
-      "name": "Get library items"
+      "name": "Get library items",
+      "sections": {
+        "pagination": {
+          "name": "Pagination"
+        }
+      }
     },
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
-      "name": "Get playerQueue details (advanced)"
+      "name": "Get playerQueue details"
     },
     "play_announcement": {
       "description": "Plays an announcement on a Music Assistant player with more fine-grained control options.",
@@ -299,12 +389,20 @@
           "description": "Use a forced volume level for the announcement. Omit to use player default.",
           "name": "Announce volume"
         },
+        "message": {
+          "description": "Text to announce, spoken by the selected text-to-speech entity. Provide either a message or a URL.",
+          "name": "Message"
+        },
         "pre_announce_url": {
           "description": "URL to the pre-announcement sound.",
           "name": "Pre-announce URL"
         },
+        "tts_entity_id": {
+          "description": "Text-to-speech entity that speaks the message. Required when a message is given.",
+          "name": "Text-to-speech entity"
+        },
         "url": {
-          "description": "URL to the notification sound.",
+          "description": "URL to the notification sound. Provide either a message or a URL.",
           "name": "URL"
         },
         "use_pre_announce": {
@@ -340,6 +438,10 @@
         "radio_mode": {
           "description": "Enable radio mode to auto-generate a playlist based on the selection.",
           "name": "Enable radio mode"
+        },
+        "username": {
+          "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured. Defaults to the Home Assistant user that made the request, when the username matches a Music Assistant user.",
+          "name": "Username"
         }
       },
       "name": "Play media"
@@ -374,9 +476,18 @@
         "name": {
           "description": "The name/title to search for.",
           "name": "Search name"
+        },
+        "username": {
+          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters.",
+          "name": "Username"
         }
       },
-      "name": "Search Music Assistant"
+      "name": "Search Music Assistant",
+      "sections": {
+        "search_options": {
+          "name": "Search options"
+        }
+      }
     },
     "transfer_queue": {
       "description": "Transfers a player's queue to another player.",

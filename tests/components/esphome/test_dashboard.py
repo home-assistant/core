@@ -114,7 +114,7 @@ async def test_setup_dashboard_fails(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
+    """Test nothing is stored on failed setup without prior dashboard."""
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,

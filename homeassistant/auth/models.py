@@ -1,7 +1,5 @@
 """Auth models."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 import secrets
@@ -28,7 +26,6 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 class AuthFlowContext(FlowContext, total=False):
     """Typed context dict for auth flow."""
 
-    credential_only: bool
     ip_address: IPv4Address | IPv6Address
     redirect_uri: str
 

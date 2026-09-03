@@ -21,9 +21,6 @@
     "save_video": {
       "service": "mdi:file-video"
     },
-    "send_pin": {
-      "service": "mdi:two-factor-authentication"
-    },
     "trigger_camera": {
       "service": "mdi:image-refresh"
     }

@@ -1,8 +1,6 @@
 """Support for KNX number entities."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from xknx.devices import NumericValue
 
@@ -10,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_MODE,
     CONF_NAME,
     CONF_TYPE,
@@ -37,7 +34,12 @@ from .const import (
     NumberConf,
 )
 from .dpt import get_supported_dpts
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
@@ -66,7 +68,7 @@ async def async_setup_entry(
             KnxYamlNumber(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.NUMBER):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.NUMBER):
         entities.extend(
             KnxUiNumber(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -80,23 +82,24 @@ class _KnxNumber(RestoreNumber):
 
     _device: NumericValue
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if (
-            not self._device.sensor_value.readable
-            and (last_state := await self.async_get_last_state())
-            and (last_number_data := await self.async_get_last_number_data())
+        if (last_state := await self.async_get_last_state()) and (
+            last_number_data := await self.async_get_last_number_data()
         ):
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.sensor_value.value = last_number_data.native_value
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the entity value to represent the entity state."""
         # self._device.sensor_value.value is set in __init__ so it is never None
         return cast(float, self._device.resolve_state())
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._device.set(value)
@@ -115,13 +118,13 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
             group_address=config[KNX_ADDRESS],
             group_address_state=config.get(CONF_STATE_ADDRESS),
             respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
             value_type=config[CONF_TYPE],
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.sensor_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.sensor_value.group_address),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]
@@ -129,7 +132,9 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         self._attr_device_class = config.get(
             CONF_DEVICE_CLASS,
             try_parse_enum(
-                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                # sensor device classes should, with some
+                # exceptions ("enum" etc.), align with
+                # number device classes
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             ),
@@ -193,7 +198,9 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
             )
         else:
             self._attr_device_class = try_parse_enum(
-                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                # sensor device classes should, with some
+                # exceptions ("enum" etc.), align with
+                # number device classes
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             )

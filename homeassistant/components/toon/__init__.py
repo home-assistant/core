@@ -11,17 +11,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_AGREEMENT_ID, CONF_MIGRATE, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .coordinator import ToonDataUpdateCoordinator
+from .coordinator import ToonConfigEntry, ToonDataUpdateCoordinator
 from .oauth2 import register_oauth2_implementations
 
 PLATFORMS = [
@@ -94,15 +92,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
     """Set up Toon from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
     coordinator = ToonDataUpdateCoordinator(hass, entry, session)
@@ -111,23 +103,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
-    # Register device for the Meter Adapter, since it will have no entities.
+    agreement = coordinator.data.agreement
+    agreement_id = agreement.agreement_id
+
+    # Register the parent devices before forwarding the platforms, so that the
+    # child devices created by the entities can deterministically resolve their
+    # via_device_id.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    display_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, agreement_id)},
+        manufacturer="Eneco",
+        model=agreement.display_hardware_version.rpartition("/")[0],
+        name="Toon Display",
+        sw_version=agreement.display_software_version.rpartition("/")[-1],
+    )
+    # The Meter Adapter has no entities of its own.
+    meter_adapter_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
-            (
-                DOMAIN,
-                coordinator.data.agreement.agreement_id,
-                "meter_adapter",
-            )  # type: ignore[arg-type]
+            (DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[arg-type]
         },
         manufacturer="Eneco",
         name="Meter Adapter",
-        via_device=(DOMAIN, coordinator.data.agreement.agreement_id),
+        via_device_id=display_device.id,
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
+        },
+        name="Electricity Meter",
+        via_device_id=meter_adapter_device.id,
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, agreement_id, "boiler_module"),  # type: ignore[arg-type]
+        },
+        manufacturer="Eneco",
+        name="Boiler Module",
+        via_device_id=display_device.id,
     )
 
     # Spin up the platforms
@@ -145,17 +163,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
     """Unload Toon config entry."""
 
     # Remove webhooks registration
-    await hass.data[DOMAIN][entry.entry_id].unregister_webhook()
+    await entry.runtime_data.unregister_webhook()
 
     # Unload entities for this entry/device.
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Cleanup
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

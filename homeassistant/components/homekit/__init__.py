@@ -1,7 +1,5 @@
 """Support for Apple HomeKit."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
@@ -27,7 +25,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.device_automation.trigger import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.device_automation.trigger import (  # pylint: disable=home-assistant-component-root-import
     async_validate_trigger_config,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
@@ -90,6 +88,7 @@ from . import (  # noqa: F401
     type_cameras,
     type_covers,
     type_fans,
+    type_heater_coolers,
     type_humidifiers,
     type_lights,
     type_locks,
@@ -100,7 +99,13 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
+from .accessories import (
+    HomeAccessory,
+    HomeBridge,
+    HomeDriver,
+    async_resolve_accessory_type,
+    get_accessory,
+)
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -489,6 +494,9 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
         for device_id in referenced.referenced_devices:
             if not (dev_reg_ent := dev_reg.async_get(device_id)):
                 raise HomeAssistantError(f"No device found for device id: {device_id}")
+            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
+                # A child device carries no HomeKit pairing; only its parent can.
+                continue
             macs = [
                 cval
                 for ctype, cval in dev_reg_ent.connections
@@ -574,6 +582,10 @@ class HomeKit:
         self.bridge: HomeBridge | None = None
         self._reset_lock = asyncio.Lock()
         self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
+        # True while running the first ever start of this entry (no
+        # persisted pairing state yet); accessory mode uses it to tell a
+        # brand new entry from one that predates the HeaterCooler.
+        self._first_ever_start = False
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> bool:
         """Set up bridge and accessory driver.
@@ -671,8 +683,10 @@ class HomeKit:
         removed: list[str] = []
         acc: HomeAccessory | None
         for entity_id in entity_ids:
-            aid = self.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
-            if aid not in self.bridge.accessories:
+            # A lookup must not allocate; an allocation marks the entity as
+            # previously bridged, which would suppress the automatic routing.
+            aid = self.aid_storage.get_allocated_aid_for_entity_id(entity_id)
+            if aid is None or aid not in self.bridge.accessories:
                 continue
             if acc := self.async_remove_bridge_accessory(aid):
                 self._async_shutdown_accessory(acc)
@@ -755,8 +769,14 @@ class HomeKit:
 
         assert self.aid_storage is not None
         assert self.bridge is not None
-        aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         conf = self._config.get(state.entity_id, {}).copy()
+        # Must run before the aid is allocated below so a never bridged
+        # entity is still recognizable as new.
+        pending_type = async_resolve_accessory_type(
+            self.aid_storage, state, conf, allow_auto=True
+        )
+        newly_allocated = not self.aid_storage.entity_is_allocated(state.entity_id)
+        aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
@@ -764,11 +784,19 @@ class HomeKit:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
                 self.bridge.add_accessory(acc)
+                if pending_type:
+                    self.aid_storage.async_set_accessory_type(
+                        state.entity_id, pending_type
+                    )
                 return acc
         except Exception:
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
+        if newly_allocated:
+            # A failed first attempt must not classify the entity as
+            # existing on the next try.
+            self.aid_storage.async_delete_aid_for_entity_id(state.entity_id)
         return None
 
     def _would_exceed_max_devices(self, name: str | None) -> bool:
@@ -884,6 +912,7 @@ class HomeKit:
             self.setup, async_zc_instance, uuid
         )
         assert self.driver is not None
+        self._first_ever_start = not loaded_from_disk
 
         if not await self._async_create_accessories():
             return
@@ -896,6 +925,9 @@ class HomeKit:
             # need to make sure its persisted to disk.
             async with self.hass.data[PERSIST_LOCK_DATA]:
                 await self.hass.async_add_executor_job(self.driver.persist)
+        # The pairing state is persisted now, so later reloads treat the
+        # entry as existing.
+        self._first_ever_start = False
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:
@@ -934,7 +966,7 @@ class HomeKit:
 
     @callback
     def _async_register_bridge(self) -> None:
-        """Register the bridge as a device so homekit_controller and exclude it from discovery."""
+        """Register bridge as device for homekit_controller exclusion."""
         assert self.driver is not None
         dev_reg = dr.async_get(self.hass)
         formatted_mac = dr.format_mac(self.driver.state.mac)
@@ -976,7 +1008,7 @@ class HomeKit:
         """Purge bridges that exist from failed pairing or manual resets."""
         devices_to_purge = [
             entry.id
-            for entry in dev_reg.devices.get_devices_for_config_entry_id(self._entry_id)
+            for entry in dr.async_entries_for_config_entry(dev_reg, self._entry_id)
             if (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections  # type: ignore[unreachable]
@@ -1002,6 +1034,13 @@ class HomeKit:
             return None
         state = entity_states[0]
         conf = self._config.get(state.entity_id, {}).copy()
+        # Accessory mode has no aid allocation to tell new from existing,
+        # so only a brand new pairing picks its type automatically; anything
+        # else keeps its current accessory.
+        assert self.aid_storage is not None
+        pending_type = async_resolve_accessory_type(
+            self.aid_storage, state, conf, allow_auto=self._first_ever_start
+        )
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
         if acc is None:
             _LOGGER.error(
@@ -1009,6 +1048,9 @@ class HomeKit:
                 self._name,
                 self._filter.config,
             )
+            return None
+        if pending_type:
+            self.aid_storage.async_set_accessory_type(state.entity_id, pending_type)
         return acc
 
     async def _async_create_bridge_accessory(
@@ -1029,7 +1071,8 @@ class HomeKit:
         dev_reg = dr.async_get(self.hass)
         valid_device_ids = []
         for device_id in self._devices:
-            if not dev_reg.async_get(device_id):
+            device = dev_reg.async_get(device_id)
+            if device is None:
                 _LOGGER.warning(
                     (
                         "HomeKit %s cannot add device %s because it is missing from the"
@@ -1038,7 +1081,17 @@ class HomeKit:
                     self._name,
                     device_id,
                 )
+            elif isinstance(device, dr.ChildDeviceEntry):
+                _LOGGER.warning(
+                    (
+                        "HomeKit %s cannot add device %s because a child device cannot"
+                        " be a HomeKit accessory"
+                    ),
+                    self._name,
+                    device_id,
+                )
             else:
+                # A main or composite device is a valid HomeKit accessory
                 valid_device_ids.append(device_id)
         for device_id, device_triggers in (
             await device_automation.async_get_device_automations(
@@ -1047,7 +1100,7 @@ class HomeKit:
                 valid_device_ids,
             )
         ).items():
-            device = dev_reg.async_get(device_id)
+            device = dev_reg.async_get(device_id, include_child_devices=False)
             assert device is not None
             valid_device_triggers: list[dict[str, Any]] = []
             for trigger in device_triggers:
@@ -1177,7 +1230,13 @@ class HomeKit:
         """Set attributes that will be used for homekit device info."""
         ent_cfg = self._config[entity_id]
         if ent_reg_ent.device_id:
-            if dev_reg_ent := dev_reg.async_get(ent_reg_ent.device_id):
+            dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
+            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
+                # A child device has no hardware info of its own; use the parent's
+                dev_reg_ent = dev_reg.async_get(
+                    dev_reg_ent.parent_device_id, include_child_devices=False
+                )
+            if dev_reg_ent is not None:
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
             try:

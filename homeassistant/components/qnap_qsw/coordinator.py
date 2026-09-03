@@ -1,12 +1,10 @@
 """The QNAP QSW coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
@@ -53,6 +51,7 @@ class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=DATA_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with asyncio.timeout(QSW_TIMEOUT_SEC):
@@ -82,6 +81,7 @@ class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=FW_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update firmware data via library."""
         async with asyncio.timeout(QSW_TIMEOUT_SEC):

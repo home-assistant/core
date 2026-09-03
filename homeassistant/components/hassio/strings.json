@@ -52,9 +52,35 @@
     },
     "mount_reload_unknown_device_id": {
       "message": "Device ID not found"
+    },
+    "supervisor_not_connected": {
+      "message": "Not connected with the supervisor / system too busy"
+    },
+    "supervisor_update_pending": {
+      "message": "Supervisor was out-of-date during onboarding. Update triggered, will retry when complete"
     }
   },
   "issues": {
+    "issue_addon_app_port_conflict": {
+      "fix_flow": {
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        },
+        "step": {
+          "addon_execute_start": {
+            "description": "App {addon} has a port conflict on port {port}. The app cannot change this in settings. Please uninstall the app or stop and reconfigure the other service using port {port}. Once unblocked, select this option again to start the app."
+          },
+          "fix_menu": {
+            "description": "App {addon} has a port conflict on port {port}. You can clear the port configuration in the app settings to automatically resolve this and start the app, or you can manually unblock the port by stopping or reconfiguring the other service using it.",
+            "menu_options": {
+              "addon_clear_port_config": "Clear port configuration",
+              "addon_execute_start": "Start after manual unblock"
+            }
+          }
+        }
+      },
+      "title": "App port conflict"
+    },
     "issue_addon_boot_fail": {
       "fix_flow": {
         "abort": {
@@ -126,11 +152,18 @@
         },
         "step": {
           "fix_menu": {
-            "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
+            "description": "Could not set up `{reference}`. This can happen when the storage device is unreachable, or when local data is blocking the mount location. Check host logs for errors from the mount service for more details.\n\nUse reload to try again. If you need to update `{reference}`, go to [storage]({storage_url}).",
             "menu_options": {
               "mount_execute_reload": "[%key:common::action::reload%]",
-              "mount_execute_remove": "Remove"
+              "mount_execute_remove": "Remove",
+              "mount_move_local_data": "Move blocking local data away"
             }
+          },
+          "mount_execute_remove": {
+            "description": "Select **Submit** to remove the network storage `{reference}` from Home Assistant. Any data stored on the device itself is not affected, but automations, backups or apps relying on this storage will no longer have access to it.\n\nYou can add the network storage again later from [storage]({storage_url})."
+          },
+          "mount_move_local_data": {
+            "description": "Select **Submit** to move the local data blocking `{reference}` to a `{reference}_local_recovery` folder and set up the mount again.\n\nNo files are deleted. For media and share mounts the recovery folder is created next to the mount, where you can review and remove it. For backup mounts it is placed in local backup storage."
           }
         }
       },
@@ -203,9 +236,24 @@
       },
       "title": "Reboot required"
     },
+    "legacy_homeassistant_folder": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "An automation or script called the `hassio.backup_partial` or `hassio.restore_partial` action with `\"homeassistant\"` listed in `folders`. This is a legacy alias for the `homeassistant: true` option and will stop being accepted in a future release.\n\nUpdate the affected automations and scripts to set `homeassistant: true` and remove `\"homeassistant\"` from the `folders` list. When this is done, select **Submit** to mark this issue as resolved.",
+            "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
+          }
+        }
+      },
+      "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
+    },
     "unhealthy": {
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - {reason}"
+    },
+    "unhealthy_data_filesystem_check_error": {
+      "description": "System is currently unhealthy because a filesystem integrity check failed on the data partition. This can be caused by unexpected power loss or failing storage and may affect configuration, apps, or backups. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - Data partition filesystem check failed"
     },
     "unhealthy_docker": {
       "description": "System is currently unhealthy because Docker is configured incorrectly. For troubleshooting information, select Learn more.",
@@ -218,6 +266,10 @@
     "unhealthy_duplicate_os_installation": {
       "description": "System is currently unhealthy because it has detected multiple Home Assistant OS installations. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Duplicate Home Assistant OS installation"
+    },
+    "unhealthy_os_filesystem_check_error": {
+      "description": "System is currently unhealthy because a filesystem integrity check failed on an operating system partition. This can be caused by unexpected power loss or failing storage. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - OS partition filesystem check failed"
     },
     "unhealthy_oserror_bad_message": {
       "description": "System is currently unhealthy because the operating system has reported an OS error: Bad message. For troubleshooting information, select Learn more.",
@@ -548,6 +600,7 @@
     "info": {
       "agent_version": "Agent version",
       "board": "Board",
+      "disk_life_time": "Disk lifetime",
       "disk_total": "Disk total",
       "disk_used": "Disk used",
       "docker_version": "Docker version",

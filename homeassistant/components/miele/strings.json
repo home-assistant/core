@@ -6,20 +6,10 @@
     "abort": {
       "account_mismatch": "The used account does not match the original account",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -709,6 +699,7 @@
           "pork_tenderloin_medaillons_4_cm": "Pork tenderloin (medaillons, 4 cm)",
           "pork_tenderloin_medaillons_5_cm": "Pork tenderloin (medaillons, 5 cm)",
           "pork_with_crackling": "Pork with crackling",
+          "pot_rests_and_filters": "Pot rests and filters",
           "potato_cheese_gratin": "Potato cheese gratin",
           "potato_dumplings_half_half_boil_in_bag": "Potato dumplings (half/half, boil-in-bag)",
           "potato_dumplings_half_half_deep_frozen": "Potato dumplings (half/half, deep-frozen)",
@@ -751,6 +742,7 @@
           "powerfresh": "PowerFresh",
           "prawns": "Prawns",
           "pre_ironing": "Pre-ironing",
+          "pre_wash": "Pre-wash",
           "proofing": "Proofing",
           "prove_15_min": "Prove for 15 min",
           "prove_30_min": "Prove for 30 min",
@@ -789,6 +781,7 @@
           "rice_pudding_rapid_steam_cooking": "Rice pudding (rapid steam cooking)",
           "rice_pudding_steam_cooking": "Rice pudding (steam cooking)",
           "rinse": "Rinse",
+          "rinse_and_hold": "Rinse and hold",
           "rinse_out_lint": "Rinse out lint",
           "rinse_salt": "Rinse salt",
           "risotto": "Risotto",
@@ -896,6 +889,7 @@
           "toffee_date_dessert_several_small": "Toffee-date dessert (several small)",
           "top_heat": "Top heat",
           "tortellini_fresh": "Tortellini (fresh)",
+          "towels": "Towels",
           "trainers": "Trainers",
           "trainers_refresh": "Trainers refresh",
           "treacle_sponge_pudding_one_large": "Treacle sponge pudding (one large)",
@@ -982,6 +976,7 @@
           "blocked_brushes": "Brushes blocked",
           "blocked_drive_wheels": "Drive wheels blocked",
           "blocked_front_wheel": "Front wheel blocked",
+          "cancelled": "Cancelled",
           "cleaning": "Cleaning",
           "comfort_cooling": "Comfort cooling",
           "cooling_down": "Cooling down",
@@ -1024,6 +1019,7 @@
           "normal": "Normal",
           "normal_plus": "Normal plus",
           "not_running": "Not running",
+          "paused": "Paused",
           "perfect_dry_active": "PerfectDry active",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
@@ -1164,9 +1160,6 @@
     },
     "invalid_target": {
       "message": "Invalid device targeted."
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "set_program_error": {
       "message": "'Set program' action failed: {status} / {message}"

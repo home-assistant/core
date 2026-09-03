@@ -1,10 +1,8 @@
 """OpenGarage button."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from opengarage import OpenGarage
 
@@ -68,6 +66,7 @@ class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
         """Initialize the button."""
         super().__init__(coordinator, device_id, description)
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_action(

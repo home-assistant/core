@@ -1,7 +1,5 @@
 """Support for SmartThings Cloud."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy
@@ -27,6 +25,14 @@ from pysmartthings import (
 )
 from pysmartthings.models import HealthStatus
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -37,7 +43,6 @@ from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -53,7 +58,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -129,13 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     # after migration but still require reauthentication
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
     try:
@@ -158,7 +156,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     def _handle_max_connections() -> None:
         _LOGGER.debug(
-            "We hit the limit of max connections or we could not remove the old one, so retrying"
+            "We hit the limit of max connections or we could"
+            " not remove the old one, so retrying"
         )
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
@@ -193,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_LOCATION_ID],
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
-    except SmartThingsSinkError as err:
+    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         _LOGGER.exception("Couldn't create a new subscription")
         raise ConfigEntryNotReady from err
     subscription_id = subscription.subscription_id
@@ -232,26 +231,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             device_status[device.device_id] = FullDevice(
                 device=device, status=status, online=online.state == HealthStatus.ONLINE
             )
+        scenes = {
+            scene.scene_id: scene
+            for scene in await client.get_scenes(
+                location_id=entry.data[CONF_LOCATION_ID]
+            )
+        }
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
+    except SmartThingsConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
 
-    scenes = {
-        scene.scene_id: scene
-        for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
-    }
-
     def handle_deleted_device(device_id: str) -> None:
         """Handle a deleted device."""
-        dev_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)},
+        dev_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), entry.entry_id
         )
         if dev_entry is not None:
-            device_registry.async_update_device(
-                dev_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(dev_entry.id)
 
     entry.async_on_unload(
         client.add_device_lifecycle_event_listener(
@@ -315,9 +315,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for device_identifier in device_status
         ):
             continue
-        device_registry.async_update_device(
-            device_entry.id, remove_config_entry_id=entry.entry_id
-        )
+        device_registry.async_remove_device(device_entry.id)
 
     return True
 
@@ -337,7 +335,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry migration."""
 
     if entry.version < 3:
-        # We keep the old data around, so we can use that to clean up the webhook in the future
+        # We keep the old data around, so we can use that
+        # to clean up the webhook in the future
         hass.config_entries.async_update_entry(
             entry, version=3, data={OLD_DATA: dict(entry.data)}
         )
@@ -345,7 +344,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.minor_version < 2:
 
         def migrate_entities(entity_entry: RegistryEntry) -> dict[str, Any] | None:
-            if entity_entry.domain == "binary_sensor":
+            if entity_entry.domain == BINARY_SENSOR_DOMAIN:
                 device_id, attribute = entity_entry.unique_id.split(".")
                 if (
                     capability := BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES.get(
@@ -359,9 +358,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return {
                     "new_unique_id": new_unique_id,
                 }
-            if entity_entry.domain in {"cover", "climate", "fan", "light", "lock"}:
+            if entity_entry.domain in {
+                COVER_DOMAIN,
+                CLIMATE_DOMAIN,
+                FAN_DOMAIN,
+                LIGHT_DOMAIN,
+                LOCK_DOMAIN,
+            }:
                 return {"new_unique_id": f"{entity_entry.unique_id}_{MAIN}"}
-            if entity_entry.domain == "sensor":
+            if entity_entry.domain == SENSOR_DOMAIN:
                 delimiter = "." if " " not in entity_entry.unique_id else " "
                 if delimiter not in entity_entry.unique_id:
                     return None
@@ -379,7 +384,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         "energySaved_meter",
                     }:
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.POWER_CONSUMPTION_REPORT}_{Attribute.POWER_CONSUMPTION}_{attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{Capability.POWER_CONSUMPTION_REPORT}"
+                                f"_{Attribute.POWER_CONSUMPTION}"
+                                f"_{attribute}"
+                            ),
                         }
                     if attribute in {
                         "X Coordinate",
@@ -392,7 +402,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             "Z Coordinate": "z_coordinate",
                         }[attribute]
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{Capability.THREE_AXIS}"
+                                f"_{Attribute.THREE_AXIS}"
+                                f"_{new_attribute}"
+                            ),
                         }
                     if attribute in {
                         Attribute.MACHINE_STATE,
@@ -404,16 +419,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         if capability is None:
                             return None
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{capability}"
+                                f"_{attribute}_{attribute}"
+                            ),
                         }
                     return None
                 return {
-                    "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                    "new_unique_id": (
+                        f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}"
+                    ),
                 }
 
-            if entity_entry.domain == "switch":
+            if entity_entry.domain == SWITCH_DOMAIN:
                 return {
-                    "new_unique_id": f"{entity_entry.unique_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+                    "new_unique_id": (
+                        f"{entity_entry.unique_id}_{MAIN}"
+                        f"_{Capability.SWITCH}"
+                        f"_{Attribute.SWITCH}"
+                        f"_{Attribute.SWITCH}"
+                    ),
                 }
 
             return None
@@ -482,9 +508,8 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
-    for device in sorted(
-        devices.values(), key=lambda d: d.device.parent_device_id or ""
-    ):
+    created_devices: dict[str, dr.DeviceEntry] = {}
+    for device in devices.values():
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {
@@ -503,8 +528,6 @@ def create_devices(
                         format_zigbee_address(device.device.hub.hub_eui),
                     )
                 )
-        if device.device.parent_device_id and device.device.parent_device_id in devices:
-            kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
                 {
@@ -568,7 +591,9 @@ def create_devices(
                 if mac_connections:
                     kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
         if (
-            device_registry.async_get_device({(DOMAIN, device.device.device_id)})
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.device.device_id), entry.entry_id
+            )
             is None
         ):
             kwargs.update(
@@ -580,13 +605,24 @@ def create_devices(
                     )
                 }
             )
-        device_registry.async_get_or_create(
+        created_devices[device.device.device_id] = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",
             name=device.device.label,
             **kwargs,
         )
+
+    # Link child devices to their parent in a second pass, so registration is
+    # robust to any ordering of parents and children in the device list,
+    # including nested hierarchies where a parent is itself a child device.
+    for device in devices.values():
+        parent_device_id = device.device.parent_device_id
+        if parent_device_id and parent_device_id in devices:
+            device_registry.async_update_device(
+                created_devices[device.device.device_id].id,
+                via_device_id=created_devices[parent_device_id].id,
+            )
 
 
 KEEP_CAPABILITY_QUIRK: dict[

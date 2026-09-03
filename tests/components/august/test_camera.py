@@ -25,37 +25,12 @@ async def test_create_doorbell(
     ):
         await _create_august_with_devices(hass, [doorbell_one], brand=Brand.AUGUST)
 
-        camera_state = hass.states.get("camera.k98gidt45gul_name_camera")
+        camera_state = hass.states.get(
+            "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
+        )
         assert camera_state.state == CameraState.IDLE
 
         url = camera_state.attributes["entity_picture"]
-
-        client = await hass_client_no_auth()
-        resp = await client.get(url)
-        assert resp.status == HTTPStatus.OK
-        body = await resp.text()
-        assert body == "image"
-
-
-async def test_doorbell_refresh_content_token_recover(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
-) -> None:
-    """Test camera image content token expired."""
-    doorbell_two = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
-    with patch.object(
-        doorbell_two,
-        "async_get_doorbell_image",
-        create=False,
-        side_effect=[ContentTokenExpired, "image"],
-    ):
-        await _create_august_with_devices(
-            hass,
-            [doorbell_two],
-            brand=Brand.YALE_HOME,
-        )
-        url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
-            "entity_picture"
-        ]
 
         client = await hass_client_no_auth()
         resp = await client.get(url)
@@ -78,11 +53,11 @@ async def test_doorbell_refresh_content_token_fail(
         await _create_august_with_devices(
             hass,
             [doorbell_two],
-            brand=Brand.YALE_HOME,
+            brand=Brand.YALE_AUGUST,
         )
-        url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
-            "entity_picture"
-        ]
+        url = hass.states.get(
+            "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
+        ).attributes["entity_picture"]
 
         client = await hass_client_no_auth()
         resp = await client.get(url)

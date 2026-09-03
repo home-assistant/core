@@ -39,8 +39,8 @@
 # name: test_all_entities[LPH31][binary_sensor.garden_low_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Garden Low water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Low water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_low_water',
@@ -90,8 +90,8 @@
 # name: test_all_entities[LPH31][binary_sensor.garden_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Garden Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_pump',
@@ -141,8 +141,8 @@
 # name: test_all_entities[LPH31][binary_sensor.garden_pump_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Garden Pump error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pump error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_pump_error',
@@ -192,8 +192,8 @@
 # name: test_all_entities[LPH63][binary_sensor.garden_low_nutrients-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Garden Low nutrients',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Low nutrients',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_low_nutrients',
@@ -243,8 +243,8 @@
 # name: test_all_entities[LPH63][binary_sensor.garden_low_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Garden Low water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Low water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_low_water',
@@ -294,8 +294,8 @@
 # name: test_all_entities[LPH63][binary_sensor.garden_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Garden Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_pump',
@@ -345,8 +345,8 @@
 # name: test_all_entities[LPH63][binary_sensor.garden_refill_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Garden Refill error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Refill error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_refill_error',

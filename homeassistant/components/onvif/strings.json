@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "no_h264": "There were no H.264 streams available. Check the profile configuration on your device.",
       "no_mac": "Could not configure unique ID for ONVIF device.",
@@ -77,8 +76,15 @@
         "data": {
           "enable_webhooks": "Enable webhooks",
           "extra_arguments": "Extra FFmpeg arguments",
-          "rtsp_transport": "RTSP transport mechanism",
-          "use_wallclock_as_timestamps": "Use wall clock as timestamps"
+          "rtsp_transport": "RTSP transport mechanism"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "use_wallclock_as_timestamps": "Use wall clock as timestamps"
+            },
+            "name": "More options"
+          }
         },
         "title": "ONVIF device options"
       }

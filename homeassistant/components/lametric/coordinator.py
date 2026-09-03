@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the LaMatric integration."""
 
-from __future__ import annotations
+from typing import override
 
 from demetriek import Device, LaMetricAuthenticationError, LaMetricDevice, LaMetricError
 
@@ -33,6 +33,7 @@ class LaMetricDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             hass, LOGGER, config_entry=entry, name=DOMAIN, update_interval=SCAN_INTERVAL
         )
 
+    @override
     async def _async_update_data(self) -> Device:
         """Fetch device information of the LaMetric device."""
         try:

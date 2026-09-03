@@ -1,21 +1,14 @@
 """The Netatmo integration."""
 
-from __future__ import annotations
-
 import logging
-import secrets
 from typing import Any
 
 from aiohttp import ClientError
 import pyatmo
 
 from homeassistant.components import cloud
-from homeassistant.components.webhook import (
-    async_generate_url as webhook_generate_url,
-    async_register as webhook_register,
-    async_unregister as webhook_unregister,
-)
-from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.webhook import async_unregister as webhook_unregister
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -23,34 +16,26 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import (
-    CONF_CLOUDHOOK_URL,
-    DATA_CAMERAS,
-    DATA_DEVICE_IDS,
-    DATA_EVENTS,
-    DATA_HOMES,
-    DATA_PERSONS,
-    DATA_SCHEDULES,
-    DOMAIN,
-    PLATFORMS,
-    WEBHOOK_DEACTIVATION,
-    WEBHOOK_PUSH_TYPE,
-)
-from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
-from .webhook import async_handle_webhook
+from .const import DOMAIN, PLATFORMS
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
+from .services import async_setup_services
+from .webhook import async_register_webhook, async_unregister_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,27 +46,14 @@ MAX_WEBHOOK_RETRIES = 3
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
-    hass.data[DOMAIN] = {
-        DATA_PERSONS: {},
-        DATA_DEVICE_IDS: {},
-        DATA_SCHEDULES: {},
-        DATA_HOMES: {},
-        DATA_EVENTS: {},
-        DATA_CAMERAS: {},
-    }
+    async_setup_services(hass)
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
     """Set up Netatmo from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     # Set unique id if non was set (migration)
     if not entry.unique_id:
@@ -111,101 +83,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     entry.runtime_data = data_handler
     await data_handler.async_setup()
 
-    async def unregister_webhook(
-        _: Any,
-    ) -> None:
-        if CONF_WEBHOOK_ID not in entry.data:
-            return
-        _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
-        async_dispatcher_send(
-            hass,
-            f"signal-{DOMAIN}-webhook-None",
-            {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
-        )
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        try:
-            await entry.runtime_data.auth.async_dropwebhook()
-        except pyatmo.ApiError:
-            _LOGGER.debug(
-                "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
-            )
+    async def register_webhook(_: Any = None) -> None:
+        await async_register_webhook(hass, entry)
 
-    async def register_webhook(
-        _: Any,
-    ) -> None:
-        if CONF_WEBHOOK_ID not in entry.data:
-            data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
-            hass.config_entries.async_update_entry(entry, data=data)
-
-        if cloud.async_active_subscription(hass):
-            webhook_url = await async_cloudhook_generate_url(hass, entry)
-        else:
-            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-
-        if entry.data[
-            "auth_implementation"
-        ] == cloud.DOMAIN and not webhook_url.startswith("https://"):
-            _LOGGER.warning(
-                "Webhook not registered - "
-                "https and port 443 is required to register the webhook"
-            )
-            return
-
-        webhook_register(
-            hass,
-            DOMAIN,
-            "Netatmo",
-            entry.data[CONF_WEBHOOK_ID],
-            async_handle_webhook,
-        )
-
-        try:
-            await entry.runtime_data.auth.async_addwebhook(webhook_url)
-            _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
-        except pyatmo.ApiError as err:
-            _LOGGER.error("Error during webhook registration - %s", err)
-        else:
-            entry.async_on_unload(
-                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-            )
+    async def unregister_webhook(_: Any = None) -> None:
+        await async_unregister_webhook(hass, entry)
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
-            await register_webhook(None)
+            await register_webhook()
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
-            await unregister_webhook(None)
+            await unregister_webhook()
             entry.async_on_unload(async_call_later(hass, 30, register_webhook))
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
-            await register_webhook(None)
+            await register_webhook()
         entry.async_on_unload(
             cloud.async_listen_connection_change(hass, manage_cloudhook)
         )
     else:
         entry.async_on_unload(async_at_started(hass, register_webhook))
 
-    hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
-    hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
-
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
     return True
-
-
-async def async_cloudhook_generate_url(
-    hass: HomeAssistant, entry: NetatmoConfigEntry
-) -> str:
-    """Generate the full URL for a webhook_id."""
-    if CONF_CLOUDHOOK_URL not in entry.data:
-        webhook_url = await cloud.async_create_cloudhook(
-            hass, entry.data[CONF_WEBHOOK_ID]
-        )
-        data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
-        hass.config_entries.async_update_entry(entry, data=data)
-        return webhook_url
-    return str(entry.data[CONF_CLOUDHOOK_URL])
 
 
 async def async_config_entry_updated(
@@ -241,16 +144,38 @@ async def async_remove_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    data = config_entry.runtime_data
-    modules = [m for h in data.account.homes.values() for m in h.modules]
-    rooms = [r for h in data.account.homes.values() for r in h.rooms]
+    account = config_entry.runtime_data.account
+    # A disabled home leaves the account, so everything below it looks stale to
+    # the inventory check. Its descendants keep their own disabler, hence a walk.
+    unpolled_home_ids = account.all_home_names.keys() - account.homes.keys()
+    device_registry = dr.async_get(hass)
+    device: AnyDeviceEntry | None = device_entry
+    while device is not None:
+        if any(
+            identifier[1] in unpolled_home_ids
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+        ):
+            return False
+        device = (
+            device_registry.async_get(device.via_device_id, include_child_devices=False)
+            if isinstance(device, DeviceEntry) and device.via_device_id
+            else None
+        )
+
+    homes = config_entry.runtime_data.account.homes.values()
+    valid_ids = {
+        *config_entry.runtime_data.account.all_home_names,
+        *config_entry.runtime_data.account.modules,
+        *(module for home in homes for module in home.modules),
+        *(room for home in homes for room in home.rooms),
+    }
 
     return not any(
-        identifier
+        identifier[1] in valid_ids
         for identifier in device_entry.identifiers
-        if (identifier[0] == DOMAIN and identifier[1] in modules)
-        or identifier[1] in rooms
+        if identifier[0] == DOMAIN
     )

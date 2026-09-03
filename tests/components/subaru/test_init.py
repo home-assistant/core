@@ -12,12 +12,14 @@ from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .api_responses import (
     TEST_VIN_1_G1,
     TEST_VIN_2_EV,
     TEST_VIN_3_G3,
+    TEST_VIN_4_G4,
     VEHICLE_DATA,
     VEHICLE_STATUS_EV,
     VEHICLE_STATUS_G3,
@@ -56,6 +58,30 @@ async def test_setup_g3(hass: HomeAssistant, subaru_config_entry) -> None:
     check_entry = hass.config_entries.async_get_entry(subaru_config_entry.entry_id)
     assert check_entry
     assert check_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_g4(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subaru_config_entry
+) -> None:
+    """Test setup with a G4 vehicle (2026+ models report api_gen "g4")."""
+    await setup_subaru_config_entry(
+        hass,
+        subaru_config_entry,
+        vehicle_list=[TEST_VIN_4_G4],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_4_G4],
+        vehicle_status=VEHICLE_STATUS_G3,
+    )
+    check_entry = hass.config_entries.async_get_entry(subaru_config_entry.entry_id)
+    assert check_entry
+    assert check_entry.state is ConfigEntryState.LOADED
+    # Gen4 must receive both Gen2+ and Gen3+ sensor sets; without this, only
+    # the odometer was created on 2026 model year vehicles.
+    assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{TEST_VIN_4_G4}_AVG_FUEL_CONSUMPTION"
+    )
+    assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{TEST_VIN_4_G4}_REMAINING_FUEL_PERCENT"
+    )
 
 
 async def test_setup_g1(hass: HomeAssistant, subaru_config_entry) -> None:
@@ -146,7 +172,7 @@ async def test_update_disabled(hass: HomeAssistant, ev_entry) -> None:
 
 
 async def test_fetch_failed(hass: HomeAssistant, subaru_config_entry) -> None:
-    """Tests when fetch fails."""
+    """Test setup retries when the first fetch fails."""
     await setup_subaru_config_entry(
         hass,
         subaru_config_entry,
@@ -156,8 +182,7 @@ async def test_fetch_failed(hass: HomeAssistant, subaru_config_entry) -> None:
         fetch_effect=SubaruException("403 Error"),
     )
 
-    test_entity = hass.states.get(TEST_ENTITY_ID)
-    assert test_entity.state == "unavailable"
+    assert subaru_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant, ev_entry) -> None:

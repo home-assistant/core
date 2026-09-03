@@ -2,7 +2,7 @@
 # ruff: noqa: PYI021  # Allow docstrings
 
 from collections.abc import Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, override
 
 __all__ = [
     "EventType",
@@ -20,6 +20,8 @@ class EventType(Generic[_DataT]):
 
     def __init__(self, value: str, /) -> None: ...
     def __len__(self) -> int: ...
+    @override
     def __hash__(self) -> int: ...
+    @override
     def __eq__(self, value: object, /) -> bool: ...
     def __getitem__(self, index: int) -> str: ...

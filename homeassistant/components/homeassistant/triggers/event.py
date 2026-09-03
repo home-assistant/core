@@ -1,18 +1,29 @@
 """Offer event listening automation rules."""
 
-from __future__ import annotations
-
 from collections.abc import ItemsView, Mapping
+import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM, EVENT_STATE_REPORTED
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_EVENT_DATA,
+    CONF_PLATFORM,
+    EVENT_STATE_REPORTED,
+)
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    template,
+)
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import yaml as yaml_util
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
@@ -39,6 +50,58 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Optional(CONF_EVENT_CONTEXT): vol.All(dict, cv.template_complex),
     }
 )
+
+
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config.
+
+    Warn if the trigger filters event_data.device_id on a pre-migration composite device
+    id - a device that was split into one device per config entry.
+    A templated device id is a Template (not a plain string) and is left alone.
+    """
+    validated_config: ConfigType = TRIGGER_SCHEMA(config)
+    if (
+        CONF_EVENT_DATA in validated_config
+        and isinstance(
+            device_id := validated_config[CONF_EVENT_DATA].get(CONF_DEVICE_ID), str
+        )
+        and (
+            split_devices := dr.async_get(
+                hass
+            ).async_get_devices_for_composite_device_id(device_id)
+        )
+    ):
+        _log_composite_device_id_warning(hass, config, device_id, split_devices)
+    return validated_config
+
+
+@callback
+def _log_composite_device_id_warning(
+    hass: HomeAssistant,
+    config: ConfigType,
+    device_id: str,
+    split_devices: list[dr.DeviceEntry],
+) -> None:
+    """Warn that an event trigger filters on a split (pre-migration) device id."""
+
+    device_summaries: list[str] = []
+    for device in split_devices:
+        entry = hass.config_entries.async_get_entry(device.config_entry_id)
+        domain = entry.domain if entry else "unknown"
+        name = device.name_by_user or device.name or device.id
+        device_summaries.append(f"{name} ({device.id}) from the {domain} integration")
+
+    _LOGGER.warning(
+        "Event trigger filters on device '%s', which was split into one device per "
+        "integration and no longer exists, so the trigger can no longer fire. Update the "
+        "automation, script or template entity to filter on one of these devices instead: "
+        "%s.\nThe affected trigger is configured as:\n%s",
+        device_id,
+        ", ".join(device_summaries),
+        yaml_util.dump(config),
+    )
 
 
 def _schema_value(value: Any) -> Any:
