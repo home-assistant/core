@@ -11,6 +11,15 @@
           "api_key": "Your Foreca Weather API key from the My API page",
           "location": "Coordinates to get the weather forecast for"
         }
+      },
+      "reauth_confirm": {
+        "description": "The Foreca Weather API rejected the API key for {location}. Enter a new one from the My API page.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::foreca::config::step::user::data_description::api_key%]"
+        }
       }
     },
     "error": {
@@ -19,7 +28,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {

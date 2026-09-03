@@ -47,6 +47,11 @@ async def test_setup_fails_auth_on_rejected_key(
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
+    # Raising ConfigEntryAuthFailed starts a reauth flow, so the flow has to
+    # have the step: without it the started flow raises in the background.
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
+
 
 async def test_setup_fails_auth_when_air_quality_rejects_key(
     hass: HomeAssistant,
@@ -57,6 +62,9 @@ async def test_setup_fails_auth_when_air_quality_rejects_key(
     mock_foreca_client.air_quality_hourly.side_effect = ForecaAuthError
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
 
 
 async def test_documented_request_budget(

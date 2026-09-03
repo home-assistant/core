@@ -113,3 +113,60 @@ async def test_entry_title_falls_back_without_location_name(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Foreca"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_foreca_client")
+async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Test a rejected key can be replaced."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["location"] == "Helsinki"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-key"
+    assert mock_config_entry.data[CONF_LATITUDE] == 60.17
+    assert mock_config_entry.data[CONF_LONGITUDE] == 24.94
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (ForecaAuthError, "invalid_auth"),
+        (ForecaConnectionError, "cannot_connect"),
+        (RuntimeError, "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test a replacement key that is still bad keeps the form open."""
+    mock_config_entry.add_to_hass(hass)
+    mock_foreca_client.location_info.side_effect = exception
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "still-bad"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_API_KEY] == "test-key"
+
+    mock_foreca_client.location_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "good-key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "good-key"
