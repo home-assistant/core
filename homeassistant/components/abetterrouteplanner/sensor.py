@@ -3,9 +3,8 @@
 Which metrics a vehicle reports varies by make, model and connectivity, so its
 sensor set cannot be known up front — it is only learned from what the vehicle
 actually sends. Entities are therefore created lazily, on a metric's first
-value. A parked vehicle sends nothing, so setup also recreates entities from
-the entity registry, which is the only record of what a vehicle has reported
-before, and ``RestoreSensor`` puts the last reading back on them.
+value. A vehicle that has reported before but is parked now shows up as an
+unavailable registry entry until it next wakes.
 
 The ``charging_state`` option strings are HA-owned rather than derived from the
 library enum, so a library-side value change cannot alter a reported state.
@@ -13,17 +12,14 @@ library enum, so a library-side value change cannot alter a reported state.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Self, override
+from typing import Any, override
 
 from aioabrp import ChargingState, Metric, MetricValue, Telemetry
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -36,12 +32,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinator
@@ -56,50 +50,6 @@ CHARGING_STATE_OPTIONS: dict[ChargingState, str] = {
     ChargingState.NOT_CHARGING: "not_charging",
     ChargingState.PLUGGED_IN: "plugged_in",
 }
-
-
-def _is_clean_provider_str(value: object) -> bool:
-    """Reject a padded or empty provider rather than normalising it."""
-    return isinstance(value, str) and bool(value) and value == value.strip()
-
-
-@dataclass
-class AbrpSensorExtraStoredData(SensorExtraStoredData):
-    """Sensor restore data carrying the metric's staleness metadata."""
-
-    last_reported_at: datetime | None
-    provider: str | None
-
-    @override
-    def as_dict(self) -> dict[str, Any]:
-        """Return a JSON-serializable representation of the stored data."""
-        return {
-            **super().as_dict(),
-            "last_reported_at": (
-                self.last_reported_at.isoformat()
-                if self.last_reported_at is not None
-                else None
-            ),
-            "provider": self.provider,
-        }
-
-    @classmethod
-    @override
-    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
-        """Rebuild the stored data, dropping anything that no longer parses."""
-        if (base := SensorExtraStoredData.from_dict(restored)) is None:
-            return None
-        stamp: datetime | None = None
-        stamp_raw = restored.get("last_reported_at")
-        if isinstance(stamp_raw, str) and stamp_raw:
-            stamp = dt_util.parse_datetime(stamp_raw)
-        provider_raw = restored.get("provider")
-        return cls(
-            base.native_value,
-            base.native_unit_of_measurement,
-            stamp,
-            provider_raw if _is_clean_provider_str(provider_raw) else None,
-        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -294,31 +244,7 @@ async def async_setup_entry(
     vehicles = runtime.vehicles
     telemetry_coordinator = runtime.telemetry_coordinator
 
-    entity_registry = er.async_get(hass)
     added: set[tuple[int, Metric]] = set()
-
-    restored: list[SensorEntity] = []
-    for raw, _ in vehicles:
-        vehicle_id = raw.vehicle_id
-        # Recreate wake-only metrics so a parked vehicle doesn't flash Unavailable.
-        for description in SENSORS:
-            if (vehicle_id, description.metric) in added:
-                continue
-            unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
-            entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-            if entity_id is None:
-                continue
-            # unique_id is scoped by OIDC sub, so reject rows owned by another entry.
-            entry_row = entity_registry.async_get(entity_id)
-            if entry_row is None or entry_row.config_entry_id != entry.entry_id:
-                continue
-            restored.append(
-                _build_telemetry_sensor(
-                    telemetry_coordinator, entry, vehicle_id, description
-                )
-            )
-            added.add((vehicle_id, description.metric))
-    async_add_entities(restored)
 
     @callback
     def _add_new_sensors() -> None:
@@ -350,7 +276,7 @@ async def async_setup_entry(
 
 
 class AbrpTelemetrySensor[T: (float, str)](
-    CoordinatorEntity[AbrpTelemetryCoordinator], RestoreSensor
+    CoordinatorEntity[AbrpTelemetryCoordinator], SensorEntity
 ):
     """One telemetry sensor (soc / power / voltage / charging_state) per vehicle."""
 
@@ -374,13 +300,6 @@ class AbrpTelemetrySensor[T: (float, str)](
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, scope)},
         )
-        self._restored_native_value: T | None = None
-        self._restored_last_reported_at: datetime | None = None
-        self._restored_provider: str | None = None
-
-    def _restore_native_value(self, raw: object) -> T | None:
-        """Coerce a recorder-cached ``native_value`` to ``T`` (or ``None``)."""
-        raise NotImplementedError
 
     def _value_from_metric(self, metric_value: MetricValue) -> T | None:
         """Coerce a live ``MetricValue`` to this sensor's display ``T``."""
@@ -388,80 +307,41 @@ class AbrpTelemetrySensor[T: (float, str)](
 
     @property
     @override
-    def extra_restore_state_data(self) -> AbrpSensorExtraStoredData:
-        """Persist the staleness metadata in the same channel as the value.
-
-        Attributes are only written while the entity is available, so keeping
-        the stamp there would lose it exactly when the value stops refreshing.
-        """
-        return AbrpSensorExtraStoredData(
-            self.native_value,
-            self.native_unit_of_measurement,
-            self._current_last_reported_at(),
-            self._current_provider(),
-        )
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Lift recorder-cached value + stamp into per-instance restore slots."""
-        await super().async_added_to_hass()
-        if (last_extra := await self.async_get_last_extra_data()) is None:
-            return
-        if (last := AbrpSensorExtraStoredData.from_dict(last_extra.as_dict())) is None:
-            return
-        self._restored_native_value = self._restore_native_value(last.native_value)
-        self._restored_last_reported_at = last.last_reported_at
-        self._restored_provider = last.provider
-
-    @property
-    @override
     def native_value(self) -> StateType:
-        """Live value when present, falling back to the restored value.
+        """Return this metric's latest reading.
 
         Annotated ``StateType``, not ``T | None``: HA's ``home-assistant-return-type``
         pylint plugin checks the literal annotation and won't resolve the TypeVar.
         """
         tlm = self.coordinator.data.get(self._vehicle_id)
-        if tlm is not None:
-            metric_value = self.entity_description.value_fn(tlm)
-            if metric_value is not None:
-                live = self._value_from_metric(metric_value)
-                if live is not None:
-                    return live
-        return self._restored_native_value
-
-    def _current_last_reported_at(self) -> datetime | None:
-        """Live receipt stamp when present, falling back to the restored one."""
-        live = self.coordinator.last_reported_at.get(self._vehicle_id, {}).get(
-            self._metric
-        )
-        return live if live is not None else self._restored_last_reported_at
-
-    def _current_provider(self) -> str | None:
-        """Live provider when present, falling back to the restored one."""
-        live = self.coordinator.last_provider.get(self._vehicle_id, {}).get(
-            self._metric
-        )
-        return live if live is not None else self._restored_provider
+        if tlm is None:
+            return None
+        metric_value = self.entity_description.value_fn(tlm)
+        if metric_value is None:
+            return None
+        return self._value_from_metric(metric_value)
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Compose ``last_reported_at`` + ``provider`` (live-wins).
-
-        The live-to-restored fallback is per-attribute, not whole-dict.
-        """
+        """Expose the reading's wire time and upstream provider."""
         attrs: dict[str, Any] = {}
-        if (stamp := self._current_last_reported_at()) is not None:
+        stamp = self.coordinator.last_reported_at.get(self._vehicle_id, {}).get(
+            self._metric
+        )
+        if stamp is not None:
             attrs["last_reported_at"] = stamp
-        if (provider := self._current_provider()) is not None:
+        provider = self.coordinator.last_provider.get(self._vehicle_id, {}).get(
+            self._metric
+        )
+        if provider is not None:
             attrs["provider"] = provider
         return attrs or None
 
     @property
     @override
     def available(self) -> bool:
-        """Return True whenever a live or restored value is surfacing.
+        """Return True whenever a value is surfacing.
 
         Decoupled from ``CoordinatorEntity.available``: ABRP goes silent between
         vehicle wakes, which is steady state rather than a failure. A terminal
@@ -477,13 +357,6 @@ class AbrpNumericSensor(AbrpTelemetrySensor[float]):
     entity_description: AbrpNumericSensorEntityDescription
 
     @override
-    def _restore_native_value(self, raw: object) -> float | None:
-        """Accept an int/float recorder value (rejecting bool), else ``None``."""
-        if isinstance(raw, (int, float)) and not isinstance(raw, bool):
-            return float(raw)
-        return None
-
-    @override
     def _value_from_metric(self, metric_value: MetricValue) -> float | None:
         """Return the numeric reading; ignore a non-float value defensively."""
         value = metric_value.value
@@ -496,12 +369,6 @@ class AbrpEnumSensor(AbrpTelemetrySensor[str]):
     """The categorical ENUM telemetry sensor (charging_state)."""
 
     entity_description: AbrpEnumSensorEntityDescription
-
-    @override
-    def _restore_native_value(self, raw: object) -> str | None:
-        """Accept a restored string only when it is a current ``options`` member."""
-        options = self.entity_description.options or ()
-        return raw if isinstance(raw, str) and raw in options else None
 
     @override
     def _value_from_metric(self, metric_value: MetricValue) -> str | None:

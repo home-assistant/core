@@ -27,8 +27,7 @@ from homeassistant.components.abetterrouteplanner.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -42,11 +41,7 @@ from .conftest import (
     build_vehicle_model_display,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, snapshot_platform
 
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
 POWER_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_power"
@@ -624,119 +619,6 @@ async def test_charging_state_provider_and_stamp_attributes(
     assert state.state == "charging_dc"
     assert state.attributes.get("provider") == "RIVIAN_STREAM"
     assert state.attributes.get("last_reported_at") == stamp
-
-
-def _charging_restored_state(
-    *,
-    native_value: str | None = "not_charging",
-    last_reported_at: str | None = None,
-    provider: str | None = None,
-) -> tuple[State, dict[str, Any]]:
-    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``.
-
-    Staleness metadata goes only into the extra data, matching where the entity
-    persists it — state attributes are dropped whenever an entity is unavailable.
-    """
-    state = State(
-        CHARGING_STATE_ENTITY_ID,
-        native_value if native_value is not None else "unknown",
-    )
-    extra_data: dict[str, Any] = {
-        "native_value": native_value,
-        "native_unit_of_measurement": None,
-        "last_reported_at": last_reported_at,
-        "provider": provider,
-    }
-    return state, extra_data
-
-
-async def _charging_restart_setup(
-    hass: HomeAssistant,
-    entry: MockConfigEntry,
-    *,
-    entity_registry: er.EntityRegistry,
-    restored_states: list[tuple[State, dict[str, Any]]] | None = None,
-) -> None:
-    """Set up the integration simulating an HA restart with a prior enum row."""
-    hass.set_state(CoreState.not_running)
-    if restored_states is not None:
-        mock_restore_cache_with_extra_data(hass, restored_states)
-    assert await async_setup_component(hass, "auth", {})
-    assert await async_setup_component(hass, DOMAIN, {})
-    entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id=CHARGING_STATE_UNIQUE_ID,
-        config_entry=entry,
-        suggested_object_id="rivian_r2_2027_standard_long_range_charging_state",
-    )
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    ("restored_value", "expected_state"),
-    [
-        pytest.param("not_charging", "not_charging", id="parked_not_charging_survives"),
-        pytest.param("charging_ac", "charging_ac", id="in_options_survives"),
-        pytest.param(
-            "CHARGING_AC", "unavailable", id="wire_form_not_in_options_rejected"
-        ),
-        pytest.param("bogus", "unavailable", id="unknown_value_rejected"),
-    ],
-)
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_charging_state_restore_native_value(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    restored_value: str,
-    expected_state: str,
-) -> None:
-    """Restored enum state survives restart only when it is a valid option."""
-    await _charging_restart_setup(
-        hass,
-        config_entry_with_vehicles,
-        entity_registry=entity_registry,
-        restored_states=[_charging_restored_state(native_value=restored_value)],
-    )
-
-    state = hass.states.get(CHARGING_STATE_ENTITY_ID)
-    assert state is not None
-    assert state.state == expected_state
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_charging_state_restores_provider_and_stamp(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Restored ``provider`` + ``last_reported_at`` surface on the enum sensor."""
-    stamp_iso = "2026-05-20T12:00:00+00:00"
-    stamp_dt = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
-
-    await _charging_restart_setup(
-        hass,
-        config_entry_with_vehicles,
-        entity_registry=entity_registry,
-        restored_states=[
-            _charging_restored_state(
-                native_value="not_charging",
-                last_reported_at=stamp_iso,
-                provider="RIVIAN_STREAM",
-            )
-        ],
-    )
-
-    state = hass.states.get(CHARGING_STATE_ENTITY_ID)
-    assert state is not None
-    assert state.state == "not_charging"
-    assert state.attributes.get("provider") == "RIVIAN_STREAM"
-    assert state.attributes.get("last_reported_at") == stamp_dt
 
 
 def test_charging_state_options_cross_pinned() -> None:
