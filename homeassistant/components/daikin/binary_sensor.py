@@ -42,6 +42,6 @@ class DaikinDemandControlSensor(DaikinEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = self.device.get_demand_control()
-        if attrs.get("dmd_mode") != "0":
+        if attrs.get("mode") != "0":
             attrs.pop("max_pow", None)
         return attrs
