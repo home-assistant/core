@@ -6,7 +6,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle, Telemetry
+from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
 from aiohttp import ClientError
 import pytest
 from yarl import URL
@@ -479,38 +479,6 @@ async def test_stream_survives_a_failed_platform_unload(
     assert unloaded is platforms_unloaded
     assert config_entry_with_vehicles.state is expected_state
     assert stream.stopped is expected_stopped
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_seed_runs_for_each_vehicle_before_stream_spawn(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: AsyncMock,
-    fake_stream: Any,
-) -> None:
-    """Setup seeds telemetry once per garage vehicle, before the stream starts."""
-    entry = config_entry_with_vehicles
-    entry.add_to_hass(hass)
-
-    # No autospec: conftest already patched this attribute, and an unbound
-    # class-attribute mock receives the vehicle id as its sole positional arg.
-    async def _record_seed(vehicle_id: int) -> Telemetry:
-        return Telemetry()
-
-    with patch(
-        "aioabrp.AbrpClient.async_get_current_telemetry",
-        side_effect=_record_seed,
-    ) as mock_seed:
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    seeded_vehicle_ids = {call.args[0] for call in mock_seed.call_args_list}
-    assert seeded_vehicle_ids == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
-
-    stream = fake_stream.stream
-    assert stream is not None
-    assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
-    assert stream.started is True
 
 
 @pytest.mark.usefixtures("mock_abrp_client")

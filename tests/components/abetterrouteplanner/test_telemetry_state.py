@@ -2,17 +2,9 @@
 
 from datetime import UTC, datetime
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from aioabrp import (
-    AbrpApiError,
-    AbrpAuthError,
-    AbrpClient,
-    ConnectionEvent,
-    ConnectionState,
-    Metric,
-    Telemetry,
-)
+from aioabrp import ConnectionEvent, ConnectionState, Metric, Telemetry
 import pytest
 
 from homeassistant.components.abetterrouteplanner.coordinator import (
@@ -189,51 +181,6 @@ async def test_connection_logging_is_once_per_transition(
 
 class _FatalSignal(BaseException):
     """A non-``Exception`` ``BaseException`` stand-in for fatal control signals."""
-
-
-@pytest.mark.parametrize(
-    "swallowed_error",
-    [
-        pytest.param(AbrpAuthError("invalid session"), id="auth_error"),
-        pytest.param(AbrpApiError("backend overloaded"), id="api_error"),
-    ],
-)
-async def test_async_seed_swallows_abrp_errors_for_one_vehicle(
-    telemetry_coordinator: AbrpTelemetryCoordinator,
-    mock_abrp_client: AsyncMock,
-    swallowed_error: Exception,
-) -> None:
-    """An Abrp auth/api failure for one vehicle is swallowed; others still seed."""
-    coordinator = telemetry_coordinator
-
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
-        soc=build_metric_value(0.42)
-    )
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = swallowed_error
-
-    # Patched on the class, so a bare instance drives the seed path.
-    client = AbrpClient.__new__(AbrpClient)
-
-    await coordinator.async_seed(client, [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2])
-
-    assert coordinator.data[MOCK_VEHICLE_ID].soc is not None
-    assert coordinator.data[MOCK_VEHICLE_ID].soc.value == 0.42
-    assert MOCK_VEHICLE_ID_2 not in coordinator.data
-
-
-async def test_async_seed_reraises_non_abrp_base_exception(
-    telemetry_coordinator: AbrpTelemetryCoordinator,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """A non-Abrp ``BaseException`` from a seed call re-raises (not swallowed)."""
-    coordinator = telemetry_coordinator
-
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = _FatalSignal()
-
-    client = AbrpClient.__new__(AbrpClient)
-
-    with pytest.raises(_FatalSignal):
-        await coordinator.async_seed(client, [MOCK_VEHICLE_ID])
 
 
 async def test_terminal_auth_failure_sets_and_clears_stream_auth_failed(

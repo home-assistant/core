@@ -1,7 +1,6 @@
 """Telemetry coordinator for the A Better Routeplanner integration."""
 
 import asyncio
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -202,43 +201,3 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
             elif event.state is ConnectionState.CONNECTED and self.stream_auth_failed:
                 self.stream_auth_failed = False
                 self.async_update_listeners()
-
-    async def async_seed(self, client: AbrpClient, vehicle_ids: Iterable[int]) -> None:
-        """Best-effort seed of the per-vehicle map via one-shot telemetry.
-
-        A rejected seed only logs at debug level: the garage fetch is the
-        authoritative auth signal, so a revoked token must not emit one warning
-        per vehicle here.
-        """
-        ids = list(vehicle_ids)
-        if not ids:
-            return
-        results = await asyncio.gather(
-            *(client.async_get_current_telemetry(vid) for vid in ids),
-            return_exceptions=True,
-        )
-        for vehicle_id, result in zip(ids, results, strict=True):
-            if isinstance(result, AbrpAuthError):
-                _LOGGER.debug(
-                    "Telemetry seed for vehicle %d rejected (%s); stream will retry",
-                    vehicle_id,
-                    result,
-                )
-                continue
-            if isinstance(result, AbrpApiError):
-                _LOGGER.debug(
-                    "Telemetry seed for vehicle %d failed (%s); skipping",
-                    vehicle_id,
-                    result,
-                )
-                continue
-            if isinstance(result, BaseException):
-                if isinstance(result, Exception):
-                    _LOGGER.warning(
-                        "Unexpected telemetry seed failure for vehicle %d: %s",
-                        vehicle_id,
-                        result,
-                    )
-                    continue
-                raise result
-            self._apply_metrics(vehicle_id, result)

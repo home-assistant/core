@@ -1,5 +1,12 @@
 """Sensor platform for the A Better Routeplanner integration.
 
+Which metrics a vehicle reports varies by make, model and connectivity, so its
+sensor set cannot be known up front — it is only learned from what the vehicle
+actually sends. Entities are therefore created lazily, on a metric's first
+value. A parked vehicle sends nothing, so setup also recreates entities from
+the entity registry, which is the only record of what a vehicle has reported
+before, and ``RestoreSensor`` puts the last reading back on them.
+
 The ``charging_state`` option strings are HA-owned rather than derived from the
 library enum, so a library-side value change cannot alter a reported state.
 """
@@ -246,32 +253,6 @@ def _telemetry_unique_id(
 ) -> str:
     """Build a telemetry sensor's ``unique_id`` — the one definition of the scheme."""
     return f"{entry.unique_id}_{vehicle_id}_{key}"
-
-
-def vehicles_without_sensors(
-    hass: HomeAssistant,
-    entry: AbetterrouteplannerConfigEntry,
-    vehicle_ids: list[int],
-) -> list[int]:
-    """Return the vehicles that have no telemetry sensor in the entity registry.
-
-    These are the vehicles the registry probe in ``async_setup_entry`` cannot
-    recreate entities for, so they are the ones that need a seeded value to
-    have any entity by the end of setup.
-    """
-    registry = er.async_get(hass)
-    return [
-        vehicle_id
-        for vehicle_id in vehicle_ids
-        if not any(
-            registry.async_get_entity_id(
-                "sensor",
-                DOMAIN,
-                _telemetry_unique_id(entry, vehicle_id, description.key),
-            )
-            for description in SENSORS
-        )
-    ]
 
 
 def _extract_value(

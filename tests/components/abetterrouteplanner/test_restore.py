@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aioabrp import AbrpVehicle, Telemetry
 from freezegun import freeze_time
@@ -596,51 +596,6 @@ async def test_repeated_garage_vehicle_restores_one_entity_per_metric(
 
     assert "does not generate unique IDs" not in caplog.text
     assert len(hass.states.async_entity_ids("sensor")) == len(preseed_registry_keys)
-
-
-@pytest.mark.parametrize(
-    ("preseed_vehicle_ids", "expected_polled_ids"),
-    [
-        pytest.param((), {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}, id="no_vehicle_known"),
-        pytest.param((MOCK_VEHICLE_ID,), {MOCK_VEHICLE_ID_2}, id="one_vehicle_known"),
-        pytest.param(
-            (MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2), set(), id="whole_garage_known"
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_polls_only_vehicles_without_registered_sensors(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    fake_stream: Any,
-    preseed_vehicle_ids: tuple[int, ...],
-    expected_polled_ids: set[int],
-) -> None:
-    """Only garage vehicles lacking a registry row are seed-polled at setup."""
-
-    async def _record_poll(vehicle_id: int) -> Telemetry:
-        return Telemetry()
-
-    with patch(
-        "aioabrp.AbrpClient.async_get_current_telemetry",
-        side_effect=_record_poll,
-    ) as mock_poll:
-        await _restart_setup(
-            hass,
-            config_entry_with_vehicles,
-            entity_registry=entity_registry,
-            preseed_registry_keys=["voltage"],
-            preseed_vehicle_ids=preseed_vehicle_ids,
-        )
-
-    assert {call.args[0] for call in mock_poll.call_args_list} == expected_polled_ids
-
-    # The stream always covers the whole garage, seeded or not.
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.seed is None
-    assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")

@@ -49,25 +49,6 @@ def _unique_id_lookup(
     )
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_seed_only_soc_creates_only_soc_entity(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """The seed returns soc only; the stream delivers nothing."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
-        soc=build_metric_value(50.0)
-    )
-
-    await _lazy_setup(hass, config_entry_with_vehicles)
-
-    assert entity_registry.async_get(SOC_ENTITY_ID) is not None
-    assert entity_registry.async_get(POWER_ENTITY_ID) is None
-    assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
-
-
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_stream_only_metric_creates_entity(
     hass: HomeAssistant,

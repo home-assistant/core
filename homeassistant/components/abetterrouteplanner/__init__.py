@@ -30,7 +30,6 @@ from .coordinator import (
     async_fetch_garage,
 )
 from .oauth import AbetterrouteplannerOAuth2Implementation
-from .sensor import vehicles_without_sensors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,13 +110,8 @@ async def async_setup_entry(
     # endpoint rejects as a whole if it is malformed.
     vehicle_ids = list(dict.fromkeys(raw.vehicle_id for raw, _ in vehicles))
 
-    # The stream's connect snapshot re-delivers current state, so the seed only
-    # covers setup timing; seeded first so the snapshot merges onto it.
     stream: TelemetryStream | None = None
     if vehicle_ids:
-        new_vehicles = vehicles_without_sensors(hass, entry, vehicle_ids)
-        if new_vehicles:
-            await telemetry_coordinator.async_seed(client, new_vehicles)
         stream = TelemetryStream(
             websession,
             ABRP_APP_KEY,

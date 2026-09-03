@@ -195,24 +195,6 @@ async def test_soc_native_value_is_percent(
     assert state.state == "85.7"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_seeded_metric_surfaces_at_setup(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """A metric present in the setup seed snapshot creates its entity eagerly."""
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
-        soc=build_metric_value(42.0)
-    )
-
-    await _setup_integration(hass, config_entry_with_vehicles)
-
-    state = hass.states.get(SOC_ENTITY_ID)
-    assert state is not None
-    assert state.state == "42.0"
-
-
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
