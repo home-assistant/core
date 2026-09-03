@@ -954,9 +954,6 @@ class ConfigEntry[_DataT = Any]:
                 migration_result = False
 
             if not migration_result:
-                self.logger.error(
-                    "%s.async_migrate_entry did not return boolean", self.domain
-                )
                 self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, *reason)
                 return
 
