@@ -11700,6 +11700,72 @@ async def test_loading_child_device_with_missing_parent(
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_drops_empty_deleted_devices(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test stored deleted devices with no identifiers or connections are dropped."""
+
+    def _deleted_device(
+        device_id: str,
+        identifiers: list[list[str]],
+        connections: list[list[str]],
+    ) -> dict[str, Any]:
+        return {
+            "area_id": None,
+            "config_entry_id": mock_config_entry.entry_id,
+            "config_subentry_id": None,
+            "connections": connections,
+            "created_at": "2024-01-01T00:00:00+00:00",
+            "disabled_by": None,
+            "disabled_by_undefined": False,
+            "id": device_id,
+            "identifiers": identifiers,
+            "labels": [],
+            "modified_at": "2024-01-01T00:00:00+00:00",
+            "name_by_user": None,
+            "orphaned_timestamp": None,
+            "domain": None,
+        }
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [],
+            "child_devices": [],
+            "deleted_devices": [
+                _deleted_device("with_identifiers", [["test", "1"]], []),
+                _deleted_device("with_connections", [], [["mac", "12:34:56:78:90:ab"]]),
+                _deleted_device("empty_1", [], []),
+                _deleted_device("empty_2", [], []),
+            ],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # The two devices retaining an identifier or a connection are kept; the two with
+    # neither are dropped
+    assert set(registry._deleted_devices) == {"with_identifiers", "with_connections"}
+    assert "Dropped 2 deleted devices with no identifiers or connections" in caplog.text
+
+    # The drop scheduled a save, so it persists instead of leaving the store dirty
+    # until an unrelated write
+    await flush_store(registry._store)
+    stored_ids = {
+        device["id"]
+        for device in hass_storage[dr.STORAGE_KEY]["data"]["deleted_devices"]
+    }
+    assert stored_ids == {"with_identifiers", "with_connections"}
+
+
 async def test_effective_area_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
