@@ -522,6 +522,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     """Handle sending Telegram Bot message service calls."""
 
     _deprecate_timeout(service)
+    _deprecate_inline_keyboard(service)
 
     # this is the list of targets to send the message to
     targets = _build_targets(service)
@@ -678,6 +679,54 @@ def _deprecate_timeout(service: ServiceCall) -> None:
             "action_origin": service_call_origin,
         },
         learn_more_url="https://github.com/home-assistant/core/pull/155198",
+    )
+
+
+def _service_call_origin(service: ServiceCall) -> str:
+    """Return the automation, script, or frontend that made the call."""
+    # default: service was called using frontend such as
+    # developer tools or automation editor
+    service_call_origin: str = "call_service"
+
+    origin = service.context.origin_event
+    if origin and ATTR_ENTITY_ID in origin.data:
+        # automation
+        service_call_origin = origin.data[ATTR_ENTITY_ID]
+    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
+        # script
+        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+
+    return service_call_origin
+
+
+# Deprecated: remove in 2026.12.0
+def _deprecate_inline_keyboard(service: ServiceCall) -> None:
+    """Warn when a legacy inline_keyboard format is used."""
+    rows = service.data.get(ATTR_KEYBOARD_INLINE)
+    if not rows:
+        return
+
+    # the dict format nests one mapping per button inside each row
+    if all(
+        isinstance(row, list) and all(isinstance(button, dict) for button in row)
+        for row in rows
+    ):
+        return
+
+    service_call_origin = _service_call_origin(service)
+    ir.async_create_issue(
+        service.hass,
+        DOMAIN,
+        f"deprecated_inline_keyboard_{service_call_origin}",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_inline_keyboard",
+        translation_placeholders={
+            "action": f"{DOMAIN}.{service.service}",
+            "action_origin": service_call_origin,
+        },
     )
 
 

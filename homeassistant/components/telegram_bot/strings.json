@@ -207,7 +207,13 @@
       "message": "Invalid file name: {file_name}. The file name must not contain `~`, `..`, `/` or `\\`."
     },
     "invalid_inline_keyboard": {
-      "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
+      "message": "Invalid value for inline keyboard. Expected a list of button rows."
+    },
+    "invalid_inline_keyboard_button": {
+      "message": "Each inline keyboard button requires a non-empty \"text\" and exactly one non-empty \"callback_data\" or \"url\"."
+    },
+    "invalid_inline_keyboard_style": {
+      "message": "Invalid button style \"{style}\". Must be one of: {valid_styles}."
     },
     "invalid_notify_entity": {
       "message": "Invalid notify entity: {entity_id}"
@@ -226,6 +232,10 @@
     }
   },
   "issues": {
+    "deprecated_inline_keyboard": {
+      "description": "The action `{action}` called from `{action_origin}` is using a deprecated format for one or more `inline_keyboard` buttons.\n\nThe comma-separated string format cannot represent button text containing `,` or `:`, or callback data containing `,`, and it treats callback data containing a URL as a link button. The `[text, data]` list format handles those correctly, but neither format can set button styles. Both will be removed in Home Assistant 2026.12.\n\nPlease update `{action_origin}` to the mapping format, for example:\n\n```yaml\ninline_keyboard:\n  - - text: \"Button 1\"\n      callback_data: \"/command1\"\n      style: \"primary\"\n```",
+      "title": "Deprecated inline_keyboard format"
+    },
     "deprecated_timeout_parameter": {
       "fix_flow": {
         "step": {

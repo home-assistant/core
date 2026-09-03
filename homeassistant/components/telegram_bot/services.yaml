@@ -41,9 +41,9 @@ send_message:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text
-        button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -179,8 +179,9 @@ send_photo:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -356,8 +357,9 @@ send_sticker:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -450,8 +452,9 @@ send_animation:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -544,8 +547,9 @@ send_video:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -629,8 +633,9 @@ send_voice:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -723,8 +728,9 @@ send_document:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -788,8 +794,9 @@ send_location:
           multiple: true
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     message_tag:
@@ -909,8 +916,9 @@ edit_message:
         boolean:
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     additional_fields:
@@ -987,8 +995,9 @@ edit_message_media:
         text:
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     additional_fields:
@@ -1024,8 +1033,9 @@ edit_caption:
         text:
     inline_keyboard:
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     additional_fields:
@@ -1057,8 +1067,9 @@ edit_replymarkup:
     inline_keyboard:
       required: true
       example:
-        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
-        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+        '[[{"text": "Approve", "callback_data": "/approve", "style": "success"},
+        {"text": "Deny", "callback_data": "/deny", "style": "danger"}],
+        [{"text": "Docs", "url": "https://www.home-assistant.io"}]]'
       selector:
         object:
     additional_fields:
