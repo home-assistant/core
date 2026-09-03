@@ -49,7 +49,9 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    schema_keys = [str(getattr(key, "schema", key)) for key in result["data_schema"].schema]
+    schema_keys = [
+        str(getattr(key, "schema", key)) for key in result["data_schema"].schema
+    ]
     joined = " ".join(schema_keys).lower()
     assert "host" in joined and "token" in joined
     assert "enable" not in joined
