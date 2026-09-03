@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
-ASSUMED_STATE_SECONDS = 25
+ASSUMED_STATE_SECONDS = 22
 COMMAND_REFRESH_DELAYS = (3, 20)
 ACTIVE_CHARGING_STATES = frozenset(
     {
@@ -115,6 +115,9 @@ class NexBlueChargingSwitch(
 
     async def _async_set_charging(self, should_charge: bool) -> None:
         """Send a command, immediately update state, and refresh status."""
+        if self.assumed_state and self._assumed_is_on == should_charge:
+            return
+
         try:
             if should_charge:
                 await self.coordinator.client.async_start_charging(self._serial_number)

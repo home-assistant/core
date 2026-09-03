@@ -103,6 +103,43 @@ async def test_turn_off_stops_charging(
     assert hass.states.get(entity_id).state == "off"
 
 
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        ("turn_on", "async_start_charging"),
+        ("turn_off", "async_stop_charging"),
+    ],
+)
+async def test_repeated_assumed_command_is_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    service: str,
+    method: str,
+) -> None:
+    """Test a repeated command is ignored while its state is assumed."""
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB123456_charging"
+    )
+    assert entity_id
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    getattr(mock_client, method).assert_awaited_once_with("NB123456")
+
+
 async def test_command_error_is_reported(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -155,7 +192,7 @@ async def test_command_refreshes_and_assumed_state_expires(
     assert mock_client.async_list_chargers.await_count == 0
     assert mock_client.async_get_charger_status.await_count == 0
 
-    for seconds, expected_refreshes in ((3, 1), (22, 2)):
+    for seconds, expected_refreshes in ((3, 1), (17, 2)):
         freezer.tick(timedelta(seconds=seconds))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -163,7 +200,7 @@ async def test_command_refreshes_and_assumed_state_expires(
         assert mock_client.async_list_chargers.await_count == expected_refreshes
         assert mock_client.async_get_charger_status.await_count == expected_refreshes
 
-    freezer.tick(timedelta(seconds=5))
+    freezer.tick(timedelta(seconds=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
