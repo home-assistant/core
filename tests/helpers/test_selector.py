@@ -1723,7 +1723,14 @@ def test_device_class_selector_schema(
                 "multiple": True,
             },
             (["measurement"], ["total", "total_increasing"]),
-            ("measurement", 0, None, ["cat"]),
+            ("measurement", 0, None, ["cat"], ["measurement_angle"]),
+        ),
+        (
+            {
+                "state_classes": ["measurement", "total", "total_increasing"],
+            },
+            ("measurement", "total", "total_increasing"),
+            (["measurement"], 0, None, "dog", "measurement_angle"),
         ),
     ],
 )
