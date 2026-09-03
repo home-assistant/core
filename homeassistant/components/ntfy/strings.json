@@ -84,7 +84,8 @@
   "config_subentries": {
     "topic": {
       "abort": {
-        "already_configured": "Topic is already configured"
+        "already_configured": "Topic is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "[%key:component::ntfy::common::topic%]",
       "error": {
