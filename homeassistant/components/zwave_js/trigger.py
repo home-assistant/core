@@ -3,10 +3,11 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger
 
-from .triggers import event, value_updated
+from .triggers import event, node_status, value_updated
 
 TRIGGERS = {
     event.RELATIVE_PLATFORM_TYPE: event.EventTrigger,
+    node_status.RELATIVE_PLATFORM_TYPE: node_status.NodeStatusTrigger,
     value_updated.RELATIVE_PLATFORM_TYPE: value_updated.ValueUpdatedTrigger,
 }
 

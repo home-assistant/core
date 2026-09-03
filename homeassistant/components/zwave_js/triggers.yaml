@@ -18,6 +18,18 @@
         - integration: zwave_js
       multiple: true
 
+.node_status_list: &node_status_list
+  required: false
+  selector:
+    select:
+      translation_key: node_status
+      multiple: true
+      options:
+        - alive
+        - asleep
+        - awake
+        - dead
+
 event:
   fields:
     event_source:
@@ -50,6 +62,28 @@ event:
       default: false
       selector:
         boolean:
+
+node_status:
+  target:
+    entity:
+      - integration: zwave_js
+        domain: sensor
+    device:
+      - integration: zwave_js
+  fields:
+    behavior:
+      required: true
+      default: each
+      selector:
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+    from: *node_status_list
+    to: *node_status_list
 
 value_updated:
   fields:
