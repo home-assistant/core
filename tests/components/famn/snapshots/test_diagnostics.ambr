@@ -33,6 +33,18 @@
             'uid': '**REDACTED**',
           }),
           dict({
+            'allDay': False,
+            'calendarId': '**REDACTED**',
+            'endDateTime': '2026-08-12T15:00:00+00:00',
+            'id': '**REDACTED**',
+            'isCancelled': True,
+            'sequence': 1,
+            'startDateTime': '2026-08-12T14:00:00+00:00',
+            'timeZone': 'UTC',
+            'title': '**REDACTED**',
+            'uid': '**REDACTED**',
+          }),
+          dict({
             'allDay': True,
             'calendarId': '**REDACTED**',
             'endDateTime': '2026-08-16T00:00:00+00:00',

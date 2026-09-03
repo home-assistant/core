@@ -1,5 +1,6 @@
 """Tests for the Famn integration setup."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -165,3 +166,40 @@ async def test_task_list_pagination(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_tasks_api.get_task_lists_endpoint.call_count == 3
+
+
+async def test_rotation_survives_cancellation(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device_api: AsyncMock
+) -> None:
+    """Test that a cancelled setup still persists the rotated refresh token.
+
+    Famn's refresh token is single use. If a rotation is cancelled after the
+    server consumed the old token but before the replacement is stored, the
+    next setup would present a spent token and lose the pairing.
+    """
+    rotating = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _rotate(**kwargs: object) -> DeviceTokenResponse:
+        rotating.set()
+        await release.wait()
+        return DeviceTokenResponse(
+            access_token="rotated-access-token",
+            refresh_token="rotated-refresh-token",
+            access_token_expires_at=dt_util.utcnow() + timedelta(minutes=10),
+        )
+
+    mock_device_api.rotate_device_refresh_token_endpoint.side_effect = _rotate
+
+    mock_config_entry.add_to_hass(hass)
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await rotating.wait()
+
+    # The entry is torn down while Famn is mid-rotation.
+    setup.cancel()
+    release.set()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "rotated-refresh-token"

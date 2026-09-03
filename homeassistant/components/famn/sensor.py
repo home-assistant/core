@@ -1,9 +1,9 @@
 """Sensor platform for the Famn integration."""
 
 from datetime import datetime, timedelta
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
-from famn_sdk import LeaderboardEntry, MealItem, MealSlot, TaskItem
+from famn_sdk import LeaderboardEntry, MealItem, MealSlot, SpaceMember, TaskItem
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
@@ -50,15 +50,18 @@ async def async_setup_entry(
 
     @callback
     def add_member_sensors() -> None:
-        """Add XP sensors for members that appeared on the leaderboard."""
+        """Add XP sensors for members that appeared in the space.
+
+        The roster is the source, not the leaderboard: a member with no XP
+        this season is absent from the leaderboard, so building from it
+        would leave them without a sensor until they earn a point.
+        """
         members = {
-            member.space_member_id: member
-            for member in scores.data.leaderboard
-            if member.space_member_id is not None
+            member.id: member for member in scores.data.members if member.id is not None
         }
         if new_members := set(members) - known_members:
             async_add_entities(
-                FamnMemberXPSensor(scores, member_id, members[member_id])
+                FamnMemberXPSensor(scores, members[member_id])
                 for member_id in new_members
             )
             known_members.update(new_members)
@@ -109,6 +112,14 @@ class FamnListDueTodaySensor(FamnEntity, SensorEntity):
             "list_name": coordinator.data[list_id].task_list.name
         }
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the name in step with the list's name in Famn."""
+        if (data := self.coordinator.data.get(self._key)) is not None:
+            self._attr_translation_placeholders = {"list_name": data.task_list.name}
+        super()._handle_coordinator_update()
+
     @property
     @override
     def native_value(self) -> int:
@@ -136,20 +147,44 @@ class FamnMemberXPSensor(CoordinatorEntity[FamnScoresCoordinator], SensorEntity)
     _attr_translation_key = "member_xp"
     _attr_native_unit_of_measurement = "XP"
 
-    def __init__(
-        self,
-        coordinator: FamnScoresCoordinator,
-        member_id: str,
-        entry: LeaderboardEntry,
-    ) -> None:
+    def __init__(self, coordinator: FamnScoresCoordinator, member: SpaceMember) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._member_id = member_id
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{member_id}_xp"
+        if TYPE_CHECKING:
+            assert member.id is not None
+        self._member_id = member.id
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{member.id}_xp"
         self._attr_translation_placeholders = {
-            "member_name": entry.display_name or member_id
+            "member_name": member.display_name or member.id
         }
         self._attr_device_info = famn_device_info(coordinator.config_entry)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the name in step with the member's display name in Famn."""
+        if (member := self._member()) is not None:
+            self._attr_translation_placeholders = {
+                "member_name": member.display_name or self._member_id
+            }
+        super()._handle_coordinator_update()
+
+    def _member(self) -> SpaceMember | None:
+        """Return the member's current roster entry, if they are still there."""
+        return next(
+            (
+                member
+                for member in self.coordinator.data.members
+                if member.id == self._member_id
+            ),
+            None,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the member is still part of the Famn space."""
+        return super().available and self._member() is not None
 
     def _entry(self) -> LeaderboardEntry | None:
         """Return the member's current leaderboard entry, if any."""

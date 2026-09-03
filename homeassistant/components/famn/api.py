@@ -64,8 +64,32 @@ class FamnAuth:
     async def async_ensure_token_valid(self) -> None:
         """Refresh the device tokens when the access token is about to expire.
 
+        The rotation is shielded from cancellation. Famn's refresh token is
+        single use and is spent the moment the request reaches the server, so
+        an unload or a reload landing mid-flight would drop the replacement
+        and leave the entry holding a token Famn has already consumed —
+        presenting that on the next setup is what trips reuse detection and
+        revokes the pairing.
+
         Raises `ApiError` for transient failures, so that callers can map them
         onto the error handling that fits their context.
+        """
+        if dt_util.utcnow() + TOKEN_EXPIRY_MARGIN < self._expires_at:
+            return
+
+        # The rotation runs as a config entry task, so that shielding it from
+        # the caller's cancellation does not hide it from Home Assistant.
+        await asyncio.shield(
+            self.hass.async_create_task(
+                self._async_rotate_if_needed(), "famn-token-rotation"
+            )
+        )
+
+    async def _async_rotate_if_needed(self) -> None:
+        """Rotate the device tokens and persist what Famn hands back.
+
+        The lock is taken inside the shielded call, so a cancelled caller
+        cannot release it while the rotation is still in flight.
         """
         async with self._lock:
             if dt_util.utcnow() + TOKEN_EXPIRY_MARGIN < self._expires_at:

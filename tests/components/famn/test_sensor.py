@@ -121,3 +121,19 @@ async def test_overdue_counts(
     assert total is not None
     assert total.state == "2"
     assert total.attributes["overdue"] == 2
+
+
+async def test_xp_sensor_for_member_without_xp(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that a member who is absent from the leaderboard still gets a sensor.
+
+    Famn's seasons reset weekly and drop everyone on zero from the
+    leaderboard, so the roster is what decides which sensors exist.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    # Bestemor is on the roster but has earned nothing this season.
+    bestemor = hass.states.get("sensor.home_assistant_bestemor_xp")
+    assert bestemor is not None
+    assert bestemor.state == "0"

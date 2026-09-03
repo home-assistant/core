@@ -151,3 +151,33 @@ async def test_calendar_pagination(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_calendar_api.get_calendars_endpoint.call_count == 2
+
+
+async def test_cancelled_occurrence_is_hidden(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a cancelled occurrence is neither the next event nor listed."""
+    # 13:00Z sits between the cancelled 14:00Z slot and the 16:00Z training,
+    # so an unfiltered "next event" would be the cancelled one.
+    freezer.move_to("2026-08-12T13:00:00Z")
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["message"] == "Fotballtrening"
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            EVENT_START_DATETIME: "2026-08-12T00:00:00Z",
+            EVENT_END_DATETIME: "2026-08-17T00:00:00Z",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [event["summary"] for event in result[ENTITY_ID]["events"]]
+    assert "Avlyst tannlegetime" not in summaries

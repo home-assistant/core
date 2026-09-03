@@ -122,6 +122,25 @@ class FamnMemberNotifyEntity(CoordinatorEntity[FamnScoresCoordinator], NotifyEnt
         self._attr_name = member.display_name or member.account_id
         self._attr_device_info = famn_device_info(entry)
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the entity name in step with the member's display name."""
+        if (member := self._member()) is not None:
+            self._attr_name = member.display_name or self._account_id
+        super()._handle_coordinator_update()
+
+    def _member(self) -> SpaceMember | None:
+        """Return the member's current roster entry, if they are still there."""
+        return next(
+            (
+                member
+                for member in self.coordinator.data.members
+                if member.account_id == self._account_id
+            ),
+            None,
+        )
+
     @property
     @override
     def available(self) -> bool:
@@ -130,10 +149,7 @@ class FamnMemberNotifyEntity(CoordinatorEntity[FamnScoresCoordinator], NotifyEnt
         A member who left has no phone to reach any more, so the entity goes
         unavailable rather than pushing to a stale account.
         """
-        return super().available and any(
-            member.account_id == self._account_id
-            for member in self.coordinator.data.members
-        )
+        return super().available and self._member() is not None
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:

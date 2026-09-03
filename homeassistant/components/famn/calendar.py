@@ -112,6 +112,14 @@ class FamnCalendarEntity(CoordinatorEntity[FamnCalendarsCoordinator], CalendarEn
         self._attr_name = coordinator.data[calendar_id].calendar.name
         self._attr_device_info = famn_device_info(coordinator.config_entry)
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the entity name in step with the calendar's name in Famn."""
+        if (data := self.coordinator.data.get(self._key)) is not None:
+            self._attr_name = data.calendar.name
+        super()._handle_coordinator_update()
+
     @property
     @override
     def available(self) -> bool:
@@ -124,7 +132,7 @@ class FamnCalendarEntity(CoordinatorEntity[FamnCalendarsCoordinator], CalendarEn
         """Return the current or next upcoming occurrence."""
         now = dt_util.utcnow()
         for famn_event in self.coordinator.data[self._key].upcoming:
-            if _event_end(famn_event) > now:
+            if not famn_event.is_cancelled and _event_end(famn_event) > now:
                 return _to_ha_event(famn_event)
         return None
 
@@ -142,4 +150,7 @@ class FamnCalendarEntity(CoordinatorEntity[FamnCalendarsCoordinator], CalendarEn
                 translation_domain=DOMAIN,
                 translation_key="calendar_events_failed",
             ) from err
-        return [_to_ha_event(event) for event in events]
+        # A cancelled occurrence still comes back from Famn, so that clients
+        # can tombstone it; as a Home Assistant event it would read as one
+        # that is still going ahead.
+        return [_to_ha_event(event) for event in events if not event.is_cancelled]

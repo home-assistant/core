@@ -4,10 +4,12 @@ from datetime import datetime
 import re
 from unittest.mock import AsyncMock, patch
 
-from famn_sdk import ApiError
+from famn_sdk import ApiError, TaskListPaginateResponse
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.famn.coordinator import SCAN_INTERVAL
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATETIME,
@@ -17,7 +19,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -26,7 +28,7 @@ from homeassistant.util import dt as dt_util
 from . import setup_integration
 from .conftest import CHORES_LIST_ID, SHOPPING_LIST_ID, TODOS_LIST_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "todo.home_assistant_weekly_chores"
 TODOS_ENTITY_ID = "todo.home_assistant_todos"
@@ -399,3 +401,87 @@ async def test_todo_edit_details(
     assert body.title == "Call the plumber"
     assert body.description == "The kitchen tap drips"
     assert body.due_date == datetime(2026, 8, 14, 16, 0, tzinfo=dt_util.UTC)
+
+
+async def test_rename_and_complete_in_one_call(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tasks_api: AsyncMock,
+) -> None:
+    """Test that a rename is not dropped when the same call also completes."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_ITEM: "Take out the trash",
+            ATTR_RENAME: "Take out the bins",
+            ATTR_STATUS: "completed",
+        },
+        blocking=True,
+    )
+
+    # The edit is written first, so Famn logs the completion against the
+    # chore under its new title.
+    body = mock_tasks_api.update_task_item_endpoint.call_args.kwargs["body"]
+    assert body.title == "Take out the bins"
+    mock_tasks_api.log_task_item_done_endpoint.assert_called_once()
+
+
+async def test_complete_only_does_not_rewrite_the_item(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tasks_api: AsyncMock,
+) -> None:
+    """Test that plain completion does not send a redundant update."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_ITEM: "Take out the trash",
+            ATTR_STATUS: "completed",
+        },
+        blocking=True,
+    )
+
+    mock_tasks_api.update_task_item_endpoint.assert_not_called()
+    mock_tasks_api.log_task_item_done_endpoint.assert_called_once()
+
+
+async def test_list_rename_updates_entity_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tasks_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that renaming a list in Famn renames the entity."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FRIENDLY_NAME] == (
+        "Home Assistant Weekly chores"
+    )
+
+    async def _renamed(
+        *, task_type: str | None = None, **kwargs: object
+    ) -> TaskListPaginateResponse:
+        response = await original(task_type=task_type, **kwargs)
+        for task_list in response.items or []:
+            if task_list.id == CHORES_LIST_ID:
+                task_list.name = "Ukentlige gjøremål"
+        return response
+
+    original = mock_tasks_api.get_task_lists_endpoint.side_effect
+    mock_tasks_api.get_task_lists_endpoint.side_effect = _renamed
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FRIENDLY_NAME] == (
+        "Home Assistant Ukentlige gjøremål"
+    )
