@@ -1,7 +1,7 @@
 """Diagnostics support for 1-Wire."""
 
 from dataclasses import asdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
@@ -30,9 +30,12 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: OneWireConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: OneWireConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
+    if TYPE_CHECKING:
+        # onewire does not create child devices
+        assert isinstance(device_entry, dr.DeviceEntry)
 
     onewire_hub = entry.runtime_data
 

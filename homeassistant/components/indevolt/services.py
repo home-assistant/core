@@ -10,7 +10,7 @@ from indevolt_api import (
 )
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -30,13 +30,14 @@ RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Required("power"): vol.All(
             vol.Coerce(int),
-            vol.Range(min=0, max=2400),
+            vol.Range(min=0, max=10800),
         ),
     }
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Indevolt integration."""
 
     async def charge(call: ServiceCall) -> None:
