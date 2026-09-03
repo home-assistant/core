@@ -11,7 +11,8 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -48,6 +49,8 @@ CONF_ADS_VALUE = "value"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
+TASK_WATCHDOG = "ads_connection_watchdog"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -70,7 +73,7 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
 
     conf = config[DOMAIN]
@@ -82,7 +85,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client = pyads.Connection(net_id, port, ip_address)
 
     try:
-        ads = AdsHub(client)
+        ads = await hass.async_add_executor_job(AdsHub, client)
     except pyads.ADSError:
         _LOGGER.error(
             "Could not connect to ADS host (netid=%s, ip=%s, port=%s)",
@@ -93,7 +96,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_ADS] = ads
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
+    hass.async_create_background_task(ads.async_watch_connection(hass), TASK_WATCHDOG)
+
+    async def async_shutdown(event: Event) -> None:
+        """Close the connection when Home Assistant stops."""
+        await hass.async_add_executor_job(ads.shutdown)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
 
     def handle_write_data_by_name(call: ServiceCall) -> None:
         """Write a value to the connected ADS device."""
@@ -104,9 +113,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             ads.write_by_name(ads_var, value, ADS_TYPEMAP[ads_type])
         except pyads.ADSError as err:
-            _LOGGER.error(err)
+            raise HomeAssistantError(f"Error writing {ads_var}: {err}") from err
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_WRITE_DATA_BY_NAME,
         handle_write_data_by_name,
