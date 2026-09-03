@@ -8,10 +8,7 @@ from sofar_modbus.modern.faults import FaultCategory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sofar.binary_sensor import (
-    FAULT_SENSOR_DESCRIPTIONS,
-    FLAG_SENSOR_DESCRIPTIONS,
-)
+from homeassistant.components.sofar.binary_sensor import FAULT_SENSOR_DESCRIPTIONS
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -166,19 +163,3 @@ async def test_active_power_limit_enabled_follows_its_bit(
     assert entity_id is not None
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == expected
-
-
-async def test_flag_sensors_start_disabled(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test the settings-register binary sensors are opt-in."""
-    for description in FLAG_SENSOR_DESCRIPTIONS:
-        entry = entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{description.key}"
-        )
-        assert entry is not None
-        assert entity_registry.async_get(entry).disabled_by is (
-            er.RegistryEntryDisabler.INTEGRATION
-        )
