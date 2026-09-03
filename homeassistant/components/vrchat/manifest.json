@@ -1,0 +1,11 @@
+{
+  "domain": "vrchat",
+  "name": "VRChat",
+  "codeowners": ["@hi94740"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vrchat",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["vrchatapi-async==1.20.8.post2"]
+}
