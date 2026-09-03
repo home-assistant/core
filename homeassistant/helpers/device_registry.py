@@ -1780,6 +1780,26 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
                 return entry
         return None
 
+    def get_overlapping_orphans(
+        self,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+        domain: str,
+    ) -> list[DeletedDeviceEntry]:
+        """Return the orphans of a domain sharing an identifier or connection.
+
+        Resolved through the orphan indexes, so orphaning a device costs its own
+        identifiers and connections rather than a scan of every deleted device.
+        Both sets are taken from a stored entry, so their connections are already
+        normalized and match the index keys.
+        """
+        orphans: dict[str, DeletedDeviceEntry] = {}
+        for identifier in identifiers:
+            orphans.update(self._orphaned_identifiers.get(identifier, {}))
+        for connection in connections:
+            orphans.update(self._orphaned_connections.get(connection, {}))
+        return [entry for entry in orphans.values() if entry.domain == domain]
+
 
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
@@ -4353,16 +4373,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # device from the same integration is orphaned, drop any existing orphan
             # it overlaps so the newest one wins deterministically instead of shadowing
             # it.
-            for existing in list(self._deleted_devices.values()):
-                if (
-                    existing.config_entry_id is None
-                    and existing.domain == domain
-                    and (
-                        existing.connections & deleted_device.connections
-                        or existing.identifiers & deleted_device.identifiers
-                    )
-                ):
-                    del self._deleted_devices[existing.id]
+            for existing in self._deleted_devices.get_overlapping_orphans(
+                deleted_device.identifiers, deleted_device.connections, domain
+            ):
+                del self._deleted_devices[existing.id]
         self._deleted_devices[deleted_device.id] = attr.evolve(
             deleted_device,
             config_entry_id=None,

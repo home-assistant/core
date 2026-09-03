@@ -3085,6 +3085,47 @@ async def test_orphaning_replaces_colliding_same_domain_orphan(
     assert restored.id == device_2.id
 
 
+async def test_orphaning_keeps_non_overlapping_same_domain_orphans(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Orphaning a device leaves same-domain orphans it does not collide with.
+
+    Only an orphan sharing an identifier or connection would collide in the lookup
+    index, so orphaning must drop exactly those and not every orphan of the domain.
+    """
+    entries = []
+    devices = []
+    for index in range(3):
+        entry = MockConfigEntry(domain="hue")
+        entry.add_to_hass(hass)
+        entries.append(entry)
+        devices.append(
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, f"12:34:56:ab:cd:0{index}")},
+                identifiers={("hue", str(index))},
+            )
+        )
+
+    for entry in entries:
+        device_registry.async_clear_config_entry(entry.entry_id, entry.domain)
+
+    # None of them overlap, so all three orphans survive
+    for device in devices:
+        assert device.id in device_registry._deleted_devices
+
+    # Each is still restorable by its own identifier
+    for index, device in enumerate(devices):
+        entry = MockConfigEntry(domain="hue")
+        entry.add_to_hass(hass)
+        restored = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, f"12:34:56:ab:cd:0{index}")},
+            identifiers={("hue", str(index))},
+        )
+        assert restored.id == device.id
+
+
 async def test_orphaned_domain_survives_store_round_trip(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
