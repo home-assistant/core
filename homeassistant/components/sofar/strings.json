@@ -570,7 +570,7 @@
   },
   "exceptions": {
     "invalid_action_value": {
-      "message": "{error}"
+      "message": "The provided value is not valid for this action."
     },
     "modbus_error": {
       "message": "{error}"
@@ -583,6 +583,9 @@
     },
     "unsupported_action": {
       "message": "{title} does not support this action."
+    },
+    "write_failed": {
+      "message": "Failed to write to the inverter."
     }
   },
   "selector": {

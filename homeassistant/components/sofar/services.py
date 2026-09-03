@@ -1,7 +1,6 @@
 """Services for the Sofar integration."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from collections.abc import Awaitable
 
 from modbus_connection import ModbusError
 from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
@@ -85,22 +84,19 @@ def _get_entry(
     return entry
 
 
-@asynccontextmanager
-async def _writing(entry: SofarConfigEntry) -> AsyncIterator[None]:
+async def _write(entry: SofarConfigEntry, write: Awaitable[None]) -> None:
     """Translate a failed write, then let the settings sensors catch up."""
     try:
-        yield
+        await write
     except ValueError as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_action_value",
-            translation_placeholders={"error": str(err)},
         ) from err
     except ModbusError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="modbus_error",
-            translation_placeholders={"error": str(err)},
+            translation_key="write_failed",
         ) from err
     await entry.runtime_data.settings.async_request_refresh()
 
@@ -112,34 +108,46 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def _handle_set_feed_in_limit(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "feed_in")
         device = entry.runtime_data.readings.device
-        mode = FeedinLimitationMode[call.data[ATTR_MODE].upper()]
-        async with _writing(entry):
-            await device.feed_in.async_write_limit(mode, call.data[ATTR_MAX_POWER])
+        await _write(
+            entry,
+            device.feed_in.async_write_limit(
+                FeedinLimitationMode[call.data[ATTR_MODE].upper()],
+                call.data[ATTR_MAX_POWER],
+            ),
+        )
 
     async def _handle_set_active_power_limit(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "active_power_control")
         device = entry.runtime_data.readings.device
-        async with _writing(entry):
-            await device.active_power_control.async_write_active_power_limit(
+        await _write(
+            entry,
+            device.active_power_control.async_write_active_power_limit(
                 call.data[ATTR_ENABLED], call.data[ATTR_LIMIT]
-            )
+            ),
+        )
 
     async def _handle_set_passive_mode_timeout(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "passive")
         device = entry.runtime_data.readings.device
-        action = PassiveModeTimeoutAction[call.data[ATTR_ACTION].upper()]
-        async with _writing(entry):
-            await device.passive.async_write_timeout(call.data[ATTR_TIMEOUT], action)
+        await _write(
+            entry,
+            device.passive.async_write_timeout(
+                call.data[ATTR_TIMEOUT],
+                PassiveModeTimeoutAction[call.data[ATTR_ACTION].upper()],
+            ),
+        )
 
     async def _handle_set_passive_mode_power(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "passive")
         device = entry.runtime_data.readings.device
-        async with _writing(entry):
-            await device.passive.async_write_power(
+        await _write(
+            entry,
+            device.passive.async_write_power(
                 call.data[ATTR_GRID_POWER],
                 call.data[ATTR_BATTERY_POWER_MIN],
                 call.data[ATTR_BATTERY_POWER_MAX],
-            )
+            ),
+        )
 
     async_register_admin_service(
         hass,
