@@ -135,8 +135,15 @@ def mock_iseo_client() -> Generator[MagicMock]:
 
 @pytest.fixture(autouse=True)
 def _no_settle_delay() -> Generator[None]:
-    """Skip the post-read wait the real lock needs."""
-    with patch("homeassistant.components.iseo_argo_ble.coordinator._SETTLE_DELAY", 0):
+    """Skip the wait the real lock needs after an admin session."""
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.coordinator.ADMIN_SETTLE_DELAY", 0
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.binary_sensor.ADMIN_SETTLE_DELAY", 0
+        ),
+    ):
         yield
 
 
