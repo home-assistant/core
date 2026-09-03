@@ -112,6 +112,34 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     assert state.attributes.get("last_reported_at") == t3
 
 
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_wire_time_is_preferred_over_receipt_time(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_stream: Any,
+) -> None:
+    """A reading carrying its own wire time is not stamped with arrival time."""
+
+    await _setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=["voltage"],
+    )
+
+    wire = datetime(2026, 5, 20, 8, 0, 0, tzinfo=UTC)
+    with freeze_time(datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)):
+        fake_stream.fire_frame(
+            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0, time=wire))
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("last_reported_at") == wire
+
+
 @pytest.mark.parametrize(
     ("provider", "expected"),
     [

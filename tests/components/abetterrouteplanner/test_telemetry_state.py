@@ -82,10 +82,10 @@ async def test_provider_isolated_per_vehicle_and_metric(
     assert Metric.VOLTAGE not in coordinator.last_provider[MOCK_VEHICLE_ID]
 
 
-async def test_last_reported_at_is_receipt_time_not_wire_time(
+async def test_last_reported_at_is_wire_time(
     telemetry_coordinator: AbrpTelemetryCoordinator,
 ) -> None:
-    """``last_reported_at`` is stamped at apply (RECEIPT) time, ignoring mv.time."""
+    """``last_reported_at`` reports the wire time, so an old value looks old."""
     coordinator = telemetry_coordinator
 
     receipt = datetime(2026, 6, 11, 12, 30, 0, tzinfo=UTC)
@@ -101,8 +101,28 @@ async def test_last_reported_at_is_receipt_time_not_wire_time(
         )
 
     stamp = coordinator.last_reported_at[MOCK_VEHICLE_ID][Metric.SOC]
-    assert stamp == receipt
-    assert stamp != wire_time
+    assert stamp == wire_time
+    assert stamp != receipt
+
+
+async def test_last_reported_at_falls_back_to_receipt_without_wire_time(
+    telemetry_coordinator: AbrpTelemetryCoordinator,
+) -> None:
+    """A frame carrying no wire time still gets a stamp, from receipt time."""
+    coordinator = telemetry_coordinator
+
+    receipt = datetime(2026, 6, 11, 12, 30, 0, tzinfo=UTC)
+
+    with patch(
+        "homeassistant.components.abetterrouteplanner.coordinator.dt_util.utcnow",
+        return_value=receipt,
+    ):
+        coordinator.on_update(
+            MOCK_VEHICLE_ID,
+            Telemetry(soc=build_metric_value(0.5, time=None)),
+        )
+
+    assert coordinator.last_reported_at[MOCK_VEHICLE_ID][Metric.SOC] == receipt
 
 
 async def test_auth_failed_connection_event_logs_warning(

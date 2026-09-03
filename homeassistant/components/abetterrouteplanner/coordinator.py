@@ -120,7 +120,7 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
             update_interval=None,
         )
         self.data = {}
-        # Receipt time, not the wire timestamp.
+        # The reading's own wire time, falling back to receipt time.
         self.last_reported_at: dict[int, dict[Metric, datetime]] = {}
         # Sticky on omission: a frame without a provider keeps the prior value.
         self.last_provider: dict[int, dict[Metric, str]] = {}
@@ -143,7 +143,8 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         reported = self.last_reported_at.setdefault(vehicle_id, {})
         providers = self.last_provider.setdefault(vehicle_id, {})
         for metric, metric_value in delta.items():
-            reported[metric] = now
+            # The wire time, so a rollup value days old is not stamped "now".
+            reported[metric] = metric_value.time or now
             if metric_value.provider is not None:
                 providers[metric] = metric_value.provider
 
