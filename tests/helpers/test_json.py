@@ -1,12 +1,15 @@
 """Test Home Assistant remote methods and classes."""
 
+from collections.abc import Callable
 import datetime
 from functools import partial
+import gc
 import json
 import math
 import os
 from pathlib import Path
 import time
+import tracemalloc
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
@@ -221,6 +224,45 @@ def test_cached_json_fragment() -> None:
     assert (
         json_dumps([fragment]) == '[{"a":1,"b":[1,2,3],"c":{"nested":true},"d":null}]'
     )
+
+
+def test_cached_json_fragment_trims_buffer() -> None:
+    """Test cached_json_fragment drops orjson's over-allocated buffer.
+
+    orjson.dumps returns bytes whose backing buffer is rounded up to a power of
+    two and not shrunk; cached_json_fragment copies them to a right-sized buffer.
+    Without that copy the cached fragment retains the full over-allocated buffer,
+    which is the memory regression this guards against.
+
+    The over-allocation is invisible to normal object inspection: sys.getsizeof()
+    reports the logical length, not the backing buffer, and orjson.Fragment
+    exposes no way to reach the bytes it wraps. So the actual retained allocation
+    can only be observed via tracemalloc.
+    """
+    # A payload large enough that orjson's over-allocation is clearly visible.
+    data = {f"key_{index}": "value" * 5 for index in range(40)}
+    serialized_size = len(json_bytes(data))
+
+    def retained_bytes(make: Callable[[], object]) -> int:
+        gc.collect()
+        before, _ = tracemalloc.get_traced_memory()
+        obj = make()
+        gc.collect()  # free the transient over-allocated buffer, keep only `obj`
+        after, _ = tracemalloc.get_traced_memory()
+        assert obj is not None  # keep the fragment alive until measured
+        return after - before
+
+    tracemalloc.start()
+    try:
+        over_allocated = retained_bytes(lambda: json_fragment(json_bytes(data)))
+        right_sized = retained_bytes(lambda: cached_json_fragment(data))
+    finally:
+        tracemalloc.stop()
+
+    # The plain fragment keeps orjson's oversized buffer; the trimmed one keeps
+    # roughly the serialized size.
+    assert over_allocated > serialized_size * 3
+    assert right_sized < serialized_size * 2
 
 
 def test_json_bytes_strip_null() -> None:

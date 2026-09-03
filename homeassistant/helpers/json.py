@@ -119,13 +119,14 @@ json_fragment = orjson.Fragment
 def cached_json_fragment(data: Any) -> orjson.Fragment:
     """Return a json fragment right-sized for long-term caching.
 
-    orjson over-allocates the returned bytes buffer and does not shrink it (the
-    logical length is set but the allocation is rounded up to a power-of-two
-    floor), so a fragment cached for the lifetime of a long-lived object retains
-    several KiB of unused buffer per object. Copy the bytes to a right-sized
-    buffer before wrapping them, which matters when many such fragments are cached
-    at once (e.g. one per deleted device registry entry).
+    orjson over-allocates the returned bytes buffer and does not shrink it: the
+    logical length is set but the capacity is rounded up to a power of two (at
+    least a few KiB), so a fragment cached for the lifetime of a long-lived
+    object retains several KiB of unused buffer. Copy the bytes to a right-sized
+    buffer before wrapping them, which matters when many such fragments are
+    cached at once.
     """
+    # Drop orjson's over-allocated slack with help of a memoryview.
     return orjson.Fragment(bytes(memoryview(json_bytes(data))))
 
 
