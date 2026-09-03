@@ -110,8 +110,7 @@ class FamnRealtime:
             for coordinator in dict.fromkeys(self._topic_coordinators.values()):
                 await coordinator.async_request_refresh()
 
-            await self._async_read_events(ws)
-            return True
+            return await self._async_read_events(ws)
 
     async def _async_await_auth_ok(self, ws: aiohttp.ClientWebSocketResponse) -> bool:
         """Wait for the gateway to acknowledge the auth frame."""
@@ -131,19 +130,36 @@ class FamnRealtime:
         self.auth.invalidate()
         return False
 
-    async def _async_read_events(self, ws: aiohttp.ClientWebSocketResponse) -> None:
+    async def _async_read_events(self, ws: aiohttp.ClientWebSocketResponse) -> bool:
         """Forward gateway events until the connection ends.
 
         Instead of a second timer task, the receive timeout doubles as the
         token-renewal schedule: whenever the renewal deadline passes, a
         fresh auth frame extends the session in place.
+
+        Returns whether the session was healthy while it lasted.
         """
+        renewed = False
         while True:
             remaining = (self.auth.reauth_at - dt_util.utcnow()).total_seconds()
             if remaining <= 0:
+                if renewed:
+                    # The token that was just rotated is already due for
+                    # renewal again, so the expiry is not advancing — a
+                    # server clock ahead of ours, or an expiry echoed back
+                    # unchanged. Renewing once more would spin against the
+                    # gateway at full speed, so drop the socket and let the
+                    # reconnect backoff slow the retries down.
+                    LOGGER.debug(
+                        "Famn returned an access token that is already due for "
+                        "renewal; dropping the realtime session"
+                    )
+                    return False
                 token = await self.auth.async_get_access_token()
                 await ws.send_json({"type": "auth", "token": token})
+                renewed = True
                 continue
+            renewed = False
 
             try:
                 async with asyncio.timeout(remaining):
@@ -158,7 +174,7 @@ class FamnRealtime:
                 aiohttp.WSMsgType.CLOSED,
                 aiohttp.WSMsgType.ERROR,
             ):
-                return
+                return True
             if msg.type is not aiohttp.WSMsgType.TEXT:
                 continue
 
@@ -186,7 +202,7 @@ class FamnRealtime:
                     if data.get("code") in (401, 403):
                         # The session is dead; reconnect with a fresh token.
                         self.auth.invalidate()
-                        return
+                        return True
                 case _:
                     # auth_ok for renewals, pong, and any future frame types.
                     pass

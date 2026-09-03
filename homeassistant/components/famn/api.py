@@ -85,7 +85,11 @@ class FamnAuth:
                     ) from err
                 raise
 
-            if tokens.access_token is None or tokens.refresh_token is None:
+            if (
+                tokens.access_token is None
+                or tokens.access_token_expires_at is None
+                or tokens.refresh_token is None
+            ):
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="token_rotation_unauthorized",

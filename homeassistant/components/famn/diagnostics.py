@@ -8,12 +8,22 @@ from homeassistant.core import HomeAssistant
 from .coordinator import FamnConfigEntry
 
 TO_REDACT = {
-    "created_by",
-    "updated_by",
-    "executing_user_id",
+    "id",
+    "uid",
+    "spaceId",
+    "taskListId",
+    "calendarId",
+    "recurrenceId",
+    "createdBy",
+    "updatedBy",
+    "executingUserId",
     "assignments",
     "organizer",
-    "ics_blob",
+    "icsBlob",
+    "name",
+    "title",
+    "description",
+    "location",
 }
 
 

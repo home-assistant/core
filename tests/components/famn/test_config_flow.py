@@ -26,12 +26,6 @@ PLACEHOLDERS = {
 }
 
 
-@pytest.fixture(autouse=True)
-def frozen_time(freezer: FrozenDateTimeFactory) -> None:
-    """Freeze time within the pairing TTL of the fixtures."""
-    freezer.move_to("2026-08-12T12:00:00Z")
-
-
 async def _start_flow(hass: HomeAssistant) -> FlowResult:
     """Start the user flow and check that it shows the QR form."""
     result = await hass.config_entries.flow.async_init(

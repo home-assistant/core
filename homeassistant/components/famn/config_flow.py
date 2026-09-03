@@ -65,6 +65,7 @@ def _is_complete(tokens: DeviceTokenResponse) -> bool:
         and tokens.refresh_token_expires_at
         and tokens.device
         and tokens.device.id
+        and tokens.device.relation_id
     )
 
 
@@ -81,6 +82,13 @@ class FamnConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pairing: StartDevicePairingResponse | None = None
         self._secret: str | None = None
         self._tokens: DeviceTokenResponse | None = None
+
+    @override
+    def async_remove(self) -> None:
+        """Cancel pairing when the flow is removed."""
+        super().async_remove()
+        if self.pair_task is not None:
+            self.pair_task.cancel()
 
     @override
     async def async_step_user(

@@ -319,6 +319,46 @@ async def test_reauth_flow_starts_when_device_is_revoked(
     )
 
 
+async def test_non_advancing_expiry_drops_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_api: AsyncMock,
+    mock_gateway: FakeGateway,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a token expiry that never advances does not spin."""
+    await setup_integration(hass, mock_config_entry)
+    await _async_wait_for(
+        lambda: bool(mock_gateway.sockets and mock_gateway.sockets[0].sent)
+    )
+    socket = mock_gateway.sockets[0]
+
+    def stale_frames() -> int:
+        """Count the auth frames sent with the stale token."""
+        return sum(frame.get("token") == "stale-access-token" for frame in socket.sent)
+
+    # Famn hands back an access token that already looks expired here, as a
+    # server clock running ahead of ours would.
+    freezer.move_to("2026-08-12T12:09:00Z")
+    mock_device_api.rotate_device_refresh_token_endpoint.return_value = (
+        DeviceTokenResponse(
+            access_token="stale-access-token",
+            refresh_token="stale-refresh-token",
+            access_token_expires_at=dt_util.utcnow() - timedelta(minutes=1),
+        )
+    )
+
+    # Any frame wakes the read loop, which then notices the deadline.
+    socket.feed({"type": "pong"})
+    await _async_wait_for(lambda: stale_frames() == 1)
+
+    # The session is dropped after that single attempt rather than
+    # re-authenticating in a tight loop.
+    for _ in range(50):
+        await asyncio.sleep(0)
+    assert stale_frames() == 1
+
+
 async def test_server_close_reconnects_after_backoff(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

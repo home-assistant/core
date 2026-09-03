@@ -1,5 +1,6 @@
 """Todo platform for the Famn integration."""
 
+from dataclasses import replace
 from datetime import datetime
 from typing import TYPE_CHECKING, override
 from uuid import UUID
@@ -13,7 +14,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -43,7 +44,7 @@ async def async_setup_entry(
             )
             known_lists.update(new_lists)
 
-    coordinator.async_add_listener(add_entities)
+    entry.async_on_unload(coordinator.async_add_listener(add_entities))
     add_entities()
 
     shopping = entry.runtime_data.shopping
@@ -58,7 +59,7 @@ async def async_setup_entry(
             )
             known_shopping.update(new_lists)
 
-    shopping.async_add_listener(add_shopping_entities)
+    entry.async_on_unload(shopping.async_add_listener(add_shopping_entities))
     add_shopping_entities()
 
 
@@ -120,6 +121,7 @@ class FamnShoppingListEntity(
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the shopping list."""
         try:
+            await self.coordinator.auth.async_ensure_token_valid()
             await self.coordinator.list_item_api.create_list_item_endpoint(
                 self._key,
                 body=ListItem(
@@ -138,16 +140,32 @@ class FamnShoppingListEntity(
 
         await self.coordinator.async_request_refresh()
 
+    def _famn_item(self, uid: str | None) -> ListItem | None:
+        """Return the Famn list item a todo item stands for."""
+        return next(
+            (item for item in self.coordinator.data[self._key].items if item.id == uid),
+            None,
+        )
+
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Check an item off the shopping list."""
-        if item.status != TodoItemStatus.COMPLETED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="uncheck_not_supported",
-            )
+        """Check an item off the shopping list, or edit it in place.
 
+        Home Assistant merges an update into the existing item before
+        handing it over, so an edit that only touches the name or the
+        description still arrives with the item open.
+        """
+        if item.status == TodoItemStatus.COMPLETED:
+            await self._async_check_off(item)
+        else:
+            await self._async_edit(item)
+
+        await self.coordinator.async_request_refresh()
+
+    async def _async_check_off(self, item: TodoItem) -> None:
+        """Mark the item bought."""
         try:
+            await self.coordinator.auth.async_ensure_token_valid()
             await self.coordinator.list_item_api.set_list_item_done_endpoint(
                 self._key, str(item.uid)
             )
@@ -158,7 +176,38 @@ class FamnShoppingListEntity(
                 translation_placeholders={"name": item.summary or ""},
             ) from err
 
-        await self.coordinator.async_request_refresh()
+    async def _async_edit(self, item: TodoItem) -> None:
+        """Write a new name and description back to Famn.
+
+        The endpoint replaces the whole item, so the edit is applied to the
+        copy Famn last handed us. Sending a bare item instead would drop the
+        product, category and quantity the app keeps on it.
+        """
+        existing = self._famn_item(item.uid)
+        if existing is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_item_failed",
+                translation_placeholders={"name": item.summary or ""},
+            )
+
+        try:
+            await self.coordinator.auth.async_ensure_token_valid()
+            await self.coordinator.list_item_api.update_list_item_endpoint(
+                self._key,
+                str(item.uid),
+                body=replace(
+                    existing,
+                    name=item.summary or existing.name,
+                    description=item.description,
+                ),
+            )
+        except ApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_item_failed",
+                translation_placeholders={"name": item.summary or ""},
+            ) from err
 
 
 def _sort_key(item: TaskItem) -> tuple[datetime, int, str]:
@@ -187,8 +236,12 @@ class FamnChoreListEntity(FamnEntity, TodoListEntity):
         task_list = coordinator.data[list_id].task_list
         self._attr_name = task_list.name
 
+        # Chores recur on a rule Famn owns, so only their title can be
+        # edited from here; one-off todos expose their details as well.
+        self._edits_details = task_list.task_type == TASK_TYPE_TODOS
+
         features = TodoListEntityFeature.UPDATE_TODO_ITEM
-        if task_list.task_type == TASK_TYPE_TODOS:
+        if self._edits_details:
             features |= (
                 TodoListEntityFeature.CREATE_TODO_ITEM
                 | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
@@ -221,6 +274,7 @@ class FamnChoreListEntity(FamnEntity, TodoListEntity):
         grants task XP as usual.
         """
         try:
+            await self.coordinator.auth.async_ensure_token_valid()
             await self.coordinator.tasks_api.create_task_item_endpoint(
                 self._key,
                 body=CreateTaskItemRequest(
@@ -241,14 +295,22 @@ class FamnChoreListEntity(FamnEntity, TodoListEntity):
 
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Mark a chore as done."""
-        if item.status != TodoItemStatus.COMPLETED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="uncomplete_not_supported",
-            )
+        """Mark a chore as done, or edit it in place.
 
+        Home Assistant merges an update into the existing item before
+        handing it over, so a rename still arrives with the chore open.
+        """
+        if item.status == TodoItemStatus.COMPLETED:
+            await self._async_log_done(item)
+        else:
+            await self._async_edit(item)
+
+        await self.coordinator.async_request_refresh()
+
+    async def _async_log_done(self, item: TodoItem) -> None:
+        """Log the chore as completed, which is what grants the XP."""
         try:
+            await self.coordinator.auth.async_ensure_token_valid()
             await self.coordinator.tasks_api.log_task_item_done_endpoint(
                 str(item.uid), self._key
             )
@@ -259,4 +321,46 @@ class FamnChoreListEntity(FamnEntity, TodoListEntity):
                 translation_placeholders={"name": item.summary or ""},
             ) from err
 
-        await self.coordinator.async_request_refresh()
+    async def _async_edit(self, item: TodoItem) -> None:
+        """Write the item's new fields back to Famn.
+
+        The endpoint replaces the whole task, so the edit is applied to the
+        copy Famn last handed us; a bare item would drop the recurrence
+        rule, assignments and category the app keeps on it.
+        """
+        existing = next(
+            (
+                task_item
+                for task_item in self.coordinator.data[self._key].items
+                if task_item.id == item.uid
+            ),
+            None,
+        )
+        if existing is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_item_failed",
+                translation_placeholders={"name": item.summary or ""},
+            )
+
+        updated = replace(existing, title=item.summary or existing.title)
+        if self._edits_details:
+            # A chore's `due` is the next occurrence Famn computed, not a
+            # stored deadline, so it is only written back for todo lists.
+            updated = replace(
+                updated,
+                description=item.description,
+                due_date=item.due if isinstance(item.due, datetime) else None,
+            )
+
+        try:
+            await self.coordinator.auth.async_ensure_token_valid()
+            await self.coordinator.tasks_api.update_task_item_endpoint(
+                str(item.uid), self._key, body=updated
+            )
+        except ApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_item_failed",
+                translation_placeholders={"name": item.summary or ""},
+            ) from err

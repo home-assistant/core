@@ -67,11 +67,8 @@
     "token_rotation_unauthorized": {
       "message": "Famn rejected the device credentials. Pair Home Assistant with Famn again."
     },
-    "uncheck_not_supported": {
-      "message": "Famn does not support re-adding a checked-off item from Home Assistant."
-    },
-    "uncomplete_not_supported": {
-      "message": "Famn does not support marking a completed chore as open again."
+    "update_item_failed": {
+      "message": "Failed to update {name} in Famn."
     }
   }
 }

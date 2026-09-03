@@ -50,6 +50,108 @@
     'state': '1',
   })
 # ---
+# name: test_entities[todo.home_assistant_handleliste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.home_assistant_handleliste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Handleliste',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Handleliste',
+    'platform': 'famn',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <TodoListEntityFeature: 69>,
+    'translation_key': None,
+    'unique_id': '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d_5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[todo.home_assistant_handleliste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Assistant Handleliste',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 69>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.home_assistant_handleliste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_entities[todo.home_assistant_todos-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.home_assistant_todos',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Todos',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Todos',
+    'platform': 'famn',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <TodoListEntityFeature: 101>,
+    'translation_key': None,
+    'unique_id': '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d_3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1003',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[todo.home_assistant_todos-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Assistant Todos',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 101>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.home_assistant_todos',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_entities[todo.home_assistant_weekly_chores-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

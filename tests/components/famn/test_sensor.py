@@ -19,6 +19,7 @@ async def test_due_today_sensors(
 ) -> None:
     """Test the per-list and space-wide due-today sensors."""
     # 05:00 local (US/Pacific); the local day ends 2026-08-13T07:00:00Z.
+    await hass.config.async_set_time_zone("US/Pacific")
     freezer.move_to("2026-08-12T12:00:00Z")
     await setup_integration(hass, mock_config_entry)
 

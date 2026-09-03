@@ -1,5 +1,6 @@
 """Tests for the Famn calendar platform."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from famn_sdk import ApiError
@@ -15,6 +16,7 @@ from homeassistant.components.calendar import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import CALENDAR_ID
@@ -98,8 +100,14 @@ async def test_get_events_service(
     call = mock_calendar_api.get_calendar_events_endpoint.call_args
     assert call.args[0] == CALENDAR_ID
     assert call.kwargs["expand"] is True
-    assert call.kwargs["from_"] == "2026-08-12T00:00:00+00:00"
-    assert call.kwargs["to"] == "2026-08-17T00:00:00+00:00"
+    # Home Assistant hands the range over in local time, so compare the
+    # instants rather than how they are spelled.
+    assert dt_util.parse_datetime(call.kwargs["from_"]) == datetime(
+        2026, 8, 12, tzinfo=dt_util.UTC
+    )
+    assert dt_util.parse_datetime(call.kwargs["to"]) == datetime(
+        2026, 8, 17, tzinfo=dt_util.UTC
+    )
 
 
 async def test_get_events_service_error(

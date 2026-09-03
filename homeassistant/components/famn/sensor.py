@@ -42,7 +42,7 @@ async def async_setup_entry(
             )
             known_lists.update(new_lists)
 
-    coordinator.async_add_listener(add_entities)
+    entry.async_on_unload(coordinator.async_add_listener(add_entities))
     add_entities()
 
     scores = entry.runtime_data.scores
@@ -63,7 +63,7 @@ async def async_setup_entry(
             )
             known_members.update(new_members)
 
-    scores.async_add_listener(add_member_sensors)
+    entry.async_on_unload(scores.async_add_listener(add_member_sensors))
     add_member_sensors()
 
     async_add_entities([FamnDinnerSensor(entry.runtime_data.meals)])

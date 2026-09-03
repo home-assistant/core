@@ -38,7 +38,7 @@ async def async_setup_entry(
             )
             known_calendars.update(new_calendars)
 
-    coordinator.async_add_listener(add_entities)
+    entry.async_on_unload(coordinator.async_add_listener(add_entities))
     add_entities()
 
 

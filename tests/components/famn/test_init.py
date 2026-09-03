@@ -1,5 +1,6 @@
 """Tests for the Famn integration setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from famn_sdk import ApiError, DeviceTokenResponse, TaskListPaginateResponse
@@ -10,6 +11,7 @@ from homeassistant.components.famn.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import SPACE_ID
@@ -76,7 +78,9 @@ async def test_rotated_refresh_token_is_persisted(
     """Test that a rotated refresh token is written back to the config entry."""
     mock_device_api.rotate_device_refresh_token_endpoint.return_value = (
         DeviceTokenResponse(
-            access_token="new-access-token", refresh_token="new-refresh-token"
+            access_token="new-access-token",
+            refresh_token="new-refresh-token",
+            access_token_expires_at=dt_util.utcnow() + timedelta(minutes=10),
         )
     )
 

@@ -19,6 +19,7 @@ from famn_sdk import (
     TaskItem,
     TaskListPaginateResponse,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.famn.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -37,6 +38,18 @@ TODOS_LIST_ID = "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1003"
 CALENDAR_ID = "9c8d7e6f-5a4b-4c3d-8e2f-1a0b9c8d7001"
 SHOPPING_LIST_ID = "5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001"
 PAIRING_SECRET = "mock-pairing-secret"
+
+
+@pytest.fixture(autouse=True)
+def frozen_time(freezer: FrozenDateTimeFactory) -> None:
+    """Freeze the clock inside the validity of the token fixtures.
+
+    The device token fixtures carry fixed expiry timestamps. On a clock that
+    has drifted past them every request rotates the token again, which is
+    never what a test means to exercise. Tests that need another moment move
+    the clock on from here themselves.
+    """
+    freezer.move_to("2026-08-12T12:00:00Z")
 
 
 @pytest.fixture

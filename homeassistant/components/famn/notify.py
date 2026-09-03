@@ -46,7 +46,7 @@ async def async_setup_entry(
             )
             known_members.update(new_members)
 
-    scores.async_add_listener(add_member_entities)
+    entry.async_on_unload(scores.async_add_listener(add_member_entities))
     add_member_entities()
 
 
@@ -73,12 +73,12 @@ class FamnNotifyEntity(NotifyEntity):
     ) -> None:
         """Send the message via Famn, to one member or the whole space."""
         scores = self._entry.runtime_data.scores
-        await scores.auth.async_ensure_token_valid()
 
         if TYPE_CHECKING:
             assert self._entry.unique_id is not None
 
         try:
+            await scores.auth.async_ensure_token_valid()
             await scores.space_api.notify_space_endpoint(
                 self._entry.unique_id,
                 body=NotifySpaceRequest(
