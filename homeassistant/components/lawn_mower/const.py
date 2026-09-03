@@ -23,7 +23,7 @@ class LawnMowerActivity(StrEnum):
     """Device is returning."""
 
     IDLE = "idle"
-    """Device is idle, stopped but not docked."""
+    """Device is stopped, but neither docked nor paused."""
 
 
 class LawnMowerEntityFeature(IntFlag):
