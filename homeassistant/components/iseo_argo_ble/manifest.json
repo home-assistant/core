@@ -75,5 +75,5 @@
   "iot_class": "local_polling",
   "loggers": ["iseo_argo_ble"],
   "quality_scale": "bronze",
-  "requirements": ["iseo-argo-ble==0.9.4"]
+  "requirements": ["iseo-argo-ble==0.9.5"]
 }
