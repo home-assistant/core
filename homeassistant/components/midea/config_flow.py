@@ -730,14 +730,16 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
                 ),
             )
+            entry_device_id = entry.data[CONF_DEVICE_ID]
+            device = devices.get(entry_device_id)
             if len(devices) == 0:
                 error = "invalid_device_ip"
-            elif entry.data[CONF_DEVICE_ID] not in devices:
+            elif device is None:
                 error = "invalid_device_id_for_ip"
             else:
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
+                    data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
                 )
         return self.async_show_form(
             step_id="reconfigure",
