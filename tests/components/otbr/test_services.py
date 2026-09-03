@@ -6,6 +6,8 @@ import re
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import DelayTimer, MeshcopTLVType, Timestamp
@@ -27,10 +29,11 @@ from homeassistant.components.thread import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from . import BASE_URL, DATASET_CH16
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 # A different network from the one under test: ts 1003, channel 15. Carries
 # every network-defining TLV plus a wakeup-channel TLV (0x4a) to prove
@@ -313,6 +316,158 @@ async def test_pending_dataset_appearing_mid_flight_is_surfaced(
 
     assert exc_info.value.translation_key == "pending_dataset_in_place"
 
+    # The router refused, so no migration is under way: the propagation
+    # window recorded before the write is handed back, and a retry once the
+    # other pending dataset is gone is not refused as still in flight.
+    mock_pending_endpoint(aioclient_mock)
+    response = await call_migrate(hass, dataset=TARGET)
+    assert response["status"] == "migrating"
+
+
+async def test_migration_window_is_measured_from_the_routers_acceptance(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A slow write does not shorten the recorded propagation window.
+
+    The router's delay timer starts when it accepts the dataset, so the
+    window is re-anchored once the request completes; measured from before
+    the request, a 60s delay behind an 8s request would have ended while the
+    mesh was still counting down.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.OK)
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/pending", status=HTTPStatus.NO_CONTENT)
+
+    async def slow_put(method, url, data):
+        freezer.tick(8)
+        return AiohttpClientMockResponse(method, url, status=HTTPStatus.CREATED)
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", side_effect=slow_put)
+    await call_migrate(hass, dataset=TARGET, delay=60)
+
+    mock_pending_endpoint(aioclient_mock)
+    freezer.tick(55)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=TARGET)
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert exc_info.value.translation_placeholders == {"remaining": "5"}
+
+    freezer.tick(5)
+    assert (await call_migrate(hass, dataset=TARGET))["status"] == "migrating"
+
+
+async def test_a_write_that_never_arrived_frees_the_migration_window(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A lost connection over a router that took nothing does not block.
+
+    The window is opened before the write, so a connection that dies has to
+    be resolved rather than assumed: a router that answers and holds no
+    pending dataset never got it, and refusing retries for the whole delay
+    would be a self-inflicted outage.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.OK)
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/pending", status=HTTPStatus.NO_CONTENT)
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", exc=aiohttp.ClientError)
+
+    with pytest.raises(HomeAssistantError):
+        await call_migrate(hass, dataset=TARGET)
+
+    # The retry is a normal migration, not a refusal.
+    mock_pending_endpoint(aioclient_mock)
+    response = await call_migrate(hass, dataset=TARGET)
+
+    assert response["status"] == "migrating"
+
+
+async def test_the_persisted_window_covers_the_router_request(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A crash during the write cannot leave a window that ends too early.
+
+    Home Assistant can stop between the router accepting the dataset and the
+    deadline being re-anchored afterwards, leaving only what was written
+    before the request. The router starts its delay when it accepts, so that
+    record has to cover the request as well.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.OK)
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/pending", status=HTTPStatus.NO_CONTENT)
+
+    persisted: list[float] = []
+
+    async def slow_put(method, url, data):
+        # What a crash right here would leave behind, at the moment the
+        # router accepts the write and starts counting down.
+        freezer.tick(8)
+        (record,) = hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"].values()
+        persisted.append(record["until"] - dt_util.utcnow().timestamp())
+        return AiohttpClientMockResponse(method, url, status=HTTPStatus.CREATED)
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", side_effect=slow_put)
+    await call_migrate(hass, dataset=TARGET, delay=60)
+
+    assert persisted and persisted[0] >= 60
+
+
+async def test_a_lost_connection_keeps_the_migration_window(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A write that may have landed keeps the mesh marked as migrating.
+
+    With no answer from the router the dataset may well be propagating, and
+    refusing a retry for the delay is the safe side of that uncertainty.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.OK)
+
+    # Nothing before the write (this action checks, then the library checks
+    # again), the written dataset after it: the connection died reporting a
+    # write the router did take.
+    pending = [None, None, TARGET]
+
+    async def pending_get(method, url, data):
+        answer = pending[0] if len(pending) == 1 else pending.pop(0)
+        if answer is None:
+            return AiohttpClientMockResponse(method, url, status=HTTPStatus.NO_CONTENT)
+        return AiohttpClientMockResponse(method, url, text=answer)
+
+    async def slow_failure(method, url, data):
+        freezer.tick(8)
+        return AiohttpClientMockResponse(method, url, exc=aiohttp.ClientError)
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/pending", side_effect=pending_get)
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", side_effect=slow_failure)
+
+    with pytest.raises(HomeAssistantError):
+        await call_migrate(hass, dataset=TARGET, delay=60)
+
+    # The write may have landed as late as the moment the connection died,
+    # so the window is measured from there, not from before the request.
+    mock_pending_endpoint(aioclient_mock)
+    freezer.tick(55)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=TARGET)
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert exc_info.value.translation_placeholders == {"remaining": "5"}
+
 
 async def test_delay_is_applied(
     hass: HomeAssistant,
@@ -538,25 +693,63 @@ async def test_concurrent_migrations_are_serialized(
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Overlapping migrations never produce equal timestamps.
+    """Overlapping migrations of one mesh run one at a time, and only one runs.
 
-    The lock serializes them and the store-aware stamping makes the second
-    write strictly newer, so neither is silently ignored by the mesh.
+    The lock serializes them; the second then finds the first still
+    propagating and is refused rather than stamped newer, since a router that
+    has not learned the first dataset yet would accept the second in its
+    place and split the mesh.
     """
     mock_pending_endpoint(aioclient_mock)
 
-    r1, r2 = await asyncio.gather(
-        call_migrate(hass, dataset=TARGET), call_migrate(hass, dataset=TARGET)
+    results = await asyncio.gather(
+        call_migrate(hass, dataset=TARGET),
+        call_migrate(hass, dataset=TARGET),
+        return_exceptions=True,
     )
 
-    assert r1["status"] == "migrating"
-    assert r2["status"] == "migrating"
-    puts = pending_calls(aioclient_mock)
-    assert len(puts) == 2
-    stamps = {
-        tlv_parser.parse_tlv(p[2])[MeshcopTLVType.ACTIVETIMESTAMP].seconds for p in puts
-    }
-    assert stamps == {1004, 1005}
+    outcomes = sorted(type(r).__name__ for r in results)
+    assert outcomes == ["HomeAssistantError", "dict"]
+    refused = next(r for r in results if isinstance(r, HomeAssistantError))
+    assert refused.translation_key == "migration_in_flight"
+    assert len(pending_calls(aioclient_mock)) == 1
+
+
+async def test_second_migration_of_a_mesh_waits_for_the_first(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A mesh mid-migration refuses another until the delay has expired.
+
+    The refusal names the time left; once the delay is over the next
+    migration of the same mesh proceeds, stamped above the first.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    other_target = dict(tlv_parser.parse_tlv(TARGET))
+    other_target[MeshcopTLVType.EXTPANID] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.EXTPANID, bytes.fromhex("3333333344444444")
+    )
+
+    await call_migrate(hass, dataset=TARGET, delay=60)
+    freezer.tick(30)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert exc_info.value.translation_placeholders == {"remaining": "30"}
+    assert len(pending_calls(aioclient_mock)) == 1
+
+    freezer.tick(30)
+    response = await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
+
+    assert response["status"] == "migrating"
+    stamps = [
+        tlv_parser.parse_tlv(put[2])[MeshcopTLVType.ACTIVETIMESTAMP].seconds
+        for put in pending_calls(aioclient_mock)
+    ]
+    assert stamps == [1004, 1005]
 
 
 async def test_channel_change_waits_for_dataset_lock(
@@ -748,13 +941,14 @@ async def test_migrations_of_one_mesh_do_not_share_a_timestamp(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test two migrations of the same mesh get distinct timestamps.
 
-    A pending dataset takes its delay to propagate, so a second border router
-    on the same mesh still reports the old active dataset and no pending one.
-    Targeting a different network, nothing in the router's or the store's
-    state would separate the two stamps.
+    A second border router on the same mesh may still report the old active
+    dataset and no pending one, even once the first migration's delay has
+    expired. Targeting a different network, nothing in the router's or the
+    store's state would separate the two stamps.
     """
     mock_pending_endpoint(aioclient_mock)
     other_target = dict(tlv_parser.parse_tlv(TARGET))
@@ -766,6 +960,7 @@ async def test_migrations_of_one_mesh_do_not_share_a_timestamp(
     )
 
     await call_migrate(hass, dataset=TARGET)
+    freezer.tick(301)
     await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
 
     stamps = [
@@ -782,6 +977,7 @@ async def test_issued_timestamps_survive_a_restart(
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
     hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the per-mesh timestamp floor is not lost with a restart.
 
@@ -803,8 +999,14 @@ async def test_issued_timestamps_survive_a_restart(
     # Written through before the router was, not on the lazy save timer.
     (source_xpan,) = hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"]
 
-    # A restart drops everything held in memory; the file stays.
+    # A restart drops everything held in memory; the file stays, and so does
+    # the propagation window it records.
     del hass.data[ISSUED_TIMESTAMPS_KEY]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
+    assert exc_info.value.translation_key == "migration_in_flight"
+
+    freezer.tick(301)
     await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
 
     stamps = [
@@ -813,9 +1015,8 @@ async def test_issued_timestamps_survive_a_restart(
     ]
     assert len(stamps) == 2
     assert stamps[0] < stamps[1]
-    assert hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"] == {
-        source_xpan: [stamps[1], 0]
-    }
+    record = hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"][source_xpan]
+    assert record["timestamp"] == [stamps[1], 0]
 
 
 async def test_preferred_dataset_replaced_while_reading_the_router(

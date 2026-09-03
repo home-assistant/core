@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
+from python_otbr_api import PENDING_DATASET_DELAY_TIMER, OTBRError, tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .util import (
@@ -29,6 +30,7 @@ from .util import (
 
 if TYPE_CHECKING:
     from .types import OTBRConfigEntry
+    from .util import IssuedTimestamps, OTBRData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +43,11 @@ ATTR_DELAY = "delay"
 # The delay recommended for a channel change; a network change needs the
 # same grace for sleepy devices to hear about it.
 DEFAULT_DELAY_S = PENDING_DATASET_DELAY_TIMER // 1000
+
+# How long the write itself can take: the library reads the pending dataset
+# and then writes it, each bounded by the ten second timeout the integration
+# gives its API client.
+_WRITE_WINDOW_S = 20
 
 # The pending dataset is merged by the router over a base it chooses: an
 # in-flight pending dataset, or a freshly generated random network. Any
@@ -222,6 +229,75 @@ async def _pinned_channel_of_another_router(
     return None
 
 
+async def _router_holds_a_pending_dataset(data: OTBRData) -> bool:
+    """Return whether the router has a pending dataset, assuming it does.
+
+    Asked after a write whose outcome the connection did not report. Any
+    pending dataset means one is propagating, whether or not it is the one
+    that was being written. A router that cannot be asked leaves the
+    question open, and the answer that protects the mesh is that there is
+    one.
+    """
+    try:
+        return await data.get_pending_dataset_tlvs() is not None
+    except HomeAssistantError:
+        return True
+
+
+async def _write_pending_dataset(
+    data: OTBRData,
+    dataset: bytes,
+    issued: IssuedTimestamps,
+    source_xpan: str | None,
+    stamp: tuple[int, int],
+    delay: int,
+) -> None:
+    """Hand the pending dataset to the router, recording it as propagating.
+
+    The record is written before the write and deliberately outlasts the
+    delay: the router starts its own timer only once it accepts the dataset,
+    up to _WRITE_WINDOW_S later, and a crash in between leaves this record
+    as the only one. Erring long costs a late retry after such a crash;
+    erring short lets the next migration overtake a mesh still counting
+    down. The record is tightened to the real deadline once the write
+    completes.
+    """
+    previous = issued.record(source_xpan) if source_xpan is not None else None
+    if source_xpan is not None:
+        await issued.async_set(
+            source_xpan,
+            stamp,
+            until=dt_util.utcnow().timestamp() + delay + _WRITE_WINDOW_S,
+        )
+    try:
+        await data.set_pending_dataset_tlvs(dataset)
+    except HomeAssistantError as err:
+        if source_xpan is not None:
+            # A definitive answer from the router, or the library's own
+            # refusal, means nothing was written. A dropped connection
+            # leaves that open, so ask the router: holding a pending
+            # dataset means something is propagating and the window stays,
+            # measured from the latest moment the write can have landed;
+            # holding none means it never arrived, and keeping the window
+            # would refuse every retry until it expired.
+            if isinstance(
+                err.__cause__, OTBRError
+            ) or not await _router_holds_a_pending_dataset(data):
+                await issued.async_restore(source_xpan, previous)
+            else:
+                await issued.async_set(
+                    source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
+                )
+        raise
+    if source_xpan is not None:
+        # The router's delay timer started when it accepted the write, not
+        # when the request left: a slow request would otherwise end the
+        # recorded window while the mesh is still counting down.
+        await issued.async_set(
+            source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
+        )
+
+
 async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
     """Migrate a border router and every device on its network.
 
@@ -342,6 +418,17 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         source_xpan_item = active.get(MeshcopTLVType.EXTPANID)
         source_xpan = str(source_xpan_item).lower() if source_xpan_item else None
         if source_xpan is not None:
+            # A newer stamp is not enough while the earlier dataset is still
+            # propagating: a router that has not learned it yet accepts this
+            # one in its place, and devices that only got the earlier dataset
+            # end up on a different network than the rest. Refuse until the
+            # earlier migration's delay has expired.
+            if remaining := issued.seconds_in_flight(source_xpan):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="migration_in_flight",
+                    translation_placeholders={"remaining": str(remaining)},
+                )
             newest = max(newest, issued.get(source_xpan))
 
         # Always step the seconds, never the ticks: python_otbr_api's channel
@@ -384,10 +471,13 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
                     translation_key="preferred_dataset_changed",
                 )
 
-        if source_xpan is not None:
-            await issued.async_set(source_xpan, (seconds, 0))
-        await data.set_pending_dataset_tlvs(
-            bytes.fromhex(tlv_parser.encode_tlv(pending))
+        await _write_pending_dataset(
+            data,
+            bytes.fromhex(tlv_parser.encode_tlv(pending)),
+            issued,
+            source_xpan,
+            (seconds, 0),
+            delay,
         )
 
         # What the network will run after the delay is the re-stamped
