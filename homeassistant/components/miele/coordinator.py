@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import cast, override
 
 from aiohttp import ClientResponseError
 from pymiele import (
@@ -19,9 +19,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PROGRAM_IDS
+from .const import DOMAIN, PROGRAM_IDS, MieleAppliance
 
 _LOGGER = logging.getLogger(__name__)
+
+_UNMAPPED_PROGRAM_ID_APPLIANCES = {
+    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+    MieleAppliance.MICROWAVE,
+    MieleAppliance.DIALOG_OVEN,
+}
 
 
 @dataclass
@@ -79,14 +86,24 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
     def _record_unknown_program_ids(self, devices: dict[str, MieleDevice]) -> None:
         """Record unknown program IDs from appliance state updates."""
         for device_id, device in devices.items():
-            if (program_id_type := PROGRAM_IDS.get(device.device_type)) is None:
+            program_id = cast(int | None, device.state_program_id)
+            if program_id is None:
                 continue
-            program_id = device.state_program_id
-            if program_id_type(program_id).name is not None:
+
+            program_id_type = PROGRAM_IDS.get(device.device_type)
+            if program_id_type is None:
+                if (
+                    device.device_type not in _UNMAPPED_PROGRAM_ID_APPLIANCES
+                    or program_id in (0, -1)
+                ):
+                    continue
+            elif program_id_type(program_id).name is not None:
                 continue
-            self.unknown_program_ids.setdefault(device_id, {})[program_id] = (
-                device.state_program_id_localized
-            )
+
+            unknown_programs = self.unknown_program_ids.setdefault(device_id, {})
+            value_localized = device.state_program_id_localized
+            if value_localized or program_id not in unknown_programs:
+                unknown_programs[program_id] = value_localized
 
     @override
     async def _async_update_data(self) -> MieleCoordinatorData:

@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
-from homeassistant.components.miele.const import DOMAIN
+from homeassistant.components.miele.const import DOMAIN, MieleAppliance
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
@@ -99,8 +99,13 @@ async def test_device_diagnostics_retains_unknown_program(
         data_callback = get_data_callback(mock_miele_client)
         await data_callback(device_fixture)
 
-        program_id["value_raw"] = 0
         program_id["value_localized"] = ""
+        await data_callback(device_fixture)
+
+        program_id["value_raw"] = 0
+        await data_callback(device_fixture)
+
+        program_id["value_raw"] = None
         await data_callback(device_fixture)
 
         result = await get_diagnostics_for_device(
@@ -113,3 +118,45 @@ async def test_device_diagnostics_retains_unknown_program(
         mock_miele_client.get_programs.assert_not_awaited()
     finally:
         completed_warnings.discard(warning)
+
+
+@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
+async def test_device_diagnostics_records_unmapped_program(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: DeviceRegistry,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_fixture: MieleDevices,
+) -> None:
+    """Test diagnostics record programs for appliances without an enum mapping."""
+    device_id = "DummyAppliance_CoffeeSystem"
+    device = device_fixture[device_id]
+    device["ident"]["type"]["value_raw"] = (
+        MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL
+    )
+    program_id = device["state"]["ProgramID"]
+    program_id["value_raw"] = 31001
+    program_id["value_localized"] = "Cottons"
+
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+
+    data_callback = get_data_callback(mock_miele_client)
+    program_id["value_raw"] = 0
+    program_id["value_localized"] = ""
+    await data_callback(device_fixture)
+    program_id["value_raw"] = -1
+    await data_callback(device_fixture)
+
+    result = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, device_entry
+    )
+
+    assert result["miele_data"]["unknown_program_ids"] == [
+        {"value_raw": 31001, "value_localized": "Cottons"}
+    ]
+    mock_miele_client.get_programs.assert_not_awaited()
