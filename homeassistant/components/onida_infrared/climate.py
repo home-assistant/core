@@ -104,7 +104,7 @@ class OnidaAcClimateEntity(
 
     def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
         """Initialize Onida AC climate entity."""
-        super().__init__(entry, unique_id_suffix="climate", device_name="Onida AC")
+        super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
 
         configured_modes = entry.data.get(

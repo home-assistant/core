@@ -15,11 +15,15 @@ class OnidaIrEntity(Entity):
     def __init__(
         self,
         entry: ConfigEntry,
-        unique_id_suffix: str,
+        unique_id_suffix: str | None = None,
         device_name: str = "Onida AC",
     ) -> None:
         """Initialize Onida IR entity."""
-        self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
+        self._attr_unique_id = (
+            entry.entry_id
+            if unique_id_suffix is None
+            else f"{entry.entry_id}_{unique_id_suffix}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=device_name,

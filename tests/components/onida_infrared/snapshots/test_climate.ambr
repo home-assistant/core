@@ -47,7 +47,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 9>,
     'translation_key': None,
-    'unique_id': '01JTEST0000000000000000001_climate',
+    'unique_id': '01JTEST0000000000000000001',
     'unit_of_measurement': None,
   })
 # ---
@@ -73,7 +73,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 9>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.onida_ac',

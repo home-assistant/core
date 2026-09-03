@@ -116,7 +116,8 @@ rules:
   async-dependency:
     status: exempt
     comment: |
-      This integration has no external dependencies.
+      This integration depends on infrared_protocols, which provides only code
+      definitions with no I/O, so async dependency does not apply.
   inject-websession:
     status: exempt
     comment: |
