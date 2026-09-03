@@ -16,12 +16,10 @@ ATTR_EN_DEMAND = "en_demand"
 ATTR_MAX_POW = "max_pow"
 
 ATTR_MODE_MANUAL = "manual"
-ATTR_MODE_SCHEDULED = "scheduled"
 ATTR_MODE_AUTO = "auto"
 
 DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
     ATTR_MODE_MANUAL: 0,
-    ATTR_MODE_SCHEDULED: 1,
     ATTR_MODE_AUTO: 2,
 }
 

@@ -24,5 +24,4 @@ set_demand_control:
           translation_key: "demand_control_mode"
           options:
             - "manual"
-            - "scheduled"
             - "auto"

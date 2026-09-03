@@ -94,8 +94,7 @@
     "demand_control_mode": {
       "options": {
         "auto": "Auto",
-        "manual": "Manual",
-        "scheduled": "Scheduled"
+        "manual": "Manual"
       }
     }
   },
@@ -116,7 +115,7 @@
           "name": "Maximum power"
         },
         "mode": {
-          "description": "Demand control mode: manual, scheduled or auto.",
+          "description": "Demand control mode: manual or auto.",
           "name": "Mode"
         }
       },

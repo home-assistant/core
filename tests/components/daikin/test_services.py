@@ -78,7 +78,6 @@ async def test_set_demand_control(
     ("mode", "expected_mode"),
     [
         ("manual", 0),
-        ("scheduled", 1),
         ("auto", 2),
     ],
 )
