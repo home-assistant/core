@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "error": {
       "bad_dsn": "Invalid DSN",
       "unknown": "[%key:common::config_flow::error::unknown%]"

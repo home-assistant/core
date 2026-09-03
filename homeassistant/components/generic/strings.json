@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "error": {
       "already_exists": "A camera with these URL settings already exists.",
       "invalid_still_image": "URL did not return a valid still image",

@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "error": {
       "invalid_discovery_topic": "Invalid discovery topic prefix."
     },

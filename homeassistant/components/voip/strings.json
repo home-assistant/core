@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "step": {
       "user": {
         "description": "Receive Voice over IP calls to interact with Assist."

@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "step": {
       "confirm": {
         "description": "Please confirm setting up the Deako integration"

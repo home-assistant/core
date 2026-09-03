@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "step": {
       "confirm": {
         "description": "Do you want to set up an Escea fireplace?"

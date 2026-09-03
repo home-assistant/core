@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "step": {
       "user": {
         "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"

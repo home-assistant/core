@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "step": {
       "user": {
         "description": "Do you want to start the setup? The initial setup will take about 30-40 seconds."

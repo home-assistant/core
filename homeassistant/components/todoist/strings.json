@@ -1,6 +1,5 @@
 {
   "config": {
-    "abort": {},
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
