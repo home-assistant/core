@@ -171,7 +171,8 @@ async def recreate_container(call: ServiceCall) -> None:
     await coordinator.async_request_refresh()
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(
