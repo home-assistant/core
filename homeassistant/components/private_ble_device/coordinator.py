@@ -10,7 +10,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.core import HomeAssistant
 
-from .const import COORDINATOR
+from .const import PRIVATE_BLE_DEVICE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -239,9 +239,9 @@ def async_get_coordinator(hass: HomeAssistant) -> PrivateDevicesCoordinator:
     mac addresses with an IRK involves AES operations. We don't want to
     duplicate that work.
     """
-    if (existing := hass.data.get(COORDINATOR)) is not None:
+    if (existing := hass.data.get(PRIVATE_BLE_DEVICE_DATA)) is not None:
         return existing
 
-    coordinator = hass.data[COORDINATOR] = PrivateDevicesCoordinator(hass)
+    coordinator = hass.data[PRIVATE_BLE_DEVICE_DATA] = PrivateDevicesCoordinator(hass)
 
     return coordinator
