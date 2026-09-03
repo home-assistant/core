@@ -425,6 +425,10 @@ async def test_reload_entry_in_setup_retry(
         (None, {"hello", "another", "world"}),
         ("integration", {"hello", "another"}),
         ("helper", {"world"}),
+        # FLOWS has no bucket for these, so only custom integrations can match
+        ("device", set()),
+        ("hub", set()),
+        ("service", set()),
     ],
 )
 async def test_available_flows(
@@ -443,6 +447,29 @@ async def test_available_flows(
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
         assert set(data) == result
+
+
+@pytest.mark.parametrize(
+    "type_filter",
+    [
+        # the frontend sends an array of types joined into a single value
+        "device,hub,service",
+        "not_a_type",
+        "",
+    ],
+)
+async def test_available_flows_invalid_type(
+    client: TestClient, type_filter: str
+) -> None:
+    """Test an unknown type filter is rejected instead of raising.
+
+    Regression test for https://github.com/home-assistant/core/issues/176851
+    """
+    resp = await client.get(
+        "/api/config/config_entries/flow_handlers",
+        params={"type": type_filter},
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 ############################

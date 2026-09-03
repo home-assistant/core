@@ -352,16 +352,21 @@ async def async_get_custom_components(
     return comps_or_future
 
 
+ConfigFlowTypeFilter = Literal["device", "helper", "hub", "integration", "service"]
+
+
 async def async_get_config_flows(
     hass: HomeAssistant,
-    type_filter: Literal["device", "helper", "hub", "service"] | None = None,
+    type_filter: ConfigFlowTypeFilter | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
     integrations = await async_get_custom_components(hass)
     flows: set[str] = set()
 
     if type_filter is not None:
-        flows.update(FLOWS[type_filter])
+        # FLOWS only buckets built-in flows as "helper" or "integration"; the more
+        # specific types only ever match custom integrations below.
+        flows.update(FLOWS.get(type_filter, []))
     else:
         for type_flows in FLOWS.values():
             flows.update(type_flows)
