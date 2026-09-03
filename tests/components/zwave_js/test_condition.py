@@ -642,3 +642,62 @@ async def test_node_status_selector_translations(hass: HomeAssistant) -> None:
     assert {
         key.removeprefix(prefix) for key in translations if key.startswith(prefix)
     } == {"alive", "asleep", "awake", "dead"}
+
+
+async def test_non_zwave_device_is_skipped(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a targeted device from another integration is neither a node nor unresolved."""
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("other", "dev")}
+    )
+    checker = await _checker(
+        hass,
+        {
+            "condition": f"{DOMAIN}.node_status",
+            "target": {
+                "device_id": [
+                    _device_id(
+                        device_registry, client, lock_schlage_be469, integration
+                    ),
+                    other_device.id,
+                ]
+            },
+            "options": {"behavior": "all", "status": "alive"},
+        },
+    )
+    assert checker.async_check() is True
+
+
+async def test_value_empty_property_key(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an empty property key is treated as no property key."""
+    checker = await _checker(
+        hass,
+        {
+            "condition": f"{DOMAIN}.value",
+            "target": {
+                "device_id": _device_id(
+                    device_registry, client, lock_schlage_be469, integration
+                )
+            },
+            "options": {
+                "command_class": 112,
+                "property": 3,
+                "property_key": "",
+                "value": 255,
+            },
+        },
+    )
+    assert checker.async_check() is True
