@@ -12,6 +12,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.iseo_argo_ble.const import (
     ATTR_ENABLED,
     DOMAIN,
@@ -27,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -124,6 +129,31 @@ async def test_set_credential_enabled(
     assert hass.states.get(entity_id).state == expected_state
     # The new state is applied to the cached list rather than re-read.
     mock_iseo_client.read_users.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_update_entity_does_not_reach_the_lock(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the generic update action does not re-read the credential list.
+
+    Repeating that admin read is what faults the lock's firmware, so asking for
+    a refresh has to stay inert however it is asked for.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    mock_iseo_client.read_users.reset_mock()
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ALICE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_iseo_client.read_users.assert_not_called()
 
 
 @pytest.mark.parametrize(
