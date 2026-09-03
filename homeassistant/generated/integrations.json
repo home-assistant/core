@@ -5635,6 +5635,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "podcast_player": {
+      "name": "Podcast Player",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "point": {
       "name": "Minut Point",
       "integration_type": "hub",

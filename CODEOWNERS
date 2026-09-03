@@ -1438,6 +1438,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/plex/ @jjlawren
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew
 /tests/components/plugwise/ @CoMPaTech @bouwew
+/homeassistant/components/podcast_player/ @armilancode
+/tests/components/podcast_player/ @armilancode
 /homeassistant/components/point/ @fredrike
 /tests/components/point/ @fredrike
 /homeassistant/components/pooldose/ @lmaertin
