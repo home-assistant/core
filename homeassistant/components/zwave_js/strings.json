@@ -1119,11 +1119,11 @@
           "name": "Config entry"
         },
         "device_id": {
-          "description": "Devices whose node events to listen to. Node events need at least one device or entity.",
+          "description": "Devices whose node events to listen to. Node events need at least one device or entity, and controller or driver events must not have any.",
           "name": "Devices"
         },
         "entity_id": {
-          "description": "Entities whose node events to listen to. Node events need at least one device or entity.",
+          "description": "Entities whose node events to listen to. Node events need at least one device or entity, and controller or driver events must not have any.",
           "name": "Entities"
         },
         "event": {

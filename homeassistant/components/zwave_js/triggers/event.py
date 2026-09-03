@@ -51,11 +51,25 @@ RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
 PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 
-def validate_non_node_event_source(obj: dict) -> dict:
-    """Validate that a trigger for a non node event source has a config entry."""
-    if obj[ATTR_EVENT_SOURCE] != "node" and ATTR_CONFIG_ENTRY_ID in obj:
+def validate_event_source_targets(obj: dict) -> dict:
+    """Validate that the targets match the event source."""
+    if obj[ATTR_EVENT_SOURCE] == "node":
+        if ATTR_DEVICE_ID not in obj and ATTR_ENTITY_ID not in obj:
+            raise vol.Invalid(
+                f"Node event triggers must contain {ATTR_DEVICE_ID} or "
+                f"{ATTR_ENTITY_ID}."
+            )
         return obj
-    raise vol.Invalid(f"Non node event triggers must contain {ATTR_CONFIG_ENTRY_ID}.")
+    if ATTR_CONFIG_ENTRY_ID not in obj:
+        raise vol.Invalid(
+            f"Non node event triggers must contain {ATTR_CONFIG_ENTRY_ID}."
+        )
+    if ATTR_DEVICE_ID in obj or ATTR_ENTITY_ID in obj:
+        raise vol.Invalid(
+            f"Non node event triggers must not contain {ATTR_DEVICE_ID} or "
+            f"{ATTR_ENTITY_ID}."
+        )
+    return obj
 
 
 def validate_event_name(obj: dict) -> dict:
@@ -112,10 +126,7 @@ _CONFIG_SCHEMA = vol.Schema(
             _OPTIONS_SCHEMA_DICT,
             validate_event_name,
             validate_event_data,
-            vol.Any(
-                validate_non_node_event_source,
-                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-            ),
+            validate_event_source_targets,
         )
     }
 )

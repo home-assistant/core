@@ -1,5 +1,6 @@
 """The tests for Z-Wave JS automation triggers."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import copy
 from unittest.mock import MagicMock, patch
 
@@ -1047,6 +1048,74 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
                     "property": "latchStatus",
                 },
             },
+        )
+
+
+@pytest.mark.parametrize(
+    ("event_source", "event", "target_keys", "expectation"),
+    [
+        pytest.param(
+            "controller",
+            "inclusion started",
+            ["device_id"],
+            pytest.raises(vol.Invalid, match="must not contain"),
+            id="controller_with_device_id",
+        ),
+        pytest.param(
+            "driver",
+            "logging",
+            ["entity_id"],
+            pytest.raises(vol.Invalid, match="must not contain"),
+            id="driver_with_entity_id",
+        ),
+        pytest.param(
+            "node",
+            "interview stage completed",
+            [],
+            pytest.raises(vol.Invalid, match="must contain"),
+            id="node_without_targets",
+        ),
+        pytest.param(
+            "controller",
+            "inclusion started",
+            [],
+            does_not_raise(),
+            id="controller_without_targets",
+        ),
+    ],
+)
+async def test_zwave_js_event_source_target_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    event_source: str,
+    event: str,
+    target_keys: list[str],
+    expectation: AbstractContextManager,
+) -> None:
+    """Test that zwave_js.event targets are validated against the event source."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    targets = {"device_id": device.id, "entity_id": SCHLAGE_BE469_LOCK_ENTITY}
+
+    with expectation:
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.event",
+                    "options": {
+                        "config_entry_id": integration.entry_id,
+                        "event_source": event_source,
+                        "event": event,
+                        **{key: targets[key] for key in target_keys},
+                    },
+                }
+            ],
         )
 
 
