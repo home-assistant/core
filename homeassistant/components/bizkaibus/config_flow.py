@@ -18,7 +18,9 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_LINE_IDS, CONF_LINES, CONF_STOP_ID, DOMAIN
 
-USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_STOP_ID): cv.string})
+USER_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_STOP_ID): vol.All(cv.string, vol.Match(r"^[0-9]{4}$"))}
+)
 
 
 def _lines_schema(
