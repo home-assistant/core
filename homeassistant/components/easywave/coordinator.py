@@ -320,7 +320,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._battery_state[device_id] = _BATTERY_STATE_LOW
                 self.fire_device_event(device_id, EVENT_TYPE_BATTERY_LOW, subtype="low")
             return
-        if self._battery_state.get(device_id) == _BATTERY_STATE_OK:
+        # Only treat OK telegrams as recovery after a known low state.
+        if self._battery_state.get(device_id) != _BATTERY_STATE_LOW:
+            self._battery_state[device_id] = _BATTERY_STATE_OK
+            self._battery_ok_streak[device_id] = 0
             return
         self._battery_ok_streak[device_id] = (
             self._battery_ok_streak.get(device_id, 0) + 1
@@ -329,6 +332,14 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._battery_state[device_id] = _BATTERY_STATE_OK
             self._battery_ok_streak[device_id] = 0
             self.fire_device_event(device_id, EVENT_TYPE_BATTERY_NORMAL, subtype="ok")
+
+    @callback
+    def sync_transmitter_battery_state(self, device_id: str, state: str) -> None:
+        """Seed battery event state from a restored battery sensor."""
+        if state not in (_BATTERY_STATE_OK, _BATTERY_STATE_LOW):
+            return
+        self._battery_state[device_id] = state
+        self._battery_ok_streak[device_id] = 0
 
     @property
     def _has_telegram_listeners(self) -> bool:

@@ -13,6 +13,7 @@ from easywave_home_control.codec.events import EasywaveButton
 import pytest
 
 from homeassistant.components.easywave.config_flow_device import (
+    _normalize_learned_sensor,
     _normalize_learned_transmitter,
 )
 from homeassistant.components.easywave.const import (
@@ -155,6 +156,8 @@ def test_normalize_learned_transmitter_rejects_should_ignore() -> None:
 
 def _make_sensor_learn_telegram(
     serial_hex: str = MOCK_SENSOR_SERIAL,
+    *,
+    capabilities: int = NEO_SENSOR_CAPABILITIES,
 ) -> SensorTelegramEvent:
     """Return a mock neo sensor learn telegram."""
     return SensorTelegramEvent(
@@ -163,9 +166,16 @@ def _make_sensor_learn_telegram(
             version=0,
             has_battery=True,
             battery_level=7,
-            capabilities=NEO_SENSOR_CAPABILITIES,
+            capabilities=capabilities,
         ),
     )
+
+
+def test_normalize_learned_sensor_rejects_without_measurements() -> None:
+    """Learn telegrams without temperature or humidity are not accepted."""
+    telegram = _make_sensor_learn_telegram(capabilities=0)
+
+    assert _normalize_learned_sensor(telegram) is None
 
 
 async def test_transmitter_flow_group_impulse(
@@ -692,6 +702,29 @@ async def test_neo_sensor_flow_rejects_non_sensor_telegrams(
     invalid_event = _make_transmitter_telegram()
     coordinator = _make_coordinator(telegram=None)
     coordinator.transceiver.receive_telegram = AsyncMock(return_value=invalid_event)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_neo_sensor_flow_until_intro(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.easywave.config_flow_learning.LEARNING_TIMEOUT",
+        0.01,
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": "learn"}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "learn_timeout_sensor"
+
+
+async def test_neo_sensor_flow_rejects_sensor_without_measurements(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Neo sensor learning ignores learn telegrams without temp/humidity."""
+    telegram = _make_sensor_learn_telegram(capabilities=0)
+    coordinator = _make_coordinator(telegram=telegram)
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
 

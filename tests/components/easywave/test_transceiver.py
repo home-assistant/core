@@ -388,6 +388,48 @@ def test_resolve_gateway_port_matches_configured_device_path() -> None:
         )
 
 
+def test_resolve_gateway_port_rejects_path_owned_by_other_serial() -> None:
+    """Do not claim a reused path that belongs to a different serialized RX11."""
+    other_stick = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="other"
+    )
+    replacement = MagicMock(
+        device="/dev/ttyACM1", vid=0x155A, pid=0x1014, serial_number="replacement"
+    )
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[other_stick, replacement],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="configured",
+                device_path="/dev/ttyACM0",
+            )
+            is None
+        )
+
+
+def test_resolve_gateway_port_path_fallback_when_serial_absent_on_port() -> None:
+    """A path match is allowed when the stick has no USB serial number."""
+    port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number=None)
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[port],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="configured",
+                device_path="/dev/ttyACM0",
+                allow_replacement=False,
+            )
+            == "/dev/ttyACM0"
+        )
+
+
 def test_resolve_gateway_port_returns_none_when_comports_raises() -> None:
     """Port resolution fails closed when USB enumeration raises."""
     with patch(

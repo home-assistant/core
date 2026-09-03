@@ -364,6 +364,9 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             native = last_data.native_value
             if native in _BATTERY_OPTIONS:
                 self._native_value = str(native)
+                self._coordinator.sync_transmitter_battery_state(
+                    self._device_id, self._native_value
+                )
         # Then subscribe to coordinator
         await super().async_added_to_hass()
 

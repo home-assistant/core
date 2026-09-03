@@ -53,12 +53,16 @@ def _normalize_learned_sensor(telegram: Any) -> dict[str, Any] | None:
         return None
     if not isinstance(telegram.payload, SensorLearnPayload):
         return None
+    measures_temperature = telegram.payload.measures_temperature
+    measures_humidity = telegram.payload.measures_humidity
+    if not measures_temperature and not measures_humidity:
+        return None
     return {
         "serial": telegram.sensor_serial,
         "capabilities": telegram.payload.capabilities,
         "has_battery": telegram.payload.has_battery,
-        "measures_temperature": telegram.payload.measures_temperature,
-        "measures_humidity": telegram.payload.measures_humidity,
+        "measures_temperature": measures_temperature,
+        "measures_humidity": measures_humidity,
     }
 
 
@@ -214,6 +218,11 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
         """Confirm the learned neo sensor and create a subentry."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")  # pragma: no cover
+
+        if not self._learned_device.get(
+            "measures_temperature"
+        ) and not self._learned_device.get("measures_humidity"):
+            return self.async_abort(reason="unsupported_sensor")
 
         serial_hex = self._learned_device["serial"].hex()
         unique_id = f"neo_sensor_{serial_hex}"

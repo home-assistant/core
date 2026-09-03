@@ -55,7 +55,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_TYPE): vol.In(
             _GATEWAY_TRIGGER_TYPES + _TRANSMITTER_TRIGGER_TYPES
         ),
-        vol.Optional(CONF_SUBTYPE): str,
+        vol.Required(CONF_SUBTYPE): str,
     }
 )
 
@@ -77,7 +77,11 @@ def _find_easywave_config_entry(
     device: dr.DeviceEntry | dr.ChildDeviceEntry,
     easywave_id: str,
 ) -> ConfigEntry | None:
-    """Return the Easywave config entry linked to a device."""
+    """Return the Easywave config entry linked to a device.
+
+    Only entries that own the registry device (directly or via the gateway
+    parent) are accepted, so advertised triggers match fire_device_event().
+    """
     device_registry = dr.async_get(hass)
 
     for entry_id in device.config_entries:
@@ -96,12 +100,6 @@ def _find_easywave_config_entry(
                 entry.domain == DOMAIN
             ):
                 return entry
-
-    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-        if easywave_id == entry.entry_id:
-            return entry
-        if _subentry_data(entry, easywave_id) is not None:
-            return entry
 
     return None
 
@@ -214,9 +212,8 @@ async def async_attach_trigger(
     event_data: dict[str, Any] = {
         "device_id": config[CONF_DEVICE_ID],
         "type": config[CONF_TYPE],
+        CONF_SUBTYPE: config[CONF_SUBTYPE],
     }
-    if CONF_SUBTYPE in config:
-        event_data[CONF_SUBTYPE] = config[CONF_SUBTYPE]
 
     return await event_trigger.async_attach_trigger(
         hass,

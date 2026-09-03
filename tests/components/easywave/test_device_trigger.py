@@ -356,7 +356,7 @@ async def test_get_triggers_resolves_stored_device_without_config_entry_link(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Stored device options resolve triggers without a config entry device link."""
+    """Orphan Easywave identifiers without an entry link advertise no triggers."""
     entry = _make_gateway_entry(
         _transmitter_device_record(button_count=1, title="Stored Device Transmitter")
     )
@@ -375,16 +375,14 @@ async def test_get_triggers_resolves_stored_device_without_config_entry_link(
         name="Transmitter",
     )
 
-    triggers = await device_trigger.async_get_triggers(hass, orphan.id)
-
-    assert any(trigger[CONF_TYPE] == EVENT_TYPE_BUTTON_PRESS for trigger in triggers)
+    assert await device_trigger.async_get_triggers(hass, orphan.id) == []
 
 
 async def test_get_gateway_triggers_without_config_entry_link(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Gateway identifiers resolve triggers without a direct config entry link."""
+    """Orphan gateway identifiers without an entry link advertise no triggers."""
     entry = _make_gateway_entry()
     await async_setup_easywave_entry(hass, entry)
     gateway = device_registry.async_get_device_by_identifier(
@@ -401,12 +399,7 @@ async def test_get_gateway_triggers_without_config_entry_link(
         name="Gateway",
     )
 
-    triggers = await device_trigger.async_get_triggers(hass, device.id)
-
-    assert {trigger[CONF_TYPE] for trigger in triggers} == {
-        EVENT_TYPE_GATEWAY_CONNECTED,
-        EVENT_TYPE_GATEWAY_DISCONNECTED,
-    }
+    assert await device_trigger.async_get_triggers(hass, device.id) == []
 
 
 async def test_get_triggers_returns_empty_for_orphan_without_loaded_entry(

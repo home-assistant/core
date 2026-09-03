@@ -64,8 +64,13 @@ def resolve_gateway_port(
 
     if device_path:
         for port in ports:
-            if port.device == device_path:
-                return port.device
+            if port.device != device_path:
+                continue
+            # When a serial is configured, do not claim a path that already
+            # belongs to a different serialized RX11 (paths can be reused).
+            if usb_serial and port.serial_number and port.serial_number != usb_serial:
+                continue
+            return port.device
 
     if allow_replacement and len(ports) == 1:
         if usb_serial or device_path:

@@ -859,6 +859,44 @@ async def test_dispatch_battery_normal_fires_event_without_battery_entity(
     assert any(event.data["type"] == EVENT_TYPE_BATTERY_NORMAL for event in events)
 
 
+async def test_dispatch_battery_normal_requires_known_low_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """OK telegrams do not fire battery-normal before a known low state."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    transceiver = mock_easywave_transceiver()
+    coordinator = EasywaveCoordinator(hass, transceiver, entry)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Test Transmitter",
+    )
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.DEFAULT,
+            should_ignore=False,
+        )
+    )
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.DEFAULT,
+            should_ignore=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert all(event.data["type"] != EVENT_TYPE_BATTERY_NORMAL for event in events)
+    assert coordinator._battery_state[MOCK_TRANSMITTER_DEVICE_ID] == "ok"
+
+
 async def test_gateway_connected_event_fires_from_coordinator_callback(
     hass: HomeAssistant,
     coordinator: EasywaveCoordinator,
