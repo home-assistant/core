@@ -150,7 +150,12 @@ class _OutgoingConnectionManager:
             self._remove_stop_listener = None
             remove()
         if server is not None:
-            server.close()
+            try:
+                server.close()
+            except Exception:
+                # close() is documented never to raise; a broken contract
+                # must not abort an entry's remaining cleanup callbacks
+                _LOGGER.exception("Error closing the outgoing connection listener")
 
     @callback
     def _async_hass_stop(self, event: Event) -> None:
