@@ -9,6 +9,9 @@
     "player_usage_report": {
       "service": "mdi:account-clock-outline"
     },
+    "update_daily_restrictions": {
+      "service": "mdi:calendar-clock-outline"
+    },
     "update_pin_code": {
       "service": "mdi:lock-open-outline"
     }
