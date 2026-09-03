@@ -1065,12 +1065,17 @@ async def test_light_with_zero_mirek(
 ) -> None:
     """Test lights don't crash when the bridge reports zero mirek values.
 
+    A light may report both a zeroed mirek schema and a zeroed current mirek,
+    each of which used to reach a mired -> kelvin conversion unguarded.
+
     Regression test for https://github.com/home-assistant/core/issues/116258
     and https://github.com/home-assistant/core/issues/181168
     """
     # Patch the fixture data to have zero mirek values before loading
     for resource in v2_resources_test_data:
         if resource.get("type") == "light" and "color_temperature" in resource:
+            resource["color_temperature"]["mirek"] = 0
+            resource["color_temperature"]["mirek_valid"] = True
             resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
             resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
 
@@ -1084,3 +1089,5 @@ async def test_light_with_zero_mirek(
     # Should fall back to defaults instead of crashing
     assert test_light.attributes["max_color_temp_kelvin"] == 6535
     assert test_light.attributes["min_color_temp_kelvin"] == 2000
+    # A zeroed mirek is not a usable color temperature, so it is not reported
+    assert test_light.attributes["color_temp_kelvin"] is None
