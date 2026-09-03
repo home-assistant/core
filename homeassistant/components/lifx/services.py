@@ -53,6 +53,7 @@ from .const import (
     SERVICE_EFFECT_STOP,
     SERVICE_PAINT_THEME,
 )
+from .util import async_entry_is_legacy
 
 if TYPE_CHECKING:
     from .manager import LIFXManager
@@ -203,7 +204,13 @@ SERVICES_SCHEMA = {
 
 def _get_manager(service: ServiceCall) -> LIFXManager:
     """Return the LIFX manager, raising a user-facing error if unavailable."""
-    if (manager := service.hass.data.get(DATA_LIFX_MANAGER)) is None:
+    hass = service.hass
+    # The manager is stored before the connection and first refresh are awaited,
+    # so its presence alone does not mean a device is usable.
+    if (manager := hass.data.get(DATA_LIFX_MANAGER)) is None or not any(
+        not async_entry_is_legacy(entry)
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_loaded",
