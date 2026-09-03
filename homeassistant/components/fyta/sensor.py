@@ -135,7 +135,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     ),
     FytaSensorEntityDescription(
         key="last_updated",
-        translation_key="last_sensor_update",
+        translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda plant: (

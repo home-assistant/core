@@ -73,8 +73,8 @@
       "last_fertilised": {
         "name": "Last fertilized"
       },
-      "last_sensor_update": {
-        "name": "Last sensor update"
+      "last_update": {
+        "name": "Last update"
       },
       "light": {
         "name": "Light",
