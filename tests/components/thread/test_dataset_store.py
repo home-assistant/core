@@ -81,6 +81,22 @@ DATASET_1_OTHER_SECURITY_POLICY = (
 )
 
 
+async def test_save_writes_immediately(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test async_save writes the store ahead of the scheduled save."""
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    store = await dataset_store.async_get_store(hass)
+    store.preferred_dataset = next(iter(store.datasets.values())).id
+    assert dataset_store.STORAGE_KEY not in hass_storage
+
+    await store.async_save()
+
+    saved = hass_storage[dataset_store.STORAGE_KEY]["data"]
+    assert saved["datasets"][0]["tlv"] == DATASET_1
+    assert saved["preferred_dataset"] == store.preferred_dataset
+
+
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
     with pytest.raises(TLVError, match="expected 173 bytes for tag 222, got 2"):
