@@ -671,6 +671,9 @@
       "aux_heating": {
         "name": "Auxiliary heating"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "disinfect": {
         "name": "Disinfect"
       },
