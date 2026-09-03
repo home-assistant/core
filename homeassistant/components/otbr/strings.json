@@ -30,6 +30,9 @@
     "invalid_dataset": {
       "message": "The dataset must be Thread operational dataset TLVs in hex."
     },
+    "migration_in_flight": {
+      "message": "This network is already migrating: a migration started from Home Assistant still has {remaining} seconds of its delay left. Wait for it to complete, then try again."
+    },
     "no_active_network": {
       "message": "The border router has no active network to migrate; join it to a network first."
     },
