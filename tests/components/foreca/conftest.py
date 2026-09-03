@@ -12,7 +12,6 @@ from pyforeca import (
     Location,
     MinutelyForecast,
     Observation,
-    UsageDay,
     UsageMonth,
 )
 import pytest
@@ -135,12 +134,16 @@ MINUTELY = [
     MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.2),
 ]
 
-USAGE = UsageMonth(
-    hits=44,
-    daily=[
-        UsageDay(date="2026-09-01", hits=23),
-        UsageDay(date="2026-09-03", hits=21),
-    ],
+# Built from a real response: a day's total is only available per API product,
+# so parsing it wrong reads as zero requests rather than as an error.
+USAGE = UsageMonth.from_api(
+    {
+        "hits": 44,
+        "daily": [
+            {"date": "2026-09-01", "apis": [{"name": "Weather API", "hits": 23}]},
+            {"date": "2026-09-03", "apis": [{"name": "Weather API", "hits": 21}]},
+        ],
+    }
 )
 
 LOCATION = Location(
