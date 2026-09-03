@@ -100,7 +100,11 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             snap = await self.client.get_devices(if_none_match=self._etag)
         except LanbonAuthError as err:
             raise ConfigEntryAuthFailed("unauthorized") from err
-        except (LanbonConnectionError, LanbonTimeoutError, LanbonError) as err:
+        except (
+            LanbonConnectionError,
+            LanbonTimeoutError,
+            LanbonError,
+        ) as err:
             raise UpdateFailed(type(err).__name__) from err
         if snap is None:
             if self.data is None:
@@ -176,7 +180,12 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             raise
         except asyncio.CancelledError:
             raise
-        except (LanbonConnectionError, LanbonTimeoutError, LanbonError, OSError):
+        except (
+            LanbonConnectionError,
+            LanbonTimeoutError,
+            LanbonError,
+            OSError,
+        ):
             _LOGGER.debug("events loop ended; stay on polling")
             self._use_ws = False
         finally:

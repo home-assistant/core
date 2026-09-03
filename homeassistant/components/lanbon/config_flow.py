@@ -76,7 +76,12 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         except ApiDisabled:
             errors["base"] = "api_disabled"
             return None
-        except (LanbonConnectionError, LanbonTimeoutError, OSError, TimeoutError):
+        except (
+            LanbonConnectionError,
+            LanbonTimeoutError,
+            OSError,
+            TimeoutError,
+        ):
             errors["base"] = "cannot_connect"
             return None
 
