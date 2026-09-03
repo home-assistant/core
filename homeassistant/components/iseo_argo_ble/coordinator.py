@@ -11,17 +11,12 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import ADMIN_SETTLE_DELAY, DOMAIN
 
 if TYPE_CHECKING:
     from . import IseoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-# Seconds to hold the BLE mutex after reading the user list. The lock needs a
-# moment to tear the admin session down; talking to it again straight away
-# makes the next operation fail.
-_SETTLE_DELAY = 2
 
 
 class IseoUserCoordinator(DataUpdateCoordinator[list[UserEntry]]):
@@ -72,7 +67,7 @@ class IseoUserCoordinator(DataUpdateCoordinator[list[UserEntry]]):
             async with self._ble_lock:
                 self.client.update_ble_device(ble_device)
                 users = await self.client.read_users()
-                await asyncio.sleep(_SETTLE_DELAY)
+                await asyncio.sleep(ADMIN_SETTLE_DELAY)
         except IseoAuthError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

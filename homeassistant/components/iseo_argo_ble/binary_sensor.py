@@ -1,5 +1,6 @@
 """ISEO Argo BLE lock credential sensors."""
 
+import asyncio
 from dataclasses import replace
 from typing import cast, override
 
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IseoConfigEntry
-from .const import CONF_ADMIN_UUID, DEFAULT_USER_SUBTYPE, DOMAIN
+from .const import ADMIN_SETTLE_DELAY, CONF_ADMIN_UUID, DEFAULT_USER_SUBTYPE, DOMAIN
 from .coordinator import IseoUserCoordinator
 
 PARALLEL_UPDATES = 1
@@ -157,6 +158,9 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                     user_type=self._user_type,
                     disabled=not enabled,
                 )
+                # Targeting several credentials calls this once per entity, so
+                # keep the mutex while the lock closes the admin session.
+                await asyncio.sleep(ADMIN_SETTLE_DELAY)
         except IseoAuthError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

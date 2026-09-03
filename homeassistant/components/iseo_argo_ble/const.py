@@ -17,6 +17,11 @@ CONF_ENABLE_ADMIN = "enable_admin"
 SERVICE_SET_CREDENTIAL_ENABLED = "set_credential_enabled"
 ATTR_ENABLED = "enabled"
 
+# Seconds to keep holding the BLE mutex after an admin session. The lock needs
+# a moment to tear one down; talking to it again straight away makes the next
+# operation fail.
+ADMIN_SETTLE_DELAY = 2
+
 # Default user subtype (gateway)
 DEFAULT_USER_SUBTYPE: int = 17  # UserSubType.BT_GATEWAY
 # The gateway subtype cannot read or modify the lock's user list, so user
