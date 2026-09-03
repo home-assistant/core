@@ -3,14 +3,13 @@
 import hashlib
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientError, ClientResponseError
 from pymiele import completed_warnings
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
-from .coordinator import MieleConfigEntry
+from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 
 TO_REDACT = {"access_token", "refresh_token", "fabNumber"}
 
@@ -28,23 +27,18 @@ def redact_identifiers(in_data: dict[str, Any]) -> dict[str, Any]:
     return out_data
 
 
-async def _async_get_programs_diagnostics(
-    config_entry: MieleConfigEntry, device_id: str
-) -> list[dict[str, int | str]] | dict[str, int | str]:
-    """Return privacy-safe program diagnostics for a device."""
-    try:
-        programs = await config_entry.runtime_data.api.get_programs(device_id)
-    except ClientResponseError as err:
-        return {"error": type(err).__name__, "status": err.status}
-    except (ClientError, TimeoutError) as err:
-        return {"error": type(err).__name__}
-
+def _unknown_program_ids(
+    coordinator: MieleDataUpdateCoordinator, device_id: str
+) -> list[dict[str, int | str | None]]:
+    """Return unknown program IDs observed in appliance state updates."""
     return [
         {
-            "program_id": program["programId"],
-            "program": program["program"].strip(),
+            "value_raw": program_id,
+            "value_localized": value_localized,
         }
-        for program in sorted(programs, key=lambda program: program["programId"])
+        for program_id, value_localized in sorted(
+            coordinator.unknown_program_ids.get(device_id, {}).items()
+        )
     ]
 
 
@@ -76,6 +70,14 @@ async def async_get_config_entry_diagnostics(
                 for device_id, action_data in (
                     config_entry.runtime_data.coordinator.data.actions.items()
                 )
+            }
+        ),
+        "unknown_program_ids": redact_identifiers(
+            {
+                device_id: _unknown_program_ids(
+                    config_entry.runtime_data.coordinator, device_id
+                )
+                for device_id in config_entry.runtime_data.coordinator.unknown_program_ids
             }
         ),
     }
@@ -119,7 +121,7 @@ async def async_get_device_diagnostics(
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
         },
-        "programs": await _async_get_programs_diagnostics(config_entry, device_id),
+        "unknown_program_ids": _unknown_program_ids(coordinator, device_id),
     }
     miele_data["missing_code_warnings"] = (
         sorted(completed_warnings) if len(completed_warnings) > 0 else ["None"]

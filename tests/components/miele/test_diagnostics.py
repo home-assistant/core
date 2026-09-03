@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from aiohttp import ClientConnectionError, ClientResponseError
+from pymiele import MieleDevices, completed_warnings
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
@@ -11,7 +11,7 @@ from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from . import setup_integration
+from . import get_data_callback, setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
@@ -71,45 +71,45 @@ async def test_diagnostics_device(
             "miele_test.entry_id",
         )
     )
-    mock_miele_client.get_programs.assert_awaited_once_with(TEST_DEVICE)
+    mock_miele_client.get_programs.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    ("programs_error", "expected_programs_diagnostics"),
-    [
-        pytest.param(
-            ClientResponseError(MagicMock(), (), status=404),
-            {"error": "ClientResponseError", "status": 404},
-            id="unsupported",
-        ),
-        pytest.param(
-            ClientConnectionError(),
-            {"error": "ClientConnectionError"},
-            id="offline",
-        ),
-        pytest.param(TimeoutError(), {"error": "TimeoutError"}, id="timeout"),
-    ],
-)
-async def test_device_diagnostics_programs_unavailable(
+@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
+async def test_device_diagnostics_retains_unknown_program(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: DeviceRegistry,
     mock_miele_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    programs_error: Exception,
-    expected_programs_diagnostics: dict[str, int | str],
+    device_fixture: MieleDevices,
 ) -> None:
-    """Test device diagnostics remain available when programs are unavailable."""
-    await setup_integration(hass, mock_config_entry)
-    mock_miele_client.get_programs.side_effect = programs_error
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, TEST_DEVICE), mock_config_entry.entry_id
-    )
-    assert device_entry is not None
+    """Test diagnostics retain unknown programs after the program finishes."""
+    device_id = "DummyAppliance_CoffeeSystem"
+    warning = "Missing CoffeeSystemProgramId code: 99999 - defaulting to Unknown"
+    try:
+        await setup_integration(hass, mock_config_entry)
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
+        assert device_entry is not None
 
-    result = await get_diagnostics_for_device(
-        hass, hass_client, mock_config_entry, device_entry
-    )
+        program_id = device_fixture[device_id]["state"]["ProgramID"]
+        program_id["value_raw"] = 99999
+        program_id["value_localized"] = "Mystery drink"
+        data_callback = get_data_callback(mock_miele_client)
+        await data_callback(device_fixture)
 
-    assert result["miele_data"]["programs"] == expected_programs_diagnostics
-    assert "devices" in result["miele_data"]
+        program_id["value_raw"] = 0
+        program_id["value_localized"] = ""
+        await data_callback(device_fixture)
+
+        result = await get_diagnostics_for_device(
+            hass, hass_client, mock_config_entry, device_entry
+        )
+
+        assert result["miele_data"]["unknown_program_ids"] == [
+            {"value_raw": 99999, "value_localized": "Mystery drink"}
+        ]
+        mock_miele_client.get_programs.assert_not_awaited()
+    finally:
+        completed_warnings.discard(warning)

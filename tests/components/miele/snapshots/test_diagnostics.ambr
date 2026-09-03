@@ -1039,6 +1039,8 @@
       'missing_code_warnings': list([
         'None',
       ]),
+      'unknown_program_ids': dict({
+      }),
     }),
   })
 # ---
@@ -1237,27 +1239,7 @@
       'missing_code_warnings': list([
         'None',
       ]),
-      'programs': list([
-        dict({
-          'program': 'Cottons',
-          'program_id': 1,
-        }),
-        dict({
-          'program': 'Fan plus',
-          'program_id': 13,
-        }),
-        dict({
-          'program': 'Dark garments / Denim',
-          'program_id': 123,
-        }),
-        dict({
-          'program': 'QuickPowerWash',
-          'program_id': 146,
-        }),
-        dict({
-          'program': 'Ristretto',
-          'program_id': 24000,
-        }),
+      'unknown_program_ids': list([
       ]),
     }),
   })

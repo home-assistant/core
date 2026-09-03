@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, PROGRAM_IDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +74,19 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             update_interval=timedelta(seconds=120),
         )
         self.api = api
+        self.unknown_program_ids: dict[str, dict[int, str | None]] = {}
+
+    def _record_unknown_program_ids(self, devices: dict[str, MieleDevice]) -> None:
+        """Record unknown program IDs from appliance state updates."""
+        for device_id, device in devices.items():
+            if (program_id_type := PROGRAM_IDS.get(device.device_type)) is None:
+                continue
+            program_id = device.state_program_id
+            if program_id_type(program_id).name is not None:
+                continue
+            self.unknown_program_ids.setdefault(device_id, {})[program_id] = (
+                device.state_program_id_localized
+            )
 
     @override
     async def _async_update_data(self) -> MieleCoordinatorData:
@@ -82,6 +95,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         devices = {
             device_id: MieleDevice(device) for device_id, device in devices_json.items()
         }
+        self._record_unknown_program_ids(devices)
         self.devices = devices
         actions = {}
 
@@ -117,6 +131,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         updated_devices = {
             device_id: MieleDevice(device) for device_id, device in devices_json.items()
         }
+        self._record_unknown_program_ids(updated_devices)
         self.async_set_updated_data(
             MieleCoordinatorData(
                 devices={**self.data.devices, **updated_devices},
