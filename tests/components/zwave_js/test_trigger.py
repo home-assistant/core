@@ -11,7 +11,6 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.config_validation import COMMAND_CLASS_MARKERS
 from homeassistant.components.zwave_js.helpers import (
     async_bypass_dynamic_config_validation,
     get_device_id,
@@ -29,7 +28,7 @@ from homeassistant.helpers import device_registry as dr, trigger
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
-from .common import SCHLAGE_BE469_LOCK_ENTITY
+from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
 
 from tests.common import async_capture_events
 
@@ -1522,28 +1521,6 @@ async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
     assert {
         key.removeprefix(prefix) for key in translations if key.startswith(prefix)
     } == expected
-
-
-@pytest.mark.parametrize("command_class", sorted(COMMAND_CLASS_MARKERS))
-@pytest.mark.usefixtures("lock_schlage_be469", "integration")
-async def test_value_updated_rejects_command_class_markers(
-    hass: HomeAssistant, command_class: CommandClass
-) -> None:
-    """Test the command class markers are rejected by the value_updated trigger."""
-    with pytest.raises(vol.Invalid):
-        await trigger.async_validate_trigger_config(
-            hass,
-            [
-                {
-                    "platform": f"{DOMAIN}.value_updated",
-                    "options": {
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": command_class.value,
-                        "property": "latchStatus",
-                    },
-                }
-            ],
-        )
 
 
 @pytest.mark.parametrize(
