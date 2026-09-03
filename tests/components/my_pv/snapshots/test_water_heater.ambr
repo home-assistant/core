@@ -1,5 +1,50 @@
 # serializer version: 1
-# name: test_water_heater
+# name: test_water_heater[water_heater.my_pv_ac_elwa_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'off',
+        'electric',
+      ]),
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.my_pv_ac_elwa_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'my_pv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': '1601500000000000-temp1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heater[water_heater.my_pv_ac_elwa_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 54.3,
