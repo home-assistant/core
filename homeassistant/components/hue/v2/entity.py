@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
-from aiohue.v2.controllers.base import BaseResourcesController
+from aiohue.v2.controllers.base import BaseResourcesController, GroupedControllerBase
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
@@ -21,8 +21,12 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light import Light
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
+    from aiohue.v2.models.room import Room
+    from aiohue.v2.models.zone import Zone
 
-    type HueResource = Light | DevicePower | GroupedLight | LightLevel | Motion
+    type HueResource = (
+        Light | DevicePower | GroupedLight | LightLevel | Motion | Room | Zone
+    )
 
 
 RESOURCE_TYPE_NAMES = {
@@ -40,7 +44,7 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
     def __init__(
         self,
         bridge: HueBridge,
-        controller: BaseResourcesController,
+        controller: BaseResourcesController | GroupedControllerBase,
         resource: HueResource,
     ) -> None:
         """Initialize a generic Hue resource entity."""
