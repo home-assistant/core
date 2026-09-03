@@ -5,7 +5,9 @@
     "condition_endpoint_description": "Endpoint of the value.",
     "condition_endpoint_name": "Endpoint",
     "condition_value_description": "The value to compare with, either the raw value or its state label.",
-    "condition_value_name": "Value"
+    "condition_value_name": "Value",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "config_parameter": {
@@ -1146,6 +1148,26 @@
         }
       },
       "name": "Z-Wave JS event received"
+    },
+    "node_status": {
+      "description": "Triggers when the status of one or more Z-Wave JS nodes changes. Target nodes by device, area, floor, or label, or select their node status sensors directly.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::zwave_js::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::zwave_js::common::trigger_for_name%]"
+        },
+        "from": {
+          "description": "Only trigger when the previous status is one of these.",
+          "name": "From"
+        },
+        "to": {
+          "description": "Only trigger when the new status is one of these.",
+          "name": "To"
+        }
+      },
+      "name": "Z-Wave JS node status changed"
     },
     "value_updated": {
       "description": "Triggers when a Z-Wave value on one or more nodes changes.",
