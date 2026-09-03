@@ -11,7 +11,7 @@ for real instead of being bypassed via ``__new__``.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -413,61 +413,6 @@ async def test_get_smb_leaves_system_info_untouched_without_connections_key(
     coord.state.get_smb = AsyncMock(return_value={})
     await coord.get_smb()
     assert coord.ds["system_info"]["smb_connections"] == 3
-
-
-# ---------------------------
-#   get_updatecheck
-# ---------------------------
-# The update.status parsing/malformed-response handling these tests used to
-# exercise directly now lives in and is tested by aiotruenas's own
-# TrueNASState.get_update(). get_updatecheck just merges the result into
-# ds["system_info"], so this only needs to lock in that plumbing.
-async def test_get_updatecheck_no_update_falls_back_to_running_version(
-    coordinator: TrueNASCoordinator,
-) -> None:
-    """No pending update: the resting "up-to-date" version is replaced with the running one."""
-    coord = coordinator
-    coord.ds = {"system_info": {"version": "25.04.1"}}
-    coord.state = MagicMock()
-    coord.state.get_update = AsyncMock(
-        return_value={
-            "update_available": False,
-            "update_state": "IDLE",
-            "update_version": "up-to-date",
-            "update_date": None,
-            "update_profile": None,
-            "update_train": None,
-            "update_filename": None,
-        }
-    )
-    await coord.get_updatecheck()
-    info = coord.ds["system_info"]
-    assert info["update_available"] is False
-    assert info["update_version"] == "25.04.1"
-
-
-async def test_get_updatecheck_pending_update_keeps_new_version(
-    coordinator: TrueNASCoordinator,
-) -> None:
-    """A pending update's own version is not overridden by the running version."""
-    coord = coordinator
-    coord.ds = {"system_info": {"version": "25.04.1"}}
-    coord.state = MagicMock()
-    coord.state.get_update = AsyncMock(
-        return_value={
-            "update_available": True,
-            "update_state": "AVAILABLE",
-            "update_version": "25.10.0",
-            "update_date": None,
-            "update_profile": None,
-            "update_train": None,
-            "update_filename": None,
-        }
-    )
-    await coord.get_updatecheck()
-    info = coord.ds["system_info"]
-    assert info["update_available"] is True
-    assert info["update_version"] == "25.10.0"
 
 
 async def test_start_app_stats_stops_when_containers_not_monitored(
@@ -1320,7 +1265,6 @@ def _stub_all_jobs(coord: TrueNASCoordinator) -> None:
         "get_smb",
         "get_ups",
         "get_pool",
-        "get_updatecheck",
     ):
         setattr(coord, name, AsyncMock())
 
@@ -1333,7 +1277,6 @@ async def test_async_update_data_runs_jobs_when_connected(
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
-    coord.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
     _stub_all_jobs(coord)
     coord.ds = {"foo": "bar", "system_info": {"hostname": "truenas"}}
 
@@ -1341,7 +1284,6 @@ async def test_async_update_data_runs_jobs_when_connected(
 
     coord.get_systeminfo.assert_awaited_once()
     coord.get_pool.assert_awaited_once()
-    coord.get_updatecheck.assert_awaited_once()
     assert result is coord.ds
 
 
@@ -1423,7 +1365,6 @@ async def test_async_update_data_swallows_job_exceptions(
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
-    coord.last_updatecheck_update = dt_util.utcnow()
     _stub_all_jobs(coord)
     coord.get_disk = AsyncMock(side_effect=Exception("boom"))
     coord.ds = {"system_info": {"hostname": "truenas"}}

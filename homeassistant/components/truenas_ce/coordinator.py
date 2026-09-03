@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable, Hashable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
 import re
 from typing import Any, override
@@ -174,7 +174,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._systemstats_errored: dict[str, datetime] = {}
         self._systemstats_error_cooldown = timedelta(minutes=10)
         self.datasets_hass_device_id = None
-        self.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
 
         self._is_virtual = False
         self._version_major: int = 0
@@ -288,12 +287,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # get_pool relies on dataset data, so run it after gather completes
             if self.api.connected():
                 await _run_job(self.get_pool)
-
-        now = dt_util.utcnow().replace(microsecond=0)
-        delta = now - self.last_updatecheck_update
-        if self.api.connected() and delta.total_seconds() > 60 * 60 * 12:
-            await self.get_updatecheck()
-            self.last_updatecheck_update = now
 
         if not self.api.connected():
             raise UpdateFailed(
@@ -487,26 +480,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         for interface in self.ds["interface"].values():
             interface["link_up"] = interface.get("link_state") == LINK_STATE_UP
-
-    async def get_updatecheck(self) -> None:
-        """Check for pending updates via the aiotruenas domain layer.
-
-        ``TrueNASState.get_update()`` returns a standalone flat map (its
-        "no update pending" resting state already matches this coordinator's
-        prior defaults: ``update_state="IDLE"``, ``update_version=
-        "up-to-date"``); merged into ``system_info`` here so the update
-        sensors' data paths are unchanged. Falls back to the current running
-        version, matching the previous local default, when no update is
-        pending and ``system_info`` already has one.
-        """
-        update = await self.state.get_update()
-        if update["update_version"] == "up-to-date" and self.ds["system_info"].get(
-            "version"
-        ):
-            update = {**update, "update_version": self.ds["system_info"]["version"]}
-        self.ds["system_info"].update(update)
-        if update["update_available"]:
-            _LOGGER.debug("TrueNAS Update found: %s", update["update_version"])
 
     async def get_systemstats(self) -> None:
         """Get system statistics."""

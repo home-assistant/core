@@ -6,6 +6,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -103,7 +104,11 @@ async def async_setup_entry(
 ) -> bool:
     """Set up TrueNAS config entry."""
     coordinator = TrueNASCoordinator(hass, config_entry)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await coordinator.api.close()
+        raise
     config_entry.runtime_data = coordinator
     coordinator.system_device_id = register_system_device(
         hass, config_entry, coordinator
