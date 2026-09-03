@@ -1,17 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: This integration does not provide any service actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: This integration does not provide any service actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not provide any conditions.
@@ -65,15 +61,15 @@ rules:
   entity-category: done
   entity-device-class:
     status: exempt
-    comment: Neither lock nor switch entities have device classes.
+    comment: Lock entities have no device classes, and no binary sensor device class describes a lock credential.
   entity-disabled-by-default:
     status: exempt
-    comment: The lock and the user switches are all cheap to keep enabled — they read from a user list fetched once at setup.
+    comment: The lock and the credential sensors are all cheap to keep enabled — they read from a credential list fetched once at setup.
   entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: Uses default platform icons; no custom icons defined.
+    comment: Entities use the default platform icons; only the action has an icon.
   reconfiguration-flow:
     status: exempt
     comment: Configuration is a BLE address and generated identities. The identities can only be enrolled during a Master Card scan, so changing them means setting the lock up again.

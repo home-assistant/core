@@ -1,0 +1,10 @@
+set_credential_enabled:
+  target:
+    entity:
+      integration: iseo_argo_ble
+      domain: binary_sensor
+  fields:
+    enabled:
+      required: true
+      selector:
+        boolean:

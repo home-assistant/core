@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_credential_enabled": {
+      "service": "mdi:account-lock-open"
+    }
+  }
+}

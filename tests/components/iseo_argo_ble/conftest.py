@@ -50,7 +50,7 @@ MOCK_USERS = [
         disabled=False,
     ),
     # The two identities Home Assistant enrolled for itself; neither gets a
-    # switch.
+    # credential sensor.
     UserEntry(
         user_type=USER_TYPE_BT,
         uuid_hex=MOCK_UUID_HEX,
@@ -158,7 +158,7 @@ def mock_ble_device() -> Generator[MagicMock]:
             return_value=ble_device,
         ),
         patch(
-            "homeassistant.components.iseo_argo_ble.switch.async_ble_device_from_address",
+            "homeassistant.components.iseo_argo_ble.binary_sensor.async_ble_device_from_address",
             return_value=ble_device,
         ),
     ):
