@@ -521,6 +521,54 @@ async def test_no_listen_start(
     assert "Ring event listener failed to start after 10 seconds" in [
         record.message for record in caplog.records if record.levelname == "WARNING"
     ]
+    # No stale credentials to clear, so no reload should have happened.
+    assert CONF_LISTEN_CREDENTIALS not in mock_entry.data
+    assert "Clearing stale Ring listen credentials" not in caplog.text
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert mock_ring_event_listener_class.call_count == 1
+
+
+async def test_listen_start_failure_clears_stale_credentials(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    mock_ring_event_listener_class: type[RingEventListener],
+    mock_ring_client: Ring,
+) -> None:
+    """Test stale GCM credentials are cleared and reload scheduled when listener fails."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={
+            "username": "foo",
+            "token": {},
+            CONF_LISTEN_CREDENTIALS: {
+                "android_id": "stale-id",
+                "security_token": "stale-token",
+            },
+        },
+    )
+    mock_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        domain=BINARY_SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{FRONT_DOOR_DEVICE_ID}-motion",
+        suggested_object_id=f"{FRONT_DOOR_DEVICE_ID}_motion",
+        config_entry=mock_entry,
+    )
+    mock_ring_event_listener_class.return_value.started = False
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert CONF_LISTEN_CREDENTIALS not in mock_entry.data
+    assert "Clearing stale Ring listen credentials to force re-registration" in [
+        record.message for record in caplog.records if record.levelname == "WARNING"
+    ]
+    # The reload is scheduled as a task rather than patched, so by the time
+    # async_block_till_done returns the entry has actually been set up again.
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert mock_ring_event_listener_class.call_count == 2
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
