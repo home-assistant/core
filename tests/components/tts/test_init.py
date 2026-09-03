@@ -1857,6 +1857,166 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
             pass
 
 
+def _streaming_wav_header(
+    sample_rate: int = 22050,
+    sample_width: int = 2,
+    sample_channels: int = 1,
+) -> bytes:
+    """Create a WAV header like a streaming TTS source does, with no frames."""
+    with io.BytesIO() as wav_io:
+        wav_writer: wave.Wave_write = wave.open(wav_io, "wb")
+        with wav_writer:
+            wav_writer.setframerate(sample_rate)
+            wav_writer.setsampwidth(sample_width)
+            wav_writer.setnchannels(sample_channels)
+
+        return wav_io.getvalue()
+
+
+async def _async_chunks(*chunks: bytes) -> AsyncGenerator[bytes]:
+    """Yield audio chunks."""
+    for chunk in chunks:
+        yield chunk
+
+
+@pytest.mark.parametrize(
+    ("chunks", "expected_input_args", "expected_stdin"),
+    [
+        pytest.param(
+            [_streaming_wav_header(), b"chunk1", b"chunk2"],
+            ["-f", "s16le", "-ar", "22050", "-ac", "1", "-probesize", "32"],
+            b"chunk1chunk2",
+            id="header_in_first_chunk",
+        ),
+        pytest.param(
+            [_streaming_wav_header()[:20], _streaming_wav_header()[20:] + b"chunk1"],
+            ["-f", "s16le", "-ar", "22050", "-ac", "1", "-probesize", "32"],
+            b"chunk1",
+            id="header_split_across_chunks",
+        ),
+        pytest.param(
+            [
+                _streaming_wav_header(
+                    sample_rate=48000, sample_channels=2, sample_width=4
+                )
+            ],
+            ["-f", "s32le", "-ar", "48000", "-ac", "2", "-probesize", "32"],
+            b"",
+            id="header_48khz_stereo_32bit",
+        ),
+    ],
+)
+async def test_async_convert_audio_streaming_wav_is_unwrapped(
+    hass: HomeAssistant,
+    chunks: list[bytes],
+    expected_input_args: list[str],
+    expected_stdin: bytes,
+) -> None:
+    """Test that a streaming WAV source is fed to ffmpeg as raw samples."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass, "wav", _async_chunks(*chunks), "flac"
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    assert command[4 : command.index("-i")] == expected_input_args
+
+    written = b"".join(call.args[0] for call in mock_process.stdin.write.call_args_list)
+    assert written == expected_stdin
+
+
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        pytest.param([b"NOTRIFF" + bytes(64)], id="not_a_wav_file"),
+        pytest.param([b""], id="empty"),
+        # A known data size means other chunks may follow the audio
+        pytest.param(
+            [_streaming_wav_header()[:40] + (100).to_bytes(4, "little"), bytes(100)],
+            id="complete_wav_file",
+        ),
+        # 3 == WAVE_FORMAT_IEEE_FLOAT
+        pytest.param(
+            [
+                _streaming_wav_header()[:20]
+                + (3).to_bytes(2, "little")
+                + _streaming_wav_header()[22:]
+            ],
+            id="not_pcm",
+        ),
+    ],
+)
+async def test_async_convert_audio_wav_fallback(
+    hass: HomeAssistant, chunks: list[bytes]
+) -> None:
+    """Test that audio which cannot be unwrapped is passed to ffmpeg as a WAV file."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass, "wav", _async_chunks(*chunks), "flac"
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    assert command[4 : command.index("-i")] == ["-f", "wav", "-probesize", "32"]
+
+    written = b"".join(call.args[0] for call in mock_process.stdin.write.call_args_list)
+    assert written == b"".join(chunks)
+
+
+async def test_async_convert_audio_streaming_wav_roundtrip(hass: HomeAssistant) -> None:
+    """Test that unwrapped audio is converted correctly by ffmpeg."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    # 0.1 seconds of silence at 22050 Hz
+    audio = bytes(2 * 2205)
+
+    converted = b"".join(
+        [
+            chunk
+            async for chunk in tts._async_convert_audio(
+                hass,
+                "wav",
+                _async_chunks(_streaming_wav_header(), audio),
+                "wav",
+                to_sample_rate=16000,
+                to_sample_channels=1,
+                to_sample_bytes=2,
+            )
+        ]
+    )
+
+    with (
+        io.BytesIO(converted) as converted_io,
+        wave.open(converted_io, "rb") as wav_file,
+    ):
+        assert wav_file.getframerate() == 16000
+        assert wav_file.getnchannels() == 1
+        assert wav_file.getsampwidth() == 2
+
+    # ffmpeg cannot rewind a pipe to fill in the size, so measure the audio that
+    # follows the 44 byte header. 0.1 seconds at 16Khz is 1600 16-bit samples.
+    assert (len(converted) - 44) == pytest.approx(1600 * 2, abs=200)
+
+
 async def _audio_data_gen() -> AsyncGenerator[bytes]:
     """Yield test audio data."""
     yield b"audio"
