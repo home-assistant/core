@@ -51,7 +51,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.256940348958333',
+    'state': '0.141981021875',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_current_hour_price-entry]
@@ -109,7 +109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.28275885',
+    'state': '0.17191075',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_highest_price_time-entry]
@@ -265,7 +265,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2026-04-11T06:00:00+00:00',
+    'state': '2026-04-10T01:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_max_price-entry]
@@ -320,7 +320,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.399000525',
+    'state': '0.288152425',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_min_price-entry]
@@ -375,7 +375,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.188351625',
+    'state': '0.08713815',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_next_hour_price-entry]
@@ -430,7 +430,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.2629693',
+    'state': '0.1521212',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_percentage_of_max-entry]
@@ -482,7 +482,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.87',
+    'state': '59.66',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_current_hour_price-entry]
@@ -540,7 +540,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.5468407201224',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_next_hour_price-entry]
@@ -595,6 +595,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.5468407201224',
   })
 # ---
