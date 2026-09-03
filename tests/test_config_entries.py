@@ -7565,10 +7565,10 @@ async def test_update_entry_custom_reason_stays_local(
             return getattr(self, update_and_abort)(entry, reason="custom_reason")
 
     with mock_config_flow("comp", MockFlowHandler):
-        if source == config_entries.SOURCE_REAUTH:
-            result = await entry.start_reauth_flow(hass)
-        else:
-            result = await entry.start_reconfigure_flow(hass)
+        result = await {
+            config_entries.SOURCE_REAUTH: entry.start_reauth_flow,
+            config_entries.SOURCE_RECONFIGURE: entry.start_reconfigure_flow,
+        }[source](hass)
 
     await hass.async_block_till_done()
 
