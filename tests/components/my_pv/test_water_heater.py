@@ -1,6 +1,6 @@
 """Test the my-PV water heater."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
@@ -19,11 +19,13 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
@@ -31,16 +33,17 @@ async def test_water_heater(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful setup of a water heater."""
 
-    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.WATER_HEATER]):
+        mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("water_heater.my_pv_ac_elwa_2")
-    assert state == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_water_heater_turn_off(
