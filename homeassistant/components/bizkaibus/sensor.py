@@ -134,6 +134,7 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
         index = self._find_index_by_bus_id()
 
         if index < 0 or index >= len(self.coordinator.data):
+            self._attr_extra_state_attributes = {}
             return None
 
         self._attr_extra_state_attributes = {
