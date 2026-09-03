@@ -504,6 +504,17 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     return node.values[value_id]
 
 
+def node_status_matches(node: ZwaveNode, status: str) -> bool:
+    """Return whether the node has the given status name."""
+    return node.status.name.lower() == status
+
+
+def value_matches_state(value: ZwaveValue, expected: Any) -> bool:
+    """Return whether a value equals the expected raw value or state label."""
+    current = value.value
+    return expected in (current, value.metadata.states.get(str(current), current))
+
+
 def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
     """Find zwave_js config entry from a device."""
     for entry_id in device.config_entries:
