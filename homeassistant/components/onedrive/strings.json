@@ -111,9 +111,6 @@
     "no_files_match_pattern": {
       "message": "No files match the following patterns: {patterns}"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "update_failed": {
       "message": "Failed to update drive state"
     },

@@ -56,6 +56,16 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "electric_heater_enabled": {
+        "name": "Electric heater enabled"
+      },
+      "filter_alarm": {
+        "name": "Filter alarm"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_no_import": {
       "description": "Configuring Flexit using YAML is being removed.\n\nYour existing YAML configuration could not be automatically imported because the Modbus connection details are configured separately, in a `modbus:` hub, which is not accessible from the `climate` platform configuration.\n\nRemove the `flexit` configuration from your configuration.yaml file, then add the integration again from the Home Assistant UI, providing the Modbus connection details and unit ID of your Flexit unit.",

@@ -890,6 +890,7 @@
           "toffee_date_dessert_several_small": "Toffee-date dessert (several small)",
           "top_heat": "Top heat",
           "tortellini_fresh": "Tortellini (fresh)",
+          "towels": "Towels",
           "trainers": "Trainers",
           "trainers_refresh": "Trainers refresh",
           "treacle_sponge_pudding_one_large": "Treacle sponge pudding (one large)",
@@ -1160,9 +1161,6 @@
     },
     "invalid_target": {
       "message": "Invalid device targeted."
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "set_program_error": {
       "message": "'Set program' action failed: {status} / {message}"

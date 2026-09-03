@@ -167,9 +167,6 @@
       "offroad_lightbar_present": {
         "name": "Offroad lightbar"
       },
-      "passenger_seat_belt": {
-        "name": "Passenger seat belt"
-      },
       "pin_to_drive_enabled": {
         "name": "PIN to Drive enabled"
       },
@@ -1184,9 +1181,6 @@
     },
     "not_ready_connection_error": {
       "message": "Unable to connect to Teslemetry"
-    },
-    "oauth_implementation_not_available": {
-      "message": "OAuth implementation not available, try reauthenticating"
     },
     "set_scheduled_charging_time": {
       "message": "Scheduled charging time is required when enabling"

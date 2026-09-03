@@ -1141,7 +1141,9 @@ async def test_invalid_segments(
 )
 @pytest.mark.usefixtures("setup_vacuum")
 async def test_raise_segments_changed_issue(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that issue is raised on segments change."""
     hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bedroom")
@@ -1160,7 +1162,6 @@ async def test_raise_segments_changed_issue(
     hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bathroom")
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) != 0
 
 
