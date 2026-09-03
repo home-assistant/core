@@ -1051,19 +1051,19 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("event_source", "event", "target_keys", "expectation"),
+    ("event_source", "event", "option_keys", "expectation"),
     [
         pytest.param(
             "controller",
             "inclusion started",
-            ["device_id"],
+            ["config_entry_id", "device_id"],
             pytest.raises(vol.Invalid, match="must not contain"),
             id="controller_with_device_id",
         ),
         pytest.param(
             "driver",
             "logging",
-            ["entity_id"],
+            ["config_entry_id", "entity_id"],
             pytest.raises(vol.Invalid, match="must not contain"),
             id="driver_with_entity_id",
         ),
@@ -1077,9 +1077,16 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
         pytest.param(
             "controller",
             "inclusion started",
-            [],
+            ["config_entry_id"],
             does_not_raise(),
             id="controller_without_targets",
+        ),
+        pytest.param(
+            "controller",
+            "inclusion started",
+            [],
+            pytest.raises(vol.Invalid, match="must contain config_entry_id"),
+            id="controller_without_config_entry",
         ),
     ],
 )
@@ -1091,7 +1098,7 @@ async def test_zwave_js_event_source_target_validation(
     integration: MockConfigEntry,
     event_source: str,
     event: str,
-    target_keys: list[str],
+    option_keys: list[str],
     expectation: AbstractContextManager,
 ) -> None:
     """Test that zwave_js.event targets are validated against the event source."""
@@ -1099,7 +1106,11 @@ async def test_zwave_js_event_source_target_validation(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
-    targets = {"device_id": device.id, "entity_id": SCHLAGE_BE469_LOCK_ENTITY}
+    options = {
+        "config_entry_id": integration.entry_id,
+        "device_id": device.id,
+        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+    }
 
     with expectation:
         await trigger.async_validate_trigger_config(
@@ -1108,10 +1119,9 @@ async def test_zwave_js_event_source_target_validation(
                 {
                     "platform": f"{DOMAIN}.event",
                     "options": {
-                        "config_entry_id": integration.entry_id,
                         "event_source": event_source,
                         "event": event,
-                        **{key: targets[key] for key in target_keys},
+                        **{key: options[key] for key in option_keys},
                     },
                 }
             ],
