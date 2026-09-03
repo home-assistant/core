@@ -29,8 +29,19 @@ async def test_sensor(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the EnergyZero - Energy sensors."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
     with patch("homeassistant.components.energyzero.PLATFORMS", ["sensor"]):
         await setup_integration(hass, mock_config_entry)
+
+    gas_state = hass.states.get("sensor.energyzero_today_gas_current_hour_price")
+    assert gas_state
+    assert gas_state.state == "0.5468407201224"
+    assert gas_state.state != "1.2736393201224"
+
+    energy_state = hass.states.get("sensor.energyzero_today_energy_current_hour_price")
+    assert energy_state
+    assert energy_state.state == "0.17191075"
+    assert energy_state.state != "0.28275885"
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
