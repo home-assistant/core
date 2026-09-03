@@ -380,3 +380,82 @@ async def test_reload_on_subentry_rename(
         await hass.async_block_till_done()
 
     mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_reload_on_subentry_data_change(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is reloaded when a subentry's data changes without a title change.
+
+    The snapshot compares the whole subentry (via as_dict()), not just the
+    title, so a data-only change must reload too.
+    """
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    subentry = next(iter(config_entry.subentries.values()))
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_update_subentry(
+            config_entry, subentry, data={"favorite": True}
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_no_reload_on_entry_title_change(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is not reloaded when only the entry's own title changes.
+
+    The listener only cares about subentries, so an entry-level write that
+    leaves subentries untouched must not reload, same as a token refresh.
+    """
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(config_entry, title="Renamed Entry")
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_no_reload_on_entry_options_change(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the entry is not reloaded when only its options change.
+
+    Options are entry-level, not subentry data, so this must not reload
+    either.
+    """
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(config_entry, options={"foo": "bar"})
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
