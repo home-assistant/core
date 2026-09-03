@@ -1072,3 +1072,27 @@ async def test_light_with_zero_mirek(
     # Should fall back to defaults instead of crashing
     assert test_light.attributes["max_color_temp_kelvin"] == 6535
     assert test_light.attributes["min_color_temp_kelvin"] == 2000
+
+
+async def test_grouped_light_with_zero_mirek(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test grouped light doesn't crash when bridge reports zero mirek values.
+
+    Regression test for https://github.com/home-assistant/core/issues/181168
+    """
+    for resource in v2_resources_test_data:
+        if resource.get("type") == "light" and "color_temperature" in resource:
+            resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
+            resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    # Should not raise ZeroDivisionError while aggregating the group values
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    test_entity = hass.states.get("light.test_zone")
+    assert test_entity is not None
+    # Should fall back to defaults instead of crashing
+    assert test_entity.attributes["max_color_temp_kelvin"] == 6535
+    assert test_entity.attributes["min_color_temp_kelvin"] == 2000
