@@ -84,10 +84,7 @@ rules:
       Each config entry creates a single device.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      No entities should be disabled by default.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
     status: exempt

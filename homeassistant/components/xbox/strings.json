@@ -160,9 +160,6 @@
     "media_not_found": {
       "message": "The requested media could not be found."
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "request_exception": {
       "message": "Failed to connect to Xbox Network"
     },
