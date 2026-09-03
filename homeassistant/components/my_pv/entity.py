@@ -38,13 +38,10 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        if (
-            not self.coordinator.device.connected
-            or self.coordinator.device.is_on is None
-        ):
-            return False
-
-        if self.coordinator.device.get_data_value(self.entity_description.key) is None:
-            return False
-
-        return super().available
+        return (
+            super().available
+            and self.coordinator.device.connected
+            and self.coordinator.device.is_on is not None
+            and self.coordinator.device.get_data_value(self.entity_description.key)
+            is not None
+        )
