@@ -1,6 +1,7 @@
 """Fixtures for ISEO Argo BLE tests."""
 
 from collections.abc import Generator
+import struct
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from iseo_argo_ble import USER_TYPE_BT, USER_TYPE_PIN, USER_TYPE_RFID, UserEntry
@@ -26,6 +27,11 @@ from . import (
 
 from tests.common import MockConfigEntry
 
+# A validity window the lock would hold for a time-limited credential.
+MOCK_VALIDITY = (
+    bytes([0x01]) + struct.pack(">II", 1_700_000_000, 1_900_000_000) + bytes(10)
+)
+
 MOCK_USERS = [
     UserEntry(
         user_type=USER_TYPE_RFID,
@@ -33,6 +39,7 @@ MOCK_USERS = [
         name="Alice",
         inner_subtype=None,
         disabled=False,
+        validity=MOCK_VALIDITY,
     ),
     UserEntry(
         user_type=USER_TYPE_PIN,

@@ -80,6 +80,9 @@
     },
     "lock_rejected_identity": {
       "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
+    },
+    "validity_window_unknown": {
+      "message": "Home Assistant cannot restore {name}, because the credential was already suspended when the lock was first read and its original validity window is not recoverable. Restore it in the Argo app instead."
     }
   },
   "services": {

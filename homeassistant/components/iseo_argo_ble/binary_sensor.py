@@ -89,6 +89,12 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         self._uuid_hex = user.uuid_hex
         self._user_type = user.user_type
         self._inner_subtype = user.inner_subtype
+        # The time profile the lock had before Home Assistant touched it.
+        # Suspending overwrites it, so this is the only copy to restore from —
+        # and if the credential was already suspended when the list was first
+        # read, what we hold is the expired sentinel, not the real window.
+        self._validity = user.validity
+        self._validity_is_original = not user.disabled
 
         self._attr_translation_key = USER_TYPE_TRANSLATION_KEYS.get(
             user.user_type, "credential_other"
@@ -187,11 +193,23 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
 
     async def async_set_enabled(self, enabled: bool) -> None:
         """Let this credential open the lock, or stop it doing so."""
+        if enabled and not self._validity_is_original:
+            # Restoring would have to guess, and guessing "no restriction" hands
+            # out more access than the credential ever had.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="validity_window_unknown",
+                translation_placeholders={"name": self._credential_name},
+            )
+
         async with self._admin_session() as client:
             await client.set_user_disabled(
                 uuid_hex=self._uuid_hex,
                 user_type=self._user_type,
                 disabled=not enabled,
+                # Put the credential's own validity window back, so restoring an
+                # invitation that ran for one weekend does not make it permanent.
+                validity=self._validity if enabled else None,
             )
 
         self._apply_to_cached_users(disabled=not enabled)
