@@ -98,8 +98,6 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_outgoing_connection_server() -> Generator[MagicMock]:
     """Patch the shared dial-in listener so tests never bind a real socket."""
     server = MagicMock()
-    server.start = AsyncMock()
-    server.stop = AsyncMock()
     with patch(
         "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
         return_value=server,

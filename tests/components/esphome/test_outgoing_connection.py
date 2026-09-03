@@ -1,8 +1,7 @@
 """Tests for device-initiated outgoing connections."""
 
-import asyncio
 import logging
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
@@ -67,7 +66,7 @@ async def test_outgoing_connection_registration(
     await hass.async_block_till_done()
     unregister.assert_called()
     # The last unregistration stops the listener and frees the port
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()
 
 
 @pytest.mark.parametrize("noise_psk", [None, ""])
@@ -130,16 +129,16 @@ async def test_outgoing_connection_shared_listener(
     )
     await hass.async_block_till_done()
 
-    mock_server.start.assert_awaited_once()
+    mock_server.start.assert_called_once()
     assert mock_server.register.call_count == 2
 
     # Unloading one entry keeps the shared listener running
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    mock_server.stop.assert_not_awaited()
+    mock_server.close.assert_not_called()
     await hass.config_entries.async_unload(entry2.entry_id)
     await hass.async_block_till_done()
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()
 
 
 async def test_outgoing_connection_zero_psk_never_registers(
@@ -187,7 +186,7 @@ async def test_outgoing_connection_listener_restarts_after_last_unload(
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()
 
     entry2 = _make_entry(unique_id="aa:bb:cc:dd:ee:01")
     entry2.add_to_hass(hass)
@@ -197,7 +196,7 @@ async def test_outgoing_connection_listener_restarts_after_last_unload(
         device_info={"mac_address": "AA:BB:CC:DD:EE:01", "name": "test2"},
     )
     await hass.async_block_till_done()
-    assert mock_server.start.await_count == 2
+    assert mock_server.start.call_count == 2
     assert mock_server.register.call_count == 2
 
 
@@ -215,7 +214,7 @@ async def test_outgoing_connection_stops_on_hass_stop(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()
 
 
 async def test_outgoing_connection_bind_failure_warns_once(
@@ -249,49 +248,30 @@ async def test_outgoing_connection_bind_failure_warns_once(
     assert len(warnings) == 1
 
 
-async def test_outgoing_connection_rebinds_while_old_stop_pending(
+async def test_outgoing_connection_rebind_after_close(
     hass: HomeAssistant,
     mock_server: MagicMock,
 ) -> None:
-    """A new registration binds immediately; stops need no serialization."""
-    release = asyncio.Event()
-    stop_started = asyncio.Event()
-
-    async def gated_stop() -> None:
-        stop_started.set()
-        await release.wait()
-
-    mock_server.stop = AsyncMock(side_effect=gated_stop)
-    unregister = await async_register_outgoing_target(hass, MAC, MagicMock())
+    """close() is synchronous, so the next registration rebinds directly."""
+    unregister = async_register_outgoing_target(hass, MAC, MagicMock())
     assert unregister is not None
-    unregister()  # schedules the gated stop
-    await stop_started.wait()
-
-    # The library releases the port before stop() awaits, so the next
-    # registration does not wait for the pending stop
+    unregister()
+    mock_server.close.assert_called_once()
     assert (
-        await async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
+        async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
         is not None
     )
-    assert mock_server.start.await_count == 2
-    release.set()
-    await hass.async_block_till_done()
+    assert mock_server.start.call_count == 2
 
 
 async def test_outgoing_connection_not_started_during_shutdown(
     hass: HomeAssistant,
     mock_server: MagicMock,
 ) -> None:
-    """A listener whose bind raced the STOP event is stopped, not kept."""
-
-    async def stop_during_bind() -> None:
-        hass.set_state(CoreState.stopping)
-
-    mock_server.start = AsyncMock(side_effect=stop_during_bind)
-    assert await async_register_outgoing_target(hass, MAC, MagicMock()) is None
-    await hass.async_block_till_done()
-    mock_server.register.assert_not_called()
-    mock_server.stop.assert_awaited_once()
+    """No listener is started once Home Assistant is stopping."""
+    hass.set_state(CoreState.stopping)
+    assert async_register_outgoing_target(hass, MAC, MagicMock()) is None
+    mock_server.start.assert_not_called()
 
 
 async def test_outgoing_connection_unregister_error_contained(
@@ -301,14 +281,14 @@ async def test_outgoing_connection_unregister_error_contained(
 ) -> None:
     """A raising library unregister recovers by discarding just that route."""
     mock_server.register.return_value = MagicMock(side_effect=RuntimeError("boom"))
-    unregister = await async_register_outgoing_target(hass, MAC, MagicMock())
+    unregister = async_register_outgoing_target(hass, MAC, MagicMock())
     assert unregister is not None
     unregister()
     await hass.async_block_till_done()
     assert "Error removing the dial-in route" in caplog.text
     mock_server.discard.assert_called_once_with(MAC)
     # The last registration is gone, so the listener stops on the normal path
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()
 
 
 async def test_outgoing_connection_register_error_stops_listener(
@@ -327,7 +307,7 @@ async def test_outgoing_connection_register_error_stops_listener(
 
     assert entry.state is ConfigEntryState.LOADED
     assert "Could not set up dial-in routing" in caplog.text
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()
 
 
 async def test_outgoing_connection_unregister_error_spares_survivors(
@@ -339,10 +319,8 @@ async def test_outgoing_connection_unregister_error_spares_survivors(
     bad_unregister = MagicMock(side_effect=RuntimeError("boom"))
     good_unregister = MagicMock()
     mock_server.register.side_effect = [bad_unregister, good_unregister]
-    first = await async_register_outgoing_target(hass, MAC, MagicMock())
-    second = await async_register_outgoing_target(
-        hass, "aa:bb:cc:dd:ee:01", MagicMock()
-    )
+    first = async_register_outgoing_target(hass, MAC, MagicMock())
+    second = async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
     assert first is not None
     assert second is not None
 
@@ -351,8 +329,8 @@ async def test_outgoing_connection_unregister_error_spares_survivors(
     assert "Error removing the dial-in route" in caplog.text
     mock_server.discard.assert_called_once_with(MAC)
     # The shared listener survives for the remaining registration
-    mock_server.stop.assert_not_awaited()
+    mock_server.close.assert_not_called()
 
     second()
     await hass.async_block_till_done()
-    mock_server.stop.assert_awaited_once()
+    mock_server.close.assert_called_once()

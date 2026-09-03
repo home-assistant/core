@@ -599,9 +599,8 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
-    async def _async_register_outgoing_target(
-        self, reconnect_logic: ReconnectLogic
-    ) -> None:
+    @callback
+    def _async_register_outgoing_target(self, reconnect_logic: ReconnectLogic) -> None:
         """Register this entry's MAC with the shared dial-in listener.
 
         Runs once at setup; a dynamically provisioned key takes effect on
@@ -617,9 +616,7 @@ class ESPHomeManager:
         if (mac := entry.unique_id) is None:
             return
         try:
-            unregister = await async_register_outgoing_target(
-                self.hass, mac, reconnect_logic
-            )
+            unregister = async_register_outgoing_target(self.hass, mac, reconnect_logic)
         except Exception:
             # Dial-in is an optional extra; it must not fail the entry
             _LOGGER.exception("%s: Could not set up dial-in routing", entry.title)
@@ -1242,7 +1239,7 @@ class ESPHomeManager:
         # Last so a failed setup cannot leak the route: the device may open
         # the TCP connection to us when it cannot be reached, and a dial-in
         # for this MAC is handed to the reconnect logic
-        await self._async_register_outgoing_target(reconnect_logic)
+        self._async_register_outgoing_target(reconnect_logic)
 
 
 @callback
