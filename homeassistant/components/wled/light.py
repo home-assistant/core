@@ -134,6 +134,7 @@ class WLEDMainLight(WLEDEntity, LightEntity):
 class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
+    _attr_supported_color_modes: set[ColorMode]
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_translation_key = "segment"
     _attr_min_color_temp_kelvin = COLOR_TEMP_K_MIN
@@ -176,15 +177,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     def _infer_color_mode(self) -> None:
         """Infer the color mode from the current color of the segment.
 
-        WLED does not track the color mode used, so derive it from the color.
-        Only applies to RGB lights with color temperature support: RGBWW lights
-        stay in RGBWW mode, so the cold/warm white channels keep being
-        reported. Only a dedicated white channel or pure white RGB is color
-        temperature, any other grey (r == g == b) is a regular RGB color.
+        WLED support RGBWW lights but they can't be controlled as regulars RGBWW.
+        There are 2 options you can control them as RGB+CTT or RGBW+CCT lights
         """
         if (
-            not self._attr_supported_color_modes
-            or ColorMode.RGB not in self._attr_supported_color_modes
+            ColorMode.RGB not in self._attr_supported_color_modes
             or ColorMode.COLOR_TEMP not in self._attr_supported_color_modes
             or self._segment not in self.coordinator.data.state.segments
         ):
@@ -197,7 +194,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         r, g, b, w = (*color.primary, 0, 0, 0, 0)[:4]
         self._attr_color_mode = (
             ColorMode.COLOR_TEMP
-            if (r == g == b == 0 and w > 0) or (r == g == b == 255 and w == 0)
+            if (r == g == b == 0 and w > 0) or (r == g == b and w == 0)
             else ColorMode.RGB
         )
 
@@ -336,20 +333,14 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         if ATTR_RGB_COLOR in kwargs:
             # if the light supports cct reset white balance to white to not distort colors
-            if (
-                self._attr_supported_color_modes
-                and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
-            ):
+            if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
                 data[ATTR_CCT] = 127
 
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
             # if the light supports cct reset white balance to white to not distort colors
-            if (
-                self._attr_supported_color_modes
-                and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
-            ):
+            if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
                 data[ATTR_CCT] = 127
 
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
@@ -371,16 +362,15 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             data[ATTR_CCT] = cct
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if self._attr_supported_color_modes:
-                has_rgb = ColorMode.RGB in self._attr_supported_color_modes
-                has_rgbw = ColorMode.RGBW in self._attr_supported_color_modes
-                has_rgbww = ColorMode.RGBWW in self._attr_supported_color_modes
+            has_rgb = ColorMode.RGB in self._attr_supported_color_modes
+            has_rgbw = ColorMode.RGBW in self._attr_supported_color_modes
+            has_rgbww = ColorMode.RGBWW in self._attr_supported_color_modes
 
-                if has_rgb:
-                    data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
+            if has_rgb:
+                data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
 
-                if has_rgbw or has_rgbww:
-                    data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
+            if has_rgbw or has_rgbww:
+                data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
 
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
