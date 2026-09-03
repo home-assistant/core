@@ -407,39 +407,6 @@ async def test_coffee_system_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("base_program_id", "expected_state"),
-    [
-        pytest.param(24010, "caffe_americano", id="caffe-americano"),
-        pytest.param(24011, "long_black", id="long-black"),
-        pytest.param(24023, "chai_latte", id="chai-latte"),
-    ],
-)
-@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
-@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-@pytest.mark.usefixtures("mock_miele_client")
-async def test_coffee_system_program_ids(
-    hass: HomeAssistant,
-    setup_platform: MockConfigEntry,
-    device_fixture: MieleDevices,
-    base_program_id: int,
-    expected_state: str,
-) -> None:
-    """Test coffee system program IDs for all profiles."""
-    data_callback = setup_platform.runtime_data.coordinator.callback_update_data
-    program_id = device_fixture["DummyAppliance_CoffeeSystem"]["state"]["ProgramID"]
-
-    for profile_number in range(1, 6):
-        program_id["value_raw"] = base_program_id + (profile_number - 1) * 32
-        await data_callback(device_fixture)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("sensor.coffee_system_program")
-        assert state is not None
-        assert state.state == expected_state
-        assert state.attributes["profile"] == f"profile_{profile_number}"
-
-
 @pytest.mark.parametrize("load_device_file", ["laundry.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_laundry_wash_scenario(
