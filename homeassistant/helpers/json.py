@@ -116,6 +116,19 @@ def json_bytes_strip_null(data: Any) -> bytes:
 json_fragment = orjson.Fragment
 
 
+def cached_json_fragment(data: Any) -> orjson.Fragment:
+    """Return a json fragment right-sized for long-term caching.
+
+    orjson over-allocates the returned bytes buffer and does not shrink it (the
+    logical length is set but the allocation is rounded up to a power-of-two
+    floor), so a fragment cached for the lifetime of a long-lived object retains
+    several KiB of unused buffer per object. Copy the bytes to a right-sized
+    buffer before wrapping them, which matters when many such fragments are cached
+    at once (e.g. one per deleted device registry entry).
+    """
+    return orjson.Fragment(bytes(memoryview(json_bytes(data))))
+
+
 def json_dumps(data: Any) -> str:
     r"""Dump json string.
 

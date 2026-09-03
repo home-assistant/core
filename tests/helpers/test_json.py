@@ -16,7 +16,9 @@ from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder as DefaultHASSJSONEncoder,
+    cached_json_fragment,
     find_paths_unserializable_data,
+    json_bytes,
     json_bytes_sorted,
     json_bytes_strip_null,
     json_dumps,
@@ -205,6 +207,19 @@ def test_json_fragments() -> None:
     assert (
         json_dumps([Fragment1(), Fragment2()])
         == '[{"inner":"fragment1"},{"inner":"fragment2"}]'
+    )
+
+
+def test_cached_json_fragment() -> None:
+    """Test cached_json_fragment serializes identically to a plain fragment."""
+    data = {"a": 1, "b": [1, 2, 3], "c": {"nested": True}, "d": None}
+
+    fragment = cached_json_fragment(data)
+    assert isinstance(fragment, json_fragment)
+    # The right-sized copy embeds the same bytes as the plain fragment path.
+    assert json_dumps([fragment]) == json_dumps([json_fragment(json_bytes(data))])
+    assert (
+        json_dumps([fragment]) == '[{"a":1,"b":[1,2,3],"c":{"nested":true},"d":null}]'
     )
 
 
