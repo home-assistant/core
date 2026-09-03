@@ -79,16 +79,9 @@ class AlertEntity(Entity):
             hass, [watched_entity_id], self.watched_entity_change
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
-        """Evaluate the watched entity's current state once added.
-
-        The alert only subscribes to future state changes of the watched
-        entity. If that entity is already in the alert state when the alert
-        is created - for example a restored state after a restart - no
-        state change event will ever arrive, and the alert would stay idle
-        even though its condition is met. Evaluate the current state here so
-        an already-met condition starts alerting.
-        """
+        """Start alerting if the watched entity is already in the alert state."""
         await super().async_added_to_hass()
         if (
             (state := self.hass.states.get(self._watched_entity_id)) is not None
