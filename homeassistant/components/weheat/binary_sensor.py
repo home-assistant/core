@@ -83,13 +83,6 @@ COOLING_START_CONDITION_SENSORS = [
     for condition in HeatPump.COOLING_START_CONDITION_BITS
 ]
 
-CONNECTIVITY_SENSOR = WeHeatBinarySensorEntityDescription(
-    key="is_online",
-    device_class=BinarySensorDeviceClass.CONNECTIVITY,
-    entity_category=EntityCategory.DIAGNOSTIC,
-    value_fn=lambda status: status.is_online,
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -97,7 +90,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
-    entities: list[WeheatHeatPumpBinarySensor] = [
+    entities = [
         WeheatHeatPumpBinarySensor(
             weheatdata.heat_pump_info,
             weheatdata.data_coordinator,
@@ -107,16 +100,6 @@ async def async_setup_entry(
         for entity_description in BINARY_SENSORS + COOLING_START_CONDITION_SENSORS
         if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
     ]
-    entities.extend(
-        WeheatHeatPumpBinarySensor(
-            weheatdata.heat_pump_info,
-            weheatdata.data_coordinator,
-            CONNECTIVITY_SENSOR,
-        )
-        for weheatdata in entry.runtime_data
-        if CONNECTIVITY_SENSOR.value_fn(weheatdata.data_coordinator.data) is not None
-    )
-
     async_add_entities(entities)
 
 

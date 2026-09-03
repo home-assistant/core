@@ -47,7 +47,7 @@ async def test_create_binary_entities(
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 4
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
@@ -56,13 +56,12 @@ async def test_offline_heat_pump_keeps_reporting(
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an offline heat pump reports connectivity without hiding its last values."""
+    """Test the cloud calling a heat pump offline does not hide its last values."""
     mock_weheat_heat_pump.is_online = False
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("binary_sensor.test_model_connectivity").state == STATE_OFF
     assert (
         hass.states.get("binary_sensor.test_model_indoor_unit_water_pump").state
         == STATE_OFF
