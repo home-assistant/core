@@ -25,6 +25,8 @@ class GoodweRuntimeData:
     inverter: Inverter
     coordinator: GoodweUpdateCoordinator
     device_info: DeviceInfo
+    eco_mode_power: int = 100
+    eco_mode_soc: int = 100
 
 
 class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import GoodweConfigEntry
+from .coordinator import GoodweConfigEntry, GoodweRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ async def async_setup_entry(
     inverter = config_entry.runtime_data.inverter
     device_info = config_entry.runtime_data.device_info
 
-    supported_modes = await inverter.get_operation_modes(False)
+    supported_modes = await inverter.get_operation_modes(True)
     # read current operating mode from the inverter
     try:
         active_mode = await inverter.get_operation_mode()
@@ -63,8 +63,9 @@ async def async_setup_entry(
                         device_info,
                         OPERATION_MODE,
                         inverter,
+                        config_entry.runtime_data,
                         [v for k, v in _MODE_TO_OPTION.items() if k in supported_modes],
-                        active_mode_option,
+                        current_mode=active_mode_option,
                     )
                 ]
             )
@@ -87,7 +88,9 @@ class InverterOperationModeEntity(SelectEntity):
         device_info: DeviceInfo,
         description: SelectEntityDescription,
         inverter: Inverter,
+        runtime_data: GoodweRuntimeData,
         supported_options: list[str],
+        *,
         current_mode: str,
     ) -> None:
         """Initialize the inverter operation mode setting entity."""
@@ -97,6 +100,7 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_options = supported_options
         self._attr_current_option = current_mode
         self._inverter: Inverter = inverter
+        self._runtime_data = runtime_data
 
     async def async_update(self) -> None:
         """Get the current value from inverter."""
@@ -106,6 +110,14 @@ class InverterOperationModeEntity(SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._inverter.set_operation_mode(_OPTION_TO_MODE[option])
+        mode = _OPTION_TO_MODE[option]
+        if mode in (OperationMode.ECO_CHARGE, OperationMode.ECO_DISCHARGE):
+            await self._inverter.set_operation_mode(
+                mode,
+                eco_mode_power=self._runtime_data.eco_mode_power,
+                eco_mode_soc=self._runtime_data.eco_mode_soc,
+            )
+        else:
+            await self._inverter.set_operation_mode(mode)
         self._attr_current_option = option
         self.async_write_ha_state()
