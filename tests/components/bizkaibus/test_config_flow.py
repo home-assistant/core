@@ -347,3 +347,51 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_LINE_IDS: ["C"],
             CONF_LINES: {"A": "Route A updated", "C": "Route C"},
         }
+
+
+async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
+    """Test the options flow reports a connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "1234"},
+        options={CONF_LINE_IDS: ["A"], CONF_LINES: {"A": "Route A"}},
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_setup_api,
+    ):
+        mock_api_class.return_value.TestConnection = AsyncMock(return_value=False)
+        mock_setup_api.return_value.GetTimetable = AsyncMock(return_value=None)
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import_flow(hass: HomeAssistant) -> None:
+    """Test importing a stop creates a config entry."""
+    with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
+        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=None)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "import"}, data={CONF_STOP_ID: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "1234"
+    assert result["data"] == {CONF_STOP_ID: "1234"}
+
+
+async def test_import_flow_without_stop_id(hass: HomeAssistant) -> None:
+    """Test importing without a stop ID is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_stop_id"

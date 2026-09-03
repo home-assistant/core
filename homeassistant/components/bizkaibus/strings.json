@@ -72,6 +72,9 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "Failed to connect to Bizkaibus."
+    },
     "step": {
       "init": {
         "data": {
