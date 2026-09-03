@@ -14,6 +14,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.issue_registry import IssueRegistry
 
 from . import ALL_MODELS, WN90LP_CASE, ModelCase
 
@@ -199,10 +200,20 @@ class TestSerialNumberRevalidation:
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+def _wrong_device_issue(
+    issue_registry: IssueRegistry, init_integration: MockConfigEntry
+):
+    """The repair issue a runtime identity mismatch on this entry would raise."""
+    return issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"wrong_device_{init_integration.entry_id}"
+    )
+
+
 async def test_a_swap_after_setup_takes_entities_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    issue_registry: IssueRegistry,
     mock_unit: MockModbusUnit,
     init_integration: MockConfigEntry,
 ) -> None:
@@ -211,7 +222,8 @@ async def test_a_swap_after_setup_takes_entities_unavailable(
     Distinct from setup-time rejection: the entry is already loaded, so the
     coordinator -- not ``async_setup_entry`` -- is what has to notice. The
     entry stays loaded because this surfaces as a failed update, the same
-    way a dropped connection does.
+    way a dropped connection does -- so a repair issue is what actually
+    tells the user there is something to fix.
     """
     entity_id = entity_registry.async_get_entity_id(
         "sensor",
@@ -220,6 +232,7 @@ async def test_a_swap_after_setup_takes_entities_unavailable(
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "26.2"
+    assert _wrong_device_issue(issue_registry, init_integration) is None
 
     mock_unit.holding[0x163] = 0x0000
     mock_unit.holding[0x164] = 0x0001
@@ -230,6 +243,46 @@ async def test_a_swap_after_setup_takes_entities_unavailable(
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert init_integration.state is ConfigEntryState.LOADED
+    assert _wrong_device_issue(issue_registry, init_integration) is not None
+
+
+async def test_a_swap_recovery_clears_the_repair_issue(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    issue_registry: IssueRegistry,
+    mock_unit: MockModbusUnit,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the original WN90LP reappearing clears the swap's repair issue.
+
+    The issue is meant to persist only for as long as the mismatch does --
+    put the original sensor back, whether by undoing the swap or by moving
+    the entry's reconfigured address back, and it should clear on its own.
+    """
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{WN90LP_CASE.identity(init_integration.entry_id)}_temperature",
+    )
+    assert entity_id is not None
+
+    mock_unit.holding[0x163] = 0x0000
+    mock_unit.holding[0x164] = 0x0001
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _wrong_device_issue(issue_registry, init_integration) is not None
+
+    mock_unit.holding[0x163] = WN90LP_CASE.registers[0x163]
+    mock_unit.holding[0x164] = WN90LP_CASE.registers[0x164]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "26.2"
+    assert _wrong_device_issue(issue_registry, init_integration) is None
 
 
 @pytest.mark.parametrize("model_case", [ALL_MODELS[1]], ids=["WN69LP"], indirect=True)
