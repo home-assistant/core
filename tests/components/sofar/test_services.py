@@ -210,6 +210,30 @@ async def test_max_power_not_a_multiple_of_100_is_a_service_error(
     assert exc_info.value.translation_key == "max_power_not_a_multiple_of_100"
 
 
+async def test_unexpected_value_error_is_a_service_error(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test a library ValueError the handlers don't preempt still translates."""
+    device = init_integration.runtime_data.readings.device
+    with (
+        patch.object(
+            device.feed_in, "async_write_limit", side_effect=ValueError("boom")
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FEED_IN_LIMIT,
+            {
+                ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
+                ATTR_MODE: "disabled",
+                ATTR_MAX_POWER: 3000,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "invalid_action_value"
+
+
 async def test_write_failure_is_a_home_assistant_error(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
