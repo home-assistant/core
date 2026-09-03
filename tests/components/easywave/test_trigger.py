@@ -1,6 +1,7 @@
 """Tests for Easywave purpose-specific triggers."""
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.components.easywave.const import (
@@ -13,7 +14,7 @@ from homeassistant.components.easywave.const import (
 from homeassistant.components.easywave.trigger import TRIGGERS
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import CONF_TARGET
+from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -462,3 +463,17 @@ async def test_trigger_rejects_empty_target(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError, match="No target defined"):
         await trigger_cls.async_validate_config(hass, {CONF_TARGET: {}})
+
+
+async def test_trigger_rejects_unsupported_options(hass: HomeAssistant) -> None:
+    """Easywave triggers expose no options and reject unknown keys."""
+    trigger_cls = TRIGGERS["button_press_a"]
+
+    with pytest.raises(vol.Invalid):
+        await trigger_cls.async_validate_config(
+            hass,
+            {
+                CONF_TARGET: {CONF_DEVICE_ID: "device-id"},
+                CONF_OPTIONS: {"unknown": True},
+            },
+        )

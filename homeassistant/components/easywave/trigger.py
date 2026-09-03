@@ -35,7 +35,8 @@ CONF_SUBTYPE = "subtype"
 _TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Optional(CONF_OPTIONS, default={}): dict,
+        # Empty mapping: these triggers expose no options.
+        vol.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
