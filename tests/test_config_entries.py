@@ -10,6 +10,7 @@ import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from aiohttp import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -40,6 +41,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -558,6 +560,24 @@ async def test_migrate_from_higher_version_not_supported(
             None,
             None,
             id="Returns False",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=OAuth2TokenRequestReauthError(
+                    domain="comp",
+                    request_info=RequestInfo(
+                        url="https://example.com",
+                        method="GET",
+                        headers={},
+                        real_url="https://example.com",
+                    ),
+                )
+            ),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Config entry 'Mock Title' for comp integration could not authenticate",
+            "oauth2_helper_reauth_required",
+            "homeassistant",
+            id="OAuth reauth error",
         ),
     ],
 )
