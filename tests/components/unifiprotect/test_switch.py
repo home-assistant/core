@@ -43,6 +43,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import patch_ufp_method
 from .conftest import UNIFI_MAC
@@ -1226,56 +1227,44 @@ async def test_switch_command_when_public_object_vanishes(
     entity coroutines, so a delete frame landing after that check must not
     reach the command path as a missing public object.
     """
-    capabilities = {SensorFeatureCapability.MOTION}
-    first = make_public_sensor(sensor_all, capabilities=capabilities)
-    second = make_public_sensor(sensor_all, capabilities=capabilities)
-    second.id = "vanishing-sensor"
-    second.mac = "FFEEDDCCBB04"
-    second.name = "Vanishing Sensor"
-    second.display_name = "Vanishing Sensor"
+    public = make_public_sensor(
+        sensor_all, capabilities={SensorFeatureCapability.MOTION}
+    )
     pb = ufp_public_only.api.public_bootstrap
-    pb.sensors = {first.id: first, second.id: second}
+    pb.sensors = {public.id: public}
 
     await setup_public_only()
-    entity_ids = [
-        entity_registry.async_get_entity_id(
-            Platform.SWITCH, DOMAIN, f"{public.mac}_motion"
-        )
-        for public in (first, second)
-    ]
-    assert all(entity_ids)
-
-    def _delete_on_command(victim: Mock, result: Mock) -> AsyncMock:
-        """Delete ``victim`` while the other sensor's command is running."""
-
-        async def _run(*args: Any, **kwargs: Any) -> Mock:
-            pb.sensors.pop(victim.id, None)
-            msg = public_device_ws_message(victim)
-            msg.new_obj = None
-            msg.old_obj = victim
-            ufp_public_only.devices_ws_subscription(msg)
-            return result
-
-        return AsyncMock(side_effect=_run)
-
-    first.set_motion_status = _delete_on_command(second, first)
-    second.set_motion_status = _delete_on_command(first, second)
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            "switch", "turn_off", {ATTR_ENTITY_ID: entity_ids}, blocking=True
-        )
-
-    # Which of the two runs first is HA's scheduling choice, so resolve the
-    # real outcome rather than parametrizing it.
-    ran, missed = (
-        (first, second) if first.set_motion_status.call_count else (second, first)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{public.mac}_motion"
     )
-    assert ran.set_motion_status.call_count == 1
-    assert missed.set_motion_status.call_count == 0
+    assert entity_id
+    platform = next(
+        p for p in async_get_platforms(hass, DOMAIN) if p.domain == Platform.SWITCH
+    )
+    entity = platform.entities[entity_id]
+    request_call = entity.async_request_call
+
+    async def _delete_then_run(coro: Coroutine[Any, Any, Any]) -> Any:
+        """Drop the sensor after the availability filter, before the command."""
+        pb.sensors.pop(public.id)
+        msg = public_device_ws_message(public)
+        msg.new_obj = None
+        msg.old_obj = public
+        ufp_public_only.devices_ws_subscription(msg)
+        return await request_call(coro)
+
+    with (
+        patch.object(entity, "async_request_call", _delete_then_run),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    public.set_motion_status.assert_not_called()
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "device_not_available"
-    assert err.value.translation_placeholders == {"device_name": missed.display_name}
+    assert err.value.translation_placeholders == {"device_name": public.display_name}
 
 
 async def test_switch_hybrid_public_sensor_without_private_deferred(

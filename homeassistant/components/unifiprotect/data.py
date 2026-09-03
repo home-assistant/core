@@ -80,6 +80,11 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
     return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
 
 
+# Device families the public API alone provides; hybrid has no private adopt
+# path for them, so their add always goes through the public add signal.
+_PUBLIC_ONLY_MODELS = {ModelType.RELAY}
+
+
 def _pair_public_private[
     PublicDeviceT: PublicDeviceModel,
     PrivateDeviceT: ProtectAdoptableDeviceModel,
@@ -330,20 +335,21 @@ class ProtectData:
 
         The first successful refresh fixes the add-dedup baseline: platforms
         enumerate that snapshot at setup, so only devices appearing later are
-        offered through the add signal. Public-only mode only, matching the
-        dispatch gate: hybrid never dispatches adds.
+        offered through the add signal. Covers the same devices as the
+        dispatch gate (see _async_uses_public_add).
         """
         await self.api.update_public()
         if self._public_baseline_taken:
             return
         self._public_baseline_taken = True
         api = self.api
-        if not api.is_public_only or not api.has_public_bootstrap:
+        if not api.has_public_bootstrap:
             return
         self._known_public_macs.update(
             device.mac
             for device in api.public_bootstrap.all_devices()
             if isinstance(device, PublicDeviceModel)
+            and self._async_uses_public_add(device)
         )
 
     @callback
@@ -358,18 +364,27 @@ class ProtectData:
         self._known_public_macs.clear()
 
     @callback
+    def _async_uses_public_add(self, device: PublicDeviceModel) -> bool:
+        """Whether a device is discovered through the public add signal.
+
+        Every device in public-only mode. Hybrid discovers through the private
+        adopt path, where a second add would clash on unique_id, so only the
+        families without a private counterpart qualify there.
+        """
+        return self.api.is_public_only or device.model in _PUBLIC_ONLY_MODELS
+
+    @callback
     def _async_dispatch_new_public_device(self, device: PublicDeviceModel) -> None:
         """Offer a public device to the platforms, once per mac.
 
-        Public-only mode only: hybrid discovers new devices through the private
-        adopt path, and a second add would clash on unique_id. Cameras are
-        offered too: the channels signal only serves the camera platform. Dedup
-        happens here so platforms can add without their own duplicate checks.
+        Cameras are offered too: the channels signal only serves the camera
+        platform. Dedup happens here so platforms can add without their own
+        duplicate checks.
         """
         api = self.api
         if (
-            not api.is_public_only
-            or not api.has_public_bootstrap
+            not api.has_public_bootstrap
+            or not self._async_uses_public_add(device)
             or device.mac in self._known_public_macs
         ):
             return
@@ -515,10 +530,9 @@ class ProtectData:
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)
-            if self.api.is_public_only:
-                for device in list(self.api.public_bootstrap.all_devices()):
-                    if isinstance(device, PublicDeviceModel):
-                        self._async_dispatch_new_public_device(device)
+            for device in list(self.api.public_bootstrap.all_devices()):
+                if isinstance(device, PublicDeviceModel):
+                    self._async_dispatch_new_public_device(device)
 
     @callback
     def _async_signal_nvr_update(self) -> None:

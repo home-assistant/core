@@ -557,6 +557,9 @@ async def async_setup_entry(
 
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Relay):
+            async_add_entities(_relay_output_switches(data, device))
+            return
         async_add_entities(
             async_all_device_entities(
                 data, ProtectSwitch, _MODEL_DESCRIPTIONS, public_device=device
@@ -583,16 +586,24 @@ async def async_setup_entry(
             )
     async_add_entities(entities)
 
-    # Public API: relay output switches. Only available when the public
-    # bootstrap has been primed (requires API key + supported NVR firmware).
+    # Relays exist only in the public API; a relay adopted later arrives
+    # through the public add signal in either mode.
     if api.has_public_bootstrap:
-        relay_entities: list[ProtectRelayOutputSwitch] = [
-            ProtectRelayOutputSwitch(data, relay, output)
+        relay_entities = [
+            entity
             for relay in api.public_bootstrap.relays.values()
-            for output in relay.outputs
+            for entity in _relay_output_switches(data, relay)
         ]
         if relay_entities:
             async_add_entities(relay_entities)
+
+
+@callback
+def _relay_output_switches(
+    data: ProtectData, relay: Relay
+) -> list[ProtectRelayOutputSwitch]:
+    """Build one switch per output channel of a relay."""
+    return [ProtectRelayOutputSwitch(data, relay, output) for output in relay.outputs]
 
 
 class ProtectRelayOutputSwitch(SwitchEntity):

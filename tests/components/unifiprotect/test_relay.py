@@ -5,7 +5,13 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import ModelType, PublicRelayOutput, Relay, RelayOutputState
+from uiprotect.data import (
+    ModelType,
+    PublicRelayOutput,
+    Relay,
+    RelayOutputState,
+    WSAction,
+)
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -24,7 +30,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import MockUFPFixture, init_entry, make_public_bootstrap
+from .utils import (
+    MockUFPFixture,
+    init_entry,
+    make_public_bootstrap,
+    public_device_ws_message,
+)
 
 RELAY_ID = "relay-id-1"
 RELAY_MAC = "AA:BB:CC:DD:EE:01"
@@ -616,3 +627,88 @@ async def test_relay_switch_public_only(
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
+
+
+@pytest.fixture(name="setup_hybrid")
+def setup_hybrid_fixture(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Return a callable setting up the hybrid entry with an empty public bootstrap."""
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(None)
+
+    async def _setup() -> None:
+        await init_entry(hass, ufp, [])
+
+    return _setup
+
+
+def _add_relay_frame(ufp: MockUFPFixture, relay: Mock) -> None:
+    """Deliver a public devices websocket add frame for ``relay``."""
+    ufp.api.public_bootstrap.relays[relay.id] = relay
+    msg = public_device_ws_message(relay)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+
+
+@pytest.mark.parametrize(
+    ("ufp_fixture", "setup_fixture"),
+    [
+        pytest.param("ufp_public_only", "setup_public_only", id="public_only"),
+        pytest.param("ufp", "setup_hybrid", id="hybrid"),
+    ],
+)
+async def test_relay_switch_added_after_setup(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    ufp_fixture: str,
+    setup_fixture: str,
+) -> None:
+    """A relay adopted after setup gets its switches from its add frame in both modes.
+
+    A relay has no private counterpart, so hybrid cannot discover it through
+    the adopt path either. A re-delivered frame must not add a second time.
+    """
+    ufp: MockUFPFixture = request.getfixturevalue(ufp_fixture)
+    setup: Callable[[], Coroutine[Any, Any, None]] = request.getfixturevalue(
+        setup_fixture
+    )
+    await setup()
+    assert entity_registry.async_get(SWITCH_ENTITY_ID) is None
+
+    relay = _make_relay()
+    _add_relay_frame(ufp, relay)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(SWITCH_ENTITY_ID) is not None
+    count = len(hass.states.async_entity_ids(SWITCH_DOMAIN))
+
+    _add_relay_frame(ufp, relay)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == count
+    assert "already exists" not in caplog.text
+
+
+async def test_relay_switch_hybrid_startup_relay_not_added_twice(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A relay enumerated at hybrid setup is in the add baseline.
+
+    Its add frame (or the re-offer after a reconnect) must not create the
+    switches a second time.
+    """
+    ufp, relay = ufp_with_relay
+    await init_entry(hass, ufp, [])
+    count = len(hass.states.async_entity_ids(SWITCH_DOMAIN))
+    assert count
+
+    _add_relay_frame(ufp, relay)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == count
+    assert "already exists" not in caplog.text
