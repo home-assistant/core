@@ -159,6 +159,8 @@ class _OutgoingConnectionManager:
 
     @callback
     def _async_hass_stop(self, event: Event) -> None:
+        # The one-shot listener already removed itself before dispatch
+        self._remove_stop_listener = None
         self._async_close_server()
 
     @callback

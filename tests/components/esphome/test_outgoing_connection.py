@@ -205,6 +205,7 @@ async def test_outgoing_connection_stops_on_hass_stop(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """The shared listener is stopped when Home Assistant stops."""
     entry = _make_entry()
@@ -215,6 +216,8 @@ async def test_outgoing_connection_stops_on_hass_stop(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_server.close.assert_called_once()
+    # The one-shot listener must not be removed a second time
+    assert "Unable to remove unknown job listener" not in caplog.text
 
 
 async def test_outgoing_connection_bind_failure_warns_once(
