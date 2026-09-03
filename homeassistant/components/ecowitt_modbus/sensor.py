@@ -107,12 +107,9 @@ def _rainfall(key: str, *, precision: int, **kwargs: Any) -> EcowittSensorDescri
     Both models count up from the last reset rather than reporting a rate,
     and both can be reset by a command this integration does not send.
 
-    ``precision`` has to match the register's own step, or the default
-    display rounds away the reading's real resolution. Zero decimals is the
-    worst case -- it rounds a single 0.254mm WN69LP tip to nothing -- but
-    even one or two decimals would still round 0.254 to 0.3 or 0.25, hiding
-    the sensor's actual increment rather than just losing precision on a
-    large total. Three decimals is what it takes to show the true step.
+    ``precision`` has to match the register's own step -- e.g. 3 for the
+    WN69LP's 0.254mm tips -- or the default display rounds it to something
+    coarser than the sensor actually measures.
     """
     return _reading(
         key,
