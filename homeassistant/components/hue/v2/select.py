@@ -4,6 +4,7 @@ from typing import override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.controllers.groups import RoomController, ZoneController
 from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene
@@ -38,12 +39,17 @@ async def async_setup_entry(
 
     @callback
     def _on_group_added(_: EventType, group: Room | Zone) -> None:
-        async_add_entities([HueSceneSelectEntity(bridge, tracker, group.id)])
+        controller = api.groups.room if isinstance(group, Room) else api.groups.zone
+        async_add_entities([HueSceneSelectEntity(bridge, tracker, controller, group)])
 
     for group_controller in (api.groups.room, api.groups.zone):
         async_add_entities(
             HueSceneSelectEntity(
-                bridge, tracker, group.id, scenes_by_group.get(group.id, [])
+                bridge,
+                tracker,
+                group_controller,
+                group,
+                scenes_by_group.get(group.id, []),
             )
             for group in group_controller
         )
@@ -90,19 +96,20 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
         self,
         bridge: HueBridge,
         tracker: SceneActivityTracker,
-        group_id: str,
+        controller: RoomController | ZoneController,
+        group: Room | Zone,
         initial_scenes: list[HueScene | HueSmartScene] | None = None,
     ) -> None:
         """Initialize the scene select entity."""
-        super().__init__(bridge, bridge.api.groups, bridge.api.groups.get(group_id))
+        super().__init__(bridge, controller, group)
         self._tracker = tracker
-        self._group_id = group_id
-        self._group_state = tracker.get_group_state(group_id)
+        self._group_id = group.id
+        self._group_state = tracker.get_group_state(self._group_id)
         # Attach to the virtual Hue group device (same as grouped lights and scenes).
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.resource.id)},
         )
-        self._attr_unique_id = f"{group_id}_scene_select"
+        self._attr_unique_id = f"{self._group_id}_scene_select"
         self.refresh_options(initial_scenes)
 
     @override
