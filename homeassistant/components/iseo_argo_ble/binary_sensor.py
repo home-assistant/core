@@ -124,6 +124,16 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
             self._attr_is_on = not user.disabled
         super()._handle_coordinator_update()
 
+    @override
+    async def async_update(self) -> None:
+        """Do nothing, on purpose.
+
+        `CoordinatorEntity` would ask the coordinator to refresh, which re-reads
+        the credential list over an admin session. Repeating that is what faults
+        the lock's firmware, so `homeassistant.update_entity` is inert here.
+        Reload the config entry to pick up credentials changed elsewhere.
+        """
+
     async def async_set_enabled(self, enabled: bool) -> None:
         """Let this credential open the lock, or stop it doing so."""
         entry = self.coordinator.config_entry
