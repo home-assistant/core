@@ -738,6 +738,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_lanbon._tcp.local.": [
+        {
+            "domain": "lanbon",
+        },
+    ],
     "_linkplay._tcp.local.": [
         {
             "domain": "linkplay",

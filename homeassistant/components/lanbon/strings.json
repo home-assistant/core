@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "LANBON",
+        "description": "Enter the gateway IP and the Bearer token shown on the device after Open Integration is enabled. Token is not in mDNS.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "Token"
+        }
+      },
+      "discovery_confirm": {
+        "title": "Discovered {name}",
+        "description": "Add {name} at {host}. Paste the token from the device screen.",
+        "data": {
+          "token": "Token"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate {name}",
+        "description": "Token was rejected. Enter the current token from the device.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach the device. Enable Open Integration on the panel, then retry.",
+      "invalid_auth": "Invalid token",
+      "api_disabled": "Open Integration is off on the device",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured",
+      "reauth_successful": "Reauthentication successful",
+      "wrong_device": "Token belongs to a different gateway"
+    }
+  }
+}
