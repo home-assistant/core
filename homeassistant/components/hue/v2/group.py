@@ -35,6 +35,7 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
+from .light import FALLBACK_MAX_MIREDS, FALLBACK_MIN_MIREDS
 
 
 async def async_setup_entry(
@@ -264,22 +265,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     if color_temp.mirek
                     else None
                 )
+                # lights may report a zeroed schema, fall back to the Hue defaults
                 self._attr_min_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek_schema.mirek_maximum
+                        color_temp.mirek_schema.mirek_maximum or FALLBACK_MAX_MIREDS
                     )
                 )
                 self._attr_max_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek_schema.mirek_minimum
+                        color_temp.mirek_schema.mirek_minimum or FALLBACK_MIN_MIREDS
                     )
                 )
                 # counters for color mode vote and average temp
-                if (
-                    light.on.on
-                    and color_temp.mirek is not None
-                    and color_temp.mirek_valid
-                ):
+                if light.on.on and color_temp.mirek and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
                     light_in_colortemp_mode = True
                     temp_total += color_util.color_temperature_mired_to_kelvin(
