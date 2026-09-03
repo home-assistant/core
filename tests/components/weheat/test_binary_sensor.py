@@ -47,7 +47,7 @@ async def test_create_binary_entities(
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 15
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
