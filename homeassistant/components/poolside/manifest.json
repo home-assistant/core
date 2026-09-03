@@ -1,0 +1,13 @@
+{
+  "domain": "poolside",
+  "name": "Poolside",
+  "codeowners": ["@PoolsideStan"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/poolside",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["aiopoolside"],
+  "quality_scale": "bronze",
+  "requirements": ["aiopoolside==0.1.0"],
+  "zeroconf": ["_poolside._tcp.local."]
+}

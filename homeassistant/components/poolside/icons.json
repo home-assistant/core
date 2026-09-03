@@ -1,0 +1,87 @@
+{
+  "entity": {
+    "fan": {
+      "filter": {
+        "default": "mdi:creation-outline"
+      },
+      "water_feature": {
+        "default": "mdi:fountain"
+      }
+    },
+    "select": {
+      "cooling_mode": {
+        "default": "mdi:snowflake"
+      },
+      "heating_mode": {
+        "default": "mdi:fire"
+      }
+    },
+    "sensor": {
+      "actual_power_state": {
+        "default": "mdi:power"
+      },
+      "actuator_state": {
+        "default": "mdi:valve",
+        "state": {
+          "attempting_to_move": "mdi:valve-open",
+          "calibrating": "mdi:progress-wrench",
+          "error": "mdi:alert-circle",
+          "failed": "mdi:alert-circle",
+          "offline": "mdi:lan-disconnect",
+          "overload": "mdi:alert-circle"
+        }
+      },
+      "current_state": {
+        "default": "mdi:state-machine"
+      },
+      "disabled_reason": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "freeze_protect": "mdi:snowflake-alert",
+          "pool_cover": "mdi:window-shutter",
+          "winterized": "mdi:snowflake"
+        }
+      },
+      "dissolved_oxygen_concentration": {
+        "default": "mdi:gas-cylinder"
+      },
+      "dissolved_oxygen_saturation": {
+        "default": "mdi:gas-cylinder"
+      },
+      "free_chlorine": {
+        "default": "mdi:beaker"
+      },
+      "orp": {
+        "default": "mdi:flash"
+      },
+      "ph": {
+        "default": "mdi:ph"
+      },
+      "salt_level": {
+        "default": "mdi:shaker-outline"
+      },
+      "site_mode": {
+        "default": "mdi:cog",
+        "state": {
+          "factory": "mdi:factory",
+          "fault": "mdi:alert-circle",
+          "installer": "mdi:account-hard-hat"
+        }
+      },
+      "total_chlorine": {
+        "default": "mdi:beaker"
+      },
+      "winterized": {
+        "default": "mdi:snowflake"
+      }
+    },
+    "switch": {
+      "filter": {
+        "default": "mdi:creation-outline"
+      },
+      "water_feature": {
+        "default": "mdi:fountain"
+      }
+    }
+  }
+}

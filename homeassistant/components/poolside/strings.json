@@ -1,0 +1,152 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "pair_busy": "Another pairing request is already pending on the controller. Please try again in a few minutes.",
+      "pair_failed": "The controller rejected the pairing request.",
+      "pair_rejected": "The pairing request was rejected on the controller.",
+      "pair_timeout": "Nobody approved the pairing request in time. Please try again.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "progress": {
+      "pair": "Waiting for approval on the Poolside controller..."
+    },
+    "step": {
+      "pair": {
+        "description": "On your Poolside controller or in the Poolside app, approve the pairing request from “{fingerprint}”. Confirm the code shown there matches: {fingerprint}",
+        "title": "Approve this connection"
+      },
+      "reauth_confirm": {
+        "description": "Home Assistant needs to be re-approved on your Poolside controller. Continue to start pairing again."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Poolside controller.",
+          "port": "The port the controller's Home Assistant websocket server listens on."
+        },
+        "description": "Connect to your Poolside controller."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name} ({host})?"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "cooling_mode": {
+        "name": "{control_name} cooling mode",
+        "state": {
+          "chiller": "Chiller",
+          "heatpump": "Heat pump",
+          "smart": "Smart"
+        }
+      },
+      "heating_mode": {
+        "name": "{control_name} heating mode",
+        "state": {
+          "fuel": "Fuel",
+          "heatpump": "Heat pump",
+          "smart": "Smart",
+          "solar": "Solar"
+        }
+      }
+    },
+    "sensor": {
+      "actual_power_state": {
+        "name": "Power state",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "actuator_state": {
+        "name": "State",
+        "state": {
+          "attempting_to_move": "Moving",
+          "calibrating": "Calibrating",
+          "error": "Error",
+          "failed": "Failed",
+          "idle": "Idle",
+          "offline": "Offline",
+          "overload": "Overload",
+          "waiting_to_move": "Waiting"
+        }
+      },
+      "current_state": {
+        "name": "Water state",
+        "state": {
+          "cooldown": "Cooldown",
+          "cooling": "Cooling",
+          "critical_alert": "Critical alert",
+          "filtering": "Filtering",
+          "heating": "Heating",
+          "installer_mode": "Installer mode",
+          "off": "[%key:common::state::off%]",
+          "on": "Running"
+        }
+      },
+      "disabled_reason": {
+        "name": "{control_name} disabled reason",
+        "state": {
+          "freeze_protect": "Freeze protection",
+          "none": "None",
+          "pool_cover": "Pool cover closed",
+          "winterized": "Winterized"
+        }
+      },
+      "dissolved_oxygen_concentration": {
+        "name": "Dissolved oxygen concentration"
+      },
+      "dissolved_oxygen_saturation": {
+        "name": "Dissolved oxygen saturation"
+      },
+      "free_chlorine": {
+        "name": "Free chlorine"
+      },
+      "orp": {
+        "name": "ORP"
+      },
+      "salt_level": {
+        "name": "Salt level"
+      },
+      "site_mode": {
+        "name": "Controller mode",
+        "state": {
+          "factory": "Factory",
+          "fault": "Fault",
+          "installer": "Installer",
+          "normal": "Normal"
+        }
+      },
+      "total_chlorine": {
+        "name": "Total chlorine"
+      },
+      "winterized": {
+        "name": "Winterized",
+        "state": {
+          "false": "False",
+          "true": "True"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "expose_pool_devices": "Expose pool devices"
+        },
+        "data_description": {
+          "expose_pool_devices": "Create read-only telemetry devices for the physical pool equipment (pumps, heaters, lights, actuators) the controller operates."
+        }
+      }
+    }
+  }
+}

@@ -1444,6 +1444,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/pooldose/ @lmaertin
 /homeassistant/components/poolsense/ @haemishkyd
 /tests/components/poolsense/ @haemishkyd
+/homeassistant/components/poolside/ @PoolsideStan
+/tests/components/poolside/ @PoolsideStan
 /homeassistant/components/portainer/ @erwindouna
 /tests/components/portainer/ @erwindouna
 /homeassistant/components/power/ @home-assistant/core

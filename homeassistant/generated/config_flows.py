@@ -615,6 +615,7 @@ FLOWS = {
         "point",
         "pooldose",
         "poolsense",
+        "poolside",
         "portainer",
         "powerfox",
         "powerfox_local",
