@@ -118,10 +118,12 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.proxmox: ProxmoxAPI
 
         self.known_nodes: set[str] = set()
-        self.known_vms: set[tuple[str, int]] = set()
-        self.known_containers: set[tuple[str, int]] = set()
+        self.known_vms: set[int] = set()
+        self.known_containers: set[int] = set()
         self.known_storages: set[tuple[str, str]] = set()
         self.permissions: dict[str, dict[str, int]] = {}
+        self.vmid_node_map: dict[int, str] = {}
+        self.ctid_node_map: dict[int, str] = {}
 
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
         self.new_vms_callbacks: list[
@@ -222,8 +224,57 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 update=resources.update,
             )
 
+        self._build_id_node_maps(data)
+        # New-resource callbacks create entities that immediately read coordinator data.
+        self.data = data
         self._async_add_remove_nodes(data)
         return data
+
+    def _build_id_node_maps(self, data: dict[str, ProxmoxNodeData]) -> None:
+        """Build VMID/CTID-to-node maps from current data.
+
+        During live migration a VMID may temporarily appear on two nodes.
+        Resolution priority:
+        1. If the previously-known node still reports the VMID, keep it
+           (source node preferred, stable across refreshes).
+        2. Otherwise, pick the lexicographically smallest node name
+           reporting the VMID so the choice is deterministic and does
+           not depend on dict iteration order.
+        """
+        vm_candidates: dict[int, list[str]] = {}
+        ct_candidates: dict[int, list[str]] = {}
+        for node_name, node_data in data.items():
+            for vmid in node_data.vms:
+                vm_candidates.setdefault(vmid, []).append(node_name)
+            for ctid in node_data.containers:
+                ct_candidates.setdefault(ctid, []).append(node_name)
+
+        for nodes in vm_candidates.values():
+            nodes.sort()
+        for nodes in ct_candidates.values():
+            nodes.sort()
+
+        self.vmid_node_map = self._resolve_id_map(
+            vm_candidates,
+            self.vmid_node_map,
+        )
+
+        self.ctid_node_map = self._resolve_id_map(
+            ct_candidates,
+            self.ctid_node_map,
+        )
+
+    @staticmethod
+    def _resolve_id_map(
+        candidates: dict[int, list[str]], previous: dict[int, str]
+    ) -> dict[int, str]:
+        """Pick a node per VMID/CTID, preferring previous mapping when stable."""
+        return {
+            vmid: previous[vmid]
+            if vmid in previous and previous[vmid] in nodes
+            else nodes[0]
+            for vmid, nodes in candidates.items()
+        }
 
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
@@ -333,38 +384,38 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)
 
-        # And yes, track new VM's and containers as well
-        current_vms = {
-            (node_name, vmid)
-            for node_name, node_data in data.items()
-            for vmid in node_data.vms
-        }
+        self._async_update_resource_device_parents(data)
+
+        # Track VMs by VMID only (not by node), since VMIDs are globally
+        # unique in a Proxmox cluster and VMs can migrate between nodes.
+        current_vms = {vmid for node_data in data.values() for vmid in node_data.vms}
         self.known_vms &= current_vms
         new_vms = current_vms - self.known_vms
         if new_vms:
             _LOGGER.debug("New VMs found: %s", new_vms)
             self.known_vms.update(new_vms)
-            new_vm_data = [
-                (data[node_name], data[node_name].vms[vmid])
-                for node_name, vmid in new_vms
-            ]
+            new_vm_data: list[tuple[ProxmoxNodeData, dict[str, Any]]] = []
+            for vmid in new_vms:
+                node_name = self.vmid_node_map[vmid]
+                new_vm_data.append((data[node_name], data[node_name].vms[vmid]))
             for vms_callback in self.new_vms_callbacks:
                 vms_callback(new_vm_data)
 
+        # Track containers by VMID only, same rationale as VMs.
         current_containers = {
-            (node_name, vmid)
-            for node_name, node_data in data.items()
-            for vmid in node_data.containers
+            vmid for node_data in data.values() for vmid in node_data.containers
         }
         self.known_containers &= current_containers
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
-            new_container_data = [
-                (data[node_name], data[node_name].containers[vmid])
-                for node_name, vmid in new_containers
-            ]
+            new_container_data: list[tuple[ProxmoxNodeData, dict[str, Any]]] = []
+            for vmid in new_containers:
+                node_name = self.ctid_node_map[vmid]
+                new_container_data.append(
+                    (data[node_name], data[node_name].containers[vmid])
+                )
             for containers_callback in self.new_containers_callbacks:
                 containers_callback(new_container_data)
 
@@ -386,6 +437,40 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 storages_callback(new_storage_data)
 
         self._async_remove_stale_devices(data)
+
+    @callback
+    def _async_update_resource_device_parents(
+        self, data: dict[str, ProxmoxNodeData]
+    ) -> None:
+        """Update VM/container device parents after a migration."""
+        registry = dr.async_get(self.hass)
+        entry_id = self.config_entry.entry_id
+
+        for resource_kind, node_map in (
+            ("vm", self.vmid_node_map),
+            ("container", self.ctid_node_map),
+        ):
+            for resource_id, node_name in node_map.items():
+                resource_device = registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{entry_id}_{resource_kind}_{resource_id}"), entry_id
+                )
+                if resource_device is None:
+                    continue
+
+                node_device = registry.async_get_device_by_identifier(
+                    (
+                        DOMAIN,
+                        f"{entry_id}_node_{data[node_name].node['id']}",
+                    ),
+                    entry_id,
+                )
+                if (
+                    node_device is not None
+                    and resource_device.via_device_id != node_device.id
+                ):
+                    registry.async_update_device(
+                        resource_device.id, via_device_id=node_device.id
+                    )
 
     @callback
     def _async_remove_stale_devices(self, data: dict[str, ProxmoxNodeData]) -> None:
