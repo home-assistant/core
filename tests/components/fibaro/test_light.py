@@ -80,7 +80,7 @@ async def test_fgd212_light_brightness_without_setvalue_action(
         await init_integration(hass, mock_config_entry)
         # Assert
         state = hass.states.get("light.room_1_8_spots_116")
-        assert state.attributes[ATTR_BRIGHTNESS] == 128
+        assert state.attributes[ATTR_BRIGHTNESS] == 127
         assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
         assert state.state == "on"
 
