@@ -119,7 +119,7 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
-    async def update_image(self, image_id: str):
+    async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
         self._cached_image = None
         try:

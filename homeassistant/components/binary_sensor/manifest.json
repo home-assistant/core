@@ -1,6 +1,6 @@
 {
   "domain": "binary_sensor",
-  "name": "Binary Sensor",
+  "name": "Binary sensor",
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/binary_sensor",
   "integration_type": "entity",

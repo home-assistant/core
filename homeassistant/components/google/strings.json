@@ -48,11 +48,6 @@
       }
     }
   },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    }
-  },
   "options": {
     "step": {
       "init": {
