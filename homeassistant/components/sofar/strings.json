@@ -645,7 +645,7 @@
           "name": "Inverter"
         },
         "enabled": {
-          "description": "Whether the inverter applies the limit. Turning this off leaves the last limit in place, unused.",
+          "description": "Whether the inverter applies the limit. Limit is required either way: disabling still writes it, but the device ignores it until re-enabled.",
           "name": "Enabled"
         },
         "limit": {
