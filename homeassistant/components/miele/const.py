@@ -1204,6 +1204,8 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
     espresso_macchiato = 24007, 24039, 24071, 24135
     cafe_au_lait = 24008, 24040, 24072, 24104, 24136
     caffe_latte = 24009, 24041, 24073, 24105, 24137
+    caffe_americano = 24010, 24042, 24074, 24106, 24138
+    long_black = 24011, 24043, 24075, 24107, 24139
     flat_white = 24012, 24044, 24076, 24108, 24140
     very_hot_water = 24013, 24045, 24077, 24109, 24141
     hot_water = 24014, 24046, 24078, 24110, 24142
@@ -1215,6 +1217,7 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
     green_tea = 24020, 24052, 24084, 24116, 24148
     white_tea = 24021, 24053, 24085, 24117, 24149
     japanese_tea = 24022, 29054, 24086, 24118, 24150
+    chai_latte = 24023, 24055, 24087, 24119, 24151
     # special programs
     coffee_pot = 24400
     barista_assistant = 24407
