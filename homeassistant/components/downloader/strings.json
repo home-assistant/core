@@ -1,8 +1,6 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
+    "abort": {},
     "error": {
       "directory_does_not_exist": "The directory could not be reached. Please check your settings."
     },

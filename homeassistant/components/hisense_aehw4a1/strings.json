@@ -1,8 +1,6 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
+    "abort": {},
     "step": {
       "confirm": {
         "description": "Do you want to set up Hisense AEH-W4A1?"
