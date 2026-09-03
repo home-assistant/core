@@ -136,9 +136,6 @@
     "invalid_media_id": {
       "message": "Not a Yoto media identifier: {media_id}"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "play_failed": {
       "message": "Failed to play Yoto media: {error}"
     },

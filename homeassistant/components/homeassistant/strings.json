@@ -4,6 +4,7 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
@@ -48,6 +49,12 @@
     },
     "oauth2_helper_refresh_transient": {
       "message": "Temporary error refreshing credentials for {domain}, try again later"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "oauth2_unknown_implementation": {
+      "message": "The configured authentication method is no longer available, re-authentication required"
     },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
@@ -255,10 +262,10 @@
       "name": "Reload all Home Assistant configuration"
     },
     "reload_config_entry": {
-      "description": "Reloads any explicitly provided config entry ID and any config entries referenced by entities or devices in the target. If both are provided, the union of those config entries is reloaded.",
+      "description": "Reloads the config entry of the provided config entry ID.",
       "fields": {
         "entry_id": {
-          "description": "Optional configuration entry ID to reload.",
+          "description": "The configuration entry to reload.",
           "name": "Config entry ID"
         }
       },

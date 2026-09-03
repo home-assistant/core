@@ -73,6 +73,12 @@
     "invalid_account": {
       "message": "The selected device ({device_name}) is not an account belonging to this Monzo connection."
     },
+    "invalid_api_response": {
+      "message": "The Monzo API returned an invalid response."
+    },
+    "invalid_api_response_with_details": {
+      "message": "The Monzo API returned an invalid response. Enable debug logging for details."
+    },
     "invalid_device": {
       "message": "The selected Monzo device could not be found."
     },
@@ -81,9 +87,6 @@
     },
     "invalid_transfer_account": {
       "message": "{device_name} does not support pot transfers. Choose a different Monzo account."
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "pot_account_mismatch": {
       "message": "{pot_name} belongs to {pot_account_name}, not {account_name}. Choose its associated Monzo account, or choose a pot belonging to {account_name}."

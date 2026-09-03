@@ -1,10 +1,12 @@
 """Support for Sofar sensors."""
 
-from collections.abc import Callable
+from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date
 from enum import IntEnum
 from typing import cast, override
+
+from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -26,28 +28,13 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
-from homeassistant.util.variance import ignore_variance
 
-# Aliased: a module-level SCAN_INTERVAL would set the platform's poll.
-from .const import SCAN_INTERVAL as _POLL_INTERVAL
-from .coordinator import SofarConfigEntry, SofarRuntimeData
+from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
 PARALLEL_UPDATES = 0
-
-# Two polls of slack, so jitter does not republish a steady countdown.
-_COUNTDOWN_VARIANCE = timedelta(seconds=_POLL_INTERVAL * 2)
-
-
-def _deadline_filter() -> Callable[[int], datetime]:
-    """Turn remaining seconds into a deadline, holding it steady."""
-    return ignore_variance(
-        lambda seconds: dt_util.utcnow() + timedelta(seconds=seconds),
-        _COUNTDOWN_VARIANCE,
-    )
 
 
 async def async_setup_entry(
@@ -58,21 +45,59 @@ async def async_setup_entry(
     """Set up the Sofar Inverter Modbus sensor platform."""
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
+    device = runtime_data.readings.device
 
-    entities: list[SensorEntity] = [
+    async_add_entities(
         _sensor_class(description)(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served
-    ]
-    async_add_entities(entities)
+        if description.component in served and not _is_battery_pack(description)
+    )
+
+    wired: set[int] = set()
+
+    @callback
+    def _async_add_wired_packs() -> None:
+        """Add a pack's sensors the first time it reports a voltage."""
+        new = {
+            number
+            for number in _BATTERY_COMPONENTS
+            if number not in wired and _pack_is_wired(device, served, number)
+        }
+        if not new:
+            return
+        wired.update(new)
+        async_add_entities(
+            _sensor_class(description)(runtime_data, description)
+            for description in SENSOR_DESCRIPTIONS
+            if (part := description.part) is not None
+            and part[0] == "battery"
+            and part[1] in new
+        )
+
+    _async_add_wired_packs()
+    entry.async_on_unload(
+        runtime_data.readings.async_add_listener(_async_add_wired_packs)
+    )
+
+
+def _is_battery_pack(description: SofarSensorDescription) -> bool:
+    """Whether a description belongs to one numbered battery pack."""
+    return description.part is not None and description.part[0] == "battery"
+
+
+def _pack_is_wired(device: SofarInverter, served: frozenset[str], number: int) -> bool:
+    """Whether a pack has answered, so it physically exists."""
+    component_name = _BATTERY_COMPONENTS[number]
+    if component_name not in served:
+        return False
+    component = getattr(device, component_name)
+    return bool(getattr(component, f"battery_voltage_{number}", None))
 
 
 def _sensor_class(
     description: SofarSensorDescription,
 ) -> type[SofarSensor | SofarTotalSensor]:
     """Pick the entity class a description's semantics ask for."""
-    if description.device_class is SensorDeviceClass.TIMESTAMP:
-        return SofarCountdownSensor
     if description.state_class in (
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
@@ -95,30 +120,6 @@ class SofarSensor(SofarEntity, SensorEntity):
         if isinstance(value, IntEnum):
             return value.name.lower()
         return cast(str | int | float | date | None, value)
-
-
-class SofarCountdownSensor(SofarSensor):
-    """Defines a Sofar countdown, published as the moment it runs out."""
-
-    def __init__(
-        self,
-        runtime_data: SofarRuntimeData,
-        entity_description: SofarSensorDescription,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(runtime_data, entity_description)
-        self._deadline = _deadline_filter()
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        seconds = getattr(component, self.entity_description.key)
-        if not isinstance(seconds, int) or seconds <= 0:
-            # A restart must not land inside the finished countdown's slack.
-            self._deadline = _deadline_filter()
-            return None
-        return self._deadline(seconds)
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
@@ -162,25 +163,142 @@ class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """Describe a Sofar sensor."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class _PartMeasurement:
+    """One measurement every string or pack repeats, before it gets a number."""
+
+    key: str
+    translation_key: str
+    device_class: SensorDeviceClass | None = None
+    native_unit_of_measurement: str | None = None
+    state_class: SensorStateClass | None = None
+    suggested_display_precision: int | None = None
+    entity_category: EntityCategory | None = None
+    entity_registry_enabled_default: bool = True
+
+
+# Which register block each string or pack is read from.
+_PV_STRING_COMPONENTS = {
+    1: "pv_1_2",
+    2: "pv_1_2",
+    3: "pv_3",
+    4: "pv_4",
+    5: "pv_5_6",
+    6: "pv_5_6",
+    7: "pv_7_8",
+    8: "pv_7_8",
+    9: "pv_9_10",
+    10: "pv_9_10",
+}
+_BATTERY_COMPONENTS = {
+    n: "battery_1_2" if n <= 2 else "battery_3_8" for n in range(1, 9)
+}
+
+_PV_STRING_MEASUREMENTS = (
+    _PartMeasurement(
+        key="pv_voltage",
+        translation_key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        entity_registry_enabled_default=False,
+    ),
+    _PartMeasurement(
+        key="pv_current",
+        translation_key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    _PartMeasurement(
+        key="pv_power",
+        translation_key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+)
+
+_BATTERY_MEASUREMENTS = (
+    _PartMeasurement(
+        key="battery_voltage",
+        translation_key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    _PartMeasurement(
+        key="battery_current",
+        translation_key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+    ),
+    _PartMeasurement(
+        key="battery_power",
+        translation_key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    _PartMeasurement(
+        key="battery_temperature",
+        translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    _PartMeasurement(
+        key="battery_capacity",
+        translation_key="state_of_charge",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    _PartMeasurement(
+        key="battery_state_of_health",
+        translation_key="state_of_health",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    _PartMeasurement(
+        key="battery_charge_cycle",
+        translation_key="charge_cycle",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
+def _part_sensors(
+    kind: str,
+    components: Mapping[int, str],
+    measurements: tuple[_PartMeasurement, ...],
+) -> tuple[SofarSensorDescription, ...]:
+    """Repeat a part's measurements across every string or pack it has."""
+    return tuple(
+        SofarSensorDescription(
+            key=f"{measurement.key}_{number}",
+            component=component,
+            translation_key=measurement.translation_key,
+            part=(kind, number),
+            device_class=measurement.device_class,
+            native_unit_of_measurement=measurement.native_unit_of_measurement,
+            state_class=measurement.state_class,
+            suggested_display_precision=measurement.suggested_display_precision,
+            entity_category=measurement.entity_category,
+            entity_registry_enabled_default=(
+                measurement.entity_registry_enabled_default
+            ),
+        )
+        for number, component in components.items()
+        for measurement in measurements
+    )
+
+
 SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
-    SofarSensorDescription(
-        key="pv_power_1",
-        component="pv_1_2",
-        translation_key="pv_power_1",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_power_2",
-        component="pv_1_2",
-        translation_key="pv_power_2",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
     SofarSensorDescription(
         key="pv_power_total",
         component="pv_1_2",
@@ -213,13 +331,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
             "upgrading",
             "self_charging",
         ],
-    ),
-    SofarSensorDescription(
-        key="waiting_time",
-        component="state",
-        translation_key="waiting_ends",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(
         key="inverter_temperature_1",
@@ -273,12 +384,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SofarSensorDescription(
-        key="serial_number",
-        component="identity",
-        translation_key="serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(
@@ -840,16 +945,16 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SofarSensorDescription(
-        key="offgrid_loadpeakratio",
+        key="offgrid_load_peak_ratio",
         component="offgrid_single_phase",
-        translation_key="offgrid_loadpeakratio",
+        translation_key="offgrid_load_peak_ratio",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
     SofarSensorDescription(
-        key="offgrid_loadpeakratio_l1",
+        key="offgrid_load_peak_ratio_l1",
         component="offgrid_three_phase",
-        translation_key="offgrid_loadpeakratio_l1",
+        translation_key="offgrid_load_peak_ratio_l1",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
@@ -904,9 +1009,9 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SofarSensorDescription(
-        key="offgrid_loadpeakratio_l2",
+        key="offgrid_load_peak_ratio_l2",
         component="offgrid_three_phase",
-        translation_key="offgrid_loadpeakratio_l2",
+        translation_key="offgrid_load_peak_ratio_l2",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
@@ -961,9 +1066,9 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SofarSensorDescription(
-        key="offgrid_loadpeakratio_l3",
+        key="offgrid_load_peak_ratio_l3",
         component="offgrid_three_phase",
-        translation_key="offgrid_loadpeakratio_l3",
+        translation_key="offgrid_load_peak_ratio_l3",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
@@ -1024,737 +1129,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_1",
-        component="pv_1_2",
-        translation_key="pv_voltage_1",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_1",
-        component="pv_1_2",
-        translation_key="pv_current_1",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_2",
-        component="pv_1_2",
-        translation_key="pv_voltage_2",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_2",
-        component="pv_1_2",
-        translation_key="pv_current_2",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_3",
-        component="pv_3",
-        translation_key="pv_voltage_3",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_3",
-        component="pv_3",
-        translation_key="pv_current_3",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_3",
-        component="pv_3",
-        translation_key="pv_power_3",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_4",
-        component="pv_4",
-        translation_key="pv_voltage_4",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_4",
-        component="pv_4",
-        translation_key="pv_current_4",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_4",
-        component="pv_4",
-        translation_key="pv_power_4",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_5",
-        component="pv_5_6",
-        translation_key="pv_voltage_5",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_5",
-        component="pv_5_6",
-        translation_key="pv_current_5",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_5",
-        component="pv_5_6",
-        translation_key="pv_power_5",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_6",
-        component="pv_5_6",
-        translation_key="pv_voltage_6",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_6",
-        component="pv_5_6",
-        translation_key="pv_current_6",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_6",
-        component="pv_5_6",
-        translation_key="pv_power_6",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_7",
-        component="pv_7_8",
-        translation_key="pv_voltage_7",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_7",
-        component="pv_7_8",
-        translation_key="pv_current_7",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_7",
-        component="pv_7_8",
-        translation_key="pv_power_7",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_8",
-        component="pv_7_8",
-        translation_key="pv_voltage_8",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_8",
-        component="pv_7_8",
-        translation_key="pv_current_8",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_8",
-        component="pv_7_8",
-        translation_key="pv_power_8",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_9",
-        component="pv_9_10",
-        translation_key="pv_voltage_9",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_9",
-        component="pv_9_10",
-        translation_key="pv_current_9",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_9",
-        component="pv_9_10",
-        translation_key="pv_power_9",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="pv_voltage_10",
-        component="pv_9_10",
-        translation_key="pv_voltage_10",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_current_10",
-        component="pv_9_10",
-        translation_key="pv_current_10",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="pv_power_10",
-        component="pv_9_10",
-        translation_key="pv_power_10",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_1",
-        component="battery_1_2",
-        translation_key="battery_voltage_1",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SofarSensorDescription(
-        key="battery_current_1",
-        component="battery_1_2",
-        translation_key="battery_current_1",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_1",
-        component="battery_1_2",
-        translation_key="battery_power_1",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_1",
-        component="battery_1_2",
-        translation_key="battery_temperature_1",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_1",
-        component="battery_1_2",
-        translation_key="battery_state_of_charge_1",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_1",
-        component="battery_1_2",
-        translation_key="battery_state_of_health_1",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_1",
-        component="battery_1_2",
-        translation_key="battery_charge_cycle_1",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_2",
-        component="battery_1_2",
-        translation_key="battery_voltage_2",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_2",
-        component="battery_1_2",
-        translation_key="battery_current_2",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_2",
-        component="battery_1_2",
-        translation_key="battery_power_2",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_2",
-        component="battery_1_2",
-        translation_key="battery_temperature_2",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_2",
-        component="battery_1_2",
-        translation_key="battery_state_of_charge_2",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_2",
-        component="battery_1_2",
-        translation_key="battery_state_of_health_2",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_2",
-        component="battery_1_2",
-        translation_key="battery_charge_cycle_2",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_3",
-        component="battery_3_8",
-        translation_key="battery_voltage_3",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_3",
-        component="battery_3_8",
-        translation_key="battery_current_3",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_3",
-        component="battery_3_8",
-        translation_key="battery_power_3",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_3",
-        component="battery_3_8",
-        translation_key="battery_temperature_3",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_3",
-        component="battery_3_8",
-        translation_key="battery_state_of_charge_3",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_3",
-        component="battery_3_8",
-        translation_key="battery_state_of_health_3",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_3",
-        component="battery_3_8",
-        translation_key="battery_charge_cycle_3",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_4",
-        component="battery_3_8",
-        translation_key="battery_voltage_4",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_4",
-        component="battery_3_8",
-        translation_key="battery_current_4",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_4",
-        component="battery_3_8",
-        translation_key="battery_power_4",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_4",
-        component="battery_3_8",
-        translation_key="battery_temperature_4",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_4",
-        component="battery_3_8",
-        translation_key="battery_state_of_charge_4",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_4",
-        component="battery_3_8",
-        translation_key="battery_state_of_health_4",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_4",
-        component="battery_3_8",
-        translation_key="battery_charge_cycle_4",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_5",
-        component="battery_3_8",
-        translation_key="battery_voltage_5",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_5",
-        component="battery_3_8",
-        translation_key="battery_current_5",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_5",
-        component="battery_3_8",
-        translation_key="battery_power_5",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_5",
-        component="battery_3_8",
-        translation_key="battery_temperature_5",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_5",
-        component="battery_3_8",
-        translation_key="battery_state_of_charge_5",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_5",
-        component="battery_3_8",
-        translation_key="battery_state_of_health_5",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_5",
-        component="battery_3_8",
-        translation_key="battery_charge_cycle_5",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_6",
-        component="battery_3_8",
-        translation_key="battery_voltage_6",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_6",
-        component="battery_3_8",
-        translation_key="battery_current_6",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_6",
-        component="battery_3_8",
-        translation_key="battery_power_6",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_6",
-        component="battery_3_8",
-        translation_key="battery_temperature_6",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_6",
-        component="battery_3_8",
-        translation_key="battery_state_of_charge_6",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_6",
-        component="battery_3_8",
-        translation_key="battery_state_of_health_6",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_6",
-        component="battery_3_8",
-        translation_key="battery_charge_cycle_6",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_7",
-        component="battery_3_8",
-        translation_key="battery_voltage_7",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_7",
-        component="battery_3_8",
-        translation_key="battery_current_7",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_7",
-        component="battery_3_8",
-        translation_key="battery_power_7",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_7",
-        component="battery_3_8",
-        translation_key="battery_temperature_7",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_7",
-        component="battery_3_8",
-        translation_key="battery_state_of_charge_7",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_7",
-        component="battery_3_8",
-        translation_key="battery_state_of_health_7",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_7",
-        component="battery_3_8",
-        translation_key="battery_charge_cycle_7",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_voltage_8",
-        component="battery_3_8",
-        translation_key="battery_voltage_8",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_current_8",
-        component="battery_3_8",
-        translation_key="battery_current_8",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_power_8",
-        component="battery_3_8",
-        translation_key="battery_power_8",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
-    ),
-    SofarSensorDescription(
-        key="battery_temperature_8",
-        component="battery_3_8",
-        translation_key="battery_temperature_8",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_capacity_8",
-        component="battery_3_8",
-        translation_key="battery_state_of_charge_8",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_state_of_health_8",
-        component="battery_3_8",
-        translation_key="battery_state_of_health_8",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_charge_cycle_8",
-        component="battery_3_8",
-        translation_key="battery_charge_cycle_8",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SofarSensorDescription(
@@ -2067,3 +1441,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
+
+SENSOR_DESCRIPTIONS += _part_sensors(
+    "pv_string", _PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
+) + _part_sensors("battery", _BATTERY_COMPONENTS, _BATTERY_MEASUREMENTS)

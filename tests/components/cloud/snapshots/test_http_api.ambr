@@ -30,7 +30,7 @@
   --- | ---
   ai_task | AI Task
   auth | Auth
-  binary_sensor | Binary Sensor
+  binary_sensor | Binary sensor
   cloud | Home Assistant Cloud
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
@@ -43,7 +43,7 @@
   http | HTTP
   intent | Intent
   llm | LLM
-  media_source | Media Source
+  media_source | Media source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
   stt | Speech-to-text (STT)
@@ -166,7 +166,7 @@
   --- | ---
   ai_task | AI Task
   auth | Auth
-  binary_sensor | Binary Sensor
+  binary_sensor | Binary sensor
   cloud | Home Assistant Cloud
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
@@ -179,7 +179,7 @@
   http | HTTP
   intent | Intent
   llm | LLM
-  media_source | Media Source
+  media_source | Media source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
   stt | Speech-to-text (STT)
