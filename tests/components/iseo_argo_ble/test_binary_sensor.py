@@ -2,12 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from iseo_argo_ble import (
-    USER_TYPE_PIN,
-    USER_TYPE_RFID,
-    IseoAuthError,
-    IseoConnectionError,
-)
+from iseo_argo_ble import USER_TYPE_RFID, IseoAuthError, IseoConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -35,6 +30,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
+from .conftest import MOCK_VALIDITY
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -85,51 +81,71 @@ async def test_no_sensors_without_admin_identity(
     mock_iseo_client.read_users.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    ("enabled", "entity_id", "expected_uuid", "expected_user_type", "expected_state"),
-    [
-        pytest.param(
-            False,
-            ALICE_ENTITY_ID,
-            "1111111111111111111111111111aaaa",
-            USER_TYPE_RFID,
-            STATE_OFF,
-            id="suspend",
-        ),
-        pytest.param(
-            True,
-            BOB_ENTITY_ID,
-            "2222222222222222222222222222bbbb",
-            USER_TYPE_PIN,
-            STATE_ON,
-            id="restore",
-        ),
-    ],
-)
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
-async def test_set_credential_enabled(
+async def test_suspend_credential(
     hass: HomeAssistant,
     mock_admin_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
-    enabled: bool,
-    entity_id: str,
-    expected_uuid: str,
-    expected_user_type: int,
-    expected_state: str,
 ) -> None:
-    """Test the action writes to the lock and updates the sensor."""
+    """Test suspending writes to the lock and updates the sensor."""
     await setup_integration(hass, mock_admin_config_entry)
 
-    await _set_enabled(hass, entity_id, enabled)
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
 
     mock_iseo_client.set_user_disabled.assert_called_once_with(
-        uuid_hex=expected_uuid,
-        user_type=expected_user_type,
-        disabled=not enabled,
+        uuid_hex="1111111111111111111111111111aaaa",
+        user_type=USER_TYPE_RFID,
+        disabled=True,
+        validity=None,
     )
-    assert hass.states.get(entity_id).state == expected_state
+    assert hass.states.get(ALICE_ENTITY_ID).state == STATE_OFF
     # The new state is applied to the cached list rather than re-read.
     mock_iseo_client.read_users.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_restore_credential_puts_its_window_back(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test restoring hands the lock the window the credential started with.
+
+    Suspending overwrites it, so restoring without it would turn a credential
+    that was valid for one weekend into one valid forever.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
+    await _set_enabled(hass, ALICE_ENTITY_ID, True)
+
+    assert mock_iseo_client.set_user_disabled.await_args.kwargs == {
+        "uuid_hex": "1111111111111111111111111111aaaa",
+        "user_type": USER_TYPE_RFID,
+        "disabled": False,
+        "validity": MOCK_VALIDITY,
+    }
+    assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_restore_refuses_when_the_window_is_unknown(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a credential suspended before setup is not restored blindly.
+
+    Only the expired sentinel was ever read, so restoring would have to guess,
+    and guessing "no restriction" grants more access than it ever had.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    assert hass.states.get(BOB_ENTITY_ID).state == STATE_OFF
+
+    with pytest.raises(ServiceValidationError):
+        await _set_enabled(hass, BOB_ENTITY_ID, True)
+
+    mock_iseo_client.set_user_disabled.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
