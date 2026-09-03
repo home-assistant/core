@@ -113,13 +113,18 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
 class _Registration:
     """One MAC registration; unregisters exactly once."""
 
-    __slots__ = ("_hass", "_state", "_unregister")
+    __slots__ = ("_hass", "_mac", "_state", "_unregister")
 
     def __init__(
-        self, hass: HomeAssistant, state: _ListenerState, unregister: CALLBACK_TYPE
+        self,
+        hass: HomeAssistant,
+        state: _ListenerState,
+        mac: str,
+        unregister: CALLBACK_TYPE,
     ) -> None:
         self._hass = hass
         self._state = state
+        self._mac = mac
         self._unregister: CALLBACK_TYPE | None = unregister
 
     @callback
@@ -135,22 +140,27 @@ class _Registration:
             unregister()
         except Exception:
             # A cleanup callback must not abort the entry's remaining cleanup
-            failed = True
             _LOGGER.exception("Error removing the dial-in route")
-            if state.registrations > 1:
-                _LOGGER.warning(
-                    (
-                        "Stopping the outgoing connection listener; %s other"
-                        " device(s) will not receive dial-ins until their"
-                        " entries are reloaded"
-                    ),
-                    state.registrations - 1,
-                )
+            try:
+                # The targeted recovery keeps the other entries routed
+                state.server.discard(self._mac)
+            except Exception:
+                failed = True
+                _LOGGER.exception("Error discarding the dial-in route")
+                if state.registrations > 1:
+                    _LOGGER.warning(
+                        (
+                            "Stopping the outgoing connection listener; %s other"
+                            " device(s) will not receive dial-ins until their"
+                            " entries are reloaded"
+                        ),
+                        state.registrations - 1,
+                    )
         finally:
             state.registrations -= 1
             # In the finally so a raising unregister cannot leave a routeless
-            # listener holding the port; a failed removal tears the whole
-            # listener down so the routes and the count cannot diverge.
+            # listener holding the port; when even discard failed the routes
+            # are unknowable, so the whole listener is torn down.
             # Already popped when HA is stopping.
             if (state.registrations == 0 or failed) and hass.data.get(
                 _KEY_OUTGOING_CONNECTION_LISTENER
@@ -216,4 +226,4 @@ async def async_register_outgoing_target(
             _async_stop_listener(hass, state)
         raise
     state.registrations += 1
-    return _Registration(hass, state, unregister).async_unregister
+    return _Registration(hass, state, mac, unregister).async_unregister

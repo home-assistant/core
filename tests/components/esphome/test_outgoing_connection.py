@@ -327,13 +327,15 @@ async def test_outgoing_connection_unregister_error_contained(
     mock_server: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A raising library unregister still tears the listener down."""
+    """A raising library unregister recovers by discarding just that route."""
     mock_server.register.return_value = MagicMock(side_effect=RuntimeError("boom"))
     unregister = await async_register_outgoing_target(hass, MAC, MagicMock())
     assert unregister is not None
     unregister()
     await hass.async_block_till_done()
     assert "Error removing the dial-in route" in caplog.text
+    mock_server.discard.assert_called_once_with(MAC)
+    # The last registration is gone, so the listener stops on the normal path
     mock_server.stop.assert_awaited_once()
 
 
@@ -353,4 +355,32 @@ async def test_outgoing_connection_register_error_stops_listener(
 
     assert entry.state is ConfigEntryState.LOADED
     assert "Could not set up dial-in routing" in caplog.text
+    mock_server.stop.assert_awaited_once()
+
+
+async def test_outgoing_connection_unregister_error_spares_survivors(
+    hass: HomeAssistant,
+    mock_server: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One entry's failed unregister does not unroute the other entries."""
+    bad_unregister = MagicMock(side_effect=RuntimeError("boom"))
+    good_unregister = MagicMock()
+    mock_server.register.side_effect = [bad_unregister, good_unregister]
+    first = await async_register_outgoing_target(hass, MAC, MagicMock())
+    second = await async_register_outgoing_target(
+        hass, "aa:bb:cc:dd:ee:01", MagicMock()
+    )
+    assert first is not None
+    assert second is not None
+
+    first()
+    await hass.async_block_till_done()
+    assert "Error removing the dial-in route" in caplog.text
+    mock_server.discard.assert_called_once_with(MAC)
+    # The shared listener survives for the remaining registration
+    mock_server.stop.assert_not_awaited()
+
+    second()
+    await hass.async_block_till_done()
     mock_server.stop.assert_awaited_once()
