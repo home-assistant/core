@@ -601,8 +601,9 @@ class ESPHomeManager:
         if not self.cli.outgoing_connection_target:
             _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
             return
-        # The declared flag requires a MAC unique id
-        if (mac := entry.unique_id) is None:
+        # Same MAC gate the declared flag used; the None check narrows types
+        if (mac := entry.unique_id) is None or not _has_mac_unique_id(entry):
+            _LOGGER.debug("%s: Not routing dial-ins; no MAC unique id", entry.title)
             return
         try:
             unregister = async_register_outgoing_target(self.hass, mac, reconnect_logic)
