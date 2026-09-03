@@ -74,11 +74,24 @@ def _does_cooling(status: HeatPump) -> bool:
     return status.cooling_activity is not None
 
 
+def _is_cooling(status: HeatPump) -> bool:
+    """Return whether the heat pump is running a cooling cycle right now."""
+    return status.heat_pump_state is HeatPump.State.COOLING
+
+
 def _cooling_blocked_by(status: HeatPump) -> str | None:
-    """Return the first condition that is keeping the heat pump from cooling."""
+    """Return the first condition that is keeping the heat pump from cooling.
+
+    The start conditions describe whether a cycle may begin, so they say nothing
+    once one is running: the demand condition in particular goes back to unmet as
+    soon as the heat pump acts on it, which would read as cooling being held off
+    for want of demand while the compressor is running.
+    """
     conditions = status.cooling_start_conditions
     if conditions is None:
         return None
+    if _is_cooling(status):
+        return "none"
     return next((name for name, met in conditions.items() if not met), "none")
 
 
@@ -291,7 +304,9 @@ SENSORS = [
         options=[reason.name.lower() for reason in HeatPump.CoolingStopReason],
         value_fn=(
             lambda status: (
-                status.cooling_stop_reason.name.lower()
+                "none"
+                if _is_cooling(status)
+                else status.cooling_stop_reason.name.lower()
                 if status.cooling_stop_reason is not None
                 else None
             )

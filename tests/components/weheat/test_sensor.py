@@ -90,6 +90,38 @@ async def test_cooling_blocked_by(
     assert hass.states.get("sensor.test_model_cooling_blocked_by").state == expected
 
 
+@pytest.mark.parametrize(
+    ("sensor", "attribute", "stale"),
+    [
+        # the demand condition goes back to unmet as soon as cooling acts on it
+        ("cooling_blocked_by", "cooling_start_conditions", _start_conditions("demand")),
+        # the stop reason is why the last cycle ended, so it survives into the next
+        (
+            "cooling_stop_reason",
+            "cooling_stop_reason",
+            HeatPump.CoolingStopReason.HEAT_PUMP_CONTROL,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_stale_cooling_reasons_are_not_reported_while_cooling(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    sensor: str,
+    attribute: str,
+    stale: object,
+) -> None:
+    """Test what held cooling off is not reported once a cycle is running."""
+    mock_weheat_heat_pump.heat_pump_state = HeatPump.State.COOLING
+    setattr(mock_weheat_heat_pump, attribute, stale)
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(f"sensor.test_model_{sensor}").state == "none"
+
+
 @pytest.mark.usefixtures("mock_weheat_discover")
 async def test_unreported_start_conditions_create_no_sensor(
     hass: HomeAssistant,
