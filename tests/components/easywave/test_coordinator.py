@@ -105,6 +105,7 @@ async def test_first_refresh_registers_gateway_versions(
     await coordinator.async_config_entry_first_refresh()
 
     assert coordinator.is_offline is False
+    assert coordinator._listener_task is None
     mock_transceiver.connect.assert_awaited_once()
     mock_transceiver.set_disconnect_callback.assert_called_once()
     mock_transceiver.set_connected_callback.assert_called_once()
@@ -116,6 +117,19 @@ async def test_first_refresh_registers_gateway_versions(
     assert device is not None
     assert device.hw_version == "1.0"
     assert device.sw_version == "2.0"
+
+
+async def test_sync_transmitter_battery_state_preserves_live_state(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Restored battery state must not overwrite a live telegram update."""
+    coordinator._battery_state["tx1"] = "low"
+
+    coordinator.sync_transmitter_battery_state("tx1", "ok")
+
+    assert coordinator.transmitter_battery_state("tx1") == "low"
+    coordinator.sync_transmitter_battery_state("tx2", "ok")
+    assert coordinator.transmitter_battery_state("tx2") == "ok"
 
 
 async def test_first_refresh_raises_not_ready_when_connect_fails(
@@ -217,6 +231,7 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
     coordinator.register_transmitter_entities([MagicMock()])
+    coordinator.enable_telegram_reception()
     await coordinator.hass.async_block_till_done(wait_background_tasks=True)
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(return_value=True)
@@ -390,6 +405,7 @@ async def test_telegram_listener_restarts_after_suspend_resume(
     entity = MagicMock()
     try:
         coordinator.register_sensor_entities([entity])
+        coordinator.enable_telegram_reception()
         await coordinator.hass.async_block_till_done(wait_background_tasks=True)
 
         await coordinator.suspend_telegram_listener()
@@ -455,6 +471,7 @@ async def test_resume_telegram_listener_ignored_while_shutting_down(
     await coordinator.async_config_entry_first_refresh()
     entity = MagicMock()
     coordinator.register_sensor_entities([entity])
+    coordinator.enable_telegram_reception()
     await coordinator.hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator._listener_task is not None
 
@@ -489,7 +506,7 @@ async def test_ensure_telegram_listener_noops_when_offline(
     await coordinator.async_config_entry_first_refresh()
     coordinator.is_offline = True
 
-    coordinator.ensure_telegram_listener()
+    coordinator.enable_telegram_reception()
 
     assert coordinator._listener_task is None
 
@@ -527,6 +544,7 @@ async def test_async_shutdown_awaits_cancelled_listener(
     mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
     coordinator.register_sensor_entities([MagicMock()])
+    coordinator.enable_telegram_reception()
     await asyncio.wait_for(started.wait(), timeout=1)
 
     await coordinator.async_shutdown()
@@ -549,6 +567,7 @@ async def test_ensure_telegram_listener_skips_running_task(
     mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
     coordinator.register_sensor_entities([MagicMock()])
+    coordinator.enable_telegram_reception()
     await asyncio.wait_for(started.wait(), timeout=1)
 
     first_task = coordinator._listener_task
@@ -566,7 +585,7 @@ async def test_ensure_telegram_listener_noops_without_entities(
     """Listener startup is skipped when no entities are registered."""
     await coordinator.async_config_entry_first_refresh()
 
-    coordinator.ensure_telegram_listener()
+    coordinator.enable_telegram_reception()
 
     assert coordinator._listener_task is None
 
@@ -577,6 +596,7 @@ async def test_start_telegram_listener_noops_without_entities(
 ) -> None:
     """Direct listener startup is skipped when no entities are registered."""
     await coordinator.async_config_entry_first_refresh()
+    coordinator.enable_telegram_reception()
 
     coordinator._start_telegram_listener()
 
@@ -598,6 +618,7 @@ async def test_telegram_listener_loop_exits_when_disconnected_receive_returns_no
 
     await coordinator.async_config_entry_first_refresh()
     coordinator.register_sensor_entities([MagicMock()])
+    coordinator.enable_telegram_reception()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator._listener_task is not None
@@ -671,6 +692,9 @@ async def test_listener_starts_for_configured_transmitter_without_entities(
 
     mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
+    assert coordinator._listener_task is None
+
+    coordinator.enable_telegram_reception()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator._listener_task is not None
@@ -799,6 +823,7 @@ async def test_unregister_transmitter_entity_keeps_listener_for_configured_devic
     await coordinator.async_config_entry_first_refresh()
     entity = MagicMock()
     coordinator.register_transmitter_entities([entity])
+    coordinator.enable_telegram_reception()
     await hass.async_block_till_done(wait_background_tasks=True)
     assert coordinator._listener_task is not None
 
@@ -1015,6 +1040,7 @@ async def test_connected_callback_restarts_telegram_listener(
     mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
     coordinator.register_sensor_entities([MagicMock()])
+    coordinator.enable_telegram_reception()
     await hass.async_block_till_done(wait_background_tasks=True)
     coordinator.is_offline = True
     coordinator._stop_telegram_listener()
@@ -1041,6 +1067,7 @@ async def test_unregister_transmitter_entity_stops_listener_without_configured_d
     await coordinator.async_config_entry_first_refresh()
     entity = MagicMock()
     coordinator.register_transmitter_entities([entity])
+    coordinator.enable_telegram_reception()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     coordinator.unregister_transmitter_entity(entity)

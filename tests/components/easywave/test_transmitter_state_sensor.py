@@ -162,6 +162,10 @@ async def test_battery_sensor_restores_last_known_state(hass: HomeAssistant) -> 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["icon"] == "mdi:battery-alert"
+    assert (
+        gateway.runtime_data.coordinator.transmitter_battery_state(MOCK_DEVICE_ID)
+        == "low"
+    )
 
 
 async def _run_transmitter_telegram_test(

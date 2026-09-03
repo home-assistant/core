@@ -84,6 +84,9 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._gateway_last_status = "disconnected"
         self._battery_ok_streak: dict[str, int] = {}
         self._battery_state: dict[str, str] = {}
+        # Stay false until platforms finish restoring entity state so early
+        # telegrams cannot race restored battery transition state.
+        self._telegram_reception_ready = False
         self._register_homeassistant_started_listener()
         # Run before DataUpdateCoordinator.async_shutdown (LIFO) so cancelled
         # learning cleanup cannot restart reception after unload begins.
@@ -174,8 +177,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if connected:
                 self._register_transceiver_callbacks()
                 self._update_gateway_device()
-                self.ensure_telegram_listener()
                 # Baseline the live connection without firing a startup event.
+                # Telegram reception starts after platforms restore entity state.
                 self._gateway_last_status = self._gateway_connection_status()
             else:
                 raise UpdateFailed(
@@ -339,11 +342,22 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def sync_transmitter_battery_state(self, device_id: str, state: str) -> None:
-        """Seed battery event state from a restored battery sensor."""
+        """Seed battery event state from a restored battery sensor.
+
+        Live telegram updates win over restored persistence: only seed when
+        the coordinator has not already established a state for this device.
+        """
         if state not in (_BATTERY_STATE_OK, _BATTERY_STATE_LOW):
+            return
+        if device_id in self._battery_state:
             return
         self._battery_state[device_id] = state
         self._battery_ok_streak[device_id] = 0
+
+    def enable_telegram_reception(self) -> None:
+        """Allow telegram reception after platforms have finished setup."""
+        self._telegram_reception_ready = True
+        self.ensure_telegram_listener()
 
     @property
     def _has_telegram_listeners(self) -> bool:
@@ -382,12 +396,16 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def ensure_telegram_listener(self) -> None:
         """Start the telegram listener when reception is required."""
-        if self._has_telegram_listeners and not self.is_offline:
+        if (
+            self._telegram_reception_ready
+            and self._has_telegram_listeners
+            and not self.is_offline
+        ):
             self._start_telegram_listener()
 
     def _start_telegram_listener(self) -> None:
         """Start the background telegram listener task."""
-        if self._shutting_down:
+        if self._shutting_down or not self._telegram_reception_ready:
             return
         if self._listener_task is not None and not self._listener_task.done():
             return

@@ -97,7 +97,7 @@ async def async_setup_entry(
                     config_subentry_id=device.subentry_id,
                 )
 
-    coordinator.ensure_telegram_listener()
+    coordinator.enable_telegram_reception()
 
 
 class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity):
@@ -353,18 +353,19 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator and restore last known battery state.
 
-        Restore BEFORE calling super() to prevent the coordinator listener
-        from overwriting the restored value.
+        Seed the coordinator from persistence when it has no live state yet,
+        then mirror the coordinator-owned value for the UI.
         """
-        # Restore first
         if (last_data := await self.async_get_last_sensor_data()) is not None:
             native = last_data.native_value
             if native in _BATTERY_OPTIONS:
-                self._native_value = str(native)
                 self._coordinator.sync_transmitter_battery_state(
-                    self._device_id, self._native_value
+                    self._device_id, str(native)
                 )
-        # Then subscribe to coordinator
+        if (
+            state := self._coordinator.transmitter_battery_state(self._device_id)
+        ) is not None:
+            self._native_value = state
         await super().async_added_to_hass()
 
     @override
