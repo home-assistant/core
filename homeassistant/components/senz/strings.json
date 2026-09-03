@@ -34,9 +34,6 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "set_attribute_error": {
       "message": "Failed to set {attribute} on the device."
     }

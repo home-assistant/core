@@ -15,7 +15,11 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         },
-        "description": "To generate API key go to {developer_registration_url}"
+        "data_description": {
+          "api_key": "To generate API key go to {developer_registration_url}.",
+          "latitude": "The latitude of your location.",
+          "longitude": "The longitude of your location."
+        }
       }
     }
   },

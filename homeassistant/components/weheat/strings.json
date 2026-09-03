@@ -243,6 +243,7 @@
           "heating": "Heating",
           "legionella_prevention": "Legionella prevention",
           "manual_control": "Manual control",
+          "offline": "Offline",
           "self_test": "Self-test",
           "standby": "[%key:common::state::standby%]",
           "updating": "Updating",
@@ -276,11 +277,6 @@
       "water_outlet_temperature": {
         "name": "Water outlet temperature"
       }
-    }
-  },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }

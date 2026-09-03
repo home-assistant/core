@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -100,7 +101,13 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             location = await discover_ssdp_location(host)
-            serial = await fetch_device_serial(location) if location else None
+            serial = (
+                await fetch_device_serial(
+                    location, session=async_get_clientsession(self.hass)
+                )
+                if location
+                else None
+            )
         except TimeoutError as err:
             raise TimeoutConnect from err
         except OSError as err:
