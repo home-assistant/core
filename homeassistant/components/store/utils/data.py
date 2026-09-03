@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from ..base import HacsBase
 from ..const import HACS_REPOSITORY_ID
-from ..enums import HacsDisabledReason, HacsDispatchEvent
+from ..enums import HacsDispatchEvent
 from ..repositories.base import TOPIC_FILTER, HacsManifest, HacsRepository
 from .logger import LOGGER
 from .path import is_safe
@@ -150,7 +150,6 @@ class HacsData:
                 self.hacs.hass.config.path(".storage/store.repositories"),
                 exception,
             )
-            self.hacs.disable_hacs(HacsDisabledReason.RESTORE)
             return False
 
         if not common and not repositories:

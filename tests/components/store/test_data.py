@@ -122,7 +122,7 @@ async def test_restore_unreadable_data(
     store: HacsBase,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an unreadable repositories file disables the store."""
+    """Test an unreadable repositories file fails the restore."""
     data = HacsData(store)
 
     with patch(
@@ -132,7 +132,6 @@ async def test_restore_unreadable_data(
         assert not await data.restore()
 
     assert "restore the file from a backup" in caplog.text
-    assert store.system.disabled
 
 
 @pytest.mark.usefixtures("stored_repositories")

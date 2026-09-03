@@ -71,6 +71,3 @@ class HacsDisabledReason(StrEnum):
     RATE_LIMIT = "rate_limit"
     REMOVED = "removed"
     INVALID_TOKEN = "invalid_token"
-    CONSTRAINS = "constrains"
-    LOAD_HACS = "load_hacs"
-    RESTORE = "restore"

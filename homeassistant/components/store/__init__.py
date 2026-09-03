@@ -4,7 +4,12 @@ For more details about this integration, please refer to the documentation at
 https://hacs.xyz/
 """
 
-from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
+from aiogithubapi import (
+    AIOGitHubAPIException,
+    GitHub,
+    GitHubAPI,
+    GitHubAuthenticationException,
+)
 from aiogithubapi.const import ACCEPT_HEADERS
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -15,11 +20,14 @@ from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,6 +35,7 @@ from .base import HacsBase, StoreConfigEntry
 from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
 from .data_client import HacsDataClient
 from .enums import HacsDisabledReason, HacsStage, LovelaceMode
+from .exceptions import HacsException
 from .migration import async_migrate_from_hacs, async_remove_duplicate_entries
 from .utils.data import HacsData
 from .utils.queue_manager import QueueManager
@@ -127,51 +136,46 @@ async def _async_initialize_integration(
         client_name=CLIENT_NAME,
     )
 
-    async def async_startup():
-        """HACS startup tasks."""
-        hacs.enable_hacs()
+    hacs.enable_hacs()
 
+    try:
         if not await hacs.data.restore():
-            hacs.disable_hacs(HacsDisabledReason.RESTORE)
-            return False
+            raise ConfigEntryNotReady("Could not restore the stored data")
 
         hacs.set_active_categories()
 
         async_register_websocket_commands(hass)
         await hacs.async_setup_frontend_endpoint_plugin()
+    except GitHubAuthenticationException as exception:
+        raise ConfigEntryAuthFailed(
+            "The GitHub token is no longer valid"
+        ) from exception
+    except (AIOGitHubAPIException, HacsException) as exception:
+        raise ConfigEntryNotReady(
+            f"Could not set up the Community store: {exception}"
+        ) from exception
 
-        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    hacs.set_stage(HacsStage.SETUP)
 
-        hacs.set_stage(HacsStage.SETUP)
-        if hacs.system.disabled:
-            return False
+    # Setting up can leave the store disabled, an invalid token is for the user
+    # to fix, anything else is worth another try.
+    if hacs.system.disabled_reason is HacsDisabledReason.INVALID_TOKEN:
+        raise ConfigEntryAuthFailed("The GitHub token is no longer valid")
 
-        hacs.set_stage(HacsStage.WAITING)
-        hacs.log.info(
-            "Setup complete, waiting for Home Assistant before startup tasks starts"
+    if hacs.system.disabled:
+        raise ConfigEntryNotReady(
+            f"The Community store is disabled: {hacs.system.disabled_reason}"
         )
 
-        # Schedule startup tasks
-        async_at_start(hass=hass, at_start_cb=hacs.startup_tasks)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-        return not hacs.system.disabled
+    hacs.set_stage(HacsStage.WAITING)
+    hacs.log.info(
+        "Setup complete, waiting for Home Assistant before startup tasks starts"
+    )
 
-    async def async_try_startup(_=None):
-        """Startup wrapper for yaml config."""
-        try:
-            startup_result = await async_startup()
-        except AIOGitHubAPIException:
-            startup_result = False
-        if not startup_result:
-            if hacs.system.disabled_reason != HacsDisabledReason.INVALID_TOKEN:
-                hacs.log.info("Could not setup HACS, trying again in 15 min")
-                async_call_later(hass, 900, async_try_startup)
-            return
-        hacs.enable_hacs()
+    async_at_start(hass=hass, at_start_cb=hacs.startup_tasks)
 
-    await async_try_startup()
-
-    # Mischief managed!
     return True
 
 
@@ -184,10 +188,7 @@ async def async_setup_entry(
     async_migrate_from_hacs(hass, config_entry)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
-    setup_result = await _async_initialize_integration(
-        hass=hass, config_entry=config_entry
-    )
-    return setup_result and not config_entry.runtime_data.system.disabled
+    return await _async_initialize_integration(hass=hass, config_entry=config_entry)
 
 
 async def async_unload_entry(

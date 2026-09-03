@@ -2,14 +2,18 @@
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+from aiogithubapi import AIOGitHubAPIException, GitHubAuthenticationException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.store import async_remove_config_entry_device
 from homeassistant.components.store.const import DOMAIN, HACS_SYSTEM_ID
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.store.enums import HacsDisabledReason
+from homeassistant.components.store.exceptions import HacsException
+from homeassistant.components.store.utils.data import HacsData
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -41,6 +45,109 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "state"),
+    [
+        pytest.param(
+            GitHubAuthenticationException("Bad credentials"),
+            ConfigEntryState.SETUP_ERROR,
+            id="authentication",
+        ),
+        pytest.param(
+            AIOGitHubAPIException("GitHub is having a moment"),
+            ConfigEntryState.SETUP_RETRY,
+            id="github_api",
+        ),
+        pytest.param(
+            HacsException("Something went wrong"),
+            ConfigEntryState.SETUP_RETRY,
+            id="store",
+        ),
+    ],
+)
+async def test_setup_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test a failure while setting up leaves the entry for core to handle."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(HacsData, "restore", side_effect=side_effect):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is state
+
+
+async def test_setup_retries_without_restored_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test data that can not be restored is retried instead of disabling."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(HacsData, "restore", return_value=False):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("reason", "state"),
+    [
+        pytest.param(
+            HacsDisabledReason.INVALID_TOKEN,
+            ConfigEntryState.SETUP_ERROR,
+            id="invalid_token",
+        ),
+        pytest.param(
+            HacsDisabledReason.RATE_LIMIT,
+            ConfigEntryState.SETUP_RETRY,
+            id="rate_limit",
+        ),
+    ],
+)
+async def test_setup_with_a_disabled_store(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    reason: HacsDisabledReason,
+    state: ConfigEntryState,
+) -> None:
+    """Test a store that ends up disabled while setting up fails the setup."""
+
+    async def _disable(self: HacsData) -> bool:
+        """Restore the data, but leave the store disabled."""
+        self.hacs.disable_hacs(reason)
+        return True
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(HacsData, "restore", _disable):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is state
+
+
+async def test_setup_asks_to_reauthenticate_for_an_invalid_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid token during setup asks the user to reauthenticate."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        HacsData,
+        "restore",
+        side_effect=GitHubAuthenticationException("Bad credentials"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.usefixtures("stored_repositories")
