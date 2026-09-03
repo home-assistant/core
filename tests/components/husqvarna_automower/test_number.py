@@ -107,7 +107,7 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
 ) -> None:
     """Test removal of a legacy global cutting height registry entry."""
     unique_id = f"{TEST_MOWER_ID}_0_cutting_height_work_area"
-    entity_registry.async_get_or_create(
+    registry_entry = entity_registry.async_get_or_create(
         Platform.NUMBER,
         "husqvarna_automower",
         unique_id,
@@ -116,9 +116,7 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert entity_registry.async_get(
-        "number.garden_test_mower_1_cutting_height_work_area"
-    ) is None
+    assert entity_registry.async_get(registry_entry.entity_id) is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
