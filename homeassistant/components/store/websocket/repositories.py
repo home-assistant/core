@@ -1,6 +1,4 @@
 """Register info websocket commands."""
-# The store object is shared and read where no config entry is at hand.
-# pylint: disable=home-assistant-use-runtime-data
 
 from typing import TYPE_CHECKING, Any
 
@@ -9,15 +7,13 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
-from ..const import DOMAIN
+from ..base import async_get_store
 from ..enums import HacsDispatchEvent
 from ..exceptions import HacsException
 from ..utils import regex
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-
-    from ..base import HacsBase
 
 
 @websocket_api.websocket_command(
@@ -34,7 +30,7 @@ async def hacs_repositories_list(
     msg: dict[str, Any],
 ) -> None:
     """List repositories."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
@@ -91,7 +87,7 @@ async def hacs_repositories_clear_new(
     msg: dict[str, Any],
 ) -> None:
     """Clear new repositories for specific categories."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
 
     if repo := msg.get("repository"):
         if (repository := hacs.repositories.get_by_id(repo)) is None:
@@ -129,7 +125,7 @@ async def hacs_repositories_removed(
     msg: dict[str, Any],
 ) -> None:
     """Get information about removed repositories."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
     content = [
         repo.to_json()
         for repo in hacs.repositories.list_removed
@@ -153,7 +149,7 @@ async def hacs_repositories_add(
     msg: dict[str, Any],
 ) -> None:
     """Add custom repositoriy."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
     repository = regex.extract_repository_from_url(msg["repository"])
     category = msg["category"]
 
@@ -217,7 +213,7 @@ async def hacs_repositories_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove custom repositoriy."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
     repository = hacs.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(

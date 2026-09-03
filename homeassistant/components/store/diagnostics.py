@@ -5,19 +5,17 @@ from typing import Any
 from aiogithubapi import GitHubException
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .base import HacsBase
-from .const import DOMAIN
+from .base import StoreConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StoreConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = entry.runtime_data
 
     data: dict[str, Any] = {
         "entry": entry.as_dict(),

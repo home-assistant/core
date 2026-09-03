@@ -29,6 +29,7 @@ from homeassistant.components.persistent_notification import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -1118,3 +1119,21 @@ class HacsBase:
         )
 
         self.status.active_frontend_endpoint_plugin = True
+
+
+type StoreConfigEntry = ConfigEntry[HacsBase]
+
+
+@callback
+def async_get_store(hass: HomeAssistant) -> HacsBase:
+    """Return the store of the loaded config entry.
+
+    For the code that has no config entry at hand, like the WebSocket API and
+    the system health info. The manifest sets single_config_entry, so there is
+    never more than one entry to pick from.
+    """
+    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+        raise HomeAssistantError("The Community store is not loaded")
+
+    entry: StoreConfigEntry = entries[0]
+    return entry.runtime_data

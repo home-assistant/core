@@ -1,6 +1,4 @@
 """Provide info to system health."""
-# The store object is shared and read where no config entry is at hand.
-# pylint: disable=home-assistant-use-runtime-data
 
 from typing import Any
 
@@ -9,7 +7,7 @@ from aiogithubapi.common.const import BASE_API_URL
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .base import HacsBase
+from .base import async_get_store
 from .const import DOMAIN
 
 GITHUB_STATUS = "https://www.githubstatus.com/"
@@ -27,10 +25,10 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    if DOMAIN not in hass.data:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         return {"Disabled": "The Community store is not loaded"}
 
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
     response = await hacs.githubapi.rate_limit()
 
     data = {

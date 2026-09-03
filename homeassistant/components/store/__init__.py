@@ -3,8 +3,6 @@
 For more details about this integration, please refer to the documentation at
 https://hacs.xyz/
 """
-# The store object is shared and read where no config entry is at hand.
-# pylint: disable=home-assistant-use-runtime-data
 
 from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS
@@ -14,7 +12,7 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.lovelace import LOVELACE_DATA
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,7 +23,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 
-from .base import HacsBase
+from .base import HacsBase, StoreConfigEntry
 from .const import CLIENT_NAME, DOMAIN, HACS_SYSTEM_ID
 from .data_client import HacsDataClient
 from .enums import HacsDisabledReason, HacsStage, LovelaceMode
@@ -71,10 +69,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_initialize_integration(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: StoreConfigEntry,
 ) -> bool:
     """Initialize the integration."""
-    hass.data[DOMAIN] = hacs = HacsBase()
+    config_entry.runtime_data = hacs = HacsBase()
     hacs.enable_hacs()
 
     if config_entry.source == SOURCE_IMPORT:
@@ -177,7 +175,9 @@ async def _async_initialize_integration(
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: StoreConfigEntry
+) -> bool:
     """Set up this integration using UI."""
     # Runs before the update listener is added, trimming the options must not
     # trigger a reload while the entry is still being set up.
@@ -187,13 +187,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     setup_result = await _async_initialize_integration(
         hass=hass, config_entry=config_entry
     )
-    hacs: HacsBase = hass.data[DOMAIN]
-    return setup_result and not hacs.system.disabled
+    return setup_result and not config_entry.runtime_data.system.disabled
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: StoreConfigEntry
+) -> bool:
     """Handle removal of an entry."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = config_entry.runtime_data
 
     if hacs.queue.has_pending_tasks:
         hacs.log.warning("Pending tasks, can not unload, try again later.")
@@ -216,24 +217,25 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hacs.set_stage(None)
     hacs.disable_hacs(HacsDisabledReason.REMOVED)
 
-    hass.data.pop(DOMAIN, None)
     hass.data.pop(STORE_CACHE_KEY, None)
 
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, config_entry: StoreConfigEntry
+) -> None:
     """Reload the config entry when its options change."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: StoreConfigEntry,
     device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = config_entry.runtime_data
     repository_id = None
     for identifier in device_entry.identifiers:
         if (

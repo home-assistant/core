@@ -1,28 +1,24 @@
 """Switch entities for HACS."""
-# The store object is shared and read where no config entry is at hand.
-# pylint: disable=home-assistant-use-runtime-data
 
 from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import HacsBase
-from .const import DOMAIN
+from .base import HacsBase, StoreConfigEntry
 from .entity import HacsRepositoryEntity
 from .repositories.base import HacsRepository
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StoreConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup switch platform."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = entry.runtime_data
     async_add_entities(
         HacsRepositoryPreReleaseSwitchEntity(hacs=hacs, repository=repository)
         for repository in hacs.repositories.list_downloaded

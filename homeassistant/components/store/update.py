@@ -1,18 +1,14 @@
 """Update entities for HACS."""
-# The store object is shared and read where no config entry is at hand.
-# pylint: disable=home-assistant-use-runtime-data
 
 from typing import Any, override
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import HacsBase
-from .const import DOMAIN
+from .base import StoreConfigEntry
 from .entity import HacsRepositoryEntity
 from .enums import HacsCategory, HacsDispatchEvent
 from .exceptions import HacsException
@@ -20,11 +16,11 @@ from .exceptions import HacsException
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StoreConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup update platform."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = entry.runtime_data
     async_add_entities(
         HacsRepositoryUpdateEntity(hacs=hacs, repository=repository)
         for repository in hacs.repositories.list_downloaded

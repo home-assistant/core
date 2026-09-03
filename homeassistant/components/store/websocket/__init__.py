@@ -1,8 +1,6 @@
 """Register_commands."""
-# The store object is shared and read where no config entry is at hand.
-# pylint: disable=home-assistant-use-runtime-data
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -10,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from ..const import DOMAIN
+from ..base import async_get_store
 from .critical import hacs_critical_acknowledge, hacs_critical_list
 from .repositories import (
     hacs_repositories_add,
@@ -31,9 +29,6 @@ from .repository import (
     hacs_repository_state,
     hacs_repository_version,
 )
-
-if TYPE_CHECKING:
-    from ..base import HacsBase
 
 
 @callback
@@ -104,7 +99,7 @@ async def hacs_info(
     msg: dict[str, Any],
 ) -> None:
     """Return information about HACS."""
-    hacs: HacsBase = hass.data[DOMAIN]
+    hacs = async_get_store(hass)
     connection.send_message(
         websocket_api.result_message(
             msg["id"],

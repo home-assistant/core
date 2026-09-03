@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from aiogithubapi import GitHubException
 import pytest
@@ -223,18 +223,6 @@ async def test_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_already_set_up(hass: HomeAssistant) -> None:
-    """Test the flow aborts when the store is set up without an entry."""
-    hass.data[DOMAIN] = MagicMock()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
@@ -300,7 +288,7 @@ async def test_options_flow(
     assert init_integration.data == {CONF_TOKEN: TOKEN}
 
     # The entry is reloaded, so the store picks the new options up
-    store = hass.data[DOMAIN]
+    store = init_integration.runtime_data
     assert store.configuration.appdaemon is False
     assert store.configuration.country == "NL"
 

@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import HacsBase, async_get_store
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.enums import HacsCategory
 from homeassistant.components.store.repositories.base import (
@@ -135,8 +135,8 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
 
 
 def get_hacs(hass: HomeAssistant) -> HacsBase:
-    """Return the shared store object."""
-    return hass.data[DOMAIN]
+    """Return the store object of the loaded config entry."""
+    return async_get_store(hass)
 
 
 def dummy_repository_base(

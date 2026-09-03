@@ -7,6 +7,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import json as json_util
+from homeassistant.util.hass_dict import HassKey
 
 from ..const import VERSION_STORAGE
 from ..exceptions import HacsException
@@ -16,7 +17,6 @@ from .path import resolve_in_directory
 _LOGGER = LOGGER
 
 STORENAME = "store"
-STORE_CACHE_KEY = "hacs_store_cache"
 
 # The keys HACS wrote its data under, mapped to the key each one is adopted as
 # on the first load. The HACS files themselves are never written to or removed:
@@ -48,6 +48,9 @@ class HACSStore(Store[dict[str, Any]]):
         if data == {} or data["version"] != self.version:
             return None
         return data["data"]
+
+
+STORE_CACHE_KEY: HassKey[dict[str, HACSStore]] = HassKey("hacs_store_cache")
 
 
 def get_store_key(key: str) -> str:

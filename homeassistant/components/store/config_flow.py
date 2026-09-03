@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .base import HacsBase
+from .base import StoreConfigEntry
 from .const import CLIENT_ID, CLIENT_NAME, DOMAIN, LOCALE
 from .utils.configuration_schema import APPDAEMON, COUNTRY
 from .utils.logger import LOGGER
@@ -55,12 +55,6 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         self._errors = {}
-        # A user flow with an entry already present is aborted by core, the
-        # manifest sets single_config_entry. This catches the store running
-        # without an entry of its own.
-        if self.hass.data.get(DOMAIN):
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input:
             if [x for x in user_input if x.startswith("acc_") and not user_input[x]]:
                 self._errors["base"] = "acc"
@@ -214,13 +208,16 @@ class HacsOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        hacs: HacsBase | None = self.hass.data.get(DOMAIN)
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        if hacs is None or hacs.configuration is None:
+        entries: list[StoreConfigEntry] = self.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
+        if not entries:
             return self.async_abort(reason="not_setup")
 
+        hacs = entries[0].runtime_data
         if hacs.queue.has_pending_tasks:
             return self.async_abort(reason="pending_tasks")
 
