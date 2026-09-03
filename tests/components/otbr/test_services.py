@@ -19,8 +19,11 @@ from homeassistant.components.otbr.util import (
     ISSUED_TIMESTAMPS_STORAGE_KEY,
     async_get_dataset_lock,
 )
-from homeassistant.components.thread import async_add_dataset
-from homeassistant.components.thread.dataset_store import async_get_store
+from homeassistant.components.thread import (
+    async_add_dataset,
+    async_get_store,
+    dataset_store,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -619,6 +622,33 @@ async def test_ticks_count_in_the_comparison(
         MeshcopTLVType.ACTIVETIMESTAMP
     ]
     assert (stamp.seconds, stamp.ticks) == (1004, 0)
+
+
+async def test_migration_is_persisted_before_success_is_reported(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
+    """The store is written before the action returns, not on the save delay.
+
+    The mesh is migrating either way once the router accepted the write; a
+    crash inside the store's save delay must not leave Home Assistant with
+    the abandoned network as its preferred one.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    await async_add_dataset(hass, "test", DATASET_CH16.hex())
+    store = await async_get_store(hass)
+    store.preferred_dataset = next(iter(store.datasets.values())).id
+
+    await call_migrate(hass, dataset=TARGET)
+
+    saved = hass_storage[dataset_store.STORAGE_KEY]["data"]
+    by_id = {entry["id"]: entry for entry in saved["datasets"]}
+    preferred = by_id[saved["preferred_dataset"]]
+    assert tlv_parser.parse_tlv(preferred["tlv"])[MeshcopTLVType.EXTPANID].data == (
+        bytes.fromhex("1111111122222222")
+    )
 
 
 async def test_migration_refreshes_repair_issues(
