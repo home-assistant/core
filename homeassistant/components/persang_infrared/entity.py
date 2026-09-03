@@ -18,12 +18,7 @@ class PersangIrEntity(InfraredEmitterConsumerEntity):
         infrared_entity_id: str,
         unique_id_suffix: str | None = None,
     ) -> None:
-        """Initialize Persang IR entity.
-
-        Platforms with a single entity leave ``unique_id_suffix`` unset; the
-        buttons pass their description key, since unique IDs only have to be
-        unique per platform.
-        """
+        """Initialize Persang IR entity."""
         self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_unique_id = (
             entry.entry_id
