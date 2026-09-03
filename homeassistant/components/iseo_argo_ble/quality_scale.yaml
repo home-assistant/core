@@ -70,9 +70,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entities use the default platform icons; only the action has an icon.
-  reconfiguration-flow:
-    status: exempt
-    comment: Configuration is a BLE address and generated identities. The identities can only be enrolled during a Master Card scan, so changing them means setting the lock up again.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
