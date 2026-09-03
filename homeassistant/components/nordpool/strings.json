@@ -166,7 +166,7 @@
           "name": "Date"
         },
         "multiplier": {
-          "description": "Factor by which to multiply each returned price, for example to include taxes and VAT. Accepts a template and defaults to 1 (unmodified prices)."
+          "description": "Factor by which to multiply each returned price, for example to include taxes and VAT. Accepts a template and defaults to 1 (unmodified prices).",
           "name": "Multiplier"
         }
       },
