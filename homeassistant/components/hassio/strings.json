@@ -105,7 +105,7 @@
         },
         "step": {
           "addon_execute_remove": {
-            "description": "App {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme]({addon_info}) and [documentation]({addon_documentation}) of the app to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated app and permanently delete the data it stored, including its databases and any other files it created. Create a [backup]({backup_url}) first if you might need that data later.\n\nAlternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme]({addon_info}) and [documentation]({addon_documentation}) of the app to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated app and permanently delete everything in its private data folder, including any databases, credentials and other internal state it kept there. Create a [backup]({backup_url}) first if you might need that data later.\n\nAlternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
@@ -118,7 +118,7 @@
         },
         "step": {
           "addon_execute_remove": {
-            "description": "App {addon} only supports architectures and/or machines which are no longer supported by Home Assistant. It will stop working in a future release.\n\nSelecting **Submit** will uninstall this deprecated app and permanently delete the data it stored, including its databases and any other files it created. Create a [backup]({backup_url}) first if you might need that data later.\n\nAlternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} only supports architectures and/or machines which are no longer supported by Home Assistant. It will stop working in a future release.\n\nSelecting **Submit** will uninstall this deprecated app and permanently delete everything in its private data folder, including any databases, credentials and other internal state it kept there. Create a [backup]({backup_url}) first if you might need that data later.\n\nAlternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
@@ -135,7 +135,7 @@
         },
         "step": {
           "addon_execute_remove": {
-            "description": "App {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall the app and permanently delete the data it stored, including its databases and any other files it created. Create a [backup]({backup_url}) first if you might need that data later.\n\nAlternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall the app and permanently delete everything in its private data folder, including any databases, credentials and other internal state it kept there. Create a [backup]({backup_url}) first if you might need that data later.\n\nAlternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
