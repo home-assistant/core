@@ -1,5 +1,6 @@
 """Config flow: manual + mDNS. Token is typed by the user, never taken from TXT."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from aiolanbon import (
@@ -184,9 +185,8 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @override
     async def async_step_reauth(
-        self, entry_data: dict[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication when the token is rejected."""
         self._host = entry_data[CONF_HOST]

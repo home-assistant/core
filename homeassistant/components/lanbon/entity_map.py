@@ -16,7 +16,9 @@ def iter_switch_components(
         return []
     rows: list[tuple[Device, Component]] = []
     for device in snapshot.devices:
-        for component in device.components:
-            if is_switch_component(component):
-                rows.append((device, component))
+        rows.extend(
+            (device, component)
+            for component in device.components
+            if is_switch_component(component)
+        )
     return rows
