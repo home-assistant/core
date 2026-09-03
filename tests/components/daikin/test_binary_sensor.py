@@ -15,7 +15,7 @@ from .conftest import ZoneDevice, async_setup_daikin
 
 DEMAND_CONTROL_DATA = {
     "en_demand": "1",
-    "mode": "0",
+    "dmd_mode": "0",
     "max_pow": "50",
     "scdl_per_day": "4",
 }
