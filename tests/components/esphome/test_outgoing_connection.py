@@ -164,14 +164,14 @@ async def test_outgoing_connection_requires_mac_unique_id(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
 ) -> None:
-    """A pre-2023 non-MAC unique id has no route; the flag is still declared."""
+    """A pre-2023 non-MAC unique id gets no route and declares no flag."""
     entry = _make_entry(unique_id="my-old-device")
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()
 
     mock_server.register.assert_not_called()
-    assert mock_client.outgoing_connection_target is True
+    assert mock_client.outgoing_connection_target is False
 
 
 async def test_outgoing_connection_listener_restarts_after_last_unload(

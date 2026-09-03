@@ -79,8 +79,9 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
         # callback), and a still-bound port surfaces as OSError from start()
         done, _ = await asyncio.wait([stopping], timeout=_STOP_TIMEOUT)
         if not done:
-            # Still stopping; keep it so the next attempt can wait on it
-            _LOGGER.debug("Previous outgoing connection listener is still stopping")
+            # Still stopping; keep it so the next attempt can wait on it. The
+            # bind below then likely fails, so name the real cause loudly
+            _LOGGER.warning("Previous outgoing connection listener is still stopping")
             hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
     server = OutgoingConnectionServer()
     await server.start()
@@ -121,19 +122,22 @@ class _Registration:
         self._unregister = None
         hass = self._hass
         state = self._state
+        failed = False
         try:
             unregister()
         except Exception:
             # A cleanup callback must not abort the entry's remaining cleanup
+            failed = True
             _LOGGER.exception("Error removing the dial-in route")
         finally:
             state.registrations -= 1
             # In the finally so a raising unregister cannot leave a routeless
-            # listener holding the port. Already popped when HA is stopping.
-            if (
-                state.registrations == 0
-                and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
-            ):
+            # listener holding the port; a failed removal tears the whole
+            # listener down so the routes and the count cannot diverge.
+            # Already popped when HA is stopping.
+            if (state.registrations == 0 or failed) and hass.data.get(
+                _KEY_OUTGOING_CONNECTION_LISTENER
+            ) is state:
                 _async_stop_listener(hass, state)
 
 
@@ -149,12 +153,13 @@ async def async_register_outgoing_target(
         try:
             state = await _async_get_listener(hass)
         except OSError as err:
-            # One warning per failure window, not one per registered device
+            # One warning per failure window, not one per registered device;
+            # INFO after that so a deliberate retry still reports its outcome
             now = hass.loop.time()
             last = hass.data.get(
                 _KEY_OUTGOING_CONNECTION_BIND_FAILED, -_BIND_WARN_INTERVAL
             )
-            level = logging.DEBUG
+            level = logging.INFO
             if now - last >= _BIND_WARN_INTERVAL:
                 hass.data[_KEY_OUTGOING_CONNECTION_BIND_FAILED] = now
                 level = logging.WARNING

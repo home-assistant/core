@@ -110,6 +110,12 @@ UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
 
 
 @callback
+def _has_mac_unique_id(entry: ESPHomeConfigEntry) -> bool:
+    """Dial-in routing is keyed by MAC; pre-2023 name unique ids have none."""
+    return (unique_id := entry.unique_id) is not None and ":" in unique_id
+
+
+@callback
 def _is_outgoing_connection_target(noise_psk: str | None) -> bool:
     """A dial-back target must hold a real key.
 
@@ -137,8 +143,10 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
+        # Only declared when a dial-in route can actually exist
         outgoing_connection_target=declare_outgoing_target
-        and _is_outgoing_connection_target(noise_psk),
+        and _is_outgoing_connection_target(noise_psk)
+        and _has_mac_unique_id(entry),
     )
 
 
@@ -603,13 +611,15 @@ class ESPHomeManager:
         # The client's key, not entry data: must match what the hello declared
         if not _is_outgoing_connection_target(self.cli.noise_psk):
             return
-        if not ((mac := entry.unique_id) and ":" in mac):
+        if not _has_mac_unique_id(entry):
             _LOGGER.debug(
                 "%s: Not routing dial-ins; unique id %s is not a MAC address",
                 entry.title,
                 entry.unique_id,
             )
             return
+        mac = entry.unique_id
+        assert mac is not None
         try:
             unregister = await async_register_outgoing_target(
                 self.hass, mac, reconnect_logic
