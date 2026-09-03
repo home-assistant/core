@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+from infrared_protocols.codes.lg.ac import LGACCode
 from infrared_protocols.commands.lg_ac import (
     MIN_TEMP,
     LgAcCommand,
@@ -13,6 +14,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_SWING_HORIZONTAL_MODE,
+    ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
@@ -20,6 +23,8 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
+    SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
@@ -441,12 +446,17 @@ async def test_receiver_ignores_non_lg_ac_signal(
     [
         pytest.param(
             [HVACMode.COOL, HVACMode.DRY],
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
             id="with_temperature_mode",
         ),
         pytest.param(
             [HVACMode.DRY, HVACMode.FAN_ONLY],
-            ClimateEntityFeature.FAN_MODE,
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
             id="without_temperature_mode",
         ),
     ],
@@ -467,20 +477,25 @@ async def test_target_temperature_feature_follows_configured_modes(
     [
         pytest.param(
             HVACMode.COOL,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
-            (HVACMode.COOL, FAN_HIGH, 29.0),
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                ATTR_SWING_MODE: "high",
+                ATTR_SWING_HORIZONTAL_MODE: "left",
+            },
+            (HVACMode.COOL, FAN_HIGH, 29.0, "high", "left"),
             id="full_state",
         ),
         pytest.param(
             STATE_UNAVAILABLE,
             {},
-            (HVACMode.OFF, FAN_AUTO, float(MIN_TEMP)),
+            (HVACMode.OFF, FAN_AUTO, float(MIN_TEMP), "off", "off"),
             id="unavailable_falls_back_to_defaults",
         ),
         pytest.param(
             HVACMode.HEAT,
             {"fan_mode": FAN_HIGH, "temperature": 29.0},
-            (HVACMode.OFF, FAN_HIGH, 29.0),
+            (HVACMode.OFF, FAN_HIGH, 29.0, "off", "off"),
             id="mode_no_longer_configured_is_ignored",
         ),
     ],
@@ -492,7 +507,7 @@ async def test_state_restored_on_restart(
     platforms: list[Platform],
     restored_state: str,
     restored_attributes: dict[str, Any],
-    expected: tuple[HVACMode, str, float],
+    expected: tuple[HVACMode, str, float, str, str],
 ) -> None:
     """Test the assumed state is restored, since infrared cannot read it back."""
     mock_restore_cache(
@@ -506,10 +521,14 @@ async def test_state_restored_on_restart(
 
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
-    expected_mode, expected_fan, expected_temp = expected
+    expected_mode, expected_fan, expected_temp, expected_swing, expected_swing_h = (
+        expected
+    )
     assert state.state == expected_mode
     assert state.attributes["fan_mode"] == expected_fan
     assert state.attributes["temperature"] == expected_temp
+    assert state.attributes[ATTR_SWING_MODE] == expected_swing
+    assert state.attributes[ATTR_SWING_HORIZONTAL_MODE] == expected_swing_h
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -563,3 +582,112 @@ async def test_set_temperature_with_unsupported_hvac_mode(
         )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("swing_mode", "expected_button"),
+    [
+        pytest.param("off", LGACCode.SWING_V_OFF, id="off"),
+        pytest.param("lowest", LGACCode.SWING_V_LOWEST, id="lowest"),
+        pytest.param("low", LGACCode.SWING_V_LOW, id="low"),
+        pytest.param("middle_low", LGACCode.SWING_V_MIDDLE_LOW, id="middle_low"),
+        pytest.param("middle_high", LGACCode.SWING_V_MIDDLE_HIGH, id="middle_high"),
+        pytest.param("high", LGACCode.SWING_V_HIGH, id="high"),
+        pytest.param("highest", LGACCode.SWING_V_HIGHEST, id="highest"),
+        pytest.param("swing", LGACCode.SWING_V_SWING, id="swing"),
+    ],
+)
+async def test_set_swing_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    swing_mode: str,
+    expected_button: LGACCode,
+) -> None:
+    """Test setting a vertical swing mode sends that vane's fixed code."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_SWING_MODE: swing_mode},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == expected_button.to_command().get_raw_timings()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_SWING_MODE] == swing_mode
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("swing_mode", "expected_button"),
+    [
+        pytest.param("off", LGACCode.SWING_H_OFF, id="off"),
+        pytest.param("left", LGACCode.SWING_H_LEFT, id="left"),
+        pytest.param("middle_left", LGACCode.SWING_H_MIDDLE_LEFT, id="middle_left"),
+        pytest.param("middle", LGACCode.SWING_H_MIDDLE, id="middle"),
+        pytest.param("middle_right", LGACCode.SWING_H_MIDDLE_RIGHT, id="middle_right"),
+        pytest.param("right", LGACCode.SWING_H_RIGHT, id="right"),
+        pytest.param("left_half", LGACCode.SWING_H_MIDDLE_TO_LEFT, id="left_half"),
+        pytest.param("right_half", LGACCode.SWING_H_MIDDLE_TO_RIGHT, id="right_half"),
+        pytest.param("swing", LGACCode.SWING_H_SWING, id="swing"),
+    ],
+)
+async def test_set_swing_horizontal_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    swing_mode: str,
+    expected_button: LGACCode,
+) -> None:
+    """Test setting a horizontal swing mode sends that vane's fixed code."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_SWING_HORIZONTAL_MODE: swing_mode},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == expected_button.to_command().get_raw_timings()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_SWING_HORIZONTAL_MODE] == swing_mode
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("button", "attribute", "expected"),
+    [
+        pytest.param(
+            LGACCode.SWING_V_HIGH, ATTR_SWING_MODE, "high", id="vertical_position"
+        ),
+        pytest.param(
+            LGACCode.SWING_H_RIGHT,
+            ATTR_SWING_HORIZONTAL_MODE,
+            "right",
+            id="horizontal_position",
+        ),
+    ],
+)
+async def test_receiver_updates_swing_from_fixed_code(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    button: LGACCode,
+    attribute: str,
+    expected: str,
+) -> None:
+    """Test a received vane fixed code updates the matching swing attribute."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(timings=button.to_command().get_raw_timings())
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[attribute] == expected
