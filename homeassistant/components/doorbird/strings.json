@@ -85,6 +85,22 @@
     }
   },
   "issues": {
+    "deprecated_camera_last_motion": {
+      "description": "The `{entity_id}` ({entity_name}) camera entity is deprecated and has been replaced by the **Last motion** image entity on the same device, which shows the same still image and updates the moment a motion event fires.\n\nUpdate any dashboards, templates, automations or scripts to use the image entity, then disable `{entity_id}` to have it removed after the next restart.",
+      "title": "The DoorBird last motion camera is deprecated"
+    },
+    "deprecated_camera_last_motion_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) camera entity is deprecated and has been replaced by the **Last motion** image entity on the same device, which shows the same still image and updates the moment a motion event fires.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the image entity, then disable `{entity_id}` to have it removed after the next restart.",
+      "title": "[%key:component::doorbird::issues::deprecated_camera_last_motion::title%]"
+    },
+    "deprecated_camera_last_ring": {
+      "description": "The `{entity_id}` ({entity_name}) camera entity is deprecated and has been replaced by the **Last ring** image entity on the same device, which shows the same still image and updates the moment a doorbell ring event fires.\n\nUpdate any dashboards, templates, automations or scripts to use the image entity, then disable `{entity_id}` to have it removed after the next restart.",
+      "title": "The DoorBird last ring camera is deprecated"
+    },
+    "deprecated_camera_last_ring_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) camera entity is deprecated and has been replaced by the **Last ring** image entity on the same device, which shows the same still image and updates the moment a doorbell ring event fires.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the image entity, then disable `{entity_id}` to have it removed after the next restart.",
+      "title": "[%key:component::doorbird::issues::deprecated_camera_last_ring::title%]"
+    },
     "error_registering_events": {
       "fix_flow": {
         "step": {

@@ -108,6 +108,7 @@ async def doorbird_mocker(
         entry: MockConfigEntry | None = None,
         api: DoorBird | None = None,
         change_schedule: tuple[bool, int] | None = None,
+        change_favorite: bool = True,
         info: dict[str, Any] | None = None,
         info_side_effect: Exception | None = None,
         schedule: list[DoorBirdScheduleEntry] | None = None,
@@ -132,6 +133,7 @@ async def doorbird_mocker(
             favorites=favorites or doorbird_favorites,
             favorites_side_effect=favorites_side_effect,
             change_schedule=change_schedule,
+            change_favorite=change_favorite,
         )
         entry.add_to_hass(hass)
         with patch_doorbird_api_entry_points(api):

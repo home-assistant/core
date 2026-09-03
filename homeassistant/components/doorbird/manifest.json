@@ -1,6 +1,7 @@
 {
   "domain": "doorbird",
   "name": "DoorBird",
+  "after_dependencies": ["automation", "script"],
   "codeowners": ["@oblogic7", "@bdraco", "@flacjacket"],
   "config_flow": true,
   "dependencies": ["http", "repairs"],
