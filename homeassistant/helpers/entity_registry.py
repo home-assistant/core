@@ -2664,6 +2664,8 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
 def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Set up the entity restore mechanism."""
 
+    from . import entity  # noqa: PLC0415
+
     @callback
     def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
@@ -2693,6 +2695,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         if state is None or not state.attributes.get(EntityStateAttribute.RESTORED):
             return
 
+        del entity.entity_sources(hass)[event.data["entity_id"]]
         hass.states.async_remove(event.data["entity_id"], context=event.context)
 
     hass.bus.async_listen(
@@ -2709,10 +2712,18 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         """Make sure state machine contains entry for each registered entity."""
         existing = set(hass.states.async_entity_ids())
 
+        entity_sources = entity.entity_sources(hass)
         for entry in registry.entities.values():
             if entry.entity_id in existing or entry.disabled:
                 continue
 
+            entity_info: entity.EntityInfo = {
+                "domain": entry.platform,
+            }
+            if entry.config_entry_id:
+                entity_info["config_entry"] = entry.config_entry_id
+
+            entity_sources[entry.entity_id] = entity_info
             entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
