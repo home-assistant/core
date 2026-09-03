@@ -86,6 +86,7 @@ from homeassistant.setup import (
     async_get_setup_timings,
     async_wait_component,
 )
+from homeassistant.util import slugify
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -126,6 +127,7 @@ def async_register_commands(
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
@@ -724,6 +726,17 @@ def handle_ping(
 ) -> None:
     """Handle ping command."""
     connection.send_message(pong_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "slugify", vol.Required("text"): str}
+)
+def handle_slugify(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle slugify command."""
+    connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
 
 
 @lru_cache

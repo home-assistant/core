@@ -1,11 +1,12 @@
 {
   "domain": "monzo",
   "name": "Monzo",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@jakemartin-icl"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/monzo",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["monzopy==1.5.1"]
+  "requirements": ["monzopy==1.8.0"]
 }

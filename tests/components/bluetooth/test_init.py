@@ -16,6 +16,7 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BluetoothCallbackReplay,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -45,6 +46,7 @@ from homeassistant.components.bluetooth.match import (
     MANUFACTURER_ID,
     SERVICE_DATA_UUID,
     SERVICE_UUID,
+    BluetoothCallbackMatcher,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -56,6 +58,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import get_scheduled_timer_handles
 
 from . import (
     FakeRemoteScanner,
@@ -156,7 +159,7 @@ async def test_setup_and_stop_passive(
 
     assert init_kwargs == {
         "bluez": {
-            **scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+            **scanner.PASSIVE_SCANNER_ARGS,
             "adapter": "hci0",
         },
         "scanning_mode": "passive",
@@ -1503,6 +1506,113 @@ async def test_register_callbacks(
     assert service_info.manufacturer_id == 89
 
 
+@pytest.mark.parametrize(
+    ("devices", "matcher", "replay", "expected_addresses"),
+    [
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.OLDEST_FIRST,
+            ["AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:02"],
+            id="oldest-first",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:02", "AA:BB:CC:DD:EE:01"],
+            id="newest-first",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "target", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "other", 2000.0),
+                ("AA:BB:CC:DD:EE:03", "target", 3000.0),
+            ],
+            {LOCAL_NAME: "target"},
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:03", "AA:BB:CC:DD:EE:01"],
+            id="newest-first-with-filter",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.DISABLED,
+            [],
+            id="disabled",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "target", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "other", 2000.0),
+            ],
+            {ADDRESS: "AA:BB:CC:DD:EE:01"},
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:01"],
+            id="newest-first-address-match",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "newer", 2000.0),
+                ("AA:BB:CC:DD:EE:02", "older", 1000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.OLDEST_FIRST,
+            ["AA:BB:CC:DD:EE:02", "AA:BB:CC:DD:EE:01"],
+            id="oldest-first-out-of-order-insertion",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_register_callbacks_history_replay_order(
+    hass: HomeAssistant,
+    devices: list[tuple[str, str, float]],
+    matcher: BluetoothCallbackMatcher | None,
+    replay: BluetoothCallbackReplay,
+    expected_addresses: list[str],
+) -> None:
+    """History replay respects the replay order kwarg."""
+    mock_bt = []
+    replayed: list[BluetoothServiceInfo] = []
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        for address, name, adv_time in devices:
+            device = generate_ble_device(address, name)
+            adv = generate_advertisement_data(local_name=name)
+            inject_advertisement_with_time_and_source_connectable(
+                hass, device, adv, adv_time, SOURCE_LOCAL, True
+            )
+
+        def _subscriber(
+            service_info: BluetoothServiceInfo, change: BluetoothChange
+        ) -> None:
+            replayed.append(service_info)
+
+        cancel = bluetooth.async_register_callback(
+            hass, _subscriber, matcher, BluetoothScanningMode.ACTIVE, replay=replay
+        )
+        cancel()
+
+    assert [si.address for si in replayed] == expected_addresses
+
+
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_register_callbacks_raises_exception(
     hass: HomeAssistant,
@@ -2740,9 +2850,10 @@ async def test_wrapped_instance_with_filter(
 
         assert _get_manager() is not None
         scanner = HaBleakScannerWrapper(
-            filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
+            filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]},
+            detection_callback=_device_detected,
         )
-        scanner.register_detection_callback(_device_detected)
+        await scanner.start()
 
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
@@ -2752,11 +2863,12 @@ async def test_wrapped_instance_with_filter(
         assert discovered == [switchbot_device]
         assert len(detected) == 1
 
-        scanner.register_detection_callback(_device_detected)
-        # We should get a reply from the history when we register again
+        # register_detection_callback is deprecated but still replays the history
+        with pytest.warns(DeprecationWarning, match="is deprecated"):
+            scanner.register_detection_callback(_device_detected)
         assert len(detected) == 2
-        scanner.register_detection_callback(_device_detected)
-        # We should get a reply from the history when we register again
+        with pytest.warns(DeprecationWarning, match="is deprecated"):
+            scanner.register_detection_callback(_device_detected)
         assert len(detected) == 3
 
         with patch_discovered_devices([]):
@@ -2813,9 +2925,10 @@ async def test_wrapped_instance_with_service_uuids(
 
         assert _get_manager() is not None
         scanner = HaBleakScannerWrapper(
-            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            detection_callback=_device_detected,
         )
-        scanner.register_detection_callback(_device_detected)
+        await scanner.start()
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
@@ -2873,9 +2986,10 @@ async def test_wrapped_instance_with_service_uuids_with_coro_callback(
 
         assert _get_manager() is not None
         scanner = HaBleakScannerWrapper(
-            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            detection_callback=_device_detected,
         )
-        scanner.register_detection_callback(_device_detected)
+        await scanner.start()
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
@@ -2927,9 +3041,10 @@ async def test_wrapped_instance_with_broken_callbacks(
 
         assert _get_manager() is not None
         scanner = HaBleakScannerWrapper(
-            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            detection_callback=_device_detected,
         )
-        scanner.register_detection_callback(_device_detected)
+        await scanner.start()
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
@@ -2976,11 +3091,11 @@ async def test_wrapped_instance_changes_uuids(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper(detection_callback=_device_detected)
+        await scanner.start()
         scanner.set_scanning_filter(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
-        scanner.register_detection_callback(_device_detected)
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
@@ -3032,11 +3147,11 @@ async def test_wrapped_instance_changes_filters(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper(detection_callback=_device_detected)
+        await scanner.start()
         scanner.set_scanning_filter(
             filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
         )
-        scanner.register_detection_callback(_device_detected)
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
@@ -3163,6 +3278,33 @@ async def test_default_address_config_entries_removed_linux(
     await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+
+
+@pytest.mark.usefixtures("one_adapter", "mock_bleak_scanner_start")
+async def test_unload_cancels_expire_devices_timer(hass: HomeAssistant) -> None:
+    """Test unloading an adapter cancels the scanner expire devices timer."""
+
+    def _expire_devices_timers() -> list[asyncio.TimerHandle]:
+        return [
+            handle
+            for handle in get_scheduled_timer_handles(hass.loop)
+            if not handle.cancelled()
+            and "_async_expire_devices_schedule_next" in repr(handle)
+        ]
+
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    # The timer must exist first, otherwise the assertion below is vacuous
+    assert _expire_devices_timers()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not _expire_devices_timers()
 
 
 @pytest.mark.usefixtures("one_adapter")

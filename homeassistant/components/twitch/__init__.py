@@ -14,28 +14,21 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     LocalOAuth2Implementation,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .const import OAUTH_SCOPES, PLATFORMS
 from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
     """Set up Twitch from a config entry."""
-    try:
-        implementation = cast(
-            LocalOAuth2Implementation,
-            await async_get_config_entry_implementation(hass, entry),
-        )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = cast(
+        LocalOAuth2Implementation,
+        await async_get_config_entry_implementation(hass, entry),
+    )
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()

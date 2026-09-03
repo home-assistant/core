@@ -3,7 +3,7 @@
   ReadOnlyDict({
     <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
     <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station Somewhere Street 1 Status',
-    'latitude': 51.1,
-    'longitude': 13.1,
+    <EntityStateAttribute.LATITUDE: 'latitude'>: 51.1,
+    <EntityStateAttribute.LONGITUDE: 'longitude'>: 13.1,
   })
 # ---

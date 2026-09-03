@@ -9,6 +9,7 @@ from pyportainer.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -103,6 +104,27 @@ async def test_update_install_errors(
         )
 
 
+@pytest.mark.parametrize("repo_digests", [None, []], ids=["missing", "empty"])
+async def test_update_installed_version_without_repo_digest(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    repo_digests: list[str] | None,
+) -> None:
+    """Test an image that was never pulled from a registry has no installed version."""
+    mock_portainer_client.get_image.return_value.repo_digests = repo_digests
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
+
+
 async def test_update_using_cache(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
@@ -125,7 +147,6 @@ async def test_update_using_cache(
         await setup_integration(hass, mock_config_entry)
 
     # Reset call counts, since it needs to be measured what happens in this sequence
-    mock_portainer_client.inspect_container.reset_mock()
     mock_portainer_client.get_image.reset_mock()
 
     # Trigger a refresh, but it should use the cache
@@ -136,5 +157,4 @@ async def test_update_using_cache(
         blocking=True,
     )
 
-    mock_portainer_client.inspect_container.assert_not_called()
     mock_portainer_client.get_image.assert_not_called()

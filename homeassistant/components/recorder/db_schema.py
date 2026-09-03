@@ -33,15 +33,13 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from homeassistant.components.sensor import SensorEntityCapabilityAttribute
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, EventStateChangedData
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
@@ -139,11 +137,11 @@ _DEFAULT_TABLE_ARGS = {
     "mariadb_engine": MYSQL_ENGINE,
 }
 
-_MATCH_ALL_KEEP = {
-    ATTR_DEVICE_CLASS,
-    ATTR_STATE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_FRIENDLY_NAME,
+_MATCH_ALL_KEEP: set[str] = {
+    EntityStateAttribute.DEVICE_CLASS,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT,
+    EntityStateAttribute.FRIENDLY_NAME,
+    SensorEntityCapabilityAttribute.STATE_CLASS,
 }
 
 
