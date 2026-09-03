@@ -1,16 +1,11 @@
 """Tests for the UniFi Protect relay (Public API) switch entities."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import (
-    ModelType,
-    PublicBootstrap,
-    PublicRelayOutput,
-    Relay,
-    RelayOutputState,
-)
+from uiprotect.data import ModelType, PublicRelayOutput, Relay, RelayOutputState
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -29,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, make_public_bootstrap
 
 RELAY_ID = "relay-id-1"
 RELAY_MAC = "AA:BB:CC:DD:EE:01"
@@ -75,12 +70,7 @@ def _make_relay(
 
 def _make_public_bootstrap(relay: Mock | None) -> Mock:
     """Build a public bootstrap mock holding the given relay."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.relays = {relay.id: relay} if relay is not None else {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
-    pb.sirens = {}
-    return pb
+    return make_public_bootstrap(relays={relay.id: relay} if relay is not None else {})
 
 
 @pytest.fixture(name="ufp_with_relay")
@@ -601,3 +591,28 @@ async def test_relay_switch_command_when_output_gone(
             {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
+
+
+async def test_relay_switch_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Relay output switches are public-API entities and work in API-key-only mode."""
+    relay = _make_relay()
+    relay.outputs[0].state = RelayOutputState.ON
+    ufp_public_only.api.public_bootstrap.relays = {relay.id: relay}
+
+    await setup_public_only()
+
+    assert entity_registry.async_get(SWITCH_ENTITY_ID) is not None
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+    relay.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")

@@ -86,21 +86,26 @@ def _pair_public_private[
 ](
     public_devices: dict[str, PublicDeviceT],
     private_devices: dict[str, PrivateDeviceT],
+    *,
+    ignore_unadopted: bool = True,
 ) -> Generator[tuple[PublicDeviceT | None, PrivateDeviceT | None]]:
     """Pair public-master devices with their private fill by shared id.
 
     The public map is the master list; the matching private device is attached
     when present (hybrid) and ``None`` in public-only mode. An adopted private
     device not (yet) mirrored publicly is yielded as ``(None, private)`` so the
-    caller can defer it. Devices not adopted by us are skipped on both sides.
+    caller can defer it. Devices not adopted by us are skipped on both sides
+    unless ``ignore_unadopted`` is false (the adopt button needs them).
     """
     for device_id, public in public_devices.items():
         private = private_devices.get(device_id)
-        if private is not None and not private.is_adopted_by_us:
+        if ignore_unadopted and private is not None and not private.is_adopted_by_us:
             continue
         yield public, private
     for device_id, private in private_devices.items():
-        if device_id in public_devices or not private.is_adopted_by_us:
+        if device_id in public_devices or (
+            ignore_unadopted and not private.is_adopted_by_us
+        ):
             continue
         yield None, private
 
@@ -196,6 +201,32 @@ class ProtectData:
         """Get all cameras."""
         return cast(
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
+        )
+
+    def get_public_devices(
+        self, model_type: ModelType, *, ignore_unadopted: bool = True
+    ) -> Generator[tuple[PublicDeviceModel | None, ProtectAdoptableDeviceModel | None]]:
+        """Yield ``(public, private)`` pairs of a model type (see _pair_public_private).
+
+        Without a public bootstrap every private device is yielded unpaired, so
+        hybrid enumeration is unchanged when the public API is unavailable.
+        """
+        api = self.api
+        public_devices: dict[str, PublicDeviceModel] = {}
+        if (
+            api.has_public_bootstrap
+            and (store := api.public_bootstrap.store_for(model_type)) is not None
+        ):
+            public_devices = cast(dict[str, PublicDeviceModel], store)
+        # An API-key-only client never initializes the private bootstrap;
+        # accessing it would raise.
+        private_devices: dict[str, ProtectAdoptableDeviceModel] = (
+            {}
+            if api.is_public_only
+            else async_get_devices_by_type(api.bootstrap, model_type)
+        )
+        yield from _pair_public_private(
+            public_devices, private_devices, ignore_unadopted=ignore_unadopted
         )
 
     def get_public_cameras(
@@ -332,14 +363,13 @@ class ProtectData:
 
         Public-only mode only: hybrid discovers new devices through the private
         adopt path, and a second add would clash on unique_id. Cameras are
-        excluded, the channels signal owns their (re-)enumeration. Dedup
+        offered too: the channels signal only serves the camera platform. Dedup
         happens here so platforms can add without their own duplicate checks.
         """
         api = self.api
         if (
             not api.is_public_only
             or not api.has_public_bootstrap
-            or device.model is ModelType.CAMERA
             or device.mac in self._known_public_macs
         ):
             return
@@ -374,7 +404,7 @@ class ProtectData:
         if isinstance(new_obj, PublicDeviceModel):
             if new_obj.model is ModelType.CAMERA:
                 self._async_reenumerate_camera_on_public_change(new_obj, message)
-            elif message.action is WSAction.ADD:
+            if message.action is WSAction.ADD:
                 self._async_dispatch_new_public_device(new_obj)
             self._async_signal_public_update(new_obj.mac, new_obj)
 
