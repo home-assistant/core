@@ -18,8 +18,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
-ASSUMED_STATE_SECONDS = 15
-COMMAND_REFRESH_DELAYS = (1, 3, 8, 15)
+ASSUMED_STATE_SECONDS = 25
+COMMAND_REFRESH_DELAYS = (3, 20)
+ACTIVE_CHARGING_STATES = frozenset(
+    {
+        2,  # Charging
+        5,  # Waiting for available power
+        7,  # Waiting for car response
+    }
+)
 
 
 async def async_setup_entry(
@@ -86,7 +93,7 @@ class NexBlueChargingSwitch(
         status = self.coordinator.data.get(self._serial_number)
         if status is None:
             return False
-        return status.charging_state == 2
+        return status.charging_state in ACTIVE_CHARGING_STATES
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -112,17 +119,17 @@ class NexBlueChargingSwitch(
         self._assumed_state_expires_at = time.monotonic() + ASSUMED_STATE_SECONDS
         self.async_write_ha_state()
         self._schedule_command_refreshes()
-        await self.coordinator.async_refresh()
 
     def _schedule_command_refreshes(self) -> None:
-        """Refresh while cloud and charger state catch up after a command."""
+        """Schedule bounded refreshes while cloud and charger state catch up."""
+        self._cancel_pending_refreshes()
 
         def _schedule_refresh(delay: int) -> None:
             cancel: Callable[[], None] | None = None
 
             @callback
             def _request_refresh(_now: datetime) -> None:
-                """Request a refresh from the Home Assistant event loop."""
+                """Refresh coordinator data after a command."""
                 if cancel is not None:
                     self._pending_refreshes.discard(cancel)
                 self.hass.async_create_task(self.coordinator.async_refresh())
@@ -134,7 +141,7 @@ class NexBlueChargingSwitch(
             _schedule_refresh(delay)
 
     def _cancel_pending_refreshes(self) -> None:
-        """Cancel refreshes that have not fired when the entity is removed."""
+        """Cancel command refreshes that have not fired."""
         for cancel in self._pending_refreshes:
             cancel()
         self._pending_refreshes.clear()

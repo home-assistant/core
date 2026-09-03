@@ -1,6 +1,7 @@
 """Tests for NexBlue switches."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -15,6 +16,8 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import CHARGER_STATUS
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -125,7 +128,7 @@ async def test_command_error_is_reported(
         )
 
 
-async def test_stop_charging_refreshes_and_assumed_state_expires(
+async def test_command_refreshes_and_assumed_state_expires(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
@@ -148,10 +151,10 @@ async def test_stop_charging_refreshes_and_assumed_state_expires(
     )
 
     assert hass.states.get(entity_id).state == "off"
-    assert mock_client.async_list_chargers.await_count == 1
-    assert mock_client.async_get_charger_status.await_count == 1
+    assert mock_client.async_list_chargers.await_count == 0
+    assert mock_client.async_get_charger_status.await_count == 0
 
-    for seconds, expected_refreshes in ((1, 2), (2, 3), (5, 4), (7, 5)):
+    for seconds, expected_refreshes in ((3, 1), (22, 2)):
         freezer.tick(timedelta(seconds=seconds))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -159,7 +162,46 @@ async def test_stop_charging_refreshes_and_assumed_state_expires(
         assert mock_client.async_list_chargers.await_count == expected_refreshes
         assert mock_client.async_get_charger_status.await_count == expected_refreshes
 
+    freezer.tick(timedelta(seconds=5))
+    await init_integration.runtime_data.async_refresh()
+
+    assert mock_client.async_list_chargers.await_count == 3
+    assert mock_client.async_get_charger_status.await_count == 3
     assert hass.states.get(entity_id).state == "on"
+
+
+async def test_new_command_replaces_pending_command_refreshes(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new command replaces the previous command's refreshes."""
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB123456_charging"
+    )
+    assert entity_id
+    mock_client.async_list_chargers.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.async_list_chargers.await_count == 1
 
 
 async def test_pending_command_refreshes_cancelled_on_unload(
@@ -182,7 +224,7 @@ async def test_pending_command_refreshes_cancelled_on_unload(
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert mock_client.async_list_chargers.await_count == 1
+    assert mock_client.async_list_chargers.await_count == 0
 
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
@@ -191,4 +233,29 @@ async def test_pending_command_refreshes_cancelled_on_unload(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_client.async_list_chargers.await_count == 1
+    assert mock_client.async_list_chargers.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("charging_state", "expected_state"),
+    [
+        (5, "on"),
+        (6, "off"),
+        (7, "on"),
+    ],
+)
+async def test_charging_session_states(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    charging_state: int,
+    expected_state: str,
+) -> None:
+    """Test switch state reflects whether a charging session is active."""
+    mock_client.async_get_charger_status.return_value = replace(
+        CHARGER_STATUS, charging_state=charging_state
+    )
+
+    await init_integration.runtime_data.async_refresh()
+
+    assert hass.states.get("switch.nb123456_charging").state == expected_state
