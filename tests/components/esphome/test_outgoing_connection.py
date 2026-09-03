@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
@@ -249,11 +249,11 @@ async def test_outgoing_connection_bind_failure_warns_once(
     assert len(warnings) == 1
 
 
-async def test_outgoing_connection_waits_for_pending_stop(
+async def test_outgoing_connection_rebinds_while_old_stop_pending(
     hass: HomeAssistant,
     mock_server: MagicMock,
 ) -> None:
-    """A new registration does not rebind until the old listener has stopped."""
+    """A new registration binds immediately; stops need no serialization."""
     release = asyncio.Event()
     stop_started = asyncio.Event()
 
@@ -264,62 +264,34 @@ async def test_outgoing_connection_waits_for_pending_stop(
     mock_server.stop = AsyncMock(side_effect=gated_stop)
     unregister = await async_register_outgoing_target(hass, MAC, MagicMock())
     assert unregister is not None
-    assert mock_server.start.await_count == 1
     unregister()  # schedules the gated stop
     await stop_started.wait()
 
-    task = hass.async_create_task(
-        async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
+    # The library releases the port before stop() awaits, so the next
+    # registration does not wait for the pending stop
+    assert (
+        await async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
+        is not None
     )
-    await asyncio.sleep(0.05)
-    # Still waiting for the old socket to be released
-    assert not task.done()
-    assert mock_server.start.await_count == 1
-    release.set()
-    assert await task is not None
     assert mock_server.start.await_count == 2
+    release.set()
+    await hass.async_block_till_done()
 
 
 async def test_outgoing_connection_not_started_during_shutdown(
     hass: HomeAssistant,
     mock_server: MagicMock,
 ) -> None:
-    """A listener that finishes binding after STOP fired is stopped again."""
-    hass.set_state(CoreState.stopping)
+    """A listener whose bind raced the STOP event is stopped, not kept."""
+
+    async def stop_during_bind() -> None:
+        hass.set_state(CoreState.stopping)
+
+    mock_server.start = AsyncMock(side_effect=stop_during_bind)
     assert await async_register_outgoing_target(hass, MAC, MagicMock()) is None
     await hass.async_block_till_done()
     mock_server.register.assert_not_called()
     mock_server.stop.assert_awaited_once()
-
-
-async def test_outgoing_connection_slow_stop_stays_tracked(
-    hass: HomeAssistant,
-    mock_server: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A stop outliving the wait is logged and kept for the next attempt."""
-    release = asyncio.Event()
-    stop_started = asyncio.Event()
-
-    async def gated_stop() -> None:
-        stop_started.set()
-        await release.wait()
-
-    mock_server.stop = AsyncMock(side_effect=gated_stop)
-    unregister = await async_register_outgoing_target(hass, MAC, MagicMock())
-    assert unregister is not None
-    unregister()
-    await stop_started.wait()
-
-    with patch("homeassistant.components.esphome.outgoing_connection._STOP_TIMEOUT", 0):
-        assert (
-            await async_register_outgoing_target(hass, "aa:bb:cc:dd:ee:01", MagicMock())
-            is not None
-        )
-    assert "still stopping" in caplog.text
-    assert mock_server.start.await_count == 2
-    release.set()
-    await hass.async_block_till_done()
 
 
 async def test_outgoing_connection_unregister_error_contained(

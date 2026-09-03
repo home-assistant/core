@@ -1,7 +1,6 @@
 """Shared listener for ESPHome device-initiated connections."""
 
 import asyncio
-from dataclasses import dataclass
 import logging
 
 from aioesphomeapi import (
@@ -12,55 +11,16 @@ from aioesphomeapi import (
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.singleton import singleton
 from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-# Bound on waiting for a previous listener to stop before rebinding
-_STOP_TIMEOUT = 10.0
-# A recurring bind failure re-warns after this long instead of staying debug
+# A recurring bind failure re-warns after this long instead of staying at info
 _BIND_WARN_INTERVAL = 3600.0
 
-
-@dataclass
-class _ListenerState:
-    """The shared listener with its registration count and stop listener."""
-
-    server: OutgoingConnectionServer
-    remove_stop_listener: CALLBACK_TYPE
-    registrations: int = 0
-
-
-_KEY_OUTGOING_CONNECTION_LISTENER: HassKey[_ListenerState] = HassKey(
-    "esphome_outgoing_connection_listener"
+_KEY_OUTGOING_CONNECTION_MANAGER: HassKey[_OutgoingConnectionManager] = HassKey(
+    "esphome_outgoing_connection_manager"
 )
-_KEY_OUTGOING_CONNECTION_STOPPING: HassKey[asyncio.Task[None]] = HassKey(
-    "esphome_outgoing_connection_stopping"
-)
-# Monotonic time of the last bind-failure warning
-_KEY_OUTGOING_CONNECTION_BIND_FAILED: HassKey[float] = HassKey(
-    "esphome_outgoing_connection_bind_failed"
-)
-
-
-async def _wait_all(tasks: set[asyncio.Task[None]]) -> None:
-    await asyncio.wait(tasks)
-
-
-@callback
-def _async_stop_listener(hass: HomeAssistant, state: _ListenerState) -> None:
-    # Drops the cached listener and stops it; the caller checked ownership
-    del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
-    state.remove_stop_listener()
-    # Tracked so the next registration waits for the port release
-    stopping = hass.async_create_task(state.server.stop())
-    stopping.add_done_callback(_log_stop_failure)
-    previous = hass.data.get(_KEY_OUTGOING_CONNECTION_STOPPING)
-    if previous is not None and not previous.done():
-        # A slow earlier stop may still hold the port; wait on both
-        stopping = hass.async_create_task(_wait_all({previous, stopping}))
-    hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
 
 
 def _log_stop_failure(task: asyncio.Task[None]) -> None:
@@ -75,55 +35,18 @@ def _log_stop_failure(task: asyncio.Task[None]) -> None:
         )
 
 
-@singleton(_KEY_OUTGOING_CONNECTION_LISTENER, async_=True)
-async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
-    """Start the shared listener; raises OSError when the port cannot be bound.
-
-    Raising keeps the singleton uncached so the next registration retries.
-    """
-    if (stopping := hass.data.pop(_KEY_OUTGOING_CONNECTION_STOPPING, None)) is not None:
-        # Wait for the previous listener to release the port before rebinding;
-        # wait() absorbs its failure or cancellation (logged by its done
-        # callback), and a still-bound port surfaces as OSError from start()
-        done, _ = await asyncio.wait([stopping], timeout=_STOP_TIMEOUT)
-        if not done:
-            # Still stopping; keep it so the next attempt can wait on it. The
-            # bind below then likely fails, so name the real cause loudly
-            _LOGGER.warning("Previous outgoing connection listener is still stopping")
-            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = stopping
-    server = OutgoingConnectionServer()
-    await server.start()
-    if hass.data.pop(_KEY_OUTGOING_CONNECTION_BIND_FAILED, None) is not None:
-        _LOGGER.info(
-            "Listening for ESPHome outgoing connections on port %s",
-            DEFAULT_OUTGOING_CONNECTION_PORT,
-        )
-
-    async def _async_stop(event: Event) -> None:
-        # Drop the cached instance so late registrations cannot attach to it
-        hass.data.pop(_KEY_OUTGOING_CONNECTION_LISTENER, None)
-        await server.stop()
-
-    remove_stop_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_stop
-    )
-    return _ListenerState(server, remove_stop_listener)
-
-
 class _Registration:
     """One MAC registration; unregisters exactly once."""
 
-    __slots__ = ("_hass", "_mac", "_state", "_unregister")
+    __slots__ = ("_mac", "_manager", "_unregister")
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        state: _ListenerState,
+        manager: _OutgoingConnectionManager,
         mac: str,
         unregister: CALLBACK_TYPE,
     ) -> None:
-        self._hass = hass
-        self._state = state
+        self._manager = manager
         self._mac = mac
         self._unregister: CALLBACK_TYPE | None = unregister
 
@@ -133,8 +56,73 @@ class _Registration:
         if (unregister := self._unregister) is None:
             return
         self._unregister = None
-        hass = self._hass
-        state = self._state
+        self._manager.async_remove_registration(self._mac, unregister)
+
+
+class _OutgoingConnectionManager:
+    """Owns the shared dial-in listener for this Home Assistant instance.
+
+    The library releases the port before its stop() first awaits, so a
+    replacement listener can always bind immediately and stops need no
+    cross-listener serialization here.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        self._hass = hass
+        self._server: OutgoingConnectionServer | None = None
+        self._registrations = 0
+        self._lock = asyncio.Lock()
+        self._remove_stop_listener: CALLBACK_TYPE | None = None
+        self._last_bind_warning = -_BIND_WARN_INTERVAL
+        self._bind_failed = False
+
+    async def async_register(
+        self, mac: str, reconnect_logic: ReconnectLogic
+    ) -> CALLBACK_TYPE | None:
+        """Route dial-ins from this MAC; returns the unregister callback.
+
+        None when the listening port cannot be bound. The last
+        unregistration stops the listener and frees the port.
+        """
+        async with self._lock:
+            hass = self._hass
+            if (server := self._server) is None:
+                server = OutgoingConnectionServer()
+                try:
+                    await server.start()
+                except OSError as err:
+                    self._async_log_bind_failure(err)
+                    return None
+                if hass.is_stopping:
+                    # Shutting down (possibly since before the bind); the
+                    # one-shot listener below would never hear the STOP event
+                    self._async_schedule_stop(server)
+                    return None
+                if self._bind_failed:
+                    self._bind_failed = False
+                    self._last_bind_warning = -_BIND_WARN_INTERVAL
+                    _LOGGER.info(
+                        "Listening for ESPHome outgoing connections on port %s",
+                        DEFAULT_OUTGOING_CONNECTION_PORT,
+                    )
+                self._server = server
+                self._remove_stop_listener = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, self._async_hass_stop
+                )
+            try:
+                unregister = server.register(mac, reconnect_logic)
+            except BaseException:
+                # A freshly started listener with no registrations would
+                # otherwise hold the port for the rest of the run
+                if self._registrations == 0:
+                    self._async_stop_server()
+                raise
+            self._registrations += 1
+        return _Registration(self, mac, unregister).async_unregister
+
+    @callback
+    def async_remove_registration(self, mac: str, unregister: CALLBACK_TYPE) -> None:
+        """Remove one route; called at most once per registration."""
         failed = False
         try:
             unregister()
@@ -142,30 +130,71 @@ class _Registration:
             # A cleanup callback must not abort the entry's remaining cleanup
             _LOGGER.exception("Error removing the dial-in route")
             try:
-                # The targeted recovery keeps the other entries routed
-                state.server.discard(self._mac)
+                if self._server is not None:
+                    # The targeted recovery keeps the other entries routed
+                    self._server.discard(mac)
             except Exception:
                 failed = True
                 _LOGGER.exception("Error discarding the dial-in route")
-                if state.registrations > 1:
+                if self._registrations > 1:
                     _LOGGER.warning(
                         (
                             "Stopping the outgoing connection listener; %s other"
                             " device(s) will not receive dial-ins until their"
                             " entries are reloaded"
                         ),
-                        state.registrations - 1,
+                        self._registrations - 1,
                     )
         finally:
-            state.registrations -= 1
-            # In the finally so a raising unregister cannot leave a routeless
-            # listener holding the port; when even discard failed the routes
-            # are unknowable, so the whole listener is torn down.
-            # Already popped when HA is stopping.
-            if (state.registrations == 0 or failed) and hass.data.get(
-                _KEY_OUTGOING_CONNECTION_LISTENER
-            ) is state:
-                _async_stop_listener(hass, state)
+            self._registrations -= 1
+            # When even discard failed the routes are unknowable, so the
+            # whole listener is torn down
+            if self._server is not None and (self._registrations == 0 or failed):
+                self._async_stop_server()
+
+    @callback
+    def _async_stop_server(self) -> None:
+        server = self._server
+        self._server = None
+        if (remove := self._remove_stop_listener) is not None:
+            self._remove_stop_listener = None
+            remove()
+        if server is not None:
+            self._async_schedule_stop(server)
+
+    @callback
+    def _async_schedule_stop(self, server: OutgoingConnectionServer) -> None:
+        # Fire and forget: the library frees the port before stop() first
+        # awaits, so nothing needs to wait; the callback logs a failure
+        self._hass.async_create_task(server.stop()).add_done_callback(_log_stop_failure)
+
+    async def _async_hass_stop(self, event: Event) -> None:
+        if (server := self._server) is None:
+            return
+        self._server = None
+        self._remove_stop_listener = None
+        await server.stop()
+
+    @callback
+    def _async_log_bind_failure(self, err: OSError) -> None:
+        # One warning per failure window, not one per registered device;
+        # info after that so a deliberate retry still reports its outcome
+        self._bind_failed = True
+        now = self._hass.loop.time()
+        level = logging.INFO
+        if now - self._last_bind_warning >= _BIND_WARN_INTERVAL:
+            self._last_bind_warning = now
+            level = logging.WARNING
+        _LOGGER.log(
+            level,
+            (
+                "Cannot listen for ESPHome outgoing connections on port %s: %s;"
+                " devices are still told to dial back, reload an ESPHome entry"
+                " to retry the bind"
+            ),
+            DEFAULT_OUTGOING_CONNECTION_PORT,
+            err,
+        )
 
 
 async def async_register_outgoing_target(
@@ -176,54 +205,8 @@ async def async_register_outgoing_target(
     Returns the unregister callback, or None when the listening port cannot
     be bound. The last unregistration stops the listener and frees the port.
     """
-    while True:
-        try:
-            state = await _async_get_listener(hass)
-        except OSError as err:
-            # One warning per failure window, not one per registered device;
-            # INFO after that so a deliberate retry still reports its outcome
-            now = hass.loop.time()
-            last = hass.data.get(
-                _KEY_OUTGOING_CONNECTION_BIND_FAILED, -_BIND_WARN_INTERVAL
-            )
-            level = logging.INFO
-            if now - last >= _BIND_WARN_INTERVAL:
-                hass.data[_KEY_OUTGOING_CONNECTION_BIND_FAILED] = now
-                level = logging.WARNING
-            _LOGGER.log(
-                level,
-                (
-                    "Cannot listen for ESPHome outgoing connections on port %s: %s;"
-                    " devices are still told to dial back, reload an ESPHome entry"
-                    " to retry the bind"
-                ),
-                DEFAULT_OUTGOING_CONNECTION_PORT,
-                err,
-            )
-            return None
-        if hass.is_stopping:
-            # The STOP event may have fired while binding, in which case the
-            # one-shot listener missed it and nothing else would stop this
-            # instance; a shared listener others route through is left alone
-            if (
-                state.registrations == 0
-                and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
-            ):
-                _async_stop_listener(hass, state)
-            return None
-        if hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state:
-            break
-        # Popped and stopped while we awaited it; build a fresh listener
-    try:
-        unregister = state.server.register(mac, reconnect_logic)
-    except Exception:
-        # A freshly started listener with no registrations would otherwise
-        # hold the port for the rest of the run
-        if (
-            state.registrations == 0
-            and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
-        ):
-            _async_stop_listener(hass, state)
-        raise
-    state.registrations += 1
-    return _Registration(hass, state, mac, unregister).async_unregister
+    if (manager := hass.data.get(_KEY_OUTGOING_CONNECTION_MANAGER)) is None:
+        manager = hass.data[_KEY_OUTGOING_CONNECTION_MANAGER] = (
+            _OutgoingConnectionManager(hass)
+        )
+    return await manager.async_register(mac, reconnect_logic)
