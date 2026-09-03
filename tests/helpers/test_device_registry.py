@@ -3041,36 +3041,59 @@ async def test_orphan_not_restored_for_other_domain(
     assert device.id in device_registry._deleted_devices
 
 
+@pytest.mark.parametrize(
+    ("connections_1", "identifiers_1", "connections_2", "identifiers_2"),
+    [
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+            {("hue", "1")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+            {("hue", "2")},
+            id="shared_connection",
+        ),
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:01")},
+            {("hue", "shared")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:02")},
+            {("hue", "shared")},
+            id="shared_identifier",
+        ),
+    ],
+)
 async def test_orphaning_replaces_colliding_same_domain_orphan(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    connections_1: set[tuple[str, str]],
+    identifiers_1: set[tuple[str, str]],
+    connections_2: set[tuple[str, str]],
+    identifiers_2: set[tuple[str, str]],
 ) -> None:
     """Orphaning a device drops a stale same-domain orphan it collides with.
 
-    Two devices from the same integration sharing a connection both orphan under
-    config_entry_id=None and would collide in the lookup index; the newest orphan replaces
-    the stale one so a re-add restores it deterministically.
+    Two devices from the same integration sharing a connection or an identifier both
+    orphan under config_entry_id=None and would collide in the lookup index; the newest
+    orphan replaces the stale one so a re-add restores it deterministically.
     """
-    connections = {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}
     entry_1 = MockConfigEntry(domain="hue")
     entry_1.add_to_hass(hass)
     device_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
-        connections=connections,
-        identifiers={("hue", "1")},
+        connections=connections_1,
+        identifiers=identifiers_1,
     )
     entry_2 = MockConfigEntry(domain="hue")
     entry_2.add_to_hass(hass)
     device_2 = device_registry.async_get_or_create(
         config_entry_id=entry_2.entry_id,
-        connections=connections,
-        identifiers={("hue", "2")},
+        connections=connections_2,
+        identifiers=identifiers_2,
     )
 
     device_registry.async_clear_config_entry(entry_1.entry_id, entry_1.domain)
     assert device_1.id in device_registry._deleted_devices
 
     device_registry.async_clear_config_entry(entry_2.entry_id, entry_2.domain)
-    # The newer orphan replaces the stale one it collides with on the shared connection
+    # The newer orphan replaces the stale one it collides with
     assert device_1.id not in device_registry._deleted_devices
     assert device_2.id in device_registry._deleted_devices
 
@@ -3079,8 +3102,8 @@ async def test_orphaning_replaces_colliding_same_domain_orphan(
     entry_3.add_to_hass(hass)
     restored = device_registry.async_get_or_create(
         config_entry_id=entry_3.entry_id,
-        connections=connections,
-        identifiers={("hue", "2")},
+        connections=connections_2,
+        identifiers=identifiers_2,
     )
     assert restored.id == device_2.id
 

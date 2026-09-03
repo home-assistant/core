@@ -1786,13 +1786,7 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         connections: set[tuple[str, str]],
         domain: str,
     ) -> list[DeletedDeviceEntry]:
-        """Return the orphans of a domain sharing an identifier or connection.
-
-        Resolved through the orphan indexes, so orphaning a device costs its own
-        identifiers and connections rather than a scan of every deleted device.
-        Both sets are taken from a stored entry, so their connections are already
-        normalized and match the index keys.
-        """
+        """Return the orphans of a domain sharing an identifier or connection."""
         orphans: dict[str, DeletedDeviceEntry] = {}
         for identifier in identifiers:
             orphans.update(self._orphaned_identifiers.get(identifier, {}))
@@ -4426,10 +4420,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and pending_move.config_entry_id == config_entry_id
             ):
                 self._devices[device.id] = attr.evolve(device, pending_move=None)
-        # Iterate ids rather than entries: a snapshot of the entries would hold
-        # every deleted device alive while the loop replaces them, doubling the
-        # registry's footprint on a large store. Re-reading each id also skips an
-        # entry the orphan dedupe dropped mid-loop instead of resurrecting it.
+        # Not `list(self._deleted_devices.values())`, which would keep every entry
+        # alive until the loop ends.
         for deleted_device_id in list(self._deleted_devices):
             deleted_device = self._deleted_devices.get(deleted_device_id)
             if (
@@ -4469,6 +4461,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and pending_move.config_subentry_id == config_subentry_id
             ):
                 self._devices[device.id] = attr.evolve(device, pending_move=None)
+        # Not `list(self._deleted_devices.values())`, which would keep every entry
+        # alive until the loop ends.
         for deleted_device_id in list(self._deleted_devices):
             deleted_device = self._deleted_devices.get(deleted_device_id)
             if (
@@ -4487,6 +4481,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         growing without bound.
         """
         now_time = time.time()
+        # Not `list(self._deleted_devices.values())`, which would keep every entry
+        # alive until the loop ends.
         for deleted_device_id in list(self._deleted_devices):
             deleted_device = self._deleted_devices.get(deleted_device_id)
             if deleted_device is None or deleted_device.orphaned_timestamp is None:
@@ -4505,6 +4501,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_update_device(device.id, area_id=None)
         for child_device in self._child_devices.get_devices_for_area_id(area_id):
             self._async_update_child_device(child_device.id, area_id=None)
+        # Not `list(self._deleted_devices.values())`, which would keep every entry
+        # alive until the loop ends.
         for deleted_device_id in list(self._deleted_devices):
             deleted_device = self._deleted_devices.get(deleted_device_id)
             if deleted_device is None or deleted_device.area_id != area_id:
@@ -4523,6 +4521,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_update_child_device(
                 child_device.id, labels=child_device.labels - {label_id}
             )
+        # Not `list(self._deleted_devices.values())`, which would keep every entry
+        # alive until the loop ends.
         for deleted_device_id in list(self._deleted_devices):
             deleted_device = self._deleted_devices.get(deleted_device_id)
             if deleted_device is None or label_id not in deleted_device.labels:
