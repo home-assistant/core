@@ -263,6 +263,45 @@ async def test_the_same_host_and_unit_on_different_ports_are_not_duplicates(
     assert result["title"] != mock_config_entry.title
 
 
+async def test_the_same_host_in_a_different_case_is_still_a_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Test duplicate detection is not fooled by hostname case.
+
+    The shared Modbus layer treats a host case-insensitively --
+    ``Device.local`` and ``device.local`` share one underlying connection --
+    so without normalizing here, typing the same host in a different case
+    would create a second entry polling the same physical unit as the first.
+    """
+    existing = MockConfigEntry(
+        domain=DOMAIN, data={**WN69LP_CASE.entry_data, CONF_HOST: "device.local"}
+    )
+    existing.add_to_hass(hass)
+
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    with _serving(WN69LP_CASE.unit_id, WN69LP_CASE.registers):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {**WN69LP_CASE.user_input, CONF_HOST: "Device.local"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_a_new_hosts_case_is_normalized(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a host is lowercased before it is stored."""
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    with _serving(WN69LP_CASE.unit_id, WN69LP_CASE.registers):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {**WN69LP_CASE.user_input, CONF_HOST: "Gateway.Local"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "gateway.local"
+
+
 @pytest.mark.usefixtures("mock_temporary_unit")
 async def test_a_wn90lp_is_recognised_at_a_new_address(
     hass: HomeAssistant,
@@ -451,6 +490,30 @@ class TestReconfigure:
         assert mock_config_entry.title == (
             f"{model_case.name} (192.168.1.200:{MOCK_PORT}, unit {model_case.unit_id})"
         )
+
+    @pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
+    async def test_a_new_hosts_case_is_normalized(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test a host is lowercased on the reconfigure path too.
+
+        Only the create path is exercised elsewhere; the same normalization
+        has to apply here; otherwise moving an entry to a mixed-case host
+        would store it as typed, and a later add attempt using a different
+        case for that same host would no longer be caught as a duplicate.
+        """
+        mock_config_entry.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**WN90LP_CASE.user_input, CONF_HOST: "New-Gateway.Local"},
+        )
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.data[CONF_HOST] == "new-gateway.local"
 
     @EVERY_MODEL
     @pytest.mark.usefixtures("mock_temporary_unit")

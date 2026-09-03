@@ -73,6 +73,18 @@ def _connection_schema(default_unit_id: int, defaults: Mapping[str, Any]) -> vol
     )
 
 
+def _normalize_host(user_input: dict[str, Any]) -> None:
+    """Lowercase the host in place, to match how the shared connection sees it.
+
+    The shared Modbus layer treats a host case-insensitively -- ``Device.local``
+    and ``device.local`` share one underlying connection -- but duplicate
+    detection here compares ``entry.data`` as plain strings. Left un-normalized,
+    typing the same host in a different case would create a second entry
+    polling the same physical unit as the first.
+    """
+    user_input[CONF_HOST] = user_input[CONF_HOST].lower()
+
+
 async def _async_probe(
     hass: HomeAssistant, model: str, user_input: Mapping[str, Any]
 ) -> EcowittDevice:
@@ -153,6 +165,7 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            _normalize_host(user_input)
             try:
                 device = await _async_probe(self.hass, self._model, user_input)
             except NotThisDeviceError:
@@ -202,6 +215,7 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            _normalize_host(user_input)
             try:
                 device = await _async_probe(self.hass, model, user_input)
             except NotThisDeviceError:
