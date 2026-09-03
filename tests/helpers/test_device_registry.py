@@ -8384,23 +8384,130 @@ async def test_device_registry_deleted_device_collision(
     assert len(device_registry._deleted_devices) == 0
 
 
+@pytest.mark.parametrize(
+    ("initial", "update"),
+    [
+        pytest.param(
+            {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                "identifiers": {("bridgeid", "0123")},
+            },
+            {"new_connections": set(), "new_identifiers": set()},
+            id="clear_both",
+        ),
+        pytest.param(
+            {"identifiers": {("bridgeid", "0123")}},
+            {"new_identifiers": set()},
+            id="clear_only_identifiers_of_identifier_only_device",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}},
+            {"new_connections": set()},
+            id="clear_only_connections_of_connection_only_device",
+        ),
+    ],
+)
 async def test_update_device_no_connections_or_identifiers(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    initial: dict[str, set[tuple[str, str]]],
+    update: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Test an update leaving a device with no identity is rejected.
+
+    Clearing the last identity side would leave a device that can never be restored
+    once deleted, so it must be rejected whether both sides are cleared at once or one
+    side is cleared while the other is already empty.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, **initial
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
+        device_registry.async_update_device(device.id, **update)
+
+    # The rejected update leaves the device untouched and creates no deleted device
+    assert device_registry.async_get(device.id) == device
+    assert len(device_registry._deleted_devices) == 0
+
+
+async def test_update_device_can_clear_one_identity_side(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test clearing one identity side is allowed while the other remains."""
+    # Stored MAC connections are normalized to lowercase
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    identifier = ("bridgeid", "0123")
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={connection},
+        identifiers={identifier},
+    )
+
+    # Dropping all identifiers is allowed while a connection remains
+    updated = device_registry.async_update_device(device.id, new_identifiers=set())
+    assert updated.identifiers == set()
+    assert updated.connections == {connection}
+
+    # Dropping all connections is allowed while an identifier remains
+    updated = device_registry.async_update_device(
+        device.id, new_identifiers={identifier}, new_connections=set()
+    )
+    assert updated.connections == set()
+    assert updated.identifiers == {identifier}
+
+
+async def test_update_device_empty_identity_rejected_before_mutation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test updating a device clearing connections and identifiers."""
-    mock_config_entry = MockConfigEntry(domain="mqtt", title=None)
-    mock_config_entry.add_to_hass(hass)
+    """Test the empty-identity rejection runs before any sibling state is mutated.
 
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
+    Completing a composite split's move clears its siblings' pending moves. An update
+    combining that move with an identity-emptying replacement must reject before that
+    mutation, so the rejected update leaves no partial state behind.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="test")
+    entry_3.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
     )
-    with pytest.raises(HomeAssistantError):
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate two migration splits of one composite, each with a pending move to entry_3
+    pending_move = dr._PendingMove(entry_3.entry_id, None, None)
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, pending_move=pending_move
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id, pending_move=pending_move
+    )
+
+    # Removing device_1's owning entry completes its pending move (which would clear the
+    # sibling's pending move) while new_identifiers=set() empties its identity
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
         device_registry.async_update_device(
-            device.id, new_connections=set(), new_identifiers=set()
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            new_identifiers=set(),
         )
+
+    # device_1 is untouched, and the sibling's pending move survives the rejected update
+    assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
+    assert device_registry._devices[device_1.id].identifiers == {("test", "1")}
+    assert device_registry._devices[device_2.id]._pending_move == pending_move
 
 
 async def test_connections_validator() -> None:
