@@ -13,9 +13,13 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     MOCK_MEDIA_DIR_URI_1,
+    MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
     MOCK_MEDIA_IMAGE_URI_1,
+    MOCK_MEDIA_IMAGE_URI_2,
+    MOCK_MEDIA_IMAGE_URI_3,
+    MOCK_MEDIA_IMAGE_URI_4,
     TEST_IMAGE,
 )
 from .helpers import directory, image
@@ -73,6 +77,12 @@ def media_source_state() -> MediaSourceState:
                     can_expand=False,
                 ),
                 image(MOCK_MEDIA_IMAGE_URI_1),
+            ),
+            MOCK_MEDIA_DIR_URI_2: directory(
+                "Three pictures",
+                image(MOCK_MEDIA_IMAGE_URI_2),
+                image(MOCK_MEDIA_IMAGE_URI_3),
+                image(MOCK_MEDIA_IMAGE_URI_4),
             ),
             MOCK_MEDIA_DIR_URI_EMPTY: directory("Empty folder"),
         },

@@ -22,9 +22,14 @@ from homeassistant.exceptions import HomeAssistantError
 from .conftest import MediaSourceMocks, MediaSourceState
 from .const import (
     DEFAULT_ENTITY_ID,
+    MOCK_MEDIA_DIR_URI_1,
+    MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
     MOCK_MEDIA_IMAGE_URI_1,
+    MOCK_MEDIA_IMAGE_URI_2,
+    MOCK_MEDIA_IMAGE_URI_3,
+    MOCK_MEDIA_IMAGE_URI_4,
     TEST_IMAGE,
 )
 from .helpers import config_entry_from_uri
@@ -70,42 +75,41 @@ async def test_image(
     await _verify_path_image(hass, hass_client)
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_image_multi(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    mock_media_source,
-    browse_media_result: BrowseMediaSource,
-    browse_media_result_2: BrowseMediaSource,
+    media_source_state: MediaSourceState,
 ) -> None:
     """Test multiple media sources."""
-
-    expected_images = [
-        child
-        for result in (browse_media_result, browse_media_result_2)
-        for child in result.children
-        if child.media_class == MediaClass.IMAGE
-    ]
+    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_4] = PlayMedia(
+        url="",
+        mime_type="image/png",
+        path=TEST_IMAGE,
+    )
 
     with (
         freeze_time(TEST_TIME),
         patch(
             "homeassistant.components.collection_image.image.random.choice",
-            return_value=expected_images[-1],
+            return_value=media_source_state.browse_results[
+                MOCK_MEDIA_DIR_URI_2
+            ].children[2],
         ) as mock_choice,
     ):
-        config_entry = _create_config_entry([MOCK_MEDIA_URI_1, MOCK_MEDIA_URI_2])
+        config_entry = config_entry_from_uri(
+            [MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_2]
+        )
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_choice.assert_called_once_with(expected_images)
-
     assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
-        "media-source://mymedia/photo",
-        "media-source://mymedia_2/photo_1",
-        "media-source://mymedia_2/photo_2",
-        "media-source://mymedia_2/photo_3",
+        MOCK_MEDIA_IMAGE_URI_1,
+        MOCK_MEDIA_IMAGE_URI_2,
+        MOCK_MEDIA_IMAGE_URI_3,
+        MOCK_MEDIA_IMAGE_URI_4,
     ]
 
     state = hass.states.get(DEFAULT_ENTITY_ID)

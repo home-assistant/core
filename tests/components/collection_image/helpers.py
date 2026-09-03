@@ -7,15 +7,23 @@ from homeassistant.components.media_source import BrowseMediaSource
 from tests.common import MockConfigEntry
 
 
-def config_entry_from_uri(uri: str) -> MockConfigEntry:
-    """From a uri, construct a config entry."""
+def config_entry_from_uri(uri: str | list[str]) -> MockConfigEntry:
+    """Construct a mock config entry from one URI or a list of URIs."""
+
+    def media_item(content_id: str) -> dict[str, str]:
+        return {
+            "media_content_id": content_id,
+            "media_content_type": "",
+        }
+
+    media: dict[str, str] | list[dict[str, str]]
+    if isinstance(uri, str):
+        media = media_item(uri)
+    else:
+        media = [media_item(item) for item in uri]
+
     return MockConfigEntry(
-        data={
-            "media": {
-                "media_content_id": uri,
-                "media_content_type": "",
-            },
-        },
+        data={"media": media},
         domain=DOMAIN,
         title="Random Image",
     )
