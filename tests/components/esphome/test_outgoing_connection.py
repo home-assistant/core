@@ -355,3 +355,19 @@ async def test_outgoing_connection_discard_failure_stops_shared_listener(
     # The survivor's unregister is a no-op against the gone listener
     second()
     mock_server.close.assert_called_once()
+
+
+async def test_outgoing_connection_close_error_contained(
+    hass: HomeAssistant,
+    mock_server: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A raising close() cannot abort the remaining cleanup."""
+    mock_server.close.side_effect = RuntimeError("boom")
+    unregister = async_register_outgoing_target(hass, MAC, MagicMock())
+    assert unregister is not None
+    unregister()
+    assert "Error closing the outgoing connection listener" in caplog.text
+    # The manager forgot the listener despite the failed close
+    assert async_register_outgoing_target(hass, MAC, MagicMock()) is not None
+    assert mock_server.start.call_count == 2
