@@ -1122,6 +1122,7 @@ async def test_reader_writer_create(
 )
 async def test_reader_writer_create_addon_folder_error(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
@@ -1146,7 +1147,6 @@ async def test_reader_writer_create_addon_folder_error(
         ),
     ]
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert not issue_registry.issues
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})

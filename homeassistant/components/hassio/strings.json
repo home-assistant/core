@@ -159,6 +159,9 @@
               "mount_move_local_data": "Move blocking local data away"
             }
           },
+          "mount_execute_remove": {
+            "description": "Select **Submit** to remove the network storage `{reference}` from Home Assistant. Any data stored on the device itself is not affected, but automations, backups or apps relying on this storage will no longer have access to it.\n\nYou can add the network storage again later from [storage]({storage_url})."
+          },
           "mount_move_local_data": {
             "description": "Select **Submit** to move the local data blocking `{reference}` to a `{reference}_local_recovery` folder and set up the mount again.\n\nNo files are deleted. For media and share mounts the recovery folder is created next to the mount, where you can review and remove it. For backup mounts it is placed in local backup storage."
           }

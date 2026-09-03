@@ -127,11 +127,11 @@ class AllStates:
     __getitem__ = __getattr__
 
     def _collect_all(self) -> None:
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.all_states = True
 
     def _collect_all_lifecycle(self) -> None:
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.all_states_lifecycle = True
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -262,11 +262,15 @@ class DomainStates:
     __getitem__ = __getattr__
 
     def _collect_domain(self) -> None:
-        if (entity_collect := render_info_cv.get()) is not None:
+        if (
+            entity_collect := render_info_cv.get()
+        ) is not None and entity_collect.collecting:
             entity_collect.domains.add(self._domain)  # type: ignore[attr-defined]
 
     def _collect_domain_lifecycle(self) -> None:
-        if (entity_collect := render_info_cv.get()) is not None:
+        if (
+            entity_collect := render_info_cv.get()
+        ) is not None and entity_collect.collecting:
             entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -305,7 +309,11 @@ class TemplateStateBase(State):
         self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
-        if self._collect and (render_info := render_info_cv.get()):
+        if (
+            self._collect
+            and (render_info := render_info_cv.get())
+            and render_info.collecting
+        ):
             render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -314,7 +322,11 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and (render_info := render_info_cv.get()):
+            if (
+                self._collect
+                and (render_info := render_info_cv.get())
+                and render_info.collecting
+            ):
                 render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
             return getattr(self._state, item)
         if item == "entity_id":
@@ -472,7 +484,9 @@ _create_template_state_no_collect = partial(TemplateState, collect=False)
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    if (entity_collect := render_info_cv.get()) is not None:
+    if (
+        entity_collect := render_info_cv.get()
+    ) is not None and entity_collect.collecting:
         entity_collect.entities.add(entity_id)  # type: ignore[attr-defined]
 
 

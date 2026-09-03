@@ -93,6 +93,7 @@
             "speed",
             "motionIndirect",
             "motionDirect",
+            "dryComfort",
             "windFree",
             "windFreeSleep"
           ],

@@ -11,11 +11,13 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
+from .const import DOMAIN
 from .entity import IRobotEntity
 from .models import RoombaConfigEntry
 
@@ -317,8 +319,14 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
             high_perf = True
             carpet_boost = False
         else:
-            _LOGGER.error("No such fan speed available: %s", fan_speed)
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                    "fan_speeds": ", ".join(FAN_SPEEDS),
+                },
+            )
 
         # The set_preference method does only accept string values
         def _set_fan_speed_preferences() -> None:
@@ -371,30 +379,36 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except IndexError:
-            _LOGGER.error(
-                "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
-                fan_speed,
-            )
-            return
-        except ValueError:
-            _LOGGER.error("Spray amount error: expected integer, got '%s'", split[1])
-            return
+        except IndexError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed_format",
+                translation_placeholders={"fan_speed": fan_speed},
+            ) from err
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="spray_amount_not_a_number",
+                translation_placeholders={"spray_amount": split[1]},
+            ) from err
         if behavior not in BRAAVA_MOP_BEHAVIORS:
-            _LOGGER.error(
-                "Mop behavior error: expected one of %s, got '%s'",
-                str(BRAAVA_MOP_BEHAVIORS),
-                behavior,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_mop_behavior",
+                translation_placeholders={
+                    "behavior": behavior,
+                    "behaviors": ", ".join(BRAAVA_MOP_BEHAVIORS),
+                },
             )
-            return
         if spray not in BRAAVA_SPRAY_AMOUNT:
-            _LOGGER.error(
-                "Spray amount error: expected one of %s, got '%d'",
-                str(BRAAVA_SPRAY_AMOUNT),
-                spray,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_spray_amount",
+                translation_placeholders={
+                    "spray_amount": str(spray),
+                    "spray_amounts": ", ".join(str(s) for s in BRAAVA_SPRAY_AMOUNT),
+                },
             )
-            return
 
         overlap = 0
         if behavior == MOP_STANDARD:
