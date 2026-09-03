@@ -410,23 +410,23 @@ async def test_coffee_system_sensor_states(
 @pytest.mark.parametrize(
     ("base_program_id", "expected_state"),
     [
-        (24010, "caffe_americano"),
-        (24011, "long_black"),
-        (24023, "chai_latte"),
+        pytest.param(24010, "caffe_americano", id="caffe-americano"),
+        pytest.param(24011, "long_black", id="long-black"),
+        pytest.param(24023, "chai_latte", id="chai-latte"),
     ],
 )
 @pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("mock_miele_client")
 async def test_coffee_system_program_ids(
     hass: HomeAssistant,
-    mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     device_fixture: MieleDevices,
     base_program_id: int,
     expected_state: str,
 ) -> None:
     """Test coffee system program IDs for all profiles."""
-    data_callback = get_data_callback(mock_miele_client)
+    data_callback = setup_platform.runtime_data.coordinator.callback_update_data
     program_id = device_fixture["DummyAppliance_CoffeeSystem"]["state"]["ProgramID"]
 
     for profile_number in range(1, 6):
