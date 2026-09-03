@@ -70,13 +70,13 @@ DECONZ_DOMAIN = "deconz"
 # For the fast path, we automatically migrate everything
 # and restore the most recent backup
 MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
-MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
+MIGRATION_STRATEGY_MANUAL = "migration_strategy_manual"
 
 # Similarly, setup follows the same approach: we create a new network
 SETUP_STRATEGY_RECOMMENDED = "setup_strategy_recommended"
-SETUP_STRATEGY_ADVANCED = "setup_strategy_advanced"
+SETUP_STRATEGY_MANUAL = "setup_strategy_manual"
 
-# For the advanced paths, we allow users to pick how to form a network: form a brand new
+# For the manual paths, we allow users to pick how to form a network: form a brand new
 # network, use the settings currently on the stick, restore from a database backup, or
 # restore from a JSON backup
 FORMATION_STRATEGY = "formation_strategy"
@@ -340,8 +340,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             # Fast path: automatically form a new network
             return await self.async_step_setup_strategy_recommended()
         if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
-            # Advanced path: let the user choose
-            return await self.async_step_setup_strategy_advanced()
+            # Manual path: let the user choose
+            return await self.async_step_setup_strategy_manual()
 
         # Allow onboarding for new users to just create a new network automatically
         if (
@@ -355,7 +355,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             step_id="choose_setup_strategy",
             menu_options=[
                 SETUP_STRATEGY_RECOMMENDED,
-                SETUP_STRATEGY_ADVANCED,
+                SETUP_STRATEGY_MANUAL,
             ],
         )
 
@@ -365,10 +365,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         """Recommended setup strategy: form a brand-new network."""
         return await self.async_step_form_new_network()
 
-    async def async_step_setup_strategy_advanced(
+    async def async_step_setup_strategy_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Advanced setup strategy: let the user choose."""
+        """Manual setup strategy: let the user choose."""
         return await self.async_step_choose_formation_strategy()
 
     async def async_step_choose_migration_strategy(
@@ -379,13 +379,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             # Fast path: automatically migrate everything
             return await self.async_step_migration_strategy_recommended()
         if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
-            # Advanced path: let the user choose
-            return await self.async_step_migration_strategy_advanced()
+            # Manual path: let the user choose
+            return await self.async_step_migration_strategy_manual()
         return self.async_show_menu(
             step_id="choose_migration_strategy",
             menu_options=[
                 MIGRATION_STRATEGY_RECOMMENDED,
-                MIGRATION_STRATEGY_ADVANCED,
+                MIGRATION_STRATEGY_MANUAL,
             ],
         )
 
@@ -512,10 +512,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             description_placeholders={"device_path": self._radio_mgr.device_path},
         )
 
-    async def async_step_migration_strategy_advanced(
+    async def async_step_migration_strategy_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Advanced migration strategy: let the user choose."""
+        """Manual migration strategy: let the user choose."""
         return await self.async_step_choose_formation_strategy()
 
     async def async_step_choose_formation_strategy(

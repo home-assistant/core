@@ -772,7 +772,7 @@ async def test_multiple_zha_entries_aborts(hass: HomeAssistant, mock_app) -> Non
 
     result_recommended = await hass.config_entries.flow.async_configure(
         result_confirm["flow_id"],
-        user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_ADVANCED},
+        user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_MANUAL},
     )
 
     result_reuse = await hass.config_entries.flow.async_configure(
@@ -1669,7 +1669,7 @@ def advanced_pick_radio(hass: HomeAssistant) -> Generator[RadioPicker]:
 
         advanced_strategy_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"next_step_id": config_flow.SETUP_STRATEGY_ADVANCED},
+            user_input={"next_step_id": config_flow.SETUP_STRATEGY_MANUAL},
         )
 
         assert advanced_strategy_result["type"] is FlowResultType.MENU
@@ -2372,7 +2372,7 @@ async def test_options_flow_defaults(
 
     result6 = await hass.config_entries.options.async_configure(
         result5["flow_id"],
-        user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_ADVANCED},
+        user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_MANUAL},
     )
     await hass.async_block_till_done()
 
@@ -3018,7 +3018,7 @@ async def test_migrate_setup_options_with_ignored_discovery(
     assert confirm_result["step_id"] == "choose_setup_strategy"
     assert confirm_result["menu_options"] == [
         "setup_strategy_recommended",
-        "setup_strategy_advanced",
+        "setup_strategy_manual",
     ]
 
 
