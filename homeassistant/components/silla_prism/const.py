@@ -1,20 +1,82 @@
-"""Constants for the Silla Prism integration."""
-
-from typing import Final
+"""Constants for Prism integration."""
 
 from homeassistant.const import Platform
 
-DOMAIN: Final = "silla_prism"
+DOMAIN = "silla_prism"
+SENSOR_DOMAIN = "sensor"
+BINARY_SENSOR_DOMAIN = "binary_sensor"
+NUMBER_DOMAIN = "number"
+SELECT_DOMAIN = "select"
+BUTTON_DOMAIN = "button"
+SWITCH_DOMAIN = "switch"
+CONF_TOPIC = "topic"
+CONF_BASE_TOPIC = CONF_TOPIC
+CONF_VSENSORS = "vsensors"
+CONF_POWERWALL = "powerwall"
+CONF_PORTS = "ports"
+CONF_SERIAL = "serial"
+CONF_MAX_CURRENT = "maxcurr"
+CONF_SOLAR_BATTERY_BALANCE = "solar_battery_balance"
+CONF_BATTERY_POWER_SENSOR = "battery_power_sensor"
+CONF_SOLAR_PRODUCTION_POWER_SENSOR = "solar_production_power_sensor"
+CONF_HOME_LOAD_POWER_SENSOR = "home_load_power_sensor"
+CONF_HOME_LOAD_INCLUDES_EV = "home_load_includes_ev"
+CONF_BATTERY_DISCHARGE_POSITIVE = "battery_discharge_positive"
+CONF_BATTERY_MAX_CHARGE_POWER = "battery_max_charge_power"
+CONF_SOLAR_BALANCE_PHASES = "solar_balance_phases"
+CONF_SOLAR_BALANCE_START_DELAY = "solar_balance_start_delay"
+CONF_SOLAR_BALANCE_USE_BATTERY_CHARGE = "solar_balance_use_battery_charge"
+CONF_BATTERY_SOC_SENSOR = "battery_soc_sensor"
+CONF_SOLAR_BALANCE_SOC_MID = "solar_balance_soc_mid"
+CONF_SOLAR_BALANCE_SOC_HIGH = "solar_balance_soc_high"
+CONF_SOLAR_BALANCE_MID_RESERVE_POWER = "solar_balance_mid_reserve_power"
+CONF_SOLAR_BALANCE_HIGH_RESERVE_POWER = "solar_balance_high_reserve_power"
+CONF_SOLAR_BALANCE_TARGET_EXPORT_POWER = "solar_balance_target_export_power"
+CONF_SOLAR_BALANCE_DEADBAND_POWER = "solar_balance_deadband_power"
+CONF_SOLAR_BALANCE_INCREASE_INTERVAL = "solar_balance_increase_interval"
+CONF_SOLAR_BALANCE_INCREASE_STEP = "solar_balance_increase_step"
+CONF_SOLAR_BALANCE_DECREASE_STEP = "solar_balance_decrease_step"
+CONF_SOLAR_BALANCE_RESIDUAL_EXPORT_POWER = "solar_balance_residual_export_power"
+CONF_SOLAR_BALANCE_RESIDUAL_EXPORT_DELAY = "solar_balance_residual_export_delay"
+CONF_SOLAR_BALANCE_DRY_RUN = "solar_balance_dry_run"
+DEFAULT_TOPIC = "prism/"
+DEFAULT_VSENSORS = False
+DEFAULT_POWERWALL = False
+DEFAULT_PORTS = 1
+DEFAULT_SERIAL = ""
+DEFAULT_MAX_CURRENT = 16
+DEFAULT_SOLAR_BATTERY_BALANCE = False
+DEFAULT_BATTERY_POWER_SENSOR = ""
+DEFAULT_SOLAR_PRODUCTION_POWER_SENSOR = ""
+DEFAULT_HOME_LOAD_POWER_SENSOR = ""
+DEFAULT_HOME_LOAD_INCLUDES_EV = False
+DEFAULT_BATTERY_DISCHARGE_POSITIVE = True
+DEFAULT_BATTERY_MAX_CHARGE_POWER = 2700
+DEFAULT_SOLAR_BALANCE_PHASES = 1
+DEFAULT_SOLAR_BALANCE_START_DELAY = 5
+DEFAULT_SOLAR_BALANCE_USE_BATTERY_CHARGE = False
+DEFAULT_BATTERY_SOC_SENSOR = ""
+DEFAULT_SOLAR_BALANCE_SOC_MID = 40
+DEFAULT_SOLAR_BALANCE_SOC_HIGH = 80
+DEFAULT_SOLAR_BALANCE_MID_RESERVE_POWER = 1500
+DEFAULT_SOLAR_BALANCE_HIGH_RESERVE_POWER = 1000
+DEFAULT_SOLAR_BALANCE_TARGET_EXPORT_POWER = 150
+DEFAULT_SOLAR_BALANCE_DEADBAND_POWER = 150
+DEFAULT_SOLAR_BALANCE_INCREASE_INTERVAL = 15
+DEFAULT_SOLAR_BALANCE_INCREASE_STEP = 1
+DEFAULT_SOLAR_BALANCE_DECREASE_STEP = 3
+DEFAULT_SOLAR_BALANCE_RESIDUAL_EXPORT_POWER = 400
+DEFAULT_SOLAR_BALANCE_RESIDUAL_EXPORT_DELAY = 60
+DEFAULT_SOLAR_BALANCE_DRY_RUN = False
 
-PLATFORMS: Final = [Platform.SENSOR]
+CONF_ALLOW_SERVICE_CALLS = "allow_service_calls"
+DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
-CONF_BASE_TOPIC: Final = "base_topic"
-
-DEFAULT_BASE_TOPIC: Final = "prism"
-
-MANUFACTURER: Final = "Silla"
-MODEL: Final = "Prism"
-
-#: Charging port targeted by this integration. Single-cable Prisms only expose
-#: port 1; DUO support (port 2) is intentionally left for a follow-up.
-PORT: Final = 1
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
