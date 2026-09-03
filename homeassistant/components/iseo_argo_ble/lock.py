@@ -19,7 +19,7 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -47,8 +47,6 @@ _POLL_INTERVAL = timedelta(seconds=30)
 # that notices the door is open would otherwise read the log twice.
 _ACCESS_LOG_DEBOUNCE = 5
 
-SERVICE_READ_ACCESS_LOG = "read_access_log"
-
 # Access log event codes, grouped into the event types the log reports. Codes
 # outside these groups (door closed, mode changes, enrolments) are read and
 # discarded — they are not access events. See the library's event code table.
@@ -70,9 +68,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up ISEO lock entity from a config entry."""
     async_add_entities([IseoLockEntity(entry)])
-    entity_platform.async_get_current_platform().async_register_entity_service(
-        SERVICE_READ_ACCESS_LOG, None, "async_read_access_log"
-    )
 
 
 class IseoLockEntity(LockEntity):

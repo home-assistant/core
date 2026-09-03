@@ -4,17 +4,43 @@ from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_priva
 from iseo_argo_ble import IseoClient
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_platform_entity_service
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN, PLATFORMS
+from .const import (
+    CONF_PRIV_SCALAR,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+    PLATFORMS,
+    SERVICE_READ_ACCESS_LOG,
+)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type IseoConfigEntry = ConfigEntry[IseoClient]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the integration's actions.
+
+    Registered here rather than with the platform so the action exists even
+    while the lock is unreachable, and automations using it stay valid.
+    """
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_READ_ACCESS_LOG,
+        entity_domain=LOCK_DOMAIN,
+        schema=None,
+        func="async_read_access_log",
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:

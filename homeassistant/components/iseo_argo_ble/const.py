@@ -8,6 +8,9 @@ PLATFORMS: list[Platform] = [Platform.EVENT, Platform.LOCK]
 # Config entry keys (CONF_ADDRESS and CONF_UUID come from homeassistant.const)
 CONF_PRIV_SCALAR = "priv_scalar"
 
+# Action reading the lock's access log on demand
+SERVICE_READ_ACCESS_LOG = "read_access_log"
+
 # Default user subtype (gateway)
 DEFAULT_USER_SUBTYPE: int = 17  # UserSubType.BT_GATEWAY
 

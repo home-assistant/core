@@ -10,11 +10,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.components.iseo_argo_ble.const import DOMAIN
+from homeassistant.components.iseo_argo_ble.const import DOMAIN, SERVICE_READ_ACCESS_LOG
 from homeassistant.components.iseo_argo_ble.lock import (
     _ACCESS_LOG_DEBOUNCE,
     _POLL_INTERVAL,
-    SERVICE_READ_ACCESS_LOG,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
