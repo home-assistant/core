@@ -310,3 +310,39 @@ async def test_telemetry_coordinator_context_fetch_failure(
         )
     )
     assert room_temperature_sensor.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
+        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
+        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+    ],
+)
+async def test_outdoor_temperature_update_cycle_fails(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test that a failing outdoor temperature fetch clears the value without unloading the entry."""
+    await setup_integration(hass, mock_config_entry)
+    telemetry_coordinator = mock_config_entry.runtime_data.telemetry_coordinator
+
+    assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is not None
+
+    mock_melcloud_client.get_outdoor_temperature.side_effect = exception
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is None
+
+    mock_melcloud_client.get_outdoor_temperature.side_effect = None
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is not None

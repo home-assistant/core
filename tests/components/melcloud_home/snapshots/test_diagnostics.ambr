@@ -36,7 +36,7 @@
                 'has_energy_consumed_meter': True,
                 'has_fan_operation_mode': None,
                 'has_half_degree_increments': True,
-                'has_outdoor_temperature_sensor': False,
+                'has_outdoor_temperature_sensor': True,
                 'has_standby_mode': False,
                 'has_vane_horizontal': True,
                 'has_vane_vertical': True,
@@ -275,6 +275,7 @@
         'atw-unit-uuid-1': 450.5,
       }),
       'outdoor_temperature': dict({
+        'ata-unit-uuid-1': 19.5,
       }),
     }),
   })

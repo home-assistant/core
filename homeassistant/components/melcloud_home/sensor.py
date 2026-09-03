@@ -54,11 +54,6 @@ OUTDOOR_TEMPERATURE_DESCRIPTION = SensorEntityDescription(
 )
 
 
-def _has_energy_meter(unit: ATAUnit | ATWUnit) -> bool:
-    """Return whether a unit reports an energy consumption meter."""
-    return bool(unit.capabilities and unit.capabilities.has_energy_consumed_meter)
-
-
 @dataclass(frozen=True, kw_only=True)
 class MelCloudHomeSensorEntityDescription[_UnitT: ATAUnit | ATWUnit](
     SensorEntityDescription
@@ -157,15 +152,13 @@ async def async_setup_entry(
             (
                 ATAEnergySensor(coordinator, telemetry_coordinator, unit)
                 for unit in units
-                if _has_energy_meter(unit)
+                if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
             (
                 ATAOutdoorTemperatureSensor(coordinator, telemetry_coordinator, unit)
                 for unit in units
-                if bool(
-                    unit.capabilities
-                    and unit.capabilities.has_outdoor_temperature_sensor
-                )
+                if unit.capabilities
+                and unit.capabilities.has_outdoor_temperature_sensor
             ),
         ),
         lambda units: chain(
@@ -174,6 +167,11 @@ async def async_setup_entry(
                 for entity_description in ATW_SENSORS
                 for unit in units
                 if entity_description.exists_fn(unit)
+            ),
+            (
+                ATWEnergySensor(coordinator, telemetry_coordinator, unit)
+                for unit in units
+                if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
         ),
     )
@@ -284,3 +282,48 @@ class ATAOutdoorTemperatureSensor(MelCloudHomeATATelemetrySensor):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._telemetry_coordinator.data.outdoor_temperature.get(self._unit_id)
+
+
+class ATWEnergySensor(MelCloudHomeATWUnitEntity, SensorEntity):
+    """Representation of a MELCloud Home ATW energy sensor."""
+
+    entity_description = ENERGY_CONSUMED_DESCRIPTION
+
+    def __init__(
+        self,
+        coordinator: MelCloudHomeCoordinator,
+        telemetry_coordinator: MelCloudHomeTelemetryCoordinator,
+        unit: ATWUnit,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, unit)
+        self._telemetry_coordinator = telemetry_coordinator
+        self._attr_unique_id = f"{unit.id}_{ENERGY_CONSUMED_DESCRIPTION.key}"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Also react to updates from the telemetry coordinator."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._telemetry_coordinator.async_add_listener(
+                self._handle_coordinator_update
+            )
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and self._telemetry_coordinator.last_update_success
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self._telemetry_coordinator.data.energy.get(self._unit_id)
+
+    @property
+    @override
+    def last_reset(self) -> datetime:
+        """Return start of month."""
+        return utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
