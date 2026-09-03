@@ -19,14 +19,8 @@ BITMASK_SCHEMA = vol.All(
     lambda value: int(value, 16),
 )
 
-# NIF separators listed in SDS13548 as "not an actual Command Class"
-COMMAND_CLASS_MARKERS = frozenset(
-    {CommandClass.MARK, CommandClass.SECURITY_SCHEME0_MARK}
-)
-
 COMMAND_CLASS_SCHEMA = vol.All(
-    vol.Coerce(int),
-    vol.In([cc.value for cc in CommandClass if cc not in COMMAND_CLASS_MARKERS]),
+    vol.Coerce(int), vol.In([cc.value for cc in CommandClass])
 )
 
 
