@@ -3,7 +3,6 @@
 from google_photos_library_api.api import GooglePhotosLibraryApi
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -30,17 +29,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: GooglePhotosConfigEntry
 ) -> bool:
     """Set up Google Photos from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
 
     web_session = async_get_clientsession(hass)
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)

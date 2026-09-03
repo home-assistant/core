@@ -88,9 +88,6 @@
     "invalid_transfer_account": {
       "message": "{device_name} does not support pot transfers. Choose a different Monzo account."
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "pot_account_mismatch": {
       "message": "{pot_name} belongs to {pot_account_name}, not {account_name}. Choose its associated Monzo account, or choose a pot belonging to {account_name}."
     },

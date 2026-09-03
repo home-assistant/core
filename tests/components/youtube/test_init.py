@@ -6,8 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.youtube import DOMAIN
-from homeassistant.components.youtube.const import CONF_CHANNELS
+from homeassistant.components.youtube.const import CONF_CHANNELS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestConnectionError
