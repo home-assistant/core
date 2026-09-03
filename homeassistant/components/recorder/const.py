@@ -4,11 +4,9 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_RESTORED,
-    ATTR_SUPPORTED_FEATURES,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
+    EntityStateAttribute,
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
 
@@ -40,7 +38,11 @@ DEFAULT_MAX_BIND_VARS = 4000
 
 DB_WORKER_PREFIX = "DbWorker"
 
-ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
+ALL_DOMAIN_EXCLUDE_ATTRS: set[str] = {
+    EntityStateAttribute.ATTRIBUTION,
+    EntityStateAttribute.RESTORED,
+    EntityStateAttribute.SUPPORTED_FEATURES,
+}
 
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"

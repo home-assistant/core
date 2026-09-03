@@ -18,12 +18,16 @@ def test_zones_in_device_registry(
 ) -> None:
     """Test that devices are added to the device registry."""
 
-    device1 = device_registry.async_get_device(identifiers={(DOMAIN, "5965394")})
+    device1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5965394"), mock_added_config_entry.entry_id
+    )
     assert device1 is not None
     assert device1.name == "Zone One"
     assert device1.manufacturer == "Hydrawise"
 
-    device2 = device_registry.async_get_device(identifiers={(DOMAIN, "5965395")})
+    device2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5965395"), mock_added_config_entry.entry_id
+    )
     assert device2 is not None
     assert device2.name == "Zone Two"
     assert device2.manufacturer == "Hydrawise"
@@ -36,7 +40,9 @@ def test_controller_in_device_registry(
     mock_pydrawise: Mock,
 ) -> None:
     """Test that devices are added to the device registry."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "52496")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "52496"), mock_added_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Home Controller"
     assert device.manufacturer == "Hydrawise"

@@ -20,6 +20,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
     _attr_name: str | None = None
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

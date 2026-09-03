@@ -181,9 +181,6 @@ async def test_migration_v1_to_v3(
     entry.add_to_hass(hass)
     assert entry.version == 1
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-
     vm_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_vm_100")},
@@ -519,11 +516,11 @@ async def test_stale_devices_removed(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     entry_id = mock_config_entry.entry_id
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_vm_100")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_100"), entry_id
     )
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_101"), entry_id
     )
 
     # VM 100 is gone, VM 101 remains
@@ -538,9 +535,11 @@ async def test_stale_devices_removed(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, f"{entry_id}_vm_100")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry_id}_vm_100"), entry_id
+        )
         is None
     )
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_101"), entry_id
     )

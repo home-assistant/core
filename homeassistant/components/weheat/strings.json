@@ -2,18 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_devices_found": "Could not find any heat pumps on this account",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "You can only reauthenticate this account with the same user."
     },
     "create_entry": {
@@ -122,8 +113,10 @@
           "heating": "Heating",
           "legionella_prevention": "Legionella prevention",
           "manual_control": "Manual control",
+          "offline": "Offline",
           "self_test": "Self-test",
           "standby": "[%key:common::state::standby%]",
+          "updating": "Updating",
           "water_check": "Checking water temperature"
         }
       },
@@ -151,11 +144,6 @@
       "water_outlet_temperature": {
         "name": "Water outlet temperature"
       }
-    }
-  },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }

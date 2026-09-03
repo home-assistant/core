@@ -45,6 +45,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONFIG,
@@ -111,7 +112,7 @@ class MockAyla(AylaApi):
     @property
     def auth_expiration(self) -> datetime:
         """Sample expiration timestamp that is always 1200 seconds behind now()."""
-        return datetime.now() - timedelta(seconds=1200)  # pylint: disable=home-assistant-enforce-naive-now
+        return dt_util.naive_now() - timedelta(seconds=1200)
 
 
 class MockShark(SharkIqVacuum):
@@ -229,7 +230,9 @@ async def test_device_properties(
     target_value: str,
 ) -> None:
     """Test device properties."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AC000Wxxxxxxxxx"), ENTRY_ID
+    )
     assert getattr(device, device_property) == target_value
 
 

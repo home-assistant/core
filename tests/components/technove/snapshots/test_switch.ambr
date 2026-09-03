@@ -62,7 +62,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'switch.technove_station_charging_enabled',
     'has_entity_name': True,
     'hidden_by': None,
