@@ -1,8 +1,10 @@
 """Tests for NexBlue switches."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from nexblue_api import NexBlueError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -121,3 +123,72 @@ async def test_command_error_is_reported(
             {"entity_id": entity_id},
             blocking=True,
         )
+
+
+async def test_stop_charging_refreshes_and_assumed_state_expires(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test command refreshes run and the assumed state expires."""
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB123456_charging"
+    )
+    assert entity_id
+    mock_client.async_list_chargers.reset_mock()
+    mock_client.async_get_charger_status.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert hass.states.get(entity_id).state == "off"
+    assert mock_client.async_list_chargers.await_count == 1
+    assert mock_client.async_get_charger_status.await_count == 1
+
+    for seconds, expected_refreshes in ((1, 2), (2, 3), (5, 4), (7, 5)):
+        freezer.tick(timedelta(seconds=seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert mock_client.async_list_chargers.await_count == expected_refreshes
+        assert mock_client.async_get_charger_status.await_count == expected_refreshes
+
+    assert hass.states.get(entity_id).state == "on"
+
+
+async def test_pending_command_refreshes_cancelled_on_unload(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test pending command refreshes do not run after unloading the entry."""
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB123456_charging"
+    )
+    assert entity_id
+    mock_client.async_list_chargers.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert mock_client.async_list_chargers.await_count == 1
+
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.async_list_chargers.await_count == 1
