@@ -192,10 +192,10 @@ async def test_action_rejected_when_unsupported(
         )
 
 
-async def test_feed_in_limit_rejects_an_unusable_power(
+async def test_invalid_action_value_is_a_service_error(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test a power the inverter cannot store is refused as user error."""
+    """Test the library's ValueError surfaces as a ServiceValidationError."""
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -209,12 +209,12 @@ async def test_feed_in_limit_rejects_an_unusable_power(
         )
 
 
-async def test_action_reports_a_failed_write(
+async def test_write_failure_is_a_home_assistant_error(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a refused write surfaces as an error, not a silent no-op."""
+    """Test a ModbusError surfaces as a HomeAssistantError."""
     mock_connection.for_unit(1).fail_write(FEED_IN_MODE_REGISTER, ModbusError("busy"))
 
     with pytest.raises(HomeAssistantError):
