@@ -17,5 +17,6 @@ async def async_setup_entry(
     """Set up Hue select entities."""
     bridge = config_entry.runtime_data
     if bridge.api_version == 1:
-        return  # scene select is not supported on V1 bridges
+        # should not happen, but just in case
+        raise NotImplementedError("Select support is only available for V2 bridges")
     await setup_entry_v2(hass, config_entry, async_add_entities)
