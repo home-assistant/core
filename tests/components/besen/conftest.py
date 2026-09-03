@@ -73,6 +73,12 @@ def charger_state(
             if charge is not None
             else ChargeStatus(
                 charger_status=charger_status,
+                error_details="No Error",
+                charging_status="Start",
+                charging_status_description="EV is connected, please press start",
+                plug_state="Connected Locked",
+                output_state="Charging",
+                current_state="Charging",
                 power=3500,
                 total_energy=12.3,
                 session_energy=1.2,

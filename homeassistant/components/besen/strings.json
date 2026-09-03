@@ -39,7 +39,85 @@
   },
   "entity": {
     "sensor": {
+      "charging_message": {
+        "name": "Charging message",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "charging_completed": "Charging completed",
+          "charging_reservation": "Charging reservation",
+          "ev_connected_press_start": "EV is connected, press start",
+          "plug_not_connected": "The plug is not connected. Connect it before starting charging.",
+          "see_error_state": "See error state",
+          "waiting_for_button": "Waiting for the button to activate",
+          "waiting_for_ev": "Charging started, waiting for the EV",
+          "waiting_for_swipe": "Waiting for a card swipe"
+        }
+      },
       "charging_power": { "name": "Charging power" },
+      "charging_status": {
+        "name": "Charging status",
+        "state": {
+          "canceled": "Canceled",
+          "connect": "Connect",
+          "fault": "[%key:common::state::fault%]",
+          "finish_charging": "Finish charging",
+          "finished": "Finished",
+          "start": "Start",
+          "waiting": "Waiting"
+        }
+      },
+      "current_state": {
+        "name": "Current state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "charging_fault_1": "Charging fault 1",
+          "charging_fault_2": "Charging fault 2",
+          "charging_reservation": "Charging reservation",
+          "completed": "Completed",
+          "completed_full_charge": "Completed, fully charged",
+          "fault": "[%key:common::state::fault%]",
+          "not_connected": "Not connected",
+          "ready_to_charge": "Ready to charge",
+          "unknown_1": "Unknown 1",
+          "unknown_10": "Unknown 10",
+          "unknown_2": "Unknown 2",
+          "unknown_3": "Unknown 3",
+          "unknown_4": "Unknown 4",
+          "unknown_5": "Unknown 5",
+          "unknown_6": "Unknown 6",
+          "unknown_7": "Unknown 7",
+          "unknown_8": "Unknown 8",
+          "unknown_9": "Unknown 9",
+          "waiting_for_button": "Waiting for button",
+          "waiting_for_swipe": "Waiting for card swipe"
+        }
+      },
+      "error_state": {
+        "name": "Error state",
+        "state": {
+          "cc_error": "CC error",
+          "cp_error": "CP error",
+          "diode_short_circuit": "Diode short circuit",
+          "dlb_over_current": "DLB overcurrent, mains overload",
+          "eeprom_failure": "EEPROM failure",
+          "emergency_stop": "Emergency stop",
+          "flash_memory_failure": "Flash memory failure",
+          "input_power_error": "Input power error",
+          "leakage_protection": "Leakage protection",
+          "low_voltage": "Low voltage",
+          "metering_module_failure": "Metering module failure",
+          "no_error": "No error",
+          "offline": "Offline",
+          "over_current": "Overcurrent",
+          "over_temperature": "Overtemperature",
+          "over_voltage": "Overvoltage",
+          "relay_stick_error": "Relay stick error",
+          "rtc_failure": "RTC failure",
+          "short_circuit": "Short circuit",
+          "ungrounded": "Ungrounded",
+          "unknown": "Unknown"
+        }
+      },
       "external_temperature": { "name": "External temperature" },
       "internal_temperature": { "name": "Internal temperature" },
       "l1_current": { "name": "L1 current" },
@@ -48,6 +126,34 @@
       "l2_voltage": { "name": "L2 voltage" },
       "l3_current": { "name": "L3 current" },
       "l3_voltage": { "name": "L3 voltage" },
+      "output_state": {
+        "name": "Output state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "idle": "[%key:common::state::idle%]",
+          "unknown_0": "Unknown 0",
+          "unknown_1": "Unknown 1",
+          "unknown_2": "Unknown 2",
+          "unknown_3": "Unknown 3",
+          "unknown_4": "Unknown 4",
+          "unknown_5": "Unknown 5",
+          "unknown_6": "Unknown 6"
+        }
+      },
+      "plug_state": {
+        "name": "Plug state",
+        "state": {
+          "connected_locked": "Connected, locked",
+          "connected_unlocked": "Connected, unlocked",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "unknown_0": "Unknown 0",
+          "unknown_1": "Unknown 1",
+          "unknown_2": "Unknown 2",
+          "unknown_3": "Unknown 3",
+          "unknown_4": "Unknown 4",
+          "unknown_5": "Unknown 5"
+        }
+      },
       "session_energy": { "name": "Session energy" },
       "total_energy": { "name": "Total energy" }
     },
