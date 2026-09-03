@@ -147,6 +147,7 @@ homeassistant.components.clicksend.*
 homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
+homeassistant.components.collection_image.*
 homeassistant.components.comelit.*
 homeassistant.components.command_line.*
 homeassistant.components.compit.*
@@ -674,4 +675,5 @@ homeassistant.components.zeroconf.*
 homeassistant.components.zinvolt.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
+homeassistant.components.zonneplan.*
 homeassistant.components.zwave_js.*
