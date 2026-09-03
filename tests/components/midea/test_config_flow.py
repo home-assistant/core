@@ -2049,7 +2049,7 @@ async def _assert_reconfigure_success(
     with (
         patch(
             "homeassistant.components.midea.config_flow.discover",
-            return_value=DISCOVERY_RESULT,
+            return_value=discovery_result,
         ) as mock_discovery,
         patch(
             "homeassistant.components.midea.config_flow.device_selector",
