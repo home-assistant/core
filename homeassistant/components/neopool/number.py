@@ -290,6 +290,8 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
         self._write_unsub: CALLBACK_TYPE | None = None
         self._pending_value: float | None = None
+        # Bumped per set_value; a flush clears only the value it queued.
+        self._pending_token = 0
         self._write_future: asyncio.Future[None] | None = None
         self._flush_lock = asyncio.Lock()
         self._removing = False
@@ -308,7 +310,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         self._removing = True
         self._cancel_pending_write()
         if self._write_future is not None and not self._write_future.done():
-            # Wake any awaiting callers; they treat cancellation as a clean exit.
+            # Awaiting callers treat cancellation as a clean exit.
             self._write_future.cancel()
         await super().async_will_remove_from_hass()
 
@@ -324,14 +326,13 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         """Set the native value of the number entity.
 
         The write is debounced so a rapid stepper settles into a single EEPROM
-        cycle. Every caller in the same debounce window awaits one shared future
-        that the coalesced write resolves, so a blocking service call still sees
-        the write's outcome and surfaces any device error.
+        cycle. Callers in the same window await one shared future the coalesced
+        write resolves, so a blocking service call still sees the outcome.
         """
         self._pending_value = value
-        # Show the pending value optimistically. Write happens once the stepper
-        # settles; restart the timer so it fires after the last click, not the
-        # first, sparing the device a flash cycle per intermediate step.
+        # A later same-valued set_value takes a fresh token, so a flush clears
+        # exactly the value it queued, not a newer batch's identical one.
+        self._pending_token += 1
         self.async_write_ha_state()
         self._cancel_pending_write()
         if self._write_future is None or self._write_future.done():
@@ -339,38 +340,28 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         future = self._write_future
         self._write_unsub = async_call_later(self.hass, WRITE_DELAY, self._async_flush)
         try:
-            # Shield the shared future: cancelling one caller's service task must
-            # not cancel the batch and release the other coalesced callers.
+            # Shield so cancelling one caller's task does not cancel the batch.
             await asyncio.shield(future)
         except asyncio.CancelledError:
             if self._removing:
-                # Removed while waiting: nothing to report, exit cleanly.
                 return
-            # This service task was cancelled, not the batch: re-raise so the
-            # caller's cancellation propagates while the shielded future lives on.
             raise
 
     async def _async_flush(self, _now: datetime) -> None:
         """Write the settled value, resolving the awaited coalesce future."""
         self._write_unsub = None
-        # Detach this batch: a set_value arriving during the write below must
-        # start a fresh future and its own flush, not reuse or resolve this one.
+        # Detach this batch: a set_value during the write below starts a fresh
+        # future and its own flush, not reusing or resolving this one.
         future = self._write_future
         self._write_future = None
-        # Snapshot the queued value for this batch. Leave _pending_value in
-        # place: a later set_value may already have replaced it, and it backs
-        # the optimistic native_value the UI shows until this write commits.
+        # Leave _pending_value in place: it backs the optimistic native_value.
         pending = self._pending_value
-        # Only a run that reaches the end reports success; any earlier exit
-        # (device error, cancel, an unexpected raise) resolves the future
-        # itself or leaves it for the finally to fail, never a false success.
+        token = self._pending_token
+        # False until a run reaches the end; the finally fails any earlier exit.
         resolved = False
         try:
-            if pending is None:  # pragma: no cover
-                # Defensive: the timer only fires after a value is queued.
+            if pending is None:  # pragma: no cover - timer fires only when queued
                 return
-            # Serialize flushes so a later batch cannot overlap this write and
-            # resolve out of order.
             async with self._flush_lock:
                 if self._abort_if_removing(future):
                     resolved = True
@@ -378,14 +369,11 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 client = self.coordinator.client
                 desc = self.entity_description
                 raw = round(pending * desc.scale)
-                # No EEPROM cycle if the settled value already matches the device.
+                # Skip the EEPROM cycle if the device already holds this value.
                 if (current := self._decode_raw()) is not None and (
                     round(current * desc.scale) == raw
                 ):
-                    # Settled value already on the device: no write, but the
-                    # caller succeeded. Drop the optimistic value back to the
-                    # register reading and resolve the batch.
-                    self._clear_pending_if_current(pending)
+                    self._clear_pending_if_current(token)
                     if future is not None and not future.done():
                         future.set_result(None)
                     resolved = True
@@ -393,7 +381,6 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 try:
                     if desc.setpoint is not None:
                         await client.async_set_setpoint(desc.setpoint, raw)
-                        # Merge the quantized value the device stored, not the raw input.
                         overrides = {self._data_key: raw / desc.scale}
                     elif desc.masked_flag is not None:
                         # Serialize the read-modify-write against sibling writes.
@@ -404,11 +391,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     else:  # pragma: no cover - description validated upstream
                         return
                 except (NeoPoolError, OSError, TimeoutError) as err:
-                    # Roll the optimistic value back to the register reading and
-                    # report the failure to the awaiting caller.
                     self._report_write_failure(
                         future,
-                        pending,
+                        token,
                         HomeAssistantError(
                             translation_domain=DOMAIN,
                             translation_key="modbus_communication_error",
@@ -418,47 +403,36 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     resolved = True
                     return
                 except Exception as err:  # noqa: BLE001
-                    # An unexpected write error must still reach the blocking
-                    # caller as a failure, unchanged so the real cause shows.
-                    self._report_write_failure(future, pending, err)
+                    # Surface unexpected errors unchanged, not as a comm error.
+                    self._report_write_failure(future, token, err)
                     resolved = True
                     return
                 if self._abort_if_removing(future):
                     resolved = True
                     return
                 try:
-                    # Merge the device result first, then drop the optimistic
-                    # value: clearing it before the merge would briefly surface
-                    # the stale register reading and emit a rollback state event.
+                    # Merge before clearing, else the stale register reading
+                    # briefly surfaces as a rollback event.
                     self.coordinator.async_set_updated_data(
                         {**self.coordinator.data, **overrides}
                     )
-                    self._clear_pending_if_current(pending)
+                    self._clear_pending_if_current(token)
                     self.coordinator.request_refresh_with_followup()
                 except Exception as err:  # noqa: BLE001
-                    # A merge/refresh error after the device write must reach the
-                    # caller as a failure, unchanged: the write itself succeeded,
-                    # so do not mislabel it as a communication error.
-                    self._report_write_failure(future, pending, err)
+                    # Write succeeded; surface the merge error unchanged.
+                    self._report_write_failure(future, token, err)
                     resolved = True
                     return
                 if future is not None and not future.done():
                     future.set_result(None)
                 resolved = True
         finally:
-            # A bare cancel of this flush task leaves resolved False: fail the
-            # batch rather than letting a blocking caller read a false success.
             if not resolved and future is not None and not future.done():
                 future.cancel()  # pragma: no cover - task cancel is non-deterministic
 
     @callback
     def _abort_if_removing(self, future: asyncio.Future[None] | None) -> bool:
-        """Skip the write when the entity is being removed.
-
-        The client is closing, so leave the coordinator alone. This batch
-        detached its future, so removal cannot cancel it for us; release it as
-        a clean exit instead.
-        """
+        """Skip the write when removed, releasing the detached future cleanly."""
         if not self._removing:
             return False
         if future is not None and not future.done():
@@ -469,28 +443,18 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     def _report_write_failure(
         self,
         future: asyncio.Future[None] | None,
-        batch_value: float,
+        batch_token: int,
         exc: Exception,
     ) -> None:
-        """Roll the optimistic value back and fail the awaiting caller.
-
-        The caller passes the exception to surface: a translated
-        communication error for expected client failures, or the original
-        exception for anything unexpected so the real cause is not masked.
-        """
-        self._clear_pending_if_current(batch_value)
+        """Roll the optimistic value back and fail the awaiting caller."""
+        self._clear_pending_if_current(batch_token)
         if future is not None and not future.done():
             future.set_exception(exc)
 
     @callback
-    def _clear_pending_if_current(self, batch_value: float) -> None:
-        """Drop the optimistic value unless a newer write already replaced it.
-
-        A later set_value during this batch's device I/O leaves its own value in
-        _pending_value; clearing it then would flash the stale register reading
-        until that newer write commits, so only this batch's value is cleared.
-        """
-        if self._pending_value == batch_value:
+    def _clear_pending_if_current(self, batch_token: int) -> None:
+        """Drop the optimistic value unless a newer set_value replaced it."""
+        if self._pending_token == batch_token:
             self._pending_value = None
         self.async_write_ha_state()
 

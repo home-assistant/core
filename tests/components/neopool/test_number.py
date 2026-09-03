@@ -274,6 +274,59 @@ async def test_heating_setpoint_writes_via_high_level_api(
     )
 
 
+@pytest.mark.parametrize(
+    ("suffix", "data_key", "value", "kind", "expected_raw"),
+    [
+        pytest.param("mbf_par_ph1", "MBF_PAR_PH1", 7.2, SetpointKind.PH_MAX, 720),
+        pytest.param("mbf_par_ph2", "MBF_PAR_PH2", 7.0, SetpointKind.PH_MIN, 700),
+        pytest.param("mbf_par_rx1", "MBF_PAR_RX1", 700, SetpointKind.REDOX, 700),
+        pytest.param("mbf_par_cl1", "MBF_PAR_CL1", 1.5, SetpointKind.CHLORINE, 150),
+        pytest.param("mbf_par_hidro", "MBF_PAR_HIDRO", 50, SetpointKind.HIDRO, 500),
+        pytest.param(
+            "mbf_par_smart_temp_high",
+            "MBF_PAR_SMART_TEMP_HIGH",
+            18,
+            SetpointKind.SMART_TEMP_HIGH,
+            18,
+        ),
+        pytest.param(
+            "mbf_par_smart_temp_low",
+            "MBF_PAR_SMART_TEMP_LOW",
+            12,
+            SetpointKind.SMART_TEMP_LOW,
+            12,
+        ),
+    ],
+)
+async def test_setpoint_write_targets_map_to_kind_and_scale(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    suffix: str,
+    data_key: str,
+    value: float,
+    kind: SetpointKind,
+    expected_raw: int,
+) -> None:
+    """Each setpoint entity writes to its own SetpointKind with the right scale.
+
+    A wrong enum or scale in a single description would pass the snapshots and
+    the generic debounce tests, so exercise every write target explicitly.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={data_key: expected_raw}
+    )
+    await setup_integration(hass, mock_config_entry_number)
+
+    entity_id = _number_entity_id(hass, mock_config_entry_number, suffix)
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    await _write(hass, freezer, entity_id, value)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(kind, expected_raw)
+
+
 async def test_number_state_returns_raw_register_value(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
@@ -312,7 +365,8 @@ async def test_hidro_units_follow_visual_style(
 
     ``MBF_PAR_UICFG_MACH_VISUAL_STYLE`` forces percentage (0x4000) or g/h
     (0x2000); the nominal (``MBF_PAR_HIDRO_NOM``) drives the maximum in both
-    modes.
+    modes. The nominal is a non-default value so the assertion fails if the
+    dynamic maximum falls back to the description's static 100.
     """
     await setup_integration(hass, mock_config_entry_number)
     await _poll(
@@ -321,7 +375,7 @@ async def test_hidro_units_follow_visual_style(
         mock_neopool_client,
         {
             **MOCK_POOL_DATA,
-            "MBF_PAR_HIDRO_NOM": 100,
+            "MBF_PAR_HIDRO_NOM": 85,
             "MBF_PAR_MODEL": 0x0002,
             "MBF_PAR_UICFG_MACH_VISUAL_STYLE": visual_style,
         },
@@ -332,7 +386,7 @@ async def test_hidro_units_follow_visual_style(
     assert state is not None
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
     assert state.attributes["step"] == float(expected_step)
-    assert state.attributes["max"] == 100
+    assert state.attributes["max"] == 85
 
 
 async def test_masked_number_state_decodes_field(
@@ -640,6 +694,59 @@ async def test_write_queued_during_flush_gets_its_own_outcome(
     state = hass.states.get(ph1_entity_id)
     assert state is not None
     assert float(state.state) == 8.0
+
+
+async def test_same_value_queued_during_flush_still_resolves(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A second set_value of the same value mid-flush still gets an outcome.
+
+    The two batches carry the same float value, so telling them apart by value
+    alone fails: the first flush would clear the second batch's pending value,
+    its own flush would then find nothing queued, and the newer caller would be
+    left cancelled. Each batch is tagged, so the newer caller resolves.
+    """
+    in_write = asyncio.Event()
+    release = asyncio.Event()
+    seen: list[int] = []
+
+    async def _gated_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        seen.append(value)
+        if len(seen) == 1:
+            in_write.set()
+            await release.wait()
+        return {"MBF_PAR_PH1": value}
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_gated_setpoint)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+    seen.clear()
+
+    # First write enters the library call and blocks there.
+    first = _set_value_nowait(hass, ph1_entity_id, 7.0)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # The same value arrives again while the first write is still in flight.
+    second = _set_value_nowait(hass, ph1_entity_id, 7.0)
+    await _let_park(hass)
+
+    # Release the first write, then flush the second batch. Both callers must
+    # observe an outcome; neither is left cancelled.
+    release.set()
+    await first
+    await _flush(hass, freezer)
+    await second
+
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 7.0
 
 
 async def test_unexpected_write_error_reaches_caller(
