@@ -352,7 +352,7 @@ async def async_get_custom_components(
     return comps_or_future
 
 
-ConfigFlowTypeFilter = Literal["device", "helper", "hub", "integration", "service"]
+ConfigFlowTypeFilter = Literal["helper", "integration"]
 
 
 async def async_get_config_flows(
@@ -364,9 +364,7 @@ async def async_get_config_flows(
     flows: set[str] = set()
 
     if type_filter is not None:
-        # FLOWS only buckets built-in flows as "helper" or "integration"; the more
-        # specific types only ever match custom integrations below.
-        flows.update(FLOWS.get(type_filter, []))
+        flows.update(FLOWS[type_filter])
     else:
         for type_flows in FLOWS.values():
             flows.update(type_flows)
