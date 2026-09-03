@@ -264,7 +264,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     if color_temp.mirek
                     else None
                 )
-                # fall back to the hue defaults if the light reports invalid limits
                 self._attr_min_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
                         color_temp.mirek_schema.mirek_maximum or FALLBACK_MAX_MIREDS

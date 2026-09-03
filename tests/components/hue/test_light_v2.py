@@ -1,5 +1,6 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
+from copy import deepcopy
 from unittest.mock import Mock
 
 from homeassistant.components.light import (
@@ -1055,14 +1056,15 @@ async def test_light_with_zero_mirek(
 
     Regression test for https://github.com/home-assistant/core/issues/116258
     """
-    # Patch the fixture data to have zero mirek values before loading
-    for resource in v2_resources_test_data:
+    # the fixture is package scoped, so patch a copy to not affect other tests
+    test_data = deepcopy(v2_resources_test_data)
+    for resource in test_data:
         if resource.get("type") == "light" and "color_temperature" in resource:
             resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
             resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
             break
 
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await mock_bridge_v2.api.load_test_data(test_data)
 
     # Should not raise ZeroDivisionError during setup
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
@@ -1081,12 +1083,14 @@ async def test_grouped_light_with_zero_mirek(
 
     Regression test for https://github.com/home-assistant/core/issues/181168
     """
-    for resource in v2_resources_test_data:
+    # the fixture is package scoped, so patch a copy to not affect other tests
+    test_data = deepcopy(v2_resources_test_data)
+    for resource in test_data:
         if resource.get("type") == "light" and "color_temperature" in resource:
             resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
             resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
 
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await mock_bridge_v2.api.load_test_data(test_data)
 
     # Should not raise ZeroDivisionError while aggregating the group values
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
