@@ -2032,7 +2032,7 @@ pyHik==0.4.5
 pyHomee==1.4.4
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.1
+pyRFXtrx==0.34.0
 
 # homeassistant.components.sony_projector
 pySDCP==1
