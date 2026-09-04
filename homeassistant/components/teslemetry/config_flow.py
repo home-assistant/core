@@ -283,8 +283,17 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_instructions()
         except TeslaFleetError as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
-            return await self._async_abort("cannot_connect")
-        return await self._async_finish()
+            await self._async_disconnect()
+            return self.async_abort(reason="cannot_connect")
+        if TYPE_CHECKING:
+            assert self._address is not None
+            assert self._vin is not None
+        await self._async_disconnect()
+        return self.async_create_entry(
+            title=self._title or self._vin,
+            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
+            unique_id=self._vin,
+        )
 
     async def async_step_instructions(
         self, user_input: dict[str, Any] | None = None
@@ -341,23 +350,6 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")
         return self.async_show_progress_done(next_step_id="pair")
-
-    async def _async_finish(self) -> SubentryFlowResult:
-        """Persist the paired BLE address and finish the subentry."""
-        if TYPE_CHECKING:
-            assert self._address is not None
-            assert self._vin is not None
-        await self._async_disconnect()
-        return self.async_create_entry(
-            title=self._title or self._vin,
-            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
-            unique_id=self._vin,
-        )
-
-    async def _async_abort(self, reason: str) -> SubentryFlowResult:
-        """Disconnect any open BLE connection and abort the flow."""
-        await self._async_disconnect()
-        return self.async_abort(reason=reason)
 
     async def _async_disconnect(self) -> None:
         """Disconnect the BLE link, if any, and drop the reference to it."""
