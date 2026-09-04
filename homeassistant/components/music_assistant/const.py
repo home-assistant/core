@@ -78,6 +78,14 @@ ATTR_DISCART_IMAGE = "discart_image"
 ATTR_FANART_IMAGE = "fanart_image"
 ATTR_USERNAME = "username"
 
+ATTR_PROVIDERS = "providers"
+ATTR_PROVIDER_TYPE = "provider_type"
+ATTR_PROVIDER_DOMAIN = "provider_domain"
+ATTR_PROVIDER_INSTANCE_ID = "provider_instance_id"
+ATTR_PROVIDER_ENABLED = "provider_enabled"
+ATTR_PROVIDER_STATUS = "provider_status"
+ATTR_PROVIDER_LAST_ERROR = "provider_last_error"
+
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)

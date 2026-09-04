@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from music_assistant_models.enums import MediaType, QueueOption
+from music_assistant_models.enums import MediaType, ProviderType, QueueOption
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -43,6 +43,8 @@ from .const import (
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
     ATTR_PRE_ANNOUNCE_URL,
+    ATTR_PROVIDER_TYPE,
+    ATTR_PROVIDERS,
     ATTR_RADIO,
     ATTR_RADIO_MODE,
     ATTR_SEARCH,
@@ -60,8 +62,10 @@ from .const import (
 from .helpers import catch_user_not_found, get_music_assistant_client
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
+    PROVIDERS_RESULT_SCHEMA,
     SEARCH_RESULT_SCHEMA,
     media_item_dict_from_mass_item,
+    provider_config_dict_from_mass_item,
 )
 
 if TYPE_CHECKING:
@@ -77,6 +81,7 @@ if TYPE_CHECKING:
 
 SERVICE_SEARCH = "search"
 SERVICE_GET_LIBRARY = "get_library"
+SERVICE_GET_PROVIDERS = "get_providers"
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
@@ -126,6 +131,18 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_ALBUM_TYPE): list[MediaType],
                 vol.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
                 vol.Optional(ATTR_USERNAME): cv.string,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROVIDERS,
+        handle_get_providers,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+                vol.Optional(ATTR_PROVIDER_TYPE): vol.Coerce(ProviderType),
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -317,6 +334,22 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
             ATTR_OFFSET: offset,
             ATTR_ORDER_BY: order_by,
             ATTR_MEDIA_TYPE: media_type,
+        }
+    )
+    return response
+
+
+async def handle_get_providers(call: ServiceCall) -> ServiceResponse:
+    """Handle get_providers action."""
+    mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    providers = await mass.config.get_provider_configs(
+        provider_type=call.data.get(ATTR_PROVIDER_TYPE),
+    )
+    response: ServiceResponse = PROVIDERS_RESULT_SCHEMA(
+        {
+            ATTR_PROVIDERS: [
+                provider_config_dict_from_mass_item(item) for item in providers
+            ],
         }
     )
     return response

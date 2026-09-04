@@ -266,3 +266,23 @@ get_library:
       example: "john"
       selector:
         text:
+
+get_providers:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: music_assistant
+    provider_type:
+      example: "music"
+      selector:
+        select:
+          translation_key: provider_type
+          options:
+            - music
+            - player
+            - metadata
+            - plugin
+            - core
+            - audio_analysis

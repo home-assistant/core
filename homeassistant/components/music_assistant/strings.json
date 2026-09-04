@@ -324,6 +324,17 @@
         "year": "Year",
         "year_desc": "Year (desc)"
       }
+    },
+    "provider_type": {
+      "options": {
+        "audio_analysis": "Audio analysis",
+        "core": "Core",
+        "metadata": "Metadata",
+        "music": "Music",
+        "player": "Player",
+        "plugin": "Plugin",
+        "unknown": "Unknown"
+      }
     }
   },
   "services": {
@@ -377,6 +388,20 @@
           "name": "Pagination"
         }
       }
+    },
+    "get_providers": {
+      "description": "Returns the configured Music Assistant providers, optionally filtered by type.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::music_assistant::services::search::fields::config_entry_id::description%]",
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
+        },
+        "provider_type": {
+          "description": "Only return providers of this type.",
+          "name": "Provider type"
+        }
+      },
+      "name": "Get providers"
     },
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
