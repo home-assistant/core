@@ -38,6 +38,16 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     properties={},
 )
 
+ZEROCONF_DISCOVERY_NEW_IP = ZeroconfServiceInfo(
+    ip_address=ip_address("127.0.0.2"),
+    ip_addresses=[ip_address("127.0.0.2")],
+    hostname="VELUX_KLF_LAN_ABCD.local.",
+    name="VELUX_KLF_LAN_ABCD._http._tcp.local.",
+    port=80,
+    type="_http._tcp.local.",
+    properties={},
+)
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow(hass: HomeAssistant, mock_pyvlx: AsyncMock) -> None:
@@ -374,6 +384,25 @@ async def test_zeroconf_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_discovered_config_entry: MockConfigEntry,
+) -> None:
+    """Test zeroconf discovery updates the host for an existing unique ID."""
+    mock_discovered_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY_NEW_IP,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_discovered_config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
