@@ -24,7 +24,10 @@ TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse.build(
                 {"id": "3", "name": "Player 3"},
             ],
         },
-        "version": {},
+        "version": {
+            "name": "Dummy Version",
+            "protocol": 123,
+        },
         "description": "Dummy MOTD",
     },
     latency=5,
