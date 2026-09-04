@@ -28,12 +28,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: Entities of this integration do not subscribe to events.
-  entity-unique-id:
-    status: todo
-    comment: >-
-      CoolmasterEntity assigns _attr_unique_id only when a subclass defines an
-      entity_description (via hasattr). Split that into CoolmasterDescriptionEntity
-      so described entities get an unconditional unique ID, then claim bronze.
+  entity-unique-id: done
   has-entity-name: done
   runtime-data: done
   test-before-configure: done

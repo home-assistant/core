@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import CoolmasterConfigEntry
-from .entity import CoolmasterEntity
+from .entity import CoolmasterDescriptionEntity
 
 
 async def async_setup_entry(
@@ -27,7 +27,7 @@ async def async_setup_entry(
     )
 
 
-class CoolmasterCleanFilter(CoolmasterEntity, BinarySensorEntity):
+class CoolmasterCleanFilter(CoolmasterDescriptionEntity, BinarySensorEntity):
     """Representation of a unit's filter state (true means need to be cleaned)."""
 
     entity_description = BinarySensorEntityDescription(

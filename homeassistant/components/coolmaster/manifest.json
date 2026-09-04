@@ -7,5 +7,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pycoolmasternet_async"],
+  "quality_scale": "bronze",
   "requirements": ["pycoolmasternet-async==0.2.4"]
 }

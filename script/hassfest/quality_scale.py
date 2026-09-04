@@ -1158,7 +1158,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "compensation",
     "concord232",
     "control4",
-    "coolmaster",
     "cppm_tracker",
     "cpuspeed",
     "crownstone",
