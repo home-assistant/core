@@ -50,12 +50,6 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[HeatPump], StateType]
 
 
-def _dhw_target_temperature(status: HeatPump) -> float | None:
-    """Return the DHW target temperature, which is zero when there is none."""
-    target = status.dhw_target_temperature
-    return target or None
-
-
 SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="power_output",
@@ -226,7 +220,8 @@ DHW_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
-        value_fn=_dhw_target_temperature,
+        # A target of zero is how the heat pump says DHW control is off.
+        value_fn=lambda status: status.dhw_target_temperature or None,
     ),
     WeHeatSensorEntityDescription(
         translation_key="dhw_control_method",
