@@ -244,18 +244,12 @@ async def test_boolean_state_configuration_alarm_enabled_switches(
 ) -> None:
     """Test Boolean State Configuration alarm enabled switches."""
 
-    def get_switch_entry(translation_key: str) -> er.RegistryEntry:
-        """Return the registry entry for an alarm switch."""
-        for state in hass.states.async_all(Platform.SWITCH):
-            entry = entity_registry.async_get(state.entity_id)
-            if entry and entry.translation_key == translation_key:
-                return entry
-        pytest.fail(f"Missing switch for {translation_key}")
-
-    visual_entry = get_switch_entry("visual_alarm_enabled")
-    audible_entry = get_switch_entry("audible_alarm_enabled")
-    visual_entity_id = visual_entry.entity_id
-    audible_entity_id = audible_entry.entity_id
+    visual_entity_id = "switch.klippbok_water_leak_sensor_visual_alarm_enabled"
+    audible_entity_id = "switch.klippbok_water_leak_sensor_audible_alarm_enabled"
+    visual_entry = entity_registry.async_get(visual_entity_id)
+    audible_entry = entity_registry.async_get(audible_entity_id)
+    assert visual_entry
+    assert audible_entry
 
     visual_state = hass.states.get(visual_entity_id)
     audible_state = hass.states.get(audible_entity_id)
