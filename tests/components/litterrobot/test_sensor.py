@@ -147,13 +147,27 @@ async def test_pet_visits_today_sensor(
     assert sensor.state == "2"
 
 
+@pytest.mark.parametrize(
+    ("account_fixture", "expected_state"),
+    [
+        pytest.param("mock_account_with_litterhopper", "enabled", id="litter_robot_4"),
+        pytest.param(
+            "mock_account_with_litterhopper_5", "litter_low", id="litter_robot_5"
+        ),
+    ],
+)
 async def test_litterhopper_sensor(
-    hass: HomeAssistant, mock_account_with_litterhopper: MagicMock
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    account_fixture: str,
+    expected_state: str,
 ) -> None:
     """Tests LitterHopper sensors."""
-    await setup_integration(hass, mock_account_with_litterhopper, SENSOR_DOMAIN)
+    await setup_integration(
+        hass, request.getfixturevalue(account_fixture), SENSOR_DOMAIN
+    )
     sensor = hass.states.get("sensor.test_hopper_status")
-    assert sensor.state == "enabled"
+    assert sensor.state == expected_state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

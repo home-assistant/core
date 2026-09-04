@@ -75,9 +75,13 @@
           "disabled": "mdi:filter-remove",
           "empty": "mdi:filter-minus-outline",
           "enabled": "mdi:filter-check",
+          "jammed": "mdi:filter-off",
+          "litter_low": "mdi:filter-minus",
           "motor_disconnected": "mdi:engine-off",
           "motor_fault_short": "mdi:flash-off",
-          "motor_ot_amps": "mdi:flash-alert"
+          "motor_ot_amps": "mdi:flash-alert",
+          "offline": "mdi:cloud-off",
+          "ready": "mdi:filter-check-outline"
         }
       },
       "next_filter_replacement": {

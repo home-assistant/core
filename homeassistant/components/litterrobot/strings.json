@@ -129,9 +129,13 @@
           "disabled": "[%key:common::state::disabled%]",
           "empty": "[%key:common::state::empty%]",
           "enabled": "[%key:common::state::enabled%]",
+          "jammed": "Jammed",
+          "litter_low": "Litter low",
           "motor_disconnected": "Motor disconnected",
           "motor_fault_short": "Motor shorted",
-          "motor_ot_amps": "Motor overtorqued"
+          "motor_ot_amps": "Motor overtorqued",
+          "offline": "[%key:component::litterrobot::entity::sensor::status_code::state::offline%]",
+          "ready": "[%key:component::litterrobot::entity::sensor::status_code::state::rdy%]"
         }
       },
       "last_feeding": {
