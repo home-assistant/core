@@ -1,17 +1,9 @@
 """Constants for Minecraft Server integration tests."""
 
-from mcstatus.motd import Motd
 from mcstatus.responses import (
-    BedrockStatusPlayers,
     BedrockStatusResponse,
-    BedrockStatusVersion,
-    JavaStatusPlayer,
-    JavaStatusPlayers,
     JavaStatusResponse,
-    JavaStatusVersion,
-    LegacyStatusPlayers,
     LegacyStatusResponse,
-    LegacyStatusVersion,
 )
 
 from homeassistant.components.minecraft_server.api import MinecraftServerData
@@ -21,23 +13,21 @@ TEST_HOST = "mc.dummyserver.com"
 TEST_PORT = 25566
 TEST_ADDRESS = f"{TEST_HOST}:{TEST_PORT}"
 
-TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
-    raw={"foo": "bar"},
-    players=JavaStatusPlayers(
-        online=3,
-        max=10,
-        sample=[
-            JavaStatusPlayer(id="1", name="Player 1"),
-            JavaStatusPlayer(id="2", name="Player 2"),
-            JavaStatusPlayer(id="3", name="Player 3"),
-        ],
-    ),
-    version=JavaStatusVersion(name="Dummy Version", protocol=123),
-    motd=Motd.parse("Dummy MOTD", bedrock=False),
-    icon=None,
-    enforces_secure_chat=False,
+TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse.build(
+    {
+        "players": {
+            "online": 3,
+            "max": 10,
+            "sample": [
+                {"id": "1", "name": "Player 1"},
+                {"id": "2", "name": "Player 2"},
+                {"id": "3", "name": "Player 3"},
+            ],
+        },
+        "version": {},
+        "description": "Dummy MOTD",
+    },
     latency=5,
-    forge_data=None,
 )
 
 TEST_JAVA_DATA = MinecraftServerData(
@@ -53,13 +43,19 @@ TEST_JAVA_DATA = MinecraftServerData(
     map_name=None,
 )
 
-TEST_BEDROCK_STATUS_RESPONSE = BedrockStatusResponse(
-    players=BedrockStatusPlayers(online=3, max=10),
-    version=BedrockStatusVersion(brand="MCPE", name="Dummy Version", protocol=123),
-    motd=Motd.parse("Dummy MOTD", bedrock=True),
+TEST_BEDROCK_STATUS_RESPONSE = BedrockStatusResponse.build(
+    [
+        "MCPE",  # version.brand
+        "Dummy MOTD",  # motd
+        123,  # version.protocol
+        "Dummy Version",  # version.name
+        3,  # players.online
+        10,  # players.max
+        "Dummy Server ID",  # server unique ID
+        "Dummy Map Name",  # map_name
+        "Dummy Game Mode",  # gamemode
+    ],
     latency=5,
-    gamemode="Dummy Game Mode",
-    map_name="Dummy Map Name",
 )
 
 TEST_BEDROCK_DATA = MinecraftServerData(
@@ -75,9 +71,13 @@ TEST_BEDROCK_DATA = MinecraftServerData(
     map_name="Dummy Map Name",
 )
 
-TEST_LEGACY_JAVA_STATUS_RESPONSE = LegacyStatusResponse(
-    players=LegacyStatusPlayers(online=3, max=10),
-    version=LegacyStatusVersion(name="1.6.4", protocol=78),
-    motd=Motd.parse("Dummy MOTD"),
+TEST_LEGACY_JAVA_STATUS_RESPONSE = LegacyStatusResponse.build(
+    [
+        78,  # version.protocol
+        "1.6.4",  # version.name
+        "Dummy MOTD",  # motd
+        3,  # players online
+        10,  # players max
+    ],
     latency=5,
 )
