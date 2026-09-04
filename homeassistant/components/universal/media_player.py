@@ -1,6 +1,7 @@
 """Combination of multiple media players for a universal controller."""
 
 from copy import copy
+import logging
 from typing import Any, override
 
 import voluptuous as vol
@@ -33,6 +34,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -67,7 +69,10 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -76,7 +81,12 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "universal"
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -85,6 +95,35 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 CONF_BROWSE_MEDIA_ENTITY = "browse_media_entity"
+
+# Config/options flow commands and attributes exposed via ActionSelector/
+# TextSelector fields; kept here (rather than in config_flow.py) so
+# async_setup_entry can share the same list without a circular import.
+EXPOSED_COMMANDS = (
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
+    SERVICE_VOLUME_UP,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_SELECT_SOURCE,
+    SERVICE_SELECT_SOUND_MODE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_STOP,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+)
+
+EXPOSED_ATTRIBUTES = (
+    "state",
+    "is_volume_muted",
+    "volume_level",
+    "source",
+    "source_list",
+    "sound_mode",
+    "sound_mode_list",
+)
 
 STATES_ORDER = [
     STATE_UNKNOWN,
@@ -129,10 +168,54 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the universal media players."""
-    await async_setup_reload_service(hass, "universal", [Platform.MEDIA_PLAYER])
+    await async_setup_reload_service(hass, DOMAIN, [Platform.MEDIA_PLAYER])
+    async_add_entities([UniversalMediaPlayer(hass, config)])
 
-    player = UniversalMediaPlayer(hass, config)
-    async_add_entities([player])
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Universal media player from a config entry."""
+    options = config_entry.options
+
+    # ActionSelector stores actions as lists; unwrap to the single service-call
+    # dict that async_call_from_config expects.  Empty lists mean the command
+    # was not configured and should be omitted from the commands dict entirely.
+    # Re-validate through SERVICE_SCHEMA to compile any templated data/target
+    # values back into Template objects: config entry storage is JSON and can
+    # only ever hold raw strings, but _async_call_service calls
+    # async_call_from_config with validate_config=False and expects templates
+    # pre-compiled.
+    commands: dict[str, Any] = {}
+    for cmd in EXPOSED_COMMANDS:
+        actions = options.get(cmd, [])
+        if isinstance(actions, list) and actions:
+            commands[cmd] = cv.SERVICE_SCHEMA(actions[0])
+
+    # TemplateSelector stores templates as raw strings; compile them here
+    # since UniversalMediaPlayer expects Template objects.
+    active_child_template = None
+    if raw_template := options.get(CONF_ACTIVE_CHILD_TEMPLATE):
+        active_child_template = Template(raw_template, hass)
+    state_template = None
+    if raw_template := options.get(CONF_STATE_TEMPLATE):
+        state_template = Template(raw_template, hass)
+
+    config: ConfigType = {
+        CONF_NAME: config_entry.title,
+        CONF_CHILDREN: options.get(CONF_CHILDREN, []),
+        CONF_COMMANDS: commands,
+        CONF_ATTRS: options.get(CONF_ATTRS, {}),
+        CONF_UNIQUE_ID: config_entry.entry_id,
+        CONF_BROWSE_MEDIA_ENTITY: options.get(CONF_BROWSE_MEDIA_ENTITY),
+        CONF_DEVICE_CLASS: options.get(CONF_DEVICE_CLASS),
+        CONF_ACTIVE_CHILD_TEMPLATE: active_child_template,
+        CONF_STATE_TEMPLATE: state_template,
+    }
+
+    async_add_entities([UniversalMediaPlayer(hass, config)])
 
 
 class UniversalMediaPlayer(MediaPlayerEntity):

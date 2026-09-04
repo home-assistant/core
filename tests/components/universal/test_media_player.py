@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.universal import media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
+    STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -23,12 +24,18 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, async_mock_service, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_mock_service,
+    get_fixture_path,
+)
 
 CONFIG_CHILDREN_ONLY = {
     "name": "test",
@@ -1414,3 +1421,204 @@ async def test_reload(hass: HomeAssistant) -> None:
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )
     assert "unique_id" not in hass.states.get("media_player.master_bed_tv").attributes
+
+
+async def test_async_setup_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_states: Mock
+) -> None:
+    """Test setting up the platform from a config entry."""
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Config entry TV",
+        options={
+            "name": "Config entry TV",
+            "children": [
+                media_player.ENTITY_ID_FORMAT.format("mock1"),
+                media_player.ENTITY_ID_FORMAT.format("mock2"),
+            ],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        media_player.DOMAIN, universal.DOMAIN, config_entry.entry_id
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    mock_states.mock_mp_1._state = STATE_PLAYING
+    mock_states.mock_mp_1.async_schedule_update_ha_state()
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_PLAYING
+
+
+async def test_async_setup_entry_commands(hass: HomeAssistant) -> None:
+    """Test commands configured through a config entry are routed correctly."""
+    service = async_mock_service(hass, "test", "turn_off")
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry commands",
+        options={
+            "name": "Entry commands",
+            "children": [],
+            "turn_off": [{"action": "test.turn_off", "data": {}}],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_TURN_OFF,
+        {"entity_id": "media_player.entry_commands"},
+        blocking=True,
+    )
+    assert len(service) == 1
+
+
+async def test_async_setup_entry_device_class_and_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """Test device_class and attribute overrides configured through a config entry."""
+    hass.states.async_set("switch.tv_state", STATE_ON)
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry advanced",
+        options={
+            "name": "Entry advanced",
+            "children": [],
+            "device_class": "speaker",
+            "attributes": {"state": "switch.tv_state"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.entry_advanced")
+    assert state.attributes["device_class"] == "speaker"
+    assert state.state == STATE_ON
+
+
+async def test_async_setup_entry_templates(hass: HomeAssistant) -> None:
+    """Test active_child_template and state_template configured through a config entry."""
+    hass.states.async_set("media_player.mock1", STATE_OFF)
+    hass.states.async_set("media_player.mock2", STATE_PLAYING)
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry templates",
+        options={
+            "name": "Entry templates",
+            "children": [
+                media_player.ENTITY_ID_FORMAT.format("mock1"),
+                media_player.ENTITY_ID_FORMAT.format("mock2"),
+            ],
+            "active_child_template": "{{ 'media_player.mock1' }}",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # active_child_template forces mock1 (off) to be treated as active,
+    # overriding the default of picking mock2 (playing).
+    assert hass.states.get("media_player.entry_templates").state == STATE_OFF
+
+
+async def test_async_setup_entry_command_data_template(hass: HomeAssistant) -> None:
+    """Test a templated value in a command's data configured through a config entry.
+
+    Config entry options are JSON, so command data can only ever be stored as
+    a plain template string, never a compiled Template object; this verifies
+    async_setup_entry recompiles it so the template still renders correctly
+    when the command runs (regression test: the recompiled command must also
+    remain usable with async_call_from_config's validate_config=False).
+    """
+    service = async_mock_service(hass, "test", "set_volume")
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry volume template",
+        options={
+            "name": "Entry volume template",
+            "children": [],
+            "volume_set": [
+                {"action": "test.set_volume", "data": {"level": "{{ volume_level }}"}}
+            ],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_VOLUME_SET,
+        {
+            "entity_id": "media_player.entry_volume_template",
+            "volume_level": 0.42,
+        },
+        blocking=True,
+    )
+    assert len(service) == 1
+    assert service[0].data["level"] == 0.42
+
+
+async def test_options_flow_reloads_entity(hass: HomeAssistant) -> None:
+    """Test that completing the options flow reloads the entity.
+
+    Without options_flow_reloads set on the flow handler, the config entry's
+    options are updated in storage but the running entity keeps its old
+    in-memory configuration until Home Assistant restarts.
+    """
+    hass.states.async_set("media_player.mock1", STATE_IDLE)
+    hass.states.async_set("media_player.mock2", STATE_IDLE)
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Reload test",
+        options={
+            "name": "Reload test",
+            "children": ["media_player.mock1"],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # _child_state is only populated by state-change events, not an initial
+    # read, so the child must actually change after setup for the entity to
+    # pick it up.
+    hass.states.async_set("media_player.mock1", STATE_PLAYING)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.reload_test").state == STATE_PLAYING
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"children": ["media_player.mock2"]}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # If the entity didn't reload, it would still be watching mock1 (stuck on
+    # "playing") and never react to mock2 changing at all.
+    hass.states.async_set("media_player.mock2", STATE_PAUSED)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.reload_test").state == STATE_PAUSED
