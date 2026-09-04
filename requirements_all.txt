@@ -1460,7 +1460,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.8.28.62336
+knx-frontend==2026.9.4.63549
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.11.2
