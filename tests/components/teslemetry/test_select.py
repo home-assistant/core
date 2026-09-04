@@ -575,12 +575,7 @@ async def test_paired_site_operation_mode_reads_local(
     hass: HomeAssistant,
     mock_powerwall_config: AsyncMock,
 ) -> None:
-    """A paired site reads the operation mode back from local config.json.
-
-    The cloud site_info mode is "self_consumption"; the operation select
-    instead reflects the local top-level default_real_mode, while the
-    export-rule select stays on cloud.
-    """
+    """A paired site reads the operation mode back from local config.json."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     mock_powerwall_config.return_value = {
@@ -610,12 +605,7 @@ async def test_paired_site_operation_mode_recovers_after_local_failure(
     mock_powerwall_config: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failed initial local read does not abort setup; a later refresh recovers.
-
-    The first config.json read fails, so setup still completes with the site
-    falling back and the local-backed select unavailable. Once the gateway
-    answers on a later refresh, the select reads the local operation mode.
-    """
+    """A failed initial local read does not abort setup; a later refresh recovers."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     mock_powerwall_config.side_effect = PowerwallError("gateway unreachable")

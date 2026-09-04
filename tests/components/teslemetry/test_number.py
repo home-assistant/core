@@ -196,11 +196,7 @@ async def test_paired_site_backup_reserve_reads_local(
     raw_reserve: int,
     expected: str,
 ) -> None:
-    """A paired site reads the backup reserve back from local config.json.
-
-    The cloud site_info reserve is 0; the number instead reflects the local
-    raw value scaled to the user-facing percentage.
-    """
+    """A paired site reads the backup reserve back from local config.json."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     mock_powerwall_config.return_value = {
@@ -224,11 +220,7 @@ async def test_paired_site_backup_reserve_unavailable_when_key_missing(
     hass: HomeAssistant,
     mock_powerwall_config: AsyncMock,
 ) -> None:
-    """A successful local read that omits the key leaves the number unavailable.
-
-    The gateway answered, but config.json carried no backup_reserve_percent, so
-    the local-backed number reads unavailable rather than a guessed value.
-    """
+    """A successful local read that omits the key leaves the number unavailable."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     mock_powerwall_config.return_value = {"site_info": {}}
