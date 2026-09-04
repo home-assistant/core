@@ -32,6 +32,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
@@ -189,6 +190,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Select an account vehicle to add over Bluetooth, then pair it."""
         entry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
         already_added = {
             subentry.data[CONF_VIN]
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)

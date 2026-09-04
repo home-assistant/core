@@ -1192,3 +1192,18 @@ async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_vehicles"
+
+
+async def test_subentry_add_flow_entry_not_loaded(hass: HomeAssistant) -> None:
+    """The add flow aborts when the parent entry is not loaded."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"

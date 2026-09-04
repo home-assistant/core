@@ -50,6 +50,7 @@
     "vehicle": {
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
         "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
