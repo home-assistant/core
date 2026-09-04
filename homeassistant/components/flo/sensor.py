@@ -90,9 +90,9 @@ class FloLastEventUsageSensor(FloEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return gallons consumed in the last water-flow event."""
         event = self._device.last_water_event
-        if event is None or event.get("gallonsConsumed") is None:
+        if event is None or event.get("totalGal") is None:
             return None
-        return round(event["gallonsConsumed"], 1)
+        return round(event["totalGal"], 1)
 
     @property
     @override
@@ -101,11 +101,12 @@ class FloLastEventUsageSensor(FloEntity, SensorEntity):
         event = self._device.last_water_event
         if event is None:
             return {}
+        predicted = event.get("predicted") or {}
         return {
-            "fixture_type": event.get("fixtureType"),
-            "duration_seconds": event.get("durationSeconds"),
-            "start_time": event.get("startTime"),
-            "end_time": event.get("endTime"),
+            "fixture_type": predicted.get("displayText"),
+            "duration_seconds": event.get("duration"),
+            "start_time": event.get("startAt"),
+            "end_time": event.get("endAt"),
             "event_id": event.get("id"),
         }
 
@@ -126,7 +127,8 @@ class FloLastEventFixtureSensor(FloEntity, SensorEntity):
         event = self._device.last_water_event
         if event is None:
             return None
-        return event.get("fixtureType")
+        predicted = event.get("predicted") or {}
+        return predicted.get("displayText")
 
 
 class FloSystemModeSensor(FloEntity, SensorEntity):
