@@ -423,6 +423,19 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             except PowerwallAuthenticationError as err:
                 raise PowerwallKeyRejectedError from err
 
+    def _default_gateway_host(self) -> str:
+        """Return the host to pre-fill on the credentials form.
+
+        Discovery wins; on reconfigure a failed discovery falls back to the
+        subentry's known host rather than the setup-AP default, so a
+        password-only change is verified against the right gateway.
+        """
+        if self._discovered_host:
+            return self._discovered_host
+        if self.source == SOURCE_RECONFIGURE:
+            return cast(str, self._get_reconfigure_subentry().data[CONF_HOST])
+        return DEFAULT_GATEWAY_HOST
+
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -453,7 +466,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Required(
                         CONF_HOST,
-                        default=self._discovered_host or DEFAULT_GATEWAY_HOST,
+                        default=self._default_gateway_host(),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }

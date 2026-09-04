@@ -31,7 +31,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.teslemetry.config_flow import _cloud_energy_site
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -1480,14 +1479,96 @@ async def test_reconfigure_aborts_when_site_not_resolved(hass: HomeAssistant) ->
     assert result["reason"] == "cannot_connect"
 
 
-async def test_reconfigure_unwraps_paired_router_to_cloud_api(
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_prefills_existing_host_when_discovery_fails(
     hass: HomeAssistant,
 ) -> None:
-    """Pairing a paired site must target its cloud secondary, not the local gateway."""
-    entry = await _setup_paired_account(hass)
-    energy_data = entry.runtime_data.energysites[0]
+    """A failed discovery on reconfigure keeps the subentry's known host default.
 
-    # A paired site routes local-first, so its api is a router over the cloud site.
+    Otherwise a password-only change would default to the setup-AP address and
+    be verified against the wrong gateway.
+    """
+    entry = await _setup_paired_account(hass)
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+    # The fixture host equals DEFAULT_GATEWAY_HOST, so set a distinct known host
+    # to prove the default is the subentry's value and not the setup-AP fallback.
+    known_host = "192.168.1.50"
+    hass.config_entries.async_update_subentry(
+        entry, subentry, data={**subentry.data, CONF_HOST: known_host}
+    )
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=AsyncMock(side_effect=ClientError),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert _credentials_host_default(result) == known_host
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_aborts_when_rsa_key_load_fails(hass: HomeAssistant) -> None:
+    """Reconfigure aborts when the integration's RSA key cannot be loaded."""
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    with patch(
+        "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
+        side_effect=OSError,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_pairs_via_cloud_secondary_not_local_primary(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfiguring a paired site pairs through the cloud site, not the local gateway.
+
+    A paired site's api is a local-first router, so the pairing lookup must be
+    unwrapped to the cloud secondary; routing it would hit the local Powerwall.
+    """
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    energy_data = entry.runtime_data.energysites[0]
     assert isinstance(energy_data.api, EnergySiteRouter)
-    assert _cloud_energy_site(energy_data) is energy_data.api.secondary
-    assert _cloud_energy_site(energy_data) is not energy_data.api.primary
+
+    cloud_lookup = AsyncMock(
+        return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+    )
+    # find_authorized_clients is a cloud-only method; adding it to the local
+    # backend makes the router route to it local-first, so an accidentally
+    # routed lookup would land on the primary and this test would catch it.
+    local_lookup = AsyncMock(
+        return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+    )
+    with (
+        patch.object(
+            energy_data.api.secondary, "find_authorized_clients", cloud_lookup
+        ),
+        patch.object(
+            energy_data.api.primary,
+            "find_authorized_clients",
+            local_lookup,
+            create=True,
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    # Reaching credentials means the cloud lookup reported the key verified.
+    assert result["step_id"] == "credentials"
+    cloud_lookup.assert_awaited()
+    local_lookup.assert_not_awaited()
