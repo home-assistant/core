@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -19,6 +20,7 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
+    DOMAIN,
     OPT_ON,
     OPT_SPEED,
     OPT_WIND,
@@ -186,6 +188,11 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         sleep_time: int,
     ) -> None:
         """Set a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self.coordinator.modern_forms.fan(sleep=sleep_time * 60)
 
     @modernforms_exception_handler
@@ -193,4 +200,9 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         self,
     ) -> None:
         """Clear a Modern Forms fan sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self.coordinator.modern_forms.fan(sleep=CLEAR_TIMER)

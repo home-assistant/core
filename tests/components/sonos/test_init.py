@@ -98,7 +98,10 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_upnp_disabled_discovery(
-    hass: HomeAssistant, config_entry: MockConfigEntry, soco: MockSoCo
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
 ) -> None:
     """Test issue creation when discovery processing fails with 403."""
 
@@ -116,7 +119,6 @@ async def test_upnp_disabled_discovery(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(
             sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
@@ -127,6 +129,7 @@ async def test_upnp_disabled_discovery(
 
 async def test_upnp_disabled_manual_hosts(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     soco_factory: SoCoMockFactory,
 ) -> None:
     """Test issue creation when manual host processing fails with 403."""
@@ -145,7 +148,6 @@ async def test_upnp_disabled_manual_hosts(
     ):
         await _setup_hass(hass)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(
         sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
     )

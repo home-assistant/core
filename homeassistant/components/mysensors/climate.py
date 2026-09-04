@@ -9,7 +9,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,6 +18,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
+from .models import MySensorsConfigEntry
 
 DICT_HA_TO_MYS = {
     HVACMode.AUTO: "AutoChangeOver",
@@ -39,7 +39,7 @@ OPERATION_LIST = [HVACMode.OFF, HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MySensorsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
@@ -47,11 +47,11 @@ async def async_setup_entry(
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors climate."""
         setup_mysensors_platform(
-            hass,
+            config_entry,
             Platform.CLIMATE,
             discovery_info,
             MySensorsHVAC,
-            async_add_entities=async_add_entities,
+            async_add_entities,
         )
 
     config_entry.async_on_unload(

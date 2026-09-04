@@ -58,7 +58,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -134,13 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     # after migration but still require reauthentication
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
     try:
@@ -199,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_LOCATION_ID],
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
-    except SmartThingsSinkError as err:
+    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         _LOGGER.exception("Couldn't create a new subscription")
         raise ConfigEntryNotReady from err
     subscription_id = subscription.subscription_id
@@ -238,16 +231,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             device_status[device.device_id] = FullDevice(
                 device=device, status=status, online=online.state == HealthStatus.ONLINE
             )
+        scenes = {
+            scene.scene_id: scene
+            for scene in await client.get_scenes(
+                location_id=entry.data[CONF_LOCATION_ID]
+            )
+        }
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
+    except SmartThingsConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
-
-    scenes = {
-        scene.scene_id: scene
-        for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
-    }
 
     def handle_deleted_device(device_id: str) -> None:
         """Handle a deleted device."""

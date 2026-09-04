@@ -74,7 +74,7 @@ async def test_gen24_storage_mppt(
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current", 8.2)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage", 402.1)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
-    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_energy", 1000000)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_energy", 1000000)
     assert_state(hass, "sensor.gen24_storage_mppt_2_dc_power", 1650)
     assert_state(hass, "sensor.gen24_storage_mppt_3_dc_power", 0)
     assert_state(hass, "sensor.gen24_storage_mppt_4_dc_power", 480)
@@ -301,7 +301,7 @@ async def test_not_implemented_values(
 
     assert_state(hass, "sensor.inverter_name_mppt_1_dc_power", 3300)
     assert hass.states.get("sensor.inverter_name_mppt_2_dc_power") is None
-    assert hass.states.get("sensor.inverter_name_mppt_2_dc_energy") is None
+    assert hass.states.get("sensor.inverter_name_mppt_2_energy") is None
     # PV total unknown when a PV module doesn't report energy
     assert hass.states.get("sensor.inverter_name_pv_energy_total") is None
 
@@ -312,7 +312,7 @@ async def test_not_implemented_values(
     freezer.tick(FroniusModbusInverterUpdateCoordinator.default_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert_state(hass, "sensor.inverter_name_mppt_1_dc_energy", "unknown")
+    assert_state(hass, "sensor.inverter_name_mppt_1_energy", "unknown")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

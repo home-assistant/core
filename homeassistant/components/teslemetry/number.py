@@ -7,6 +7,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
@@ -97,7 +98,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
 class TeslemetryNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable[[EnergySite, float], Awaitable[Any]]
+    func: Callable[[EnergySite | EnergySiteRouter, float], Awaitable[Any]]
     requires: str | None = None
     scopes: list[Scope]
 
