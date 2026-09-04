@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
@@ -202,3 +203,53 @@ async def test_sensor_unavailable(
 
     state = hass.states.get("sensor.google_for_developers_views")
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("short_video_ids", "expected_yielded", "expected_latest_video_state"),
+    [
+        pytest.param(
+            {"wysukDrMdqU"},
+            2,
+            "Google I/O 2023 Developer Keynote in 5 minutes",
+            id="stops_after_short_and_non_short_found",
+        ),
+        pytest.param(
+            {"wysukDrMdqU", "hleLlcHwQLM", "lMKjtSFujcw", "c0mqBuXPrpA", "_n9xwuTORas"},
+            10,
+            "unavailable",
+            id="caps_at_page_size_when_only_shorts",
+        ),
+    ],
+)
+async def test_sensor_playlist_iteration(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    short_video_ids: set[str],
+    expected_yielded: int,
+    expected_latest_video_state: str,
+) -> None:
+    """Test playlist iteration stops as early as possible and never paginates."""
+    await setup_integration()
+
+    mock = MockYouTube(hass, short_video_ids=short_video_ids)
+    with patch(
+        "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
+        return_value=mock,
+    ):
+        # Clear the coordinator's is_short cache so results come from the mock.
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        entry.runtime_data._is_short_cache.clear()
+        future = dt_util.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+        await asyncio.sleep(0.1)
+
+    assert mock.playlist_item_requests == 1
+    assert mock.playlist_items_yielded == expected_yielded
+
+    state = hass.states.get("sensor.google_for_developers_latest_short")
+    assert state.state == "What's new in Google Home in less than 1 minute"
+
+    state = hass.states.get("sensor.google_for_developers_latest_video")
+    assert state.state == expected_latest_video_state

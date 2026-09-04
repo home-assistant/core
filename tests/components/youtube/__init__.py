@@ -30,6 +30,8 @@ class MockYouTube:
         self._playlist_items_fixture = playlist_items_fixture
         self._subscriptions_fixture = subscriptions_fixture
         self._short_video_ids: set[str] = short_video_ids or set()
+        self.playlist_item_requests = 0
+        self.playlist_items_yielded = 0
 
     async def set_user_authentication(
         self, token: str, scopes: list[AuthScope]
@@ -59,12 +61,26 @@ class MockYouTube:
     async def get_playlist_items(
         self, playlist_id: str, amount: int
     ) -> AsyncGenerator[YouTubePlaylistItem]:
-        """Get channels."""
+        """Get playlist items, paginating like the real API.
+
+        Cycles the fixture items forever in pages of `amount` (like a large
+        upload playlist), so tests can assert how far the coordinator
+        iterates before stopping.
+        """
         channels = await async_load_json_object_fixture(
             self.hass, self._playlist_items_fixture, DOMAIN
         )
-        for item in channels["items"]:
-            yield YouTubePlaylistItem(**item)
+        items = channels["items"]
+        if not items:
+            self.playlist_item_requests += 1
+            return
+        index = 0
+        while True:
+            self.playlist_item_requests += 1
+            for _ in range(amount):
+                self.playlist_items_yielded += 1
+                yield YouTubePlaylistItem(**items[index % len(items)])
+                index += 1
 
     async def get_user_subscriptions(self) -> AsyncGenerator[YouTubeSubscription]:
         """Get channels for authenticated user."""
