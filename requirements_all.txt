@@ -2140,6 +2140,9 @@ pycmus==0.1.1
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
 
+# homeassistant.components.coolbot
+pycoolbot==0.1.7
+
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.6
 
