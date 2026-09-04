@@ -307,7 +307,7 @@ async def _async_resolve_vehicle_api(
     # A bad BLE key file for one vehicle must not tear down the whole entry.
     try:
         parent = await async_get_ble_parent(hass)
-    except OSError, ValueError:
+    except (OSError, ValueError):
         LOGGER.warning(
             "Failed to load the Bluetooth key for vehicle %s; "
             "falling back to cloud control",
