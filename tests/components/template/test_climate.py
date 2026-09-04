@@ -438,3 +438,103 @@ async def test_bad_target_temperature_range_config(
         "Invalid config for 'template': some but not all values in the same group of inclusion 'temperature_limits'"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [("fan_modes", {**SET_FAN_MODE_ACTION, **MINIMUM_REQUIREMENTS})],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ ['off', 'low', 'medium', 'high'] }}", ["off", "low", "medium", "high"]),
+        ("{{ ['off', 'high'] }}", ["off", "high"]),
+        ("{{ [] }}", []),
+        ("{{ '[]' }}", []),
+        ("{{ -3 }}", None),
+        ("{{ 103.3 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_fan_modes_template(hass: HomeAssistant, expected: Any) -> None:
+    """Test template fan_modes."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("fan_modes") == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [
+        (
+            "fan_mode",
+            {
+                "fan_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_FAN_MODE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ 'off' }}", "off"),
+        ("{{ 'low' }}", "low"),
+        ("{{ 'medium' }}", "medium"),
+        ("{{ 'high' }}", "high"),
+        ("{{ -3 }}", None),
+        ("{{ 103.3 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_fan_mode_template(hass: HomeAssistant, expected: Any) -> None:
+    """Test template fan_mode."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("fan_mode") == expected
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {**SET_FAN_MODE_ACTION, **MINIMUM_REQUIREMENTS},
+        {"fan_modes": "{{ ['off', 'low', 'medium', 'high'] }}", **MINIMUM_REQUIREMENTS},
+    ],
+)
+async def test_bad_fan_mode_config(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad target temperature range configuration."""
+    platform = TEST_CLIMATE
+    await setup_entity(hass, platform, style, 0, config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': Some required option(s) are missing from inclusive group 'fan_mode', expected missing options"
+        in caplog.text
+    )

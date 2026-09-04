@@ -425,17 +425,25 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
 
         self._attr_hvac_mode = None
         self._attr_hvac_modes = []
+        self._attr_fan_mode = None
+        self._attr_fan_modes = None
+        self._attr_swing_mode = None
+        self._attr_swing_modes = None
+        self._attr_swing_horizontal_mode = None
+        self._attr_swing_horizontal_modes = None
+        self._attr_target_temperature_low = None
+        self._attr_target_temperature_high = None
 
         # Setup HVAC Mode
-        self.setup_state_template(
-            "_attr_hvac_mode",
-            tcv.strenum(self, CONF_HVAC_MODE, HVACMode),
-        )
         self.setup_template(
             CONF_HVAC_MODES,
             "_attr_hvac_modes",
             hvac_modes_list(self),
             self._update_hvac_modes,
+        )
+        self.setup_state_template(
+            "_attr_hvac_mode",
+            tcv.strenum(self, CONF_HVAC_MODE, HVACMode),
         )
         self.setup_template(
             CONF_HVAC_ACTION,
@@ -459,7 +467,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low", None),
             (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high", None),
         ):
-            setattr(self, attr, None)
             self.setup_template(
                 option,
                 attr,
@@ -487,37 +494,63 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
 
         # Fan Mode
 
-        self.setup_template(CONF_FAN_MODE, "_attr_fan_mode", cv.string)
         self.setup_template(
             CONF_FAN_MODES,
             "_attr_fan_modes",
             tcv.list_of_strings(self, CONF_FAN_MODES),
         )
+        self.setup_template(
+            CONF_FAN_MODE,
+            "_attr_fan_mode",
+            tcv.item_in_list(self, "_attr_fan_mode", "_attr_fan_modes", CONF_FAN_MODES),
+        )
 
         # Swing Mode
-        self.setup_template(CONF_SWING_MODE, "_attr_swing_mode", cv.string)
         self.setup_template(
             CONF_SWING_MODES,
             "_attr_swing_modes",
             tcv.list_of_strings(self, CONF_SWING_MODES),
         )
+        self.setup_template(
+            CONF_SWING_MODE,
+            "_attr_swing_mode",
+            tcv.item_in_list(
+                self, "_attr_swing_mode", "_attr_swing_modes", CONF_SWING_MODES
+            ),
+        )
 
         # Swing Horizontal Mode
-        self.setup_template(
-            CONF_SWING_HORIZONTAL_MODE, "_attr_swing_horizontal_mode", cv.string
-        )
         self.setup_template(
             CONF_SWING_HORIZONTAL_MODES,
             "_attr_swing_horizontal_modes",
             tcv.list_of_strings(self, CONF_SWING_HORIZONTAL_MODES),
         )
+        self.setup_template(
+            CONF_SWING_HORIZONTAL_MODE,
+            "_attr_swing_horizontal_mode",
+            tcv.item_in_list(
+                self,
+                "_attr_swing_horizontal_mode",
+                "_attr_swing_horizontal_modes",
+                CONF_SWING_HORIZONTAL_MODES,
+            ),
+        )
 
         # Preset Mode
-        self.setup_template(CONF_PRESET_MODE, "_attr_preset_mode", cv.string)
         self.setup_template(
             CONF_PRESET_MODES,
             "_attr_preset_modes",
             tcv.list_of_strings(self, CONF_PRESET_MODES),
+        )
+        self.setup_template(
+            CONF_PRESET_MODE,
+            "_attr_preset_mode",
+            tcv.item_in_list(
+                self,
+                "_attr_preset_mode",
+                "_attr_preset_modes",
+                CONF_PRESET_MODES,
+            ),
         )
 
         self._attr_supported_features = ClimateEntityFeature(0)
