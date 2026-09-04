@@ -1728,6 +1728,7 @@ async def test_media_seek_updates_position(
             {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_SEEK_POSITION: 100},
             blocking=True,
         )
+        await hass.async_block_till_done()
         soco.seek.assert_called_once_with("0:01:40")
         state = hass.states.get(entity_id)
         # Sonos fires no event for a position change: the entity must reflect
