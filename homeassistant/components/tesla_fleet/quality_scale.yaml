@@ -60,7 +60,9 @@ rules:
     comment: Documentation includes NGINX configuration examples but lacks automation use case examples.
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: done
+  docs-supported-functions:
+    status: todo
+    comment: The charge schedules sensor is missing from the entity table on home-assistant.io.
   docs-troubleshooting: done
   docs-use-cases:
     status: todo

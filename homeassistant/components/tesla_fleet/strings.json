@@ -346,6 +346,9 @@
       "battery_power": {
         "name": "Battery power"
       },
+      "charge_schedule_data_charge_schedules": {
+        "name": "Charge schedules"
+      },
       "charge_state_battery_level": {
         "name": "Battery level"
       },
