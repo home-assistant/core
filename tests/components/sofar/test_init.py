@@ -618,6 +618,11 @@ async def _setup_hybrid(
             {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_x")}, True, id="unparseable_part"
         ),
         pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_\u00b2")},
+            True,
+            id="non_decimal_digit",
+        ),
+        pytest.param(
             {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_gizmo_1")}, True, id="unknown_part_kind"
         ),
         pytest.param({("other", MOCK_HYBRID_SERIAL)}, True, id="foreign_identifier"),

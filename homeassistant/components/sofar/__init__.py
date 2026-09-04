@@ -166,7 +166,7 @@ def _battery_pack_number(serial: str, identifier: str) -> int | None:
     if not identifier.startswith(prefix):
         return None
     suffix = identifier.removeprefix(prefix)
-    number = int(suffix) if suffix.isdigit() else None
+    number = int(suffix) if suffix.isdecimal() else None
     return number if number in BATTERY_COMPONENTS else None
 
 
