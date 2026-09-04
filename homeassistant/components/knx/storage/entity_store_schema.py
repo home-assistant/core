@@ -130,6 +130,51 @@ from .const import (
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
+from .dpa import (
+    DPA_417_INFO_ON_OFF,
+    DPA_417_SWITCH_ON_OFF,
+    DPA_418_ABS_SETVALUE_CONTROL,
+    DPA_418_ACTUAL_DIMMING_VALUE,
+    DPA_418_INFO_ON_OFF,
+    DPA_418_SWITCH_ON_OFF,
+    DPA_422_ABS_SETVALUE_CONTROL,
+    DPA_422_ACTUAL_DIMMING_VALUE,
+    DPA_422_COLOUR_SET_XYY,
+    DPA_422_CURRENT_COLOUR_XYY,
+    DPA_422_INFO_ON_OFF,
+    DPA_422_SWITCH_ON_OFF,
+    DPA_423_ABS_SETVALUE_CONTROL_BLUE,
+    DPA_423_ABS_SETVALUE_CONTROL_GREEN,
+    DPA_423_ABS_SETVALUE_CONTROL_RED,
+    DPA_423_ABS_SETVALUE_CONTROL_WHITE,
+    DPA_423_ACTUAL_DIMMING_VALUE_BLUE,
+    DPA_423_ACTUAL_DIMMING_VALUE_GREEN,
+    DPA_423_ACTUAL_DIMMING_VALUE_RED,
+    DPA_423_ACTUAL_DIMMING_VALUE_WHITE,
+    DPA_423_COLOUR_SET_RGB,
+    DPA_423_COLOUR_SET_RGBW,
+    DPA_423_COMBINED_INFO_ON_OFF,
+    DPA_423_COMBINED_SWITCH_ON_OFF,
+    DPA_423_CURRENT_COLOUR_RGB,
+    DPA_423_CURRENT_COLOUR_RGBW,
+    DPA_423_SWITCH_ON_OFF_BLUE,
+    DPA_423_SWITCH_ON_OFF_GREEN,
+    DPA_423_SWITCH_ON_OFF_RED,
+    DPA_423_SWITCH_ON_OFF_WHITE,
+    DPA_427_ABS_COLOUR_TEMPERATURE_CONTROL,
+    DPA_427_ABS_SETVALUE_CONTROL,
+    DPA_427_ACTUAL_DIMMING_VALUE,
+    DPA_427_CURRENT_COLOUR_TEMPERATURE,
+    DPA_427_INFO_ON_OFF,
+    DPA_427_SWITCH_ON_OFF,
+    DPA_800_CURRENT_ABS_POS_BLINDS_PERCENT,
+    DPA_800_CURRENT_ABS_POS_SLATS_PERCENT,
+    DPA_800_DEDICATED_STOP,
+    DPA_800_MOVE_UP_DOWN,
+    DPA_800_SET_ABS_POS_BLINDS_PERCENT,
+    DPA_800_SET_ABS_POS_SLATS_PERCENT,
+    DPA_800_STOP_STEP_UP_DOWN,
+)
 from .knx_selector import (
     AllSerializeFirst,
     GASelector,
@@ -243,20 +288,34 @@ BUTTON_KNX_SCHEMA = AllSerializeFirst(
 COVER_KNX_SCHEMA = AllSerializeFirst(
     probatio.Schema(
         {
-            probatio.Optional(CONF_GA_UP_DOWN): GASelector(state=False, valid_dpt="1"),
+            probatio.Optional(CONF_GA_UP_DOWN): GASelector(
+                state=False, valid_dpt="1", dpa_write=[DPA_800_MOVE_UP_DOWN]
+            ),
             probatio.Optional(CoverConf.INVERT_UPDOWN): selector.BooleanSelector(),
-            probatio.Optional(CONF_GA_STOP): GASelector(state=False, valid_dpt="1"),
-            probatio.Optional(CONF_GA_STEP): GASelector(state=False, valid_dpt="1"),
+            probatio.Optional(CONF_GA_STOP): GASelector(
+                state=False, valid_dpt="1", dpa_write=[DPA_800_DEDICATED_STOP]
+            ),
+            probatio.Optional(CONF_GA_STEP): GASelector(
+                state=False, valid_dpt="1", dpa_write=[DPA_800_STOP_STEP_UP_DOWN]
+            ),
             "section_position_control": KNXSectionFlat(collapsible=True),
             probatio.Optional(CONF_GA_POSITION_SET): GASelector(
-                state=False, valid_dpt="5.001"
+                state=False,
+                valid_dpt="5.001",
+                dpa_write=[DPA_800_SET_ABS_POS_BLINDS_PERCENT],
             ),
             probatio.Optional(CONF_GA_POSITION_STATE): GASelector(
-                write=False, valid_dpt="5.001"
+                write=False,
+                valid_dpt="5.001",
+                dpa_state=[DPA_800_CURRENT_ABS_POS_BLINDS_PERCENT],
             ),
             probatio.Optional(CoverConf.INVERT_POSITION): selector.BooleanSelector(),
             "section_tilt_control": KNXSectionFlat(collapsible=True),
-            probatio.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
+            probatio.Optional(CONF_GA_ANGLE): GASelector(
+                valid_dpt="5.001",
+                dpa_write=[DPA_800_SET_ABS_POS_SLATS_PERCENT],
+                dpa_state=[DPA_800_CURRENT_ABS_POS_SLATS_PERCENT],
+            ),
             probatio.Optional(CoverConf.INVERT_ANGLE): selector.BooleanSelector(),
             "section_travel_time": KNXSectionFlat(),
             probatio.Required(
@@ -398,14 +457,43 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
     probatio.Schema(
         {
             probatio.Optional(CONF_GA_SWITCH): GASelector(
-                write_required=True, valid_dpt="1"
+                write_required=True,
+                valid_dpt="1",
+                dpa_write=[
+                    DPA_417_SWITCH_ON_OFF,
+                    DPA_418_SWITCH_ON_OFF,
+                    DPA_422_SWITCH_ON_OFF,
+                    DPA_423_COMBINED_SWITCH_ON_OFF,
+                    DPA_427_SWITCH_ON_OFF,
+                ],
+                dpa_state=[
+                    DPA_417_INFO_ON_OFF,
+                    DPA_418_INFO_ON_OFF,
+                    DPA_422_INFO_ON_OFF,
+                    DPA_423_COMBINED_INFO_ON_OFF,
+                    DPA_427_INFO_ON_OFF,
+                ],
             ),
             probatio.Optional(CONF_GA_BRIGHTNESS): GASelector(
-                write_required=True, valid_dpt="5.001"
+                write_required=True,
+                valid_dpt="5.001",
+                dpa_write=[
+                    DPA_418_ABS_SETVALUE_CONTROL,
+                    DPA_422_ABS_SETVALUE_CONTROL,
+                    DPA_427_ABS_SETVALUE_CONTROL,
+                ],
+                dpa_state=[
+                    DPA_418_ACTUAL_DIMMING_VALUE,
+                    DPA_422_ACTUAL_DIMMING_VALUE,
+                    DPA_427_ACTUAL_DIMMING_VALUE,
+                ],
             ),
             "section_color_temp": KNXSectionFlat(collapsible=True),
             probatio.Optional(CONF_GA_COLOR_TEMP): GASelector(
-                write_required=True, dpt=ColorTempModes
+                write_required=True,
+                dpt=ColorTempModes,
+                dpa_write=[DPA_427_ABS_COLOUR_TEMPERATURE_CONTROL],
+                dpa_state=[DPA_427_CURRENT_COLOUR_TEMPERATURE],
             ),
             probatio.Required(CONF_COLOR_TEMP_MIN, default=2700): AllSerializeFirst(
                 selector.NumberSelector(
@@ -428,7 +516,18 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                     translation_key="single_address",
                     schema={
                         probatio.Optional(CONF_GA_COLOR): GASelector(
-                            write_required=True, dpt=LightColorMode
+                            write_required=True,
+                            dpt=LightColorMode,
+                            dpa_write=[
+                                DPA_422_COLOUR_SET_XYY,
+                                DPA_423_COLOUR_SET_RGB,
+                                DPA_423_COLOUR_SET_RGBW,
+                            ],
+                            dpa_state=[
+                                DPA_422_CURRENT_COLOUR_XYY,
+                                DPA_423_CURRENT_COLOUR_RGB,
+                                DPA_423_CURRENT_COLOUR_RGBW,
+                            ],
                         )
                     },
                 ),
@@ -436,28 +535,48 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                     translation_key="individual_addresses",
                     schema={
                         probatio.Optional(CONF_GA_RED_SWITCH): GASelector(
-                            write_required=False, valid_dpt="1"
+                            write_required=False,
+                            valid_dpt="1",
+                            dpa_write=[DPA_423_SWITCH_ON_OFF_RED],
                         ),
                         probatio.Required(CONF_GA_RED_BRIGHTNESS): GASelector(
-                            write_required=True, valid_dpt="5.001"
+                            write_required=True,
+                            valid_dpt="5.001",
+                            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_RED],
+                            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_RED],
                         ),
                         probatio.Optional(CONF_GA_GREEN_SWITCH): GASelector(
-                            write_required=False, valid_dpt="1"
+                            write_required=False,
+                            valid_dpt="1",
+                            dpa_write=[DPA_423_SWITCH_ON_OFF_GREEN],
                         ),
                         probatio.Required(CONF_GA_GREEN_BRIGHTNESS): GASelector(
-                            write_required=True, valid_dpt="5.001"
+                            write_required=True,
+                            valid_dpt="5.001",
+                            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_GREEN],
+                            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_GREEN],
                         ),
                         probatio.Optional(CONF_GA_BLUE_SWITCH): GASelector(
-                            write_required=False, valid_dpt="1"
+                            write_required=False,
+                            valid_dpt="1",
+                            dpa_write=[DPA_423_SWITCH_ON_OFF_BLUE],
                         ),
                         probatio.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(
-                            write_required=True, valid_dpt="5.001"
+                            write_required=True,
+                            valid_dpt="5.001",
+                            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_BLUE],
+                            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_BLUE],
                         ),
                         probatio.Optional(CONF_GA_WHITE_SWITCH): GASelector(
-                            write_required=False, valid_dpt="1"
+                            write_required=False,
+                            valid_dpt="1",
+                            dpa_write=[DPA_423_SWITCH_ON_OFF_WHITE],
                         ),
                         probatio.Optional(CONF_GA_WHITE_BRIGHTNESS): GASelector(
-                            write_required=True, valid_dpt="5.001"
+                            write_required=True,
+                            valid_dpt="5.001",
+                            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_WHITE],
+                            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_WHITE],
                         ),
                     },
                 ),
@@ -728,7 +847,10 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
 SWITCH_KNX_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_GA_SWITCH): GASelector(
-            write_required=True, valid_dpt="1"
+            write_required=True,
+            valid_dpt="1",
+            dpa_write=[DPA_417_SWITCH_ON_OFF],
+            dpa_state=[DPA_417_INFO_ON_OFF],
         ),
         probatio.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
         probatio.Optional(
