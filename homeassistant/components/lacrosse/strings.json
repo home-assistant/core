@@ -29,6 +29,7 @@
         "menu_options": {
           "add_sensor": "Add new sensor",
           "remove_sensor": "Delete sensor",
+          "update_receiver": "Update receiver",
           "update_sensor": "Update sensor"
         }
       },
@@ -38,6 +39,17 @@
         },
         "data_description": {
           "id": "The sensor to remove, along with its device."
+        }
+      },
+      "update_receiver": {
+        "data": {
+          "baud": "Baud rate",
+          "datarate": "Data rate",
+          "device": "Serial device",
+          "frequency": "Frequency",
+          "led": "Jeelink LED",
+          "toggle_interval": "Toggle interval",
+          "toggle_mask": "Toggle mask"
         }
       },
       "update_sensor": {

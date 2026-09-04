@@ -1,7 +1,7 @@
 """Config flow for the LaCrosse integration."""
 
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 from uuid import uuid4
 
 import voluptuous as vol
@@ -50,6 +50,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+RECEIVER_OPTION_KEYS: Final = (
+    CONF_DATARATE,
+    CONF_FREQUENCY,
+    CONF_JEELINK_LED,
+    CONF_TOGGLE_INTERVAL,
+    CONF_TOGGLE_MASK,
+)
+EMPTY_VALUES: Final = (None, "")
+
 
 async def _async_free_usb_ports(hass: HomeAssistant) -> list[SelectOptionDict]:
     """Return the USB serial ports not already claimed by another integration."""
@@ -76,23 +85,48 @@ async def _async_free_usb_ports(hass: HomeAssistant) -> list[SelectOptionDict]:
     ]
 
 
-def _step_user_data_schema(ports: list[SelectOptionDict]) -> vol.Schema:
+def _receiver_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return receiver config from user input, dropping empty optional values."""
+    data = {
+        CONF_DEVICE: user_input[CONF_DEVICE],
+        CONF_BAUD: user_input[CONF_BAUD],
+    }
+    for key in RECEIVER_OPTION_KEYS:
+        if (value := user_input.get(key)) not in EMPTY_VALUES:
+            data[key] = value
+    return data
+
+
+def _step_receiver_data_schema(
+    ports: list[SelectOptionDict], defaults: dict[str, Any] | None = None
+) -> vol.Schema:
     """Return the schema for the receiver configuration step.
 
     The device VID/PID can't be matched for USB discovery since most users rely
     on a custom made adapter, so free USB ports are offered as a select instead.
     """
+    defaults = defaults or {}
+    optional_fields: dict[Any, Any] = {}
+    for key in RECEIVER_OPTION_KEYS:
+        marker = vol.Optional(key)
+        if (suggested_value := defaults.get(key)) is not None:
+            marker = vol.Optional(key, description={"suggested_value": suggested_value})
+        optional_fields[marker] = vol.Any(
+            cv.boolean if key == CONF_JEELINK_LED else cv.positive_int,
+            *EMPTY_VALUES,
+        )
+
     return vol.Schema(
         {
-            vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): SelectSelector(
+            vol.Required(
+                CONF_DEVICE, default=defaults.get(CONF_DEVICE, DEFAULT_DEVICE)
+            ): SelectSelector(
                 SelectSelectorConfig(options=ports, custom_value=True, sort=True)
             ),
-            vol.Required(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
-            vol.Optional(CONF_DATARATE): cv.positive_int,
-            vol.Optional(CONF_FREQUENCY): cv.positive_int,
-            vol.Optional(CONF_JEELINK_LED): cv.boolean,
-            vol.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
-            vol.Optional(CONF_TOGGLE_MASK): cv.positive_int,
+            vol.Required(
+                CONF_BAUD, default=defaults.get(CONF_BAUD, DEFAULT_BAUD)
+            ): cv.positive_int,
+            **optional_fields,
         }
     )
 
@@ -176,12 +210,12 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
                 usb.get_serial_by_id, user_input[CONF_DEVICE]
             )
             self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
-            self._data = user_input
+            self._data = _receiver_data(user_input)
             return await self.async_step_add_sensor()
 
         ports = await _async_free_usb_ports(self.hass)
         return self.async_show_form(
-            step_id="user", data_schema=_step_user_data_schema(ports)
+            step_id="user", data_schema=_step_receiver_data_schema(ports)
         )
 
     async def async_step_reconfigure(
@@ -192,8 +226,51 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         self._sensors = dict(self._data.pop(CONF_SENSORS, {}))
         return self.async_show_menu(
             step_id="reconfigure",
-            menu_options=["add_sensor", "update_sensor", "remove_sensor"],
+            menu_options=[
+                "update_receiver",
+                "add_sensor",
+                "update_sensor",
+                "remove_sensor",
+            ],
         )
+
+    async def async_step_update_receiver(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Update the receiver configuration."""
+        if user_input is not None:
+            old_receiver = self._data[CONF_DEVICE]
+            user_input[CONF_DEVICE] = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, user_input[CONF_DEVICE]
+            )
+            self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
+            self._data = _receiver_data(user_input)
+            self._async_update_receiver_devices(old_receiver, user_input[CONF_DEVICE])
+            return await self.async_step_finish()
+
+        ports = await _async_free_usb_ports(self.hass)
+        return self.async_show_form(
+            step_id="update_receiver",
+            data_schema=_step_receiver_data_schema(ports, self._data),
+        )
+
+    def _async_update_receiver_devices(
+        self, old_receiver: str, new_receiver: str
+    ) -> None:
+        """Update sensor device identifiers for a changed receiver."""
+        if old_receiver == new_receiver:
+            return
+
+        device_registry = dr.async_get(self.hass)
+        entry_id = self._get_reconfigure_entry().entry_id
+        for sensor_id in {sensor[CONF_ID] for sensor in self._sensors.values()}:
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, f"{old_receiver}_{sensor_id}"), entry_id
+            ):
+                device_registry.async_update_device(
+                    device.id,
+                    new_identifiers={(DOMAIN, f"{new_receiver}_{sensor_id}")},
+                )
 
     async def async_step_update_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -264,9 +341,11 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_NEW_ID, default=sensor_id): cv.positive_int,
         }
         if friendly_name := sensor.get(CONF_FRIENDLY_NAME):
-            detail_schema[vol.Optional(CONF_FRIENDLY_NAME, default=friendly_name)] = (
-                cv.string
-            )
+            detail_schema[
+                vol.Optional(
+                    CONF_FRIENDLY_NAME, description={"suggested_value": friendly_name}
+                )
+            ] = cv.string
         else:
             detail_schema[vol.Optional(CONF_FRIENDLY_NAME)] = cv.string
 
@@ -381,6 +460,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         data = {**self._data, CONF_SENSORS: self._sensors}
         if self.source == SOURCE_RECONFIGURE:
             return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data=data
+                self._get_reconfigure_entry(), title=self._data[CONF_DEVICE], data=data
             )
         return self.async_create_entry(title=self._data[CONF_DEVICE], data=data)

@@ -452,6 +452,131 @@ async def test_reconfigure_flow_duplicate_sensor_from_import(
     assert result["errors"] == {"base": "sensor_already_configured"}
 
 
+async def test_update_receiver(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test changing the receiver configuration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **MULTI_SENSOR_DATA,
+            "datarate": 17241,
+            "frequency": 868,
+            "led": True,
+            "toggle_interval": 5,
+            "toggle_mask": 255,
+        },
+    )
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "/dev/ttyUSB0_1")},
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "update_receiver"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "update_receiver"
+    assert result["data_schema"]({}) == {
+        "device": "/dev/ttyUSB0",
+        "baud": 57600,
+    }
+    schema = result["data_schema"].schema
+    assert next(key.description for key in schema if key.schema == "datarate") == {
+        "suggested_value": 17241
+    }
+    assert next(key.description for key in schema if key.schema == "frequency") == {
+        "suggested_value": 868
+    }
+    assert next(key.description for key in schema if key.schema == "led") == {
+        "suggested_value": True
+    }
+    assert next(
+        key.description for key in schema if key.schema == "toggle_interval"
+    ) == {"suggested_value": 5}
+    assert next(key.description for key in schema if key.schema == "toggle_mask") == {
+        "suggested_value": 255
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "device": "/dev/ttyUSB1",
+            "baud": 38400,
+            "datarate": "",
+            "frequency": None,
+            "led": None,
+            "toggle_interval": "",
+            "toggle_mask": None,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "device": "/dev/ttyUSB1",
+        "baud": 38400,
+        "sensors": MULTI_SENSOR_DATA["sensors"],
+    }
+    assert entry.title == "/dev/ttyUSB1"
+    assert device_registry.async_get(device.id).identifiers == {
+        (DOMAIN, "/dev/ttyUSB1_1")
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_update_receiver_same_device_with_optional_values(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test updating receiver options without changing the receiver device."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MULTI_SENSOR_DATA)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "/dev/ttyUSB0_1")},
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "update_receiver"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "device": "/dev/ttyUSB0",
+            "baud": 38400,
+            "datarate": 17241,
+            "frequency": 868,
+            "led": False,
+            "toggle_interval": 5,
+            "toggle_mask": 255,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "device": "/dev/ttyUSB0",
+        "baud": 38400,
+        "datarate": 17241,
+        "frequency": 868,
+        "led": False,
+        "toggle_interval": 5,
+        "toggle_mask": 255,
+        "sensors": MULTI_SENSOR_DATA["sensors"],
+    }
+    assert device_registry.async_get(device.id).identifiers == {
+        (DOMAIN, "/dev/ttyUSB0_1")
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_update_sensor(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -477,13 +602,15 @@ async def test_update_sensor(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "update_sensor"
-    assert result["data_schema"]({}) == {
-        "new_id": 1,
-        "friendly_name": "Outdoor humidity",
-    }
+    assert result["data_schema"]({}) == {"new_id": 1}
+    assert next(
+        key.description
+        for key in result["data_schema"].schema
+        if key.schema == "friendly_name"
+    ) == {"suggested_value": "Outdoor humidity"}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"new_id": 7}
+        result["flow_id"], {"new_id": 7, "friendly_name": "Outdoor humidity"}
     )
 
     assert result["type"] is FlowResultType.ABORT
