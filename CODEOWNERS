@@ -821,8 +821,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hue/ @marcelveldt
 /homeassistant/components/hue_ble/ @flip-dots
 /tests/components/hue_ble/ @flip-dots
-/homeassistant/components/huisbaasje/ @dennisschroer
-/tests/components/huisbaasje/ @dennisschroer
+/homeassistant/components/huisbaasje/ @DieEneSchrodinger
+/tests/components/huisbaasje/ @DieEneSchrodinger
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
 /homeassistant/components/humidity/ @home-assistant/core

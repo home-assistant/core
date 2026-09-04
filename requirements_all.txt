@@ -941,7 +941,7 @@ emulated-roku==0.3.0
 energieleser==0.1.6
 
 # homeassistant.components.huisbaasje
-energyflip-client==0.2.2
+energyflip-api-client==0.3.0
 
 # homeassistant.components.energyid
 energyid-webhooks==0.0.14
