@@ -136,15 +136,9 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Store the refreshed token and reload the entry exactly once."""
         if entry.state is not ConfigEntryState.LOADED:
-            # An unloaded entry (e.g. reauth after a setup failure) has no update
-            # listener, so the reloading variant applies the data and does not
-            # emit the paired-reload deprecation warning.
+            # Unloaded entries have no update listener, so no paired-reload warning.
             return self.async_update_reload_and_abort(entry, data=data)
-        # A loaded entry carries the _setup_subentry_change_reload update listener,
-        # but that listener only reloads when the subentry set changes; a data-only
-        # token refresh leaves it unchanged, so nothing would restart the runtime.
-        # async_update_reload_and_abort would warn because the listener exists, so
-        # update without reloading and then schedule the single reload here.
+        # Reload manually: async_update_reload_and_abort would warn (listener present).
         result = self.async_update_and_abort(entry, data=data)
         self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return result
@@ -216,8 +210,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Let the user opt an account energy site into local Powerwall control."""
         entry = cast(TeslemetryConfigEntry, self._get_entry())
-        # runtime_data (the resolved energy sites) only exists while the entry is
-        # loaded; core clears it on unload, so bail out cleanly if it is not.
+        # runtime_data exists only while the entry is loaded; core clears it on unload.
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
@@ -239,9 +232,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            # Only unpaired sites are offered here, so their api is always the
-            # cloud EnergySite that exposes the pairing endpoints (a paired site
-            # would carry an EnergySiteRouter instead).
+            # Only unpaired sites are offered, so api is always the cloud EnergySite.
             if abort := await self._prepare_energy_site(
                 cast(TeslemetryEnergySite, energy_data.api)
             ):
@@ -300,30 +291,21 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         except PowerwallLookupError:
             return self.async_abort(reason="cannot_connect")
         if client is not None:
-            # The key is already registered on the gateway. If it is verified,
-            # move on to credentials; if it is still pending, resume approval
-            # without re-registering it (re-adding would reset a pending key).
+            # Key already registered; do not re-register a pending one (it would reset).
             if client.state == AuthorizedClientState.VERIFIED:
                 return await self.async_step_credentials()
             if client.state == AuthorizedClientState.PENDING_VERIFICATION:
                 return await self.async_step_pair()
             if client.state != AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
-                # The typed accessor preserves an unrecognized state verbatim. Such
-                # a read is not usable, so treat it as a lookup failure rather than
-                # resuming pairing on a state we cannot reason about.
+                # Unrecognized state is unusable; treat it as a lookup failure.
                 LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
                 return self.async_abort(reason="cannot_connect")
-            # PENDING_VERIFICATION_TIMEOUT is terminal on its own: the ~9-minute
-            # presence-proof window already expired. Re-registering the same
-            # public key resets that window without creating a duplicate record
-            # (tesla_fleet_api's add_authorized_client docs), so fall through to
-            # register below instead of aborting a flow that can never recover.
+            # Re-registering resets the expired window (no duplicate); fall through.
 
         if TYPE_CHECKING:
             assert self._energy_site is not None
         try:
-            # Not revoked on removal: other consumers may share this
-            # authorized-client key, and revoking it would deauthorize them too.
+            # Not revoked on removal: other consumers may share this key.
             LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
             await self._energy_site.add_authorized_client(
                 self._public_key_der,
@@ -361,9 +343,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_credentials()
         if client.state == AuthorizedClientState.PENDING_VERIFICATION:
             return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
-        # Only an explicit PENDING_VERIFICATION may claim the approval is still
-        # awaiting the user; an unrecognized state is a failed read, and
-        # reporting it as pending would trap the user in the form retrying forever.
+        # An unrecognized state reported as pending would trap the user forever.
         LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
 
@@ -374,9 +354,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         try:
             result = await self._energy_site.find_authorized_clients()
         except (ClientError, TeslaFleetError) as err:
-            # Gateway returned no usable client list; raise so the caller aborts
-            # rather than mistaking a failed lookup for an unregistered key and
-            # re-registering it (which would reset an already pending key).
+            # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)
             raise PowerwallLookupError from err
         return next(
@@ -401,9 +379,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         ) as client:
             await client.connect()
             try:
-                # connect() already passed the password login, so a failure here
-                # is the unapproved RSA key rejecting the signed read, not a bad
-                # password.
+                # connect() passed the password, so a failure here is key rejection.
                 await client.get_status()
             except PowerwallAuthenticationError as err:
                 raise PowerwallKeyRejectedError from err
@@ -417,9 +393,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if TYPE_CHECKING:
                 assert self._energy_site is not None
             host = user_input[CONF_HOST].strip()
-            # The Powerwall gateway login accepts only the last 5 characters of
-            # the Wi-Fi password printed on the gateway; users routinely enter
-            # the full string, so trim it to what the gateway will accept.
+            # The gateway accepts only the last 5 characters of the Wi-Fi password.
             password = user_input[CONF_PASSWORD].strip()[-5:]
             try:
                 await self._verify_local_gateway(host, password)

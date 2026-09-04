@@ -310,9 +310,7 @@ def _prune_energy_subentries(
     """Remove energy-site subentries whose site is no longer on the account."""
     if Scope.ENERGY_DEVICE_DATA not in scopes:
         return
-    # Prune against the raw product inventory, not the access-filtered energysites
-    # list: a site can report access:false transiently while still on the account,
-    # and pruning on that flag would delete a live gateway's paired credentials.
+    # Prune on the raw product list; access:false can be transient, not a removal.
     product_site_ids = {
         str(product["energy_site_id"])
         for product in products
@@ -344,9 +342,7 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     return pem
 
 
-# PowerwallError covers aiopowerwall failures (a bad key PEM raises its
-# PowerwallAuthenticationError subclass); key I/O and parsing raise OSError and
-# ValueError.
+# aiopowerwall raises PowerwallError; key I/O and parsing raise OSError/ValueError.
 _LOCAL_CONTROL_ERRORS: Final = (OSError, ValueError, PowerwallError)
 
 
@@ -358,16 +354,13 @@ async def _async_resolve_local_control(
     cloud_energy_site: EnergySite,
 ) -> tuple[bool, str | None, EnergySite | EnergySiteRouter]:
     """Resolve opt-in local control for an energy site."""
-    # Only a battery/Powerwall (TEDAPI) gateway can pair for local control;
-    # solar-only and wall-connector-only sites cannot.
+    # Only a battery/Powerwall gateway can pair for local (TEDAPI) control.
     if not battery:
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
     if subentry_id is None:
         return True, None, cloud_energy_site
-    # Local control is opt-in per site; a failure resolving one site's local
-    # gateway (key I/O, key parsing, or client construction) must not tear down
-    # the whole integration, so fall back to cloud control for this site.
+    # A local-gateway failure for one site must not tear down the integration.
     try:
         api = await _async_resolve_energy_site_api(
             hass, entry, subentry_id, cloud_energy_site
@@ -602,9 +595,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 powerwall,
             )
 
-            # Local control is opt-in: a subentry only exists once the user adds
-            # one for this site through the "Add local energy site" flow, and its
-            # presence is what enables Powerwall-first routing.
             (
                 can_local_control,
                 subentry_id,
@@ -665,8 +655,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Reload when a local-energy-site subentry is added or removed so the
-    # affected site starts (or stops) routing through its local gateway.
     _setup_subentry_change_reload(hass, entry)
 
     _setup_dynamic_discovery(
@@ -714,8 +702,7 @@ def _setup_subentry_change_reload(
         current = set(updated_entry.subentries)
         if known.symmetric_difference(current):
             hass.config_entries.async_schedule_reload(updated_entry.entry_id)
-        # Track the latest set so further updates before the reload runs (e.g. a
-        # token refresh) do not re-schedule it off the same change.
+        # Refresh known so a later update does not re-fire on this same change.
         known = current
 
     entry.async_on_unload(entry.add_update_listener(_handle_update))

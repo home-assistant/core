@@ -57,10 +57,6 @@ class TeslemetryEnergyData:
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
-    # True when the site has a battery/Powerwall and can therefore be opted into
-    # local (TEDAPI) control via an "Add local energy site" subentry. Solar-only
-    # and wall-connector-only sites cannot pair and are never offered.
+    # Only sites with a battery/Powerwall can pair for local TEDAPI control.
     can_local_control: bool
-    # The id of the user-added local-control subentry bound to this site, or None
-    # when the site has not been opted into local control.
     subentry_id: str | None
