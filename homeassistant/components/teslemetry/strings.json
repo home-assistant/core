@@ -46,6 +46,47 @@
       }
     }
   },
+  "config_subentries": {
+    "energy_site": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
+        "no_energy_sites": "No energy sites on your Teslemetry account are available for local control. This may be because they lack a Powerwall or have already been added."
+      },
+      "entry_type": "Energy site",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
+        "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
+      },
+      "initiate_flow": {
+        "user": "Add local energy site"
+      },
+      "step": {
+        "credentials": {
+          "data": {
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%]"
+          },
+          "description": "Enter your Powerwall system's local network address and its Wi-Fi password. Only the last 5 characters of the password are needed - find them on the QR label behind the front cover of your Powerwall 3, or behind the Backup Gateway door on Powerwall 2.",
+          "title": "Connect to your Powerwall system"
+        },
+        "pair": {
+          "description": "Flick the On/Off switch on your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
+          "title": "Approve the local access key"
+        },
+        "user": {
+          "data": {
+            "site_id": "Energy site"
+          },
+          "description": "Choose the Teslemetry energy site whose Powerwall you want to control over your local network.",
+          "title": "Add local energy site"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "automatic_blind_spot_camera": {
