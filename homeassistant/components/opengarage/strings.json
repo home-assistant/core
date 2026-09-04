@@ -27,6 +27,22 @@
       "vehicle": {
         "name": "Vehicle"
       }
+    },
+    "light": {
+      "light": {
+        "name": "Light"
+      }
+    }
+  },
+  "exceptions": {
+    "light_control_failed": {
+      "message": "Unable to control the opener light because OpenGarage returned error code {result}."
+    },
+    "light_control_invalid_auth": {
+      "message": "Unable to control the opener light because the device key is incorrect."
+    },
+    "light_control_unavailable": {
+      "message": "Unable to control the opener light because the device is unavailable or does not support light control."
     }
   }
 }
