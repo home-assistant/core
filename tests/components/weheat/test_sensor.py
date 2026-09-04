@@ -85,11 +85,7 @@ async def test_an_unknown_dhw_control_method_keeps_the_sensor(
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a control method this library cannot name still gets a sensor.
-
-    The heat pump keeps reporting the raw method, so the sensor has to survive
-    the backend introducing one, ready to name it once the library knows it.
-    """
+    """Test a control method this library cannot name still gets a sensor."""
     mock_weheat_heat_pump.dhw_control_method = None
     mock_weheat_heat_pump.dhw_control_method_code = 99
 

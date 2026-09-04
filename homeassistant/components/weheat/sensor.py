@@ -48,9 +48,7 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
     value_fn: Callable[[HeatPump], StateType]
-    # Whether the heat pump supports this sensor at all. Entities are only created
-    # during setup, so a sensor whose value_fn can return None on a heat pump that
-    # does support it would otherwise never appear once a value does arrive.
+    # Entities are created only at setup, so a value_fn that can be None needs this.
     supported_fn: Callable[[HeatPump], bool] | None = None
 
 
@@ -64,12 +62,7 @@ def _is_supported(
 
 
 def _dhw_target_temperature(status: HeatPump) -> float | None:
-    """Return the DHW target temperature, if the heat pump has one.
-
-    A heat pump with DHW control off reports a target of zero, which is how it
-    says there is no target: zero is not a temperature it would ever aim for,
-    since that would freeze the vessel.
-    """
+    """Return the DHW target temperature, which is zero when there is none."""
     target = status.dhw_target_temperature
     return target or None
 
