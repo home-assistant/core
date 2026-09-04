@@ -27,7 +27,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
-from .util import get_ssl_context
+from .util import get_ssl_context, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,6 +99,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
             self._async_abort_entries_match(
                 {

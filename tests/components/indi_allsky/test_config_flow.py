@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.indi_allsky.const import DOMAIN
-from homeassistant.components.indi_allsky.util import get_ssl_context
+from homeassistant.components.indi_allsky.util import get_ssl_context, normalize_host
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -139,8 +139,17 @@ async def test_form_failures_and_recovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "duplicate_host",
+    [
+        "127.0.0.1",
+        " 127.0.0.1 ",
+    ],
+)
 async def test_form_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    duplicate_host: str,
 ) -> None:
     """Test duplicate host/port configurations abort early."""
     mock_config_entry.add_to_hass(hass)
@@ -151,13 +160,73 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "127.0.0.1",
+            CONF_HOST: duplicate_host,
             CONF_PORT: 443,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "duplicate_host",
+    [
+        "2001:db8::1",
+        "[2001:db8::1]",
+        "2001:0db8:0000:0000:0000:0000:0000:0001",
+        "2001:DB8::1",
+        " [2001:db8::1] ",
+    ],
+)
+async def test_form_already_configured_ipv6(
+    hass: HomeAssistant,
+    duplicate_host: str,
+) -> None:
+    """Test duplicate IPv6 configurations abort regardless of formatting variation."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="INDI Allsky (2001:db8::1)",
+        data={
+            CONF_HOST: "2001:db8::1",
+            CONF_PORT: 443,
+        },
+        entry_id="ipv6_entry",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: duplicate_host,
+            CONF_PORT: 443,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("input_host", "expected_host"),
+    [
+        ("127.0.0.1", "127.0.0.1"),
+        (" 127.0.0.1 ", "127.0.0.1"),
+        ("allsky.local", "allsky.local"),
+        ("2001:db8::1", "2001:db8::1"),
+        ("[2001:db8::1]", "2001:db8::1"),
+        ("2001:0db8:0000:0000:0000:0000:0000:0001", "2001:db8::1"),
+        ("2001:DB8::1", "2001:db8::1"),
+        (" [2001:db8::1] ", "2001:db8::1"),
+    ],
+)
+def test_normalize_host(input_host: str, expected_host: str) -> None:
+    """Test host normalization for IPv4, IPv6, and hostnames."""
+    assert normalize_host(input_host) == expected_host
 
 
 def test_get_ssl_context() -> None:
