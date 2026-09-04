@@ -71,6 +71,7 @@ async def test_user_flow(
     hass: HomeAssistant,
     region: tuple[str, Region],
     brand: tuple[str, Brand],
+    mock_appliances_manager_api: MagicMock,
     mock_backend_selector_api: MagicMock,
     mock_whirlpool_setup_entry: MagicMock,
 ) -> None:
@@ -87,6 +88,8 @@ async def test_user_flow(
     )
 
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+    mock_appliances_manager_api.return_value.connect.assert_awaited_once()
+    mock_appliances_manager_api.return_value.disconnect.assert_awaited_once()
     mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
@@ -154,6 +157,34 @@ async def test_user_flow_auth_error(
 
     # Test that it succeeds after the error is cleared
     mock_auth_api.return_value.do_auth.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+
+
+async def test_user_flow_connect_error(
+    hass: HomeAssistant,
+    region: tuple[str, Region],
+    brand: tuple[str, Brand],
+    mock_appliances_manager_api: MagicMock,
+    mock_whirlpool_setup_entry: MagicMock,
+) -> None:
+    """Test a failed connection in the flow initialized by the user."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_appliances_manager_api.return_value.connect.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Test that it succeeds if the connection is successful
+    mock_appliances_manager_api.return_value.connect.return_value = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
