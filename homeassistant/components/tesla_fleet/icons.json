@@ -332,5 +332,13 @@
         "default": "mdi:speedometer-slow"
       }
     }
+  },
+  "services": {
+    "add_charge_schedule": {
+      "service": "mdi:calendar-plus"
+    },
+    "remove_charge_schedule": {
+      "service": "mdi:calendar-minus"
+    }
   }
 }

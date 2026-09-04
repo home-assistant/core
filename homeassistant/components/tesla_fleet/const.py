@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 import logging
+from typing import Final
 
 from tesla_fleet_api.const import SERVERS, Scope
 
@@ -54,6 +55,19 @@ ENERGY_HISTORY_FIELDS = [
     "total_solar_generation",
     "total_grid_energy_exported",
 ]
+
+
+# Tesla encodes the days a schedule applies to as a bitmask in which Sunday, not
+# Monday, is the least significant bit.
+DAYS_OF_WEEK_BITS: Final[dict[str, int]] = {
+    "monday": 2,
+    "tuesday": 4,
+    "wednesday": 8,
+    "thursday": 16,
+    "friday": 32,
+    "saturday": 64,
+    "sunday": 1,
+}
 
 
 class TeslaFleetState(StrEnum):
