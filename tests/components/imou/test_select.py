@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import (
+    PARAM_COLLECTION_POINT,
     PARAM_CURRENT_OPTION,
     PARAM_DEVICE_VOLUME,
     PARAM_NIGHT_VISION_MODE,
@@ -121,6 +122,47 @@ async def test_select_option_via_domain_service(
     assert call.args[1] == PARAM_DEVICE_VOLUME
     assert call.args[2] == "high"
     assert hass.states.get(volume_entry.entity_id).state == "high"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_collection_point_option_via_domain_service(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Selecting a collection point calls the vendor library through the coordinator."""
+
+    async def _side_effect(device: ImouHaDevice, select_type: str, option: str) -> None:
+        device.selects[select_type][PARAM_CURRENT_OPTION] = option
+
+    mock_imou_ha_device_manager.async_select_option.side_effect = _side_effect
+    collection_point_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == f"d1${PARAM_COLLECTION_POINT}"
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: collection_point_entry.entity_id,
+            ATTR_OPTION: "Front door",
+        },
+        blocking=True,
+    )
+
+    mock_imou_ha_device_manager.async_select_option.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_select_option.await_args
+    assert call is not None
+    assert call.args[1] == PARAM_COLLECTION_POINT
+    assert call.args[2] == "Front door"
+    assert hass.states.get(collection_point_entry.entity_id).state == "Front door"
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)

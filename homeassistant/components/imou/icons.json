@@ -25,6 +25,9 @@
       },
       "night_vision_mode": {
         "default": "mdi:weather-night"
+      },
+      "collection_point": {
+        "default": "mdi:crosshairs-gps"
       }
     },
     "sensor": {

@@ -64,6 +64,12 @@
       }
     },
     "select": {
+      "collection_point": {
+        "name": "Go to collection point",
+        "state": {
+          "select_collection_point": "Select a collection point…"
+        }
+      },
       "device_volume": {
         "name": "Volume",
         "state": {
