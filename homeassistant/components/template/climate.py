@@ -427,6 +427,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_hvac_modes = []
         self._attr_fan_mode = None
         self._attr_fan_modes = None
+        self._attr_preset_mode = None
+        self._attr_preset_modes = None
         self._attr_swing_mode = None
         self._attr_swing_modes = None
         self._attr_swing_horizontal_mode = None
