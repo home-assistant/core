@@ -268,6 +268,108 @@
     'state': 'auto',
   })
 # ---
+# name: test_climate_entities_snapshot[cloud_brandt_bnt1936.json][climate.home_kitchen_oven-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 250,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'defrost',
+        'bottomHeat',
+        'bottomFan',
+        'conventional',
+        'conventionalFan',
+        'fannedGrill',
+        'keepingWarm',
+        'fanCooking',
+        'combinedHeat',
+        'bread',
+        'drying',
+        'pizza',
+        'eco',
+        'auto',
+      ]),
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.home_kitchen_oven',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-5678-1936/16000211',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities_snapshot[cloud_brandt_bnt1936.json][climate.home_kitchen_oven-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen oven',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 250,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'fanCooking',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'defrost',
+        'bottomHeat',
+        'bottomFan',
+        'conventional',
+        'conventionalFan',
+        'fannedGrill',
+        'keepingWarm',
+        'fanCooking',
+        'combinedHeat',
+        'bread',
+        'drying',
+        'pizza',
+        'eco',
+        'auto',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 180,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.home_kitchen_oven',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
 # name: test_climate_entities_snapshot[cloud_hi_kumo_europe.json][climate.somfy_tahoma_switch_yutaki_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
