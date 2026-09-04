@@ -491,6 +491,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 self._attr_max_humidity,
                 int,
             ),
+            self._update_target_humidity,
         )
         self.setup_template(
             CONF_CURRENT_HUMIDITY,
@@ -593,13 +594,15 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self._attr_hvac_modes = []
             return
 
-        supported_features = (
-            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        )
         if HVACMode.OFF in render:
-            self._attr_supported_features |= supported_features
+            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
         else:
-            self._attr_supported_features &= ~supported_features
+            self._attr_supported_features &= ~ClimateEntityFeature.TURN_OFF
+
+        if (set(HVACMode) - {HVACMode.OFF}).intersection(set(render)):
+            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+        else:
+            self._attr_supported_features &= ~ClimateEntityFeature.TURN_ON
 
         self._attr_hvac_modes = render
 
@@ -616,6 +619,24 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         else:
             self._attr_target_temperature = _round_to_step(
                 float(result), self._attr_target_temperature_step
+            )
+
+    def _update_target_humidity(
+        self,
+        result,
+    ) -> None:
+        if result is None:
+            self._attr_target_humidity = None
+            return
+
+        if self._attr_target_humidity_step is None:
+            self._attr_target_humidity = result
+        else:
+            self._attr_target_humidity = int(
+                _round_to_step(
+                    float(result) / 10.0, self._attr_target_humidity_step / 10.0
+                )
+                * 10.0
             )
 
     @override
