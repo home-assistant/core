@@ -280,12 +280,13 @@ def _setup_subentry_change_reload(
     async def _handle_update(
         hass: HomeAssistant, updated_entry: TeslemetryConfigEntry
     ) -> None:
+        # Only subentry membership matters here; an OAuth token refresh updates the entry too.
         nonlocal known
         current = set(updated_entry.subentries)
-        if known.symmetric_difference(current):
-            hass.config_entries.async_schedule_reload(updated_entry.entry_id)
-        # Track the latest set so a later update does not re-schedule off the same change.
+        if known == current:
+            return
         known = current
+        hass.config_entries.async_schedule_reload(updated_entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(_handle_update))
 
