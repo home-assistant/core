@@ -90,6 +90,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/airthings/ @danielhiversen @LaStrada
 /homeassistant/components/airthings_ble/ @vincegio @LaStrada
 /tests/components/airthings_ble/ @vincegio @LaStrada
+/homeassistant/components/airtouch3/ @L0rdCha0s
+/tests/components/airtouch3/ @L0rdCha0s
 /homeassistant/components/airtouch4/ @samsinnamon
 /tests/components/airtouch4/ @samsinnamon
 /homeassistant/components/airtouch5/ @danzel

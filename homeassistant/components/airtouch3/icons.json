@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "climate": {
+      "air_conditioner": {
+        "default": "mdi:air-conditioner"
+      },
+      "zone": {
+        "default": "mdi:home-thermometer-outline"
+      }
+    }
+  }
+}
