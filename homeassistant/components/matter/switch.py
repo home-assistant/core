@@ -1,12 +1,15 @@
 """Matter switches."""
 
+from asyncio import Lock
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
+from weakref import WeakKeyDictionary
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
+from matter_server.client.models.node import MatterEndpoint
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.switch import (
@@ -38,6 +41,8 @@ BOOLEAN_STATE_CONFIGURATION_FEATURE_VISUAL = (
 BOOLEAN_STATE_CONFIGURATION_FEATURE_AUDIBLE = (
     clusters.BooleanStateConfiguration.Bitmaps.Feature.kAudible
 )
+
+ALARM_ENABLED_LOCKS: WeakKeyDictionary[MatterEndpoint, Lock] = WeakKeyDictionary()
 
 
 async def async_setup_entry(
@@ -208,31 +213,31 @@ class MatterAlarmEnabledSwitch(MatterSwitch):
 
     async def _async_set_alarm_enabled(self, value: bool) -> None:
         """Set the enabled state for an alarm mode."""
-        alarms_enabled = (
-            self.get_matter_attribute_value(
-                clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled
+        lock = ALARM_ENABLED_LOCKS.setdefault(self._endpoint, Lock())
+        async with lock:
+            alarms_enabled = (
+                self.get_matter_attribute_value(
+                    clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled
+                )
+                or 0
             )
-            or 0
-        )
-        if value:
-            alarms_enabled |= self.entity_description.alarm_mode
-        else:
-            alarms_enabled &= ~self.entity_description.alarm_mode
+            if value:
+                alarms_enabled |= self.entity_description.alarm_mode
+            else:
+                alarms_enabled &= ~self.entity_description.alarm_mode
 
-        await self.send_device_command(
-            clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
-                alarmsToEnableDisable=alarms_enabled,
+            await self.send_device_command(
+                clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+                    alarmsToEnableDisable=alarms_enabled,
+                )
             )
-        )
-        # Optimistically update the local cache to avoid a race condition
-        # when the visual and audible alarm switches (which share this
-        # attribute) are toggled in quick succession, before the subscription
-        # report for the first command arrives.
-        alarms_enabled_path = create_attribute_path_from_attribute(
-            endpoint_id=self._endpoint.endpoint_id,
-            attribute=clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
-        )
-        self._endpoint.set_attribute_value(alarms_enabled_path, alarms_enabled)
+            # Optimistically update the local cache before allowing another
+            # alarm switch to read the bitmap.
+            alarms_enabled_path = create_attribute_path_from_attribute(
+                endpoint_id=self._endpoint.endpoint_id,
+                attribute=clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
+            )
+            self._endpoint.set_attribute_value(alarms_enabled_path, alarms_enabled)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
