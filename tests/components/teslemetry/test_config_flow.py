@@ -1149,6 +1149,33 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
+@pytest.mark.parametrize(
+    "key_error",
+    [
+        pytest.param(OSError("disk gone"), id="os_error"),
+        pytest.param(ValueError("bad key"), id="value_error"),
+    ],
+)
+async def test_subentry_scan_key_load_fails(
+    hass: HomeAssistant, key_error: Exception
+) -> None:
+    """A Bluetooth key-load failure aborts the scan step with cannot_connect."""
+    entry = await _setup_account_entry(hass)
+
+    with patch(
+        "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+        side_effect=key_error,
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
 async def test_subentry_scan_finds_device_after_active_scan(
     hass: HomeAssistant,
 ) -> None:

@@ -279,7 +279,11 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            parent = await async_get_ble_parent(self.hass)
+            try:
+                parent = await async_get_ble_parent(self.hass)
+            except (OSError, ValueError) as err:
+                LOGGER.debug("Bluetooth key load failed: %s", err)
+                return self.async_abort(reason="cannot_connect")
             # The advertised BLE name is a hash of the VIN; match on its prefix.
             expected = parent.get_name(self._vin)[:17]
             device = None
