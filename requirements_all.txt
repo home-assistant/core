@@ -667,7 +667,7 @@ beautifulsoup4==4.13.3
 besen==0.4.0
 
 # homeassistant.components.bitvis
-bitvis-protobuf==1.0.1
+bitvis-protobuf==2.0.1
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1

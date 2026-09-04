@@ -2,11 +2,12 @@
 
 import asyncio
 import logging
-from typing import Any, override
+from typing import Any, Self, override
 
 from bitvis_protobuf.listener import FilterIp
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 from bitvis_protobuf.utils import (
+    InvalidMacAddressError,
     async_resolve_host,
     async_verify_udp_port_bindable,
     normalize_host,
@@ -16,14 +17,21 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN, MODEL_NAME
+from .const import DEFAULT_NAME, DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
 from .coordinator import async_get_listener_registry
 
 _LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+    }
+)
 
 
 async def _async_test_port(hass: HomeAssistant, port: int) -> None:
@@ -52,16 +60,31 @@ async def _async_discover_mac_address(hass: HomeAssistant, host: str, port: int)
             future.set_result(payload.mac_address)
 
     filters: list[FilterIp] = []
+    original_dispatch = listener.dispatch
+
+    def dispatch(data: bytes, addr: tuple[str, int]) -> None:
+        try:
+            original_dispatch(data, addr)
+        except InvalidMacAddressError as err:
+            if not future.done():
+                future.set_exception(err)
+
+    listener.dispatch = dispatch  # type: ignore[method-assign]
     try:
         for ip in resolved_ips:
             filt = FilterIp(ip)
-            listener.register(filt, _on_payload)
+            try:
+                listener.register(filt, _on_payload)
+            except RuntimeError as err:
+                raise AbortFlow("already_in_progress") from err
             filters.append(filt)
 
         return await asyncio.wait_for(future, timeout=DISCOVERY_TIMEOUT)
     finally:
+        listener.dispatch = original_dispatch  # type: ignore[method-assign]
         for filt in filters:
             listener.unregister(filt)
+        await listener_registry.async_remove_if_unused(port)
 
 
 class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -71,6 +94,16 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: ZeroconfServiceInfo | None = None
         self._validated_host: str | None = None
+        self._host: str | None = None
+
+    @override
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return (
+            self._host is not None
+            and other_flow._host is not None
+            and normalize_host(self._host) == normalize_host(other_flow._host)
+        )
 
     def _get_friendly_name(self, name: str | None) -> str:
         """Return a user-friendly name derived from the zeroconf name."""
@@ -88,24 +121,39 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         self, host: str, title: str
     ) -> ConfigFlowResult:
         """Validate connectivity, discover MAC address, and create the entry."""
+        self._host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
+
         try:
             mac_address = await self._async_validate_host(host)
         except TimeoutError:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, {CONF_HOST: host}
+                ),
                 errors={"base": "timeout_connect"},
+            )
+        except InvalidMacAddressError:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, {CONF_HOST: host}
+                ),
+                errors={"base": "invalid_mac"},
             )
         except OSError:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, {CONF_HOST: host}
+                ),
                 errors={"base": "cannot_connect"},
             )
 
         await self.async_set_unique_id(format_mac(mac_address))
         self._abort_if_unique_id_configured()
-        self._async_abort_entries_match({CONF_HOST: host})
 
         return self.async_create_entry(
             title=title,
@@ -122,17 +170,14 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             host = normalize_host(user_input[CONF_HOST])
-            return await self._async_create_entry_from_host(host, MODEL_NAME)
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-            }
-        )
+            self._async_abort_entries_match({CONF_HOST: host})
+            return await self._async_create_entry_from_host(host, DEFAULT_NAME)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
         )
 
     @override
@@ -143,13 +188,19 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered Bitvis Power Hub via Zeroconf: %s", discovery_info)
 
         host = discovery_info.host
+        self._host = host
 
         self._async_abort_entries_match({CONF_HOST: host})
+
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         try:
             mac_address = await self._async_validate_host(host)
         except TimeoutError:
             return self.async_abort(reason="timeout_connect")
+        except InvalidMacAddressError:
+            return self.async_abort(reason="invalid_mac")
         except OSError:
             return self.async_abort(reason="cannot_connect")
 

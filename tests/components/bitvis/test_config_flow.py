@@ -2,21 +2,12 @@
 
 import asyncio
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
-from bitvis_protobuf.parse import PayloadSample
 import pytest
 
-from homeassistant.components.bitvis.config_flow import (
-    _async_discover_mac_address,
-    _async_test_port,
-)
-from homeassistant.components.bitvis.const import (
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-    MODEL_NAME,
-)
+from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from homeassistant.components.bitvis.coordinator import async_get_listener_registry
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -61,7 +52,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: USER_HOST,
         CONF_PORT: DEFAULT_PORT,
@@ -97,11 +88,40 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: USER_HOST,
         CONF_PORT: DEFAULT_PORT,
     }
+    assert result["result"].unique_id == TEST_DEVICE_MAC
+
+
+async def test_user_form_invalid_mac(hass: HomeAssistant) -> None:
+    """Test user form error when device sends payload without MAC and recovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch_config_flow_connectivity(USER_HOST, invalid_mac=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: USER_HOST,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_mac"}
+
+    with patch_config_flow_connectivity(USER_HOST):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: USER_HOST,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_DEVICE_MAC
 
 
@@ -133,7 +153,7 @@ async def test_user_form_discovery_timeout(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: USER_HOST,
         CONF_PORT: DEFAULT_PORT,
@@ -176,6 +196,19 @@ async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_confirm_invalid_mac(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery abort when device sends payload without MAC."""
+    with patch_config_flow_connectivity(ZEROCONF_HOST, invalid_mac=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_mac"
 
 
 async def test_zeroconf_confirm_discovery_timeout(hass: HomeAssistant) -> None:
@@ -252,7 +285,7 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: ipv6_host,
         CONF_PORT: DEFAULT_PORT,
@@ -300,7 +333,7 @@ async def test_user_form_keeps_hostname(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == hostname
 
 
@@ -320,7 +353,7 @@ async def test_user_form_normalize_bracketed_ipv6(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MODEL_NAME
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == ipv6_host
 
 
@@ -378,86 +411,63 @@ async def test_zeroconf_empty_name_uses_default(hass: HomeAssistant) -> None:
     assert result["title"] == DEFAULT_NAME
 
 
-async def test_async_test_port_skips_when_listener_exists(
+async def test_aborted_flow_removes_listener(
     hass: HomeAssistant,
+    mock_shared_listener: MagicMock,
 ) -> None:
-    """Test _async_test_port returns immediately when a listener already exists."""
-    with patch(
-        "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
-    ) as mock_registry:
-        mock_registry.return_value.has_listener.return_value = True
-        await _async_test_port(hass, 5000)
-
-    mock_registry.return_value.has_listener.assert_called_once_with(5000)
-
-
-async def test_async_test_port_binds_and_closes(hass: HomeAssistant) -> None:
-    """Test _async_test_port delegates to the library port bind check."""
-    with (
-        patch(
-            "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
-        ) as mock_registry,
-        patch(
-            "homeassistant.components.bitvis.config_flow.async_verify_udp_port_bindable",
-            new_callable=AsyncMock,
-        ) as mock_verify,
+    """Test listener is stopped after an aborted config flow."""
+    with patch_config_flow_connectivity(
+        USER_HOST,
+        deliver_mac=False,
+        discovery_timeout=True,
+        use_real_listener_registry=True,
+        shared_listener=mock_shared_listener,
     ):
-        mock_registry.return_value.has_listener.return_value = False
-        await _async_test_port(hass, 5000)
-
-    mock_verify.assert_awaited_once_with(5000)
-
-
-async def test_async_test_port_raises_when_all_binds_fail(
-    hass: HomeAssistant,
-) -> None:
-    """Test _async_test_port raises OSError when the library port bind check fails."""
-    with (
-        patch(
-            "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
-        ) as mock_registry,
-        patch(
-            "homeassistant.components.bitvis.config_flow.async_verify_udp_port_bindable",
-            new_callable=AsyncMock,
-            side_effect=OSError("UDP port is unavailable"),
-        ),
-    ):
-        mock_registry.return_value.has_listener.return_value = False
-        with pytest.raises(OSError, match="UDP port is unavailable"):
-            await _async_test_port(hass, 5000)
-
-
-async def test_async_discover_mac_address(hass: HomeAssistant) -> None:
-    """Test _async_discover_mac_address registers IP filters and returns MAC."""
-    mock_listener = MagicMock()
-    mock_listener.register = MagicMock()
-    mock_listener.unregister = MagicMock()
-
-    with (
-        patch(
-            "homeassistant.components.bitvis.config_flow.async_resolve_host",
-            new_callable=AsyncMock,
-            return_value={USER_HOST},
-        ),
-        patch(
-            "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
-        ) as mock_registry,
-    ):
-        mock_registry.return_value.async_get_or_create = AsyncMock(
-            return_value=mock_listener
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: USER_HOST,
+            },
         )
 
-        discover_task = asyncio.create_task(
-            _async_discover_mac_address(hass, USER_HOST, DEFAULT_PORT)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
+    mock_shared_listener.stop.assert_awaited_once()
+    assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
+
+
+async def test_concurrent_flow_same_host_aborts(hass: HomeAssistant) -> None:
+    """Test concurrent flows for the same host abort with already_in_progress."""
+    with patch_config_flow_connectivity(USER_HOST, deliver_mac=False):
+        first_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        first_task = asyncio.create_task(
+            hass.config_entries.flow.async_configure(
+                first_result["flow_id"],
+                {
+                    CONF_HOST: USER_HOST,
+                },
+            )
         )
         await hass.async_block_till_done()
 
-        callback = mock_listener.register.call_args[0][1]
+        second_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        second_result = await hass.config_entries.flow.async_configure(
+            second_result["flow_id"],
+            {
+                CONF_HOST: USER_HOST,
+            },
+        )
 
-        payload = PayloadSample(mac_address=TEST_DEVICE_MAC, sample=MagicMock())
-        callback(payload, (USER_HOST, 1234))
+        first_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await first_task
 
-        mac_address = await discover_task
-
-    assert mac_address == TEST_DEVICE_MAC
-    mock_listener.unregister.assert_called_once()
+    assert second_result["type"] is FlowResultType.ABORT
+    assert second_result["reason"] == "already_in_progress"

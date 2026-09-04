@@ -4,30 +4,19 @@ from collections.abc import Generator, Iterator
 from contextlib import ExitStack, contextmanager
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from bitvis_protobuf.listener import FilterMac
-from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
+from bitvis_protobuf.listener import FilterIp, FilterMac
+from bitvis_protobuf.parse import PayloadSample, parse_payload
+from bitvis_protobuf.powerhub_pb2 import Payload
 import pytest
 
-from homeassistant.components.bitvis.const import DEFAULT_PORT, DOMAIN, MODEL_NAME
+from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from . import find_listener_callback
 
 from tests.common import MockConfigEntry
 
 TEST_DEVICE_MAC = "aa:bb:cc:dd:ee:ff"
 SECOND_DEVICE_MAC = "11:22:33:44:55:66"
-
-
-def deliver_listener_payload(
-    listener: MagicMock,
-    mac_address: str,
-    payload: PayloadSample | PayloadDiagnostic,
-    addr: tuple[str, int] = ("192.168.1.100", 1234),
-) -> None:
-    """Deliver a payload through a mocked SharedListener registered callback."""
-    find_listener_callback(listener, mac_address)(payload, addr)
 
 
 @contextmanager
@@ -36,21 +25,76 @@ def patch_config_flow_connectivity(
     *,
     mac_address: str = TEST_DEVICE_MAC,
     deliver_mac: bool = True,
+    invalid_mac: bool = False,
     port_bind_side_effect: BaseException | None = None,
     discovery_timeout: bool = False,
+    use_real_listener_registry: bool = False,
+    shared_listener: MagicMock | None = None,
 ) -> Iterator[AsyncMock]:
     """Patch library connectivity helpers used by the config flow."""
-    mock_listener = MagicMock()
-    if deliver_mac and not discovery_timeout:
+    mock_listener = shared_listener or MagicMock()
+    mock_listener.start = AsyncMock()
+    mock_listener.stop = AsyncMock()
 
-        def _on_register(_filt: MagicMock, callback: MagicMock) -> None:
-            payload = PayloadSample(mac_address=mac_address, sample=MagicMock())
-            callback(payload, (resolved_host, 1234))
+    if shared_listener is None:
+        if invalid_mac:
+
+            def _dispatch(data: bytes, addr: tuple[str, int]) -> None:
+                parse_payload(data)
+
+            mock_listener.dispatch = MagicMock(side_effect=_dispatch)
+
+            def _on_register(_filt: MagicMock, _callback: MagicMock) -> None:
+                payload = Payload()
+                payload.sample.SetInParent()
+                mock_listener.dispatch(
+                    payload.SerializeToString(), (resolved_host, 1234)
+                )
+
+            mock_listener.register = MagicMock(side_effect=_on_register)
+        elif deliver_mac and not discovery_timeout:
+
+            def _on_register(_filt: MagicMock, callback: MagicMock) -> None:
+                payload = PayloadSample(mac_address=mac_address, sample=MagicMock())
+                callback(payload, (resolved_host, 1234))
+
+            mock_listener.register = MagicMock(side_effect=_on_register)
+        else:
+            mock_listener.register = MagicMock()
+        mock_listener.unregister = MagicMock()
+        type(mock_listener).is_empty = PropertyMock(return_value=True)
+    elif invalid_mac:
+
+        def _dispatch(data: bytes, addr: tuple[str, int]) -> None:
+            parse_payload(data)
+
+        mock_listener.dispatch = MagicMock(side_effect=_dispatch)
+        original_register = mock_listener.register.side_effect
+
+        def _on_register(filt: FilterIp | FilterMac, callback: MagicMock) -> None:
+            if isinstance(filt, FilterIp):
+                payload = Payload()
+                payload.sample.SetInParent()
+                mock_listener.dispatch(
+                    payload.SerializeToString(), (resolved_host, 1234)
+                )
+                return
+            if original_register is not None:
+                original_register(filt, callback)
 
         mock_listener.register = MagicMock(side_effect=_on_register)
-    else:
-        mock_listener.register = MagicMock()
-    mock_listener.unregister = MagicMock()
+    elif deliver_mac and not discovery_timeout:
+        original_register = mock_listener.register.side_effect
+
+        def _on_register(filt: FilterIp | FilterMac, callback: MagicMock) -> None:
+            if isinstance(filt, FilterIp):
+                payload = PayloadSample(mac_address=mac_address, sample=MagicMock())
+                callback(payload, (resolved_host, 1234))
+                return
+            if original_register is not None:
+                original_register(filt, callback)
+
+        mock_listener.register = MagicMock(side_effect=_on_register)
 
     with ExitStack() as stack:
         mock_verify = stack.enter_context(
@@ -67,11 +111,24 @@ def patch_config_flow_connectivity(
                 return_value={resolved_host},
             )
         )
-        mock_registry = stack.enter_context(
-            patch(
-                "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
+        if not use_real_listener_registry:
+            mock_registry = stack.enter_context(
+                patch(
+                    "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
+                )
             )
-        )
+            mock_registry.return_value.has_listener.return_value = False
+            mock_registry.return_value.async_get_or_create = AsyncMock(
+                return_value=mock_listener
+            )
+            mock_registry.return_value.async_remove_if_unused = AsyncMock()
+        else:
+            stack.enter_context(
+                patch(
+                    "homeassistant.components.bitvis.coordinator.SharedListener",
+                    return_value=mock_listener,
+                )
+            )
         if discovery_timeout:
             stack.enter_context(
                 patch(
@@ -79,10 +136,6 @@ def patch_config_flow_connectivity(
                     0,
                 )
             )
-        mock_registry.return_value.has_listener.return_value = False
-        mock_registry.return_value.async_get_or_create = AsyncMock(
-            return_value=mock_listener
-        )
         yield mock_verify
 
 
@@ -93,7 +146,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PORT: DEFAULT_PORT},
         unique_id=TEST_DEVICE_MAC,
-        title=MODEL_NAME,
+        title=DEFAULT_NAME,
     )
 
 
@@ -104,7 +157,7 @@ def mock_zeroconf_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.200", CONF_PORT: DEFAULT_PORT},
         unique_id=TEST_DEVICE_MAC,
-        title=MODEL_NAME,
+        title=DEFAULT_NAME,
     )
 
 
@@ -115,7 +168,7 @@ def mock_ipv6_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "2001:db8::10", CONF_PORT: DEFAULT_PORT},
         unique_id="11:22:33:44:55:66",
-        title=MODEL_NAME,
+        title=DEFAULT_NAME,
     )
 
 
@@ -126,7 +179,7 @@ def mock_second_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.101", CONF_PORT: DEFAULT_PORT},
         unique_id=SECOND_DEVICE_MAC,
-        title=MODEL_NAME,
+        title=DEFAULT_NAME,
     )
 
 
