@@ -23,6 +23,11 @@ class MideaSwitchEntityDescription(SwitchEntityDescription):
 
 SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
+        key="pump",
+        translation_key="pump",
+        models=[DeviceType.A1],
+    ),
+    MideaSwitchEntityDescription(
         key="aux_heating",
         translation_key="aux_heating",
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF],
