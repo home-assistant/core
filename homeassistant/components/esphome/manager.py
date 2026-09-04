@@ -110,9 +110,11 @@ UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
 
 
 @callback
-def _has_mac_unique_id(entry: ESPHomeConfigEntry) -> bool:
+def _mac_unique_id(entry: ESPHomeConfigEntry) -> str | None:
     """Dial-in routing is keyed by MAC; pre-2023 name unique ids have none."""
-    return (unique_id := entry.unique_id) is not None and ":" in unique_id
+    if (unique_id := entry.unique_id) is not None and ":" in unique_id:
+        return unique_id
+    return None
 
 
 @callback
@@ -136,7 +138,7 @@ def async_create_api_client(
         # The library drops the declaration without a real key; the MAC
         # gate is ours, a route needs a MAC unique id
         outgoing_connection_target=declare_outgoing_target
-        and _has_mac_unique_id(entry),
+        and _mac_unique_id(entry) is not None,
     )
 
 
@@ -601,8 +603,8 @@ class ESPHomeManager:
         if not self.cli.outgoing_connection_target:
             _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
             return
-        # Same MAC gate the declared flag used; the None check narrows types
-        if (mac := entry.unique_id) is None or not _has_mac_unique_id(entry):
+        # Same MAC gate the declared flag used
+        if (mac := _mac_unique_id(entry)) is None:
             _LOGGER.debug("%s: Not routing dial-ins; no MAC unique id", entry.title)
             return
         try:
