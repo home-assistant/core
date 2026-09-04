@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import CoolmasterConfigEntry
-from .entity import CoolmasterDescriptionEntity
+from .entity import CoolmasterEntity
 
 
 async def async_setup_entry(
@@ -23,7 +23,7 @@ async def async_setup_entry(
     )
 
 
-class CoolmasterResetFilter(CoolmasterDescriptionEntity, ButtonEntity):
+class CoolmasterResetFilter(CoolmasterEntity, ButtonEntity):
     """Reset the clean filter timer (once filter was cleaned)."""
 
     entity_description = ButtonEntityDescription(

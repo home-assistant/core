@@ -4,7 +4,6 @@ from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CoolmasterDataUpdateCoordinator
@@ -32,24 +31,11 @@ class CoolmasterEntity(CoordinatorEntity[CoolmasterDataUpdateCoordinator]):
             name=unit_id,
             sw_version=coordinator.info["version"],
         )
+        if hasattr(self, "entity_description"):
+            self._attr_unique_id: str = f"{unit_id}-{self.entity_description.key}"
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._unit = self.coordinator.data[self._unit_id]
         super()._handle_coordinator_update()
-
-
-class CoolmasterDescriptionEntity(CoolmasterEntity):
-    """A Coolmaster entity described by an entity description."""
-
-    entity_description: EntityDescription
-
-    def __init__(
-        self,
-        coordinator: CoolmasterDataUpdateCoordinator,
-        unit_id: str,
-    ) -> None:
-        """Initiate CoolmasterDescriptionEntity."""
-        super().__init__(coordinator, unit_id)
-        self._attr_unique_id = f"{unit_id}-{self.entity_description.key}"
