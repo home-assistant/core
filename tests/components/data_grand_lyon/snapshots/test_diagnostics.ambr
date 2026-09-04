@@ -32,6 +32,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'alerts': dict({
+      }),
       'park_and_rides': dict({
       }),
       'stops': dict({
@@ -95,6 +97,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'alerts': dict({
+      }),
       'park_and_rides': dict({
         'park_1': dict({
           'capacite': 240,
@@ -148,6 +152,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'alerts': dict({
+      }),
       'park_and_rides': dict({
       }),
       'stops': dict({

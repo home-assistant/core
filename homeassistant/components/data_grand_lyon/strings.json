@@ -214,6 +214,9 @@
     "auth_failed": {
       "message": "Authentication failed for Data Grand Lyon."
     },
+    "update_failed_alerts": {
+      "message": "Error fetching TCL traffic alerts from Data Grand Lyon."
+    },
     "update_failed_park_and_ride": {
       "message": "Error fetching park & ride availability from Data Grand Lyon."
     },

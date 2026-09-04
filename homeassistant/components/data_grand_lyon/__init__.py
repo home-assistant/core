@@ -10,6 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .coordinator import (
+    DataGrandLyonAlertsCoordinator,
     DataGrandLyonConfigEntry,
     DataGrandLyonData,
     DataGrandLyonParkAndRideCoordinator,
@@ -34,11 +35,13 @@ async def async_setup_entry(
     tcl_coordinator = DataGrandLyonTclCoordinator(hass, entry, client)
     velov_coordinator = DataGrandLyonVelovCoordinator(hass, entry, client)
     park_and_ride_coordinator = DataGrandLyonParkAndRideCoordinator(hass, entry, client)
+    alerts_coordinator = DataGrandLyonAlertsCoordinator(hass, entry, client)
 
     coordinators: list[DataUpdateCoordinator] = [
         tcl_coordinator,
         velov_coordinator,
         park_and_ride_coordinator,
+        alerts_coordinator,
     ]
     await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
 
@@ -46,6 +49,7 @@ async def async_setup_entry(
         tcl_coordinator=tcl_coordinator,
         velov_coordinator=velov_coordinator,
         park_and_ride_coordinator=park_and_ride_coordinator,
+        alerts_coordinator=alerts_coordinator,
     )
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))

@@ -5,6 +5,9 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from data_grand_lyon_ha import (
+    TclAlert,
+    TclAlertSeverityType,
+    TclAlertType,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -22,6 +25,7 @@ from homeassistant.components.data_grand_lyon.const import (
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_LINE,
     SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
@@ -171,6 +175,88 @@ MOCK_PARK_AND_RIDES = [
 ]
 
 
+MOCK_TCL_ALERTS = [
+    TclAlert(
+        type=TclAlertType.DISRUPTION,
+        cause="travaux",
+        debut=datetime(2026, 4, 1, 7, 0),
+        fin=datetime(2026, 4, 30, 17, 30),
+        mode="Bus",
+        ligne_com="C3",
+        ligne_cli="C3",
+        titre="Déviée dir. Cordeliers",
+        message="Les arrêts de Gare St-Paul à Cordeliers ne sont plus desservis.",
+        last_update_fme=datetime(2026, 4, 10, 9, 15),
+        n=1,
+        type_severite=TclAlertSeverityType.SIGNIFICANT_DELAYS,
+        niveau_severite=20,
+        type_objet="line",
+        liste_objet="C3",
+    ),
+    TclAlert(
+        type=TclAlertType.INFORMATION,
+        cause="événement",
+        debut=datetime(2026, 3, 1, 4, 30),
+        fin=datetime(2026, 3, 2, 1, 30),
+        mode="Bus",
+        ligne_com="C3",
+        ligne_cli="C3",
+        titre="Fête de la Musique",
+        message="Horaires prolongés.",
+        last_update_fme=datetime(2026, 3, 1, 9, 15),
+        n=2,
+        type_severite=TclAlertSeverityType.OTHER_EFFECT,
+        niveau_severite=30,
+        type_objet="line",
+        liste_objet="C3",
+    ),
+    TclAlert(
+        type=TclAlertType.DISRUPTION,
+        cause="panne bus",
+        debut=datetime(2026, 4, 10, 8, 0),
+        fin=datetime(2026, 4, 10, 20, 0),
+        mode="Bus",
+        ligne_com="27",
+        ligne_cli="27",
+        titre="Terminus Cordeliers",
+        message="La ligne est déviée.",
+        last_update_fme=datetime(2026, 4, 10, 9, 15),
+        n=3,
+        type_severite=TclAlertSeverityType.SIGNIFICANT_DELAYS,
+        niveau_severite=20,
+        type_objet="line",
+        liste_objet="27",
+    ),
+]
+
+
+@pytest.fixture
+def mock_line_subentries() -> list[ConfigSubentryData]:
+    """Mock TCL line subentries."""
+    return [
+        ConfigSubentryData(
+            data={CONF_LINE: "C3"},
+            subentry_id="line_1",
+            subentry_type=SUBENTRY_TYPE_LINE,
+            title="Line C3",
+            unique_id="line_C3",
+        )
+    ]
+
+
+@pytest.fixture
+def mock_line_config_entry(
+    mock_line_subentries: list[ConfigSubentryData],
+) -> MockConfigEntry:
+    """Create a mock config entry with TCL line subentries."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Data Grand Lyon",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        subentries_data=mock_line_subentries,
+    )
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -279,4 +365,5 @@ def mock_tcl_client() -> Generator[AsyncMock]:
         client.get_tcl_stops.return_value = MOCK_TCL_STOPS
         client.get_velov_stations.return_value = MOCK_VELOV_STATIONS
         client.get_tcl_park_and_rides.return_value = MOCK_PARK_AND_RIDES
+        client.get_tcl_alerts.return_value = MOCK_TCL_ALERTS
         yield client
