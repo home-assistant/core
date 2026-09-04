@@ -48,7 +48,7 @@ Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
 openai==2.45.0
-orjson==3.12.0
+orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
@@ -65,14 +65,14 @@ PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
-serialx==1.9.0
+serialx==1.10.0
 SQLAlchemy==2.0.52
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.6
+uv==0.12.7
 webrtc-models==0.3.0
 yarl==1.24.5
 zeroconf==0.151.1

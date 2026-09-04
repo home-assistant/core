@@ -956,7 +956,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.19.0
+env-canada==0.19.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -2735,7 +2735,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==2.0.1
+python-hotspring==2.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3013,7 +3013,7 @@ ruuvitag-ble==0.4.0
 rxv==0.7.0
 
 # homeassistant.components.samsung_exlink
-samsung-exlink==1.1.0
+samsung-exlink==1.1.1
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -3066,7 +3066,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.9.0
+serialx==1.10.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1

@@ -1757,6 +1757,25 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
                 if not self._orphaned_identifiers[identifier]:
                     del self._orphaned_identifiers[identifier]
 
+    def get_orphaned_entries(
+        self,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+        domain: str,
+    ) -> list[DeletedDeviceEntry]:
+        """Get the orphans of a domain holding any of the given keys.
+
+        Orphans are matched on their recorded domain so a chance identifier or connection
+        collision doesn't match another integration's device. connections must be
+        normalized.
+        """
+        orphans: dict[str, DeletedDeviceEntry] = {}
+        for identifier in identifiers:
+            orphans.update(self._orphaned_identifiers.get(identifier, {}))
+        for connection in connections:
+            orphans.update(self._orphaned_connections.get(connection, {}))
+        return [entry for entry in orphans.values() if entry.domain == domain]
+
     def get_orphaned_entry(
         self,
         identifiers: set[tuple[str, str]] | None,
@@ -1770,15 +1789,10 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         (carried over by the migration with no recoverable domain) is left for the
         periodic purge rather than restored.
         """
-        orphans: dict[str, DeletedDeviceEntry] = {}
-        for identifier in identifiers or ():
-            orphans.update(self._orphaned_identifiers.get(identifier, {}))
-        for connection in _normalize_connections(connections or set()):
-            orphans.update(self._orphaned_connections.get(connection, {}))
-        for entry in orphans.values():
-            if entry.domain == domain:
-                return entry
-        return None
+        orphans = self.get_orphaned_entries(
+            identifiers or set(), _normalize_connections(connections or set()), domain
+        )
+        return orphans[0] if orphans else None
 
 
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
@@ -4368,16 +4382,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # device from the same integration is orphaned, drop any existing orphan
             # it overlaps so the newest one wins deterministically instead of shadowing
             # it.
-            for existing in list(self._deleted_devices.values()):
-                if (
-                    existing.config_entry_id is None
-                    and existing.domain == domain
-                    and (
-                        existing.connections & deleted_device.connections
-                        or existing.identifiers & deleted_device.identifiers
-                    )
-                ):
-                    del self._deleted_devices[existing.id]
+            for existing in self._deleted_devices.get_orphaned_entries(
+                deleted_device.identifiers, deleted_device.connections, domain
+            ):
+                del self._deleted_devices[existing.id]
         self._deleted_devices[deleted_device.id] = attr.evolve(
             deleted_device,
             config_entry_id=None,
