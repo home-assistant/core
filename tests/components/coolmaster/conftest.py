@@ -26,6 +26,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "low",
         "mode": "cool",
         "error_code": None,
+        "demand": False,
         "clean_filter": False,
         "swing": None,
     },
@@ -37,6 +38,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "high",
         "mode": "heat",
         "error_code": "Err1",
+        "demand": True,
         "clean_filter": True,
         "swing": "horizontal",
     },
@@ -48,6 +50,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "vlow",
         "mode": "cool",
         "error_code": None,
+        "demand": False,
         "clean_filter": False,
         "swing": None,
     },
@@ -59,6 +62,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "Med",  # Test case insensitivity for fan speed
         "mode": "cool",
         "error_code": None,
+        "demand": True,
         "clean_filter": False,
         "swing": None,
     },
@@ -70,6 +74,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "ULTRA",  # Test unknown fan speed handling
         "mode": "cool",
         "error_code": None,
+        "demand": None,  # Test a bridge that does not report demand
         "clean_filter": False,
         "swing": None,
     },

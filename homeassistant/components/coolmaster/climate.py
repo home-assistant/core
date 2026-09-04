@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -32,6 +33,12 @@ CM_TO_HA_STATE = {
 }
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
+
+CM_TO_HA_ACTION = {
+    "heat": HVACAction.HEATING,
+    "cool": HVACAction.COOLING,
+    "dry": HVACAction.DRYING,
+}
 
 CM_TO_HA_FAN = {
     "low": FAN_LOW,
@@ -128,6 +135,34 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
             return HVACMode.OFF
 
         return CM_TO_HA_STATE[mode]
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running action."""
+        if not self._unit.is_on:
+            return HVACAction.OFF
+
+        mode = self._unit.mode
+        if mode == "fan":
+            # In fan only mode the fan runs for as long as the unit is on and the
+            # unit never calls for heating or cooling.
+            return HVACAction.FAN
+
+        if (demand := self._unit.demand) is None:
+            # Bridges that only speak the legacy status format omit demand.
+            return None
+        if not demand:
+            return HVACAction.IDLE
+        if mode == "auto":
+            # The bridge does not say which way a unit in automatic mode is
+            # working, so compare the room temperature against the set point.
+            return (
+                HVACAction.COOLING
+                if self._unit.temperature > self._unit.thermostat
+                else HVACAction.HEATING
+            )
+        return CM_TO_HA_ACTION[mode]
 
     @property
     @override

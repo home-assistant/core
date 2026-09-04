@@ -7,6 +7,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
@@ -20,6 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.coolmaster.climate import FAN_MODES
@@ -124,6 +126,60 @@ async def test_climate_hvac_modes(
             hass.states.get(unit).attributes[ATTR_HVAC_MODES]
             == hass.states.get("climate.l1_100").attributes[ATTR_HVAC_MODES]
         )
+
+
+async def test_climate_hvac_action(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+) -> None:
+    """Test the Coolmaster climate hvac action."""
+    assert (
+        hass.states.get("climate.l1_100").attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+    )
+    assert (
+        hass.states.get("climate.l1_101").attributes[ATTR_HVAC_ACTION]
+        == HVACAction.HEATING
+    )
+    assert (
+        hass.states.get("climate.l1_102").attributes[ATTR_HVAC_ACTION]
+        == HVACAction.IDLE
+    )
+    assert (
+        hass.states.get("climate.l1_103").attributes[ATTR_HVAC_ACTION]
+        == HVACAction.COOLING
+    )
+    # The legacy status format does not report demand, so the action is unknown.
+    assert ATTR_HVAC_ACTION not in hass.states.get("climate.l1_104").attributes
+
+
+@pytest.mark.parametrize(
+    ("mode", "demand", "temperature", "expected"),
+    [
+        # In fan only mode the fan runs whenever the unit is on.
+        ("fan", False, 25, HVACAction.FAN),
+        ("dry", True, 25, HVACAction.DRYING),
+        ("dry", False, 25, HVACAction.IDLE),
+        # A unit in automatic mode does not say which way it is working, so the
+        # room temperature is compared against the set point of 20.
+        ("auto", True, 25, HVACAction.COOLING),
+        ("auto", True, 15, HVACAction.HEATING),
+    ],
+)
+async def test_climate_hvac_action_derived_modes(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mode: str,
+    demand: bool,
+    temperature: float,
+    expected: HVACAction,
+) -> None:
+    """Test the hvac action for modes no fixture unit reports."""
+    entity = hass.data[CLIMATE_DOMAIN].get_entity("climate.l1_102")
+    entity._unit.mode = mode
+    entity._unit.demand = demand
+    entity._unit.temperature = temperature
+
+    assert entity.hvac_action == expected
 
 
 async def test_climate_fan_mode(
