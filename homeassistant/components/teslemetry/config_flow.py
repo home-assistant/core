@@ -410,8 +410,6 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             step_id="credentials",
             data_schema=vol.Schema(
                 {
-                    # Leave blank when discovery found nothing; defaulting to the
-                    # setup-AP address would misdirect a normally-connected gateway.
                     vol.Required(
                         CONF_HOST,
                         default=self._discovered_host or vol.UNDEFINED,
