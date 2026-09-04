@@ -323,40 +323,30 @@ async def test_boolean_state_configuration_alarm_enabled_switches_are_serialized
         await allow_commands.wait()
 
     matter_client.send_device_command.side_effect = send_device_command
-    visual_task = hass.async_create_task(
+    task = hass.async_create_task(
         hass.services.async_call(
-            "switch", "turn_off", {"entity_id": visual_entity_id}, blocking=True
+            "switch",
+            "turn_off",
+            {"entity_id": [visual_entity_id, audible_entity_id]},
+            blocking=True,
         )
     )
     await command_started.wait()
-    audible_task = hass.async_create_task(
-        hass.services.async_call(
-            "switch", "turn_off", {"entity_id": audible_entity_id}, blocking=True
-        )
-    )
     await asyncio.sleep(0)
 
     assert matter_client.send_device_command.call_count == 1
 
     allow_commands.set()
-    await asyncio.gather(visual_task, audible_task)
+    await task
 
-    assert matter_client.send_device_command.call_args_list == [
-        call(
-            node_id=matter_node.node_id,
-            endpoint_id=1,
-            command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
-                alarmsToEnableDisable=2,
-            ),
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args_list[-1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=0,
         ),
-        call(
-            node_id=matter_node.node_id,
-            endpoint_id=1,
-            command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
-                alarmsToEnableDisable=0,
-            ),
-        ),
-    ]
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_speaker"])
