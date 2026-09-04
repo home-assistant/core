@@ -57,11 +57,6 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
 COOLING_CONDITIONS_NOT_COUNTED = ("control_method", "contact_not_blocked")
 
 
-def _is_cooling(status: HeatPump) -> bool:
-    """Return whether a cooling cycle is running, including the water check."""
-    return status.cooling_state is not None
-
-
 def _cooling_wait_until(status: HeatPump) -> datetime | None:
     """Return when the wait after the last cooling cycle runs out."""
     conditions = status.cooling_start_conditions
@@ -70,10 +65,12 @@ def _cooling_wait_until(status: HeatPump) -> datetime | None:
     return status.cooling_available_from
 
 
+# A cooling state is only reported during a cooling cycle and covers every substate
+# of it, including the water check the overall heat pump state reports as its own.
 def _cooling_conditions_met(status: HeatPump) -> int | None:
     """Return how many conditions for starting cooling are met, as the portal counts."""
     conditions = status.cooling_start_conditions
-    if conditions is None or _is_cooling(status):
+    if conditions is None or status.cooling_state is not None:
         return None
     return sum(
         met
@@ -87,14 +84,14 @@ def _cooling_blocked_by(status: HeatPump) -> str | None:
     conditions = status.cooling_start_conditions
     if conditions is None:
         return None
-    if _is_cooling(status):
+    if status.cooling_state is not None:
         return "none"
     return next((name for name, met in conditions.items() if not met), "none")
 
 
 def _latched_reason(status: HeatPump, reason: Enum | None) -> str | None:
     """Return a reason from before the cycle, which says nothing while one runs."""
-    if _is_cooling(status):
+    if status.cooling_state is not None:
         return "none"
     return reason.name.lower() if reason is not None else None
 
