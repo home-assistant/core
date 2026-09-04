@@ -708,6 +708,9 @@ bluetooth-auto-recovery==1.6.4
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.29.24
 
+# homeassistant.components.bluetti_modbus
+bluetti-modbus==0.1.4
+
 # homeassistant.components.bond
 bond-async==0.2.1
 
