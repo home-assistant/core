@@ -135,6 +135,10 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         If yes, it updates the entry with the unique_id and discovery data and returns True.
         If no, it returns False.
+
+        Comparing the host is the best we can do, it will fail if the user configured manually
+        with a different name, but the gateway does not provide a good unique ID other than the
+        announced name, which does not exist if configured manually.
         """
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
