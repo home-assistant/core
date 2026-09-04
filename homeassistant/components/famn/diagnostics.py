@@ -13,6 +13,7 @@ TO_REDACT = {
     "spaceId",
     "taskListId",
     "calendarId",
+    "listId",
     "recurrenceId",
     "createdBy",
     "updatedBy",
