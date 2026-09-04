@@ -16,9 +16,6 @@ from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_
 
 async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
     """Return a shared TeslaBluetooth parent with the private key loaded."""
-    parent: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
-    if parent is not None:
-        return parent
     lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
     async with lock:
         # Another task may have created it while we waited for the lock.
