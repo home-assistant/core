@@ -1711,14 +1711,7 @@ async def test_position_updated_on_track_change_while_playing(
     media_event: SonosMockEvent,
     current_track_info: dict[str, Any],
 ) -> None:
-    """Test a track change without a transport state change refreshes position.
-
-    A skip or auto-advance keeps the transport state PLAYING. The position
-    must still be force-updated: the poll triggered by the event can return a
-    mid-transition snapshot still carrying the previous track's clock, which
-    the position jump heuristic alone would discard, leaving a stale position
-    and timestamp on the entity.
-    """
+    """Test a track change without a transport state change refreshes position."""
     entity_id = "media_player.zone_a"
     sub_callback = soco.avTransport.subscribe.return_value.callback
 
