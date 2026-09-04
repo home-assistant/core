@@ -1,19 +1,26 @@
 """Tests for the Overkiz data update coordinator."""
 
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import EventName
 from pyoverkiz.exceptions import (
+    BadCredentialsError,
     InvalidEventListenerIdError,
     MaintenanceError,
+    NotAuthenticatedError,
+    OverkizError,
     ServiceUnavailableError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
+from pyoverkiz.models import ExecutionRegisteredEvent
 import pytest
 
 from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -207,3 +214,211 @@ async def test_child_devices_link_to_their_gateway(
     assert secondary_gateway is not None
     assert secondary_child is not None
     assert secondary_child.via_device_id == secondary_gateway.id
+
+
+async def test_execution_dropout_ttl_recovery(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Lost EXECUTION_STATE_CHANGED event recovers via execution TTL and returns interval to 30s."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator: OverkizDataUpdateCoordinator = entry.runtime_data.coordinator
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+    # Deliver EXECUTION_REGISTERED event
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            ExecutionRegisteredEvent(
+                name=EventName.EXECUTION_REGISTERED, exec_id="exec-123"
+            )
+        ],
+    )
+
+    # Coordinator update_interval drops to 1s
+    assert coordinator.update_interval == timedelta(seconds=1)
+    assert "exec-123" in coordinator.executions
+
+    # Fast forward beyond EXECUTION_TTL without an EXECUTION_STATE_CHANGED completion event
+    freezer.tick(timedelta(seconds=65))
+    mock_client.queue_events([])
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify execution was cleaned up and interval returned to 30s
+    assert "exec-123" not in coordinator.executions
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_execution_cleared_on_error(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Errors clear pending executions and restore update_interval."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator: OverkizDataUpdateCoordinator = entry.runtime_data.coordinator
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            ExecutionRegisteredEvent(
+                name=EventName.EXECUTION_REGISTERED, exec_id="exec-456"
+            )
+        ],
+    )
+    assert coordinator.update_interval == timedelta(seconds=1)
+    assert "exec-456" in coordinator.executions
+
+    # Transient error happens on fetch
+    mock_client.fetch_events.side_effect = ClientConnectorError(Mock(), Mock())
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Executions cleared and update_interval restored
+    assert coordinator.executions == {}
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_coordinator_resync_devices_after_listener_invalidation(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Listener invalidation sets _need_full_resync and fetches all devices on next refresh."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator: OverkizDataUpdateCoordinator = entry.runtime_data.coordinator
+
+    mock_client.get_devices.reset_mock()
+
+    # Simulate InvalidEventListenerIdError
+    mock_client.fetch_events.side_effect = InvalidEventListenerIdError(
+        "Invalid event listener id"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator._need_full_resync is True
+
+    # Recovery: next poll should call get_devices to resynchronize full state
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.get_devices.await_count == 1
+    assert coordinator._need_full_resync is False
+
+
+async def test_relogin_recovery_on_transient_not_authenticated_error(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Transient NotAuthenticatedError triggers re-login without raising ConfigEntryAuthFailed."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    mock_client.login.reset_mock()
+    mock_client.get_devices.reset_mock()
+
+    # Session expired: fetch_events throws NotAuthenticatedError
+    # But client.login() and get_devices() succeed during recovery
+    mock_client.fetch_events.side_effect = NotAuthenticatedError("Session expired")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Integration stays LOADED, did not raise ConfigEntryAuthFailed
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_client.login.await_count == 1
+    assert mock_client.get_devices.await_count == 1
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state != STATE_UNAVAILABLE
+
+    # When login fails with transient network error: raises UpdateFailed (transient), NOT ConfigEntryAuthFailed
+    mock_client.login.side_effect = ClientConnectorError(Mock(), Mock())
+    mock_client.fetch_events.side_effect = NotAuthenticatedError("Session expired")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Still in LOADED state (coordinator is in retry state, not failed entry)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_server_disconnected_relogin_transport_error(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """ServerDisconnectedError catches transport errors during relogin safely as UpdateFailed."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator: OverkizDataUpdateCoordinator = entry.runtime_data.coordinator
+
+    mock_client.login.side_effect = TimeoutError("Connection timed out during relogin")
+    mock_client.fetch_events.side_effect = ServerDisconnectedError(
+        "Server disconnected"
+    )
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Cleanly caught as UpdateFailed -> entity unavailable, entry stays LOADED (will retry)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+    assert coordinator._need_full_resync is True
+
+
+async def test_bad_credentials_during_relogin_triggers_auth_failed(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Permanent BadCredentialsError during relogin triggers ConfigEntryAuthFailed."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    mock_client.login.side_effect = BadCredentialsError("Bad credentials")
+    mock_client.fetch_events.side_effect = NotAuthenticatedError("Session expired")
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_generic_overkiz_error_handled_as_transient(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Generic OverkizError is caught and handled as UpdateFailed."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator: OverkizDataUpdateCoordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = OverkizError("Internal server glitch")
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+    assert coordinator._need_full_resync is True

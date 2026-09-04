@@ -3,9 +3,10 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+import time
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientConnectorError, ServerDisconnectedError
+from aiohttp import ClientConnectorError, ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
@@ -13,6 +14,7 @@ from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
     NotAuthenticatedError,
+    OverkizError,
     ServiceUnavailableError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
@@ -40,7 +42,13 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    EXECUTION_TTL,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -77,6 +85,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.executions: dict[str, list[dict[str, str]]] = {}
+        self._executions_registered_at: dict[str, float] = {}
+        self._execution_ttl: float = EXECUTION_TTL
+        self._need_full_resync: bool = False
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -87,45 +98,165 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         )
 
+    def _handle_error_reset(self) -> None:
+        """Reset execution state and restore update interval on error."""
+        self.executions.clear()
+        self._executions_registered_at.clear()
+        self.update_interval = self._default_update_interval
+
+    def track_execution(self, exec_id: str) -> None:
+        """Track execution registration timestamp."""
+        if exec_id not in self.executions:
+            self.executions[exec_id] = []
+        self._executions_registered_at.setdefault(exec_id, time.monotonic())
+
+    def untrack_execution(self, exec_id: str) -> None:
+        """Remove tracked execution."""
+        self.executions.pop(exec_id, None)
+        self._executions_registered_at.pop(exec_id, None)
+
+    def _cleanup_stale_executions(self) -> None:
+        """Clean up executions that have exceeded their TTL."""
+        now = time.monotonic()
+        stale_exec_ids = [
+            exec_id
+            for exec_id, reg_time in self._executions_registered_at.items()
+            if now - reg_time > self._execution_ttl
+        ]
+        for exec_id in stale_exec_ids:
+            LOGGER.debug("Cleaning up stale execution %s", exec_id)
+            self.executions.pop(exec_id, None)
+            self._executions_registered_at.pop(exec_id, None)
+
+        # Track timestamp for any execution added without a timestamp
+        for exec_id in list(self.executions):
+            if exec_id not in self._executions_registered_at:
+                self._executions_registered_at[exec_id] = now
+
     @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
+        # Resynchronize full device state if connection was dropped or listener was invalidated
+        if self._need_full_resync:
+            try:
+                self.devices = await self._get_devices()
+            except (BadCredentialsError, OAuth2TokenRequestReauthError) as exception:
+                self._handle_error_reset()
+                raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+            except (
+                NotAuthenticatedError,
+                OAuth2TokenRequestError,
+                TooManyConcurrentRequestsError,
+                TooManyRequestsError,
+                MaintenanceError,
+                ServiceUnavailableError,
+                TimeoutError,
+                ClientError,
+                OverkizError,
+            ) as exception:
+                LOGGER.debug("Failed to fetch devices during resync", exc_info=True)
+                self._handle_error_reset()
+                raise UpdateFailed(
+                    f"Failed to resync devices: {exception}"
+                ) from exception
+            else:
+                self._need_full_resync = False
+
         try:
             events = await self.client.fetch_events()
         except (
             BadCredentialsError,
-            NotAuthenticatedError,
             OAuth2TokenRequestReauthError,
         ) as exception:
+            self._handle_error_reset()
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
-        except OAuth2TokenRequestError as exception:
-            raise UpdateFailed("Failed to refresh OAuth2 token.") from exception
-        except TooManyConcurrentRequestsError as exception:
-            raise UpdateFailed("Too many concurrent requests.") from exception
-        except TooManyRequestsError as exception:
-            raise UpdateFailed("Too many requests, try again later.") from exception
-        except MaintenanceError as exception:
-            raise UpdateFailed("Server is down for maintenance.") from exception
-        except ServiceUnavailableError as exception:
-            raise UpdateFailed("Server is unavailable.") from exception
-        except InvalidEventListenerIdError as exception:
-            raise UpdateFailed(exception) from exception
-        except (TimeoutError, ClientConnectorError) as exception:
-            LOGGER.debug("Failed to connect", exc_info=True)
-            raise UpdateFailed("Failed to connect.") from exception
-        except ServerDisconnectedError:
-            self.executions = {}
-
-            # During the relogin, similar exceptions can be thrown.
+        except NotAuthenticatedError:
+            self._handle_error_reset()
+            self._need_full_resync = True
             try:
                 await self.client.login()
                 self.devices = await self._get_devices()
-            except (BadCredentialsError, NotAuthenticatedError) as exception:
+            except (BadCredentialsError, OAuth2TokenRequestReauthError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
-            except TooManyRequestsError as exception:
-                raise UpdateFailed("Too many requests, try again later.") from exception
+            except (
+                NotAuthenticatedError,
+                OAuth2TokenRequestError,
+                TooManyConcurrentRequestsError,
+                TooManyRequestsError,
+                MaintenanceError,
+                ServiceUnavailableError,
+                TimeoutError,
+                ClientError,
+                OverkizError,
+            ) as exception:
+                LOGGER.debug(
+                    "Failed to relogin after session expiration", exc_info=True
+                )
+                raise UpdateFailed(
+                    f"Failed to re-authenticate: {exception}"
+                ) from exception
+            else:
+                self._need_full_resync = False
+                return self.devices
+        except OAuth2TokenRequestError as exception:
+            self._handle_error_reset()
+            raise UpdateFailed("Failed to refresh OAuth2 token.") from exception
+        except TooManyConcurrentRequestsError as exception:
+            self._handle_error_reset()
+            raise UpdateFailed("Too many concurrent requests.") from exception
+        except TooManyRequestsError as exception:
+            self._handle_error_reset()
+            raise UpdateFailed("Too many requests, try again later.") from exception
+        except MaintenanceError as exception:
+            self._handle_error_reset()
+            raise UpdateFailed("Server is down for maintenance.") from exception
+        except ServiceUnavailableError as exception:
+            self._handle_error_reset()
+            raise UpdateFailed("Server is unavailable.") from exception
+        except InvalidEventListenerIdError as exception:
+            self._handle_error_reset()
+            self._need_full_resync = True
+            raise UpdateFailed(str(exception)) from exception
+        except (TimeoutError, ClientConnectorError) as exception:
+            LOGGER.debug("Failed to connect", exc_info=True)
+            self._handle_error_reset()
+            self._need_full_resync = True
+            raise UpdateFailed("Failed to connect.") from exception
+        except ServerDisconnectedError:
+            LOGGER.debug("Server disconnected, attempting reconnection", exc_info=True)
+            self._handle_error_reset()
+            self._need_full_resync = True
 
-            return self.devices
+            try:
+                await self.client.login()
+                self.devices = await self._get_devices()
+            except (BadCredentialsError, OAuth2TokenRequestReauthError) as exception:
+                raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+            except (
+                NotAuthenticatedError,
+                OAuth2TokenRequestError,
+                TooManyConcurrentRequestsError,
+                TooManyRequestsError,
+                MaintenanceError,
+                ServiceUnavailableError,
+                TimeoutError,
+                ClientError,
+                OverkizError,
+            ) as exception:
+                LOGGER.debug(
+                    "Failed to reconnect after server disconnect", exc_info=True
+                )
+                raise UpdateFailed(f"Failed to reconnect: {exception}") from exception
+            else:
+                self._need_full_resync = False
+                return self.devices
+        except (ClientError, OverkizError) as exception:
+            LOGGER.debug("Overkiz / transport error", exc_info=True)
+            self._handle_error_reset()
+            self._need_full_resync = True
+            raise UpdateFailed(
+                f"Error fetching Overkiz data: {exception}"
+            ) from exception
 
         for event in events:
             LOGGER.debug(event)
@@ -133,7 +264,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
-        # Restore the default update interval if no executions are pending
+        # Clean up stale executions and restore update interval if no executions are pending
+        self._cleanup_stale_executions()
         if not self.executions:
             self.update_interval = self._default_update_interval
 
@@ -227,8 +359,7 @@ async def on_execution_registered(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionRegisteredEvent
 ) -> None:
     """Handle execution registered event."""
-    if event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = []
+    coordinator.track_execution(event.exec_id)
 
     if not coordinator.is_stateless:
         coordinator.update_interval = timedelta(seconds=1)
@@ -243,4 +374,4 @@ async def on_execution_state_changed(
         ExecutionState.COMPLETED,
         ExecutionState.FAILED,
     ]:
-        del coordinator.executions[event.exec_id]
+        coordinator.untrack_execution(event.exec_id)
