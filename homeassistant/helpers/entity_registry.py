@@ -55,9 +55,9 @@ from .device_registry import (
 from .frame import ReportBehavior, report_usage
 from .json import (
     JSON_DUMP,
+    cached_json_bytes,
     cached_json_fragment,
     find_paths_unserializable_data,
-    json_bytes,
     json_fragment,
 )
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
@@ -325,7 +325,9 @@ class RegistryEntry:
         """
         try:
             dict_repr = self._as_display_dict
-            json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
+            json_repr: bytes | None = (
+                cached_json_bytes(dict_repr) if dict_repr else None
+            )
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -392,7 +394,7 @@ class RegistryEntry:
         """Return a cached partial JSON representation of the entry."""
         try:
             dict_repr = self.as_partial_dict
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",

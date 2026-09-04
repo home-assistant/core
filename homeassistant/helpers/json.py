@@ -116,15 +116,23 @@ def json_bytes_strip_null(data: Any) -> bytes:
 json_fragment = orjson.Fragment
 
 
-def cached_json_fragment(data: Any) -> orjson.Fragment:
-    """Return a json fragment right-sized for long-term caching.
+def cached_json_bytes(data: Any) -> bytes:
+    """Return json bytes right-sized for long-term caching.
 
     orjson over-allocates the returned bytes buffer and does not shrink it: the
     logical length is set but the capacity is rounded up to a power of two (at
-    least a few KiB), so a fragment cached for the lifetime of a long-lived
-    object retains several KiB of unused buffer. Copy the bytes to a right-sized
-    buffer before wrapping them, which matters when many such fragments are
-    cached at once.
+    least a few KiB), so bytes cached for the lifetime of a long-lived object
+    retain several KiB of unused buffer.
+    """
+    # Drop orjson's over-allocated slack with help of a memoryview.
+    return bytes(memoryview(json_bytes(data)))
+
+
+def cached_json_fragment(data: Any) -> orjson.Fragment:
+    """Return a json fragment right-sized for long-term caching.
+
+    Wraps the same right-sized bytes as cached_json_bytes; the body is inlined
+    rather than calling it to avoid an extra function call on this hot path.
     """
     # Drop orjson's over-allocated slack with help of a memoryview.
     return orjson.Fragment(bytes(memoryview(json_bytes(data))))

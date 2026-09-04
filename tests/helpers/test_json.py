@@ -19,6 +19,7 @@ from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder as DefaultHASSJSONEncoder,
+    cached_json_bytes,
     cached_json_fragment,
     find_paths_unserializable_data,
     json_bytes,
@@ -226,43 +227,56 @@ def test_cached_json_fragment() -> None:
     )
 
 
-def test_cached_json_fragment_trims_buffer() -> None:
-    """Test cached_json_fragment drops orjson's over-allocated buffer.
+def test_cached_json_bytes() -> None:
+    """Test cached_json_bytes serializes identically to json_bytes."""
+    data = {"a": 1, "b": [1, 2, 3], "c": {"nested": True}, "d": None}
+
+    assert cached_json_bytes(data) == json_bytes(data)
+    assert (
+        cached_json_bytes(data) == b'{"a":1,"b":[1,2,3],"c":{"nested":true},"d":null}'
+    )
+
+
+@pytest.mark.parametrize(
+    "cached_serializer",
+    [cached_json_bytes, cached_json_fragment],
+    ids=["cached_json_bytes", "cached_json_fragment"],
+)
+def test_cached_json_helpers_trim_buffer(
+    cached_serializer: Callable[[Any], object],
+) -> None:
+    """Test the cached_json_* helpers cache right-sized bytes, not orjson's slack.
 
     orjson.dumps returns bytes whose backing buffer is rounded up to a power of
-    two and not shrunk; cached_json_fragment copies them to a right-sized buffer.
-    Without that copy the cached fragment retains the full over-allocated buffer,
-    which is the memory regression this guards against.
+    two and not shrunk; the helpers copy them to a right-sized buffer. Without
+    that copy the cached value would retain the full over-allocated buffer
+    (several KiB even for a small payload), which is the memory regression this
+    guards against.
 
-    The over-allocation is invisible to normal object inspection: sys.getsizeof()
-    reports the logical length, not the backing buffer, and orjson.Fragment
-    exposes no way to reach the bytes it wraps. So the actual retained allocation
-    can only be observed via tracemalloc.
+    The waste is invisible to normal object inspection: sys.getsizeof() reports
+    the logical length, not the backing buffer, and orjson.Fragment exposes no way
+    to reach the bytes it wraps, so the retained allocation can only be observed
+    via tracemalloc.
     """
-    # A payload large enough that orjson's over-allocation is clearly visible.
     data = {f"key_{index}": "value" * 5 for index in range(40)}
     serialized_size = len(json_bytes(data))
 
-    def retained_bytes(make: Callable[[], object]) -> int:
-        gc.collect()
-        before, _ = tracemalloc.get_traced_memory()
-        obj = make()
-        gc.collect()  # free the transient over-allocated buffer, keep only `obj`
-        after, _ = tracemalloc.get_traced_memory()
-        assert obj is not None  # keep the fragment alive until measured
-        return after - before
-
     tracemalloc.start()
     try:
-        over_allocated = retained_bytes(lambda: json_fragment(json_bytes(data)))
-        right_sized = retained_bytes(lambda: cached_json_fragment(data))
+        # clear_traces resets the baseline to zero so pre-existing garbage from
+        # the test session is not counted; the transient over-allocated buffer is
+        # freed by refcounting before get_traced_memory, leaving only `cached`.
+        gc.collect()
+        tracemalloc.clear_traces()
+        cached = cached_serializer(data)
+        retained, _ = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
 
-    # The plain fragment keeps orjson's oversized buffer; the trimmed one keeps
-    # roughly the serialized size.
-    assert over_allocated > serialized_size * 3
-    assert right_sized < serialized_size * 2
+    assert cached is not None  # keep alive until measured
+    # The cache holds ~the serialized size; without the copy it would hold
+    # orjson's oversized power-of-two buffer, which is far larger.
+    assert retained < serialized_size * 1.5
 
 
 def test_json_bytes_strip_null() -> None:

@@ -54,9 +54,9 @@ from .frame import (
 )
 from .json import (
     JSON_DUMP,
+    cached_json_bytes,
     cached_json_fragment,
     find_paths_unserializable_data,
-    json_bytes,
     json_fragment,
 )
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
@@ -441,7 +441,7 @@ class BaseDeviceEntry:
         """Return a cached JSON representation of the entry."""
         try:
             dict_repr = self.dict_repr
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
