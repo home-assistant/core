@@ -207,8 +207,7 @@ async def test_migration_v5_1_to_v5_2(
         identifiers={(DOMAIN, f"{entry.entry_id}_1")},
         name="Test Endpoint",
     )
-    # A device can carry identifiers from another domain if it was merged with
-    # a device from a different integration; the migration must ignore those.
+
     device_registry.async_update_device(
         endpoint_device.id,
         new_identifiers=endpoint_device.identifiers | {("other_domain", "some_id")},
@@ -220,9 +219,7 @@ async def test_migration_v5_1_to_v5_2(
         model="Container",
         name="Test Container",
     )
-    # Pre-migration container unique IDs didn't include the endpoint ID; the
-    # migration must rewrite them so containers with the same name on
-    # different environments don't collide on one entity.
+
     container_entity = entity_registry.async_get_or_create(
         domain="switch",
         platform=DOMAIN,
@@ -231,8 +228,7 @@ async def test_migration_v5_1_to_v5_2(
         device_id=container_device.id,
         original_name="Test Container Switch",
     )
-    # Non-container entities already include the endpoint ID and must be
-    # re-parented onto the subentry without their unique ID being touched.
+
     endpoint_entity = entity_registry.async_get_or_create(
         domain="sensor",
         platform=DOMAIN,
