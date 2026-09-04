@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import replace
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from aiolanbon import (
     LanbonAuthError,
@@ -17,12 +17,13 @@ from aiolanbon import (
 )
 from aiolanbon.models import DeviceSnapshot, Event, GatewayInfo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import LanbonConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 _POLL = timedelta(seconds=15)
@@ -66,8 +67,13 @@ def _patch_availability(snap: DeviceSnapshot, event: Event) -> DeviceSnapshot | 
 class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
     """Fetch LOIP device snapshot and optionally listen for events."""
 
+    config_entry: "LanbonConfigEntry"
+
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, client: LanbonClient
+        self,
+        hass: HomeAssistant,
+        config_entry: "LanbonConfigEntry",
+        client: LanbonClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -90,9 +96,8 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         """Read gateway info and whether events WebSocket is advertised."""
         try:
             self.info = await self.client.get_info()
-        except LanbonAuthError as err:
-            raise ConfigEntryAuthFailed("unauthorized") from err
         except (
+            LanbonAuthError,
             LanbonConnectionError,
             LanbonTimeoutError,
             LanbonError,
@@ -107,9 +112,8 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             if self.info is None:
                 await self._async_setup()
             snap = await self.client.get_devices(if_none_match=self._etag)
-        except LanbonAuthError as err:
-            raise ConfigEntryAuthFailed("unauthorized") from err
         except (
+            LanbonAuthError,
             LanbonConnectionError,
             LanbonTimeoutError,
             LanbonError,
@@ -127,9 +131,7 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         """Refresh once, then start the events task when the gateway supports it."""
         await super().async_config_entry_first_refresh()
         if self._use_ws:
-            entry = self.config_entry
-            assert entry is not None
-            self._events_task = entry.async_create_background_task(
+            self._events_task = self.config_entry.async_create_background_task(
                 self.hass, self._events_loop(), name="lanbon-loip-events"
             )
 
@@ -185,11 +187,10 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         except LanbonEventsUnsupportedError:
             _LOGGER.debug("events websocket unsupported; polling /devices")
             self._use_ws = False
-        except LanbonAuthError:
-            raise
         except asyncio.CancelledError:
             raise
         except (
+            LanbonAuthError,
             LanbonConnectionError,
             LanbonTimeoutError,
             LanbonError,

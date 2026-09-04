@@ -225,34 +225,3 @@ async def test_zeroconf_updates_host_when_already_configured(
     assert entry.data[CONF_HOST] == "10.0.0.9"
     assert entry.data[CONF_PORT] == 9000
 
-
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test reauthentication updates the token."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=GATEWAY_ID,
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_TOKEN: TOKEN,
-            CONF_GATEWAY_ID: GATEWAY_ID,
-        },
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    new_token = "b" * 32
-    with patch(
-        "homeassistant.components.lanbon.config_flow.LanbonClient.get_info",
-        new=AsyncMock(return_value=gateway_info()),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TOKEN: new_token}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_TOKEN] == new_token

@@ -1,6 +1,5 @@
 """LANBON LOIP integration setup. I/O goes only through aiolanbon."""
 
-from dataclasses import dataclass
 import logging
 
 from aiolanbon import LanbonClient
@@ -17,16 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SWITCH]
 
-
-@dataclass
-class LanbonRuntimeData:
-    """Runtime objects for a config entry."""
-
-    client: LanbonClient
-    coordinator: LanbonCoordinator
-
-
-type LanbonConfigEntry = ConfigEntry[LanbonRuntimeData]
+type LanbonConfigEntry = ConfigEntry[LanbonCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LanbonConfigEntry) -> bool:
@@ -40,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LanbonConfigEntry) -> bo
     coordinator = LanbonCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = LanbonRuntimeData(client=client, coordinator=coordinator)
+    entry.runtime_data = coordinator
     entry.async_on_unload(coordinator.async_on_unload)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _LOGGER.debug(

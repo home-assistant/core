@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This gateway is already configured",
-      "reauth_successful": "Reauthentication successful",
-      "wrong_device": "Token belongs to a different gateway"
+      "already_configured": "This gateway is already configured"
     },
     "error": {
       "api_disabled": "Open Integration is off on the device",
@@ -21,16 +19,6 @@
         },
         "description": "Add {name} at {host}. Paste the token from the device screen.",
         "title": "Discovered {name}"
-      },
-      "reauth_confirm": {
-        "data": {
-          "token": "Token"
-        },
-        "data_description": {
-          "token": "Paste the current token shown on the device."
-        },
-        "description": "Token was rejected. Enter the current token from the device.",
-        "title": "Reauthenticate {name}"
       },
       "user": {
         "data": {

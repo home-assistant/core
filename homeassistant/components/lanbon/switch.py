@@ -3,6 +3,7 @@
 from typing import Any, override
 
 from aiolanbon import LanbonError
+from aiolanbon.models import Component, Device, DeviceSnapshot
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -14,9 +15,29 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import LanbonConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import LanbonCoordinator
-from .entity_map import iter_switch_components
 
 PARALLEL_UPDATES = 1
+
+
+def _is_switch_component(component: Component) -> bool:
+    """Return True when LOIP declares type=switch and set_on."""
+    return component.type == "switch" and "set_on" in component.commands
+
+
+def _iter_switch_components(
+    snapshot: DeviceSnapshot | None,
+) -> list[tuple[Device, Component]]:
+    """Return switch components from a snapshot."""
+    if snapshot is None:
+        return []
+    rows: list[tuple[Device, Component]] = []
+    for device in snapshot.devices:
+        rows.extend(
+            (device, component)
+            for component in device.components
+            if _is_switch_component(component)
+        )
+    return rows
 
 
 async def async_setup_entry(
@@ -25,10 +46,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities from the LOIP snapshot."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     entities = [
         LanbonSwitch(coordinator, device.id, component.id)
-        for device, component in iter_switch_components(coordinator.data)
+        for device, component in _iter_switch_components(coordinator.data)
     ]
     async_add_entities(entities)
 
