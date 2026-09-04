@@ -9,6 +9,7 @@ from .coordinator import SpinEvConfigEntry, SpinEvCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> bool:
     """Set up a charger from a config entry."""
     coordinator = SpinEvCoordinator(hass, entry)
+    entry.async_on_unload(coordinator.async_release)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -19,10 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> bo
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> bool:
-    """Unload a config entry and hand the charger back."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.async_release()
-    return unloaded
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> None:

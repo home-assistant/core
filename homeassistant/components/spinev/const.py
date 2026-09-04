@@ -24,7 +24,7 @@ class ConnectionMode(StrEnum):
     """Give the slot back between polls, so the phone app can still reach it."""
 
     PERSISTENT = "persistent"
-    """Hold the slot, which locks every other client out, phone app included."""
+    """Keep the slot claimed, shutting other clients out while the link holds."""
 
 
 DEFAULT_CONNECTION_MODE: Final = ConnectionMode.PER_POLL

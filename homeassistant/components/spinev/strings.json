@@ -7,7 +7,7 @@
       "not_supported": "This Bluetooth device is not a Spin EV charger."
     },
     "error": {
-      "cannot_connect": "Failed to connect. The charger accepts one Bluetooth client at a time, so close the phone app and try again."
+      "cannot_connect": "Failed to connect. Check that the charger is powered on and in Bluetooth range, and that no phone app is connected to it, since it accepts one Bluetooth client at a time."
     },
     "flow_title": "{name}",
     "step": {
@@ -65,7 +65,7 @@
           "connection_mode": "Bluetooth connection"
         },
         "data_description": {
-          "connection_mode": "The charger accepts one Bluetooth client at a time. Stay connected holds that slot for Home Assistant, so nobody else in range can reach the charger, and polling is faster and fails less often. Reconnect each poll gives the slot up between polls, so the phone app stays usable."
+          "connection_mode": "The charger accepts one Bluetooth client at a time. Stay connected keeps that slot claimed for Home Assistant, which makes polling faster and less likely to fail, and keeps other clients out for as long as the link holds. Reconnect each poll gives the slot up between polls, so the phone app stays usable."
         }
       }
     }

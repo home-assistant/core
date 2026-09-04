@@ -118,6 +118,21 @@ async def test_a_persistent_connection_is_held(
     mock_charger.async_disconnect.assert_not_awaited()
 
 
+async def test_a_held_link_is_released_on_unload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_charger: AsyncMock
+) -> None:
+    """Unloading hands the charger back even when the link was being held."""
+    await setup_persistent(hass, mock_config_entry)
+
+    mock_charger.async_disconnect.assert_not_awaited()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_charger.async_disconnect.assert_awaited()
+
+
 async def test_a_held_link_that_drops_is_rebuilt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

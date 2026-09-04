@@ -33,10 +33,11 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
     """Poll one charger over Bluetooth.
 
     The charger accepts a single Bluetooth client at a time, which makes the
-    link itself the thing to decide about. Holding it keeps every other client
-    out, the phone app included, which is what an owner who does not want the
-    charger reachable from the street wants. Giving it back between polls
-    leaves the app usable. The choice is per config entry.
+    link itself the thing to decide about. Holding it keeps other clients out,
+    the phone app included, for as long as the link lasts, which is what an
+    owner who does not want the charger reachable from the street wants.
+    Giving it back between polls leaves the app usable. The choice is per
+    config entry.
 
     The poll interval also adapts to what the charger is doing: short while a
     vehicle is charging so power stays current, long while idle so a link that
