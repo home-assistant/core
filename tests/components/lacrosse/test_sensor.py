@@ -4,9 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.lacrosse.const import DOMAIN
 from homeassistant.components.lacrosse.sensor import (
-    LaCrosseBattery,
-    LaCrosseHumidity,
-    LaCrosseTemperature,
+    SENSOR_TYPES,
+    LaCrosseSensor,
     setup_platform,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -28,6 +27,32 @@ async def test_setup_platform_imports_yaml_configuration(hass: HomeAssistant) ->
     )
 
 
+def test_device_uses_friendly_name(hass: HomeAssistant) -> None:
+    """Test the device name falls back when no friendly name is configured."""
+    receiver = MagicMock()
+    named = LaCrosseSensor(
+        hass,
+        receiver,
+        "/dev/ttyUSB0",
+        "outdoor_temperature",
+        None,
+        {"id": 1, "friendly_name": "Outdoor"},
+        SENSOR_TYPES["temperature"],
+    )
+    unnamed = LaCrosseSensor(
+        hass,
+        receiver,
+        "/dev/ttyUSB0",
+        "bedroom_temperature",
+        None,
+        {"id": 2},
+        SENSOR_TYPES["temperature"],
+    )
+
+    assert named.device_info["name"] == "Outdoor"
+    assert unnamed.device_info["name"] == "LaCrosse sensor 2"
+
+
 def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> None:
     """Test temperature and humidity sensor values update from the receiver."""
     receiver = MagicMock()
@@ -35,11 +60,23 @@ def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> None:
         temperature=21.5, humidity=54, low_battery=False, new_battery=True
     )
     config = {"id": 1}
-    temperature = LaCrosseTemperature(
-        hass, receiver, "/dev/ttyUSB0", "outdoor_temperature", "Outdoor", None, config
+    temperature = LaCrosseSensor(
+        hass,
+        receiver,
+        "/dev/ttyUSB0",
+        "outdoor_temperature",
+        None,
+        config,
+        SENSOR_TYPES["temperature"],
     )
-    humidity = LaCrosseHumidity(
-        hass, receiver, "/dev/ttyUSB0", "outdoor_humidity", "Outdoor", None, config
+    humidity = LaCrosseSensor(
+        hass,
+        receiver,
+        "/dev/ttyUSB0",
+        "outdoor_humidity",
+        None,
+        config,
+        SENSOR_TYPES["humidity"],
     )
 
     temperature._callback_lacrosse(sensor_data, None)
@@ -56,14 +93,14 @@ def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> None:
 def test_battery_sensor_updates_and_expires(hass: HomeAssistant) -> None:
     """Test battery values, icons, and expiration scheduling."""
     receiver = MagicMock()
-    sensor = LaCrosseBattery(
+    sensor = LaCrosseSensor(
         hass,
         receiver,
         "/dev/ttyUSB0",
         "outdoor_battery",
-        "Outdoor battery",
         30,
         {"id": 1},
+        SENSOR_TYPES["battery"],
     )
     expiration_trigger = MagicMock()
 
@@ -92,7 +129,7 @@ def test_battery_sensor_updates_and_expires(hass: HomeAssistant) -> None:
     assert sensor.native_value == "low"
     assert sensor.icon == "mdi:battery-alert"
 
-    sensor._low_battery = False
+    sensor._sensor_data.low_battery = False
 
     assert sensor.native_value == "ok"
     assert sensor.icon == "mdi:battery"

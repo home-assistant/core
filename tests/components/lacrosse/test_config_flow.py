@@ -119,19 +119,19 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             result["flow_id"], RECEIVER_DATA
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "sensor"
+        assert result["step_id"] == "add_sensor"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEMPERATURE_SENSOR
         )
         assert result["type"] is FlowResultType.MENU
-        assert result["step_id"] == "add_sensor"
+        assert result["step_id"] == "add_sensor_or_finish"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "sensor"}
+            result["flow_id"], {"next_step_id": "add_sensor"}
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "sensor"
+        assert result["step_id"] == "add_sensor"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], HUMIDITY_SENSOR
@@ -203,31 +203,31 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "toggle_interval": None,
         "toggle_mask": None,
         "sensors": {
-            "heating": {
+            "34_humidity": {
                 "id": 34,
                 "type": "humidity",
                 "friendly_name": "heating",
                 "unique_id": "00000000000000000000000000000001",
             },
-            "heating_temperature": {
+            "34_temperature": {
                 "id": 34,
                 "type": "temperature",
                 "friendly_name": "heating",
                 "unique_id": "00000000000000000000000000000002",
             },
-            "heating_lacrosse_battery": {
+            "34_battery": {
                 "id": 34,
                 "type": "battery",
                 "friendly_name": "Heating battery",
                 "unique_id": "00000000000000000000000000000003",
             },
-            "livingroom_temperature": {
+            "9_temperature": {
                 "id": 9,
                 "type": "temperature",
                 "friendly_name": "Living room temperature",
                 "unique_id": "00000000000000000000000000000004",
             },
-            "livingroom_lacrosse_battery": {
+            "9_battery": {
                 "id": 9,
                 "type": "battery",
                 "friendly_name": "Living room battery",
@@ -250,14 +250,14 @@ async def test_duplicate_sensor(hass: HomeAssistant) -> None:
         result["flow_id"], TEMPERATURE_SENSOR
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "sensor"}
+        result["flow_id"], {"next_step_id": "add_sensor"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEMPERATURE_SENSOR
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor"
+    assert result["step_id"] == "add_sensor"
     assert result["errors"] == {"base": "sensor_already_configured"}
 
 
@@ -336,16 +336,16 @@ async def test_reconfigure_flow(
         assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "sensor"}
+            result["flow_id"], {"next_step_id": "add_sensor"}
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "sensor"
+        assert result["step_id"] == "add_sensor"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], ALL_TYPES_SENSOR
         )
         assert result["type"] is FlowResultType.MENU
-        assert result["step_id"] == "add_sensor"
+        assert result["step_id"] == "add_sensor_or_finish"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"next_step_id": "finish"}
@@ -402,23 +402,62 @@ async def test_reconfigure_flow_duplicate_sensor(hass: HomeAssistant) -> None:
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "sensor"}
+        result["flow_id"], {"next_step_id": "add_sensor"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEMPERATURE_SENSOR
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor"
+    assert result["step_id"] == "add_sensor"
     assert result["errors"] == {"base": "sensor_already_configured"}
 
 
-async def test_change_sensor_id(
+async def test_reconfigure_flow_duplicate_sensor_from_import(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a sensor imported from YAML is detected as already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **RECEIVER_DATA,
+            "sensors": {
+                "heating": {
+                    "id": 34,
+                    "type": "humidity",
+                    "friendly_name": "heating",
+                    "unique_id": "00000000000000000000000000000001",
+                },
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "add_sensor"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "id": 34,
+            "temperature": False,
+            "humidity": True,
+            "battery": False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_sensor"
+    assert result["errors"] == {"base": "sensor_already_configured"}
+
+
+async def test_update_sensor(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test changing the ID a sensor reports after a battery replacement."""
+    """Test changing the ID and name of a sensor."""
     entry = MockConfigEntry(domain=DOMAIN, data=MULTI_SENSOR_DATA)
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -428,13 +467,23 @@ async def test_change_sensor_id(
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "change_id"}
+        result["flow_id"], {"next_step_id": "update_sensor"}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "change_id"
+    assert result["step_id"] == "update_sensor"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"id": "1", "new_id": 7}
+        result["flow_id"], {"id": "1"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "update_sensor"
+    assert result["data_schema"]({}) == {
+        "new_id": 1,
+        "friendly_name": "Outdoor humidity",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"new_id": 7}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -443,7 +492,7 @@ async def test_change_sensor_id(
         "7_temperature": {
             "id": 7,
             "type": "temperature",
-            "friendly_name": "Outdoor temperature",
+            "friendly_name": "Outdoor humidity",
             "unique_id": "00000000000000000000000000000001",
         },
         "7_humidity": {
@@ -464,23 +513,66 @@ async def test_change_sensor_id(
     }
 
 
-async def test_change_sensor_id_duplicate(hass: HomeAssistant) -> None:
+async def test_update_sensor_duplicate(hass: HomeAssistant) -> None:
     """Test that a sensor ID cannot be changed to an already configured one."""
     entry = MockConfigEntry(domain=DOMAIN, data=MULTI_SENSOR_DATA)
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "change_id"}
+        result["flow_id"], {"next_step_id": "update_sensor"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"id": "1", "new_id": 2}
+        result["flow_id"], {"id": "1"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"new_id": 2}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "change_id"
+    assert result["step_id"] == "update_sensor"
     assert result["errors"] == {"base": "sensor_already_configured"}
     assert entry.data == MULTI_SENSOR_DATA
+
+
+async def test_update_sensor_without_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test changing the ID of a sensor without a friendly name."""
+    sensors = {
+        **MULTI_SENSOR_DATA["sensors"],
+        "2_temperature": {
+            key: value
+            for key, value in MULTI_SENSOR_DATA["sensors"]["2_temperature"].items()
+            if key != "friendly_name"
+        },
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MULTI_SENSOR_DATA, "sensors": sensors},
+    )
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "/dev/ttyUSB0_2")},
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "update_sensor"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"id": "2"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"new_id": 7}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert "friendly_name" not in entry.data["sensors"]["7_temperature"]
+    assert device_registry.async_get(device.id).name is None
 
 
 async def test_remove_sensor(
@@ -533,5 +625,5 @@ async def test_value_type_required(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor"
+    assert result["step_id"] == "add_sensor"
     assert result["errors"] == {"base": "value_type_required"}

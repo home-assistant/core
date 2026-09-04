@@ -10,26 +10,26 @@
     },
     "step": {
       "add_sensor": {
-        "menu_options": {
-          "finish": "Finish setup",
-          "sensor": "Add another sensor"
+        "data": {
+          "battery": "Reports battery state",
+          "expire_after": "Mark unavailable after (seconds)",
+          "friendly_name": "Name",
+          "humidity": "Reports humidity",
+          "id": "Sensor ID",
+          "temperature": "Reports temperature"
         }
       },
-      "change_id": {
-        "data": {
-          "id": "Sensor ID",
-          "new_id": "New sensor ID"
-        },
-        "data_description": {
-          "id": "The sensor whose ID has changed.",
-          "new_id": "The ID the sensor reports now, for example after a battery replacement."
+      "add_sensor_or_finish": {
+        "menu_options": {
+          "add_sensor": "Add another sensor",
+          "finish": "Finish setup"
         }
       },
       "reconfigure": {
         "menu_options": {
-          "change_id": "Change the ID of a sensor",
-          "remove_sensor": "Remove a sensor",
-          "sensor": "Add another sensor"
+          "add_sensor": "Add new sensor",
+          "remove_sensor": "Delete sensor",
+          "update_sensor": "Update sensor"
         }
       },
       "remove_sensor": {
@@ -40,14 +40,15 @@
           "id": "The sensor to remove, along with its device."
         }
       },
-      "sensor": {
+      "update_sensor": {
         "data": {
-          "battery": "Reports battery state",
-          "expire_after": "Mark unavailable after (seconds)",
           "friendly_name": "Name",
-          "humidity": "Reports humidity",
           "id": "Sensor ID",
-          "temperature": "Reports temperature"
+          "new_id": "New sensor ID"
+        },
+        "data_description": {
+          "id": "The sensor to update.",
+          "new_id": "The ID the sensor reports now, for example after a battery replacement."
         }
       },
       "user": {
@@ -60,6 +61,13 @@
           "toggle_interval": "Toggle interval",
           "toggle_mask": "Toggle mask"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
       }
     }
   }

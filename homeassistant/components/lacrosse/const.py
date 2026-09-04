@@ -32,5 +32,9 @@ class LaCrosseSensorType(IntFlag):
         """Return the configuration key of a single sensor type."""
         return str(self.name).lower()
 
+    def sensor_key(self, sensor_id: int) -> str:
+        """Return the storage key of a sensor with this type."""
+        return f"{sensor_id}_{self.key}"
+
 
 TYPES = [sensor_type.key for sensor_type in LaCrosseSensorType]

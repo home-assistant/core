@@ -97,6 +97,23 @@ def _step_user_data_schema(ports: list[SelectOptionDict]) -> vol.Schema:
     )
 
 
+def _sensor_select_options(
+    sensors: dict[str, dict[str, Any]],
+) -> list[SelectOptionDict]:
+    """Return sorted select options for sensors, labeled with their friendly name."""
+    options = {
+        str(sensor[CONF_ID]): sensor.get(CONF_FRIENDLY_NAME, sensor[CONF_ID])
+        for sensor in sensors.values()
+    }
+    return [
+        SelectOptionDict(
+            value=sensor_id,
+            label=f"{name} ({sensor_id})" if name else sensor_id,
+        )
+        for sensor_id, name in sorted(options.items(), key=lambda item: int(item[0]))
+    ]
+
+
 STEP_SENSOR_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
@@ -120,6 +137,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
         self._sensors: dict[str, dict[str, Any]] = {}
+        self._update_sensor_id: int | None = None
 
     async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml (sensor platform)."""
@@ -140,7 +158,9 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             sensor_input = dict(sensor_config)
             sensor_input[CONF_FRIENDLY_NAME] = sensor_input.pop(CONF_NAME, slug)
             sensor_input[CONF_UNIQUE_ID] = uuid4().hex
-            sensors[slug] = sensor_input
+            sensor_type = LaCrosseSensorType[sensor_input[CONF_TYPE].upper()]
+            sensor_id = sensor_type.sensor_key(sensor_input[CONF_ID])
+            sensors[sensor_id] = sensor_input
         entry_input[CONF_SENSORS] = sensors
 
         self._async_abort_entries_match({CONF_DEVICE: entry_input[CONF_DEVICE]})
@@ -157,7 +177,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
             self._data = user_input
-            return await self.async_step_sensor()
+            return await self.async_step_add_sensor()
 
         ports = await _async_free_usb_ports(self.hass)
         return self.async_show_form(
@@ -172,18 +192,47 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         self._sensors = dict(self._data.pop(CONF_SENSORS, {}))
         return self.async_show_menu(
             step_id="reconfigure",
-            menu_options=["sensor", "change_id", "remove_sensor"],
+            menu_options=["add_sensor", "update_sensor", "remove_sensor"],
         )
 
-    async def async_step_change_id(
+    async def async_step_update_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Change the ID of a sensor, which changes after a battery replacement."""
+        """Update the ID and name of a sensor."""
+        if self._update_sensor_id is None:
+            if user_input is not None:
+                self._update_sensor_id = int(user_input[CONF_ID])
+                return await self.async_step_update_sensor_details()
+
+            sensor_options = _sensor_select_options(self._sensors)
+            return self.async_show_form(
+                step_id="update_sensor",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_ID): SelectSelector(
+                            SelectSelectorConfig(options=sensor_options)
+                        )
+                    }
+                ),
+            )
+
+        return await self.async_step_update_sensor_details(user_input)
+
+    async def async_step_update_sensor_details(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Update the selected sensor's ID and name."""
         errors: dict[str, str] = {}
 
+        sensor_by_id = {sensor[CONF_ID]: sensor for sensor in self._sensors.values()}
+        sensor_id = self._update_sensor_id
+        assert sensor_id is not None
+        sensor = sensor_by_id[sensor_id]
+
         if user_input is not None:
-            old_id = int(user_input[CONF_ID])
+            old_id = sensor_id
             new_id = user_input[CONF_NEW_ID]
+            new_name = user_input.get(CONF_FRIENDLY_NAME)
 
             if any(
                 sensor[CONF_ID] == new_id
@@ -197,39 +246,47 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
                     if sensor[CONF_ID] != old_id:
                         sensors[key] = sensor
                         continue
-                    sensors[f"{new_id}_{sensor[CONF_TYPE]}"] = {
+                    sensor_type = LaCrosseSensorType[sensor[CONF_TYPE].upper()]
+                    updated_sensor = {
                         **sensor,
                         CONF_ID: new_id,
                     }
+                    if new_name:
+                        updated_sensor[CONF_FRIENDLY_NAME] = new_name
+                    else:
+                        updated_sensor.pop(CONF_FRIENDLY_NAME, None)
+                    sensors[sensor_type.sensor_key(new_id)] = updated_sensor
                 self._sensors = sensors
-                self._async_update_device_identifiers(old_id, new_id)
+                self._async_update_device(old_id, new_id, new_name)
                 return await self.async_step_finish()
 
-        sensor_ids = sorted(
-            {str(sensor[CONF_ID]) for sensor in self._sensors.values()}, key=int
-        )
+        detail_schema: dict[Any, Any] = {
+            vol.Required(CONF_NEW_ID, default=sensor_id): cv.positive_int,
+        }
+        if friendly_name := sensor.get(CONF_FRIENDLY_NAME):
+            detail_schema[vol.Optional(CONF_FRIENDLY_NAME, default=friendly_name)] = (
+                cv.string
+            )
+        else:
+            detail_schema[vol.Optional(CONF_FRIENDLY_NAME)] = cv.string
+
         return self.async_show_form(
-            step_id="change_id",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ID): SelectSelector(
-                        SelectSelectorConfig(options=sensor_ids)
-                    ),
-                    vol.Required(CONF_NEW_ID): cv.positive_int,
-                }
-            ),
+            step_id="update_sensor",
+            data_schema=vol.Schema(detail_schema),
             errors=errors or None,
         )
 
-    def _async_update_device_identifiers(self, old_id: int, new_id: int) -> None:
-        """Move the device of a sensor to its new ID to keep its customizations."""
+    def _async_update_device(self, old_id: int, new_id: int, name: str | None) -> None:
+        """Update the device of a sensor to keep its customizations."""
         receiver = self._data[CONF_DEVICE]
         device_registry = dr.async_get(self.hass)
         if device := device_registry.async_get_device_by_identifier(
             (DOMAIN, f"{receiver}_{old_id}"), self._get_reconfigure_entry().entry_id
         ):
             device_registry.async_update_device(
-                device.id, new_identifiers={(DOMAIN, f"{receiver}_{new_id}")}
+                device.id,
+                new_identifiers={(DOMAIN, f"{receiver}_{new_id}")},
+                name=name or None,
             )
 
     def _async_remove_device(self, sensor_id: int) -> None:
@@ -255,21 +312,19 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_remove_device(sensor_id)
             return await self.async_step_finish()
 
-        sensor_ids = sorted(
-            {str(sensor[CONF_ID]) for sensor in self._sensors.values()}, key=int
-        )
+        sensor_options = _sensor_select_options(self._sensors)
         return self.async_show_form(
             step_id="remove_sensor",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ID): SelectSelector(
-                        SelectSelectorConfig(options=sensor_ids)
+                        SelectSelectorConfig(options=sensor_options)
                     ),
                 }
             ),
         )
 
-    async def async_step_sensor(
+    async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add a sensor received by the configured receiver."""
@@ -283,14 +338,20 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             sensor_id = user_input[CONF_ID]
             keys = {
-                sensor_type: f"{sensor_id}_{sensor_type.key}"
+                sensor_type: sensor_type.sensor_key(sensor_id)
                 for sensor_type in LaCrosseSensorType
                 if sensor_type & selected
+            }
+            configured_types = {
+                (sensor[CONF_ID], sensor[CONF_TYPE])
+                for sensor in self._sensors.values()
             }
 
             if not selected & VALUE_SENSOR_TYPES:
                 errors["base"] = "value_type_required"
-            elif any(key in self._sensors for key in keys.values()):
+            elif any(
+                (sensor_id, sensor_type.key) in configured_types for sensor_type in keys
+            ):
                 errors["base"] = "sensor_already_configured"
             else:
                 for sensor_type, key in keys.items():
@@ -299,18 +360,18 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_TYPE: sensor_type.key,
                         CONF_UNIQUE_ID: uuid4().hex,
                     }
-                return await self.async_step_add_sensor()
+                return await self.async_step_add_sensor_or_finish()
 
         return self.async_show_form(
-            step_id="sensor",
+            step_id="add_sensor",
             data_schema=STEP_SENSOR_DATA_SCHEMA,
             errors=errors or None,
         )
 
-    async def async_step_add_sensor(self) -> ConfigFlowResult:
+    async def async_step_add_sensor_or_finish(self) -> ConfigFlowResult:
         """Offer to add another sensor or complete the flow."""
         return self.async_show_menu(
-            step_id="add_sensor", menu_options=["sensor", "finish"]
+            step_id="add_sensor_or_finish", menu_options=["add_sensor", "finish"]
         )
 
     async def async_step_finish(
