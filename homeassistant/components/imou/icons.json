@@ -15,6 +15,9 @@
       }
     },
     "select": {
+      "collection_point": {
+        "default": "mdi:crosshairs-gps"
+      },
       "device_volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -25,9 +28,6 @@
       },
       "night_vision_mode": {
         "default": "mdi:weather-night"
-      },
-      "collection_point": {
-        "default": "mdi:crosshairs-gps"
       }
     },
     "sensor": {
