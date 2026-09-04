@@ -1,0 +1,191 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This TrueNAS host is already configured.",
+      "not_truenas": "The discovered device does not appear to be a TrueNAS instance."
+    },
+    "error": {
+      "api_not_found": "Connection failed, API not found.",
+      "cannot_connect": "Failed to connect to host (TCP port closed or timeout).",
+      "certificate_verify_failed": "Certificate verification failed.",
+      "connection_refused": "Connection failed, connection refused.",
+      "handshake_timeout": "Connection failed, timed out while waiting for handshake response.",
+      "http_used": "The plain HTTP request was sent to HTTPS port. Reverse proxy?",
+      "invalid_hostname": "Invalid host. Enter only the hostname or IP address — without \"https://\", path or trailing slash.",
+      "invalid_key": "Login failed, invalid API key.",
+      "malformed_result": "API response is malformed.",
+      "proxy_intercepted": "Connection intercepted by a reverse proxy or SSO portal (e.g. Cloudflare Access). Point the integration at the TrueNAS host directly over your LAN/VPN, or exempt the WebSocket endpoint from the proxy's authentication.",
+      "tlsv1_not_supported": "TLSv1 not supported. Reverse proxy?",
+      "unknown": "Unknown error occurred.",
+      "unknown_hostname": "Unknown hostname, check DNS.",
+      "websocket_not_supported": "WebSocket not supported. Reverse proxy?"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API key",
+          "data_unit": "Data size unit (GB or GiB)",
+          "host": "Host",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
+          "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
+          "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
+          "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
+        },
+        "description": "Set up TrueNAS CE integration."
+      },
+      "zeroconf_confirm": {
+        "description": "A TrueNAS instance was discovered at {host}. Do you want to set it up?",
+        "title": "Discovered TrueNAS"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alerts": {
+        "name": "Alerts",
+        "state_attributes": {
+          "uuids": {
+            "name": "Alert UUIDs"
+          }
+        }
+      },
+      "app_stats_blkio_read": {
+        "name": "Block I/O Read"
+      },
+      "app_stats_blkio_write": {
+        "name": "Block I/O Write"
+      },
+      "app_stats_cpu": {
+        "name": "CPU"
+      },
+      "app_stats_memory": {
+        "name": "RAM"
+      },
+      "app_stats_network_rx": {
+        "name": "Network RX"
+      },
+      "app_stats_network_tx": {
+        "name": "Network TX"
+      },
+      "arc_data_hit_percent": {
+        "name": "Data hit ratio"
+      },
+      "arc_l2_hit_percent": {
+        "name": "L2 ARC hit ratio"
+      },
+      "arc_metadata_hit_percent": {
+        "name": "Metadata hit ratio"
+      },
+      "certificate_expiration_time": {
+        "name": "Expiration time"
+      },
+      "certificate_expiry": {
+        "name": "Time until expiry"
+      },
+      "directoryservices": {
+        "name": "Status"
+      },
+      "pool_allocated": {
+        "name": "Allocated"
+      },
+      "pool_errors": {
+        "name": "Errors"
+      },
+      "pool_fragmentation": {
+        "name": "Fragmentation"
+      },
+      "pool_free": {
+        "name": "Free"
+      },
+      "pool_scrub_end": {
+        "name": "Scrub finished"
+      },
+      "pool_scrub_start": {
+        "name": "Scrub started"
+      },
+      "pool_scrub_state": {
+        "name": "Scrub state"
+      },
+      "pool_size": {
+        "name": "Size"
+      },
+      "system_cache_size_arc_value": {
+        "name": "ARC size"
+      },
+      "system_cpu_temperature": {
+        "name": "Temperature"
+      },
+      "system_cpu_usage": {
+        "name": "CPU usage"
+      },
+      "system_load_longterm": {
+        "name": "CPU load longterm"
+      },
+      "system_load_midterm": {
+        "name": "CPU load midterm"
+      },
+      "system_load_shortterm": {
+        "name": "CPU load shortterm"
+      },
+      "system_memory_free": {
+        "name": "Memory free"
+      },
+      "system_memory_total": {
+        "name": "Memory total"
+      },
+      "system_memory_usage": {
+        "name": "Memory usage"
+      },
+      "system_smb_connections": {
+        "name": "SMB connections"
+      },
+      "system_uptime": {
+        "name": "Uptime"
+      },
+      "traffic_rx": {
+        "name": "RX"
+      },
+      "traffic_tx": {
+        "name": "TX"
+      },
+      "ups_charge": {
+        "name": "Charge"
+      },
+      "ups_current": {
+        "name": "Current"
+      },
+      "ups_frequency": {
+        "name": "Frequency"
+      },
+      "ups_load": {
+        "name": "Load"
+      },
+      "ups_runtime": {
+        "name": "Runtime"
+      },
+      "ups_temperature": {
+        "name": "Temperature"
+      },
+      "ups_voltage": {
+        "name": "Voltage"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error connecting to TrueNAS ({host}): {error}"
+    },
+    "disconnected": {
+      "message": "TrueNAS instance {host} disconnected"
+    },
+    "invalid_api_key": {
+      "message": "Invalid TrueNAS API key for {host}"
+    },
+    "system_info_unavailable": {
+      "message": "Essential system information was not received from TrueNAS ({host})"
+    }
+  }
+}

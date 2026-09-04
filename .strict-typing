@@ -619,6 +619,7 @@ homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.transmission.*
 homeassistant.components.trend.*
 homeassistant.components.trmnl.*
+homeassistant.components.truenas_ce.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*

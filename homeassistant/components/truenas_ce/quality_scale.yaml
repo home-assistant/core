@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom actions/services in bronze scope; see the PR review guide's minimal-initial-submission guidance.
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: Logos are ready; blocked on home-assistant/brands#10948 (open, awaiting review).
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No custom actions/services in bronze scope; see action-setup.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: Linked docs PR home-assistant/home-assistant.io#47351 still lists options (cron-skip toggle, poll interval) this Bronze scope does not expose; will be marked done once the docs PR is aligned.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: todo
+    comment: Coordinator jobs run behind a blanket exception-swallowing wrapper with no per-job/per-endpoint success tracking, so an endpoint whose job keeps raising retains its last-good ds snapshot (and its entities stay "available") indefinitely -- entity.py's available property only catches the case where the snapshot itself comes back empty, not a stale one. Planned as a follow-up PR after the initial bronze PR merges.
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Same root cause as entity-unavailable -- no per-job state to log a transition on. Planned as a follow-up PR after the initial bronze PR merges.
+  parallel-updates: done
+  reauthentication-flow:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  repair-issues:
+    status: todo
+    comment: Orphaned-statistics cleanup repair planned as a follow-up PR alongside stale-devices; the previous legacy-migration rollback repair was removed (Core integrations don't migrate from custom integrations).
+  stale-devices:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges, alongside dynamic-devices and the orphaned-statistics cleanup repair.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: aiotruenas speaks JSON-RPC over its own websockets connection; no aiohttp/httpx session to inject.
+  strict-typing: done

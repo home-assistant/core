@@ -461,6 +461,9 @@ aiotedee==0.3.0
 # homeassistant.components.tractive
 aiotractive==1.0.3
 
+# homeassistant.components.truenas_ce
+aiotruenas==1.4.1
+
 # homeassistant.components.unifi
 aiounifi==95
 
