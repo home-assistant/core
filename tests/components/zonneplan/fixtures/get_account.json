@@ -1,0 +1,207 @@
+{
+  "user_account": {
+    "initials": "",
+    "uuid": "00000000-0000-4000-8000-000000000001",
+    "email": "user@example.com",
+    "first_name": null,
+    "full_name": "No one special",
+    "is_representative": false
+  },
+  "address_groups": [
+    {
+      "uuid": "00000000-0000-4000-8000-000000000002",
+      "connections": [
+        {
+          "uuid": "00000000-0000-4000-8000-000000000002",
+          "ean": "871000000000000001",
+          "market_segment": "electricity",
+          "contracts": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000004",
+              "label": "Stroom tegen uurprijzen",
+              "type": "electricity",
+              "start_date": "2026-09-17T22:00:00.000000Z",
+              "end_date": null,
+              "meta": {
+                "external_contract_id": "00000000-0000-4000-8000-000000000005",
+                "agreement_date": "2026-08-29",
+                "original_end_date": null,
+                "contract_type": "smart",
+                "proposition_reference": "vast-voorschot-e-2025-12-kwart",
+                "start_reason": null,
+                "end_reason": null,
+                "show_in_contract_screen": true,
+                "expected_delivery": 4470,
+                "expected_production": 2520,
+                "gas_price_ceiling_contract_start_date": null,
+                "gas_price_ceiling_contract_end_date": null,
+                "deposit_type": "fixed",
+                "monthly_advanced_deposit_amount": 930000000
+              }
+            }
+          ],
+          "features": [
+            {
+              "code": "E004",
+              "start_date": "2026-08-29",
+              "label": "Verbruikshistorie"
+            }
+          ],
+          "buttons": []
+        },
+        {
+          "uuid": "00000000-0000-4000-8000-000000000003",
+          "ean": "871000000000000002",
+          "market_segment": "gas",
+          "contracts": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000006",
+              "label": "Gas tegen dagprijzen",
+              "type": "gas",
+              "start_date": "2026-09-17T22:00:00.000000Z",
+              "end_date": null,
+              "meta": {
+                "external_contract_id": "00000000-0000-4000-8000-000000000007",
+                "agreement_date": "2026-08-29",
+                "original_end_date": null,
+                "contract_type": "smart",
+                "proposition_reference": "vast-voorschot-g-2024-11",
+                "start_reason": null,
+                "end_reason": null,
+                "show_in_contract_screen": true,
+                "expected_delivery": 2171,
+                "expected_production": null,
+                "gas_price_ceiling_contract_start_date": null,
+                "gas_price_ceiling_contract_end_date": null,
+                "deposit_type": "fixed",
+                "monthly_advanced_deposit_amount": 3500000000
+              }
+            }
+          ],
+          "features": [],
+          "buttons": []
+        }
+      ],
+      "address": {
+        "id": "1234AB1",
+        "zipcode": "1234 AB",
+        "street": "Teststraat",
+        "number": "1",
+        "addition": "",
+        "city": "Voorbeeldstad",
+        "sunrise": "2026-08-29T04:39:24.000000Z",
+        "sunset": "2026-08-29T18:30:23.000000Z"
+      },
+      "is_representative": true,
+      "organization": {
+        "number": 12345678,
+        "name": "No one special",
+        "phone_numbers": ["+31600000000"],
+        "emails": ["user@example.com"],
+        "privacy_service_code": "ABCDEF",
+        "address": {
+          "id": "1234AB1",
+          "zipcode": "1234 AB",
+          "street": "Teststraat",
+          "number": "1",
+          "addition": "",
+          "city": "Voorbeeldstad",
+          "sunrise": "2026-08-29T04:39:24.000000Z",
+          "sunset": "2026-08-29T18:30:23.000000Z"
+        },
+        "debtor": {
+          "name": "J DOE",
+          "bank_account_number": "NL00BANK0123456789",
+          "mandate_reference": "01-01-2026",
+          "mandate_date": "01-01-2026",
+          "payment_method": "Automatische Incasso"
+        }
+      },
+      "organization_uuid": "00000000-0000-4000-8000-000000000008"
+    }
+  ],
+  "buttons": [],
+  "iar_enabled": false,
+  "unread_notification_count": 0,
+  "chat": {
+    "user": {
+      "identifier": "00000000-0000-4000-8000-000000000001",
+      "email": "user@example.com",
+      "name": " No one special"
+    },
+    "custom_attributes": {
+      "source": "app"
+    }
+  },
+  "notification_setting_groups": [
+    {
+      "slug": "general",
+      "name": "Algemeen",
+      "description": "Algemene notificaties over Zonneplan van onderwerpen die relevant zijn voor jou",
+      "settings": [
+        {
+          "slug": "new-updates",
+          "name": "Algemeen",
+          "description": "Altijd als eerste op de hoogte",
+          "push_enabled": true
+        },
+        {
+          "slug": "conversation-updates",
+          "name": "Chatberichten",
+          "description": "Krijg een melding bij een ongelezen bericht",
+          "push_enabled": true
+        },
+        {
+          "slug": "p1-sgn-updates",
+          "name": "Connect P1-meter berichten",
+          "description": "Updates over de dongel in je slimme meter",
+          "push_enabled": true
+        }
+      ]
+    },
+    {
+      "slug": "prices",
+      "name": "Prijsupdates",
+      "description": "Notificaties bij belangrijke prijsupdates wanneer je klant bent bij Zonneplan Energie",
+      "settings": [
+        {
+          "slug": "high-energy-price",
+          "name": "Hoge stroomprijs",
+          "description": "Melding bij een bijzonder hoge stroomprijs",
+          "push_enabled": false
+        },
+        {
+          "slug": "low-energy-price",
+          "name": "Negatieve stroomprijs",
+          "description": "Melding als de stroomprijs negatief is",
+          "push_enabled": false
+        }
+      ]
+    },
+    {
+      "slug": "malfunctions",
+      "name": "Proactieve monitoring",
+      "description": "Notificaties bij storingen",
+      "settings": [
+        {
+          "slug": "battery-malfunction",
+          "name": "Thuisbatterij",
+          "description": "Belangrijke updates over je thuisbatterij",
+          "push_enabled": true
+        },
+        {
+          "slug": "chargepoint-malfunction",
+          "name": "Laadpaal",
+          "description": "Belangrijke updates over je laadpaal",
+          "push_enabled": true
+        },
+        {
+          "slug": "solar-malfunction",
+          "name": "Zonnepanelen",
+          "description": "Belangrijke updates over je zonnepanelen",
+          "push_enabled": true
+        }
+      ]
+    }
+  ]
+}

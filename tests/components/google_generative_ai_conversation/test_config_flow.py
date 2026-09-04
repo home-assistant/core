@@ -16,6 +16,8 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -31,6 +33,8 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
+    RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_THINKING_LEVEL,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_MODEL,
@@ -79,6 +83,26 @@ def get_models_pager():
         yield model_15_flash
         yield model_15_pro
         yield model_31_flash_tts
+
+    return models_pager()
+
+
+def get_prefix_collision_models_pager():
+    """Return a pager of model ids that start with letters from "models/"."""
+    models = []
+    for name in (
+        "models/gemini-2.5-pro",
+        "models/embedding-001",
+        "models/learnlm-2.0-flash-experimental",
+        "models/lyria-realtime-exp",
+    ):
+        model = Mock(supported_actions=["generateContent"])
+        model.name = name
+        models.append(model)
+
+    async def models_pager():
+        for model in models:
+            yield model
 
     return models_pager()
 
@@ -247,6 +271,8 @@ async def test_creating_subentry(
                 CONF_TOP_P: 1.0,
                 CONF_TOP_K: 1,
                 CONF_MAX_TOKENS: 1024,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
@@ -265,6 +291,8 @@ async def test_creating_subentry(
                 CONF_TOP_P: 1.0,
                 CONF_TOP_K: 1,
                 CONF_MAX_TOKENS: 1024,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
@@ -290,6 +318,8 @@ async def test_creating_subentry(
                 CONF_TOP_P: 1.0,
                 CONF_TOP_K: 1,
                 CONF_MAX_TOKENS: 1024,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
@@ -417,6 +447,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -434,6 +466,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
             {
@@ -457,6 +491,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -471,6 +507,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -485,6 +523,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -502,6 +542,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -517,6 +559,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -531,6 +575,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -554,6 +600,24 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "",
                 CONF_LLM_HASS_API: ["assist"],
+            },
+            None,
+        ),
+        (
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: [],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: [],
             },
             None,
         ),
@@ -749,3 +813,42 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+async def test_subentry_chat_model_labels_keep_the_full_model_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test the chat model selector labels only drop the "models/" prefix."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "set_options"
+
+    # Uncheck recommended so the model selector is built
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            result["data_schema"]({CONF_RECOMMENDED: False}),
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    schema_dict = result["data_schema"].schema
+    chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
+    assert [opt["label"] for opt in schema_dict[chat_model_key].config["options"]] == [
+        "embedding-001",
+        "gemini-2.5-pro",
+        "learnlm-2.0-flash-experimental",
+        "lyria-realtime-exp",
+    ]

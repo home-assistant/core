@@ -8,23 +8,22 @@ from typing import override
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DEVICE_CLASS_UNITS,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     Platform,
     UnitOfTime,
 )
@@ -39,6 +38,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -141,7 +141,6 @@ async def async_setup_entry(
         max_sub_interval = None
 
     derivative_sensor = DerivativeSensor(
-        hass,
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
@@ -151,6 +150,7 @@ async def async_setup_entry(
         unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
+        device=async_entity_id_to_device(hass, source_entity_id),
     )
 
     async_add_entities([derivative_sensor])
@@ -166,7 +166,6 @@ async def async_setup_platform(
     await async_setup_reload_service(hass, DOMAIN, [Platform.SENSOR])
 
     derivative = DerivativeSensor(
-        hass,
         name=config.get(CONF_NAME),
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE],
@@ -190,7 +189,6 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str | None,
         round_digits: int,
@@ -201,13 +199,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
         unique_id: str | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            source_entity,
-        )
+        self.device_entry = device
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._attr_native_value = round(Decimal(0), round_digits)
@@ -243,7 +239,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if not source_state:
             return
 
-        source_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_class_raw = source_state.attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
         source_class: SensorDeviceClass | None = None
         if isinstance(source_class_raw, str):
             try:
@@ -252,7 +250,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 source_class = None
         if self._string_unit_prefix is not None and self._string_unit_time is not None:
             original_unit = self._attr_native_unit_of_measurement
-            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            source_unit = source_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
             if (
                 (
                     source_class
@@ -366,7 +366,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
         last_state = await self.async_get_last_state()
         if last_state:
-            self._attr_device_class = last_state.attributes.get(ATTR_DEVICE_CLASS)
+            self._attr_device_class = last_state.attributes.get(
+                EntityStateAttribute.DEVICE_CLASS
+            )
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -487,7 +489,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             old_timestamp: datetime,
         ) -> None:
             """Handle the sensor state changes."""
-            if not _is_decimal_state(old_value):
+            recovered_from_invalid = not _is_decimal_state(old_value)
+            if recovered_from_invalid:
                 if self._last_valid_state_time:
                     old_value = self._last_valid_state_time[0]
                     old_timestamp = self._last_valid_state_time[1]
@@ -540,7 +543,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             # A negative derivative for a total increasing sensor likely indicates the
             # sensor has been reset. To prevent inaccurate data, discard this sample.
             if (
-                new_state.attributes.get(ATTR_STATE_CLASS)
+                new_state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
                 == SensorStateClass.TOTAL_INCREASING
                 and new_derivative < 0
             ):
@@ -548,6 +551,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "%s: Dropping sample as source total_increasing sensor decreased",
                     self.entity_id,
                 )
+                if recovered_from_invalid:
+                    # Reset while recovering from an invalid source: re-baseline
+                    # and report zero so the entity doesn't stay stuck unavailable.
+                    self._state_list = []
+                    self._last_valid_state_time = (new_state.state, new_timestamp)
+                    self._write_native_value(Decimal(0))
                 return
 
             # add latest derivative to the window list

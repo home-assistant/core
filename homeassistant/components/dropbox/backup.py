@@ -51,11 +51,13 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except DropboxFileOrFolderNotFoundException as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupNotFound(
                 f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
             ) from err
         except DropboxAuthException as err:
             self._entry.async_start_reauth(self._hass)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Authentication error") from err
         except DropboxUnknownException as err:
             _LOGGER.error(
@@ -64,6 +66,7 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
             ) from err
@@ -198,6 +201,7 @@ class DropboxBackupAgent(BackupAgent):
             if backup.backup_id == backup_id:
                 return self._api.download_file(f"/{filename}")
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")
 
     @handle_backup_errors
@@ -214,6 +218,7 @@ class DropboxBackupAgent(BackupAgent):
             if backup.backup_id == backup_id:
                 return backup
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")
 
     @handle_backup_errors
@@ -232,4 +237,5 @@ class DropboxBackupAgent(BackupAgent):
                 await self._api.delete_file(f"/{metadata_filename}")
                 return
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")

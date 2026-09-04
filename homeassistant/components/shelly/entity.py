@@ -729,6 +729,8 @@ def get_entity_block_device_info(
 ) -> DeviceInfo:
     """Get device info for block entities."""
     return get_block_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
         coordinator.configuration_url,
@@ -746,6 +748,8 @@ def get_entity_rpc_device_info(
 ) -> DeviceInfo:
     """Get device info for RPC entities."""
     return get_rpc_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
         coordinator.configuration_url,

@@ -4,18 +4,17 @@ from pysmlight import Api2
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .bluetooth import async_connect_scanner
+from .bluetooth import async_setup_ble_scanner
 from .const import DOMAIN
 from .coordinator import (
     SmConfigEntry,
     SmDataUpdateCoordinator,
     SmFirmwareUpdateCoordinator,
     SmlightData,
-    base_device_info,
 )
 from .services import async_setup_services
 
@@ -55,13 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
             hass, client.sse.client(), "smlight-sse-client"
         )
 
-    if info.ble is not None and info.ble.proxy_enabled:
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            **base_device_info(info, client.host),
-        )
-        entry.async_on_unload(async_connect_scanner(hass, entry, info.model, device.id))
+    if info.ble is not None and (
+        unload_callback := await async_setup_ble_scanner(hass, entry, client, info)
+    ):
+        entry.async_on_unload(unload_callback)
 
     entry.runtime_data = SmlightData(
         data=data_coordinator,

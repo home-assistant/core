@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "address_in_use": "Unable to open local UDP port 50222.",
       "cannot_connect": "UDP discovery error.",
@@ -47,6 +44,15 @@
       },
       "lightning_count": {
         "name": "Lightning count"
+      },
+      "lightning_strike_last_distance": {
+        "name": "Lightning last distance"
+      },
+      "lightning_strike_last_energy": {
+        "name": "Lightning last energy"
+      },
+      "lightning_strike_last_epoch": {
+        "name": "Lightning last strike"
       },
       "precipitation_type": {
         "name": "Precipitation type",

@@ -119,5 +119,6 @@ set_person_away:
       selector:
         text:
 
+# Deprecated: the webhook is managed automatically. Scheduled for removal in 2027.2.0.
 register_webhook:
 unregister_webhook:

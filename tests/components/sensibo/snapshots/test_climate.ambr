@@ -164,7 +164,7 @@
         'fixedmiddletop',
       ]),
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 25,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 25,
     }),
     'context': <ANY>,
     'entity_id': 'climate.hallway_hallway',

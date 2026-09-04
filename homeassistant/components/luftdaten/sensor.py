@@ -9,9 +9,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_SHOW_ON_MAP,
+    EntityStateAttribute,
     UnitOfDensity,
     UnitOfPressure,
     UnitOfRatio,
@@ -120,12 +119,12 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
         )
 
         if show_on_map:
-            self._attr_extra_state_attributes[ATTR_LONGITUDE] = coordinator.data[
-                "longitude"
-            ]
-            self._attr_extra_state_attributes[ATTR_LATITUDE] = coordinator.data[
-                "latitude"
-            ]
+            self._attr_extra_state_attributes[EntityStateAttribute.LONGITUDE] = (
+                coordinator.data["longitude"]
+            )
+            self._attr_extra_state_attributes[EntityStateAttribute.LATITUDE] = (
+                coordinator.data["latitude"]
+            )
 
     @property
     @override

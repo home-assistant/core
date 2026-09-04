@@ -24,6 +24,7 @@
     'media_content_id': 'media-source://jellyfin/MOVIE-UUID',
     'media_content_type': 'video/mp4',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': 'http://localhost/Items/MOVIE-UUID/Images/Primary.jpg',
     'title': 'MOVIE',
   })
@@ -41,6 +42,7 @@
     'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'ALBUM',
   })
@@ -58,6 +60,7 @@
     'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'ALBUM',
   })
@@ -75,6 +78,7 @@
     'media_content_id': 'media-source://jellyfin/TRACK-UUID',
     'media_content_type': 'audio/flac',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': 'http://localhost/Items/TRACK-UUID/Images/Primary.jpg',
     'title': 'TRACK',
   })
@@ -98,6 +102,7 @@
     'media_content_id': 'media-source://jellyfin/COLLECTION-FOLDER-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'COLLECTION FOLDER',
   })
@@ -115,6 +120,7 @@
     'media_content_id': 'media-source://jellyfin/SERIES-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'SERIES',
   })
@@ -132,6 +138,7 @@
     'media_content_id': 'media-source://jellyfin/SEASON-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'SEASON',
   })
@@ -149,6 +156,7 @@
     'media_content_id': 'media-source://jellyfin/EPISODE-UUID',
     'media_content_type': 'video/mp4',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': 'http://localhost/Items/EPISODE-UUID/Images/Primary.jpg',
     'title': 'EPISODE',
   })
