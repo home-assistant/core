@@ -468,6 +468,7 @@ async def test_set_fan_mode_unsupported_mode(hass: HomeAssistant) -> None:
             assistant=conversation.DOMAIN,
         )
 
+    # Mode was not affected by failed intent
     state = hass.states.get(climate_1.entity_id)
     assert state.attributes[ATTR_FAN_MODE] == "auto"
 

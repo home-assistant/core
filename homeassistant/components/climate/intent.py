@@ -205,11 +205,7 @@ class SetFanModeIntent(intent.IntentHandler):
 async def _async_resolve_fan_mode(
     hass: HomeAssistant, language: str, climate_state: State, requested: str
 ) -> str | None:
-    """Return the entity's fan mode matching the requested one, if any.
-
-    Sentence triggers yield the canonical fan mode constants, but LLMs and
-    custom sentences may pass a localized name or differently-cased string.
-    """
+    """Return a matching fan mode using translations if necessary."""
     available: list[str] = climate_state.attributes.get(ATTR_FAN_MODES) or []
     if requested in available:
         return requested
