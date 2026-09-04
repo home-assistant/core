@@ -49,5 +49,5 @@
   "iot_class": "local_push",
   "loggers": ["specialized_turbo"],
   "quality_scale": "silver",
-  "requirements": ["specialized-turbo[cloud]==0.8.2"]
+  "requirements": ["specialized-turbo[cloud]==0.8.3"]
 }

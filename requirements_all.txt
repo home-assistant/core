@@ -3144,7 +3144,7 @@ sonos-websocket==0.2.0
 speak2mary==1.4.0
 
 # homeassistant.components.specialized_turbo
-specialized-turbo[cloud]==0.8.2
+specialized-turbo[cloud]==0.8.3
 
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.3
