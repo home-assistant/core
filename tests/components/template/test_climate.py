@@ -5,8 +5,8 @@ from typing import Any
 import pytest
 
 from homeassistant.components import climate
-from homeassistant.components.climate import HVACAction
-from homeassistant.const import UnitOfTemperature
+from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
@@ -443,6 +443,191 @@ async def test_bad_target_temperature_range_config(
 
 @pytest.mark.parametrize(
     ("attribute", "extra_config"),
+    [("hvac_modes", SET_HVAC_MODE_ACTION)],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        (
+            "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+            [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL],
+        ),
+        (
+            "{{ ['dry', 'auto', 'fan_only'] }}",
+            [HVACMode.DRY, HVACMode.AUTO, HVACMode.FAN_ONLY],
+        ),
+        ("{{ [] }}", []),
+        ("{{ '[]' }}", []),
+        (
+            "{{ ['dry', 'auto2', 'fan_only'] }}",
+            [HVACMode.DRY, HVACMode.FAN_ONLY],
+        ),
+        ("{{ -3 }}", []),
+        ("{{ 103.3 }}", []),
+        ("{{ True }}", []),
+        ("{{ False }}", []),
+        ("{{ 'something' }}", []),
+        ("{{ x - 1 }}", []),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_hvac_modes_template(
+    hass: HomeAssistant, attribute: str, expected: Any
+) -> None:
+    """Test hvac_modes template."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get(attribute) == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [
+        (
+            "hvac_mode",
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool', 'dry', 'auto'] }}",
+                **SET_HVAC_MODE_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ 'off' }}", HVACMode.OFF),
+        ("{{ 'heat' }}", HVACMode.HEAT),
+        ("{{ 'cool' }}", HVACMode.COOL),
+        ("{{ 'heat_cool' }}", HVACMode.HEAT_COOL),
+        ("{{ 'dry' }}", HVACMode.DRY),
+        ("{{ 'auto' }}", HVACMode.AUTO),
+        ("{{ 'fan_only' }}", STATE_UNKNOWN),
+        ("{{ -3 }}", STATE_UNKNOWN),
+        ("{{ 103.3 }}", STATE_UNKNOWN),
+        ("{{ True }}", STATE_UNKNOWN),
+        ("{{ False }}", STATE_UNKNOWN),
+        ("{{ 'something' }}", STATE_UNKNOWN),
+        ("{{ x - 1 }}", STATE_UNAVAILABLE),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_hvac_mode_template(hass: HomeAssistant, expected: Any) -> None:
+    """Test hvac_mode template."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("config", "option"),
+    [
+        (
+            SET_HVAC_MODE_ACTION,
+            "hvac_modes",
+        ),
+        (
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool', 'dry', 'auto', 'fan_only'] }}",
+            },
+            "set_hvac_mode",
+        ),
+    ],
+)
+async def test_required_hvac_mode_options(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    option: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test missing required options."""
+    platform = TEST_CLIMATE
+    await setup_entity(hass, platform, style, 0, config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        f"Invalid config for 'template': required key '{option}' not provided"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("attribute", "attribute_template", "extra_config"),
+    [
+        (
+            "hvac_modes",
+            "{{ state_attr('sensor.test_attribute', 'hvac_modes') or [] }}",
+            SET_HVAC_MODE_ACTION,
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_hvac_modes_updates_supported_features(hass: HomeAssistant) -> None:
+    """Test hvac_modes updates supported features."""
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["hvac_modes"] == []
+    assert state.attributes["supported_features"] == 0
+
+    await async_trigger(
+        hass,
+        TEST_ATTRIBUTE_ENTITY_ID,
+        "anything",
+        {"hvac_modes": ["heat"]},
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["hvac_modes"] == [HVACMode.HEAT]
+    assert state.attributes["supported_features"] == 0
+
+    await async_trigger(
+        hass,
+        TEST_ATTRIBUTE_ENTITY_ID,
+        "anything",
+        {"hvac_modes": ["off", "heat"]},
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["hvac_modes"] == [HVACMode.OFF, HVACMode.HEAT]
+    assert (
+        state.attributes["supported_features"]
+        == ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+    )
+
+    await async_trigger(
+        hass,
+        TEST_ATTRIBUTE_ENTITY_ID,
+        "anything",
+        {"hvac_modes": ["cool"]},
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["hvac_modes"] == [HVACMode.COOL]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
     [
         ("fan_modes", {**SET_FAN_MODE_ACTION, **MINIMUM_REQUIREMENTS}),
         ("swing_modes", {**SET_SWING_MODE_ACTION, **MINIMUM_REQUIREMENTS}),
@@ -479,7 +664,7 @@ async def test_bad_target_temperature_range_config(
 async def test_group_modes_template(
     hass: HomeAssistant, attribute: str, expected: Any
 ) -> None:
-    """Test template modes."""
+    """Test template modes for inclusive group."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     state = hass.states.get(TEST_CLIMATE.entity_id)

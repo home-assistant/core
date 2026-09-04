@@ -31,6 +31,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -267,7 +268,7 @@ def hvac_modes_list(
 
     def convert(result: Any) -> list[HVACMode] | None:
         if tcv.check_result_for_none(result):
-            return None
+            return []
 
         if isinstance(result, str):
             with contextlib.suppress(ValueError):
@@ -292,7 +293,7 @@ def hvac_modes_list(
             return validated
 
         tcv.log_validation_result_error(entity, CONF_HVAC_MODES, result, expected)
-        return None
+        return []
 
     return convert
 
@@ -442,10 +443,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             "_attr_hvac_modes",
             hvac_modes_list(self),
             self._update_hvac_modes,
+            none_on_template_error=False,
         )
         self.setup_state_template(
             "_attr_hvac_mode",
-            tcv.strenum(self, CONF_HVAC_MODE, HVACMode),
+            tcv.item_in_list(
+                self, "_attr_hvac_mode", "_attr_hvac_modes", CONF_HVAC_MODES
+            ),
         )
         self.setup_template(
             CONF_HVAC_ACTION,
@@ -584,14 +588,18 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             )
 
     def _update_hvac_modes(self, render) -> None:
-        if isinstance(render, list):
-            supported_features = (
-                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-            )
-            if HVACMode.OFF in render:
-                self._attr_supported_features |= supported_features
-            else:
-                self._attr_supported_features &= ~supported_features
+
+        if isinstance(render, TemplateError):
+            self._attr_hvac_modes = []
+            return
+
+        supported_features = (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
+        if HVACMode.OFF in render:
+            self._attr_supported_features |= supported_features
+        else:
+            self._attr_supported_features &= ~supported_features
 
         self._attr_hvac_modes = render
 
