@@ -262,9 +262,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             for domain, identifier in device.identifiers:
                 if domain != DOMAIN:
                     continue
-                candidate = identifier.removeprefix(f"{entry.entry_id}_").split("_", 1)[
-                    0
-                ]
+                candidate = (
+                    identifier.removeprefix(f"{entry.entry_id}_")
+                    .removeprefix("endpoint_")
+                    .split("_", 1)[0]
+                )
                 if candidate.isdigit():
                     devices_by_endpoint_id[candidate].append(device)
                     break
