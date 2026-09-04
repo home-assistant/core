@@ -95,7 +95,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -1870,6 +1870,54 @@ async def test_position_settles_after_resume(
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 44
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_out_of_order_poll_result_discarded(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a poll result older than the newest processed one is discarded."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Consume the initial settle poll.
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    # A newer poll whose position matches the extrapolation writes nothing
+    # but must still advance the ordering watermark.
+    newer = dict(current_track_info)
+    newer["duration_in_s"] = 156
+    newer["position_in_s"] = 44
+    media.update_media_position(
+        newer,
+        polled_at=dt_util.utcnow() + datetime.timedelta(seconds=2),
+    )
+    # A slower, older poll finishing afterwards must be discarded even though
+    # nothing was written since its request time.
+    stale = dict(current_track_info)
+    stale["duration_in_s"] = 156
+    stale["position_in_s"] = 3
+    media.update_media_position(
+        stale,
+        force_update=True,
+        polled_at=dt_util.utcnow() + datetime.timedelta(seconds=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
 
 
 @pytest.mark.parametrize(

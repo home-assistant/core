@@ -84,6 +84,7 @@ class SonosMedia:
         self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
         self._position_settle_unsub: Callable[[], None] | None = None
+        self._newest_poll_at: datetime.datetime | None = None
 
     def clear(self) -> None:
         """Clear basic media info."""
@@ -272,14 +273,12 @@ class SonosMedia:
         polled_at: datetime.datetime | None = None,
     ) -> None:
         """Update state when playing music tracks."""
-        if (
-            polled_at is not None
-            and self.position_updated_at is not None
-            and polled_at < self.position_updated_at
-        ):
-            # An overlapping poll finished out of order; a newer result has
-            # already been written.
-            return
+        if polled_at is not None:
+            if self._newest_poll_at is not None and polled_at < self._newest_poll_at:
+                # An overlapping poll finished out of order; a newer result
+                # has already been processed (whether or not it was written).
+                return
+            self._newest_poll_at = polled_at
 
         duration = position_info.get(DURATION_SECONDS)
         current_position = position_info.get(POSITION_SECONDS)
