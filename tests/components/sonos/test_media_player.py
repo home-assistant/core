@@ -33,11 +33,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_MEDIA_SEEK,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
@@ -1700,6 +1702,37 @@ async def test_position_updates(
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_media_seek_updates_position(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test that a seek updates the entity position without waiting for events."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+
+    with freeze_time("2024-01-01T12:00:05Z"):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_MEDIA_SEEK,
+            {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_SEEK_POSITION: 100},
+            blocking=True,
+        )
+        soco.seek.assert_called_once_with("0:01:40")
+        state = hass.states.get(entity_id)
+        # Sonos fires no event for a position change: the entity must reflect
+        # the commanded position immediately.
+        assert state.attributes[ATTR_MEDIA_POSITION] == 100
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 

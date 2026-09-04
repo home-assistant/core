@@ -51,6 +51,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
 from . import media_browser
 from .const import (
@@ -485,6 +486,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
+        # Sonos does not raise an event for position changes, so nothing else
+        # refreshes the entity after a seek; the commanded position is
+        # authoritative for the moment the command succeeded.
+        self.media.position = int(position)
+        self.media.position_updated_at = dt_util.utcnow()
+        self.media.write_media_player_states()
 
     @soco_error()
     @override
