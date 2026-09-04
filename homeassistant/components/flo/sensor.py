@@ -79,7 +79,6 @@ class FloLastEventUsageSensor(FloEntity, SensorEntity):
 
     _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_device_class = SensorDeviceClass.WATER
     _attr_translation_key = "last_event_usage"
 
     def __init__(self, device):
