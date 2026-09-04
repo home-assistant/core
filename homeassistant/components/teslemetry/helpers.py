@@ -59,22 +59,27 @@ async def handle_command(
 ) -> dict[str, Any]:
     """Handle a command."""
     issue_id = insufficient_credits_issue_id(entry)
+    credits_generation = entry.runtime_data.credits_generation
     try:
         result = await command
     except InsufficientCredits as e:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=INSUFFICIENT_CREDITS_ISSUE,
-            translation_placeholders={
-                "account": entry.title,
-                "credits_url": CREDITS_URL,
-            },
-            learn_more_url=CREDITS_URL,
-        )
+        # A credits-availability event that landed while this command was in
+        # flight already reports credits are back, so this response is stale: do
+        # not recreate a repair no further availability event would clear.
+        if entry.runtime_data.credits_generation == credits_generation:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=INSUFFICIENT_CREDITS_ISSUE,
+                translation_placeholders={
+                    "account": entry.title,
+                    "credits_url": CREDITS_URL,
+                },
+                learn_more_url=CREDITS_URL,
+            )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=INSUFFICIENT_CREDITS_ISSUE,
@@ -149,6 +154,7 @@ def async_handle_credits(
         and balance > CREDITS_BALANCE_THRESHOLD
     )
     if quota_available or balance_available:
+        entry.runtime_data.credits_generation += 1
         ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
 
 

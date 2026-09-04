@@ -1,6 +1,7 @@
 """Test the Teslemetry button platform."""
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -96,3 +97,52 @@ async def test_insufficient_credits(
     )
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_insufficient_credits_stale_response_ignored(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test a stale InsufficientCredits response does not recreate a cleared repair."""
+    entry = await setup_platform(hass, [Platform.BUTTON])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    async def send_credits_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # A credits-availability event lands while this command is still in
+        # flight, then the older response finally raises InsufficientCredits.
+        mock_add_listener.send(
+            {
+                "credits": {
+                    "type": "command",
+                    "cost": 1,
+                    "quota": {
+                        "used": 5,
+                        "fraction": 0.5,
+                        "reset_at": "2026-07-10T00:00:00.000Z",
+                    },
+                    "balance": 0,
+                },
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        raise InsufficientCredits
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.wake_up",
+            side_effect=send_credits_then_fail,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_wake"]},
+            blocking=True,
+        )
+
+    # The command still fails for the caller, but credits are already reported
+    # available so the stale response must not recreate the repair.
+    assert error.value.translation_key == "insufficient_credits"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

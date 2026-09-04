@@ -29,6 +29,9 @@ class TeslemetryData:
     scopes: list[Scope]
     stream: TeslemetryStream | None
     metadata_coordinator: TeslemetryMetadataCoordinator
+    # Bumped each time a credits-availability event lands; lets handle_command
+    # ignore an InsufficientCredits response that predates the latest update.
+    credits_generation: int = 0
 
 
 @dataclass
