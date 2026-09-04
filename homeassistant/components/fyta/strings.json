@@ -72,6 +72,9 @@
       "last_fertilised": {
         "name": "Last fertilized"
       },
+      "last_update": {
+        "name": "Last update"
+      },
       "light": {
         "name": "Light",
         "state_attributes": {
