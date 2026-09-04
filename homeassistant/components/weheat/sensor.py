@@ -48,17 +48,6 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
     value_fn: Callable[[HeatPump], StateType]
-    # Entities are created only at setup, so a value_fn that can be None needs this.
-    supported_fn: Callable[[HeatPump], bool] | None = None
-
-
-def _is_supported(
-    entity_description: WeHeatSensorEntityDescription, heat_pump: HeatPump
-) -> bool:
-    """Return whether the heat pump reports the value behind this sensor."""
-    if entity_description.supported_fn is not None:
-        return entity_description.supported_fn(heat_pump)
-    return entity_description.value_fn(heat_pump) is not None
 
 
 def _dhw_target_temperature(status: HeatPump) -> float | None:
@@ -237,7 +226,6 @@ DHW_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
-        supported_fn=lambda status: status.dhw_target_temperature is not None,
         value_fn=_dhw_target_temperature,
     ),
     WeHeatSensorEntityDescription(
@@ -246,7 +234,6 @@ DHW_SENSORS = [
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[method.name.lower() for method in HeatPump.DhwControlMethod],
-        supported_fn=lambda status: status.dhw_control_method_code is not None,
         value_fn=(
             lambda status: (
                 status.dhw_control_method.name.lower()
@@ -376,7 +363,7 @@ async def async_setup_entry(
                 entity_description,
             )
             for entity_description in SENSORS
-            if _is_supported(entity_description, weheatdata.data_coordinator.data)
+            if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
         )
         if weheatdata.heat_pump_info.has_dhw:
             entities.extend(
@@ -386,7 +373,6 @@ async def async_setup_entry(
                     entity_description,
                 )
                 for entity_description in DHW_SENSORS
-                if _is_supported(entity_description, weheatdata.data_coordinator.data)
             )
             entities.extend(
                 WeheatHeatPumpSensor(
@@ -395,7 +381,6 @@ async def async_setup_entry(
                     entity_description,
                 )
                 for entity_description in DHW_ENERGY_SENSORS
-                if _is_supported(entity_description, weheatdata.energy_coordinator.data)
             )
         entities.extend(
             WeheatHeatPumpSensor(
@@ -404,7 +389,8 @@ async def async_setup_entry(
                 entity_description,
             )
             for entity_description in ENERGY_SENSORS
-            if _is_supported(entity_description, weheatdata.energy_coordinator.data)
+            if entity_description.value_fn(weheatdata.energy_coordinator.data)
+            is not None
         )
 
     async_add_entities(entities)
