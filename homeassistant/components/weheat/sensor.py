@@ -280,8 +280,8 @@ COOLING_SENSORS = [
             else next(
                 (
                     name
-                    for name, met in status.cooling_start_conditions.items()
-                    if not met
+                    for name in HeatPump.COOLING_START_CONDITION_BITS
+                    if not status.cooling_start_conditions[name]
                 ),
                 "none",
             )
