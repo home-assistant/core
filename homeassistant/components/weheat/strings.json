@@ -31,39 +31,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "cooling_start_condition_contact_not_blocked": {
-        "name": "Cooling contact not blocking"
-      },
-      "cooling_start_condition_control_method": {
-        "name": "Cooling allowed by control method"
-      },
-      "cooling_start_condition_demand": {
-        "name": "Demand for cooling from cooling curve"
-      },
-      "cooling_start_condition_dtc": {
-        "name": "No cooling-related faults"
-      },
-      "cooling_start_condition_exponential_backoff": {
-        "name": "No cooling back-off waiting time"
-      },
-      "cooling_start_condition_heat_cool_delay": {
-        "name": "No heating in the last 24 hours"
-      },
-      "cooling_start_condition_indoor_unit_connected": {
-        "name": "Cooling indoor unit connected"
-      },
-      "cooling_start_condition_inside_temperature": {
-        "name": "Cooling room warmer than desired"
-      },
-      "cooling_start_condition_outside_air_temperature": {
-        "name": "Cooling outside temperature high enough"
-      },
-      "cooling_start_condition_water_temperature": {
-        "name": "Water warmer than cooling curve"
-      },
-      "cooling_start_condition_water_to_air": {
-        "name": "Cooling air warmer than system water"
-      },
       "indoor_unit_auxiliary_pump_state": {
         "name": "Indoor unit auxiliary water pump"
       },

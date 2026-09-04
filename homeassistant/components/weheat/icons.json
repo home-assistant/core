@@ -1,39 +1,6 @@
 {
   "entity": {
     "binary_sensor": {
-      "cooling_start_condition_contact_not_blocked": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_control_method": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_demand": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_dtc": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_exponential_backoff": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_heat_cool_delay": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_indoor_unit_connected": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_inside_temperature": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_outside_air_temperature": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_water_temperature": {
-        "default": "mdi:snowflake-check"
-      },
-      "cooling_start_condition_water_to_air": {
-        "default": "mdi:snowflake-check"
-      },
       "indoor_unit_auxiliary_pump_state": {
         "default": "mdi:pump"
       },
