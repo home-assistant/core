@@ -43,6 +43,9 @@
       "reauth_confirm": {
         "description": "The {name} integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "description": "Home Assistant could not register with Teslemetry. Check your internet connection and try again."
       }
     }
   },

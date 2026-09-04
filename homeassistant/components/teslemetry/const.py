@@ -11,6 +11,12 @@ LOGGER = logging.getLogger(__package__)
 AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
+SOFTWARE_ID = "home-assistant"
+# Application-credentials auth_domain for the dynamically registered client.
+# It must differ from DOMAIN so the DCR client and the legacy static client
+# (imported under DOMAIN during v1 migration) can coexist without one
+# overwriting the other under a shared auth key.
+DCR_AUTH_DOMAIN = f"{DOMAIN}_dcr"
 
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",

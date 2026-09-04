@@ -11,21 +11,24 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
+    TeslemetryRegistrationError,
 )
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
-    CLIENT_ID,
+    DCR_AUTH_DOMAIN,
     DOMAIN,
+    SOFTWARE_ID,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_platform
-from .const import CONFIG_V1, UNIQUE_ID
+from .const import CONFIG_V1, DCR_CLIENT_ID, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -40,6 +43,7 @@ async def test_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_register_client: AsyncMock,
 ) -> None:
     """Test we get the form."""
 
@@ -48,6 +52,15 @@ async def test_oauth_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    # The registration request must carry the correct client identity so the
+    # external contract cannot silently drift.
+    mock_register_client.assert_called_once()
+    assert mock_register_client.call_args.args[1:] == (
+        "Home Assistant",
+        SOFTWARE_ID,
+        __version__,
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -61,7 +74,7 @@ async def test_oauth_flow(
     parsed_url = urlparse(result["url"])
     parsed_query = parse_qs(parsed_url.query)
     assert parsed_query["response_type"][0] == "code"
-    assert parsed_query["client_id"][0] == CLIENT_ID
+    assert parsed_query["client_id"][0] == DCR_CLIENT_ID
     assert parsed_query["redirect_uri"][0] == REDIRECT
     assert parsed_query["state"][0] == state
     assert parsed_query["code_challenge"][0]
@@ -90,12 +103,63 @@ async def test_oauth_flow(
     assert result
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == UNIQUE_ID
-    assert result["data"]["auth_implementation"] == "teslemetry"
+    assert result["data"]["auth_implementation"] == DCR_AUTH_DOMAIN
     assert result["data"]["token"]["refresh_token"] == response["refresh_token"]
     assert result["data"]["token"]["access_token"] == response["access_token"]
     assert result["data"]["token"]["type"] == response["type"]
     assert result["data"]["token"]["expires_in"] == response["expires_in"]
     assert "expires_at" in result["result"].data["token"]
+
+    token_calls = [
+        call for call in aioclient_mock.mock_calls if str(call[1]) == TOKEN_URL
+    ]
+    assert len(token_calls) == 1
+    assert token_calls[0][2]["software_id"] == SOFTWARE_ID
+    assert token_calls[0][2]["software_version"] == __version__
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_registration_failure_shows_retry_form(
+    hass: HomeAssistant,
+    mock_register_client: AsyncMock,
+) -> None:
+    """Test a library registration error shows a retryable form."""
+    mock_register_client.side_effect = TeslemetryRegistrationError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_registration_failure_recovers(
+    hass: HomeAssistant,
+    mock_register_client: AsyncMock,
+) -> None:
+    """Test the flow recovers when registration succeeds on retry."""
+    mock_register_client.side_effect = TeslemetryRegistrationError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_register_client.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DCR_AUTH_DOMAIN].client_id == DCR_CLIENT_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -104,6 +168,7 @@ async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_register_client: AsyncMock,
 ) -> None:
     """Test reauth flow."""
 
@@ -145,6 +210,10 @@ async def test_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+    # Reauth must reuse the client registered during the original setup, not
+    # register a new one.
+    mock_register_client.assert_called_once()
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -160,7 +229,7 @@ async def test_reauth_account_mismatch(
         version=2,
         unique_id="baduid",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": DCR_AUTH_DOMAIN,
             "token": {
                 "access_token": "old_access_token",
                 "refresh_token": "old_refresh_token",
@@ -335,7 +404,7 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
 
     # Verify entry data was updated
-    assert mock_entry.data["auth_implementation"] == DOMAIN
+    assert mock_entry.data["auth_implementation"] == DCR_AUTH_DOMAIN
     assert mock_entry.data["token"]["refresh_token"] == "new_refresh_token"
     assert mock_entry.data["token"]["access_token"] == "new_access_token"
     assert mock_entry.data["token"]["type"] == "Bearer"
@@ -358,7 +427,7 @@ async def test_reconfigure_account_mismatch(
         version=2,
         unique_id="baduid",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": DCR_AUTH_DOMAIN,
             "token": {
                 "access_token": "old_access_token",
                 "refresh_token": "old_refresh_token",

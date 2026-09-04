@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.teslemetry.const import DCR_AUTH_DOMAIN, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
         version=2,
         unique_id="abc-123",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": DCR_AUTH_DOMAIN,
             "token": {
                 "access_token": "test_access_token",
                 "refresh_token": "test_refresh_token",
