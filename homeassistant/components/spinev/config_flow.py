@@ -181,7 +181,9 @@ class SpinEvConfigFlow(ConfigFlow, domain=DOMAIN):
         if ble_device is None:
             return False
 
-        charger = SpinEvCharger(ble_device, client_class=HaBleakClientWrapper)
+        charger = SpinEvCharger(
+            ble_device, client_class=HaBleakClientWrapper, max_attempts=1
+        )
         try:
             async with charger:
                 await charger.async_get_state_value()

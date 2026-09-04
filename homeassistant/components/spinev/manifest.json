@@ -15,5 +15,5 @@
   "iot_class": "local_polling",
   "loggers": ["spinev_ble"],
   "quality_scale": "bronze",
-  "requirements": ["spinev-ble[bleak]==0.2.0"]
+  "requirements": ["spinev-ble[bleak]==0.3.0"]
 }
