@@ -1,6 +1,6 @@
 """Support for Flo Water Monitor sensors."""
 
-from typing import override
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -42,6 +42,8 @@ async def async_setup_entry(
             entities.extend(
                 [
                     FloDailyUsageSensor(device),
+                    FloLastEventUsageSensor(device),
+                    FloLastEventFixtureSensor(device),
                     FloSystemModeSensor(device),
                     FloCurrentFlowRateSensor(device),
                     FloTemperatureSensor(device, True),
@@ -70,6 +72,62 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
         if self._device.consumption_today is None:
             return None
         return round(self._device.consumption_today, 1)
+
+
+class FloLastEventUsageSensor(FloEntity, SensorEntity):
+    """Monitors the most recent Flo Detect water-flow event."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_translation_key = "last_event_usage"
+
+    def __init__(self, device):
+        """Initialize the last event usage sensor."""
+        super().__init__("last_event_usage", device)
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return gallons consumed in the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None or event.get("gallonsConsumed") is None:
+            return None
+        return round(event["gallonsConsumed"], 1)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return details of the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None:
+            return {}
+        return {
+            "fixture_type": event.get("fixtureType"),
+            "duration_seconds": event.get("durationSeconds"),
+            "start_time": event.get("startTime"),
+            "end_time": event.get("endTime"),
+            "event_id": event.get("id"),
+        }
+
+
+class FloLastEventFixtureSensor(FloEntity, SensorEntity):
+    """Monitors the fixture type of the most recent Flo Detect event."""
+
+    _attr_translation_key = "last_event_fixture"
+
+    def __init__(self, device):
+        """Initialize the last event fixture sensor."""
+        super().__init__("last_event_fixture", device)
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the fixture type of the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None:
+            return None
+        return event.get("fixtureType")
 
 
 class FloSystemModeSensor(FloEntity, SensorEntity):
