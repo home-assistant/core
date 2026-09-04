@@ -1988,6 +1988,12 @@
         }
       }
     },
+    "eufy_robovac": {
+      "name": "Eufy RoboVac",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "eurotronic_cometblue": {
       "name": "Eurotronic Comet Blue",
       "integration_type": "device",
