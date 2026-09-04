@@ -454,6 +454,7 @@ homeassistant.components.p1_monitor.*
 homeassistant.components.paj_gps.*
 homeassistant.components.panel_custom.*
 homeassistant.components.paperless_ngx.*
+homeassistant.components.papouch.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
