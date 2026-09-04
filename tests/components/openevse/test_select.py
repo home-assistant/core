@@ -211,3 +211,19 @@ async def test_select_unavailable_when_unsupported(
     state = hass.states.get("select.openevse_mock_config_override_state")
     assert state is not None
     assert state.state == "unavailable"
+
+
+async def test_select_unavailable_when_initial_read_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test select entity is registered and unavailable when initial read fails."""
+    mock_charger.get_override_state.side_effect = TimeoutError
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.openevse_mock_config_override_state")
+    assert state is not None
+    assert state.state == "unavailable"

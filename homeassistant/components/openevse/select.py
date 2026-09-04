@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, override
 
@@ -10,6 +11,7 @@ from openevsehttp import OpenEVSE
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_SERIAL_NUMBER, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -112,7 +114,8 @@ class OpenEVSESelect(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SelectEnt
     async def async_added_to_hass(self) -> None:
         """Handle entity added to hass."""
         await super().async_added_to_hass()
-        await self._async_update_current_option()
+        with suppress(HomeAssistantError):
+            await self._async_update_current_option()
 
     @override
     def _handle_coordinator_update(self) -> None:
