@@ -10,16 +10,17 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_TOP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES
+from .const import CONF_SUPPORTED_MODES, DOMAIN
 from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 from .entity import CoolmasterEntity
 
@@ -33,10 +34,17 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
+# The CoolMasterNet vocabulary is VLow, Low, Med, High, Top, Auto. Home Assistant
+# has a constant for every one of those but the slowest, which is exposed under its
+# own name and translated in strings.json.
+FAN_VERY_LOW = "vlow"
+
 CM_TO_HA_FAN = {
+    "vlow": FAN_VERY_LOW,
     "low": FAN_LOW,
     "med": FAN_MEDIUM,
     "high": FAN_HIGH,
+    "top": FAN_TOP,
     "auto": FAN_AUTO,
 }
 
@@ -67,6 +75,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
     _attr_name = None
+    _attr_translation_key = DOMAIN
 
     # TODO(2026.7.0): When support for unknown fan speeds is
     # removed, delete this variable.
@@ -83,6 +92,8 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         super().__init__(coordinator, unit_id)
         self._attr_hvac_modes = supported_modes
         self._attr_unique_id = unit_id
+        # Fan speeds this particular indoor unit has told us it cannot do.
+        self._unsupported_fan_modes: set[str] = set()
 
     @property
     @override
@@ -153,7 +164,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return FAN_MODES
+        return [mode for mode in FAN_MODES if mode not in self._unsupported_fan_modes]
 
     @property
     @override
@@ -175,11 +186,36 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
             self._unit = await self._unit.set_thermostat(temp)
             self.async_write_ha_state()
 
+    def _reject_fan_mode(self, fan_mode: str) -> ServiceValidationError:
+        """Drop a fan mode this unit rejected and build the error to raise."""
+        self._unsupported_fan_modes.add(fan_mode)
+        self.async_write_ha_state()
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="fan_mode_unsupported",
+            translation_placeholders={
+                "fan_mode": fan_mode,
+                "unit_id": self._unit_id,
+            },
+        )
+
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        self._unit = await self._unit.set_fan_speed(HA_FAN_TO_CM[fan_mode])
+        fan_speed = HA_FAN_TO_CM[fan_mode]
+        try:
+            self._unit = await self._unit.set_fan_speed(fan_speed)
+        except ValueError as error:
+            # The bridge answers "Unsupported Feature" for a speed the indoor unit
+            # cannot do, which the library reports as CoolMasterNetCommandError.
+            raise self._reject_fan_mode(fan_mode) from error
+
+        if self._unit.fan_speed.lower() != fan_speed:
+            # A rejected fspeed command "will have no effect" per the protocol
+            # reference, so the refreshed unit still reports the previous speed.
+            raise self._reject_fan_mode(fan_mode)
+
         self.async_write_ha_state()
 
     @override

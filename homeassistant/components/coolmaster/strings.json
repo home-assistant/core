@@ -90,10 +90,26 @@
         "name": "Reset filter"
       }
     },
+    "climate": {
+      "coolmaster": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "vlow": "Very low"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "error_code": {
         "name": "Error code"
       }
+    }
+  },
+  "exceptions": {
+    "fan_mode_unsupported": {
+      "message": "Fan speed {fan_mode} is not supported by unit {unit_id}"
     }
   }
 }
