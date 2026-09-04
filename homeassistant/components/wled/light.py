@@ -183,11 +183,12 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     def _infer_color_mode(self) -> None:
         """Infer the color mode from the current color of the segment.
 
-        WLED support RGBWW lights but they can't be controlled as regulars RGBWW.
-        There are 2 options you can control them as RGB+CTT or RGBW+CCT lights.
+        WLED supports RGBWW lights, but they cannot be controlled as regular RGBWW lights.
+        There are two options: you can control them as RGB+CTT or RGBW+CCT lights.
 
-        RGBW+CCT is emulated as RGBWW
-        RGB+CCT switch from RGB to CCT mode when white is selected
+        RGBW+CCT is emulated as RGBWW.
+
+        RGB+CCT switches from RGB mode to CCT mode when white is selected.
         """
         # Checks if the light support RGB and COLOR_TEMP modes
         if (
