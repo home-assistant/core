@@ -34,6 +34,7 @@ from .coordinator import (
     PortainerCoordinatorData,
 )
 from .entity import PortainerContainerEntity
+from .util import async_add_entities_by_subentry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -98,15 +99,22 @@ async def async_setup_entry(
     ) -> None:
         """Add new container update entities."""
 
-        async_add_entities(
-            PortainerContainerImageUpdateEntity(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_IMAGE
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerImageUpdateEntity(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_IMAGE
+            ),
         )
 
     coordinator.new_containers_callbacks.append(_async_add_new_containers)

@@ -51,6 +51,29 @@
       }
     }
   },
+  "config_subentries": {
+    "environment": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "config_entry_not_loaded": "Cannot add an environment while the Portainer integration is not loaded.",
+        "no_new_environments": "All available environments on this Portainer server have already been added.",
+        "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+      },
+      "entry_type": "Environment",
+      "initiate_flow": {
+        "user": "Add environment"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "endpoint_id": "Environment"
+          },
+          "description": "Select a Portainer environment to add as a device in Home Assistant.",
+          "title": "Add a Portainer environment"
+        }
+      }
+    }
+  },
   "device": {
     "unknown_container": {
       "name": "Unknown container"
