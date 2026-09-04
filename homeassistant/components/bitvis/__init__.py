@@ -1,13 +1,9 @@
 """The Bitvis Power Hub integration."""
 
-import logging
-
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import BitvisConfigEntry, BitvisDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 

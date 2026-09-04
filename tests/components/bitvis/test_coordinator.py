@@ -1,15 +1,17 @@
 """Tests for the Bitvis Power Hub coordinator."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bitvis_protobuf.listener import FilterMac
 import pytest
 
-from homeassistant.components.bitvis.const import DEFAULT_PORT
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.bitvis.const import DEFAULT_PORT, DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_DEVICE_MAC
+from .conftest import SECOND_DEVICE_MAC, TEST_DEVICE_MAC, patch_config_flow_connectivity
 
 from tests.common import MockConfigEntry
 
@@ -56,6 +58,39 @@ async def test_two_entries_share_listener(
     patch_shared_listener.stop.assert_awaited_once()
 
 
+async def test_user_form_skips_port_bind_when_listener_exists(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    patch_shared_listener: MagicMock,
+) -> None:
+    """Test user flow skips port bind check when a listener already exists."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow.async_verify_udp_port_bindable",
+            new_callable=AsyncMock,
+        ) as mock_verify,
+        patch_config_flow_connectivity(
+            "192.168.1.101",
+            mac_address=SECOND_DEVICE_MAC,
+            use_real_listener_registry=True,
+            shared_listener=patch_shared_listener,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.101",
+            },
+        )
+
+    mock_verify.assert_not_awaited()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_setup_oserror_results_in_setup_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -84,3 +119,4 @@ async def test_setup_runtime_error_results_in_setup_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_shared_listener.unregister.assert_not_called()

@@ -8,10 +8,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import find_listener_callback, setup_integration
@@ -223,10 +222,19 @@ async def test_diagnostic_sensors_update_with_data(
 @pytest.mark.usefixtures("init_integration")
 async def test_device_info_updated_from_diagnostic(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     patch_shared_listener: MagicMock,
 ) -> None:
     """Test that device info is updated from a diagnostic payload."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), init_integration.entry_id
+    )
+    assert device is not None
+    assert device.model == MODEL_NAME
+    assert device.sw_version is None
+    assert (CONNECTION_NETWORK_MAC, TEST_DEVICE_MAC) in device.connections
+
     payload = powerhub_pb2.Payload()
     payload.diagnostic.uptime_s = 10
     payload.diagnostic.device_info.model_name = "PowerHub Gen2"
@@ -238,26 +246,19 @@ async def test_device_info_updated_from_diagnostic(
     )
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor",
-        DOMAIN,
-        f"{TEST_DEVICE_MAC}_wifi_rssi",
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), init_integration.entry_id
     )
-    assert entity_id is not None
-    entity = hass.data[SENSOR_DOMAIN].get_entity(entity_id)
-    assert entity is not None
-    assert entity.device_info is not None
-    assert entity.device_info["model"] == "PowerHub Gen2"
-    assert entity.device_info["sw_version"] == "1.2.3"
-    assert (CONNECTION_NETWORK_MAC, TEST_DEVICE_MAC) in entity.device_info[
-        "connections"
-    ]
+    assert device is not None
+    assert device.model == "PowerHub Gen2"
+    assert device.sw_version == "1.2.3"
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_device_info_cleared_when_absent_in_diagnostic(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     patch_shared_listener: MagicMock,
 ) -> None:
     """Test that device info is cleared when absent in a later diagnostic."""
@@ -272,17 +273,12 @@ async def test_device_info_cleared_when_absent_in_diagnostic(
     )
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor",
-        DOMAIN,
-        f"{TEST_DEVICE_MAC}_wifi_rssi",
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), init_integration.entry_id
     )
-    assert entity_id is not None
-    entity = hass.data[SENSOR_DOMAIN].get_entity(entity_id)
-    assert entity is not None
-    assert entity.device_info is not None
-    assert entity.device_info["model"] == "PowerHub"
-    assert entity.device_info["sw_version"] == "1.0"
+    assert device is not None
+    assert device.model == "PowerHub"
+    assert device.sw_version == "1.0"
 
     payload2 = powerhub_pb2.Payload()
     payload2.diagnostic.uptime_s = 20
@@ -292,6 +288,9 @@ async def test_device_info_cleared_when_absent_in_diagnostic(
     )
     await hass.async_block_till_done()
 
-    assert entity.device_info["model"] == MODEL_NAME
-    assert entity.device_info.get("sw_version") is None
-    assert not entity.device_info.get("connections")
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), init_integration.entry_id
+    )
+    assert device is not None
+    assert device.model == MODEL_NAME
+    assert device.sw_version is None

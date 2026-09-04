@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.power_hub_active_energy_export-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_energy_export-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_energy_export',
+    'entity_id': 'sensor.bitvis_power_hub_active_energy_export',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,23 +41,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_energy_export-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_energy_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active energy export',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_energy_export',
+    'entity_id': 'sensor.bitvis_power_hub_active_energy_export',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '789.119995117188',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_energy_import-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_energy_import-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_energy_import',
+    'entity_id': 'sensor.bitvis_power_hub_active_energy_import',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,23 +99,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_energy_import-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_energy_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active energy import',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_energy_import',
+    'entity_id': 'sensor.bitvis_power_hub_active_energy_import',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1234.56005859375',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_export',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,23 +157,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power export',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_export',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export_l1-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_export_l1',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,23 +215,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export_l1-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power export L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power export L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_export_l1',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export_l2-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_export_l2',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -273,23 +273,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export_l2-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power export L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power export L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_export_l2',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export_l3-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -305,7 +305,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_export_l3',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -331,23 +331,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_export_l3-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_export_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power export L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power export L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_export_l3',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_export_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +363,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_import',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -389,23 +389,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power import',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_import',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.41499996185303',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import_l1-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -421,7 +421,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_import_l1',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -447,23 +447,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import_l1-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power import L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power import L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_import_l1',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.800000011920929',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import_l2-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -479,7 +479,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_import_l2',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -505,23 +505,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import_l2-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power import L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power import L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_import_l2',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.699999988079071',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import_l3-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -537,7 +537,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_active_power_import_l3',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -563,23 +563,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_active_power_import_l3-state]
+# name: test_all_entities[sensor.bitvis_power_hub_active_power_import_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Active power import L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Active power import L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_active_power_import_l3',
+    'entity_id': 'sensor.bitvis_power_hub_active_power_import_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.915000021457672',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_current_l1-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_current_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -595,7 +595,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_current_l1',
+    'entity_id': 'sensor.bitvis_power_hub_current_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -621,23 +621,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_current_l1-state]
+# name: test_all_entities[sensor.bitvis_power_hub_current_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Current L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Current L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_current_l1',
+    'entity_id': 'sensor.bitvis_power_hub_current_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.5',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_current_l2-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_current_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -653,7 +653,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_current_l2',
+    'entity_id': 'sensor.bitvis_power_hub_current_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -679,23 +679,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_current_l2-state]
+# name: test_all_entities[sensor.bitvis_power_hub_current_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Current L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Current L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_current_l2',
+    'entity_id': 'sensor.bitvis_power_hub_current_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8.30000019073486',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_current_l3-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_current_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -711,7 +711,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_current_l3',
+    'entity_id': 'sensor.bitvis_power_hub_current_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -737,23 +737,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_current_l3-state]
+# name: test_all_entities[sensor.bitvis_power_hub_current_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Current L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Current L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_current_l3',
+    'entity_id': 'sensor.bitvis_power_hub_current_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.1000003814697',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_han_buffer_overflows-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_han_buffer_overflows-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -769,7 +769,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.power_hub_han_buffer_overflows',
+    'entity_id': 'sensor.bitvis_power_hub_han_buffer_overflows',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -792,21 +792,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_han_buffer_overflows-state]
+# name: test_all_entities[sensor.bitvis_power_hub_han_buffer_overflows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub HAN buffer overflows',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub HAN buffer overflows',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_han_buffer_overflows',
+    'entity_id': 'sensor.bitvis_power_hub_han_buffer_overflows',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_han_messages_successfully_parsed-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_han_messages_successfully_parsed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -822,7 +822,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.power_hub_han_messages_successfully_parsed',
+    'entity_id': 'sensor.bitvis_power_hub_han_messages_successfully_parsed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -845,21 +845,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_han_messages_successfully_parsed-state]
+# name: test_all_entities[sensor.bitvis_power_hub_han_messages_successfully_parsed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub HAN messages successfully parsed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub HAN messages successfully parsed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_han_messages_successfully_parsed',
+    'entity_id': 'sensor.bitvis_power_hub_han_messages_successfully_parsed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1000',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_energy_export-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_energy_export-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -875,7 +875,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_energy_export',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_energy_export',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -901,23 +901,23 @@
     'unit_of_measurement': <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_energy_export-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_energy_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive energy export',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_energy_export',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_energy_export',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '23.4500007629395',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_energy_import-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_energy_import-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -933,7 +933,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_energy_import',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_energy_import',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -959,23 +959,23 @@
     'unit_of_measurement': <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_energy_import-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_energy_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive energy import',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_energy_import',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_energy_import',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.6699981689453',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -991,7 +991,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_export',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1017,23 +1017,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power export',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_export',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export_l1-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1049,7 +1049,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_export_l1',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1075,23 +1075,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export_l1-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power export L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power export L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_export_l1',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export_l2-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1107,7 +1107,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_export_l2',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1133,23 +1133,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export_l2-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power export L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power export L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_export_l2',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export_l3-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1165,7 +1165,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_export_l3',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1191,23 +1191,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_export_l3-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_export_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power export L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power export L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_export_l3',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_export_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1223,7 +1223,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_import',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1249,23 +1249,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power import',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_import',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import_l1-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1281,7 +1281,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_import_l1',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1307,23 +1307,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import_l1-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power import L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power import L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_import_l1',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.200000002980232',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import_l2-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1339,7 +1339,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_import_l2',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1365,23 +1365,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import_l2-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power import L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power import L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_import_l2',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.150000005960464',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import_l3-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1397,7 +1397,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_reactive_power_import_l3',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1423,23 +1423,23 @@
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_reactive_power_import_l3-state]
+# name: test_all_entities[sensor.bitvis_power_hub_reactive_power_import_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Reactive power import L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Reactive power import L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_reactive_power_import_l3',
+    'entity_id': 'sensor.bitvis_power_hub_reactive_power_import_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.150000005960464',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_uptime-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1453,7 +1453,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.power_hub_uptime',
+    'entity_id': 'sensor.bitvis_power_hub_uptime',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1476,21 +1476,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_uptime-state]
+# name: test_all_entities[sensor.bitvis_power_hub_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Uptime',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_uptime',
+    'entity_id': 'sensor.bitvis_power_hub_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-12-31T12:00:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_voltage_l1-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_voltage_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1506,7 +1506,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_voltage_l1',
+    'entity_id': 'sensor.bitvis_power_hub_voltage_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1532,23 +1532,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_voltage_l1-state]
+# name: test_all_entities[sensor.bitvis_power_hub_voltage_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Voltage L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Voltage L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_voltage_l1',
+    'entity_id': 'sensor.bitvis_power_hub_voltage_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.0',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_voltage_l2-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_voltage_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1564,7 +1564,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_voltage_l2',
+    'entity_id': 'sensor.bitvis_power_hub_voltage_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1590,23 +1590,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_voltage_l2-state]
+# name: test_all_entities[sensor.bitvis_power_hub_voltage_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Voltage L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Voltage L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_voltage_l2',
+    'entity_id': 'sensor.bitvis_power_hub_voltage_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '229.5',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_voltage_l3-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_voltage_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1622,7 +1622,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_hub_voltage_l3',
+    'entity_id': 'sensor.bitvis_power_hub_voltage_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1648,23 +1648,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.power_hub_voltage_l3-state]
+# name: test_all_entities[sensor.bitvis_power_hub_voltage_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Voltage L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Voltage L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_voltage_l3',
+    'entity_id': 'sensor.bitvis_power_hub_voltage_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '231.199996948242',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_wi_fi_signal_strength-entry]
+# name: test_all_entities[sensor.bitvis_power_hub_wi_fi_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1680,7 +1680,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.power_hub_wi_fi_signal_strength',
+    'entity_id': 'sensor.bitvis_power_hub_wi_fi_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1703,16 +1703,16 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_all_entities[sensor.power_hub_wi_fi_signal_strength-state]
+# name: test_all_entities[sensor.bitvis_power_hub_wi_fi_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Hub Wi-Fi signal strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitvis Power Hub Wi-Fi signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_hub_wi_fi_signal_strength',
+    'entity_id': 'sensor.bitvis_power_hub_wi_fi_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

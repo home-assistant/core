@@ -8,15 +8,17 @@ from typing import override
 
 from bitvis_protobuf.listener import FilterMac, SharedListener
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
+from bitvis_protobuf.powerhub_pb2 import Diagnostic
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DATA_LISTENER_REGISTRY, DOMAIN
+from .const import DATA_LISTENER_REGISTRY, DOMAIN, MODEL_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +36,6 @@ class BitvisData:
 
     sample: PayloadSample | None = None
     diagnostic: PayloadDiagnostic | None = None
-    mac_address: str | None = None
-    model_name: str | None = None
-    sw_version: str | None = None
     boot_time: datetime | None = None
 
 
@@ -91,6 +90,8 @@ def async_get_listener_registry(hass: HomeAssistant) -> BitvisListenerRegistry:
 class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     """Coordinator to manage data updates from UDP packets."""
 
+    config_entry: BitvisConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -110,6 +111,7 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         self.port = port
         self.mac_address = mac_address
         self._filter = FilterMac(mac_address)
+        self._registered = False
         self._stable_boot_time = ignore_variance(
             _uptime_to_boot_time, timedelta(minutes=5)
         )
@@ -122,24 +124,27 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
             listener_registry = async_get_listener_registry(self.hass)
             listener = await listener_registry.async_get_or_create(self.port)
             listener.register(self._filter, self._handle_payload)
+            self._registered = True
         except OSError as err:
-            await self.async_stop()
             raise UpdateFailed(
                 f"Failed to start UDP listener on port {self.port}"
             ) from err
         except RuntimeError as err:
-            await self.async_stop()
             raise ConfigEntryError(
                 f"Failed to start UDP listener on port {self.port}"
             ) from err
 
     async def async_stop(self) -> None:
         """Unregister from the shared listener, stopping it when no longer needed."""
+        if not self._registered:
+            return
+
         if listener_registry := self.hass.data.get(DATA_LISTENER_REGISTRY):
             if listener := listener_registry.get(self.port):
                 listener.unregister(self._filter)
                 await listener_registry.async_remove_if_unused(self.port)
 
+        self._registered = False
         _LOGGER.debug(
             "Unregistered coordinator from shared UDP listener for port %s", self.port
         )
@@ -168,17 +173,34 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         """Update diagnostic data and notify listeners."""
         self.data.diagnostic = payload
         diagnostic = payload.diagnostic
-        self.data.mac_address = payload.mac_address
-        if diagnostic.HasField("device_info"):
-            device_info = diagnostic.device_info
-            self.data.model_name = device_info.model_name
-            self.data.sw_version = device_info.sw_version
-        else:
-            self.data.model_name = None
-            self.data.sw_version = None
+        self._update_device_registry(diagnostic)
         self.data.boot_time = self._stable_boot_time(diagnostic.uptime_s)
 
         self.async_set_updated_data(self.data)
+
+    @callback
+    def _update_device_registry(self, diagnostic: Diagnostic) -> None:
+        """Update device registry with model and firmware from diagnostics."""
+        device_reg = dr.async_get(self.hass)
+        if not (
+            device := device_reg.async_get_device_by_identifier(
+                (DOMAIN, self.mac_address), self.config_entry.entry_id
+            )
+        ):
+            return
+
+        if diagnostic.HasField("device_info"):
+            device_info = diagnostic.device_info
+            model = device_info.model_name or MODEL_NAME
+            sw_version = device_info.sw_version or None
+        else:
+            model = MODEL_NAME
+            sw_version = None
+
+        if device.model != model or device.sw_version != sw_version:
+            device_reg.async_update_device(
+                device.id, model=model, sw_version=sw_version
+            )
 
     @override
     async def _async_update_data(self) -> BitvisData:

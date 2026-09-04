@@ -36,28 +36,6 @@ from .coordinator import BitvisDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 
-def _build_device_info(
-    coordinator: BitvisDataUpdateCoordinator,
-    device_identifier: str,
-) -> DeviceInfo:
-    """Build DeviceInfo shared by all Bitvis entities."""
-    payload = coordinator.data.diagnostic
-    mac_address: str | None = None
-    model_name: str | None = None
-    sw_version: str | None = None
-    if payload is not None and payload.diagnostic.HasField("device_info"):
-        mac_address = coordinator.data.mac_address or None
-        model_name = payload.diagnostic.device_info.model_name or None
-        sw_version = payload.diagnostic.device_info.sw_version or None
-    return DeviceInfo(
-        identifiers={(DOMAIN, device_identifier)},
-        connections={(CONNECTION_NETWORK_MAC, mac_address)} if mac_address else set(),
-        manufacturer=MANUFACTURER,
-        model=model_name or MODEL_NAME,
-        sw_version=sw_version,
-    )
-
-
 @dataclass(frozen=True, kw_only=True)
 class BitvisSensorEntityDescription(SensorEntityDescription):
     """Describes Bitvis sensor entity."""
@@ -82,6 +60,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.phase_voltage_l1_v if data.HasField("phase_voltage_l1_v") else None
         ),
@@ -94,6 +73,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.phase_voltage_l2_v if data.HasField("phase_voltage_l2_v") else None
         ),
@@ -106,6 +86,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.phase_voltage_l3_v if data.HasField("phase_voltage_l3_v") else None
         ),
@@ -182,6 +163,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_delivered_to_client_kvar
             if data.HasField("power_reactive_delivered_to_client_kvar")
@@ -195,6 +177,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_delivered_by_client_kvar
             if data.HasField("power_reactive_delivered_by_client_kvar")
@@ -210,6 +193,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_active_l1_delivered_to_client_kw
             if data.HasField("power_active_l1_delivered_to_client_kw")
@@ -224,6 +208,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_active_l2_delivered_to_client_kw
             if data.HasField("power_active_l2_delivered_to_client_kw")
@@ -238,6 +223,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_active_l3_delivered_to_client_kw
             if data.HasField("power_active_l3_delivered_to_client_kw")
@@ -253,6 +239,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_active_l1_delivered_by_client_kw
             if data.HasField("power_active_l1_delivered_by_client_kw")
@@ -267,6 +254,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_active_l2_delivered_by_client_kw
             if data.HasField("power_active_l2_delivered_by_client_kw")
@@ -281,6 +269,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_active_l3_delivered_by_client_kw
             if data.HasField("power_active_l3_delivered_by_client_kw")
@@ -296,6 +285,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_l1_delivered_to_client_kvar
             if data.HasField("power_reactive_l1_delivered_to_client_kvar")
@@ -310,6 +300,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_l2_delivered_to_client_kvar
             if data.HasField("power_reactive_l2_delivered_to_client_kvar")
@@ -324,6 +315,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_l3_delivered_to_client_kvar
             if data.HasField("power_reactive_l3_delivered_to_client_kvar")
@@ -339,6 +331,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_l1_delivered_by_client_kvar
             if data.HasField("power_reactive_l1_delivered_by_client_kvar")
@@ -353,6 +346,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_l2_delivered_by_client_kvar
             if data.HasField("power_reactive_l2_delivered_by_client_kvar")
@@ -367,6 +361,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.power_reactive_l3_delivered_by_client_kvar
             if data.HasField("power_reactive_l3_delivered_by_client_kvar")
@@ -381,6 +376,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.energy_active_delivered_to_client_kwh
             if data.HasField("energy_active_delivered_to_client_kwh")
@@ -394,6 +390,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.energy_active_delivered_by_client_kwh
             if data.HasField("energy_active_delivered_by_client_kwh")
@@ -408,6 +405,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.energy_reactive_delivered_to_client_kvarh
             if data.HasField("energy_reactive_delivered_to_client_kvarh")
@@ -421,6 +419,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.energy_reactive_delivered_by_client_kvarh
             if data.HasField("energy_reactive_delivered_by_client_kvarh")
@@ -523,12 +522,12 @@ class BitvisBaseSensorEntity(
             assert entry.unique_id is not None
         self._device_identifier = entry.unique_id
         self._attr_unique_id = f"{self._device_identifier}_{description.key}"
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return _build_device_info(self.coordinator, self._device_identifier)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_identifier)},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac_address)},
+            manufacturer=MANUFACTURER,
+            model=MODEL_NAME,
+        )
 
 
 class BitvisSensorEntity(BitvisBaseSensorEntity):
