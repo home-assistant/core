@@ -1703,6 +1703,59 @@ async def test_position_updates(
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_position_updated_on_track_change_while_playing(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test a track change without a transport state change refreshes position.
+
+    A skip or auto-advance keeps the transport state PLAYING. The position
+    must still be force-updated: the poll triggered by the event can return a
+    mid-transition snapshot still carrying the previous track's clock, which
+    the position jump heuristic alone would discard, leaving a stale position
+    and timestamp on the entity.
+    """
+    entity_id = "media_player.zone_a"
+    sub_callback = soco.avTransport.subscribe.return_value.callback
+
+    soco.get_current_track_info.return_value = current_track_info
+    sub_callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    # Skip to the next track while PLAYING: same transport state, new track
+    # uri. The mid-transition poll reports the new track's metadata but a
+    # position snapshot matching the previous track's extrapolated clock,
+    # which the jump heuristic alone would discard as unchanged.
+    new_track_info = current_track_info.copy()
+    new_track_info["uri"] = (
+        "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/04%20Oh%21%20Darling.mp3"
+    )
+    new_track_info["title"] = "Oh! Darling"
+    new_track_info["position"] = "00:00:43"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["current_track_uri"] = new_track_info["uri"]
+    with freeze_time("2024-01-01T12:00:01Z"):
+        sub_callback(new_media_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_TITLE] == "Oh! Darling"
+        # The reported clock matches the old track's extrapolation, but the
+        # track changed, so the position must be written and re-stamped fresh.
+        assert state.attributes[ATTR_MEDIA_POSITION] == 43
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] > updated_at
+
+
 @pytest.mark.parametrize(
     ("track_info", "event_variables"),
     [

@@ -74,6 +74,9 @@ class SonosMedia:
 
         self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
+        # When the last position poll was requested; a position is only as
+        # fresh as the moment it was asked for.
+        self._position_polled_at: datetime.datetime | None = None
 
     def clear(self) -> None:
         """Clear basic media info."""
@@ -102,6 +105,9 @@ class SonosMedia:
     @soco_error()
     def poll_track_info(self) -> dict[str, Any]:
         """Poll the speaker for current track info, add converted position values."""
+        # Capture the request time first: stamping the position at write time
+        # would let a delayed response masquerade as current.
+        self._position_polled_at = dt_util.utcnow()
         track_info: dict[str, Any] = self.soco.get_current_track_info()
         track_info[DURATION_SECONDS] = _timespan_secs(track_info.get("duration"))
         track_info[POSITION_SECONDS] = _timespan_secs(track_info.get("position"))
@@ -144,14 +150,21 @@ class SonosMedia:
         """Update information about currently playing media using an event payload."""
         new_status = evars["transport_state"]
         state_changed = new_status != self.playback_status
+        # A track change without a transport state change (e.g. a skip or an
+        # auto-advance while playing) must also force a position update: the
+        # position jump heuristic can mistake a mid-transition position
+        # snapshot for the previous track's clock and leave a stale position
+        # stamped as current.
+        current_track_uri = evars["current_track_uri"]
+        track_changed = bool(current_track_uri) and current_track_uri != self.uri
 
         self.play_mode = evars["current_play_mode"]
         self.playback_status = new_status
 
-        track_uri = evars["enqueued_transport_uri"] or evars["current_track_uri"]
+        track_uri = evars["enqueued_transport_uri"] or current_track_uri
         audio_source = self.soco.music_source_from_uri(track_uri)
 
-        self.set_basic_track_info(update_position=state_changed)
+        self.set_basic_track_info(update_position=state_changed or track_changed)
 
         if ct_md := evars["current_track_meta_data"]:
             if not self.image_url:
@@ -234,4 +247,4 @@ class SonosMedia:
             self.clear_position()
         elif should_update:
             self.position = current_position
-            self.position_updated_at = dt_util.utcnow()
+            self.position_updated_at = self._position_polled_at or dt_util.utcnow()
