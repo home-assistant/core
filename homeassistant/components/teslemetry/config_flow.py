@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 from pathlib import Path
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
 from aiopowerwall import (
@@ -319,7 +319,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # (tesla_fleet_api's add_authorized_client docs), so fall through to
             # register below instead of aborting a flow that can never recover.
 
-        assert self._energy_site is not None
+        if TYPE_CHECKING:
+            assert self._energy_site is not None
         try:
             # Not revoked on removal: other consumers may share this
             # authorized-client key, and revoking it would deauthorize them too.
@@ -340,7 +341,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Check once whether the pending key has been approved on the gateway."""
-        assert self._energy_site is not None
+        if TYPE_CHECKING:
+            assert self._energy_site is not None
         if user_input is None:
             return self.async_show_form(step_id="pair")
 
@@ -367,7 +369,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _find_authorized_client(self) -> AuthorizedClient | None:
         """Return our RSA key's authorized-client entry on the gateway, or None."""
-        assert self._energy_site is not None
+        if TYPE_CHECKING:
+            assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
         except (ClientError, TeslaFleetError) as err:
@@ -387,8 +390,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _verify_local_gateway(self, host: str, password: str) -> None:
         """Prove the LAN connection and the RSA key against the gateway."""
-        assert self._key_pem is not None
-        assert self._energy_site is not None
+        if TYPE_CHECKING:
+            assert self._key_pem is not None
+            assert self._energy_site is not None
         async with PowerwallClient(
             host=host,
             gateway_password=password,
@@ -410,7 +414,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         """Collect the local gateway host/password and verify the LAN connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            assert self._energy_site is not None
+            if TYPE_CHECKING:
+                assert self._energy_site is not None
             host = user_input[CONF_HOST].strip()
             # The Powerwall gateway login accepts only the last 5 characters of
             # the Wi-Fi password printed on the gateway; users routinely enter
