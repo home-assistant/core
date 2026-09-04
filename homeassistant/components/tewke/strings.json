@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "Failed to connect",
+      "cannot_identify": "Unable to determine a unique ID for this device. Please check your device and network configuration.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "zeroconf_confirm": {
+        "description": "You are setting up the Tewke device **{name}**{room_suffix}. Click Submit to continue.",
+        "title": "Tewke device found"
+      }
+    }
+  },
+  "exceptions": {
+    "action_failed": {
+      "message": "Error {action} Tewke {identifier}: {error}"
+    },
+    "action_internal": {
+      "message": "Internal error {action} Tewke {identifier}: {error}"
+    },
+    "communication_error": {
+      "message": "Error communicating with Tewke Tap: {error}"
+    },
+    "device_swap": {
+      "message": "Device swap detected! Coordinator expected {expected_dock_id} but IP is reporting {reported_dock_id}. Waiting for Zeroconf update."
+    },
+    "discovery_error": {
+      "message": "Unable to connect to Tewke device at {host}"
+    },
+    "missing_wall_dock_id": {
+      "message": "Tewke device at {host} missing wall_dock_id"
+    },
+    "not_connected_to_wall_dock": {
+      "message": "Attempted to set {name} while not connected to Wall Dock."
+    }
+  }
+}

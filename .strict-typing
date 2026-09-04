@@ -594,6 +594,7 @@ homeassistant.components.telegram_bot.*
 homeassistant.components.teleinfo.*
 homeassistant.components.teltonika.*
 homeassistant.components.teslemetry.*
+homeassistant.components.tewke.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*
