@@ -14,12 +14,7 @@ HOST = "http://localhost"
 
 
 async def test_device_uses_shared_session(hass: HomeAssistant) -> None:
-    """Test the device is given Home Assistant's shared aiohttp session.
-
-    Without the session the library falls back to a requester that opens a new
-    session per request and never retries, so a single timed out call drops the
-    whole poll and marks the device unavailable.
-    """
+    """Test the device is given Home Assistant's shared aiohttp session."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST}, unique_id="uuid")
     entry.add_to_hass(hass)
 
