@@ -81,14 +81,33 @@ STRINGS_SCHEMA = vol.Schema(
     }
 )
 
+
+def entity_reference_validator(value: str) -> str:
+    """Validate a `<domain>.<translation_key>` reference to an entity."""
+    domain, separator, translation_key = value.partition(".")
+    if not separator:
+        raise vol.Invalid(
+            f"Entity reference '{value}' must be written as "
+            "'<domain>.<translation_key>', for example 'switch.main'"
+        )
+    vol.Coerce(Platform)(domain)
+    translation_key_validator(translation_key)
+    return value
+
+
+ENTITY_REFERENCE_SCHEMA = vol.All(str, entity_reference_validator)
+
+# Keyed by trait, so that one entity can fill several traits and one trait can
+# name several candidates for models that expose it differently.
 MAPPING_SCHEMA = vol.Schema(
     {
         device_type_validator: {
-            vol.Required("entity"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    cv.string, slug_validator=translation_key_validator
+            vol.Required("traits"): cv.schema_with_slug_keys(
+                vol.Any(
+                    ENTITY_REFERENCE_SCHEMA,
+                    vol.All([ENTITY_REFERENCE_SCHEMA], vol.Length(min=1)),
                 ),
-                slug_validator=vol.Coerce(Platform),
+                slug_validator=translation_key_validator,
             )
         }
     }
@@ -103,6 +122,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
       exact set of traits
     - every device type a mapping refers to exists in the vocabulary
     - every trait a mapping refers to is defined for that device type
-    - the entity domain a trait is mapped from is allowed for that trait
+    - the domain of each referenced entity is allowed for that trait
     """
     raise NotImplementedError

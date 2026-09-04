@@ -1,32 +1,31 @@
-# Maps La Marzocco entities onto the traits of the device types they belong to.
+# Maps the traits of a device type onto La Marzocco's entities.
 #
-# Keyed by device type, then by entity domain, then by the entity's
-# translation_key - the same addressing icons.json already uses. Scoping by
-# device type means the same translation_key can carry a different trait on a
-# different appliance.
+# Keyed by device type, then by trait. The value addresses an entity as
+# `<domain>.<translation_key>`; it looks like an entity ID but is not one, since
+# translation_key is what identifies an entity description across installations.
+# Scoping by device type means the same translation_key can fill a different
+# trait on a different appliance.
 #
-# Only entities that fill a trait defined by the core vocabulary appear here.
-# Vendor specific entities (smart standby, auto on/off, prebrew mode, firmware
-# updates) have no core trait and are deliberately left out.
+# A trait may list several candidates when models expose it differently. The
+# first one that exists on the device fills the trait.
+#
+# Only traits the core vocabulary defines appear here. Vendor specific entities
+# (smart standby, auto on/off, prebrew mode, firmware updates) fill no trait and
+# are deliberately left out.
 
 appliance.espresso_machine:
-  entity:
-    binary_sensor:
-      backflush_enabled: cleaning_active
-      brew_active: brewing
-      water_tank: water_tank_empty
-    button:
-      start_backflush: start_cleaning
-    number:
-      coffee_temp: coffee_boiler_target_temperature
-      steam_temp: steam_boiler_target_temperature
-    select:
-      # Linea Mini and Micra pick a steam temperature from three steps rather
-      # than setting a free value, so the trait is filled by a select here.
-      steam_temp_select: steam_boiler_target_temperature
-    sensor:
-      coffee_boiler_ready_time: coffee_boiler_ready_time
-      steam_boiler_ready_time: steam_boiler_ready_time
-    switch:
-      main: power
-      steam_boiler: steam_boiler_power
+  traits:
+    brewing: binary_sensor.brew_active
+    cleaning_active: binary_sensor.backflush_enabled
+    coffee_boiler_ready_time: sensor.coffee_boiler_ready_time
+    coffee_boiler_target_temperature: number.coffee_temp
+    power: switch.main
+    start_cleaning: button.start_backflush
+    steam_boiler_power: switch.steam_boiler
+    steam_boiler_ready_time: sensor.steam_boiler_ready_time
+    # Linea Mini and Micra pick a steam temperature from three steps rather than
+    # setting a free value, so on those models a select fills the trait.
+    steam_boiler_target_temperature:
+      - number.steam_temp
+      - select.steam_temp_select
+    water_tank_empty: binary_sensor.water_tank
