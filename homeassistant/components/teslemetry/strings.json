@@ -51,8 +51,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
-        "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth."
       },
       "entry_type": "Bluetooth vehicle",
       "error": {
@@ -62,7 +61,6 @@
         "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
       },
       "initiate_flow": {
-        "reconfigure": "Reconfigure Bluetooth vehicle",
         "user": "Add Bluetooth vehicle"
       },
       "progress": {

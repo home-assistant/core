@@ -963,55 +963,6 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
-async def test_subentry_reconfigure_repairs_paired_vehicle(hass: HomeAssistant) -> None:
-    """Reconfiguring an already-paired vehicle re-pairs it and re-stores its address."""
-    entry = await _setup_paired_entry(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
-    vehicle = _mock_vehicle(on_whitelist=True)
-    address_stored_at_reload = False
-
-    def _capture_reload(entry_id: str) -> None:
-        nonlocal address_stored_at_reload
-        address_stored_at_reload = (
-            entry.subentries[subentry_id].data.get(CONF_ADDRESS) == ADDRESS
-        )
-
-    with (
-        patch(
-            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
-            return_value=[_discovered_info()],
-        ),
-        patch(
-            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
-            return_value=_mock_ble_parent(vehicle),
-        ),
-        patch.object(
-            hass.config_entries, "async_schedule_reload", side_effect=_capture_reload
-        ) as mock_reload,
-    ):
-        # Reconfigure reads the VIN from the existing subentry, skipping selection.
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "scan"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    # The paired subentry keeps its credentials; no second subentry is created.
-    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
-    assert len(subentries) == 1
-    assert entry.subentries[subentry_id].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
-    mock_reload.assert_called_once_with(entry.entry_id)
-    # The address must already be persisted by the time the reload is scheduled.
-    assert address_stored_at_reload
-    vehicle.connect.assert_awaited_once()
-    vehicle.disconnect.assert_awaited_once()
-
-
 async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     """The scan step re-shows the form with an error when no device is found."""
     entry = await _setup_account_entry(hass)
