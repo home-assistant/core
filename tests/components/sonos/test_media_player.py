@@ -1721,6 +1721,13 @@ async def test_media_seek_updates_position(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
 
+    # The post-seek poll reads the updated transport information back.
+    sought_track_info = dict(current_track_info)
+    sought_track_info["position"] = "00:01:40"
+    soco.get_current_track_info.return_value = sought_track_info
+    soco.get_current_transport_info.return_value = {
+        "current_transport_state": "PLAYING"
+    }
     with freeze_time("2024-01-01T12:00:05Z"):
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1732,7 +1739,7 @@ async def test_media_seek_updates_position(
         soco.seek.assert_called_once_with("0:01:40")
         state = hass.states.get(entity_id)
         # Sonos fires no event for a position change: the entity must reflect
-        # the commanded position immediately.
+        # the position polled back from the speaker after the seek.
         assert state.attributes[ATTR_MEDIA_POSITION] == 100
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
