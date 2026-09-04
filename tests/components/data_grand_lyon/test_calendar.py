@@ -3,6 +3,7 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
+from data_grand_lyon_ha import TclAlert, TclAlertSeverityType, TclAlertType
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,6 +12,8 @@ from homeassistant.components.data_grand_lyon.const import TZ_PARIS
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import MOCK_TCL_ALERTS
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -74,6 +77,81 @@ async def test_state_off_without_alert(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+async def test_state_off_when_every_alert_has_ended(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test a line whose only alert has already ended is off."""
+    mock_tcl_client.get_tcl_alerts.return_value = [MOCK_TCL_ALERTS[1]]
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_state_on_prefers_started_alert_over_later_one(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test an alert already running is preferred over one starting later today.
+
+    Both alerts share the library's relevance bucket (an alert starting later
+    today counts as CURRENT too), and within that bucket the lower-severity
+    (more disruptive) alert would normally sort first. If the entity naively
+    took that top-ranked alert, it would report an alert starting at 18:00 as
+    the event at 14:00, and HA would compute the on/off state as off despite
+    the ongoing alert.
+    """
+    ongoing = TclAlert(
+        type=TclAlertType.INFORMATION,
+        cause="événement",
+        debut=datetime(2026, 4, 10, 8, 0),
+        fin=datetime(2026, 4, 10, 20, 0),
+        mode="Bus",
+        ligne_com="C3",
+        ligne_cli="C3",
+        titre="Ongoing information",
+        message="Service normal, information seulement.",
+        last_update_fme=datetime(2026, 4, 10, 9, 15),
+        n=10,
+        type_severite=TclAlertSeverityType.OTHER_EFFECT,
+        niveau_severite=30,
+        type_objet="line",
+        liste_objet="C3",
+    )
+    later_today = TclAlert(
+        type=TclAlertType.DISRUPTION,
+        cause="travaux",
+        debut=datetime(2026, 4, 10, 18, 0),
+        fin=datetime(2026, 4, 10, 22, 0),
+        mode="Bus",
+        ligne_com="C3",
+        ligne_cli="C3",
+        titre="Later disruption",
+        message="Déviation à partir de 18h.",
+        last_update_fme=datetime(2026, 4, 10, 9, 15),
+        n=11,
+        type_severite=TclAlertSeverityType.SIGNIFICANT_DELAYS,
+        niveau_severite=20,
+        type_objet="line",
+        liste_objet="C3",
+    )
+    mock_tcl_client.get_tcl_alerts.return_value = [ongoing, later_today]
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Ongoing information"
 
 
 @pytest.mark.parametrize(

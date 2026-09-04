@@ -74,12 +74,17 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
     @property
     @override
     def event(self) -> CalendarEvent | None:
-        """Return the most relevant alert that has not ended yet."""
+        """Return the alert in progress, or the most relevant upcoming one."""
         now = _tcl_now()
         alerts = filter_tcl_active_alerts(self.coordinator.data[self._subentry_id], now)
         if not alerts:
             return None
-        return _calendar_event(sort_tcl_alerts_by_relevance(alerts, now)[0])
+        ranked = sort_tcl_alerts_by_relevance(alerts, now)
+        # An alert starting later today shares the library's CURRENT bucket with
+        # one already running, so an in-progress alert must be preferred here
+        # for the on/off state (computed from event start/end) to stay truthful.
+        started = [alert for alert in ranked if alert.debut <= now]
+        return _calendar_event(started[0] if started else ranked[0])
 
     @override
     async def async_get_events(
