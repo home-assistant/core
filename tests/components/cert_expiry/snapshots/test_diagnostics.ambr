@@ -15,6 +15,8 @@
       'data': dict({
         'host': '**REDACTED**',
         'port': 443,
+        'ignore_hostname': False,
+        'ca_data': None,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -32,7 +34,7 @@
       ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---
@@ -52,6 +54,8 @@
       'data': dict({
         'host': '**REDACTED**',
         'port': 443,
+        'ignore_hostname': False,
+        'ca_data': None,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -69,7 +73,7 @@
       ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---
