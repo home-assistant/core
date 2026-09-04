@@ -190,6 +190,21 @@ class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
 
         super().__init__(coordinator, key)
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available.
+
+        A key served by the local config coordinator that a successful read did
+        not include is left unavailable rather than surfacing a guessed value.
+        """
+        if (
+            isinstance(self.coordinator, TeslemetryEnergySiteConfigLocalCoordinator)
+            and self.key not in self.coordinator.data
+        ):
+            return False
+        return super().available
+
 
 class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy History Entities."""

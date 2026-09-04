@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -218,3 +218,31 @@ async def test_paired_site_backup_reserve_reads_local(
         await hass.async_block_till_done()
 
     assert hass.states.get("number.energy_site_backup_reserve").state == expected
+
+
+async def test_paired_site_backup_reserve_unavailable_when_key_missing(
+    hass: HomeAssistant,
+    mock_powerwall_config: AsyncMock,
+) -> None:
+    """A successful local read that omits the key leaves the number unavailable.
+
+    The gateway answered, but config.json carried no backup_reserve_percent, so
+    the local-backed number reads unavailable rather than a guessed value.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_config.return_value = {"site_info": {}}
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.NUMBER]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("number.energy_site_backup_reserve").state == STATE_UNAVAILABLE
+    )
