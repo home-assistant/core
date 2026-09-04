@@ -44,6 +44,28 @@
     }
   },
   "config_subentries": {
+    "line": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Transit line",
+      "initiate_flow": {
+        "user": "Add transit line"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "line": "Line"
+          },
+          "data_description": {
+            "line": "Pick a line, or enter a line code directly."
+          }
+        }
+      }
+    },
     "park_and_ride": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",

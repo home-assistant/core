@@ -8,6 +8,7 @@ from data_grand_lyon_ha import (
     TclAlert,
     TclAlertSeverityType,
     TclAlertType,
+    TclLinePictogram,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -230,6 +231,22 @@ MOCK_TCL_ALERTS = [
 ]
 
 
+MOCK_TCL_LINE_PICTOGRAMS = [
+    TclLinePictogram(
+        code_ligne="C3",
+        picto_mode="mode_bus.svg",
+        picto_ligne="C3_ligne.svg",
+        picto_complet="C3.svg",
+    ),
+    TclLinePictogram(
+        code_ligne="A",
+        picto_mode="mode_metro.svg",
+        picto_ligne="A_ligne.svg",
+        picto_complet="A.svg",
+    ),
+]
+
+
 @pytest.fixture
 def mock_line_subentries() -> list[ConfigSubentryData]:
     """Mock TCL line subentries."""
@@ -366,4 +383,5 @@ def mock_tcl_client() -> Generator[AsyncMock]:
         client.get_velov_stations.return_value = MOCK_VELOV_STATIONS
         client.get_tcl_park_and_rides.return_value = MOCK_PARK_AND_RIDES
         client.get_tcl_alerts.return_value = MOCK_TCL_ALERTS
+        client.get_tcl_line_pictograms.return_value = MOCK_TCL_LINE_PICTOGRAMS
         yield client
