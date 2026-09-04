@@ -356,14 +356,14 @@ async def test_reload_on_token_change_after_auth_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.runtime_data.all_updates_successful()
+    assert not config_entry.runtime_data.has_auth_failure()
 
     xbox_live_client.smartglass.get_console_status.side_effect = ConfigEntryAuthFailed
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not config_entry.runtime_data.all_updates_successful()
+    assert config_entry.runtime_data.has_auth_failure()
 
     xbox_live_client.smartglass.get_console_status.side_effect = None
 
@@ -380,6 +380,49 @@ async def test_reload_on_token_change_after_auth_failure(
         await hass.async_block_till_done()
 
     mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+async def test_no_reload_on_token_change_after_transient_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the entry is not reloaded when a token is written after a timeout.
+
+    A coordinator keeps scheduling updates after a transient failure, so it
+    recovers on its own and a reload would only interrupt it.
+    """
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    xbox_live_client.smartglass.get_console_status.side_effect = ConnectTimeout(
+        "timeout"
+    )
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not config_entry.runtime_data.status.last_update_success
+    assert not config_entry.runtime_data.has_auth_failure()
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                "token": {**config_entry.data["token"], "access_token": "refreshed"},
+            },
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
 
 
 @pytest.mark.usefixtures("xbox_live_client")

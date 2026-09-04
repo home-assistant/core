@@ -96,20 +96,21 @@ async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) ->
     Update listeners fire on every config entry write, including the hourly
     rewrite of the OAuth token performed by OAuth2Session. Reloading on those
     would tear down and rebuild every platform once an hour, so a token-only
-    write is ignored while the coordinators are updating successfully.
+    write is ignored unless a coordinator has failed to authenticate.
 
     It cannot be ignored unconditionally though. Reauth replaces the token
     without changing anything else, and a coordinator stops scheduling updates
     once it has failed to authenticate, so reloading is the only thing that
-    gets it polling again with the new token. Reauth can also select a
-    different auth implementation, which OAuth2Session caches at setup and
-    never re-reads.
+    gets it polling again with the new token. Transient failures reschedule
+    themselves and must not reload, or a brief outage would tear the entry
+    down for no reason. Reauth can also select a different auth
+    implementation, which OAuth2Session caches at setup and never re-reads.
     """
     coordinators = entry.runtime_data
     if (
         entry.data["auth_implementation"] != coordinators.auth_implementation
         or coordinators.subentries != _subentry_snapshot(entry)
-        or not coordinators.all_updates_successful()
+        or coordinators.has_auth_failure()
     ):
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
