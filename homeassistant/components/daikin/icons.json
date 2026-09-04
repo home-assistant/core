@@ -22,5 +22,10 @@
         "default": "mdi:home-circle"
       }
     }
+  },
+  "services": {
+    "set_demand_control": {
+      "service": "mdi:meter-electric"
+    }
   }
 }
