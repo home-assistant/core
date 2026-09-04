@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectionError
 from bleak.exc import BleakError
@@ -236,7 +236,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Find the vehicle over Bluetooth and connect to it."""
-        assert self._vin is not None
+        if TYPE_CHECKING:
+            assert self._vin is not None
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -278,7 +279,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Check whether the virtual key is already whitelisted on the vehicle."""
-        assert self._vehicle is not None
+        if TYPE_CHECKING:
+            assert self._vehicle is not None
         try:
             await self._vehicle.handshakeVehicleSecurity()
         except NotOnWhitelistFault:
@@ -307,7 +309,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add the virtual key to the vehicle while showing pairing progress."""
         if self._pair_task is None:
-            assert self._vehicle is not None
+            if TYPE_CHECKING:
+                assert self._vehicle is not None
             # pair() can take minutes, so run it as a progress task rather than blocking the flow.
             self._pair_task = self.hass.async_create_task(self._vehicle.pair())
 
@@ -345,8 +348,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _async_finish(self) -> SubentryFlowResult:
         """Persist the paired BLE address and finish the subentry."""
-        assert self._address is not None
-        assert self._vin is not None
+        if TYPE_CHECKING:
+            assert self._address is not None
+            assert self._vin is not None
         await self._async_disconnect()
         entry = self._get_entry()
         if self.source == SOURCE_RECONFIGURE:
