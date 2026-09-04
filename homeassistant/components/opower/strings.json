@@ -130,10 +130,6 @@
     }
   },
   "issues": {
-    "rate_period_statistics": {
-      "description": "Your utility breaks usage and cost down by rate period, such as time of use periods or tiers. Home Assistant now keeps a consumption and a cost statistic for each period:\n\n{statistic_names}\n\nTo see them in the Energy dashboard, visit the [Energy configuration page]({energy_settings}) and add a grid connection or gas source for each period. Use the period's consumption statistic as the source and its cost statistic as the entity tracking the total costs. Do not add them next to the account total, or the usage is counted twice.\n\nOnce you have added them, ignore this issue.",
-      "title": "Rate period statistics for account: {utility_account_id}"
-    },
     "return_to_grid_migration": {
       "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those into separate export statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Energy exported to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue.",
       "title": "Export to grid statistics for account: {utility_account_id}"

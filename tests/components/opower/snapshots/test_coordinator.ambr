@@ -145,6 +145,32 @@
         'sum': 2.5,
       }),
     ]),
+    'opower:pge_elec_111111_off_peak_energy_compensation': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
     'opower:pge_elec_111111_off_peak_energy_consumption': list([
       dict({
         'end': 1672592400.0,
@@ -195,6 +221,58 @@
         'start': 1672599600.0,
         'state': 0.25,
         'sum': 0.5,
+      }),
+    ]),
+    'opower:pge_elec_111111_off_peak_energy_return': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_on_peak_energy_compensation': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
       }),
     ]),
     'opower:pge_elec_111111_on_peak_energy_consumption': list([
@@ -249,6 +327,58 @@
         'sum': 1.25,
       }),
     ]),
+    'opower:pge_elec_111111_on_peak_energy_return': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_tier_1_energy_compensation': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
     'opower:pge_elec_111111_tier_1_energy_consumption': list([
       dict({
         'end': 1672592400.0,
@@ -299,6 +429,32 @@
         'start': 1672599600.0,
         'state': 0.0,
         'sum': 0.5,
+      }),
+    ]),
+    'opower:pge_elec_111111_tier_1_energy_return': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
       }),
     ]),
   })
