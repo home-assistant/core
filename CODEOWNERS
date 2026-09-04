@@ -401,6 +401,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/diagnostics/ @home-assistant/core
 /homeassistant/components/digital_ocean/ @fabaff
 /homeassistant/components/discogs/ @thibmaek
+/tests/components/discogs/ @thibmaek
 /homeassistant/components/discord/ @tkdrob
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovergy/ @jpbede
