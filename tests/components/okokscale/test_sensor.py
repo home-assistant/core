@@ -21,8 +21,8 @@ from . import (
     OKOK_C0_SERVICE_INFO,
     OKOK_F0_SERVICE_INFO,
     OKOK_F0_TITLE,
+    conftest,
 )
-from .okokscale import conftest
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.components.bluetooth import (
