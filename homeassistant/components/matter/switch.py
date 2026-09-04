@@ -245,7 +245,7 @@ class MatterAlarmEnabledSwitch(MatterSwitch):
                         alarmsToEnableDisable=alarms_enabled,
                     )
                 )
-            except Exception:
+            except BaseException:
                 if state.pending_alarms_enabled == alarms_enabled:
                     state.pending_alarms_enabled = None
                 raise
