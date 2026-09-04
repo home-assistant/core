@@ -1,5 +1,7 @@
 """Constants for the OpenAQ integration."""
 
+from http.client import HTTPException
+from json import JSONDecodeError
 import logging
 from typing import Final
 
@@ -11,6 +13,8 @@ from openaq import (
     RateLimitError,
 )
 from openaq.core.exceptions import APIError
+
+from homeassistant.components.sensor import SensorDeviceClass
 
 DOMAIN = "openaq"
 
@@ -28,4 +32,23 @@ OPENAQ_AUTH_EXCEPTIONS: Final = (
     NotAuthorizedError,
 )
 OPENAQ_RATE_LIMIT_EXCEPTIONS: Final = (HTTPRateLimitError, RateLimitError)
-OPENAQ_API_EXCEPTIONS: Final = (APIError, OSError)
+OPENAQ_API_EXCEPTIONS: Final = (
+    APIError,
+    OSError,
+    HTTPException,
+    JSONDecodeError,
+)
+
+PARAMETER_DEVICE_CLASSES: dict[str, SensorDeviceClass | None] = {
+    "pm1": SensorDeviceClass.PM1,
+    "pm25": SensorDeviceClass.PM25,
+    "pm10": SensorDeviceClass.PM10,
+    "co": SensorDeviceClass.CO,
+    "co2": SensorDeviceClass.CO2,
+    "no2": SensorDeviceClass.NITROGEN_DIOXIDE,
+    "o3": SensorDeviceClass.OZONE,
+    "so2": SensorDeviceClass.SULPHUR_DIOXIDE,
+    "no": SensorDeviceClass.NITROGEN_MONOXIDE,
+    "nox": None,
+    "bc": None,
+}

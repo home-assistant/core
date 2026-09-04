@@ -40,10 +40,10 @@ from .const import (
     OPENAQ_API_EXCEPTIONS,
     OPENAQ_AUTH_EXCEPTIONS,
     OPENAQ_RATE_LIMIT_EXCEPTIONS,
+    PARAMETER_DEVICE_CLASSES,
     SUBENTRY_TYPE_LOCATION,
 )
 from .coordinator import create_openaq_client, normalize_parameter
-from .sensor import SENSOR_DESCRIPTIONS
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 LOCATION_FETCH_LIMIT = 100
@@ -131,7 +131,7 @@ def _supported_parameters(location: Location) -> tuple[str, ...]:
     parameters: set[str] = set()
     for sensor in location.sensors:
         parameter_name = normalize_parameter(sensor.parameter)
-        if parameter_name in SENSOR_DESCRIPTIONS:
+        if parameter_name in PARAMETER_DEVICE_CLASSES:
             parameters.add(parameter_name)
     return tuple(sorted(parameters))
 
@@ -236,13 +236,12 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
             )
             try:
                 locations: dict[int, OpenAQLocationFlowData] = {}
-                responses = await self.hass.async_add_executor_job(
+                for result_locations in await self.hass.async_add_executor_job(
                     _search_locations,
                     self._get_entry().data[CONF_API_KEY],
                     coordinates,
                     _search_radii(max_radius),
-                )
-                for result_locations in responses:
+                ):
                     for result_location in result_locations:
                         location_data = _location_from_result(result_location)
                         if location_data is None or _is_location_configured(
@@ -250,6 +249,8 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                         ):
                             continue
                         locations.setdefault(location_data.location_id, location_data)
+                    if len(locations) >= MAX_LOCATION_OPTIONS:
+                        break
             except OPENAQ_AUTH_EXCEPTIONS:
                 errors["base"] = "invalid_auth"
             except OPENAQ_RATE_LIMIT_EXCEPTIONS:
@@ -288,9 +289,7 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                         CONF_LONGITUDE: user_input[CONF_LOCATION][CONF_LONGITUDE]
                         if user_input is not None
                         else self.hass.config.longitude,
-                        CONF_RADIUS: user_input[CONF_LOCATION].get(
-                            CONF_RADIUS, MAX_RADIUS
-                        )
+                        CONF_RADIUS: max_radius
                         if user_input is not None
                         else MAX_RADIUS,
                     }
@@ -341,7 +340,9 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
 
 
 def _search_locations(
-    api_key: str, coordinates: tuple[float, float], radii: tuple[int, ...]
+    api_key: str,
+    coordinates: tuple[float, float],
+    radii: tuple[int, ...],
 ) -> list[Sequence[Location]]:
     """Search all requested radii with a temporary OpenAQ client."""
     client = create_openaq_client(api_key)

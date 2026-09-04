@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from types import SimpleNamespace
-from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from openaq.core.responses import (
@@ -123,11 +122,11 @@ def make_sensor(
     )
 
 
-def make_latest(sensor_id: int, value: float | None) -> Latest:
+def make_latest(sensor_id: int, value: float) -> Latest:
     """Return an OpenAQ latest measurement."""
     return Latest(
         datetime=DATETIME,
-        value=cast(float, value),
+        value=value,
         coordinates=Coordinates(latitude=35.1, longitude=-106.6),
         sensors_id=sensor_id,
         locations_id=LOCATION_ID,
@@ -166,58 +165,58 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_openaq_client() -> Generator[MagicMock]:
     """Mock the OpenAQ client."""
+    client = MagicMock()
+    client.close = MagicMock()
+    client.parameters = SimpleNamespace()
+    client.locations = SimpleNamespace()
+    client.parameters.list = MagicMock()
+    client.locations.get = MagicMock()
+    client.locations.list = MagicMock()
+    client.locations.latest = MagicMock()
+    client.locations.sensors = MagicMock()
+    client.parameters.list.return_value = make_response([])
+    client.locations.get.return_value = make_response([make_location()])
+    client.locations.list.return_value = make_response([make_location()])
+    client.locations.latest.return_value = make_response(
+        [
+            make_latest(1, 8.5),
+            make_latest(2, 12.1),
+            make_latest(3, 33.2),
+            make_latest(4, 0.4),
+            make_latest(5, 415),
+            make_latest(6, 15),
+            make_latest(7, 22),
+            make_latest(8, 4),
+            make_latest(9, 6),
+            make_latest(10, 17),
+            make_latest(11, 0.9),
+            make_latest(12, 123),
+        ]
+    )
+    client.locations.sensors.return_value = make_response(
+        [
+            make_sensor(1, "pm1"),
+            make_sensor(2, "pm25"),
+            make_sensor(3, "pm10"),
+            make_sensor(4, "co", "ppm"),
+            make_sensor(5, "co2", "ppm"),
+            make_sensor(6, "no2", "ppb"),
+            make_sensor(7, "o3", "ppb"),
+            make_sensor(8, "so2", "ppb"),
+            make_sensor(9, "no", "ppb"),
+            make_sensor(10, "nox", "ppb"),
+            make_sensor(11, "bc"),
+            make_sensor(12, "unsupported"),
+        ]
+    )
     with (
         patch(
-            "homeassistant.components.openaq.async_create_openaq_client",
-            new_callable=AsyncMock,
-        ) as mock_init,
-    ):
-        client = mock_init.return_value
-        client.close = MagicMock()
-        client.parameters = SimpleNamespace()
-        client.locations = SimpleNamespace()
-        client.parameters.list = MagicMock()
-        client.locations.get = MagicMock()
-        client.locations.list = MagicMock()
-        client.locations.latest = MagicMock()
-        client.locations.sensors = MagicMock()
-        client.parameters.list.return_value = make_response([])
-        client.locations.get.return_value = make_response([make_location()])
-        client.locations.list.return_value = make_response([make_location()])
-        client.locations.latest.return_value = make_response(
-            [
-                make_latest(1, 8.5),
-                make_latest(2, 12.1),
-                make_latest(3, 33.2),
-                make_latest(4, 0.4),
-                make_latest(5, 415),
-                make_latest(6, 15),
-                make_latest(7, 22),
-                make_latest(8, 4),
-                make_latest(9, 6),
-                make_latest(10, 17),
-                make_latest(11, 0.9),
-                make_latest(12, 123),
-            ]
-        )
-        client.locations.sensors.return_value = make_response(
-            [
-                make_sensor(1, "pm1"),
-                make_sensor(2, "pm25"),
-                make_sensor(3, "pm10"),
-                make_sensor(4, "co", "ppm"),
-                make_sensor(5, "co2", "ppm"),
-                make_sensor(6, "no2", "ppb"),
-                make_sensor(7, "o3", "ppb"),
-                make_sensor(8, "so2", "ppb"),
-                make_sensor(9, "no", "ppb"),
-                make_sensor(10, "nox", "ppb"),
-                make_sensor(11, "bc"),
-                make_sensor(12, "unsupported"),
-            ]
-        )
-        with patch(
+            "homeassistant.components.openaq.create_openaq_client",
+            return_value=client,
+        ),
+        patch(
             "homeassistant.components.openaq.config_flow.create_openaq_client",
             return_value=client,
-        ):
-            yield client
+        ),
+    ):
+        yield client

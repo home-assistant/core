@@ -10,6 +10,7 @@ from typing import override
 from openaq import OpenAQ
 from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
 
+from homeassistant.components.sensor import DEVICE_CLASS_UNITS
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import UnitOfDensity
 from homeassistant.core import HomeAssistant
@@ -22,6 +23,7 @@ from .const import (
     OPENAQ_API_EXCEPTIONS,
     OPENAQ_AUTH_EXCEPTIONS,
     OPENAQ_RATE_LIMIT_EXCEPTIONS,
+    PARAMETER_DEVICE_CLASSES,
 )
 
 UPDATE_INTERVAL = timedelta(minutes=10)
@@ -48,7 +50,7 @@ class OpenAQLocationData:
 
     location_id: int
     name: str
-    sensor_metadata: MappingProxyType[str, str | None]
+    sensor_metadata: MappingProxyType[str, str]
     measurements: MappingProxyType[str, float]
 
 
@@ -66,12 +68,7 @@ type OpenAQConfigEntry = ConfigEntry[OpenAQRuntimeData]
 
 def create_openaq_client(api_key: str) -> OpenAQ:
     """Create an OpenAQ client."""
-    return OpenAQ(api_key=api_key)
-
-
-async def async_create_openaq_client(hass: HomeAssistant, api_key: str) -> OpenAQ:
-    """Create an OpenAQ client."""
-    return await hass.async_add_executor_job(create_openaq_client, api_key)
+    return OpenAQ(api_key=api_key, auto_wait=False)
 
 
 def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
@@ -81,18 +78,23 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
 
 def _build_sensor_metadata(
     sensors: Sequence[Sensor],
-) -> tuple[dict[int, str], MappingProxyType[str, str | None]]:
+) -> tuple[dict[int, str], MappingProxyType[str, str]]:
     """Return sensor parameter name and unit mappings keyed by sensor id."""
     by_id: dict[int, str] = {}
-    units: dict[str, str | None] = {}
+    units: dict[str, str] = {}
 
     for sensor in sensors:
         parameter = normalize_parameter(sensor.parameter)
+        if parameter not in PARAMETER_DEVICE_CLASSES:
+            continue
+        unit = OPENAQ_UNIT_ALIASES.get(sensor.parameter.units, sensor.parameter.units)
+        device_class = PARAMETER_DEVICE_CLASSES[parameter]
+        if device_class is not None:
+            valid_units = DEVICE_CLASS_UNITS.get(device_class)
+            if valid_units is not None and unit not in valid_units:
+                continue
         by_id[sensor.id] = parameter
-        unit = sensor.parameter.units
-        units[parameter] = (
-            OPENAQ_UNIT_ALIASES.get(unit, unit) if unit is not None else None
-        )
+        units[parameter] = unit
 
     return by_id, MappingProxyType(units)
 
@@ -105,10 +107,10 @@ def normalize_latest_measurements(
     measurements: dict[str, float] = {}
 
     for latest in latest_results:
-        if latest.value is None or latest.sensors_id not in sensors_by_id:
+        if latest.sensors_id not in sensors_by_id:
             continue
         parameter = sensors_by_id[latest.sensors_id]
-        measurements[parameter] = float(latest.value)
+        measurements[parameter] = latest.value
 
     return MappingProxyType(measurements)
 
@@ -135,7 +137,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         config_entry: OpenAQConfigEntry,
         subentry: ConfigSubentry,
         client: OpenAQ,
-        client_lock: asyncio.Lock | None = None,
+        client_lock: asyncio.Lock,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -146,18 +148,17 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
-        self._client_lock = client_lock or asyncio.Lock()
+        self._client_lock = client_lock
         self.subentry = subentry
         self.location_id: int = subentry.data[CONF_LOCATION_ID]
         self._location: Location | None = None
-        self._sensors: Sequence[Sensor] | None = None
+        self._sensors_by_id: dict[int, str] | None = None
+        self._sensor_metadata: MappingProxyType[str, str] | None = None
 
     @override
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
-        location: Location
-        sensors: Sequence[Sensor]
-        if self._location is None or self._sensors is None:
+        if self._location is None:
             async with self._client_lock:
                 try:
                     (
@@ -177,12 +178,9 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     translation_domain=DOMAIN,
                     translation_key="unable_to_fetch",
                 )
-            location = location_results[0]
-            self._location = location
-            self._sensors = sensors
+            self._location = location_results[0]
+            self._sensors_by_id, self._sensor_metadata = _build_sensor_metadata(sensors)
         else:
-            location = self._location
-            sensors = self._sensors
             async with self._client_lock:
                 try:
                     latest_results = (
@@ -196,11 +194,14 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                         translation_key="unable_to_fetch",
                     ) from err
 
-        by_id, sensor_metadata = _build_sensor_metadata(sensors)
-        measurements = normalize_latest_measurements(latest_results, by_id)
+        assert self._sensors_by_id is not None
+        assert self._sensor_metadata is not None
+        measurements = normalize_latest_measurements(
+            latest_results, self._sensors_by_id
+        )
         return OpenAQLocationData(
             location_id=self.location_id,
-            name=location.name,
-            sensor_metadata=sensor_metadata,
+            name=self._location.name,
+            sensor_metadata=self._sensor_metadata,
             measurements=measurements,
         )
