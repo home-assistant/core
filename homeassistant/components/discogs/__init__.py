@@ -1,5 +1,7 @@
 """The Discogs integration."""
 
+from functools import partial
+
 import discogs_client
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +19,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscogsConfigEntry) -> b
     """Set up Discogs from a config entry."""
     try:
         client = await hass.async_add_executor_job(
-            discogs_client.Client, SERVER_SOFTWARE, None, entry.data[CONF_TOKEN]
+            partial(
+                discogs_client.Client,
+                SERVER_SOFTWARE,
+                user_token=entry.data[CONF_TOKEN],
+            )
         )
         await hass.async_add_executor_job(client.identity)
     except discogs_client.exceptions.HTTPError as err:
