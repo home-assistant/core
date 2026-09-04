@@ -611,9 +611,12 @@ class ESPHomeManager:
             # Dial-in is an optional extra; it must not fail the entry
             _LOGGER.exception("%s: Could not set up dial-in routing", entry.title)
             return
-        if unregister is not None:
-            # async_on_unload also runs when setup fails or is cancelled
-            entry.async_on_unload(unregister)
+        if unregister is None:
+            # Shutting down; the device is on its own until the next reload
+            _LOGGER.debug("%s: Dial-in routing not started", entry.title)
+            return
+        # async_on_unload also runs when setup fails or is cancelled
+        entry.async_on_unload(unregister)
 
     async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""

@@ -1,6 +1,6 @@
 """Tests for device-initiated outgoing connections."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
@@ -164,3 +164,27 @@ async def test_outgoing_connection_register_error_does_not_fail_setup(
 
     assert entry.state is ConfigEntryState.LOADED
     assert "Could not set up dial-in routing" in caplog.text
+
+
+async def test_outgoing_connection_route_removed_via_async_on_unload(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_outgoing_connection_server: MagicMock,
+) -> None:
+    """The route uses async_on_unload so a failed or cancelled setup drains it.
+
+    async_on_unload runs on failed and cancelled setups, unlike the loaded-only
+    cleanup path; registering there is what keeps a partial setup from leaking
+    the route and, on a single-entry install, the bound port.
+    """
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+    with patch.object(
+        entry, "async_on_unload", wraps=entry.async_on_unload
+    ) as async_on_unload:
+        await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+        await hass.async_block_till_done()
+
+    unregister = mock_outgoing_connection_server.register.return_value
+    assert unregister in [call.args[0] for call in async_on_unload.call_args_list]
