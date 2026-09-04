@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiopowerwall import PowerwallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -16,9 +17,18 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.coordinator import (
+    ENERGY_CONFIG_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -593,3 +603,47 @@ async def test_paired_site_operation_mode_reads_local(
     )
     # The export rule select is not rerouted and keeps its cloud value.
     assert hass.states.get("select.energy_site_allow_export").state == "pv_only"
+
+
+async def test_paired_site_operation_mode_recovers_after_local_failure(
+    hass: HomeAssistant,
+    mock_powerwall_config: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed initial local read does not abort setup; a later refresh recovers.
+
+    The first config.json read fails, so setup still completes with the site
+    falling back and the local-backed select unavailable. Once the gateway
+    answers on a later refresh, the select reads the local operation mode.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_config.side_effect = PowerwallError("gateway unreachable")
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SELECT]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.get("select.energy_site_operation_mode").state == STATE_UNAVAILABLE
+    )
+
+    mock_powerwall_config.side_effect = None
+    mock_powerwall_config.return_value = {
+        "default_real_mode": EnergyOperationMode.AUTONOMOUS
+    }
+    freezer.tick(ENERGY_CONFIG_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("select.energy_site_operation_mode").state
+        == EnergyOperationMode.AUTONOMOUS
+    )
