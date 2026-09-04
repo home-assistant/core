@@ -26,9 +26,24 @@ def find_matching_platform(
     if len(device_point.enum_values) > 0 and device_point.writable:
         return Platform.SELECT
 
-    if (description and description.native_unit_of_measurement == "DM") or (
-        device_point.raw["maxValue"] and device_point.raw["minValue"]
-    ):
+    is_bool_range = (
+        device_point.raw.get("minValue") == 0
+        and device_point.raw.get("maxValue") == 1
+        and device_point.raw.get("stepValue") == 1
+        and not device_point.raw.get("unit")
+    )
+    
+    if is_bool_range:
+        if device_point.writable:
+            return Platform.SWITCH
+        return Platform.BINARY_SENSOR
+
+    has_numeric_range = (
+        device_point.raw.get("minValue") is not None
+        and device_point.raw.get("maxValue") is not None
+    )
+
+    if (description and description.native_unit_of_measurement == "DM") or has_numeric_range:
         if device_point.writable:
             return Platform.NUMBER
         return Platform.SENSOR
