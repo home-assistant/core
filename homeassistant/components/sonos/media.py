@@ -3,6 +3,7 @@
 from collections.abc import Callable
 import datetime
 import logging
+import threading
 from typing import Any
 
 from soco.core import (
@@ -88,6 +89,8 @@ class SonosMedia:
         # in-flight executor job cannot re-arm the timer after cancellation.
         self._settle_generation = 0
         self._newest_poll_at: datetime.datetime | None = None
+        # Serializes applying poll results from concurrent executor jobs.
+        self._poll_lock = threading.Lock()
 
     def clear(self) -> None:
         """Clear basic media info."""
@@ -107,6 +110,15 @@ class SonosMedia:
         """Clear the position attributes."""
         self.position = None
         self.position_updated_at = None
+
+    @property
+    def settle_generation(self) -> int:
+        """Return the current settle-poll generation.
+
+        Captured on the event loop when an event's executor job is submitted,
+        so a cancellation always invalidates work queued before it.
+        """
+        return self._settle_generation
 
     @property
     def library(self) -> MusicLibrary:
@@ -135,37 +147,48 @@ class SonosMedia:
 
     def set_basic_track_info(self, update_position: bool = False) -> None:
         """Query the speaker to update media metadata and position info."""
-        self.clear()
-
         track_info, polled_at = self.poll_track_info()
-        if not track_info["uri"]:
-            return
-        self.uri = track_info["uri"]
-
-        audio_source = self.soco.music_source_from_uri(self.uri)
-        if source := SOURCE_MAPPING.get(audio_source):
-            self.source_name = source
-            if audio_source in LINEIN_SOURCES:
-                self.clear_position()
-                self.title = source
+        with self._poll_lock:
+            if self._newest_poll_at is not None and polled_at < self._newest_poll_at:
+                # An overlapping poll finished out of order; a newer result
+                # has already been applied. Discard the whole result so stale
+                # metadata cannot be restored alongside a guarded position.
                 return
+            self.clear()
+            if not track_info["uri"]:
+                return
+            self.uri = track_info["uri"]
 
-        self.artist = track_info.get("artist")
-        self.album_name = track_info.get("album")
-        title = track_info.get("title") or ""
-        self.title = title.strip() or None
-        self.image_url = track_info.get("album_art")
+            audio_source = self.soco.music_source_from_uri(self.uri)
+            if source := SOURCE_MAPPING.get(audio_source):
+                self.source_name = source
+                if audio_source in LINEIN_SOURCES:
+                    self.clear_position()
+                    self.title = source
+                    return
 
-        playlist_position = int(track_info.get("playlist_position", -1))
-        if playlist_position > 0:
-            self.queue_position = playlist_position
+            self.artist = track_info.get("artist")
+            self.album_name = track_info.get("album")
+            title = track_info.get("title") or ""
+            self.title = title.strip() or None
+            self.image_url = track_info.get("album_art")
 
-        self.update_media_position(
-            track_info, force_update=update_position, polled_at=polled_at
-        )
+            playlist_position = int(track_info.get("playlist_position", -1))
+            if playlist_position > 0:
+                self.queue_position = playlist_position
 
-    def update_media_from_event(self, evars: dict[str, Any]) -> None:
-        """Update information about currently playing media using an event payload."""
+            self.update_media_position(
+                track_info, force_update=update_position, polled_at=polled_at
+            )
+
+    def update_media_from_event(
+        self, evars: dict[str, Any], settle_generation: int
+    ) -> None:
+        """Update information about currently playing media using an event payload.
+
+        settle_generation must be captured on the event loop when this job is
+        submitted, so cancellations during the blocking poll are honored.
+        """
         new_status = evars["transport_state"]
         state_changed = new_status != self.playback_status
         # A track change without a transport state change (e.g. a skip or an
@@ -189,7 +212,7 @@ class SonosMedia:
             # stream rebuffers; re-poll once the transition has settled so a
             # stale snapshot cannot stick.
             self.hass.loop.call_soon_threadsafe(
-                self._async_schedule_settle_poll, self._settle_generation
+                self._async_schedule_settle_poll, settle_generation
             )
 
         if ct_md := evars["current_track_meta_data"]:
@@ -256,7 +279,10 @@ class SonosMedia:
         if audio_source in LINEIN_SOURCES:
             # Line-in/TV positions are deliberately cleared, never tracked.
             return
-        self.update_media_position(track_info, force_update=True, polled_at=polled_at)
+        with self._poll_lock:
+            self.update_media_position(
+                track_info, force_update=True, polled_at=polled_at
+            )
         self.write_media_player_states()
 
     @soco_error()

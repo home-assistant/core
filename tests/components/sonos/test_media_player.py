@@ -1872,6 +1872,61 @@ async def test_position_settles_after_resume(
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_out_of_order_poll_does_not_restore_metadata(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a stale poll is discarded whole, metadata included."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Something"
+
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    # A newer poll has been applied while a slower one was still in flight.
+    media._newest_poll_at = dt_util.utcnow() + datetime.timedelta(seconds=5)
+    stale_info = dict(current_track_info)
+    stale_info["title"] = "Stale Old Title"
+    stale_info["position"] = "00:00:03"
+    soco.get_current_track_info.return_value = stale_info
+    media.set_basic_track_info(update_position=True)
+    # The stale result must not restore old metadata nor touch the position.
+    assert media.title == "Something"
+    assert media.position == 42
+
+
+async def test_event_with_stale_generation_does_not_arm_settle(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an event job submitted before cancellation cannot arm the timer."""
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    soco.get_current_track_info.return_value = current_track_info
+    # The generation is captured at submission; cancellation runs while the
+    # job's blocking poll is still in flight.
+    stale_generation = media.settle_generation
+    media.async_cancel_settle_poll()
+    await hass.async_add_executor_job(
+        media.update_media_from_event, media_event.variables, stale_generation
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert media._position_settle_unsub is None
+
+
 async def test_settle_poll_not_rearmed_after_cancellation(
     hass: HomeAssistant,
     soco: MockSoCo,

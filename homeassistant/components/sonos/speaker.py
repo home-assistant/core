@@ -593,7 +593,9 @@ class SonosSpeaker:
 
         self.event_stats.process(event)
         self.hass.async_add_executor_job(
-            self.media.update_media_from_event, event.variables
+            self.media.update_media_from_event,
+            event.variables,
+            self.media.settle_generation,
         )
 
     @callback
