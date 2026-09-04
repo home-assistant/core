@@ -267,7 +267,7 @@ aioesphomeapi==46.2.0
 aiofiles==25.1.0
 
 # homeassistant.components.flo
-aioflo==2021.11.0
+aioflo==2026.9.3
 
 # homeassistant.components.yi
 aioftp==0.21.3
