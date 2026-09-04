@@ -149,6 +149,7 @@ async def test_migration_v3_to_v5(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, original_container_identifier)},
         via_device_id=endpoint_device.id,
+        model="Container",
         name="Test Container",
     )
 

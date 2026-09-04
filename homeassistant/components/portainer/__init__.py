@@ -290,17 +290,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
                 for reg_entry in er.async_entries_for_device(
                     entity_registry, device.id, include_disabled_entities=True
                 ):
-                    if device.model == "Container":
-                        # Container unique IDs didn't include the endpoint ID,
-                        # so identically named containers on different
-                        # environments collided on the same entity.
-                        old_prefix = f"{entry.entry_id}_"
+                    endpoint_prefix = f"{entry.entry_id}_{endpoint_id}_"
+                    if device.model == "Container" and not (
+                        reg_entry.unique_id.startswith(endpoint_prefix)
+                    ):
+                        # Older container unique IDs didn't include the endpoint
+                        # ID, so identically named containers on different
+                        # environments collided on the same entity. Entities
+                        # already migrated by the v3->v4 step are endpoint-scoped
+                        # and must be left as-is to avoid double-prefixing.
                         entity_registry.async_update_entity(
                             reg_entry.entity_id,
                             config_subentry_id=subentry.subentry_id,
                             new_unique_id=(
-                                f"{entry.entry_id}_{endpoint_id}_"
-                                f"{reg_entry.unique_id.removeprefix(old_prefix)}"
+                                f"{endpoint_prefix}{reg_entry.unique_id.removeprefix(f'{entry.entry_id}_')}"
                             ),
                         )
                     else:
