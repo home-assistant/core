@@ -551,7 +551,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            issue_id=f"rate_period_statistics_{utility_account_id}",
+            issue_id=(
+                f"rate_period_statistics_{self.config_entry.entry_id}_"
+                f"{utility_account_id}"
+            ),
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="rate_period_statistics",

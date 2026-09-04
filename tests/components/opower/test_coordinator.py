@@ -579,12 +579,16 @@ async def test_coordinator_rate_periods(
     await async_wait_recording_done(hass)
 
     # The user is told about the new statistics once
-    issue = issue_registry.async_get_issue(DOMAIN, "rate_period_statistics_111111")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"rate_period_statistics_{mock_config_entry.entry_id}_111111"
+    )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders is not None
     assert "on peak consumption" in issue.translation_placeholders["statistic_names"]
-    issue_registry.async_delete(DOMAIN, "rate_period_statistics_111111")
+    issue_registry.async_delete(
+        DOMAIN, f"rate_period_statistics_{mock_config_entry.entry_id}_111111"
+    )
 
     # Second run: the last hour is corrected and a new hour is added
     mock_opower_api.async_get_cost_reads.return_value = [
@@ -611,7 +615,10 @@ async def test_coordinator_rate_periods(
 
     # No new periods, so no new issue
     assert (
-        issue_registry.async_get_issue(DOMAIN, "rate_period_statistics_111111") is None
+        issue_registry.async_get_issue(
+            DOMAIN, f"rate_period_statistics_{mock_config_entry.entry_id}_111111"
+        )
+        is None
     )
 
     stats = await hass.async_add_executor_job(
