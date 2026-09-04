@@ -404,6 +404,7 @@ FLOWS = {
         "karakeep",
         "keenetic_ndms2",
         "kegtron",
+        "keyboard_remote",
         "keymitt_ble",
         "kiosker",
         "klik_aan_klik_uit",
