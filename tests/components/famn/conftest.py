@@ -6,15 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 from famn_sdk import (
-    CalendarEvent,
-    CalendarPaginateResponse,
     DeviceTokenResponse,
-    LeaderboardEntry,
     ListItem,
     ListModel,
-    MealSlotPaginateResponse,
-    SpaceMember,
-    SpaceSeasonSummary,
     StartDevicePairingResponse,
     TaskItem,
     TaskListPaginateResponse,
@@ -35,7 +29,6 @@ SPACE_ID = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
 DEVICE_ID = "7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3001"
 CHORES_LIST_ID = "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001"
 TODOS_LIST_ID = "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1003"
-CALENDAR_ID = "9c8d7e6f-5a4b-4c3d-8e2f-1a0b9c8d7001"
 SHOPPING_LIST_ID = "5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001"
 PAIRING_SECRET = "mock-pairing-secret"
 
@@ -151,53 +144,6 @@ def mock_tasks_api() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_calendar_api() -> Generator[AsyncMock]:
-    """Mock the Famn calendar API."""
-    with patch(
-        "homeassistant.components.famn.coordinator.CalendarApi", autospec=True
-    ) as calendar_api:
-        client = calendar_api.return_value
-        client.get_calendars_endpoint.return_value = CalendarPaginateResponse.from_dict(
-            load_json_object_fixture("calendars.json", DOMAIN)
-        )
-        events = [
-            CalendarEvent.from_dict(event)
-            for event in load_json_array_fixture("calendar_events.json", DOMAIN)
-        ]
-
-        async def _get_events(
-            calendar_id: str, **kwargs: object
-        ) -> list[CalendarEvent]:
-            return [event for event in events if str(event.calendar_id) == calendar_id]
-
-        client.get_calendar_events_endpoint.side_effect = _get_events
-        yield client
-
-
-@pytest.fixture
-def mock_space_api() -> Generator[AsyncMock]:
-    """Mock the Famn space API (XP leaderboard and season)."""
-    with patch(
-        "homeassistant.components.famn.coordinator.SpaceApi", autospec=True
-    ) as space_api:
-        client = space_api.return_value
-        client.get_space_members_endpoint.return_value = [
-            SpaceMember.from_dict(member)
-            for member in load_json_array_fixture("members.json", DOMAIN)
-        ]
-        client.get_space_score_leaderboard_endpoint.return_value = [
-            LeaderboardEntry.from_dict(entry)
-            for entry in load_json_array_fixture("leaderboard.json", DOMAIN)
-        ]
-        client.get_space_score_season_endpoint.return_value = (
-            SpaceSeasonSummary.from_dict(
-                load_json_object_fixture("season.json", DOMAIN)
-            )
-        )
-        yield client
-
-
-@pytest.fixture
 def mock_list_api() -> Generator[AsyncMock]:
     """Mock the Famn lists API (shopping lists)."""
     with (
@@ -229,21 +175,6 @@ def mock_list_api() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_meal_api() -> Generator[AsyncMock]:
-    """Mock the Famn meal planner API."""
-    with patch(
-        "homeassistant.components.famn.coordinator.MealPlannerApi", autospec=True
-    ) as meal_api:
-        client = meal_api.return_value
-        client.get_meal_slots_endpoint.return_value = (
-            MealSlotPaginateResponse.from_dict(
-                load_json_object_fixture("meal_slots.json", DOMAIN)
-            )
-        )
-        yield client
-
-
-@pytest.fixture
 def mock_realtime_session() -> Generator[MagicMock]:
     """Mock the realtime gateway as unreachable.
 
@@ -264,10 +195,7 @@ def mock_realtime_session() -> Generator[MagicMock]:
 def mock_famn(
     mock_device_api: AsyncMock,
     mock_tasks_api: AsyncMock,
-    mock_calendar_api: AsyncMock,
-    mock_space_api: AsyncMock,
     mock_list_api: AsyncMock,
-    mock_meal_api: AsyncMock,
     mock_realtime_session: MagicMock,
 ) -> None:
     """Mock every Famn API used by the integration."""

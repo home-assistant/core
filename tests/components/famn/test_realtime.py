@@ -185,29 +185,29 @@ async def test_events_are_fired_on_the_bus(
     await _async_wait_for(lambda: len(events) == 2)
 
 
-async def test_calendar_event_triggers_calendar_refresh(
+async def test_list_event_triggers_shopping_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_calendar_api: AsyncMock,
+    mock_list_api: AsyncMock,
     mock_gateway: FakeGateway,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a calendar event refreshes the calendars coordinator."""
+    """Test that a topic routes to its own coordinator, not to every one."""
     await setup_integration(hass, mock_config_entry)
     await _async_wait_for(
         lambda: bool(mock_gateway.sockets and mock_gateway.sockets[0].sent)
     )
-    baseline = mock_calendar_api.get_calendars_endpoint.call_count
+    baseline = mock_list_api.get_list_items_endpoint.call_count
 
     mock_gateway.sockets[0].feed(
-        {"type": "event", "topic": "Calendar", "action": "event-updated", "payload": {}}
+        {"type": "event", "topic": "ListItem", "action": "updated", "payload": {}}
     )
 
     freezer.tick(REFRESH_COOLDOWN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_calendar_api.get_calendars_endpoint.call_count > baseline
+    assert mock_list_api.get_list_items_endpoint.call_count > baseline
 
 
 async def test_unrelated_event_is_ignored(

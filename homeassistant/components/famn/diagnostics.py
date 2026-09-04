@@ -44,16 +44,16 @@ async def async_get_config_entry_diagnostics(
             }
             for chore_list in entry.runtime_data.chores.data.values()
         ],
-        "calendars": [
+        "shopping_lists": [
             {
-                "calendar": async_redact_data(
-                    calendar_data.calendar.to_dict(), TO_REDACT
+                "shopping_list": async_redact_data(
+                    shopping_list.shopping_list.to_dict(), TO_REDACT
                 ),
-                "upcoming": [
-                    async_redact_data(event.to_dict(), TO_REDACT)
-                    for event in calendar_data.upcoming
+                "items": [
+                    async_redact_data(item.to_dict(), TO_REDACT)
+                    for item in shopping_list.items
                 ],
             }
-            for calendar_data in entry.runtime_data.calendars.data.values()
+            for shopping_list in entry.runtime_data.shopping.data.values()
         ],
     }

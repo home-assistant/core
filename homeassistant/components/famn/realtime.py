@@ -37,16 +37,13 @@ class FamnRealtime:
             session=async_get_clientsession(hass),
         )
         # Which coordinator each gateway topic feeds. Topics on the space
-        # channel that have no entities here (chats, ...) are simply not in
-        # the map.
+        # channel that have no entities here (calendars, scores, chats, ...)
+        # are simply not in the map.
         self._topic_coordinators: dict[str, DataUpdateCoordinator[Any]] = {
             "TaskList": entry.runtime_data.chores,
             "TaskItem": entry.runtime_data.chores,
-            "Calendar": entry.runtime_data.calendars,
-            "SpaceScore": entry.runtime_data.scores,
             "List": entry.runtime_data.shopping,
             "ListItem": entry.runtime_data.shopping,
-            "MealSlot": entry.runtime_data.meals,
         }
 
     async def _async_token(self) -> tuple[str, datetime]:

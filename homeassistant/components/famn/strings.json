@@ -27,31 +27,7 @@
       }
     }
   },
-  "entity": {
-    "notify": {
-      "family": {
-        "name": "Family"
-      }
-    },
-    "sensor": {
-      "dinner_tonight": {
-        "name": "Dinner tonight"
-      },
-      "due_today": {
-        "name": "Tasks due today"
-      },
-      "list_due_today": {
-        "name": "{list_name} due today"
-      },
-      "member_xp": {
-        "name": "{member_name} XP"
-      }
-    }
-  },
   "exceptions": {
-    "calendar_events_failed": {
-      "message": "Failed to fetch calendar events from Famn."
-    },
     "cannot_connect": {
       "message": "Failed to connect to Famn."
     },
@@ -60,9 +36,6 @@
     },
     "create_item_failed": {
       "message": "Failed to create {name} in Famn."
-    },
-    "notify_failed": {
-      "message": "Failed to notify the family via Famn."
     },
     "token_rotation_unauthorized": {
       "message": "Famn rejected the device credentials. Pair Home Assistant with Famn again."

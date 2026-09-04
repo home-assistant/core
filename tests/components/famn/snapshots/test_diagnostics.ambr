@@ -1,64 +1,6 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'calendars': list([
-      dict({
-        'calendar': dict({
-          'color': '#3A87AD',
-          'description': '**REDACTED**',
-          'id': '**REDACTED**',
-          'isActive': True,
-          'kind': 'standard',
-          'name': '**REDACTED**',
-          'readOnly': False,
-          'spaceId': '**REDACTED**',
-          'timeZone': 'UTC',
-          'uid': '**REDACTED**',
-          'visibility': 'space',
-        }),
-        'upcoming': list([
-          dict({
-            'allDay': False,
-            'calendarId': '**REDACTED**',
-            'description': '**REDACTED**',
-            'endDateTime': '2026-08-12T17:30:00+00:00',
-            'id': '**REDACTED**',
-            'isCancelled': False,
-            'location': '**REDACTED**',
-            'recurrenceId': '**REDACTED**',
-            'sequence': 0,
-            'startDateTime': '2026-08-12T16:00:00+00:00',
-            'timeZone': 'UTC',
-            'title': '**REDACTED**',
-            'uid': '**REDACTED**',
-          }),
-          dict({
-            'allDay': False,
-            'calendarId': '**REDACTED**',
-            'endDateTime': '2026-08-12T15:00:00+00:00',
-            'id': '**REDACTED**',
-            'isCancelled': True,
-            'sequence': 1,
-            'startDateTime': '2026-08-12T14:00:00+00:00',
-            'timeZone': 'UTC',
-            'title': '**REDACTED**',
-            'uid': '**REDACTED**',
-          }),
-          dict({
-            'allDay': True,
-            'calendarId': '**REDACTED**',
-            'endDateTime': '2026-08-16T00:00:00+00:00',
-            'id': '**REDACTED**',
-            'isCancelled': False,
-            'sequence': 0,
-            'startDateTime': '2026-08-14T00:00:00+00:00',
-            'timeZone': 'UTC',
-            'title': '**REDACTED**',
-            'uid': '**REDACTED**',
-          }),
-        ]),
-      }),
-    ]),
     'chore_lists': list([
       dict({
         'items': list([
@@ -122,6 +64,33 @@
           'spaceId': '**REDACTED**',
           'taskType': 'todos',
           'updatedAt': '2026-08-11T08:00:00+00:00',
+        }),
+      }),
+    ]),
+    'shopping_lists': list([
+      dict({
+        'items': list([
+          dict({
+            'id': '**REDACTED**',
+            'listId': '5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001',
+            'name': '**REDACTED**',
+            'quantity': 2.0,
+            'sortOrder': 1,
+          }),
+          dict({
+            'description': '**REDACTED**',
+            'id': '**REDACTED**',
+            'listId': '5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001',
+            'name': '**REDACTED**',
+            'sortOrder': 2,
+          }),
+        ]),
+        'shopping_list': dict({
+          'icon': 'cart',
+          'id': '**REDACTED**',
+          'listType': 'grocery',
+          'name': '**REDACTED**',
+          'spaceId': '**REDACTED**',
         }),
       }),
     ]),

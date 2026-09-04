@@ -81,17 +81,14 @@ rules:
     status: exempt
     comment: All entities are primary and enabled by default.
   entity-translations:
-    status: done
+    status: exempt
     comment: >-
-      The sensors and the family notify entity use translation keys. The
-      calendar, todo and per-member entities are named after user-created
-      Famn objects, which have no key to translate.
+      Todo entities are named after the user-created Famn chore, todo and
+      shopping lists, which have no key to translate.
   exception-translations: done
   icon-translations:
-    status: done
-    comment: >-
-      The sensors declare icons in icons.json. The calendar, todo and notify
-      entities use their platform default.
+    status: exempt
+    comment: Todo entities use the platform default icon.
   reconfiguration-flow:
     status: exempt
     comment: There is nothing to reconfigure; re-pairing is handled by the reauth flow.
