@@ -1981,11 +1981,21 @@ class StateClassSelector(Selector[StateClassSelectorConfig]):
 
     selector_type = "state_class"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("state_classes"): vol.All(cv.ensure_list, [str]),
-        }
+    @staticmethod
+    def _valid_state_classes(options: list[str]) -> list[str]:
+        """Validate state classes and raise if invalid."""
+        vol.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(options)
+        return options
+
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("state_classes"): vol.All(
+                    cv.ensure_list, [str], [_valid_state_classes]
+                ),
+            },
+        ),
     )
 
     def __init__(self, config: StateClassSelectorConfig | None = None) -> None:
