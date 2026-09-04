@@ -686,6 +686,9 @@
       "prompt_tone": {
         "name": "Prompt tone"
       },
+      "pump": {
+        "name": "Pump"
+      },
       "screen_display": {
         "name": "Screen display"
       },
