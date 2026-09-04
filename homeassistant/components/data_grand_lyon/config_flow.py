@@ -499,8 +499,13 @@ class LineSubentryFlowHandler(ConfigSubentryFlow):
             if error := await self._async_load_lines():
                 return self.async_abort(reason=error)
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self._create_line(user_input[CONF_LINE])
+            line_code = user_input[CONF_LINE].strip()
+            if not line_code:
+                errors[CONF_LINE] = "invalid_line"
+            else:
+                return self._create_line(line_code)
 
         schema = vol.Schema(
             {
@@ -514,7 +519,7 @@ class LineSubentryFlowHandler(ConfigSubentryFlow):
                 )
             }
         )
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def _async_load_lines(self) -> str | None:
         """Fetch TCL lines from the API, returning an error key on failure."""

@@ -10,7 +10,7 @@
     },
     "calendar": {
       "alerts": {
-        "default": "mdi:bus-alert"
+        "default": "mdi:transit-detour"
       }
     },
     "sensor": {

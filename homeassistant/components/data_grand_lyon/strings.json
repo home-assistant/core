@@ -52,6 +52,9 @@
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Transit line",
+      "error": {
+        "invalid_line": "Enter a line code."
+      },
       "initiate_flow": {
         "user": "Add transit line"
       },
@@ -148,6 +151,11 @@
     "binary_sensor": {
       "station_open": {
         "name": "Station open"
+      }
+    },
+    "calendar": {
+      "alerts": {
+        "name": "Alerts"
       }
     },
     "sensor": {

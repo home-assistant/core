@@ -61,3 +61,20 @@ async def test_config_entry_diagnostics_with_park_and_ride(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_park_and_ride_config_entry
     ) == snapshot(exclude=props("created_at", "modified_at", "entry_id", "subentry_id"))
+
+
+async def test_config_entry_diagnostics_with_line(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics with a line's traffic alerts."""
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_line_config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at", "entry_id", "subentry_id"))

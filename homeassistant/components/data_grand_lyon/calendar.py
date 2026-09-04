@@ -69,22 +69,25 @@ async def async_setup_entry(
 class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
     """Calendar of TCL traffic alerts for a line."""
 
-    _attr_name = None
-
     @property
     @override
     def event(self) -> CalendarEvent | None:
         """Return the alert in progress, or the most relevant upcoming one."""
         now = _tcl_now()
-        alerts = filter_tcl_active_alerts(self.coordinator.data[self._subentry_id], now)
+        alerts = filter_tcl_active_alerts(
+            self.coordinator.data.get(self._subentry_id, []), now
+        )
         if not alerts:
             return None
         ranked = sort_tcl_alerts_by_relevance(alerts, now)
         # An alert starting later today shares the library's CURRENT bucket with
         # one already running, so an in-progress alert must be preferred here
         # for the on/off state (computed from event start/end) to stay truthful.
+        # Among alerts that haven't started yet, the soonest one governs when
+        # HA arms the next on/off transition, so it must win over severity too.
         started = [alert for alert in ranked if alert.debut <= now]
-        return _calendar_event(started[0] if started else ranked[0])
+        event = started[0] if started else min(ranked, key=lambda alert: alert.debut)
+        return _calendar_event(event)
 
     @override
     async def async_get_events(
@@ -95,6 +98,6 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
         window_end = end_date.astimezone(TZ_PARIS).replace(tzinfo=None)
         return [
             _calendar_event(alert)
-            for alert in self.coordinator.data[self._subentry_id]
+            for alert in self.coordinator.data.get(self._subentry_id, [])
             if alert.debut < window_end and alert.fin > window_start
         ]

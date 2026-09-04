@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_tcl_client")
 async def test_alerts_filtered_by_line(
     hass: HomeAssistant,
     mock_line_config_entry: MockConfigEntry,
-    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test alerts are filtered to the monitored line only."""
     mock_line_config_entry.add_to_hass(hass)
