@@ -29,19 +29,20 @@ def find_matching_platform(
     if (
         device_point.writable
         and not device_point.enum_values
-        and device_point.raw.get("minValue") == 0
-        and device_point.raw.get("maxValue") == 1
-        and device_point.raw.get("stepValue") == 1
-        and not device_point.raw.get("unit")
+        and device_point.min_value == 0
+        and device_point.max_value == 1
+        and device_point.step_value == 1
+        and not device_point.parameter_unit
     ):
         return Platform.SWITCH
 
-    has_numeric_range = (
-        device_point.raw.get("minValue") is not None
-        and device_point.raw.get("maxValue") is not None
+    has_numeric_range = isinstance(device_point.min_value, int | float) and isinstance(
+        device_point.max_value, int | float
     )
 
-    if (description and description.native_unit_of_measurement == "DM") or has_numeric_range:
+    if (
+        description and description.native_unit_of_measurement == "DM"
+    ) or has_numeric_range:
         if device_point.writable:
             return Platform.NUMBER
         return Platform.SENSOR
