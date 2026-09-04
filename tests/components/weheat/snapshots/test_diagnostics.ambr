@@ -5,14 +5,22 @@
       dict({
         'energy': dict({
           'heat_pump_id': '**REDACTED**',
+          't_water_in': 11,
           'total_ein_heating': 12345,
         }),
-        'has_dhw': True,
+        'info': dict({
+          'device_name': None,
+          'has_ch_boiler': False,
+          'has_dhw': True,
+          'model': 'Test Model',
+          'sn': '**REDACTED**',
+          'uuid': '**REDACTED**',
+        }),
         'logs': dict({
           'heat_pump_id': '**REDACTED**',
           't_water_in': 11,
+          'total_ein_heating': 12345,
         }),
-        'model': 'Test Model',
       }),
     ]),
   })

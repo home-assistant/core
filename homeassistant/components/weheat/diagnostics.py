@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import WeheatConfigEntry
 
-TO_REDACT = {"heat_pump_id"}
+TO_REDACT = {"heat_pump_id", "uuid", "sn"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,8 +17,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "heat_pumps": [
             {
-                "model": weheatdata.heat_pump_info.model,
-                "has_dhw": weheatdata.heat_pump_info.has_dhw,
+                "info": async_redact_data(vars(weheatdata.heat_pump_info), TO_REDACT),
                 "logs": async_redact_data(
                     weheatdata.data_coordinator.data.raw_content or {}, TO_REDACT
                 ),
