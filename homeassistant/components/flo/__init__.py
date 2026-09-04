@@ -31,17 +31,16 @@ async def async_get_flo_api(
     Returns the API client and whether SSO was used.
     """
     session = async_get_clientsession(hass)
-    if use_sso:
-        return (
-            await async_get_api(username, password, session=session, use_sso=True),
-            True,
-        )
     try:
         return (
-            await async_get_api(username, password, session=session, use_sso=False),
-            False,
+            await async_get_api(
+                username, password, session=session, use_sso=use_sso
+            ),
+            use_sso,
         )
     except RequestError as err:
+        if use_sso:
+            raise
         _LOGGER.info("Legacy Flo auth failed (%s); retrying with Moen SSO", err)
         return (
             await async_get_api(username, password, session=session, use_sso=True),
