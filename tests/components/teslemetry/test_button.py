@@ -146,3 +146,67 @@ async def test_insufficient_credits_stale_response_ignored(
     # available so the stale response must not recreate the repair.
     assert error.value.translation_key == "insufficient_credits"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_insufficient_credits_available_then_insufficient(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test the repair is created when the newest mid-flight state is insufficient."""
+    entry = await setup_platform(hass, [Platform.BUTTON])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    async def send_credits_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Credits are briefly reported available, then reported insufficient
+        # again, all while this command is still in flight.
+        mock_add_listener.send(
+            {
+                "credits": {
+                    "type": "command",
+                    "cost": 1,
+                    "quota": {
+                        "used": 5,
+                        "fraction": 0.5,
+                        "reset_at": "2026-07-10T00:00:00.000Z",
+                    },
+                    "balance": 0,
+                },
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        mock_add_listener.send(
+            {
+                "credits": {
+                    "type": "command",
+                    "cost": 1,
+                    "quota": {
+                        "used": 10,
+                        "fraction": 1.0,
+                        "reset_at": "2026-07-10T00:00:00.000Z",
+                    },
+                    "balance": 0,
+                },
+                "createdAt": "2024-10-04T10:45:18.537Z",
+            }
+        )
+        raise InsufficientCredits
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.wake_up",
+            side_effect=send_credits_then_fail,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_wake"]},
+            blocking=True,
+        )
+
+    # The newest credit state seen since the command started is insufficient, so
+    # the account really is out of credits and the repair must be created.
+    assert error.value.translation_key == "insufficient_credits"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)

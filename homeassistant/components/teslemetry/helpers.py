@@ -63,10 +63,16 @@ async def handle_command(
     try:
         result = await command
     except InsufficientCredits as e:
-        # A credits-availability event that landed while this command was in
-        # flight already reports credits are back, so this response is stale: do
-        # not recreate a repair no further availability event would clear.
-        if entry.runtime_data.credits_generation == credits_generation:
+        # Suppress the repair only when a credit-state event landed while this
+        # command was in flight and the newest state it reported is available:
+        # that response is stale and no further event would clear the repair. An
+        # insufficient event landing mid-flight is a real problem that must still
+        # surface, so only an available latest state suppresses it.
+        stale = (
+            entry.runtime_data.credits_generation != credits_generation
+            and entry.runtime_data.credits_available
+        )
+        if not stale:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -139,22 +145,26 @@ async def handle_vehicle_command(
 def async_handle_credits(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: dict[str, Any]
 ) -> None:
-    """Clear the insufficient credits issue when credits become available."""
+    """Record the latest credit state and clear the issue when credits return."""
     quota = credits.get("quota")
     fraction = quota.get("fraction") if isinstance(quota, dict) else None
-    quota_available = (
-        isinstance(fraction, (int, float))
-        and not isinstance(fraction, bool)
-        and fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
-    )
+    quota_available: bool | None = None
+    if isinstance(fraction, (int, float)) and not isinstance(fraction, bool):
+        quota_available = fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
     balance = credits.get("balance")
-    balance_available = (
-        isinstance(balance, (int, float))
-        and not isinstance(balance, bool)
-        and balance > CREDITS_BALANCE_THRESHOLD
-    )
-    if quota_available or balance_available:
-        entry.runtime_data.credits_generation += 1
+    balance_available: bool | None = None
+    if isinstance(balance, (int, float)) and not isinstance(balance, bool):
+        balance_available = balance > CREDITS_BALANCE_THRESHOLD
+    if quota_available is None and balance_available is None:
+        # No interpretable credit data, so this is not a credit-state transition.
+        return
+
+    # Record every transition, available or not, so handle_command can tell which
+    # state is newest rather than only that something changed.
+    available = bool(quota_available) or bool(balance_available)
+    entry.runtime_data.credits_generation += 1
+    entry.runtime_data.credits_available = available
+    if available:
         ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
 
 
