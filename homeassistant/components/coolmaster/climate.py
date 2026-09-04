@@ -92,7 +92,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         super().__init__(coordinator, unit_id)
         self._attr_hvac_modes = supported_modes
         self._attr_unique_id = unit_id
-        # Fan speeds this particular indoor unit has told us it cannot do.
         self._unsupported_fan_modes: set[str] = set()
 
     @property
@@ -186,35 +185,27 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
             self._unit = await self._unit.set_thermostat(temp)
             self.async_write_ha_state()
 
-    def _reject_fan_mode(self, fan_mode: str) -> ServiceValidationError:
-        """Drop a fan mode this unit rejected and build the error to raise."""
-        self._unsupported_fan_modes.add(fan_mode)
-        self.async_write_ha_state()
-        return ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="fan_mode_unsupported",
-            translation_placeholders={
-                "fan_mode": fan_mode,
-                "unit_id": self._unit_id,
-            },
-        )
-
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
         fan_speed = HA_FAN_TO_CM[fan_mode]
-        try:
-            self._unit = await self._unit.set_fan_speed(fan_speed)
-        except ValueError as error:
-            # The bridge answers "Unsupported Feature" for a speed the indoor unit
-            # cannot do, which the library reports as CoolMasterNetCommandError.
-            raise self._reject_fan_mode(fan_mode) from error
+        self._unit = await self._unit.set_fan_speed(fan_speed)
 
         if self._unit.fan_speed.lower() != fan_speed:
-            # A rejected fspeed command "will have no effect" per the protocol
-            # reference, so the refreshed unit still reports the previous speed.
-            raise self._reject_fan_mode(fan_mode)
+            # A speed the indoor unit does not have "will have no effect" per the
+            # protocol reference, so the refreshed unit still reports the previous
+            # speed. Stop offering it on this unit.
+            self._unsupported_fan_modes.add(fan_mode)
+            self.async_write_ha_state()
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="fan_mode_unsupported",
+                translation_placeholders={
+                    "fan_mode": fan_mode,
+                    "unit_id": self._unit_id,
+                },
+            )
 
         self.async_write_ha_state()
 

@@ -306,39 +306,6 @@ async def test_set_fan_mode_ignored_by_unit(
     ]
 
 
-async def test_set_fan_mode_rejected_by_bridge(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
-) -> None:
-    """Test a fan speed the bridge rejects with an error."""
-    assert FAN_TOP in hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODES]
-
-    async def reject_fan_speed(
-        self: CoolMasterNetUnitMock, value: str
-    ) -> CoolMasterNetUnitMock:
-        """Raise the way the library does on "Unsupported Feature"."""
-        raise ValueError(f"Unit {self.unit_id} doesn't support fan speed {value}.")
-
-    with (
-        patch.object(CoolMasterNetUnitMock, "set_fan_speed", reject_fan_speed),
-        pytest.raises(ServiceValidationError),
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {
-                ATTR_ENTITY_ID: "climate.l1_100",
-                ATTR_FAN_MODE: FAN_TOP,
-            },
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("climate.l1_100")
-    assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
-    assert FAN_TOP not in state.attributes[ATTR_FAN_MODES]
-
-
 async def test_set_fan_mode_unsupported_only_on_one_unit(
     hass: HomeAssistant,
     load_int: ConfigEntry,
