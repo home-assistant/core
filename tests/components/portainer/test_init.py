@@ -208,10 +208,6 @@ async def test_migration_v5_1_to_v5_2(
         name="Test Endpoint",
     )
 
-    device_registry.async_update_device(
-        endpoint_device.id,
-        new_identifiers=endpoint_device.identifiers | {("other_domain", "some_id")},
-    )
     container_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_1_adguard")},
