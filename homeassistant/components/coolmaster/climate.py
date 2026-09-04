@@ -156,12 +156,13 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
             return HVACAction.IDLE
         if mode == "auto":
             # The bridge does not say which way a unit in automatic mode is
-            # working, so compare the room temperature against the set point.
-            return (
-                HVACAction.COOLING
-                if self._unit.temperature > self._unit.thermostat
-                else HVACAction.HEATING
-            )
+            # working, so infer it from the room temperature against the set
+            # point, and stay unknown when there is nothing to tell them apart.
+            if self._unit.temperature > self._unit.thermostat:
+                return HVACAction.COOLING
+            if self._unit.temperature < self._unit.thermostat:
+                return HVACAction.HEATING
+            return None
         return CM_TO_HA_ACTION[mode]
 
     @property

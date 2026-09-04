@@ -1,5 +1,7 @@
 """The test for the Coolmaster climate platform."""
 
+from typing import Any
+
 from pycoolmasternet_async import SWING_MODES
 import pytest
 
@@ -36,7 +38,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import async_update_entity
+
+from .conftest import TEST_UNITS
 
 
 async def test_climate_state(
@@ -153,37 +156,39 @@ async def test_climate_hvac_action(
     assert ATTR_HVAC_ACTION not in hass.states.get("climate.l1_104").attributes
 
 
+def only_unit(**overrides: Any) -> dict[str, dict[str, Any]]:
+    """Build a single unit table based on L1.102, which is on and set to 20."""
+    return {"L1.102": {**TEST_UNITS["L1.102"], **overrides}}
+
+
 @pytest.mark.parametrize(
-    ("mode", "demand", "temperature", "expected"),
+    ("units", "expected"),
     [
         # In fan only mode the fan runs whenever the unit is on.
-        ("fan", False, 25, HVACAction.FAN),
-        ("dry", True, 25, HVACAction.DRYING),
-        ("dry", False, 25, HVACAction.IDLE),
+        (only_unit(mode="fan", demand=False), HVACAction.FAN),
+        (only_unit(mode="dry", demand=True), HVACAction.DRYING),
+        (only_unit(mode="dry", demand=False), HVACAction.IDLE),
         # A unit in automatic mode does not say which way it is working, so the
-        # room temperature is compared against the set point of 20.
-        ("auto", True, 25, HVACAction.COOLING),
-        ("auto", True, 15, HVACAction.HEATING),
+        # room temperature is compared against the set point of 20, and the
+        # action stays unknown when the two are equal.
+        (only_unit(mode="auto", demand=True, temperature=25), HVACAction.COOLING),
+        (only_unit(mode="auto", demand=True, temperature=15), HVACAction.HEATING),
+        (only_unit(mode="auto", demand=True, temperature=20), None),
     ],
+    indirect=["units"],
 )
 async def test_climate_hvac_action_derived_modes(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    mode: str,
-    demand: bool,
-    temperature: float,
-    expected: HVACAction,
+    expected: HVACAction | None,
 ) -> None:
     """Test the hvac action for modes no fixture unit reports."""
-    unit = load_int.runtime_data._coolmaster._units["L1.102"]
-    unit["mode"] = mode
-    unit["demand"] = demand
-    unit["temperature"] = temperature
+    attributes = hass.states.get("climate.l1_102").attributes
 
-    await async_update_entity(hass, "climate.l1_102")
-    await hass.async_block_till_done()
-
-    assert hass.states.get("climate.l1_102").attributes[ATTR_HVAC_ACTION] == expected
+    if expected is None:
+        assert ATTR_HVAC_ACTION not in attributes
+    else:
+        assert attributes[ATTR_HVAC_ACTION] == expected
 
 
 async def test_climate_fan_mode(
