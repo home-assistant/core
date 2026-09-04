@@ -71,7 +71,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                         **url_schema,
                         vol.Optional(
                             CONF_ADMIN_USERNAME,
-                            default=user_input.get(CONF_ADMIN_USERNAME),
+                            default=user_input.get(CONF_ADMIN_USERNAME, ""),
                         ): str,
                         vol.Optional(
                             CONF_ADMIN_PASSWORD,
@@ -79,7 +79,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                         ): str,
                         vol.Optional(
                             CONF_SURVEILLANCE_USERNAME,
-                            default=user_input.get(CONF_SURVEILLANCE_USERNAME),
+                            default=user_input.get(CONF_SURVEILLANCE_USERNAME, ""),
                         ): str,
                         vol.Optional(
                             CONF_SURVEILLANCE_PASSWORD,

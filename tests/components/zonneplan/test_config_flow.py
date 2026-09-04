@@ -288,3 +288,113 @@ async def test_reauth_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test the reconfigure flow refreshes the stored token."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["description_placeholders"] == {CONF_EMAIL: MOCK_EMAIL}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+    mock_zonneplan_client.async_request_otp.assert_called_once()
+
+    new_token = Token(
+        access_token="new-access-token",
+        refresh_token="new-refresh-token",
+        expires_at=datetime(2031, 1, 1, tzinfo=UTC),
+    )
+    mock_zonneplan_client.async_submit_otp.return_value = new_token
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"otp": "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_EMAIL] == MOCK_EMAIL
+    assert mock_config_entry.data[CONF_TOKEN] == new_token.as_dict()
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
+        pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(Exception("unexpected"), "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_confirm_exceptions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test we handle all reconfigure confirm step exceptions."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_zonneplan_client.async_request_otp.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["errors"] == {"base": reason}
+
+    mock_zonneplan_client.async_request_otp.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"otp": "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test reconfiguring with a different account is aborted."""
+    mock_config_entry.add_to_hass(hass)
+    mock_zonneplan_client.async_get_account.return_value = MOCK_OTHER_ACCOUNT
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"otp": "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"

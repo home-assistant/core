@@ -26,7 +26,14 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import client_context, client_context_no_verify
 
-from .const import CONF_ENCRYPTION, CONF_ENTRY, CONF_OLD_RECIPIENT, CONF_SERVER, DOMAIN
+from .const import (
+    CONF_ENCRYPTION,
+    CONF_ENTRY,
+    CONF_OLD_RECIPIENT,
+    CONF_SERVER,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool
         port=entry.data[CONF_PORT],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
-        timeout=entry.options.get(CONF_TIMEOUT),
+        timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         use_tls=entry.data[CONF_ENCRYPTION] == "tls",
         start_tls=entry.data[CONF_ENCRYPTION] == "starttls",
         tls_context=(
