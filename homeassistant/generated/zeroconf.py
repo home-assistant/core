@@ -879,6 +879,11 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
+    "_powersensor._udp.local.": [
+        {
+            "domain": "powersensor_au",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
