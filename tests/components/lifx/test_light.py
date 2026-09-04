@@ -21,24 +21,21 @@ import voluptuous as vol
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import ATTR_DURATION, ATTR_POWER, ATTR_THEME
-from homeassistant.components.lifx.light import (
-    ATTR_INFRARED,
-    ATTR_ZONES,
-    LIFX_MIN_COLOR_RAMP,
-)
-from homeassistant.components.lifx.manager import (
+from homeassistant.components.lifx.const import (
     ATTR_CLOUD_SATURATION_MAX,
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_CYCLES,
     ATTR_DIRECTION,
+    ATTR_DURATION,
     ATTR_PALETTE,
     ATTR_PERIOD,
+    ATTR_POWER,
     ATTR_POWER_ON,
     ATTR_SATURATION_MAX,
     ATTR_SATURATION_MIN,
     ATTR_SKY_TYPE,
     ATTR_SPEED,
+    ATTR_THEME,
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
@@ -47,6 +44,11 @@ from homeassistant.components.lifx.manager import (
     SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
     SERVICE_PAINT_THEME,
+)
+from homeassistant.components.lifx.light import (
+    ATTR_INFRARED,
+    ATTR_ZONES,
+    LIFX_MIN_COLOR_RAMP,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
