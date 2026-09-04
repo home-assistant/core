@@ -1,11 +1,13 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
+import datetime
 import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from soco.data_structures import (
     DidlAudioBroadcast,
@@ -13,7 +15,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
-from soco.exceptions import SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -92,6 +94,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -1747,6 +1751,77 @@ async def test_position_updated_on_track_change_while_playing(
         assert state.attributes[ATTR_MEDIA_POSITION] == 43
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] > updated_at
+
+    # A settle poll corrects any snapshot that raced the transition once the
+    # track change has settled.
+    settled_track_info = new_track_info.copy()
+    settled_track_info["position"] = "00:00:02"
+    soco.get_current_track_info.return_value = settled_track_info
+    with freeze_time("2024-01-01T12:00:03Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 2
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+async def test_position_stamped_with_poll_request_time(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delayed poll response is stamped with the poll request time."""
+    entity_id = "media_player.zone_a"
+    request_time = dt_util.utcnow()
+
+    def delayed_track_info():
+        # The speaker takes 5 seconds to answer the poll.
+        freezer.tick(datetime.timedelta(seconds=5))
+        return current_track_info
+
+    soco.get_current_track_info.side_effect = delayed_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    # The position was true when the poll was requested, not when the delayed
+    # response was written.
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == request_time
+
+    # Let the scheduled settle poll fire so no timer lingers.
+    freezer.tick(datetime.timedelta(seconds=5))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_settle_poll_failure_keeps_last_position(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test a failing settle poll leaves the last written position in place."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    # The speaker becomes unreachable before the settle poll fires.
+    soco.get_current_track_info.side_effect = SoCoException("connection lost")
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
 
 
 @pytest.mark.parametrize(
