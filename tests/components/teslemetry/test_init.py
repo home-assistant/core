@@ -1845,6 +1845,55 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
     assert not isinstance(vehicle.api, VehicleRouter)
 
 
+@pytest.mark.parametrize(
+    "key_error",
+    [
+        pytest.param(OSError("disk gone"), id="os_error"),
+        pytest.param(ValueError("bad key"), id="value_error"),
+    ],
+)
+async def test_vehicle_bluetooth_key_load_falls_back_to_cloud(
+    hass: HomeAssistant,
+    key_error: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A vehicle whose Bluetooth key fails to load degrades to cloud control.
+
+    Local Bluetooth control is opt-in per vehicle, so one vehicle's bad key file
+    must leave the entry loaded with that vehicle on its cloud API and the rest
+    of the account (e.g. energy sites) set up normally.
+    """
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock(side_effect=key_error)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    vehicle = entry.runtime_data.vehicles[0]
+    assert isinstance(vehicle.api, Vehicle)
+    assert not isinstance(vehicle.api, VehicleRouter)
+    # The rest of the account is unaffected: the energy site still loads.
+    assert len(entry.runtime_data.energysites) == 1
+    assert "falling back to cloud control" in caplog.text
+    assert any(
+        record.levelname == "WARNING" and VIN in record.message
+        for record in caplog.records
+    )
+
+
 @asynccontextmanager
 async def _paired_entry(
     hass: HomeAssistant, ble_lookup: MagicMock
