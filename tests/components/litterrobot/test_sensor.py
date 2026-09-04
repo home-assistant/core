@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
 
 from homeassistant.components.litterrobot.sensor import icon_for_gauge_level
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
@@ -168,6 +170,10 @@ async def test_litterhopper_sensor(
     )
     sensor = hass.states.get("sensor.test_hopper_status")
     assert sensor.state == expected_state
+    # a status the library can report but the sensor does not declare is invalid
+    assert {status.name.lower() for status in HopperStatus} <= set(
+        sensor.attributes[ATTR_OPTIONS]
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
