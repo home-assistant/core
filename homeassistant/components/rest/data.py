@@ -1,5 +1,6 @@
 """Support for RESTful API."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -17,6 +18,9 @@ from homeassistant.util.ssl import SSLCipherList
 from .const import XML_MIME_TYPES
 
 DEFAULT_TIMEOUT = 10
+
+# Headroom over the configured request timeout before the backstop cancels
+BACKSTOP_TIMEOUT_MARGIN = 5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +61,10 @@ class RestData:
         self._params = params
         self._request_data = data
         self._timeout = aiohttp.ClientTimeout(total=timeout)
+        # timeout <= 0 disables aiohttp's timeout, so disable the backstop too
+        self._backstop_timeout: float | None = (
+            timeout + BACKSTOP_TIMEOUT_MARGIN if timeout > 0 else None
+        )
         self._verify_ssl = verify_ssl
         self._ssl_cipher_list = SSLCipherList(ssl_cipher_list)
         self._session: aiohttp.ClientSession | None = None
@@ -151,10 +159,15 @@ class RestData:
             request_kwargs["data"] = self._request_data
         response = None
         try:
-            # Make the request
-            async with self._session.request(
-                self._method, self._resource, **request_kwargs
-            ) as response:
+            # Backstop: aiohttp's ClientTimeout can fail to fire on a request
+            # stuck in connection setup; a request that never returns would
+            # permanently stop the coordinator's polling loop (#179334).
+            async with (
+                asyncio.timeout(self._backstop_timeout),
+                self._session.request(
+                    self._method, self._resource, **request_kwargs
+                ) as response,
+            ):
                 # Read the response
                 # Only use configured encoding if no charset in Content-Type header
                 # If charset is present in Content-Type, let aiohttp use it
