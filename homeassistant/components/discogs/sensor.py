@@ -151,6 +151,7 @@ class DiscogsSensor(SensorEntity):
         self._client = client
         self._discogs_data: dict[str, Any] = {}
         self._attrs: dict[str, Any] = {}
+        assert entry.unique_id
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.discogs.com",
