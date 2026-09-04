@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from typing import Any, Final, cast
@@ -61,6 +62,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryEnergySiteLiveLocalCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
@@ -578,6 +580,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 live_coordinator,
                 info_coordinator,
                 history_coordinator,
+                raw_live_status,
             ) = await _async_setup_energy_site(
                 hass,
                 entry,
@@ -596,10 +599,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 hass, entry, bool(battery), site_id, energy_site
             )
 
+            # A paired site gets a second, local-first live coordinator that
+            # polls the LAN gateway for its supported keys; the cloud live
+            # coordinator keeps serving the cloud-only live entities.
+            live_local_coordinator = (
+                TeslemetryEnergySiteLiveLocalCoordinator(
+                    hass, entry, energy_site_api, raw_live_status
+                )
+                if isinstance(energy_site_api, EnergySiteRouter)
+                and raw_live_status is not None
+                else None
+            )
+
             energysites.append(
                 TeslemetryEnergyData(
                     api=energy_site_api,
                     live_coordinator=live_coordinator,
+                    live_local_coordinator=live_local_coordinator,
                     info_coordinator=info_coordinator,
                     history_coordinator=history_coordinator,
                     id=site_id,
@@ -739,8 +755,14 @@ async def _async_setup_energy_site(
     TeslemetryEnergySiteLiveCoordinator | None,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergyHistoryCoordinator | None,
+    dict[str, Any] | None,
 ]:
-    """Cold-read live status, build the energy coordinators, and register listeners."""
+    """Cold-read live status, build the energy coordinators, and register listeners.
+
+    Also returns the raw live_status dict (or None), captured before the live
+    coordinator normalises it in place, so a paired site can seed its local
+    coordinator from an independent copy.
+    """
     # The stream has no ready boundary, so keep a deterministic REST cold read
     # for setup auth/error handling before switching to listener-driven updates.
     try:
@@ -770,6 +792,9 @@ async def _async_setup_energy_site(
             translation_domain=DOMAIN,
             translation_key="not_ready_api_error",
         ) from e
+
+    # Snapshot before the live coordinator normalises wall_connectors in place.
+    raw_live_status = deepcopy(live_status) if isinstance(live_status, dict) else None
 
     live_coordinator = (
         TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
@@ -801,7 +826,7 @@ async def _async_setup_energy_site(
         else None
     )
 
-    return live_coordinator, info_coordinator, history_coordinator
+    return live_coordinator, info_coordinator, history_coordinator, raw_live_status
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:

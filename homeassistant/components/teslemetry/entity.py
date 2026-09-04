@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    LOCAL_LIVE_COORDINATOR_KEYS,
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
@@ -153,7 +154,15 @@ class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.live_coordinator, key)
+        # A paired site serves the locally supported live keys from its local
+        # coordinator; every other key stays on the cloud live coordinator.
+        if (
+            data.live_local_coordinator is not None
+            and key in LOCAL_LIVE_COORDINATOR_KEYS
+        ):
+            super().__init__(data.live_local_coordinator, key)
+        else:
+            super().__init__(data.live_coordinator, key)
 
 
 class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):

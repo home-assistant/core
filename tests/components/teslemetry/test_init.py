@@ -41,6 +41,7 @@ from homeassistant.components.teslemetry.const import (
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
+    ENERGY_LIVE_INTERVAL,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
@@ -1761,3 +1762,165 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
         for flow in hass.config_entries.flow.async_progress()
         if flow["handler"] == DOMAIN
     ]
+
+
+# Local gateway live_status: distinct values for the ten locally supported keys
+# (grid_status "Inactive" and island_status "off_grid" differ from the cloud
+# fixture so a reroute is observable) and None for every cloud-only key, as the
+# local adapter actually returns them.
+LOCAL_LIVE_STATUS = {
+    "response": {
+        "solar_power": 2000,
+        "energy_left": 20000,
+        "total_pack_energy": 40000,
+        "percentage_charged": 80.0,
+        "backup_capable": None,
+        "battery_power": 3000,
+        "load_power": 4000,
+        "grid_status": "Inactive",
+        "grid_services_active": None,
+        "grid_power": 1000,
+        "grid_services_power": None,
+        "generator_power": 500,
+        "island_status": "off_grid",
+        "storm_mode_active": None,
+        "timestamp": None,
+        "wall_connectors": None,
+    }
+}
+
+# entity_id -> state once a local poll has replaced the cloud seed. Power/energy
+# keys convert W/Wh to kW/kWh; island_status is an enum passed through.
+_LOCAL_LIVE_STATES = {
+    "sensor.energy_site_solar_power": "2.0",
+    "sensor.energy_site_energy_left": "20.0",
+    "sensor.energy_site_total_pack_energy": "40.0",
+    "sensor.energy_site_percentage_charged": "80.0",
+    "sensor.energy_site_battery_power": "3.0",
+    "sensor.energy_site_load_power": "4.0",
+    "sensor.energy_site_grid_power": "1.0",
+    "sensor.energy_site_generator_power": "0.5",
+    "sensor.energy_site_island_status": "off_grid",
+    "binary_sensor.energy_site_grid_status": STATE_OFF,
+}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_site_live_reads_route_to_local(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A paired site serves the ten local live keys from the LAN gateway.
+
+    Every locally supported sensor and binary sensor follows the local snapshot
+    while the cloud-only live entities keep reading the cloud coordinator, and a
+    single interval poll feeds all ten (one shared gateway request).
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    local_live = AsyncMock(return_value=LOCAL_LIVE_STATUS)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "aiopowerwall.energysite.PowerwallEnergySite.live_status",
+            new=local_live,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.PLATFORMS",
+            [Platform.SENSOR, Platform.BINARY_SENSOR],
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.runtime_data.energysites[0].live_local_coordinator is not None
+        # The setup cold read seeds the local coordinator from the cloud, so the
+        # local keys show cloud values until the first LAN poll.
+        assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+
+        # One shared snapshot per refresh: a single interval tick makes exactly
+        # one local gateway call regardless of how many entities read it.
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert local_live.await_count == 1
+    for entity_id, expected in _LOCAL_LIVE_STATES.items():
+        assert hass.states.get(entity_id).state == expected
+
+    # Cloud-only live entities keep reading the separate cloud coordinator; the
+    # local success returning None for their keys must not clobber them.
+    assert hass.states.get("sensor.energy_site_grid_services_power").state == "0.0"
+    assert hass.states.get("binary_sensor.energy_site_backup_capable").state == STATE_ON
+    assert (
+        hass.states.get("binary_sensor.energy_site_grid_services_active").state
+        == STATE_OFF
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_site_local_reads_survive_stream_disconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """A dropped stream leaves the local live entities available.
+
+    The stream is the cloud coordinator's only freshness signal, so a disconnect
+    marks the cloud-only live entities unavailable; the local coordinator polls
+    the LAN gateway independently and keeps its keys alive.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    local_live = AsyncMock(return_value=LOCAL_LIVE_STATUS)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "aiopowerwall.energysite.PowerwallEnergySite.live_status",
+            new=local_live,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.PLATFORMS",
+            [Platform.SENSOR, Platform.BINARY_SENSOR],
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_add_connection_listener.send(False)
+        await hass.async_block_till_done()
+
+    for entity_id, expected in _LOCAL_LIVE_STATES.items():
+        assert hass.states.get(entity_id).state == expected
+
+    assert (
+        hass.states.get("sensor.energy_site_grid_services_power").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("binary_sensor.energy_site_backup_capable").state
+        == STATE_UNAVAILABLE
+    )
+
+
+async def test_unpaired_site_has_no_local_live_coordinator(
+    hass: HomeAssistant,
+) -> None:
+    """An unpaired site builds no local coordinator and reads only the cloud."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    energysite = entry.runtime_data.energysites[0]
+    assert energysite.live_local_coordinator is None
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"

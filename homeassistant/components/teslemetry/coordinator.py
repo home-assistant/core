@@ -15,6 +15,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 
 from homeassistant.core import HomeAssistant
@@ -45,6 +46,8 @@ def _get_retry_after(e: TeslaFleetError) -> float:
 
 VEHICLE_INTERVAL = timedelta(seconds=60)
 VEHICLE_WAIT = timedelta(minutes=15)
+# The LAN Powerwall gateway is not on the stream, so its live coordinator polls.
+ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 METADATA_INTERVAL = timedelta(hours=1)
 
@@ -64,6 +67,24 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_STATE,
     VehicleDataEndpoint.VEHICLE_CONFIG,
 ]
+
+# live_status keys a local Powerwall can serve. On a paired site the entities
+# for these keys read the local live coordinator; every other live key stays on
+# the cloud live coordinator, which has no local gateway equivalent.
+LOCAL_LIVE_COORDINATOR_KEYS: frozenset[str] = frozenset(
+    {
+        "solar_power",
+        "energy_left",
+        "total_pack_energy",
+        "percentage_charged",
+        "battery_power",
+        "load_power",
+        "grid_power",
+        "generator_power",
+        "island_status",
+        "grid_status",
+    }
+)
 
 
 class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -200,7 +221,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
-        api: EnergySite,
+        api: EnergySite | EnergySiteRouter,
         data: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
@@ -238,6 +259,30 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 translation_placeholders={"message": e.message},
             ) from e
         return _index_wall_connectors(data)
+
+
+class TeslemetryEnergySiteLiveLocalCoordinator(TeslemetryEnergySiteLiveCoordinator):
+    """Local-first live coordinator for a paired Powerwall energy site.
+
+    Reuses the cloud coordinator's fetch and normalisation, but is handed the
+    local-first ``EnergySiteRouter`` and polls it on an interval: the LAN
+    gateway is not on the stream, so its locally supported live keys must be
+    read over REST (with cloud fallback through the router). It runs alongside
+    the stream-driven cloud coordinator, which keeps serving every cloud-only
+    live key.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySiteRouter,
+        data: dict[str, Any],
+    ) -> None:
+        """Initialize Teslemetry Energy Site Local Live coordinator."""
+        super().__init__(hass, config_entry, api, data)
+        self.name = "Teslemetry Energy Site Local Live"
+        self.update_interval = ENERGY_LIVE_INTERVAL
 
 
 class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
