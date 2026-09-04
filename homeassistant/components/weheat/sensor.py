@@ -2,6 +2,8 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
 from typing import override
 
 from weheat.abstractions.heat_pump import HeatPump
@@ -47,7 +49,54 @@ PARALLEL_UPDATES = 0
 class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
-    value_fn: Callable[[HeatPump], StateType]
+    value_fn: Callable[[HeatPump], StateType | datetime]
+
+
+# The portal counts the conditions the heat pump waits on and leaves these two
+# settings out of its tally.
+COOLING_CONDITIONS_NOT_COUNTED = ("control_method", "contact_not_blocked")
+
+
+def _is_cooling(status: HeatPump) -> bool:
+    """Return whether a cooling cycle is running, including the water check."""
+    return status.cooling_state is not None
+
+
+def _cooling_wait_until(status: HeatPump) -> datetime | None:
+    """Return when the wait after the last cooling cycle runs out."""
+    conditions = status.cooling_start_conditions
+    if conditions is None or conditions["exponential_backoff"]:
+        return None
+    return status.cooling_available_from
+
+
+def _cooling_conditions_met(status: HeatPump) -> int | None:
+    """Return how many conditions for starting cooling are met, as the portal counts."""
+    conditions = status.cooling_start_conditions
+    if conditions is None or _is_cooling(status):
+        return None
+    return sum(
+        met
+        for name, met in conditions.items()
+        if name not in COOLING_CONDITIONS_NOT_COUNTED
+    )
+
+
+def _cooling_blocked_by(status: HeatPump) -> str | None:
+    """Return the first condition keeping the heat pump from cooling."""
+    conditions = status.cooling_start_conditions
+    if conditions is None:
+        return None
+    if _is_cooling(status):
+        return "none"
+    return next((name for name, met in conditions.items() if not met), "none")
+
+
+def _latched_reason(status: HeatPump, reason: Enum | None) -> str | None:
+    """Return a reason from before the cycle, which says nothing while one runs."""
+    if _is_cooling(status):
+        return "none"
+    return reason.name.lower() if reason is not None else None
 
 
 SENSORS = [
@@ -239,6 +288,62 @@ DHW_SENSORS = [
     ),
 ]
 
+COOLING_SENSORS = [
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_state",
+        key="cooling_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[activity.name.lower() for activity in HeatPump.CoolingActivity],
+        value_fn=lambda status: (
+            status.cooling_activity.name.lower()
+            if status.cooling_activity is not None
+            else None
+        ),
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_blocked_by",
+        key="cooling_blocked_by",
+        device_class=SensorDeviceClass.ENUM,
+        options=["none", *HeatPump.COOLING_START_CONDITION_BITS],
+        value_fn=_cooling_blocked_by,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_conditions_met",
+        key="cooling_conditions_met",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_cooling_conditions_met,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_wait_until",
+        key="cooling_wait_until",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_cooling_wait_until,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="last_cooling_time",
+        key="last_cooling_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda status: status.last_cooling_time,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_pause_reason",
+        key="cooling_pause_reason",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=[reason.name.lower() for reason in HeatPump.CoolingPauseReason],
+        value_fn=lambda status: _latched_reason(status, status.cooling_pause_reason),
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_stop_reason",
+        key="cooling_stop_reason",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=[reason.name.lower() for reason in HeatPump.CoolingStopReason],
+        value_fn=lambda status: _latched_reason(status, status.cooling_stop_reason),
+    ),
+]
+
+
 ENERGY_SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="electricity_used",
@@ -360,6 +465,15 @@ async def async_setup_entry(
             for entity_description in SENSORS
             if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
         )
+        if weheatdata.data_coordinator.data.cooling_activity is not None:
+            entities.extend(
+                WeheatHeatPumpSensor(
+                    weheatdata.heat_pump_info,
+                    weheatdata.data_coordinator,
+                    entity_description,
+                )
+                for entity_description in COOLING_SENSORS
+            )
         if weheatdata.heat_pump_info.has_dhw:
             entities.extend(
                 WeheatHeatPumpSensor(
@@ -412,6 +526,6 @@ class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -31,6 +31,39 @@
   },
   "entity": {
     "binary_sensor": {
+      "cooling_start_condition_contact_not_blocked": {
+        "name": "Cooling contact not blocking"
+      },
+      "cooling_start_condition_control_method": {
+        "name": "Cooling allowed by control method"
+      },
+      "cooling_start_condition_demand": {
+        "name": "Demand for cooling from cooling curve"
+      },
+      "cooling_start_condition_dtc": {
+        "name": "No cooling-related faults"
+      },
+      "cooling_start_condition_exponential_backoff": {
+        "name": "No cooling back-off waiting time"
+      },
+      "cooling_start_condition_heat_cool_delay": {
+        "name": "No heating in the last 24 hours"
+      },
+      "cooling_start_condition_indoor_unit_connected": {
+        "name": "Cooling indoor unit connected"
+      },
+      "cooling_start_condition_inside_temperature": {
+        "name": "Cooling room warmer than desired"
+      },
+      "cooling_start_condition_outside_air_temperature": {
+        "name": "Cooling outside temperature high enough"
+      },
+      "cooling_start_condition_water_temperature": {
+        "name": "Water warmer than cooling curve"
+      },
+      "cooling_start_condition_water_to_air": {
+        "name": "Cooling air warmer than system water"
+      },
       "indoor_unit_auxiliary_pump_state": {
         "name": "Indoor unit auxiliary water pump"
       },
@@ -62,6 +95,73 @@
       },
       "compressor_rpm": {
         "name": "Compressor speed"
+      },
+      "cooling_blocked_by": {
+        "name": "Cooling blocked by",
+        "state": {
+          "contact_not_blocked": "Blocked by external contact",
+          "control_method": "Control method does not allow cooling",
+          "demand": "No cooling demand",
+          "dtc": "Cooling fault active",
+          "exponential_backoff": "Waiting for restart delay",
+          "heat_cool_delay": "Waiting for heating to cooling delay",
+          "indoor_unit_connected": "Indoor unit not connected",
+          "inside_temperature": "Room not warmer than target",
+          "none": "Not blocked",
+          "outside_air_temperature": "Outside temperature too low",
+          "water_temperature": "Water not warmer than cooling curve",
+          "water_to_air": "Air not warmer than water"
+        }
+      },
+      "cooling_conditions_met": {
+        "name": "Cooling conditions met",
+        "unit_of_measurement": "of 9"
+      },
+      "cooling_pause_reason": {
+        "name": "Cooling pause reason",
+        "state": {
+          "contact_blocked": "Blocked by external contact",
+          "demand": "No cooling demand",
+          "heat_pump_control": "Paused for another function",
+          "none": "Not paused",
+          "outside_colder_than_water_temperature": "Outside colder than water",
+          "outside_temperature_too_low": "Outside temperature too low",
+          "room_temperature_too_low": "Room temperature too low",
+          "water_temperature_below_dewpoint": "Water temperature below dew point",
+          "water_temperature_below_setpoint": "Water temperature colder than setpoint"
+        }
+      },
+      "cooling_state": {
+        "name": "Cooling state",
+        "state": {
+          "active": "Cooling",
+          "idle": "Idle",
+          "paused": "Paused",
+          "pausing": "Pausing",
+          "standby": "[%key:common::state::standby%]",
+          "standby_run_cp": "Standby, pump running",
+          "starting": "Starting",
+          "stopped": "Stopped",
+          "stopping": "Stopping",
+          "waiting": "Waiting to start",
+          "water_check": "Checking water temperature"
+        }
+      },
+      "cooling_stop_reason": {
+        "name": "Cooling stop reason",
+        "state": {
+          "contact_switch_over": "External contact switched over",
+          "control_method": "Stopped by control method",
+          "cooling_control": "Stopped by cooling control",
+          "dtc": "Stopped by diagnostics",
+          "heat_pump_control": "Stopped for another function",
+          "no_indoor_unit_communication": "No indoor unit communication",
+          "none": "Not stopped",
+          "thermostat_disabled": "Thermostat disabled"
+        }
+      },
+      "cooling_wait_until": {
+        "name": "Cooling wait until"
       },
       "cop": {
         "name": "COP"
@@ -138,6 +238,9 @@
           "updating": "Updating",
           "water_check": "Checking water temperature"
         }
+      },
+      "last_cooling_time": {
+        "name": "Last cooling"
       },
       "outside_temperature": {
         "name": "Outside temperature"
