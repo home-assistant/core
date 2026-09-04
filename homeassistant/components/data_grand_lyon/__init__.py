@@ -18,7 +18,7 @@ from .coordinator import (
     DataGrandLyonVelovCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(

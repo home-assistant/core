@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_all_entities[calendar.line_c3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.line_c3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alerts',
+    'unique_id': 'line_C3-alerts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[calendar.line_c3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
+        Les arrêts de Gare St-Paul à Cordeliers ne sont plus desservis.
+        
+        Cause: travaux
+        Type: Perturbation
+      ''',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2026-04-30 08:30:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Line C3',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Déviée dir. Cordeliers',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2026-03-31 22:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.line_c3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

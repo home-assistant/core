@@ -1,0 +1,127 @@
+"""Tests for the Data Grand Lyon calendar platform."""
+
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.data_grand_lyon.const import TZ_PARIS
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry, snapshot_platform
+
+ENTITY_ID = "calendar.line_c3"
+
+
+@pytest.fixture(autouse=True)
+def frozen_time(freezer: FrozenDateTimeFactory) -> None:
+    """Freeze time inside the in-progress alert of MOCK_TCL_ALERTS."""
+    freezer.move_to(datetime(2026, 4, 10, 14, 0, tzinfo=TZ_PARIS))
+
+
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test all calendar entities (state, attributes, registry)."""
+    with patch(
+        "homeassistant.components.data_grand_lyon.PLATFORMS", [Platform.CALENDAR]
+    ):
+        mock_line_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_line_config_entry.entry_id
+    )
+
+
+async def test_state_reflects_alert_in_progress(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test the calendar is on while an alert is in progress."""
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Déviée dir. Cordeliers"
+    assert "Cause: travaux" in state.attributes["description"]
+
+
+async def test_state_off_without_alert(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test a line with no alert is available and off."""
+    mock_tcl_client.get_tcl_alerts.return_value = []
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "expected"),
+    [
+        pytest.param(
+            datetime(2026, 4, 9, 0, 0, tzinfo=TZ_PARIS),
+            datetime(2026, 4, 11, 0, 0, tzinfo=TZ_PARIS),
+            ["Déviée dir. Cordeliers"],
+            id="inside_ongoing_alert",
+        ),
+        pytest.param(
+            datetime(2026, 2, 1, 0, 0, tzinfo=TZ_PARIS),
+            datetime(2026, 5, 1, 0, 0, tzinfo=TZ_PARIS),
+            ["Déviée dir. Cordeliers", "Fête de la Musique"],
+            id="spans_both_alerts",
+        ),
+        pytest.param(
+            datetime(2026, 1, 1, 0, 0, tzinfo=TZ_PARIS),
+            datetime(2026, 1, 2, 0, 0, tzinfo=TZ_PARIS),
+            [],
+            id="before_every_alert",
+        ),
+    ],
+)
+async def test_get_events(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    start: datetime,
+    end: datetime,
+    expected: list[str],
+) -> None:
+    """Test the requested window selects the overlapping alerts."""
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "entity_id": ENTITY_ID,
+            "start_date_time": start.isoformat(),
+            "end_date_time": end.isoformat(),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [event["summary"] for event in response[ENTITY_ID]["events"]]
+    assert sorted(summaries) == sorted(expected)
