@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 import logging
+import re
 from typing import Any, override
 
 import voluptuous as vol
@@ -15,7 +16,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -26,6 +26,7 @@ from .client import (
     ThreemaAPIClient,
     ThreemaAuthError,
     ThreemaConnectionError,
+    derive_public_key,
     generate_key_pair,
 )
 from .const import (
@@ -39,6 +40,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 _KEY_HEX_LENGTH = 64
+_KEY_PREFIXES = ("private:", "public:")
+_CONF_PUBLIC_KEY = "public_key"
+
+
+def _strip_key_prefix(value: str) -> str:
+    """Strip a Threema key-export prefix (e.g. 'private:') if present."""
+    lowered = value.lower()
+    for prefix in _KEY_PREFIXES:
+        if lowered.startswith(prefix):
+            return value[len(prefix) :].strip()
+    return value
 
 
 def _is_valid_key_hex(value: str) -> bool:
@@ -70,6 +82,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     _gateway_id: str | None = None
     _api_secret: str | None = None
     _private_key: str | None = None
+    _public_key: str | None = None
 
     @override
     async def async_step_user(
@@ -124,10 +137,26 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._gateway_id = gateway_id
                 self._api_secret = user_input[CONF_API_SECRET].strip()
 
-                self._private_key = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
+                raw_private_key = user_input.get(CONF_PRIVATE_KEY, "").strip()
+                self._private_key = (
+                    _strip_key_prefix(raw_private_key) if raw_private_key else None
+                )
+                raw_public_key = user_input.get(_CONF_PUBLIC_KEY, "").strip()
+                self._public_key = (
+                    _strip_key_prefix(raw_public_key) if raw_public_key else None
+                )
 
                 if self._private_key and not _is_valid_key_hex(self._private_key):
                     errors[CONF_PRIVATE_KEY] = "invalid_key"
+                elif self._public_key and not _is_valid_key_hex(self._public_key):
+                    errors[_CONF_PUBLIC_KEY] = "invalid_key"
+                elif (
+                    self._private_key
+                    and self._public_key
+                    and derive_public_key(self._private_key).lower()
+                    != self._public_key.lower()
+                ):
+                    errors[_CONF_PUBLIC_KEY] = "key_mismatch"
                 else:
                     client = ThreemaAPIClient(
                         self.hass,
@@ -160,13 +189,16 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_GATEWAY_ID): str,
-                vol.Required(CONF_API_SECRET): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
+                vol.Required(CONF_GATEWAY_ID, default=self._gateway_id or ""): str,
+                vol.Required(
+                    CONF_API_SECRET, default=self._api_secret or ""
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 vol.Optional(
                     CONF_PRIVATE_KEY, default=self._private_key or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+                vol.Optional(
+                    _CONF_PUBLIC_KEY, default=self._public_key or ""
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             }
         )
 
@@ -228,11 +260,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-RECIPIENT_SCHEMA = vol.All(
-    cv.string,
-    cv.matches_regex(r"^[0-9A-Za-z]{8}$"),
-    lambda value: value.upper(),
-)
+_RECIPIENT_ID_REGEX = re.compile(r"^[0-9A-Za-z]{8}$")
 
 
 class RecipientSubentryFlowHandler(ConfigSubentryFlow):
@@ -245,27 +273,34 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            recipient_id = user_input[CONF_RECIPIENT]
+            recipient_id = user_input[CONF_RECIPIENT].strip().upper()
 
-            # Check for duplicate recipients
-            for subentry in self._get_entry().subentries.values():
-                if subentry.data.get(CONF_RECIPIENT) == recipient_id:
-                    return self.async_abort(reason="already_configured")
+            if not _RECIPIENT_ID_REGEX.match(recipient_id):
+                errors[CONF_RECIPIENT] = "invalid_recipient_id"
+            else:
+                # Check for duplicate recipients
+                for subentry in self._get_entry().subentries.values():
+                    if subentry.data.get(CONF_RECIPIENT) == recipient_id:
+                        return self.async_abort(reason="already_configured")
 
-            raw_name = user_input.get(CONF_NAME, "").strip()
-            name = f"{raw_name} ({recipient_id})" if raw_name else recipient_id
+                raw_name = user_input.get(CONF_NAME, "").strip()
+                title = f"{raw_name} ({recipient_id})" if raw_name else recipient_id
 
-            return self.async_create_entry(
-                title=name,
-                data={CONF_RECIPIENT: recipient_id},
-                unique_id=recipient_id,
-            )
+                data: dict[str, str] = {CONF_RECIPIENT: recipient_id}
+                if raw_name:
+                    data[CONF_NAME] = raw_name
+
+                return self.async_create_entry(
+                    title=title,
+                    data=data,
+                    unique_id=recipient_id,
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_RECIPIENT): RECIPIENT_SCHEMA,
+                    vol.Required(CONF_RECIPIENT): str,
                     vol.Optional(CONF_NAME): str,
                 }
             ),

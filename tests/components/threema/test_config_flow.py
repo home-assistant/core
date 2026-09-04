@@ -6,12 +6,15 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.threema.client import (
     ThreemaAuthError,
     ThreemaConnectionError,
+    derive_public_key,
 )
+from homeassistant.components.threema.config_flow import _CONF_PUBLIC_KEY
 from homeassistant.components.threema.const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
@@ -19,9 +22,9 @@ from homeassistant.components.threema.const import (
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
-from homeassistant.const import CONF_RECIPIENT
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_API_SECRET, MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID
 
@@ -256,6 +259,172 @@ async def test_credentials_invalid_private_key(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "prefixed_key",
+    [
+        "private:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "PRIVATE:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    ],
+    ids=["lower", "upper"],
+)
+async def test_credentials_private_key_prefix_stripped(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+    prefixed_key: str,
+) -> None:
+    """Test a 'private:'-prefixed key (as exported by Threema's tools) is accepted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: prefixed_key,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["data"][CONF_PRIVATE_KEY]
+        == "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    )
+
+
+async def test_credentials_public_key_matches(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test a public key matching the private key is accepted and not stored."""
+    private_key = "1" * 64
+    matching_public_key = derive_public_key(private_key)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: private_key,
+            _CONF_PUBLIC_KEY: f"public:{matching_public_key}",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PRIVATE_KEY] == private_key
+    assert _CONF_PUBLIC_KEY not in result["data"]
+
+
+async def test_credentials_public_key_mismatch(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test a public key that does not match the private key is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "1" * 64,
+            _CONF_PUBLIC_KEY: "f" * 64,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {_CONF_PUBLIC_KEY: "key_mismatch"}
+
+
+async def test_credentials_public_key_invalid_hex(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test a malformed public key is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "1" * 64,
+            _CONF_PUBLIC_KEY: "not-a-valid-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {_CONF_PUBLIC_KEY: "invalid_key"}
+
+
+async def test_credentials_invalid_private_key_preserves_other_fields(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test gateway ID and API secret stay filled in after an invalid key error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "not-a-valid-key",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PRIVATE_KEY: "invalid_key"}
+
+    defaults = {
+        schema_key: schema_key.default()
+        for schema_key in result["data_schema"].schema
+        if schema_key.default is not vol.UNDEFINED
+    }
+    assert defaults[CONF_GATEWAY_ID] == MOCK_GATEWAY_ID
+    assert defaults[CONF_API_SECRET] == MOCK_API_SECRET
+
+
 async def test_credentials_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -388,7 +557,7 @@ async def test_subentry_add_recipient_with_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Dad (EFGH5678)"
-    assert result["data"] == {CONF_RECIPIENT: "EFGH5678"}
+    assert result["data"] == {CONF_RECIPIENT: "EFGH5678", CONF_NAME: "Dad"}
     assert result["unique_id"] == "EFGH5678"
 
 
@@ -404,7 +573,7 @@ async def test_subentry_invalid_recipient_id(
     mock_send_message: AsyncMock,
     invalid_id: str,
 ) -> None:
-    """Test subentry flow rejects invalid Threema ID via schema validation."""
+    """Test subentry flow rejects invalid Threema ID with an inline form error."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -414,11 +583,12 @@ async def test_subentry_invalid_recipient_id(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    with pytest.raises(InvalidData):
-        await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            user_input={CONF_RECIPIENT: invalid_id},
-        )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: invalid_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_RECIPIENT: "invalid_recipient_id"}
 
 
 async def test_subentry_duplicate_recipient(

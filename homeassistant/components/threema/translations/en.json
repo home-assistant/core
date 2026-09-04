@@ -10,6 +10,7 @@
             "invalid_auth": "Invalid authentication",
             "invalid_gateway_id": "Gateway ID must be 8 characters long and start with *.",
             "invalid_key": "Key must be a 64-character hex string (32 bytes).",
+            "key_mismatch": "The public key does not match the private key.",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -17,14 +18,16 @@
                 "data": {
                     "api_secret": "API secret",
                     "gateway_id": "Gateway ID",
-                    "private_key": "Private key (optional, enables E2E encryption)"
+                    "private_key": "Private key (optional, enables E2E encryption)",
+                    "public_key": "Public key to verify against (optional)"
                 },
                 "data_description": {
                     "api_secret": "Secret you received from Threema",
                     "gateway_id": "ID of your Gateway, including '*', e.g.: *ABCD123",
-                    "private_key": "Private key as hex string (64 characters). Leave empty for simple (non-E2E) mode."
+                    "private_key": "Private key as hex string (64 characters). A 'private:' prefix, as used by Threema's key export tools, is accepted and stripped automatically. Leave empty for simple (non-E2E) mode.",
+                    "public_key": "Never stored \u2014 only checked once against the private key above to catch copy-paste mistakes. Paste the public key you registered at gateway.threema.ch (a 'public:' prefix is accepted)."
                 },
-                "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch.",
+                "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch. Threema enables end-to-end mode for a Gateway ID manually after you register a public key, which can take a few days \u2014 so you may well be completing this step long after the keys were generated.",
                 "title": "Gateway credentials"
             },
             "reauth_confirm": {

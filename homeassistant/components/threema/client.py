@@ -181,3 +181,9 @@ def generate_key_pair() -> tuple[str, str]:
     """
     private_key = nacl.public.PrivateKey.generate()
     return private_key.encode().hex(), private_key.public_key.encode().hex()
+
+
+def derive_public_key(private_key_hex: str) -> str:
+    """Derive the hex-encoded public key matching a hex-encoded private key."""
+    private_key = nacl.public.PrivateKey(bytes.fromhex(private_key_hex))
+    return private_key.public_key.encode().hex()
