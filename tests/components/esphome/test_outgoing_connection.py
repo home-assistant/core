@@ -1,11 +1,13 @@
 """Tests for device-initiated outgoing connections."""
 
+import asyncio
 from unittest.mock import MagicMock, patch
 
 from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
+from homeassistant.components.esphome.manager import ESPHomeManager
 from homeassistant.components.esphome.outgoing_connection import (
     async_register_outgoing_target,
 )
@@ -168,25 +170,28 @@ async def test_outgoing_connection_register_error_does_not_fail_setup(
     assert "Could not set up dial-in routing" in caplog.text
 
 
-async def test_outgoing_connection_route_removed_via_async_on_unload(
+async def test_outgoing_connection_route_removed_on_failed_setup(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
     mock_outgoing_connection_server: MagicMock,
 ) -> None:
-    """The route uses async_on_unload so a failed or cancelled setup drains it.
+    """A setup that fails after the route is registered drains it.
 
-    async_on_unload runs on failed and cancelled setups, unlike the loaded-only
-    cleanup path; registering there is what keeps a partial setup from leaking
-    the route and, on a single-entry install, the bound port.
+    Registration is the last step of async_start that can raise; a failure
+    after it is the Bluetooth scanner wait being cancelled.
     """
     entry = _make_entry()
     entry.add_to_hass(hass)
-    with patch.object(
-        entry, "async_on_unload", wraps=entry.async_on_unload
-    ) as async_on_unload:
-        await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
-        await hass.async_block_till_done()
+    real_start = ESPHomeManager.async_start
 
-    unregister = mock_outgoing_connection_server.register.return_value
-    assert unregister in [call.args[0] for call in async_on_unload.call_args_list]
+    async def start_then_cancel(self: ESPHomeManager) -> None:
+        await real_start(self)
+        raise asyncio.CancelledError
+
+    with patch.object(ESPHomeManager, "async_start", start_then_cancel):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    mock_outgoing_connection_server.register.assert_called_once()
+    mock_outgoing_connection_server.register.return_value.assert_called_once()
