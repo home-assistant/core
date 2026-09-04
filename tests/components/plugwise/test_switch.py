@@ -23,11 +23,11 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize("platforms", [(SWITCH_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_switch_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -110,11 +110,11 @@ async def test_adam_climate_switch_negative_testing(
     )
 
 
+@pytest.mark.usefixtures("mock_stretch")
 @pytest.mark.parametrize("platforms", [(SWITCH_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_stretch_switch_snapshot(
     hass: HomeAssistant,
-    mock_stretch: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -161,10 +161,10 @@ async def test_stretch_switch_changes(
     )
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 async def test_unique_id_migration_plug_relay(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_smile_adam: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unique ID migration of -plugs to -relay."""

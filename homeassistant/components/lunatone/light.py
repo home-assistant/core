@@ -97,7 +97,7 @@ class LunatoneLight(
         assert self.unique_id
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self._device.name,
+            name=self._device.data.name,
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hass,
                 (

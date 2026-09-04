@@ -302,6 +302,7 @@ async def test_set_config_parameter(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -800,6 +801,7 @@ async def test_bulk_set_config_parameters(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -943,6 +945,7 @@ async def test_refresh_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
@@ -1075,6 +1078,7 @@ async def test_set_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1385,6 +1389,7 @@ async def test_multicast_set_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1760,6 +1765,7 @@ async def test_ping(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
