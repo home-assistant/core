@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
@@ -47,6 +48,30 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
     value_fn: Callable[[HeatPump], StateType]
+    # Whether the heat pump supports this sensor at all. Entities are only created
+    # during setup, so a sensor whose value_fn can return None on a heat pump that
+    # does support it would otherwise never appear once a value does arrive.
+    supported_fn: Callable[[HeatPump], bool] | None = None
+
+
+def _is_supported(
+    entity_description: WeHeatSensorEntityDescription, heat_pump: HeatPump
+) -> bool:
+    """Return whether the heat pump reports the value behind this sensor."""
+    if entity_description.supported_fn is not None:
+        return entity_description.supported_fn(heat_pump)
+    return entity_description.value_fn(heat_pump) is not None
+
+
+def _dhw_target_temperature(status: HeatPump) -> float | None:
+    """Return the DHW target temperature, if the heat pump has one.
+
+    A heat pump with DHW control off reports a target of zero, which is how it
+    says there is no target: zero is not a temperature it would ever aim for,
+    since that would freeze the vessel.
+    """
+    target = status.dhw_target_temperature
+    return target or None
 
 
 SENSORS = [
@@ -110,6 +135,15 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
         value_fn=lambda status: status.air_inlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="air_outlet_temperature",
+        key="air_outlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.air_outlet_temperature,
     ),
     WeHeatSensorEntityDescription(
         translation_key="thermostat_water_setpoint",
@@ -203,6 +237,31 @@ DHW_SENSORS = [
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         value_fn=lambda status: status.dhw_flow_volume,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_target_temperature",
+        key="dhw_target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        supported_fn=lambda status: status.dhw_target_temperature is not None,
+        value_fn=_dhw_target_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_control_method",
+        key="dhw_control_method",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=[method.name.lower() for method in HeatPump.DhwControlMethod],
+        supported_fn=lambda status: status.dhw_control_method_code is not None,
+        value_fn=(
+            lambda status: (
+                status.dhw_control_method.name.lower()
+                if status.dhw_control_method is not None
+                else None
+            )
+        ),
+    ),
 ]
 
 ENERGY_SENSORS = [
@@ -213,6 +272,14 @@ ENERGY_SENSORS = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_total,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_indoor_unit",
+        key="electricity_used_indoor_unit",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_indoor_unit,
     ),
     WeHeatSensorEntityDescription(
         translation_key="energy_output",
@@ -316,7 +383,7 @@ async def async_setup_entry(
                 entity_description,
             )
             for entity_description in SENSORS
-            if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
+            if _is_supported(entity_description, weheatdata.data_coordinator.data)
         )
         if weheatdata.heat_pump_info.has_dhw:
             entities.extend(
@@ -326,8 +393,7 @@ async def async_setup_entry(
                     entity_description,
                 )
                 for entity_description in DHW_SENSORS
-                if entity_description.value_fn(weheatdata.data_coordinator.data)
-                is not None
+                if _is_supported(entity_description, weheatdata.data_coordinator.data)
             )
             entities.extend(
                 WeheatHeatPumpSensor(
@@ -336,8 +402,7 @@ async def async_setup_entry(
                     entity_description,
                 )
                 for entity_description in DHW_ENERGY_SENSORS
-                if entity_description.value_fn(weheatdata.energy_coordinator.data)
-                is not None
+                if _is_supported(entity_description, weheatdata.energy_coordinator.data)
             )
         entities.extend(
             WeheatHeatPumpSensor(
@@ -346,8 +411,7 @@ async def async_setup_entry(
                 entity_description,
             )
             for entity_description in ENERGY_SENSORS
-            if entity_description.value_fn(weheatdata.energy_coordinator.data)
-            is not None
+            if _is_supported(entity_description, weheatdata.energy_coordinator.data)
         )
 
     async_add_entities(entities)
