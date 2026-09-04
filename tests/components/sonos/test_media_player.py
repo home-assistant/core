@@ -1824,6 +1824,54 @@ async def test_settle_poll_failure_keeps_last_position(
     assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
 
 
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_position_settles_after_resume(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test a transient 0:00 reported during a resume is settled to the truth."""
+    entity_id = "media_player.zone_a"
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Consume the initial settle poll.
+    with freeze_time("2024-01-01T12:00:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Resume: while the stream rebuffers the speaker briefly reports 0:00,
+    # which the forced state-change poll captures.
+    resuming_track_info = current_track_info.copy()
+    resuming_track_info["position"] = "00:00:00"
+    soco.get_current_track_info.return_value = resuming_track_info
+    paused_event = SonosMockEvent(soco, soco.avTransport, media_event.variables.copy())
+    paused_event.variables["transport_state"] = "PAUSED_PLAYBACK"
+    with freeze_time("2024-01-01T12:00:10Z"):
+        soco.avTransport.subscribe.return_value.callback(paused_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    playing_event = SonosMockEvent(soco, soco.avTransport, media_event.variables.copy())
+    with freeze_time("2024-01-01T12:00:12Z"):
+        soco.avTransport.subscribe.return_value.callback(playing_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 0
+
+    # Once the transition settles, the speaker reports the real clock again
+    # and the settle poll repairs the entity.
+    settled_track_info = current_track_info.copy()
+    settled_track_info["position"] = "00:00:44"
+    soco.get_current_track_info.return_value = settled_track_info
+    with freeze_time("2024-01-01T12:00:14Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 44
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
 @pytest.mark.parametrize(
     ("track_info", "event_variables"),
     [

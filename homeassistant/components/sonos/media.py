@@ -179,9 +179,10 @@ class SonosMedia:
         audio_source = self.soco.music_source_from_uri(track_uri)
 
         self.set_basic_track_info(update_position=state_changed or track_changed)
-        if track_changed:
+        if state_changed or track_changed:
             # The poll above can race the transition and return the previous
-            # track's clock; re-poll once the transition has settled so a
+            # track's clock — or, on a resume, a transient 0:00 while the
+            # stream rebuffers; re-poll once the transition has settled so a
             # stale snapshot cannot stick.
             self.hass.loop.call_soon_threadsafe(self._async_schedule_settle_poll)
 
