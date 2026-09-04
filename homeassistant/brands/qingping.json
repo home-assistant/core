@@ -1,0 +1,5 @@
+{
+  "domain": "qingping",
+  "name": "Qingping",
+  "integrations": ["qingping", "qingping_mqtt"]
+}
