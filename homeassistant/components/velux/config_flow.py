@@ -7,7 +7,7 @@ from pyvlx import PyVLX, PyVLXException
 from pyvlx.discovery import sanitize_hostname
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -137,14 +137,18 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         If no, it returns False.
         """
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == host and entry.unique_id is None:
+            if (
+                entry.data[CONF_HOST] == host
+                and entry.unique_id is None
+                and entry.state is ConfigEntryState.LOADED
+            ):
                 LOGGER.info(
                     "Config entry for host %s exists without unique_id, updating entry",
                     host,
                 )
                 self.hass.config_entries.async_update_entry(
                     entry=entry,
-                    unique_id=entry.data.get(CONF_NAME),
+                    unique_id=self.discovery_data[CONF_NAME],
                     data={**entry.data, **self.discovery_data},
                 )
                 return True

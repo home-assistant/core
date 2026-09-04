@@ -435,6 +435,28 @@ async def test_dhcp_discover_unique_id(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_discover_unique_id(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test zeroconf discovery updates a loaded entry without a unique ID."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.unique_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.unique_id == "VELUX_KLF_ABCD"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_not_loaded(
     hass: HomeAssistant, mock_pyvlx: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
