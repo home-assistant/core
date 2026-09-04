@@ -8,7 +8,7 @@ from types import ModuleType
 import pytest
 
 from homeassistant.components.modbus import get_hub
-from homeassistant.components.modbus.modbus import DATA_MODBUS_HUBS
+from homeassistant.components.modbus.const import DATA_MODBUS_HUBS
 from homeassistant.core import HomeAssistant
 
 
