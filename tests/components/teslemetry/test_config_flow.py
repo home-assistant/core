@@ -24,12 +24,14 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.teslemetry.config_flow import _cloud_energy_site
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -1393,3 +1395,99 @@ async def test_rsa_key_load_failure_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def _setup_paired_account(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an account whose battery site is already paired for local control."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_updates_credentials_and_schedules_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfiguring a paired site updates its credentials and reloads the entry."""
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    new_host = "192.168.1.50"
+
+    client = _mock_powerwall_client()
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
+            return_value=client,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["step_id"] == "credentials"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_HOST: new_host, CONF_PASSWORD: "wxyz9"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    subentry = entry.subentries[subentry_id]
+    assert subentry.data[CONF_HOST] == new_host
+    assert subentry.data[CONF_PASSWORD] == "wxyz9"
+    # The subentry-change reload listener fires only on membership changes, so the
+    # step must schedule the reload itself for the new credentials to take effect.
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_reconfigure_aborts_when_entry_not_loaded(hass: HomeAssistant) -> None:
+    """Reconfigure aborts when the account entry is not loaded."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_aborts_when_site_not_resolved(hass: HomeAssistant) -> None:
+    """Reconfigure aborts when no resolved energy site matches the subentry."""
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    # Drop the resolved sites so the subentry matches no runtime energy site.
+    entry.runtime_data.energysites = []
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfigure_unwraps_paired_router_to_cloud_api(
+    hass: HomeAssistant,
+) -> None:
+    """Pairing a paired site must target its cloud secondary, not the local gateway."""
+    entry = await _setup_paired_account(hass)
+    energy_data = entry.runtime_data.energysites[0]
+
+    # A paired site routes local-first, so its api is a router over the cloud site.
+    assert isinstance(energy_data.api, EnergySiteRouter)
+    assert _cloud_energy_site(energy_data) is energy_data.api.secondary
+    assert _cloud_energy_site(energy_data) is not energy_data.api.primary

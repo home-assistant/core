@@ -51,7 +51,8 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
-        "no_energy_sites": "No energy sites on your Teslemetry account are available for local control. This may be because they lack a Powerwall or have already been added."
+        "no_energy_sites": "No energy sites on your Teslemetry account are available for local control. This may be because they lack a Powerwall or have already been added.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Energy site",
       "error": {
@@ -62,6 +63,7 @@
         "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
       },
       "initiate_flow": {
+        "reconfigure": "Reconfigure energy site",
         "user": "Add local energy site"
       },
       "step": {
