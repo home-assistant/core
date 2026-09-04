@@ -1,0 +1,115 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: done
+    comment: >-
+      All config flow tests should end in CREATE_ENTRY to prove the flow recovers
+      from errors. To be addressed in a follow-up.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide additional conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide additional triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: >-
+      Turning a climate entity on or off is an action, so the exemption does not
+      apply. Failures need to raise HomeAssistantError.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: todo
+    comment: >-
+      CoolmasterEntity._handle_coordinator_update indexes
+      coordinator.data[self._unit_id] directly, so a unit that disappears from an
+      otherwise successful poll raises KeyError instead of going unavailable. The
+      unit should become a property and available should check that the unit id is
+      still in the coordinator data.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require authentication.
+  test-coverage:
+    status: todo
+    comment: >-
+      The platform tests should use snapshot_platform. The sensor tests should not
+      touch the coordinator directly or call async_update_entity, but advance time
+      to trigger an update naturally.
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: todo
+    comment: Blocked on the discovery rule.
+  discovery:
+    status: todo
+    comment: >-
+      The CoolMasterNet supports SSDP, but it is off by default and enabling it is
+      harder than just adding the device. DHCP discovery on the Cool Control Ltd
+      OUI 28:3B:96 is the more promising route.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class:
+    status: todo
+    comment: >-
+      The error code sensor should become an enum device class exposing translated
+      error states instead of the raw error code string.
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices:
+    status: todo
+    comment: >-
+      Devices can only be removed manually through
+      async_remove_config_entry_device. Automatic removal of units missing from a
+      poll is not implemented. A unit change in a VRF system is rare, so this has
+      been low priority.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration does not use a web session.
+  strict-typing: todo
