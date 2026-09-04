@@ -539,11 +539,7 @@ async def test_reload_on_subentry_data_change(
 async def test_no_reload_on_entry_title_change(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test the entry is not reloaded when only the entry's own title changes.
-
-    The listener only cares about subentries, so an entry-level write that
-    leaves subentries untouched must not reload, same as a token refresh.
-    """
+    """Test the entry is not reloaded when only the entry's own title changes."""
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)

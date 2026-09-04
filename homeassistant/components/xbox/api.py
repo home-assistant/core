@@ -48,10 +48,7 @@ class AsyncConfigEntryAuth(AuthenticationManager):
                     translation_key="request_exception",
                 ) from e
 
-        # The token in the config entry can also be replaced without the entry
-        # being reloaded, most notably when a reauth flow completes. Re-read it
-        # on every call so a token written elsewhere is picked up too, instead
-        # of continuing to use the one captured when this object was created.
+        # A reauth can replace the token without the entry being reloaded.
         self.oauth = self._get_oauth_token()
 
         # This will skip the OAuth refresh and only refresh User and XSTS tokens
