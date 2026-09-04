@@ -122,13 +122,20 @@ class OpenEVSESelect(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SelectEnt
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
         if self._update_task is None or self._update_task.done():
-            self._update_task = self.hass.async_create_task(
-                self._async_update_and_write_ha_state()
+            self._update_task = (
+                self.coordinator.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_update_and_write_ha_state(),
+                    name=f"{self.entity_id} update override state",
+                )
             )
 
     async def _async_update_and_write_ha_state(self) -> None:
         """Fetch updated option and write HA state."""
-        await self._async_update_current_option()
+        try:
+            await self._async_update_current_option()
+        except HomeAssistantError:
+            self._attr_current_option = None
         self.async_write_ha_state()
 
     @override
