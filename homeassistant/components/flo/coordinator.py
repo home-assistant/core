@@ -19,6 +19,14 @@ from .const import DOMAIN, LOGGER
 type FloConfigEntry = ConfigEntry[FloRuntimeData]
 
 
+def _event_sort_key(event: dict[str, Any]) -> datetime:
+    """Return a comparable timestamp for a Flo Detect event."""
+    parsed = dt_util.parse_datetime(
+        event.get("endTime") or event.get("startTime") or ""
+    )
+    return parsed or dt_util.utc_from_timestamp(0)
+
+
 @dataclass
 class FloRuntimeData:
     """Flo runtime data."""
@@ -167,7 +175,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         items = self._events.get("items") or []
         if not items:
             return None
-        return items[0]
+        return max(items, key=_event_sort_key)
 
     @property
     def firmware_version(self) -> str:

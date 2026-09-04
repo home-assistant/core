@@ -5,15 +5,6 @@
   },
   "items": [
     {
-      "id": "evt-001",
-      "macAddress": "111111111111",
-      "startTime": "2026-07-12T10:12:03-04:00",
-      "endTime": "2026-07-12T10:14:41-04:00",
-      "gallonsConsumed": 2.4,
-      "durationSeconds": 158,
-      "fixtureType": "faucet"
-    },
-    {
       "id": "evt-002",
       "macAddress": "111111111111",
       "startTime": "2026-07-12T09:41:10-04:00",
@@ -21,6 +12,15 @@
       "gallonsConsumed": 14.8,
       "durationSeconds": 432,
       "fixtureType": "shower"
+    },
+    {
+      "id": "evt-001",
+      "macAddress": "111111111111",
+      "startTime": "2026-07-12T10:12:03-04:00",
+      "endTime": "2026-07-12T10:14:41-04:00",
+      "gallonsConsumed": 2.4,
+      "durationSeconds": 158,
+      "fixtureType": "faucet"
     }
   ]
 }
