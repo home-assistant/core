@@ -1,4 +1,33 @@
 # serializer version: 1
+# name: test_knx_get_entity_link_schema[switch]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'switch',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_expose_config
   dict({
     'id': 1,
