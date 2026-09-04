@@ -1370,6 +1370,33 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("object", schema, valid_selections, invalid_selections)
 
 
+@pytest.mark.parametrize(
+    "default",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(False, id="false"),
+        pytest.param("", id="empty-string"),
+        pytest.param([], id="empty-list"),
+        pytest.param({}, id="empty-dict"),
+    ],
+)
+def test_object_selector_field_default(default: object) -> None:
+    """Test object selector field default."""
+    validated = selector.validate_selector(
+        {
+            "object": {
+                "fields": {
+                    "field": {
+                        "selector": {"text": {}},
+                        "default": default,
+                    }
+                }
+            }
+        }
+    )
+    assert validated["object"]["fields"]["field"]["default"] == default
+
+
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
@@ -1384,6 +1411,7 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
                 "selector": selector.NumberSelector(
                     selector.NumberSelectorConfig(min=0, max=100)
                 ),
+                "default": 0,
             },
         },
         "multiple": True,
