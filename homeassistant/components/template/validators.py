@@ -463,3 +463,25 @@ def check_conditions(
         )
 
     return condition_result
+
+
+def inclusive_group(name: str, optional: str, *required: str) -> Callable[[dict], dict]:
+    """Validate an inclusive group of configuration options, with 1 optional option.
+
+    The optional member requires all required options, however the required options
+    do not require the optional option.
+    """
+    _all = {optional, *required}
+    _required = set(required)
+
+    def verify(obj: dict) -> dict:
+        options = set(obj.keys())
+        if not (common := options.intersection(_all)) or common in (_required, _all):
+            return obj
+
+        missing = _required - common
+        raise vol.Invalid(
+            f"Some required option(s) are missing from inclusive group '{name}', expected missing options: {', '.join(missing)}."
+        )
+
+    return verify
