@@ -130,7 +130,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _is_already_configured_without_unique_id(self, host: str) -> bool:
+    def _is_already_configured_without_unique_id(self) -> bool:
         """Checks if a config entry already exists for the given host without a unique_id configured.
 
         If yes, it updates the entry with the unique_id and discovery data and returns True.
@@ -138,13 +138,13 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
-                entry.data[CONF_HOST] == host
+                entry.data[CONF_HOST] == self.discovery_data[CONF_HOST]
                 and entry.unique_id is None
                 and entry.state is ConfigEntryState.LOADED
             ):
                 LOGGER.info(
                     "Config entry for host %s exists without unique_id, updating entry",
-                    host,
+                    self.discovery_data[CONF_HOST],
                 )
                 self.hass.config_entries.async_update_entry(
                     entry=entry,
@@ -172,9 +172,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         # Abort if config_entry already exists without unique_id configured.
-        if self._is_already_configured_without_unique_id(
-            self.discovery_data[CONF_HOST]
-        ):
+        if self._is_already_configured_without_unique_id():
             return self.async_abort(reason="already_configured")
         self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
         return await self.async_step_discovery_confirm()
@@ -193,9 +191,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: self.discovery_data[CONF_HOST]}
         )
         # Abort if config_entry already exists without unique_id configured.
-        if self._is_already_configured_without_unique_id(
-            self.discovery_data[CONF_HOST]
-        ):
+        if self._is_already_configured_without_unique_id():
             return self.async_abort(reason="already_configured")
         self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
         return await self.async_step_discovery_confirm()
