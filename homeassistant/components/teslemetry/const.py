@@ -12,15 +12,12 @@ AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
 
-# Config subentry type holding a vehicle's pairing config
 SUBENTRY_TYPE_VEHICLE = "vehicle"
 
-# Vehicle subentry data key. A vehicle subentry also stores CONF_ADDRESS (from
-# homeassistant.const) once paired; its presence enables Bluetooth-first routing.
+# A vehicle subentry's CONF_ADDRESS (added once paired) is what enables Bluetooth-first routing.
 CONF_VIN = "vin"
 
-# File holding the integration's EC private key used to sign BLE commands. The
-# matching public/virtual key is what the user adds to the vehicle when pairing.
+# EC private key that signs BLE commands; its public/virtual key is what the user pairs to the vehicle.
 VEHICLE_KEY_FILE = "tesla_vehicle.key"
 
 BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"

@@ -194,8 +194,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
             if CONF_VIN in subentry.data
         }
-        # The account's vehicles come from runtime data; a paired vehicle uses
-        # the same existing device, so no new device is created here.
+        # A paired vehicle reuses the existing device, so no new device is created here.
         choices = {
             vehicle.vin: vehicle.device["name"] or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
@@ -245,8 +244,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # The advertised BLE name is a hash of the VIN; match on its prefix.
             expected = parent.get_name(self._vin)[:17]
             device = None
-            # The name is only in scan responses, so an AUTO-mode scanner that
-            # has not swept recently may not have it cached yet.
+            # The name is only in scan responses, so an active scan may be needed to see it.
             await async_request_active_scan(self.hass)
             for info in async_discovered_service_info(self.hass, connectable=True):
                 if info.name and info.name.startswith(expected):
@@ -257,9 +255,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if device is None:
                 errors["base"] = "device_not_found"
             else:
-                # Keep the default keepalive here (unlike command routing): it
-                # holds the link through the on-screen key-approval wait so the
-                # whitelist reply is not lost to a link-supervision drop.
+                # Keep the default keepalive (unlike command routing) so the link survives the on-screen key-approval wait.
                 self._vehicle = parent.vehicles.createBluetooth(
                     self._vin, device=device
                 )
@@ -312,10 +308,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         """Add the virtual key to the vehicle while showing pairing progress."""
         if self._pair_task is None:
             assert self._vehicle is not None
-            # pair() writes the whitelist op exactly once and confirms completion
-            # by reply or key-state polling, so it is never re-sent (which would
-            # re-prompt the user). It can take minutes, so run it as a progress
-            # task rather than blocking the flow request.
+            # pair() can take minutes, so run it as a progress task rather than blocking the flow.
             self._pair_task = self.hass.async_create_task(self._vehicle.pair())
 
         if not self._pair_task.done():
@@ -331,32 +324,27 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         try:
             task.result()
         except (BluetoothTransportError, BleakError) as err:
-            # The link dropped before the key could be confirmed - a transport
-            # failure, not the user failing to approve in time.
+            # Transport failure (link dropped), not the user failing to approve in time.
             LOGGER.debug("Bluetooth transport failed during pairing: %s", err)
             self._pair_error = {"base": "cannot_connect"}
             return self.async_show_progress_done(next_step_id="instructions")
         except (BluetoothTimeout, TimeoutError) as err:
-            # The key was sent but the vehicle never confirmed - the user has not
-            # approved it yet.
+            # The key was sent but never confirmed - the user has not approved it yet.
             LOGGER.debug("Bluetooth pairing timed out: %s", err)
             self._pair_error = {"base": "timeout"}
             return self.async_show_progress_done(next_step_id="instructions")
         except WhitelistOperationAttemptingToAddExistingKey as err:
-            # The key is already on the whitelist, so pairing has succeeded: the
-            # vehicle reports this once the user approves a key whose earlier
-            # add attempt went unconfirmed. Re-handshake to confirm it.
+            # This exception means the key is already whitelisted, so pairing succeeded; fall through to re-handshake.
             LOGGER.debug("Virtual key is already on the whitelist: %s", err)
         except TeslaFleetError as err:
-            # The vehicle rejected the key (e.g. whitelist full, denied on the
-            # screen, or valet mode) - not a timeout the user can wait out.
+            # The vehicle rejected the key (whitelist full, denied, or valet mode) - not a waitable timeout.
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_finish(self) -> SubentryFlowResult:
-        """Persist the paired BLE address, deferring the reload to the subentry-change listener so setup sees the committed address."""
+        """Persist the paired BLE address and finish the subentry."""
         assert self._address is not None
         assert self._vin is not None
         await self._async_disconnect()

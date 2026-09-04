@@ -284,8 +284,7 @@ def _setup_subentry_change_reload(
         current = set(updated_entry.subentries)
         if known.symmetric_difference(current):
             hass.config_entries.async_schedule_reload(updated_entry.entry_id)
-        # Track the latest set so further updates before the reload runs (e.g. a
-        # token refresh) do not re-schedule it off the same change.
+        # Track the latest set so a later update does not re-schedule off the same change.
         known = current
 
     entry.async_on_unload(entry.add_update_listener(_handle_update))
@@ -314,10 +313,7 @@ async def _async_resolve_vehicle_api(
         return cloud_vehicle
 
     parent = await async_get_ble_parent(hass)
-    # verify + raise_unconfirmed=False so an ambiguous BLE timeout resolves as a
-    # verified or best-effort success instead of re-sending to cloud, which
-    # would double-execute a non-idempotent command. keepalive_interval=None so
-    # command-only use does not hold the link open and keep the car awake.
+    # raise_unconfirmed=False avoids re-sending a non-idempotent command to cloud; keepalive_interval=None avoids holding the link open and keeping the car awake.
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
         confirmation="verify",
@@ -331,9 +327,7 @@ async def _async_resolve_vehicle_api(
         device = async_ble_device_from_address(hass, address, connectable=True)
         if device is None:
             return False
-        # The library does not pass establish_connection a ble_device_callback,
-        # so nothing else refreshes the handle; do it here, the one moment it is
-        # known fresh and a connect may immediately follow.
+        # The library never refreshes the BLE handle, so set it here while it is known fresh.
         bluetooth_vehicle.set_device(device)
         return True
 
@@ -469,9 +463,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
-            # Route commands through Bluetooth first when the user has added this
-            # vehicle over Bluetooth; otherwise this returns the plain cloud
-            # Vehicle.
             vehicle_api = await _async_resolve_vehicle_api(
                 hass,
                 entry,
@@ -734,9 +725,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
     """Unload Teslemetry Config."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
-        # Release any on-demand Bluetooth link a command opened so it is not left
-        # connected across a reload. Only once the platforms actually unloaded -
-        # otherwise the entry stays loaded and its backends must keep working.
+        # Release any on-demand Bluetooth link only after platforms unloaded, or the still-loaded entry's backends must keep working.
         for vehicle in entry.runtime_data.vehicles:
             if isinstance(vehicle.api, VehicleRouter):
                 try:
