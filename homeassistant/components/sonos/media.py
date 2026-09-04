@@ -84,6 +84,9 @@ class SonosMedia:
         self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
         self._position_settle_unsub: Callable[[], None] | None = None
+        # Bumped by async_cancel_settle_poll so a schedule queued from an
+        # in-flight executor job cannot re-arm the timer after cancellation.
+        self._settle_generation = 0
         self._newest_poll_at: datetime.datetime | None = None
 
     def clear(self) -> None:
@@ -185,7 +188,9 @@ class SonosMedia:
             # track's clock — or, on a resume, a transient 0:00 while the
             # stream rebuffers; re-poll once the transition has settled so a
             # stale snapshot cannot stick.
-            self.hass.loop.call_soon_threadsafe(self._async_schedule_settle_poll)
+            self.hass.loop.call_soon_threadsafe(
+                self._async_schedule_settle_poll, self._settle_generation
+            )
 
         if ct_md := evars["current_track_meta_data"]:
             if not self.image_url:
@@ -216,16 +221,21 @@ class SonosMedia:
         self.write_media_player_states()
 
     @callback
-    def _async_schedule_settle_poll(self) -> None:
-        """(Re)schedule the one-shot position poll after a track change."""
-        self.async_cancel_settle_poll()
+    def _async_schedule_settle_poll(self, generation: int) -> None:
+        """(Re)schedule the one-shot position poll after a transition."""
+        if generation != self._settle_generation:
+            # Cancelled (unload or offline) after this schedule was queued.
+            return
+        if self._position_settle_unsub is not None:
+            self._position_settle_unsub()
         self._position_settle_unsub = async_call_later(
             self.hass, POSITION_SETTLE_DELAY, self._async_settle_poll
         )
 
     @callback
     def async_cancel_settle_poll(self) -> None:
-        """Cancel a pending settle poll."""
+        """Cancel a pending settle poll and drop any queued (re)schedules."""
+        self._settle_generation += 1
         if self._position_settle_unsub is not None:
             self._position_settle_unsub()
             self._position_settle_unsub = None

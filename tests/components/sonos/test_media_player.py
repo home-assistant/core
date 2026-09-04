@@ -1872,6 +1872,26 @@ async def test_position_settles_after_resume(
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
+async def test_settle_poll_not_rearmed_after_cancellation(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a schedule queued before cancellation cannot re-arm the timer."""
+    media = list(config_entry.runtime_data.discovered.values())[0].media
+    # An executor job captures the generation, then teardown cancels before
+    # the queued schedule reaches the event loop.
+    stale_generation = media._settle_generation
+    media.async_cancel_settle_poll()
+    media._async_schedule_settle_poll(stale_generation)
+    assert media._position_settle_unsub is None
+    # A schedule queued after the cancellation is honored again.
+    media._async_schedule_settle_poll(media._settle_generation)
+    assert media._position_settle_unsub is not None
+    media.async_cancel_settle_poll()
+
+
 @pytest.mark.freeze_time("2024-01-01T12:00:00Z")
 async def test_out_of_order_poll_result_discarded(
     hass: HomeAssistant,
