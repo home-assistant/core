@@ -11,7 +11,7 @@ from .coordinator import (
     OpenAQConfigEntry,
     OpenAQDataUpdateCoordinator,
     OpenAQRuntimeData,
-    async_create_openaq_client,
+    create_openaq_client,
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -19,7 +19,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
     """Set up OpenAQ from a config entry."""
-    client = await async_create_openaq_client(hass, entry.data[CONF_API_KEY])
+    client = create_openaq_client(entry.data[CONF_API_KEY])
     client_lock = asyncio.Lock()
     coordinators: dict[str, OpenAQDataUpdateCoordinator] = {}
 

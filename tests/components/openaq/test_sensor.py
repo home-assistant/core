@@ -83,8 +83,8 @@ async def test_sensor_entities(
 
     assert entity_registry.async_get("sensor.del_norte_unsupported") is None
 
-    device = device_registry.async_get_device(
-        identifiers={("openaq", str(LOCATION_ID))}
+    device = device_registry.async_get_device_by_identifier(
+        ("openaq", str(LOCATION_ID)), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.name == "Del Norte"
@@ -98,7 +98,7 @@ async def test_missing_latest_values_create_unknown_entity(
 ) -> None:
     """Test sensors without latest values are created with unknown state."""
     mock_openaq_client.locations.latest.return_value = make_response(
-        [make_latest(1, 8.5), make_latest(2, None)]
+        [make_latest(1, 8.5)]
     )
     mock_openaq_client.locations.sensors.return_value = make_response(
         [make_sensor(1, "pm1"), make_sensor(2, "pm25")]

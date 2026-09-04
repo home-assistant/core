@@ -17,6 +17,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import OpenAQConfigEntry, OpenAQDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "pm1": SensorEntityDescription(
         key="pm1",
@@ -119,6 +121,9 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.location_id}_{entity_description.key}"
+        self._attr_native_unit_of_measurement = coordinator.data.sensor_metadata[
+            entity_description.key
+        ]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(coordinator.location_id))},
             name=coordinator.data.name,
@@ -130,9 +135,3 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.coordinator.data.measurements.get(self.entity_description.key)
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the native unit of measurement."""
-        return self.coordinator.data.sensor_metadata[self.entity_description.key]

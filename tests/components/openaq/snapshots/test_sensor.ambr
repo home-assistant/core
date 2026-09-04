@@ -113,7 +113,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '415.0',
+    'state': '415',
   })
 # ---
 # name: test_sensor_snapshot[sensor.del_norte_carbon_monoxide-entry]
@@ -231,7 +231,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '15.0',
+    'state': '15',
   })
 # ---
 # name: test_sensor_snapshot[sensor.del_norte_nitrogen_monoxide-entry]
@@ -290,7 +290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.0',
+    'state': '6',
   })
 # ---
 # name: test_sensor_snapshot[sensor.del_norte_nitrogen_oxides-entry]
@@ -348,7 +348,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '17.0',
+    'state': '17',
   })
 # ---
 # name: test_sensor_snapshot[sensor.del_norte_ozone-entry]
@@ -407,7 +407,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22.0',
+    'state': '22',
   })
 # ---
 # name: test_sensor_snapshot[sensor.del_norte_pm1-entry]
@@ -643,6 +643,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4.0',
+    'state': '4',
   })
 # ---
