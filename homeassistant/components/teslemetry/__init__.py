@@ -293,6 +293,11 @@ def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
     return None
 
 
+# Loading the BLE key raises OSError (I/O), ValueError (bad PEM), or
+# AssertionError (a valid PEM that is not an EC private key).
+_BLE_KEY_ERRORS: Final = (OSError, ValueError, AssertionError)
+
+
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -307,7 +312,7 @@ async def _async_resolve_vehicle_api(
     # A bad BLE key file for one vehicle must not tear down the whole entry.
     try:
         parent = await async_get_ble_parent(hass)
-    except (OSError, ValueError):
+    except _BLE_KEY_ERRORS:
         LOGGER.warning(
             "Failed to load the Bluetooth key for vehicle %s; "
             "falling back to cloud control",
