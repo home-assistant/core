@@ -17,8 +17,10 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -128,10 +130,13 @@ class SmLightEntity(SmEntity, LightEntity):
             effect_name: str = kwargs[ATTR_EFFECT]
             try:
                 idx = self.entity_description.effect_list.index(effect_name)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except ValueError:
-                _LOGGER.warning("Unknown effect: %s", effect_name)
-                return
+            except ValueError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_effect",
+                    translation_placeholders={"effect": effect_name},
+                ) from err
+
             payload.ultLedMode = AmbiEffect(idx)
         elif not self.is_on:
             payload.ultLedMode = AmbiEffect.WSULT_SOLID

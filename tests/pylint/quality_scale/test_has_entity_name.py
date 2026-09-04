@@ -5,7 +5,6 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.quality_scale.has_entity_name import (
     HasEntityNameChecker,
 )
@@ -13,7 +12,7 @@ from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cach
 import pytest
 import yaml
 
-from tests.pylint import assert_adds_messages, assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="has_entity_name_checker")
@@ -145,10 +144,8 @@ def test_handled(
     _create_quality_scale(integration_dir, {"has-entity-name": "done"})
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_ancestor_class_level(
@@ -180,10 +177,8 @@ class MySensor(TestIntegrationBaseEntity):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_ancestor_self_assign(
@@ -216,10 +211,8 @@ class MySensor(TestIntegrationBaseEntity):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_missing_fires(
@@ -242,10 +235,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -333,10 +324,8 @@ def test_conditional_self_assignment_fires(
         for cls in root_node.nodes_of_class(nodes.ClassDef)
         if cls.name == class_name
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_explicit_false_fires(
@@ -359,10 +348,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_generic_subscript_base_sets_flag(
@@ -394,10 +381,8 @@ class MySensor(TestIntegrationGenericBase[int]):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_two_level_subscript_chain(
@@ -438,10 +423,8 @@ class MyLight(TestIntegrationLightBase):
         file_name="light.py",
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_entity_description_fallback(
@@ -471,10 +454,8 @@ class MyEntity(Entity):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_entity_description_subscripted_annotation(
@@ -504,10 +485,8 @@ class MyEntity[T](Entity):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_entity_description_without_flag_still_fires(
@@ -542,10 +521,8 @@ class MyEntity(Entity):
         for cls in root_node.nodes_of_class(nodes.ClassDef)
         if cls.name == "MyEntity"
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_entity_description_set_in_ancestor(
@@ -585,10 +562,8 @@ class MySensor(TestIntegrationBaseEntity):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_mixin_subclassed_in_same_module_ignored(
@@ -613,10 +588,8 @@ class ActualEntity(MyClimateMixin):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_subclassed_via_subscript_ignored(
@@ -641,10 +614,8 @@ class ConcreteEntity(GenericBase[int]):
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_leaf_class_still_fires(
@@ -674,10 +645,8 @@ class SomethingUnrelated:
         for cls in root_node.nodes_of_class(nodes.ClassDef)
         if cls.name == "LonelySensor"
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_non_entity_class_ignored(
@@ -697,10 +666,8 @@ class NotAnEntity:
         integration_dir,
     )
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 def test_dict_status_done_fires(
@@ -726,10 +693,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -799,7 +764,5 @@ class MySensor(Entity):
 """
     root_node = _parse(code, integration_dir, module_name, file_name)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(has_entity_name_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, has_entity_name_checker, root_node)

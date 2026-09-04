@@ -531,8 +531,12 @@ async def test_devices_updated_on_refresh(
     assert config_entry.state is ConfigEntryState.LOADED
 
     for appliance in appliances[:2]:
-        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
-    assert not device_registry.async_get_device({(DOMAIN, appliances[2].ha_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance.ha_id), config_entry.entry_id
+        )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliances[2].ha_id), config_entry.entry_id
+    )
 
     client.get_home_appliances = AsyncMock(
         return_value=ArrayOfHomeAppliances(appliances[1:3]),
@@ -547,9 +551,13 @@ async def test_devices_updated_on_refresh(
         await client.add_events([HomeConnectApiError("error.key", "error description")])
         await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliances[0].ha_id), config_entry.entry_id
+    )
     for appliance in appliances[2:3]:
-        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance.ha_id), config_entry.entry_id
+        )
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)

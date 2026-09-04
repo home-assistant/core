@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -102,8 +103,8 @@ TILT_FEATURES = (
 
 MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        cover.ATTR_CURRENT_POSITION,
-        cover.ATTR_CURRENT_TILT_POSITION,
+        CoverEntityStateAttribute.CURRENT_POSITION,
+        CoverEntityStateAttribute.CURRENT_TILT_POSITION,
     }
 )
 

@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import NoboHubConfigEntry
 from .const import (
     ATTR_HARDWARE_VERSION,
-    ATTR_SERIAL,
     ATTR_SOFTWARE_VERSION,
     CONF_OVERRIDE_TYPE,
     DOMAIN,
@@ -32,8 +31,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
-
-    # Setup connection with hub
     hub = config_entry.runtime_data
 
     override_type = (
@@ -42,18 +39,40 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
-    entities: list[SelectEntity] = [
-        NoboProfileSelector(zone_id, hub) for zone_id in hub.zones
-    ]
-    entities.append(NoboGlobalSelector(hub, override_type))
-    async_add_entities(entities, True)
+    async_add_entities(
+        [NoboGlobalSelector(hass, hub, override_type, config_entry.entry_id)], True
+    )
+
+    known_zones: set[str] = set()
+
+    @callback
+    def _add_profiles(_hub: nobo) -> None:
+        """Add week-profile selectors for zones added to the hub."""
+        if hub.connected:
+            # Forget zones no longer on the hub so a removed-then-re-added zone
+            # (the hub reuses zone ids) is detected as new again. Skip while
+            # disconnected: a stale/empty snapshot would drop live zones and
+            # cause duplicate re-adds on reconnect.
+            known_zones.intersection_update(hub.zones)
+        new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
+        known_zones.update(new_zones)
+        async_add_entities(
+            (
+                NoboProfileSelector(hass, zone_id, hub, config_entry.entry_id)
+                for zone_id in new_zones
+            ),
+            True,
+        )
+
+    _add_profiles(hub)
+    hub.register_callback(_add_profiles)
+    config_entry.async_on_unload(lambda: hub.deregister_callback(_add_profiles))
 
 
 class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     """Global override selector for Nobø Ecohub."""
 
     _attr_translation_key = "global_override"
-    _attr_device_class = "nobo_hub__override"
     _modes = {
         nobo.API.OVERRIDE_MODE_NORMAL: "none",
         nobo.API.OVERRIDE_MODE_AWAY: "away",
@@ -63,9 +82,11 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     _attr_options = list(_modes.values())
     _attr_current_option: str | None = None
 
-    def __init__(self, hub: nobo, override_type) -> None:
+    def __init__(
+        self, hass: HomeAssistant, hub: nobo, override_type: str, entry_id: str
+    ) -> None:
         """Initialize the global override selector."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._attr_unique_id = hub.hub_serial
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
@@ -112,18 +133,21 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
     _attr_translation_key = "week_profile"
     _attr_current_option: str | None = None
 
-    def __init__(self, zone_id: str, hub: nobo) -> None:
+    def __init__(
+        self, hass: HomeAssistant, zone_id: str, hub: nobo, entry_id: str
+    ) -> None:
         """Initialize the week profile selector."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._profiles: dict[str, str] = {}
         self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
+        zone_name = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=hub.zones[zone_id][ATTR_NAME],
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            suggested_area=hub.zones[zone_id][ATTR_NAME],
+            name=zone_name,
+            via_device_id=self._hub_device_id,
+            suggested_area=zone_name,
         )
 
     @override
@@ -144,15 +168,18 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         """Fetch new state data for this zone."""
         self._read_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Available when the hub is connected and the zone still exists."""
+        return super().available and self._id in self._nobo.zones
+
     @callback
     @override
     def _read_state(self) -> None:
-        """Copy the current hub state onto the entity attributes."""
-        if self._id not in self._nobo.zones:
-            # Zone removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        """Read the current state from the hub. These are only local calls."""
+        if not self.available:
             return
-        self._attr_available = True
         self._profiles = {
             profile["week_profile_id"]: profile["name"].replace("\xa0", " ")
             for profile in self._nobo.week_profiles.values()

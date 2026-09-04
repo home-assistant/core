@@ -10,7 +10,7 @@ from indevolt_api import (
 )
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -30,13 +30,14 @@ RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Required("power"): vol.All(
             vol.Coerce(int),
-            vol.Range(min=0, max=2400),
+            vol.Range(min=0, max=10800),
         ),
     }
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Indevolt integration."""
 
     async def charge(call: ServiceCall) -> None:
@@ -146,7 +147,7 @@ async def _execute_realtime_action(
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
-    results: list[None | BaseException] = await asyncio.gather(
+    results: list[BaseException | None] = await asyncio.gather(
         *(
             coordinator.async_realtime_action(action, power, target_soc)
             for coordinator in coordinators

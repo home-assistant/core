@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -48,7 +48,7 @@ DEVICE_NUMBER_TYPES = (
         key="calibration_hum",
         translation_key="calibration_humidity",
         device_class=NumberDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         remote_key="humidity",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,

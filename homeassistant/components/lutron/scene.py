@@ -25,7 +25,9 @@ async def async_setup_entry(
     entry_data = config_entry.runtime_data
 
     async_add_entities(
-        LutronScene(area_name, keypad, device, entry_data.client)
+        LutronScene(
+            hass, area_name, keypad, device, entry_data.client, config_entry.entry_id
+        )
         for area_name, keypad, device, led in entry_data.scenes
     )
 
@@ -37,13 +39,17 @@ class LutronScene(LutronKeypad, Scene):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         keypad: Keypad,
         lutron_device: Button,
         controller: Lutron,
+        config_entry_id: str,
     ) -> None:
         """Initialize the scene/button."""
-        super().__init__(area_name, lutron_device, controller, keypad)
+        super().__init__(
+            hass, area_name, lutron_device, controller, keypad, config_entry_id
+        )
         self._attr_name = lutron_device.name
 
     @override

@@ -10,12 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfTime,
-)
+from homeassistant.const import UnitOfRatio, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -178,7 +173,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="hum",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: PERCENTAGE,
+        uom_fn=lambda _: UnitOfRatio.PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "hum"
         ),
@@ -198,7 +193,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: CONCENTRATION_PARTS_PER_MILLION,
+        uom_fn=lambda _: UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "co2"
         ),
@@ -218,7 +213,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: PERCENTAGE,
+        uom_fn=lambda _: UnitOfRatio.PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "battery"
         ),

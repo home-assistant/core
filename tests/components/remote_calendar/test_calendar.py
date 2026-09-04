@@ -1,6 +1,6 @@
 """Tests for calendar platform of Remote Calendar."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pathlib
 import textwrap
 
@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import (
@@ -210,6 +211,112 @@ async def test_api_date_event(
     # Overlap with event end
     events = await get_events("2007-07-09T00:00:00Z", "2007-07-11T00:00:00Z")
     assert len(events) == 1
+
+
+CANCELLED_EVENT_ICS = textwrap.dedent(
+    """\
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:Festival International de Jazz de Montreal
+    LOCATION:Montreal
+    DTSTART:20070628
+    DTEND:20070709
+    STATUS:CANCELLED
+    END:VEVENT
+    END:VCALENDAR
+    """
+)
+
+
+@respx.mock
+async def test_cancelled_event_is_not_returned(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    get_events: GetEventsFn,
+) -> None:
+    """Test that an event called off is not returned by the API."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=CANCELLED_EVENT_ICS)
+    )
+    await setup_integration(hass, config_entry)
+
+    events = await get_events("2007-06-28T00:00:00Z", "2007-07-10T00:00:00Z")
+
+    assert events == []
+
+
+@pytest.mark.freeze_time(datetime(2007, 6, 28, 12))
+@respx.mock
+async def test_cancelled_event_does_not_turn_the_entity_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an event called off is not picked up as the current event.
+
+    The event would be active at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=CANCELLED_EVENT_ICS)
+    )
+    await setup_integration(hass, config_entry)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
+CANCELLED_OCCURRENCE_ICS = textwrap.dedent(
+    """\
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:Daily series
+    UID:daily-series
+    DTSTART;VALUE=DATE:20261002
+    DTEND;VALUE=DATE:20261003
+    RRULE:FREQ=DAILY;COUNT=5
+    STATUS:CONFIRMED
+    END:VEVENT
+    BEGIN:VEVENT
+    SUMMARY:Daily series
+    UID:daily-series
+    RECURRENCE-ID;VALUE=DATE:20261003
+    DTSTART;VALUE=DATE:20261003
+    DTEND;VALUE=DATE:20261004
+    STATUS:CANCELLED
+    END:VEVENT
+    END:VCALENDAR
+    """
+)
+
+
+@respx.mock
+async def test_cancelled_occurrence_of_a_series_is_not_returned(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    get_events: GetEventsFn,
+) -> None:
+    """Test that only the cancelled occurrence of a recurring series is dropped.
+
+    The filtering has to happen after the series is expanded: dropping the
+    cancelled VEVENT before expansion would remove the override, and the RRULE
+    would then produce that day as an ordinary event again.
+    """
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=CANCELLED_OCCURRENCE_ICS)
+    )
+    await setup_integration(hass, config_entry)
+
+    events = await get_events("2026-10-01T00:00:00Z", "2026-10-08T00:00:00Z")
+
+    assert [event["start"] for event in events] == [
+        {"date": "2026-10-02"},
+        {"date": "2026-10-04"},
+        {"date": "2026-10-05"},
+        {"date": "2026-10-06"},
+    ]
 
 
 @pytest.mark.freeze_time(datetime(2007, 6, 28, 12))
@@ -530,3 +637,53 @@ async def test_event_edge_during_refresh_interval(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("message") == "Event Two"
+
+
+@respx.mock
+@pytest.mark.freeze_time("2026-05-18 06:00:00+00:00")
+async def test_coordinator_refresh_updates_upcoming_event_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a coordinator refresh updates the materialized upcoming event."""
+    original_calendar = textwrap.dedent(
+        """\
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:Wake up
+        DTSTART:20260518T064000
+        DTEND:20260518T065500
+        END:VEVENT
+        END:VCALENDAR
+        """
+    )
+    updated_calendar = textwrap.dedent(
+        """\
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:Wake up
+        DTSTART:20260519T080000
+        DTEND:20260519T081500
+        END:VEVENT
+        END:VCALENDAR
+        """
+    )
+    route = respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=original_calendar)
+    )
+    await setup_integration(hass, config_entry)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes.get("start_time") == "2026-05-18 06:40:00"
+
+    # Advance clock to trigger the next update interval
+    route.return_value = Response(status_code=200, text=updated_calendar)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes.get("start_time") == "2026-05-19 08:00:00"

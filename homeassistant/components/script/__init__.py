@@ -250,6 +250,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not script_entities:
             return
 
+        for script_entity in script_entities:
+            script_entity.async_set_context(service.context)
+
         await asyncio.wait(
             [
                 create_eager_task(script_entity.async_turn_off())

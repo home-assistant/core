@@ -8,7 +8,7 @@ from hole import HoleV5, HoleV6
 from hole.exceptions import HoleError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -42,15 +42,16 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
         config_entry: PiHoleConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
+        name = config_entry.title
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=config_entry.data[CONF_NAME],
+            name=name,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
         self._api = api
-        self._name = config_entry.data[CONF_NAME]
+        self._name = name
         self._host = config_entry.data[CONF_HOST]
 
     @override
