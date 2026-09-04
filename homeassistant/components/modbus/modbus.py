@@ -114,6 +114,20 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
+    if await _async_modbus_setup(hass, config):
+        return True
+
+    # Hubs are stored as they are created, so a failure part way through leaves
+    # unusable hubs behind. Drop them so their presence means they are usable.
+    hass.data.pop(DATA_MODBUS_HUBS, None)
+    return False
+
+
+async def _async_modbus_setup(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> bool:
+    """Set up the Modbus hubs and their platforms."""
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])

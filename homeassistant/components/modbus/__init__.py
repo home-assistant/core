@@ -44,9 +44,9 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
+    async_setup_services(hass)
+
     if DOMAIN not in config:
         return True
-
-    async_setup_services(hass)
 
     return await async_modbus_setup(hass, config)
