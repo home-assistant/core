@@ -9,14 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from . import (
-    OKOK_20_ADDRESS,
-    OKOK_20_SERVICE_INFO,
-    OKOK_C0_ADDRESS,
-    OKOK_C0_SERVICE_INFO,
-    OKOK_F0_ADDRESS,
-    OKOK_F0_SERVICE_INFO,
-)
+from . import OKOK_20_SERVICE_INFO, OKOK_C0_SERVICE_INFO, OKOK_F0_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -26,15 +19,15 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     ("mock_config_entry", "service_info"),
     [
         (
-            MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_ADDRESS),
+            MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_SERVICE_INFO.address),
             OKOK_F0_SERVICE_INFO,
         ),
         (
-            MockConfigEntry(domain=DOMAIN, unique_id=OKOK_20_ADDRESS),
+            MockConfigEntry(domain=DOMAIN, unique_id=OKOK_20_SERVICE_INFO.address),
             OKOK_20_SERVICE_INFO,
         ),
         (
-            MockConfigEntry(domain=DOMAIN, unique_id=OKOK_C0_ADDRESS),
+            MockConfigEntry(domain=DOMAIN, unique_id=OKOK_C0_SERVICE_INFO.address),
             OKOK_C0_SERVICE_INFO,
         ),
     ],
@@ -58,9 +51,9 @@ async def test_async_setup_entry_success(
 @pytest.mark.parametrize(
     "mock_config_entry",
     [
-        MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_ADDRESS),
-        MockConfigEntry(domain=DOMAIN, unique_id=OKOK_20_ADDRESS),
-        MockConfigEntry(domain=DOMAIN, unique_id=OKOK_C0_ADDRESS),
+        MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_SERVICE_INFO.address),
+        MockConfigEntry(domain=DOMAIN, unique_id=OKOK_20_SERVICE_INFO.address),
+        MockConfigEntry(domain=DOMAIN, unique_id=OKOK_C0_SERVICE_INFO.address),
     ],
 )
 async def test_async_unload_entry(
@@ -85,7 +78,7 @@ async def test_update_unique_id(
     """Test entity unique id migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=OKOK_F0_ADDRESS,
+        unique_id=OKOK_F0_SERVICE_INFO.address,
         version=1,
         minor_version=1,
     )
@@ -94,25 +87,25 @@ async def test_update_unique_id(
     weight_entity: er.RegistryEntry = entity_registry.async_get_or_create(
         domain=SENSOR_DOMAIN,
         platform=DOMAIN,
-        unique_id=f"{OKOK_F0_ADDRESS}-weight",
+        unique_id=f"{OKOK_F0_SERVICE_INFO.address}-weight",
         config_entry=config_entry,
     )
     battery_entity: er.RegistryEntry = entity_registry.async_get_or_create(
         domain=SENSOR_DOMAIN,
         platform=DOMAIN,
-        unique_id=f"{OKOK_F0_ADDRESS}-battery",
+        unique_id=f"{OKOK_F0_SERVICE_INFO.address}-battery",
         config_entry=config_entry,
     )
     impedance_entity: er.RegistryEntry = entity_registry.async_get_or_create(
         domain=SENSOR_DOMAIN,
         platform=DOMAIN,
-        unique_id=f"{OKOK_F0_ADDRESS}-impedance",
+        unique_id=f"{OKOK_F0_SERVICE_INFO.address}-impedance",
         config_entry=config_entry,
     )
     signal_strength_entity: er.RegistryEntry = entity_registry.async_get_or_create(
         domain=SENSOR_DOMAIN,
         platform=DOMAIN,
-        unique_id=f"{OKOK_F0_ADDRESS}-signal_strength",
+        unique_id=f"{OKOK_F0_SERVICE_INFO.address}-signal_strength",
         config_entry=config_entry,
     )
 
@@ -123,13 +116,15 @@ async def test_update_unique_id(
     assert config_entry.minor_version == 2
 
     entity_migrated = entity_registry.async_get(weight_entity.entity_id)
-    assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-mass"
+    assert entity_migrated.unique_id == f"{OKOK_F0_SERVICE_INFO.address}-mass"
 
     entity_migrated = entity_registry.async_get(battery_entity.entity_id)
-    assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-battery"
+    assert entity_migrated.unique_id == f"{OKOK_F0_SERVICE_INFO.address}-battery"
 
     entity_migrated = entity_registry.async_get(impedance_entity.entity_id)
-    assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-impedance"
+    assert entity_migrated.unique_id == f"{OKOK_F0_SERVICE_INFO.address}-impedance"
 
     entity_migrated = entity_registry.async_get(signal_strength_entity.entity_id)
-    assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-signal_strength"
+    assert (
+        entity_migrated.unique_id == f"{OKOK_F0_SERVICE_INFO.address}-signal_strength"
+    )
