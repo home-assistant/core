@@ -1,5 +1,6 @@
 """Configure tests for the Discogs integration."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,7 +8,6 @@ import pytest
 from homeassistant.components.discogs.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import MOCK_TOKEN, MOCK_USER_ID, MOCK_USERNAME
 
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_entry() -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Create a mock Discogs config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -23,6 +23,16 @@ def config_entry() -> MockConfigEntry:
         data={CONF_TOKEN: MOCK_TOKEN},
         unique_id=str(MOCK_USER_ID),
     )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.discogs.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -59,25 +69,31 @@ def mock_identity(mock_discogs_data: dict) -> MagicMock:
 
 
 @pytest.fixture
-def mock_client(mock_identity: MagicMock) -> MagicMock:
-    """Return a mock Discogs client."""
-    client = MagicMock()
-    client.identity.return_value = mock_identity
-    return client
+def mock_discogs_client(mock_identity: MagicMock) -> Generator[MagicMock]:
+    """Mock a Discogs client."""
+    with (
+        patch(
+            "homeassistant.components.discogs.discogs_client.Client",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.discogs.config_flow.discogs_client.Client",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.identity.return_value = mock_identity
+        yield client
 
 
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_discogs_client: MagicMock,
 ) -> MockConfigEntry:
     """Set up the Discogs integration for testing."""
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.discogs.sensor.discogs_client.Client",
-        return_value=mock_client,
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-    return config_entry
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry

@@ -17,7 +17,6 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -106,21 +105,20 @@ async def async_setup_platform(
         )
         return
 
-    if result.get("type") is FlowResultType.CREATE_ENTRY:
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2027.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Discogs",
-            },
-        )
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.2.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Discogs",
+        },
+    )
 
 
 async def async_setup_entry(
@@ -129,9 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Discogs sensor from a config entry."""
-    client = await hass.async_add_executor_job(
-        discogs_client.Client, SERVER_SOFTWARE, None, entry.data[CONF_TOKEN]
-    )
+    client = entry.runtime_data
     async_add_entities(
         (DiscogsSensor(entry, client, description) for description in SENSOR_TYPES),
         True,
@@ -155,11 +151,11 @@ class DiscogsSensor(SensorEntity):
         self._client = client
         self._discogs_data: dict[str, Any] = {}
         self._attrs: dict[str, Any] = {}
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.discogs.com",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, entry.unique_id)},
             manufacturer=DEFAULT_NAME,
             name=entry.title,
         )

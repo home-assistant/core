@@ -2,41 +2,35 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.discogs.const import DOMAIN
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_USER_ID
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensors(
     hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_discogs_client: MagicMock,
 ) -> None:
-    """Test sensor states."""
-    state = hass.states.get("sensor.testuser_collection")
-    assert state is not None
-    assert state.state == "42"
-    assert state.attributes["identity"] == "testuser"
+    """Test sensor entities with snapshot."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.discogs.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.testuser_wantlist")
-    assert state is not None
-    assert state.state == "10"
-    assert state.attributes["identity"] == "testuser"
-
-    state = hass.states.get("sensor.testuser_random_record")
-    assert state is not None
-    assert state.state == "Artist Name - Album Title"
-    assert state.attributes["identity"] == "testuser"
-    assert state.attributes["cat_no"] == "CAT001"
-    assert state.attributes["cover_image"] == "https://example.com/cover.jpg"
-    assert state.attributes["format"] == "Vinyl (LP)"
-    assert state.attributes["label"] == "Label Name"
-    assert state.attributes["released"] == "2023"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_sensors_empty_collection(hass: HomeAssistant) -> None:
+async def test_sensors_empty_collection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test sensors when the collection is empty."""
     mock_identity = MagicMock()
     mock_identity.name = "testuser"
@@ -50,19 +44,15 @@ async def test_sensors_empty_collection(hass: HomeAssistant) -> None:
     mock_client = MagicMock()
     mock_client.identity.return_value = mock_identity
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="testuser",
-        data={"token": "test_token"},
-        unique_id=str(MOCK_USER_ID),
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.discogs.sensor.discogs_client.Client",
-        return_value=mock_client,
+    with (
+        patch(
+            "homeassistant.components.discogs.discogs_client.Client",
+            return_value=mock_client,
+        ),
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.testuser_collection")
