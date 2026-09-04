@@ -207,7 +207,12 @@ async def test_migration_v5_1_to_v5_2(
         identifiers={(DOMAIN, f"{entry.entry_id}_1")},
         name="Test Endpoint",
     )
-
+    # A device can carry identifiers from another domain if it was merged with
+    # a device from a different integration; the migration must ignore those.
+    device_registry.async_update_device(
+        endpoint_device.id,
+        new_identifiers=endpoint_device.identifiers | {("other_domain", "some_id")},
+    )
     container_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_1_adguard")},
