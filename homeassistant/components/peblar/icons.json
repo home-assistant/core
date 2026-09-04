@@ -8,6 +8,11 @@
         "default": "mdi:alert"
       }
     },
+    "button": {
+      "socket_unlock": {
+        "default": "mdi:lock-open"
+      }
+    },
     "number": {
       "charge_current_limit": {
         "default": "mdi:speedometer"
@@ -61,12 +66,42 @@
       },
       "force_single_phase": {
         "default": "mdi:power-cycle"
+      },
+      "socket_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open-variant",
+          "on": "mdi:lock"
+        }
       }
     },
     "update": {
       "customization": {
         "default": "mdi:palette"
       }
+    }
+  },
+  "services": {
+    "add_rfid_token": {
+      "service": "mdi:card-plus"
+    },
+    "add_vehicle_token": {
+      "service": "mdi:car-connected"
+    },
+    "authorize_charge_session": {
+      "service": "mdi:card-account-details-star"
+    },
+    "delete_rfid_token": {
+      "service": "mdi:card-remove"
+    },
+    "delete_vehicle_token": {
+      "service": "mdi:car-off"
+    },
+    "list_rfid_tokens": {
+      "service": "mdi:card-account-details"
+    },
+    "list_vehicle_tokens": {
+      "service": "mdi:car-multiple"
     }
   }
 }

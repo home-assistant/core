@@ -111,6 +111,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.water_outlet_temperature = 22
     mock_heat_pump_instance.water_house_in_temperature = 33
     mock_heat_pump_instance.air_inlet_temperature = 44
+    mock_heat_pump_instance.air_outlet_temperature = 50
     mock_heat_pump_instance.power_input = 55
     mock_heat_pump_instance.power_output = 66
     mock_heat_pump_instance.dhw_top_temperature = 77
@@ -126,6 +127,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.energy_in_cooling = 9000
     mock_heat_pump_instance.energy_in_standby = 684
     mock_heat_pump_instance.energy_total = 28689
+    mock_heat_pump_instance.energy_in_indoor_unit = 1042
     mock_heat_pump_instance.energy_out_heating = 10000
     mock_heat_pump_instance.energy_out_dhw = 6677
     mock_heat_pump_instance.energy_out_defrost = -1200
@@ -134,12 +136,20 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.compressor_rpm = 4500
     mock_heat_pump_instance.compressor_percentage = 100
     mock_heat_pump_instance.dhw_flow_volume = 1.12
+    mock_heat_pump_instance.dhw_target_temperature = 55
+    mock_heat_pump_instance.dhw_control_method = HeatPump.DhwControlMethod.FIXED
+    mock_heat_pump_instance.dhw_control_method_code = 1
     mock_heat_pump_instance.central_heating_flow_volume = 1.23
     mock_heat_pump_instance.indoor_unit_water_pump_state = False
     mock_heat_pump_instance.indoor_unit_auxiliary_pump_state = False
     mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = None
     mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
+    mock_heat_pump_instance.raw_content = {
+        "heat_pump_id": TEST_HP_UUID,
+        "t_water_in": 11,
+        "total_ein_heating": 12345,
+    }
 
     return mock_heat_pump_instance
 

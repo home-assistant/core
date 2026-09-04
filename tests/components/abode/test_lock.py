@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_array_fixture
 
 DEVICE_ID = "lock.test_lock"
 
@@ -75,7 +75,7 @@ async def test_retrofit_lock_discovered(
     hass: HomeAssistant, requests_mock: Mocker
 ) -> None:
     """Test retrofit locks are discovered as lock entities."""
-    devices = json.loads(await async_load_fixture(hass, "devices.json", "abode"))
+    devices = await async_load_json_array_fixture(hass, "devices.json", "abode")
     for device in devices:
         if device["type_tag"] == "device_type.door_lock":
             device["type_tag"] = "device_type.retrofit_lock"
