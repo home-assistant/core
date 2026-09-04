@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::spinev::config::error::cannot_connect%]",
+      "no_devices_found": "No Spin EV charger was found over Bluetooth. Check that the charger is powered on, that no phone app is connected to it, and that Home Assistant has a Bluetooth adapter or an ESPHome Bluetooth proxy in range of the charger.",
+      "not_supported": "This Bluetooth device is not a Spin EV charger."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. The charger accepts one Bluetooth client at a time, so close the phone app and try again."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The chargers discovered over Bluetooth, listed by serial number."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "available": "Available",
+          "booting": "Starting up",
+          "charging": "Charging",
+          "ev_suspended": "Paused by vehicle",
+          "evse_suspended": "Paused by charger",
+          "fault": "Fault",
+          "finishing": "Finishing",
+          "idle": "Idle",
+          "starting": "Starting",
+          "unavailable": "Unavailable"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_read": {
+      "message": "Could not read the charger: {error}"
+    },
+    "device_not_found": {
+      "message": "Could not find the charger with address {address}. {reason}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "connection_mode": "Bluetooth connection"
+        },
+        "data_description": {
+          "connection_mode": "The charger accepts one Bluetooth client at a time. Stay connected holds that slot for Home Assistant, so nobody else in range can reach the charger, and polling is faster and fails less often. Reconnect each poll gives the slot up between polls, so the phone app stays usable."
+        }
+      }
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "per_poll": "Reconnect each poll",
+        "persistent": "Stay connected"
+      }
+    }
+  }
+}
