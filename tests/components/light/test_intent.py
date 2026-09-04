@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STAT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.intent import (
+    IntentResponseTargetType,
     MatchFailedError,
     MatchFailedReason,
     async_handle,
@@ -288,3 +289,109 @@ async def test_intent_set_brightness_relative_skips_onoff_lights(
 
     assert err.value.result.no_match_reason == MatchFailedReason.FEATURE
     assert not calls
+
+
+async def test_intent_set_brightness_relative_unknown_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a name that matches no light is reported as a name failure."""
+    hass.states.async_set("light.test", "on", DIMMABLE_ATTRIBUTES)
+    await intent.async_setup_intents(hass)
+
+    with pytest.raises(MatchFailedError) as err:
+        await async_handle(
+            hass,
+            "test",
+            intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+            {"name": {"value": "does not exist"}, "brightness_step": {"value": "up"}},
+        )
+
+    assert err.value.result.no_match_reason == MatchFailedReason.NAME
+
+
+async def test_intent_set_brightness_relative_duplicate_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a shared name is unambiguous when only one light can be dimmed."""
+    dimmable = entity_registry.async_get_or_create(
+        "light", "test", "l1", suggested_object_id="dimmable"
+    )
+    onoff = entity_registry.async_get_or_create(
+        "light", "test", "l2", suggested_object_id="onoff"
+    )
+    for entry in (dimmable, onoff):
+        entity_registry.async_update_entity(entry.entity_id, name="Lamp")
+    hass.states.async_set(dimmable.entity_id, "on", DIMMABLE_ATTRIBUTES)
+    hass.states.async_set(
+        onoff.entity_id, "on", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.ONOFF]}
+    )
+
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {"name": {"value": "Lamp"}, "brightness_step": {"value": "up"}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data.get(ATTR_ENTITY_ID) == [dimmable.entity_id]
+
+
+async def test_intent_set_brightness_relative_all(hass: HomeAssistant) -> None:
+    """Test the reserved "all" name targets every light."""
+    hass.states.async_set("light.one", "on", DIMMABLE_ATTRIBUTES)
+    hass.states.async_set("light.two", "on", DIMMABLE_ATTRIBUTES)
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {"name": {"value": "all"}, "brightness_step": {"value": "up"}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["light.one", "light.two"]
+
+
+async def test_intent_set_brightness_relative_response_targets(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the response reports the adjusted lights as successful targets."""
+    kitchen = area_registry.async_create("Kitchen")
+    entry = entity_registry.async_get_or_create("light", "test", "l1")
+    entity_registry.async_update_entity(entry.entity_id, area_id=kitchen.id)
+    hass.states.async_set(entry.entity_id, "on", DIMMABLE_ATTRIBUTES)
+
+    async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    response = await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {"area": {"value": "Kitchen"}, "brightness_step": {"value": "up"}},
+    )
+    await hass.async_block_till_done()
+
+    assert response.as_dict()["data"]["success"] == [
+        {
+            "type": IntentResponseTargetType.AREA,
+            "name": "Kitchen",
+            "id": kitchen.id,
+        },
+        {
+            "type": IntentResponseTargetType.ENTITY,
+            "name": "test l1",
+            "id": entry.entity_id,
+        },
+    ]

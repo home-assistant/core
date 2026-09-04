@@ -98,8 +98,13 @@ class SetBrightnessRelativeHandler(intent.IntentHandler):
         elif brightness_step == "down":
             brightness_step = -DEFAULT_BRIGHTNESS_STEP_PCT
 
+        entity_name: str | None = slots.get("name", {}).get("value")
+        if entity_name == "all":
+            # Don't match on name if targeting all entities
+            entity_name = None
+
         match_constraints = intent.MatchTargetsConstraints(
-            name=slots.get("name", {}).get("value"),
+            name=entity_name,
             area_name=slots.get("area", {}).get("value"),
             floor_name=slots.get("floor", {}).get("value"),
             domains={DOMAIN},
@@ -109,25 +114,33 @@ class SetBrightnessRelativeHandler(intent.IntentHandler):
             area_id=slots.get("preferred_area_id", {}).get("value"),
             floor_id=slots.get("preferred_floor_id", {}).get("value"),
         )
-        match_result = intent.async_match_targets(
-            hass, match_constraints, match_preferences
-        )
-        if not match_result.is_match:
-            raise intent.MatchFailedError(
-                result=match_result,
-                constraints=match_constraints,
-                preferences=match_preferences,
-            )
 
-        match_result.states = [
+        # Only dimmable lights are candidates, so that a light which cannot be
+        # dimmed does not make an otherwise unambiguous name ambiguous.
+        # An empty candidate list would be treated as "match against all states".
+        brightness_states = [
             state
-            for state in match_result.states
+            for state in hass.states.async_all(DOMAIN)
             if brightness_supported(state.attributes.get(ATTR_SUPPORTED_COLOR_MODES))
         ]
-        if not match_result.states:
+        match_result = (
+            intent.async_match_targets(
+                hass, match_constraints, match_preferences, brightness_states
+            )
+            if brightness_states
+            else intent.MatchTargetsResult(False, intent.MatchFailedReason.FEATURE)
+        )
+
+        if not match_result.is_match:
+            # Report a feature failure when lights matched but none can be dimmed
+            unfiltered_result = intent.async_match_targets(
+                hass, match_constraints, match_preferences
+            )
             raise intent.MatchFailedError(
-                result=intent.MatchTargetsResult(
-                    is_match=False, no_match_reason=intent.MatchFailedReason.FEATURE
+                result=(
+                    intent.MatchTargetsResult(False, intent.MatchFailedReason.FEATURE)
+                    if unfiltered_result.is_match
+                    else unfiltered_result
                 ),
                 constraints=match_constraints,
                 preferences=match_preferences,
@@ -150,7 +163,37 @@ class SetBrightnessRelativeHandler(intent.IntentHandler):
                 f"Error setting relative brightness: {err}"
             ) from err
 
+        success_results: list[intent.IntentResponseTarget] = []
+        if match_result.floors:
+            success_results.extend(
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.FLOOR,
+                    name=floor.name,
+                    id=floor.floor_id,
+                )
+                for floor in match_result.floors
+            )
+        elif match_result.areas:
+            success_results.extend(
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.AREA,
+                    name=area.name,
+                    id=area.id,
+                )
+                for area in match_result.areas
+            )
+
+        success_results.extend(
+            intent.IntentResponseTarget(
+                type=intent.IntentResponseTargetType.ENTITY,
+                name=state.name,
+                id=state.entity_id,
+            )
+            for state in match_result.states
+        )
+
         response = intent_obj.create_response()
+        response.async_set_results(success_results=success_results)
         response.async_set_states(
             [hass.states.get(state.entity_id) or state for state in match_result.states]
         )
