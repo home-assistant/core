@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import Iterator
 from dataclasses import dataclass
 import datetime as dt
-from typing import Any, override
+from typing import Any, Literal, cast, override
 
 from homeassistant.core import Context
 from homeassistant.helpers.trace import (
@@ -19,6 +19,36 @@ from homeassistant.util import dt as dt_util, uuid as uuid_util
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 type TraceData = dict[str, TraceBuckets]
+
+type TraceBucketKey = Literal[
+    "running",
+    "not_triggered",
+    "finished",
+    "aborted",
+    "cancelled",
+    "failed_conditions",
+    "failed_single",
+    "failed_max_runs",
+    "error",
+    "unknown",
+]
+
+FINAL_TRACE_BUCKETS: tuple[TraceBucketKey, ...] = (
+    "finished",
+    "aborted",
+    "cancelled",
+    "failed_conditions",
+    "failed_single",
+    "failed_max_runs",
+    "error",
+)
+
+TRACE_BUCKET_KEYS: tuple[TraceBucketKey, ...] = (
+    "running",
+    "not_triggered",
+    *FINAL_TRACE_BUCKETS,
+    "unknown",
+)
 
 
 class BaseTrace(abc.ABC):
@@ -46,26 +76,53 @@ class BaseTrace(abc.ABC):
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
 
+    @abc.abstractmethod
+    def bucket_key(self) -> TraceBucketKey:
+        """Return the storage bucket for this trace."""
+
+    @property
+    @abc.abstractmethod
+    def timestamp_start(self) -> dt.datetime:
+        """Return when the trace began."""
+
 
 @dataclass(slots=True)
 class TraceBuckets:
-    """The run and not-triggered traces for a single script or automation.
+    """Independently retained trace buckets for one automation/script."""
 
-    Not-triggered traces (a trigger evaluated a change but did not fire) are
-    counted and size-limited separately so they never evict actual run traces.
-    """
+    buckets: dict[TraceBucketKey, LimitedSizeDict[str, BaseTrace]]
 
-    runs: LimitedSizeDict[str, BaseTrace]
-    not_triggered: LimitedSizeDict[str, BaseTrace]
+    def bucket(self, key: TraceBucketKey) -> LimitedSizeDict[str, BaseTrace]:
+        """Return a trace bucket."""
+        return self.buckets[key]
 
-    def bucket(self, not_triggered: bool) -> LimitedSizeDict[str, BaseTrace]:
-        """Return the bucket holding traces of the requested kind."""
-        return self.not_triggered if not_triggered else self.runs
+    def set_size_limit(self, size_limit: int) -> None:
+        """Apply the configured retention limit to every bucket."""
+        for bucket in self.buckets.values():
+            bucket.size_limit = size_limit
 
     def all_traces(self) -> Iterator[BaseTrace]:
-        """Yield all traces, runs first then not-triggered."""
-        yield from self.runs.values()
-        yield from self.not_triggered.values()
+        """Yield runs by start time, then not-triggered traces."""
+        runs = (
+            trace
+            for bucket_key, bucket in self.buckets.items()
+            if bucket_key != "not_triggered"
+            for trace in bucket.values()
+        )
+
+        yield from sorted(
+            runs,
+            key=lambda trace: trace.timestamp_start,
+        )
+
+        yield from self.buckets["not_triggered"].values()
+
+    def get(self, run_id: str) -> BaseTrace | None:
+        """Return a trace by run ID from any bucket."""
+        for bucket in self.buckets.values():
+            if trace := bucket.get(run_id):
+                return trace
+        return None
 
 
 class ActionTrace(BaseTrace):
@@ -111,6 +168,26 @@ class ActionTrace(BaseTrace):
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
         self._script_execution = script_execution_get()
+
+    @property
+    @override
+    def timestamp_start(self) -> dt.datetime:
+        """Return when this trace began."""
+        return self._timestamp_start
+
+    @override
+    def bucket_key(self) -> TraceBucketKey:
+        """Return the trace's current storage bucket."""
+        if self.not_triggered:
+            return "not_triggered"
+
+        if self._state != "stopped":
+            return "running"
+
+        if self._script_execution in FINAL_TRACE_BUCKETS:
+            return self._script_execution
+
+        return "error"
 
     @override
     def as_extended_dict(self) -> dict[str, Any]:
@@ -190,6 +267,19 @@ class RestoredTrace(BaseTrace):
         self.key = f"{extended_dict['domain']}.{extended_dict['item_id']}"
         self.run_id = extended_dict["run_id"]
         self.not_triggered = short_dict.get("not_triggered", False)
+
+        timestamp_start = short_dict["timestamp"]["start"]
+
+        parsed_timestamp_start: dt.datetime | None = None
+        if isinstance(timestamp_start, dt.datetime):
+            parsed_timestamp_start = timestamp_start
+        else:
+            parsed_timestamp_start = dt_util.parse_datetime(timestamp_start)
+
+        if parsed_timestamp_start is None:
+            raise ValueError(f"Invalid trace start timestamp: {timestamp_start!r}")
+        self._timestamp_start = parsed_timestamp_start
+
         self._dict = extended_dict
         self._short_dict = short_dict
 
@@ -202,3 +292,21 @@ class RestoredTrace(BaseTrace):
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this RestoredTrace."""
         return self._short_dict  # type: ignore[no-any-return]
+
+    @override
+    def bucket_key(self) -> TraceBucketKey:
+        """Return the storage bucket for this restored trace."""
+        if self.not_triggered:
+            return "not_triggered"
+
+        script_execution = self._short_dict.get("script_execution")
+        if script_execution in FINAL_TRACE_BUCKETS:
+            return cast(TraceBucketKey, script_execution)
+
+        return "unknown"
+
+    @property
+    @override
+    def timestamp_start(self) -> dt.datetime:
+        """Return when this restored trace began."""
+        return self._timestamp_start
