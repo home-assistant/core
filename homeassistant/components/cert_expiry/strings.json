@@ -33,7 +33,9 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
+          "ca_data": "Optional CA certificate data in PEM format. This is useful for self-signed certificates or internal CAs.",
           "host": "The hostname or IP address of the server to monitor.",
+          "ignore_hostname": "This setting may need to be enabled for local host resolution that does not match the certificate hostname.",
           "port": "The port to connect to on the server."
         },
         "title": "Define the certificate to test"
