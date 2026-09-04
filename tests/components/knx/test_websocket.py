@@ -19,7 +19,10 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME
+from homeassistant.components.knx.storage.entity_link_schema import (
+    LINK_SCHEMA_FOR_PLATFORM,
+)
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -586,6 +589,44 @@ async def test_knx_get_schema(
     await client.send_json_auto_id({"type": "knx/get_schema", "platform": platform})
     res = await client.receive_json()
     assert res == snapshot
+
+
+@pytest.mark.parametrize(
+    "platform", sorted(platform.value for platform in LINK_SCHEMA_FOR_PLATFORM)
+)
+async def test_knx_get_entity_link_schema(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    platform: str,
+) -> None:
+    """Test knx/get_entity_link_schema command returning proper schema data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "knx/get_entity_link_schema", "platform": platform}
+    )
+    res = await client.receive_json()
+    # asserted explicitly: a serialization error would otherwise be recorded as a snapshot
+    assert res["success"], res
+    assert res == snapshot
+
+
+async def test_knx_get_entity_link_schema_unsupported_platform(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test knx/get_entity_link_schema command for a platform without link support."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "knx/get_entity_link_schema", "platform": Platform.LIGHT.value}
+    )
+    res = await client.receive_json()
+    assert not res["success"], res
+    assert res["error"]["message"] == "Unknown platform"
 
 
 async def test_knx_get_expose_groups(
