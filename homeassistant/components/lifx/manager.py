@@ -60,6 +60,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .util import (
     device_error,
     overwrites_existing_color,
+    palette_fraction,
     parse_hsbk_changes,
     replace_hsbk,
 )
@@ -127,7 +128,9 @@ class LIFXManager:
         if palette is None:
             return []
         return [
-            HSBK(hue, saturation / 100, brightness / 100, kelvin)
+            HSBK(
+                hue, palette_fraction(saturation), palette_fraction(brightness), kelvin
+            )
             for hue, saturation, brightness, kelvin in palette
         ]
 
