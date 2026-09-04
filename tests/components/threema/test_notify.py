@@ -249,6 +249,40 @@ async def test_send_message_simple(
     mock_send_message.assert_called_once_with(MOCK_RECIPIENT_ID, "Hello from tests!")
 
 
+async def test_send_message_with_title(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a title is formatted as a leading bold line in the sent text."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
+    assert len(notify_entities) == 1
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "send_message",
+        {
+            "entity_id": notify_entities[0].entity_id,
+            "message": "Hello from tests!",
+            "title": "My Title",
+        },
+        blocking=True,
+    )
+
+    mock_send_message.assert_called_once_with(
+        MOCK_RECIPIENT_ID, "*My Title*\nHello from tests!"
+    )
+
+
 async def test_send_message_e2e(
     hass: HomeAssistant,
     mock_config_entry_with_keys: MockConfigEntry,

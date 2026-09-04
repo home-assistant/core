@@ -42,13 +42,21 @@ _LOGGER = logging.getLogger(__name__)
 _KEY_HEX_LENGTH = 64
 _KEY_PREFIXES = ("private:", "public:")
 _CONF_PUBLIC_KEY = "public_key"
+_GATEWAY_ID_REGEX = re.compile(r"^\*[A-Z0-9]{7}$")
 
 
-def _strip_key_prefix(value: str) -> str:
-    """Strip a Threema key-export prefix (e.g. 'private:') if present."""
+def _strip_key_prefix(value: str, expected_prefix: str) -> str | None:
+    """Strip the expected Threema key-export prefix, if present.
+
+    Returns None if the value carries a *different* key-type prefix (e.g.
+    a 'public:' key pasted into the private-key field), so the mismatch
+    can be rejected instead of silently accepted as the wrong key type.
+    """
     lowered = value.lower()
     for prefix in _KEY_PREFIXES:
         if lowered.startswith(prefix):
+            if prefix != expected_prefix:
+                return None
             return value[len(prefix) :].strip()
     return value
 
@@ -128,7 +136,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             gateway_id = user_input[CONF_GATEWAY_ID].strip().upper()
 
-            if not gateway_id.startswith("*") or len(gateway_id) != 8:
+            if not _GATEWAY_ID_REGEX.match(gateway_id):
                 errors["base"] = "invalid_gateway_id"
             else:
                 await self.async_set_unique_id(gateway_id)
@@ -138,23 +146,33 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._api_secret = user_input[CONF_API_SECRET].strip()
 
                 raw_private_key = user_input.get(CONF_PRIVATE_KEY, "").strip()
-                self._private_key = (
-                    _strip_key_prefix(raw_private_key) if raw_private_key else None
-                )
+                self._private_key = raw_private_key or None
                 raw_public_key = user_input.get(_CONF_PUBLIC_KEY, "").strip()
-                self._public_key = (
-                    _strip_key_prefix(raw_public_key) if raw_public_key else None
+                self._public_key = raw_public_key or None
+
+                private_key = (
+                    _strip_key_prefix(raw_private_key, "private:")
+                    if raw_private_key
+                    else None
+                )
+                public_key = (
+                    _strip_key_prefix(raw_public_key, "public:")
+                    if raw_public_key
+                    else None
                 )
 
-                if self._private_key and not _is_valid_key_hex(self._private_key):
+                if raw_private_key and private_key is None:
                     errors[CONF_PRIVATE_KEY] = "invalid_key"
-                elif self._public_key and not _is_valid_key_hex(self._public_key):
+                elif raw_public_key and public_key is None:
+                    errors[_CONF_PUBLIC_KEY] = "invalid_key"
+                elif private_key and not _is_valid_key_hex(private_key):
+                    errors[CONF_PRIVATE_KEY] = "invalid_key"
+                elif public_key and not _is_valid_key_hex(public_key):
                     errors[_CONF_PUBLIC_KEY] = "invalid_key"
                 elif (
-                    self._private_key
-                    and self._public_key
-                    and derive_public_key(self._private_key).lower()
-                    != self._public_key.lower()
+                    private_key
+                    and public_key
+                    and derive_public_key(private_key).lower() != public_key.lower()
                 ):
                     errors[_CONF_PUBLIC_KEY] = "key_mismatch"
                 else:
@@ -162,7 +180,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass,
                         gateway_id=gateway_id,
                         api_secret=self._api_secret,
-                        private_key=self._private_key,
+                        private_key=private_key,
                     )
 
                     try:
@@ -179,8 +197,8 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_GATEWAY_ID: self._gateway_id,
                             CONF_API_SECRET: self._api_secret,
                         }
-                        if self._private_key:
-                            data[CONF_PRIVATE_KEY] = self._private_key
+                        if private_key:
+                            data[CONF_PRIVATE_KEY] = private_key
 
                         return self.async_create_entry(
                             title=f"Threema {self._gateway_id}",

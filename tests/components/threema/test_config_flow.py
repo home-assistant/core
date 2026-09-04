@@ -202,6 +202,17 @@ async def test_credentials_invalid_gateway_id(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_gateway_id"}
 
+    # Right length and prefix, but invalid characters
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: "*!!!!!!!",
+            CONF_API_SECRET: MOCK_API_SECRET,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_gateway_id"}
+
     # Valid Gateway ID — recover and create entry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -297,6 +308,61 @@ async def test_credentials_private_key_prefix_stripped(
         result["data"][CONF_PRIVATE_KEY]
         == "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     )
+
+
+async def test_credentials_public_key_in_private_key_field_rejected(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test a 'public:'-prefixed key pasted into the private-key field is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: f"public:{'a' * 64}",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PRIVATE_KEY: "invalid_key"}
+
+
+async def test_credentials_private_key_in_public_key_field_rejected(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test a 'private:'-prefixed key pasted into the public-key field is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "a" * 64,
+            _CONF_PUBLIC_KEY: f"private:{'b' * 64}",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {_CONF_PUBLIC_KEY: "invalid_key"}
 
 
 async def test_credentials_public_key_matches(
