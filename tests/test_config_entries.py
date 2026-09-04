@@ -10,6 +10,7 @@ import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from aiohttp import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -40,6 +41,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -496,6 +498,197 @@ async def test_migrate_from_higher_version_not_supported(
         "Config entry Mock Title for comp has version 2 which is higher than the current version 1"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_migrate_entry",
+        "state",
+        "log_message",
+        "logs",
+        "translation_key",
+        "translation_domain",
+    ),
+    [
+        pytest.param(
+            AsyncMock(
+                side_effect=ConfigEntryError(
+                    translation_key="error", translation_domain="comp"
+                )
+            ),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Error migrating entry Mock Title for comp",
+            True,
+            "error",
+            "comp",
+            id="ConfigEntryError",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=ConfigEntryAuthFailed(
+                    translation_key="error", translation_domain="comp"
+                )
+            ),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Config entry 'Mock Title' for comp integration could not authenticate",
+            True,
+            "error",
+            "comp",
+            id="ConfigEntryAuthFailed",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=ConfigEntryNotReady(
+                    translation_key="error", translation_domain="comp"
+                )
+            ),
+            config_entries.ConfigEntryState.SETUP_RETRY,
+            "Config entry migration 'Mock Title' for comp integration not ready yet",
+            True,
+            "error",
+            "comp",
+            id="ConfigEntryNotReady",
+        ),
+        pytest.param(
+            AsyncMock(side_effect=Exception()),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Error migrating entry Mock Title for comp",
+            True,
+            None,
+            None,
+            id="Other exceptions",
+        ),
+        pytest.param(
+            AsyncMock(return_value=False),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Error migrating entry Mock Title for comp",
+            False,  # No logging
+            None,
+            None,
+            id="Returns False",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=OAuth2TokenRequestReauthError(
+                    domain="comp",
+                    request_info=RequestInfo(
+                        url="https://example.com",
+                        method="GET",
+                        headers={},
+                        real_url="https://example.com",
+                    ),
+                )
+            ),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Config entry 'Mock Title' for comp integration could not authenticate",
+            True,
+            "oauth2_helper_reauth_required",
+            "homeassistant",
+            id="OAuth reauth error",
+        ),
+    ],
+)
+async def test_migrate_handle_exceptions(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_migrate_entry: AsyncMock,
+    state: config_entries.ConfigEntryState,
+    log_message: str,
+    logs: bool,
+    translation_key: str | None,
+    translation_domain: str | None,
+) -> None:
+    """Test migration handles exceptions correctly."""
+    entry = MockConfigEntry(domain="comp", version=1, minor_version=1)
+    entry.add_to_hass(hass)
+    assert not entry.supports_unload
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 2
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
+    assert result
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state is state
+    assert entry.error_reason_translation_domain == translation_domain
+    assert entry.error_reason_translation_key == translation_key
+    assert bool(log_message in caplog.text) is logs
+
+    assert hass.config_entries.flow.async_progress_by_handler("comp") == []
+
+
+async def test_migrate_raise_configentrynotready(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test migration can retry later when raise ConfigEntryNotReady."""
+    entry = MockConfigEntry(domain="comp", version=1, minor_version=1)
+    entry.add_to_hass(hass)
+    assert not entry.supports_unload
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_migrate_entry = AsyncMock(
+        side_effect=[ConfigEntryNotReady("Migration not ready yet"), True]
+    )
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 2
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
+    assert result
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert (
+        "Config entry migration 'Mock Title' for comp integration not ready yet"
+        in caplog.text
+    )
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (2, 2)])
