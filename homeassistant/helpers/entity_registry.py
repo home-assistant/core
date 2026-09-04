@@ -144,6 +144,7 @@ class EntityNamePart(StrEnum):
     DEVICE = "device"
     ENTITY = "entity"
     FLOOR = "floor"
+    PARENT_DEVICE = "parent_device"
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -515,10 +516,25 @@ def _async_get_full_entity_name(
 
     elif not use_legacy_naming or name is None:
         device_name: str | None = None
+        parent_device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)
             if (device := device_registry.async_get(device_id)) is not None:
                 device_name = device.name_by_user or device.name
+
+                if (
+                    EntityNamePart.PARENT_DEVICE in parts
+                    and isinstance(device, dr.ChildDeviceEntry)
+                    and (
+                        parent_device := device_registry.async_get(
+                            device.parent_device_id, include_child_devices=False
+                        )
+                    )
+                    is not None
+                ):
+                    parent_device_name = (
+                        parent_device.name_by_user or parent_device.name
+                    )
 
                 if area_id is None:
                     area_id = dr.async_get_effective_area_id(hass, device)
@@ -563,6 +579,7 @@ def _async_get_full_entity_name(
             EntityNamePart.DEVICE: device_name,
             EntityNamePart.ENTITY: entity_name,
             EntityNamePart.FLOOR: floor_name,
+            EntityNamePart.PARENT_DEVICE: parent_device_name,
         }
         full_name = " ".join(
             part_name for part in parts if (part_name := part_names[part])
@@ -1366,7 +1383,12 @@ class EntityRegistry(BaseRegistry):
         """
         parts = self.settings.entity_id_parts
         if parts is None:
-            parts = (EntityNamePart.AREA, EntityNamePart.DEVICE, EntityNamePart.ENTITY)
+            parts = (
+                EntityNamePart.AREA,
+                EntityNamePart.PARENT_DEVICE,
+                EntityNamePart.DEVICE,
+                EntityNamePart.ENTITY,
+            )
         object_id = _async_get_full_entity_name(
             self.hass,
             area_id=area_id,
