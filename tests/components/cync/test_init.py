@@ -220,7 +220,10 @@ async def test_resume_entityless_device_finalization(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.data["mesh_unique_ids_device_finalize_pending"] is True
+    assert (
+        mock_config_entry.data["mesh_unique_ids_device_identifier_parking_complete"]
+        is True
+    )
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -233,7 +236,10 @@ async def test_resume_entityless_device_finalization(
     assert migrated_first_device is not None
     assert migrated_first_device.identifiers == {(DOMAIN, "1000-1")}
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
-    assert "mesh_unique_ids_device_finalize_pending" not in mock_config_entry.data
+    assert (
+        "mesh_unique_ids_device_identifier_parking_complete"
+        not in mock_config_entry.data
+    )
 
 
 async def test_migration_without_lights_clears_marker(
@@ -400,7 +406,10 @@ async def test_migrate_overlapping_unique_ids(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.data["mesh_unique_ids_migration_pending"] is True
-    assert mock_config_entry.data["mesh_unique_ids_device_finalize_pending"] is True
+    assert (
+        mock_config_entry.data["mesh_unique_ids_device_identifier_parking_complete"]
+        is True
+    )
     interrupted_device = device_registry.async_get(merged_device.id)
     assert interrupted_device is not None
     assert interrupted_device.identifiers == {
@@ -426,7 +435,10 @@ async def test_migrate_overlapping_unique_ids(
     assert migrated_device is not None
     assert migrated_device.identifiers == expected_device_identifiers
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
-    assert "mesh_unique_ids_device_finalize_pending" not in mock_config_entry.data
+    assert (
+        "mesh_unique_ids_device_identifier_parking_complete"
+        not in mock_config_entry.data
+    )
 
 
 async def test_migration_failure_closes_client_and_keeps_marker(

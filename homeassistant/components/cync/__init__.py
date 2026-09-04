@@ -22,26 +22,33 @@ from .coordinator import CyncConfigEntry, CyncCoordinator
 _PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _MESH_UNIQUE_IDS_MIGRATION_PENDING = "mesh_unique_ids_migration_pending"
-_MESH_UNIQUE_IDS_DEVICE_FINALIZE_PENDING = "mesh_unique_ids_device_finalize_pending"
+_MESH_UNIQUE_IDS_DEVICE_IDENTIFIER_PARKING_COMPLETE = (
+    "mesh_unique_ids_device_identifier_parking_complete"
+)
 _MESH_UNIQUE_ID_MIGRATION_PREFIX = "__cync_mesh_id_migration__"
 
+type _DeviceIdentifierMigrations = dict[str, tuple[set[str], set[str]]]
 
-def _migrate_unique_ids(
-    hass: HomeAssistant, entry: CyncConfigEntry, cync: Cync
+
+def _record_device_identifier_migration(
+    migrations: _DeviceIdentifierMigrations,
+    device_id: str,
+    source_id: str,
+    final_id: str,
 ) -> None:
-    """Migrate legacy light registry IDs to pycync's mesh-based unique IDs."""
-    id_map = {
-        f"{device.parent_home_id}-{device.device_id}": device.unique_id
-        for home in cync.get_homes()
-        for device in home.get_flattened_device_list()
-        if isinstance(device, CyncLight)
-        and f"{device.parent_home_id}-{device.device_id}" != device.unique_id
-    }
+    """Record a device identifier migration."""
+    source_ids, final_ids = migrations.setdefault(device_id, (set(), set()))
+    source_ids.add(source_id)
+    final_ids.add(final_id)
 
-    temporary_id_map = {
-        f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{old_unique_id}": new_unique_id
-        for old_unique_id, new_unique_id in id_map.items()
-    }
+
+def _migrate_light_entity_unique_ids(
+    hass: HomeAssistant,
+    entry: CyncConfigEntry,
+    id_map: dict[str, str],
+    temporary_id_map: dict[str, str],
+) -> tuple[_DeviceIdentifierMigrations, set[str]]:
+    """Migrate light entity unique IDs and return their device migrations."""
 
     entity_registry = er.async_get(hass)
 
@@ -91,44 +98,46 @@ def _migrate_unique_ids(
             new_unique_id=f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{old_unique_id}",
         )
     for entity_entry in get_light_entity_entries():
-        if new_unique_id := temporary_id_map.get(entity_entry.unique_id):
+        if temporary_new_unique_id := temporary_id_map.get(entity_entry.unique_id):
             entity_registry.async_update_entity(
                 entity_entry.entity_id,
-                new_unique_id=new_unique_id,
+                new_unique_id=temporary_new_unique_id,
             )
 
-    light_entity_entries = get_light_entity_entries()
-    final_ids_by_device: dict[str, set[str]] = {}
-    source_ids_by_device: dict[str, set[str]] = {}
-    for entity_entry in light_entity_entries:
+    device_identifier_migrations: _DeviceIdentifierMigrations = {}
+    for entity_entry in get_light_entity_entries():
         if (
-            entity_entry.device_id is not None
-            and entity_entry.unique_id in id_map.values()
+            entity_entry.device_id is None
+            or entity_entry.unique_id not in id_map.values()
         ):
-            final_ids_by_device.setdefault(entity_entry.device_id, set()).add(
-                entity_entry.unique_id
+            continue
+        previous_unique_id = entity_entry.previous_unique_id
+        source_ids: tuple[str, ...]
+        if (
+            previous_unique_id is not None
+            and id_map.get(previous_unique_id) == entity_entry.unique_id
+        ):
+            source_ids = (previous_unique_id,)
+        elif (
+            previous_unique_id is not None
+            and temporary_id_map.get(previous_unique_id) == entity_entry.unique_id
+        ):
+            source_ids = (
+                previous_unique_id.removeprefix(_MESH_UNIQUE_ID_MIGRATION_PREFIX),
             )
-            previous_unique_id = entity_entry.previous_unique_id
-            if (
-                previous_unique_id is not None
-                and id_map.get(previous_unique_id) == entity_entry.unique_id
-            ):
-                source_ids_by_device.setdefault(entity_entry.device_id, set()).add(
-                    previous_unique_id
-                )
-            elif (
-                previous_unique_id is not None
-                and temporary_id_map.get(previous_unique_id) == entity_entry.unique_id
-            ):
-                source_ids_by_device.setdefault(entity_entry.device_id, set()).add(
-                    previous_unique_id.removeprefix(_MESH_UNIQUE_ID_MIGRATION_PREFIX)
-                )
-            else:
-                source_ids_by_device.setdefault(entity_entry.device_id, set()).update(
-                    old_unique_id
-                    for old_unique_id, new_unique_id in id_map.items()
-                    if new_unique_id == entity_entry.unique_id
-                )
+        else:
+            source_ids = tuple(
+                old_unique_id
+                for old_unique_id, new_unique_id in id_map.items()
+                if new_unique_id == entity_entry.unique_id
+            )
+        for source_id in source_ids:
+            _record_device_identifier_migration(
+                device_identifier_migrations,
+                entity_entry.device_id,
+                source_id,
+                entity_entry.unique_id,
+            )
 
     entity_device_ids = {
         entity_entry.device_id
@@ -137,9 +146,21 @@ def _migrate_unique_ids(
         )
         if entity_entry.device_id is not None
     }
+    return device_identifier_migrations, entity_device_ids
+
+
+def _migrate_device_identifiers(
+    hass: HomeAssistant,
+    entry: CyncConfigEntry,
+    id_map: dict[str, str],
+    temporary_id_map: dict[str, str],
+    device_identifier_migrations: _DeviceIdentifierMigrations,
+    entity_device_ids: set[str],
+) -> None:
+    """Migrate device identifiers to mesh-based IDs."""
     device_registry = dr.async_get(hass)
-    device_finalization_pending = bool(
-        entry.data.get(_MESH_UNIQUE_IDS_DEVICE_FINALIZE_PENDING)
+    device_identifier_parking_complete = bool(
+        entry.data.get(_MESH_UNIQUE_IDS_DEVICE_IDENTIFIER_PARKING_COMPLETE)
     )
     migrated_device_ids: set[str] = set()
     for config_entry_device in dr.async_entries_for_config_entry(
@@ -159,26 +180,26 @@ def _migrate_unique_ids(
             continue
         for identifier in cync_identifiers:
             if identifier in temporary_id_map:
-                source_ids_by_device.setdefault(config_entry_device.id, set()).add(
-                    identifier.removeprefix(_MESH_UNIQUE_ID_MIGRATION_PREFIX)
+                _record_device_identifier_migration(
+                    device_identifier_migrations,
+                    config_entry_device.id,
+                    identifier.removeprefix(_MESH_UNIQUE_ID_MIGRATION_PREFIX),
+                    temporary_id_map[identifier],
                 )
-                final_ids_by_device.setdefault(config_entry_device.id, set()).add(
-                    temporary_id_map[identifier]
-                )
-            elif not device_finalization_pending and identifier in id_map:
-                source_ids_by_device.setdefault(config_entry_device.id, set()).add(
-                    identifier
-                )
-                final_ids_by_device.setdefault(config_entry_device.id, set()).add(
-                    id_map[identifier]
+            elif not device_identifier_parking_complete and identifier in id_map:
+                _record_device_identifier_migration(
+                    device_identifier_migrations,
+                    config_entry_device.id,
+                    identifier,
+                    id_map[identifier],
                 )
 
-    if not device_finalization_pending:
+    if not device_identifier_parking_complete:
         for device_id in migrated_device_ids:
             device_entry = device_registry.async_get(device_id)
             if device_entry is None:
                 continue
-            source_ids = source_ids_by_device.get(device_id, set())
+            source_ids, _ = device_identifier_migrations.get(device_id, (set(), set()))
             temporary_identifiers = {
                 (
                     domain,
@@ -197,7 +218,7 @@ def _migrate_unique_ids(
             entry,
             data={
                 **entry.data,
-                _MESH_UNIQUE_IDS_DEVICE_FINALIZE_PENDING: True,
+                _MESH_UNIQUE_IDS_DEVICE_IDENTIFIER_PARKING_COMPLETE: True,
             },
         )
 
@@ -205,7 +226,7 @@ def _migrate_unique_ids(
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
             continue
-        final_ids = final_ids_by_device.get(device_id, set())
+        _, final_ids = device_identifier_migrations.get(device_id, (set(), set()))
         final_identifiers = {
             (
                 domain,
@@ -221,9 +242,41 @@ def _migrate_unique_ids(
                 new_identifiers=final_identifiers,
             )
 
+
+# Legacy and mesh ID namespaces can overlap. Entity-less devices have no
+# previous_unique_id history to disambiguate a partially completed migration.
+# Persist that all device source identifiers are parked before finalizing them,
+# so setup retries cannot remap an already-final identifier.
+def _migrate_unique_ids(
+    hass: HomeAssistant, entry: CyncConfigEntry, cync: Cync
+) -> None:
+    """Migrate legacy light registry IDs to pycync's mesh-based unique IDs."""
+    id_map = {
+        f"{device.parent_home_id}-{device.device_id}": device.unique_id
+        for home in cync.get_homes()
+        for device in home.get_flattened_device_list()
+        if isinstance(device, CyncLight)
+        and f"{device.parent_home_id}-{device.device_id}" != device.unique_id
+    }
+    temporary_id_map = {
+        f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{old_unique_id}": new_unique_id
+        for old_unique_id, new_unique_id in id_map.items()
+    }
+    device_identifier_migrations, entity_device_ids = _migrate_light_entity_unique_ids(
+        hass, entry, id_map, temporary_id_map
+    )
+    _migrate_device_identifiers(
+        hass,
+        entry,
+        id_map,
+        temporary_id_map,
+        device_identifier_migrations,
+        entity_device_ids,
+    )
+
     data = dict(entry.data)
     data.pop(_MESH_UNIQUE_IDS_MIGRATION_PENDING)
-    data.pop(_MESH_UNIQUE_IDS_DEVICE_FINALIZE_PENDING)
+    data.pop(_MESH_UNIQUE_IDS_DEVICE_IDENTIFIER_PARKING_COMPLETE)
     hass.config_entries.async_update_entry(entry, data=data)
 
 
