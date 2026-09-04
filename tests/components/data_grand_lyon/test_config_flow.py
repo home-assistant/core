@@ -780,10 +780,10 @@ async def test_line_subentry_flow_custom_value(
         pytest.param("C3", id="exact"),
     ],
 )
+@pytest.mark.usefixtures("mock_tcl_client")
 async def test_line_subentry_flow_trims_line_code(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_tcl_client: AsyncMock,
     line_code: str,
 ) -> None:
     """Test a line code with surrounding whitespace is trimmed before use."""
@@ -811,10 +811,10 @@ async def test_line_subentry_flow_trims_line_code(
         pytest.param("   ", id="whitespace_only"),
     ],
 )
+@pytest.mark.usefixtures("mock_tcl_client")
 async def test_line_subentry_flow_rejects_empty_line_code(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_tcl_client: AsyncMock,
     line_code: str,
 ) -> None:
     """Test an empty (or whitespace-only) line code re-renders the form with an error."""

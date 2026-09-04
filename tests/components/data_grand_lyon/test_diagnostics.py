@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -63,11 +64,11 @@ async def test_config_entry_diagnostics_with_park_and_ride(
     ) == snapshot(exclude=props("created_at", "modified_at", "entry_id", "subentry_id"))
 
 
+@pytest.mark.usefixtures("mock_tcl_client")
 async def test_config_entry_diagnostics_with_line(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_line_config_entry: MockConfigEntry,
-    mock_tcl_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics with a line's traffic alerts."""
