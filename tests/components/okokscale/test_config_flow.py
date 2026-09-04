@@ -202,34 +202,34 @@ async def test_async_step_user_replace_ignored(
     assert result["result"].title == OKOK_F0_TITLE
 
 
-# @pytest.mark.usefixtures("mock_bluetooth")
-# async def test_async_step_user_takes_precedence_over_discovery(
-#     hass: HomeAssistant, mock_setup_entry: AsyncMock
-# ) -> None:
-#     """Test manual setup takes precedence over discovery."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_BLUETOOTH},
-#         data=OKOK_F0_SERVICE_INFO,
-#     )
-#     assert result["type"] is FlowResultType.FORM
-#     assert result["step_id"] == "bluetooth_confirm"
-#
-#     with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": SOURCE_USER},
-#         )
-#         assert result["type"] is FlowResultType.FORM
-#
-#     result = await hass.config_entries.flow.async_configure(
-#         result["flow_id"],
-#         user_input={"address": OKOK_F0_SERVICE_INFO.address},
-#     )
-#     assert result["type"] is FlowResultType.CREATE_ENTRY
-#     assert result["title"] == OKOK_F0_TITLE
-#     assert result["result"].unique_id == OKOK_F0_SERVICE_INFO.address
-#     assert result["result"].title == OKOK_F0_TITLE
-#
-#     # Verify the original discovery flow was aborted.
-#     assert not hass.config_entries.flow.async_progress(DOMAIN)
+@pytest.mark.usefixtures("mock_bluetooth")
+async def test_async_step_user_takes_precedence_over_discovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test manual setup takes precedence over discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=OKOK_F0_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address": OKOK_F0_SERVICE_INFO.address},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == OKOK_F0_TITLE
+    assert result["result"].unique_id == OKOK_F0_SERVICE_INFO.address
+    assert result["result"].title == OKOK_F0_TITLE
+
+    # Verify the original discovery flow was aborted.
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
