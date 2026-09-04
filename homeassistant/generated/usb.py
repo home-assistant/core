@@ -5,6 +5,11 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "easywave",
+        "pid": "1014",
+        "vid": "155A",
+    },
+    {
         "description": "*usb 300*",
         "domain": "enocean",
         "manufacturer": "*enocean*",
