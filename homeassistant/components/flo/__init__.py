@@ -33,9 +33,7 @@ async def async_get_flo_api(
     session = async_get_clientsession(hass)
     try:
         return (
-            await async_get_api(
-                username, password, session=session, use_sso=use_sso
-            ),
+            await async_get_api(username, password, session=session, use_sso=use_sso),
             use_sso,
         )
     except RequestError as err:

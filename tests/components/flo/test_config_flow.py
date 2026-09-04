@@ -158,12 +158,14 @@ async def test_async_get_flo_api_uses_stored_sso(hass: HomeAssistant) -> None:
 
 async def test_async_get_flo_api_stored_sso_does_not_retry(hass: HomeAssistant) -> None:
     """Test a stored SSO failure is not retried."""
-    with patch(
-        "homeassistant.components.flo.async_get_api",
-        new_callable=AsyncMock,
-        side_effect=RequestError("sso failed"),
-    ) as mock_get_api:
-        with pytest.raises(RequestError):
-            await async_get_flo_api(hass, TEST_USER_ID, TEST_PASSWORD, use_sso=True)
+    with (
+        patch(
+            "homeassistant.components.flo.async_get_api",
+            new_callable=AsyncMock,
+            side_effect=RequestError("sso failed"),
+        ) as mock_get_api,
+        pytest.raises(RequestError),
+    ):
+        await async_get_flo_api(hass, TEST_USER_ID, TEST_PASSWORD, use_sso=True)
 
     assert mock_get_api.await_count == 1
