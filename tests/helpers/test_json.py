@@ -220,7 +220,6 @@ def test_cached_json_fragment() -> None:
 
     fragment = cached_json_fragment(data)
     assert isinstance(fragment, json_fragment)
-    # The right-sized copy embeds the same bytes as the plain fragment path.
     assert json_dumps([fragment]) == json_dumps([json_fragment(json_bytes(data))])
     assert (
         json_dumps([fragment]) == '[{"a":1,"b":[1,2,3],"c":{"nested":true},"d":null}]'
