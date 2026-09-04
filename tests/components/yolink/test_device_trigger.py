@@ -6,7 +6,10 @@ from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.yolink import DOMAIN, YOLINK_EVENT
-from homeassistant.components.yolink.const import DEV_MODEL_FLEX_FOB_YS3604_UC
+from homeassistant.components.yolink.const import (
+    DEV_MODEL_FLEX_FOB_YS3604_UC,
+    DEV_MODEL_MINI_FOB_YS3615_UC,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -81,6 +84,41 @@ async def test_get_triggers(
             "platform": "device",
             "domain": DOMAIN,
             "type": "button_4_long_press",
+            "device_id": device_entry.id,
+            "metadata": {},
+        },
+    ]
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert triggers == unordered(expected_triggers)
+
+
+async def test_get_triggers_mini_fob(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test we get the expected triggers from a yolink mini on/off fob."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:F0")},
+        model=ATTR_DEVICE_SMART_REMOTER,
+        model_id=DEV_MODEL_MINI_FOB_YS3615_UC,
+    )
+
+    expected_triggers = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "button_1_short_press",
+            "device_id": device_entry.id,
+            "metadata": {},
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "button_2_long_press",
             "device_id": device_entry.id,
             "metadata": {},
         },

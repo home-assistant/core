@@ -1,10 +1,15 @@
 """Tests for the yolink integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from yolink.client import YoLinkClient
+from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.device import YoLinkDevice, YoLinkDeviceMode
+from yolink.model import BRDP
 
 from homeassistant.components.yolink import DOMAIN
+from homeassistant.components.yolink.const import DEV_MODEL_MINI_FOB_YS3615_UC
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -43,6 +48,40 @@ async def test_device_remove_devices(
         device_registry, mock_config_entry.entry_id
     )
     assert len(device_entries) == 0
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_auth_manager")
+async def test_setup_creates_mini_fob_coordinator(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_yolink_home: MagicMock,
+) -> None:
+    """Test setup creates a device for a Mini On/Off Fob."""
+    client = MagicMock(spec=YoLinkClient)
+    client.execute = AsyncMock(
+        return_value=BRDP(code="000000", desc="Success", data={"state": {}})
+    )
+    device = YoLinkDevice(
+        YoLinkDeviceMode(
+            deviceId="mini_fob_1",
+            name="Mini Fob",
+            token="REDACTED",
+            type=ATTR_DEVICE_SMART_REMOTER,
+            modelName=DEV_MODEL_MINI_FOB_YS3615_UC,
+        ),
+        client,
+    )
+    mock_yolink_home.return_value.get_devices.return_value = [device]
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mini_fob_1")}
+    )
+    assert device_entry is not None
+    assert device_entry.model_id == DEV_MODEL_MINI_FOB_YS3615_UC
 
 
 @pytest.mark.usefixtures("setup_credentials", "mock_auth_manager", "mock_yolink_home")
