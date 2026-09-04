@@ -137,14 +137,8 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         If no, it returns False.
         """
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            LOGGER.warning(
-                "Checking existing config entry for conf_host %s: unique_id=%s (host=%s)",
-                entry.data[CONF_HOST],
-                entry.unique_id,
-                host,
-            )
             if entry.data[CONF_HOST] == host and entry.unique_id is None:
-                LOGGER.warning(
+                LOGGER.info(
                     "Config entry for host %s exists without unique_id, updating entry",
                     host,
                 )
@@ -168,7 +162,6 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             "LAN_", ""
         )
 
-        LOGGER.warning("Discovered Velux device via DHCP: %s", self.discovery_data)
         await self.async_set_unique_id(self.discovery_data[CONF_NAME])
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.discovery_data[CONF_HOST]}
@@ -189,7 +182,6 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle discovery by zeroconf."""
         self.discovery_data[CONF_HOST] = discovery_info.host
         self.discovery_data[CONF_NAME] = sanitize_hostname(discovery_info.name)
-        LOGGER.warning("Discovered Velux device via zeroconf: %s", self.discovery_data)
 
         self.context["title_placeholders"] = {CONF_NAME: self.discovery_data[CONF_NAME]}
         await self.async_set_unique_id(self.discovery_data[CONF_NAME])
