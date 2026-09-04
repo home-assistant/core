@@ -480,14 +480,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if self.source == SOURCE_RECONFIGURE:
             entry = self._get_entry()
             subentry = self._get_reconfigure_subentry()
-            if self._async_update(
+            self._async_update(
                 entry,
                 subentry,
                 data_updates={CONF_HOST: host, CONF_PASSWORD: password},
-            ):
-                # The subentry-change reload listener fires only on membership
-                # changes, so schedule the reload for this in-place data update.
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            )
+            # Always reload, even when the credentials are unchanged: an earlier
+            # cloud fallback (gateway unreachable at setup) leaves local control
+            # off, and re-verifying the same credentials must re-enable it.
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="reconfigure_successful")
 
         return self.async_create_entry(

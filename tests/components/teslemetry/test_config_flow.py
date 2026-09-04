@@ -1453,6 +1453,52 @@ async def test_reconfigure_updates_credentials_and_schedules_reload(
     mock_reload.assert_called_once_with(entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_unchanged_credentials_still_schedules_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfiguring with unchanged credentials still reloads the entry.
+
+    A gateway unreachable at setup falls back to cloud control; the user later
+    fixes their network and re-verifies the same host/password. Nothing changes
+    in the stored data, but local control must be re-enabled, so the reload has
+    to be scheduled regardless of whether the data changed.
+    """
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    client = _mock_powerwall_client()
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
+            return_value=client,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["step_id"] == "credentials"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    subentry = entry.subentries[subentry_id]
+    assert subentry.data[CONF_HOST] == HOST
+    assert subentry.data[CONF_PASSWORD] == PASSWORD
+    # The stored data is unchanged, but a re-verify must still re-enable local
+    # control after an earlier cloud fallback, so the reload is scheduled anyway.
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
 async def test_reconfigure_aborts_when_entry_not_loaded(hass: HomeAssistant) -> None:
     """Reconfigure aborts when the account entry is not loaded."""
     entry = _entry_with_powerwall()
