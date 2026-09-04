@@ -6,12 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import (
-    DEFAULT_GATEWAY_HOST,
-    PowerwallAuthenticationError,
-    PowerwallClient,
-    PowerwallError,
-)
+from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
     AuthorizedClientState,
@@ -265,8 +260,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         try:
             self._discovered_host = await energy_site.find_gateway_address() or ""
         except (ClientError, TeslaFleetError) as err:
-            LOGGER.debug("Gateway address discovery failed: %s", err)
+            LOGGER.warning("Gateway address discovery failed: %s", err)
             self._discovered_host = ""
+        else:
+            if not self._discovered_host:
+                LOGGER.warning("Gateway address discovery returned no address")
 
         path = self.hass.config.path(POWERWALL_KEY_FILE)
         keyholder = Teslemetry(
@@ -412,9 +410,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             step_id="credentials",
             data_schema=vol.Schema(
                 {
+                    # Leave blank when discovery found nothing; defaulting to the
+                    # setup-AP address would misdirect a normally-connected gateway.
                     vol.Required(
                         CONF_HOST,
-                        default=self._discovered_host or DEFAULT_GATEWAY_HOST,
+                        default=self._discovered_host or vol.UNDEFINED,
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
