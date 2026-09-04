@@ -1,8 +1,8 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable
-from typing import Any
+from collections.abc import Awaitable, Callable
+from typing import Any, cast
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
@@ -25,7 +25,8 @@ async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
         existing: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
         if existing is not None:
             return existing
-        parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
+        # TeslaBluetooth.__init__ is unannotated upstream; remove cast once tesla-fleet-api types it.
+        parent = cast("Callable[[], TeslaBluetooth]", TeslaBluetooth)()
         await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
         hass.data[BLE_PARENT_KEY] = parent
         return parent
