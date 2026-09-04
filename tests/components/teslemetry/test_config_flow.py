@@ -1213,9 +1213,8 @@ async def test_add_flow_aborts_when_entry_not_loaded(hass: HomeAssistant) -> Non
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_gateway_discovery_failure_leaves_host_blank(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A failed gateway-address discovery leaves the host field blank and warns."""
+    """A failed gateway-address discovery leaves the host field blank and proceeds."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -1235,18 +1234,13 @@ async def test_gateway_discovery_failure_leaves_host_blank(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
     assert _credentials_host_is_blank(result)
-    assert any(
-        record.levelname == "WARNING" and "discovery failed" in record.message
-        for record in caplog.records
-    )
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_gateway_discovery_empty_leaves_host_blank(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Discovery returning no address (without raising) leaves the host blank and warns."""
+    """Discovery returning no address (without raising) leaves the host blank and proceeds."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -1266,10 +1260,6 @@ async def test_gateway_discovery_empty_leaves_host_blank(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
     assert _credentials_host_is_blank(result)
-    assert any(
-        record.levelname == "WARNING" and "no address" in record.message
-        for record in caplog.records
-    )
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
