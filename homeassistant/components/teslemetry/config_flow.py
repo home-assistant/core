@@ -204,6 +204,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._discovered_host: str = ""
         self._site_id: int | None = None
         self._site_name: str = ""
+        self._approval_expired: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -328,6 +329,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is None:
             return self.async_show_form(step_id="pair")
 
+        if self._approval_expired:
+            # The user saw the expired-window notice and submitted to try again.
+            self._approval_expired = False
+            return await self._async_begin_pairing()
+
         try:
             client = await self._find_authorized_client()
         except PowerwallLookupError:
@@ -343,6 +349,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_credentials()
         if client.state == AuthorizedClientState.PENDING_VERIFICATION:
             return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
+        if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
+            # Surface the expiry; the user's next submit reopens the window.
+            self._approval_expired = True
+            return self.async_show_form(step_id="pair", errors={"base": "key_expired"})
         # An unrecognized state reported as pending would trap the user forever.
         LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
