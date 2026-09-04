@@ -5,7 +5,9 @@ from typing import Any
 import pytest
 
 from homeassistant.components import climate
+from homeassistant.components.climate import HVACAction
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
@@ -183,8 +185,256 @@ async def test_humidity_template(hass: HomeAssistant, expected: Any) -> None:
 )
 @pytest.mark.usefixtures("setup_single_attribute_climate")
 async def test_temperature_template(hass: HomeAssistant, expected: Any) -> None:
-    """Test template humidity."""
+    """Test template temperature."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     state = hass.states.get(TEST_CLIMATE.entity_id)
     assert state.attributes.get("current_temperature") == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [("hvac_action", MINIMUM_REQUIREMENTS)],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ 'cooling' }}", HVACAction.COOLING),
+        ("{{ 'defrosting' }}", HVACAction.DEFROSTING),
+        ("{{ 'drying' }}", HVACAction.DRYING),
+        ("{{ 'fan' }}", HVACAction.FAN),
+        ("{{ 'heating' }}", HVACAction.HEATING),
+        ("{{ 'idle' }}", HVACAction.IDLE),
+        ("{{ 'off' }}", HVACAction.OFF),
+        ("{{ 'preheating' }}", HVACAction.PREHEATING),
+        ("{{ 100 }}", None),
+        ("{{ 45.5 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_hvac_action_template(hass: HomeAssistant, expected: Any) -> None:
+    """Test template hvac_action."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("hvac_action") == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [
+        (
+            "target_humidity",
+            {
+                "min_humidity": 19,
+                "max_humidity": 100,
+                **SET_HUMIDITY_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ 20 }}", 20),
+        ("{{ 30 }}", 30),
+        ("{{ 45 }}", 45),
+        ("{{ 99 }}", 99),
+        ("{{ 100 }}", 100),
+        ("{{ 45.5 }}", 45),
+        ("{{ -1 }}", None),
+        ("{{ 101 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_target_humidity_template(hass: HomeAssistant, expected: Any) -> None:
+    """Test template target_humidity."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("humidity") == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [
+        (
+            "target_temperature",
+            {
+                "min_temp": -2,
+                "max_temp": 101,
+                **SET_TEMPERATURE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ -1 }}", -1),
+        ("{{ 5.3423 }}", 5.3),
+        ("{{ 30 }}", 30),
+        ("{{ 45 }}", 45),
+        ("{{ 99 }}", 99),
+        ("{{ 100 }}", 100),
+        ("{{ 45.5 }}", 45.5),
+        ("{{ -3 }}", None),
+        ("{{ 103 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_target_temperature_template(hass: HomeAssistant, expected: Any) -> None:
+    """Test template target_temperature."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("temperature") == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [
+        (
+            "target_temperature_high",
+            {
+                "min_temp": -3,
+                "max_temp": 101,
+                "target_temperature_low": "{{ -3 }}",
+                **SET_TEMPERATURE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ -1 }}", -1),
+        ("{{ 5.3423 }}", 5.3),
+        ("{{ 30 }}", 30),
+        ("{{ 45 }}", 45),
+        ("{{ 99 }}", 99),
+        ("{{ 100 }}", 100),
+        ("{{ 45.5 }}", 45.5),
+        ("{{ -4 }}", None),
+        ("{{ 103 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_target_temperature_high_template(
+    hass: HomeAssistant, expected: Any
+) -> None:
+    """Test template target_temperature_high."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("target_temp_high") == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"),
+    [
+        (
+            "target_temperature_low",
+            {
+                "min_temp": -2,
+                "max_temp": 102,
+                "target_temperature_high": "{{ 102 }}",
+                **SET_TEMPERATURE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ -1 }}", -1),
+        ("{{ 5.3423 }}", 5.3),
+        ("{{ 30 }}", 30),
+        ("{{ 45 }}", 45),
+        ("{{ 99 }}", 99),
+        ("{{ 100 }}", 100),
+        ("{{ 45.5 }}", 45.5),
+        ("{{ -3 }}", None),
+        ("{{ 103 }}", None),
+        ("{{ True }}", None),
+        ("{{ False }}", None),
+        ("{{ 'something' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_target_temperature_low_template(
+    hass: HomeAssistant, expected: Any
+) -> None:
+    """Test template target_temperature_low."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("target_temp_low") == expected
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"target_temperature_high": 30, **MINIMUM_REQUIREMENTS},
+        {"target_temperature_low": 30, **MINIMUM_REQUIREMENTS},
+    ],
+)
+async def test_bad_target_temperature_range_config(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad target temperature range configuration."""
+    platform = TEST_CLIMATE
+    await setup_entity(hass, platform, style, 0, config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': some but not all values in the same group of inclusion 'temperature_limits'"
+        in caplog.text
+    )

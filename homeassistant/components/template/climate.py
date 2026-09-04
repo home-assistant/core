@@ -421,7 +421,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             ("_attr_precision", CONF_PRECISION),
         ):
             if (option_value := config.get(option)) is not None:
-                setattr(attr, option, option_value)
+                setattr(self, attr, option_value)
 
         self._attr_hvac_mode = None
         self._attr_hvac_modes = []
@@ -459,6 +459,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low", None),
             (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high", None),
         ):
+            setattr(self, attr, None)
             self.setup_template(
                 option,
                 attr,
