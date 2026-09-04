@@ -119,12 +119,7 @@ async def test_select_option_via_domain_service(
     """Selecting an option calls the vendor library through the coordinator."""
 
     async def _side_effect(device: ImouHaDevice, select_type: str, option: str) -> None:
-        if select_type == PARAM_COLLECTION_POINT:
-            device.selects[select_type][PARAM_CURRENT_OPTION] = (
-                PARAM_COLLECTION_POINT_PROMPT
-            )
-            return
-        device.selects[select_type][PARAM_CURRENT_OPTION] = option
+        device.selects[select_type][PARAM_CURRENT_OPTION] = expected_state
 
     mock_imou_ha_device_manager.async_select_option.side_effect = _side_effect
     select_entry = next(
