@@ -57,30 +57,10 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
 COOLING_CONDITIONS_NOT_COUNTED = ("control_method", "contact_not_blocked")
 
 
-def _cooling_wait_until(status: HeatPump) -> datetime | None:
-    """Return when the wait after the last cooling cycle runs out."""
-    conditions = status.cooling_start_conditions
-    if conditions is None or conditions["exponential_backoff"]:
-        return None
-    return status.cooling_available_from
-
-
 # A cooling state is only reported during a cooling cycle and covers every substate
 # of it, including the water check the overall heat pump state reports as its own.
-def _cooling_conditions_met(status: HeatPump) -> int | None:
-    """Return how many conditions for starting cooling are met, as the portal counts."""
-    conditions = status.cooling_start_conditions
-    if conditions is None or status.cooling_state is not None:
-        return None
-    return sum(
-        met
-        for name, met in conditions.items()
-        if name not in COOLING_CONDITIONS_NOT_COUNTED
-    )
-
-
 def _cooling_blocked_by(status: HeatPump) -> str | None:
-    """Return the first condition keeping the heat pump from cooling."""
+    """Return the first unmet condition, or none when nothing holds cooling off."""
     conditions = status.cooling_start_conditions
     if conditions is None:
         return None
@@ -308,13 +288,27 @@ COOLING_SENSORS = [
         translation_key="cooling_conditions_met",
         key="cooling_conditions_met",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_cooling_conditions_met,
+        value_fn=lambda status: (
+            None
+            if status.cooling_start_conditions is None
+            or status.cooling_state is not None
+            else sum(
+                met
+                for name, met in status.cooling_start_conditions.items()
+                if name not in COOLING_CONDITIONS_NOT_COUNTED
+            )
+        ),
     ),
     WeHeatSensorEntityDescription(
         translation_key="cooling_wait_until",
         key="cooling_wait_until",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=_cooling_wait_until,
+        value_fn=lambda status: (
+            status.cooling_available_from
+            if status.cooling_start_conditions is not None
+            and not status.cooling_start_conditions["exponential_backoff"]
+            else None
+        ),
     ),
     WeHeatSensorEntityDescription(
         translation_key="last_cooling_time",
