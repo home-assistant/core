@@ -33,7 +33,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.teslemetry.config_flow import _is_gateway_unreachable
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -1379,23 +1378,6 @@ async def test_pair_step_second_lookup_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert result["errors"] == {"base": expected_error}
-
-
-@pytest.mark.parametrize(
-    ("error", "expected"),
-    [
-        pytest.param(TeslaFleetError(), False, id="tesla_fleet_error_no_status"),
-        pytest.param(ResponseError(status=502), True, id="response_error_502"),
-        pytest.param(
-            ClientResponseError(None, (), status=500),
-            False,
-            id="client_response_error_500",
-        ),
-    ],
-)
-def test_is_gateway_unreachable(error: Exception, expected: bool) -> None:
-    """Only a 502 is unreachable; a status-less error must not raise."""
-    assert _is_gateway_unreachable(error) is expected
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
