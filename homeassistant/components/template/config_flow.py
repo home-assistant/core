@@ -60,6 +60,7 @@ from .climate import (
     CONF_HVAC_MODES,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_TARGET_TEMPERATURE,
     SET_HVAC_MODE_ACTION,
     SET_TEMPERATURE_ACTION,
     async_create_preview_climate,
@@ -211,11 +212,12 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.CLIMATE:
         schema |= {
-            vol.Optional(CONF_HVAC_MODES): selector.TemplateSelector(),
+            vol.Required(CONF_HVAC_MODES): selector.TemplateSelector(),
             vol.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
-            vol.Optional(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
+            vol.Required(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
             vol.Optional(CONF_CURRENT_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TARGET_TEMPERATURE): selector.TemplateSelector(),
             vol.Optional(SET_TEMPERATURE_ACTION): selector.ActionSelector(),
         }
         additional_options |= {

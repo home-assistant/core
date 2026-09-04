@@ -1,23 +1,54 @@
 """The tests for the Template climate platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import climate
-from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.components import climate, template
+from homeassistant.components.climate import (
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityFeature,
+    ClimateEntityStateAttribute,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.components.template.climate import DEFAULT_NAME
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
+    async_get_flow_preview_state,
     async_trigger,
     make_test_action,
     make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
+
+from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
+from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "climate.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
@@ -79,8 +110,10 @@ SET_TEMPERATURE_ACTION = make_test_action(
     },
 )
 
+HVAC_MODES = {"hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}"}
+EXPECTED_HVAC_MODES = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 MINIMUM_REQUIREMENTS = {
-    "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+    **HVAC_MODES,
     **SET_HVAC_MODE_ACTION,
 }
 
@@ -1049,3 +1082,692 @@ async def test_bad_temperature_unit(
         "Invalid config for 'template': value must be one of [<UnitOfTemperature.KELVIN: 'K'>, <UnitOfTemperature.CELSIUS: '°C'>, <UnitOfTemperature.FAHRENHEIT: '°F'>] for dictionary value 'climate->0->temperature_unit'"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    ("extra_config", "attribute_template"),
+    [
+        (
+            {"hvac_mode": "{{ states('climate.test_state') }}", **MINIMUM_REQUIREMENTS},
+            "{{ is_state('binary_sensor.availability', 'on') }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
+    """Test availability templates with values from other entities."""
+    # When template returns true..
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, HVACMode.HEAT)
+
+    # Device State should not be unavailable
+    assert hass.states.get(TEST_CLIMATE.entity_id).state != STATE_UNAVAILABLE
+
+    # When Availability template returns false
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, HVACMode.COOL)
+
+    # device state should be unavailable
+    assert hass.states.get(TEST_CLIMATE.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("extra_config", "attribute_template"),
+    [
+        (
+            {"hvac_mode": "{{ states('climate.test_state') }}", **MINIMUM_REQUIREMENTS},
+            "{{ x - 12 }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "availability"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog_setup_text
+) -> None:
+    """Test that an invalid availability keeps the device available."""
+    assert hass.states.get(TEST_CLIMATE.entity_id).state != STATE_UNAVAILABLE
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
+
+
+@pytest.mark.parametrize("config", [MINIMUM_REQUIREMENTS])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_unique_id(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
+    """Test unique_id option only creates one light per id."""
+    await setup_and_test_unique_id(hass, TEST_CLIMATE, style, config)
+
+
+@pytest.mark.parametrize("config", [MINIMUM_REQUIREMENTS])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates to light unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_CLIMATE, style, entity_registry, config
+    )
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a light from a config entry."""
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "hvac_mode": "{{ 'heat' }}",
+            **MINIMUM_REQUIREMENTS,
+            "template_type": climate.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        climate.DOMAIN,
+        {"name": "My template", "hvac_mode": "{{ 'heat' }}", **MINIMUM_REQUIREMENTS},
+    )
+
+    assert state["state"] == HVACMode.HEAT
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            HVACMode.COOL,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idle",
+                "hvac_mode": "cool",
+                "hvac_modes": ["cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            HVACMode.COOL,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": HVACAction.IDLE,
+                "hvac_mode": HVACMode.COOL,
+                "hvac_modes": [HVACMode.COOL],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "humidity": None,
+                "target_temp_high": None,
+                "target_temp_low": None,
+                "temperature": None,
+            },
+        ),
+        (
+            # Missing key
+            HVACMode.COOL,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idle",
+                "hvac_mode": "cool",
+                "hvac_modes": ["cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad hvac mode
+            HVACMode.COOL,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idle",
+                "hvac_mode": "not_cool",
+                "hvac_modes": ["cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad supported hvac modes
+            HVACMode.COOL,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idle",
+                "hvac_mode": "cool",
+                "hvac_modes": ["not_cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad hvac action
+            HVACMode.COOL,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idlex",
+                "hvac_mode": "cool",
+                "hvac_modes": ["cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idle",
+                "hvac_mode": "cool",
+                "hvac_modes": ["cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": "idle",
+                "hvac_mode": None,
+                "hvac_modes": ["cool"],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "target_humidity": None,
+                "target_temperature_high": None,
+                "target_temperature_low": None,
+                "target_temperature": None,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_humidity": None,
+                "current_temperature": 35.0,
+                "fan_mode": None,
+                "fan_modes": None,
+                "hvac_action": HVACAction.IDLE,
+                "hvac_mode": None,
+                "hvac_modes": [HVACMode.COOL],
+                "preset_mode": None,
+                "preset_modes": None,
+                "swing_mode": None,
+                "swing_modes": None,
+                "swing_horizontal_mode": None,
+                "swing_horizontal_modes": None,
+                "humidity": None,
+                "target_temp_high": None,
+                "target_temp_low": None,
+                "temperature": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template climate."""
+
+    restored_attributes = {  # These should be ignored
+        "current_position": 5,
+        "current_tilt_position": 5,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_CLIMATE,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        {
+            "current_humidity": "{{ state_attr('sensor.test_state', 'current_humidity') }}",
+            "current_temperature": "{{ state_attr('sensor.test_state', 'current_temperature') }}",
+            "fan_mode": "{{ state_attr('sensor.test_state', 'fan_mode') }}",
+            "fan_modes": "{{ state_attr('sensor.test_state', 'fan_modes') or [] }}",
+            "set_fan_mode": [],
+            "hvac_mode": "{{ state_attr('sensor.test_state', 'hvac_mode') }}",
+            "hvac_modes": "{{ state_attr('sensor.test_state', 'hvac_modes') or [] }}",
+            "set_hvac_mode": [],
+            "preset_mode": "{{ state_attr('sensor.test_state', 'preset_mode') }}",
+            "preset_modes": "{{ state_attr('sensor.test_state', 'preset_modes') or [] }}",
+            "set_preset_mode": [],
+            "swing_horizontal_mode": "{{ state_attr('sensor.test_state', 'swing_horizontal_mode') }}",
+            "swing_horizontal_modes": "{{ state_attr('sensor.test_state', 'swing_horizontal_modes') or [] }}",
+            "set_swing_horizontal_mode": [],
+            "swing_mode": "{{ state_attr('sensor.test_state', 'swing_mode') }}",
+            "swing_modes": "{{ state_attr('sensor.test_state', 'swing_modes') or [] }}",
+            "set_swing_mode": [],
+            "target_humidity": "{{ state_attr('sensor.test_state', 'target_humidity') }}",
+            "target_temperature": "{{ state_attr('sensor.test_state', 'target_temperature') }}",
+            "target_temperature_high": "{{ state_attr('sensor.test_state', 'target_temperature_high') }}",
+            "target_temperature_low": "{{ state_attr('sensor.test_state', 'target_temperature_low') }}",
+            "set_temperature": [],
+        },
+        "state_attr('sensor.test_state', 'is_on') is true",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_CLIMATE,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {"hvac_modes": [HVACMode.HEAT]},
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {"hvac_modes": [HVACMode.HEAT], "hvac_mode": HVACMode.HEAT},
+    )
+
+    assert_state_and_attributes(hass, TEST_CLIMATE, HVACMode.HEAT)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_saving_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test restore saved state."""
+
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        config={
+            "hvac_mode": "{{ state_attr('climate.test_state', 'hvac_mode') }}",
+            **MINIMUM_REQUIREMENTS,
+        },
+    )
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "anything",
+        {"hvac_mode": HVACMode.COOL},
+    )
+
+    assert_state_and_attributes(
+        hass, TEST_CLIMATE, HVACMode.COOL, {"hvac_modes": EXPECTED_HVAC_MODES}
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == TEST_CLIMATE.entity_id
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == {
+        "current_humidity": None,
+        "current_temperature": None,
+        "fan_mode": None,
+        "fan_modes": None,
+        "hvac_action": None,
+        "hvac_mode": HVACMode.COOL,
+        "hvac_modes": EXPECTED_HVAC_MODES,
+        "preset_mode": None,
+        "preset_modes": None,
+        "swing_mode": None,
+        "swing_modes": None,
+        "swing_horizontal_mode": None,
+        "swing_horizontal_modes": None,
+        "humidity": None,
+        "target_temp_high": None,
+        "target_temp_low": None,
+        "temperature": None,
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        (
+            "set_fan_mode",
+            {
+                "fan_modes": "{{ ['Disco', 'Police'] }}",
+                "fan_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        ("set_humidity", MINIMUM_REQUIREMENTS),
+        ("set_hvac_mode", HVAC_MODES),
+        (
+            "set_preset_mode",
+            {
+                "preset_modes": "{{ ['Disco', 'Police'] }}",
+                "preset_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_swing_horizontal_mode",
+            {
+                "swing_horizontal_modes": "{{ ['Disco', 'Police'] }}",
+                "swing_horizontal_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_swing_mode",
+            {
+                "swing_modes": "{{ ['Disco', 'Police'] }}",
+                "swing_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        ("set_temperature", MINIMUM_REQUIREMENTS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_CLIMATE, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        (
+            "set_fan_mode",
+            {
+                "fan_modes": "{{ ['Disco', 'Police'] }}",
+                "fan_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        ("set_humidity", MINIMUM_REQUIREMENTS),
+        ("set_hvac_mode", HVAC_MODES),
+        (
+            "set_preset_mode",
+            {
+                "preset_modes": "{{ ['Disco', 'Police'] }}",
+                "preset_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_swing_horizontal_mode",
+            {
+                "swing_horizontal_modes": "{{ ['Disco', 'Police'] }}",
+                "swing_horizontal_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_swing_mode",
+            {
+                "swing_modes": "{{ ['Disco', 'Police'] }}",
+                "swing_mode": "{{ None }}",
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        ("set_temperature", MINIMUM_REQUIREMENTS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_CLIMATE, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_CLIMATE, style, MINIMUM_REQUIREMENTS
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(ClimateEntityCapabilityAttribute, ClimateEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        0,
+        {
+            **MINIMUM_REQUIREMENTS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_CLIMATE,
+        style,
+        MINIMUM_REQUIREMENTS,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(ClimateEntityCapabilityAttribute, ClimateEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            **MINIMUM_REQUIREMENTS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_CLIMATE.entity_id}: {attribute}"
+    assert error in caplog.text
