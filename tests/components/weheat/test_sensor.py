@@ -1,7 +1,5 @@
 """Tests for the weheat sensor platform."""
 
-import json
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -9,10 +7,9 @@ from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
-from homeassistant.components import weheat
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weheat.sensor import COOLING_CONDITIONS_NOT_COUNTED
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -116,6 +113,11 @@ COOLING_SENSORS = {
 }
 
 
+CONDITIONS_COUNTED = len(HeatPump.COOLING_START_CONDITION_BITS) - len(
+    COOLING_CONDITIONS_NOT_COUNTED
+)
+
+
 def _start_conditions(*unmet: str) -> dict[str, bool]:
     """Build a start condition mapping with the named conditions not met."""
     return {name: name not in unmet for name in HeatPump.COOLING_START_CONDITION_BITS}
@@ -146,7 +148,10 @@ async def test_cooling_conditions_met(
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.test_model_cooling_conditions_met").state == expected
+    state = hass.states.get("sensor.test_model_cooling_conditions_met")
+
+    assert state.state == expected
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == f"of {CONDITIONS_COUNTED}"
 
 
 @pytest.mark.parametrize(
@@ -245,19 +250,6 @@ async def test_a_heat_pump_without_cooling_gets_no_cooling_sensors(
         for entity_id in hass.states.async_entity_ids(SENSOR_DOMAIN)
         if entity_id in COOLING_SENSORS
     ] == []
-
-
-def test_the_unit_says_how_many_conditions_are_counted() -> None:
-    """Test the total in the sensor unit is the number of conditions counted."""
-    strings = json.loads((Path(weheat.__file__).parent / "strings.json").read_text())
-    counted = len(HeatPump.COOLING_START_CONDITION_BITS) - len(
-        COOLING_CONDITIONS_NOT_COUNTED
-    )
-
-    assert (
-        strings["entity"]["sensor"]["cooling_conditions_met"]["unit_of_measurement"]
-        == f"of {counted}"
-    )
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")

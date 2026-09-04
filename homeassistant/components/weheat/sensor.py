@@ -59,16 +59,6 @@ COOLING_CONDITIONS_NOT_COUNTED = ("control_method", "contact_not_blocked")
 
 # A cooling state is only reported during a cooling cycle and covers every substate
 # of it, including the water check the overall heat pump state reports as its own.
-def _cooling_blocked_by(status: HeatPump) -> str | None:
-    """Return the first unmet condition, or none when nothing holds cooling off."""
-    conditions = status.cooling_start_conditions
-    if conditions is None:
-        return None
-    if status.cooling_state is not None:
-        return "none"
-    return next((name for name, met in conditions.items() if not met), "none")
-
-
 def _latched_reason(status: HeatPump, reason: Enum | None) -> str | None:
     """Return a reason from before the cycle, which says nothing while one runs."""
     if status.cooling_state is not None:
@@ -282,7 +272,20 @@ COOLING_SENSORS = [
         key="cooling_blocked_by",
         device_class=SensorDeviceClass.ENUM,
         options=["none", *HeatPump.COOLING_START_CONDITION_BITS],
-        value_fn=_cooling_blocked_by,
+        value_fn=lambda status: (
+            None
+            if status.cooling_start_conditions is None
+            else "none"
+            if status.cooling_state is not None
+            else next(
+                (
+                    name
+                    for name, met in status.cooling_start_conditions.items()
+                    if not met
+                ),
+                "none",
+            )
+        ),
     ),
     WeHeatSensorEntityDescription(
         translation_key="cooling_conditions_met",
