@@ -16,7 +16,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    LOCAL_CONFIG_COORDINATOR_KEYS,
     TeslemetryEnergyHistoryCoordinator,
+    TeslemetryEnergySiteConfigLocalCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -47,6 +49,7 @@ class TeslemetryPollingEntity(
         | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
         | TeslemetryEnergySiteInfoCoordinator
+        | TeslemetryEnergySiteConfigLocalCoordinator
     ],
 ):
     """Parent class for all Teslemetry Coordinator entities."""
@@ -56,7 +59,8 @@ class TeslemetryPollingEntity(
         coordinator: TeslemetryVehicleDataCoordinator
         | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
-        | TeslemetryEnergySiteInfoCoordinator,
+        | TeslemetryEnergySiteInfoCoordinator
+        | TeslemetryEnergySiteConfigLocalCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
@@ -172,7 +176,19 @@ class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.info_coordinator, key)
+        # A paired site reads the config-backed keys from its local config
+        # coordinator; everything else stays on the cloud info coordinator.
+        coordinator: (
+            TeslemetryEnergySiteInfoCoordinator
+            | TeslemetryEnergySiteConfigLocalCoordinator
+        ) = data.info_coordinator
+        if (
+            data.config_local_coordinator is not None
+            and key in LOCAL_CONFIG_COORDINATOR_KEYS
+        ):
+            coordinator = data.config_local_coordinator
+
+        super().__init__(coordinator, key)
 
 
 class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):

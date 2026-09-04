@@ -59,6 +59,7 @@ from .const import (
 )
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
+    TeslemetryEnergySiteConfigLocalCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryMetadataCoordinator,
@@ -596,11 +597,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 hass, entry, bool(battery), site_id, energy_site
             )
 
+            # A paired site also reads its config.json locally so the
+            # config-backed entities read back from the LAN gateway.
+            config_local_coordinator = (
+                TeslemetryEnergySiteConfigLocalCoordinator(
+                    hass, entry, energy_site_api.primary.powerwall
+                )
+                if isinstance(energy_site_api, EnergySiteRouter)
+                else None
+            )
+
             energysites.append(
                 TeslemetryEnergyData(
                     api=energy_site_api,
                     live_coordinator=live_coordinator,
                     info_coordinator=info_coordinator,
+                    config_local_coordinator=config_local_coordinator,
                     history_coordinator=history_coordinator,
                     id=site_id,
                     device=device,
@@ -620,6 +632,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         *(
             energysite.info_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
+        ),
+        # A local config read must not fail setup: a paired gateway that is
+        # briefly unreachable should still load with cloud functionality, so
+        # refresh non-fatally and let the config-backed entities go unavailable.
+        *(
+            energysite.config_local_coordinator.async_refresh()
+            for energysite in energysites
+            if energysite.config_local_coordinator is not None
         ),
     )
 

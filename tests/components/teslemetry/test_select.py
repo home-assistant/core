@@ -32,6 +32,7 @@ from .const import (
     SITE_INFO,
     VEHICLE_DATA_ALT,
 )
+from .test_init import _TEST_RSA_KEY_PEM, _entry_with_powerwall
 
 from tests.common import async_fire_time_changed
 
@@ -558,3 +559,37 @@ async def test_export_rule_update_attrs_logic(
     state = hass.states.get("select.energy_site_allow_export")
     assert state
     assert state.state == expected_state
+
+
+async def test_paired_site_operation_mode_reads_local(
+    hass: HomeAssistant,
+    mock_powerwall_config: AsyncMock,
+) -> None:
+    """A paired site reads the operation mode back from local config.json.
+
+    The cloud site_info mode is "self_consumption"; the operation select
+    instead reflects the local top-level default_real_mode, while the
+    export-rule select stays on cloud.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_config.return_value = {
+        "default_real_mode": EnergyOperationMode.AUTONOMOUS
+    }
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SELECT]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("select.energy_site_operation_mode").state
+        == EnergyOperationMode.AUTONOMOUS
+    )
+    # The export rule select is not rerouted and keeps its cloud value.
+    assert hass.states.get("select.energy_site_allow_export").state == "pv_only"

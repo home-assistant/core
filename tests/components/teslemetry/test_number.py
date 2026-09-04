@@ -19,6 +19,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
+from .test_init import _TEST_RSA_KEY_PEM, _entry_with_powerwall
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -178,3 +179,42 @@ async def test_number_streaming(
     # Assert the entities restored their values with concrete assertions
     assert hass.states.get("number.test_charge_current").state == "24"
     assert hass.states.get("number.test_charge_limit").state == "99"
+
+
+@pytest.mark.parametrize(
+    ("raw_reserve", "expected"),
+    [
+        # config.json stores the raw reserve; raw_to_scaled_reserve is
+        # (raw - 5) / 0.95, so raw 24 -> 20.0 and raw 100 -> 100.0.
+        pytest.param(24, "20.0", id="mid"),
+        pytest.param(100, "100.0", id="full"),
+    ],
+)
+async def test_paired_site_backup_reserve_reads_local(
+    hass: HomeAssistant,
+    mock_powerwall_config: AsyncMock,
+    raw_reserve: int,
+    expected: str,
+) -> None:
+    """A paired site reads the backup reserve back from local config.json.
+
+    The cloud site_info reserve is 0; the number instead reflects the local
+    raw value scaled to the user-facing percentage.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_config.return_value = {
+        "site_info": {"backup_reserve_percent": raw_reserve}
+    }
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.NUMBER]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("number.energy_site_backup_reserve").state == expected

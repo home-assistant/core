@@ -306,3 +306,13 @@ def mock_stream_connected():
         return_value=True,
     ) as mock_stream_connected:
         yield mock_stream_connected
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_config():
+    """Mock the local Powerwall config.json read used by paired energy sites."""
+    with patch(
+        "aiopowerwall.client.PowerwallClient.get_config",
+        return_value={},
+    ) as mock_powerwall_config:
+        yield mock_powerwall_config
