@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import async_update_entity
 
 
 async def test_climate_state(
@@ -174,12 +175,15 @@ async def test_climate_hvac_action_derived_modes(
     expected: HVACAction,
 ) -> None:
     """Test the hvac action for modes no fixture unit reports."""
-    entity = hass.data[CLIMATE_DOMAIN].get_entity("climate.l1_102")
-    entity._unit.mode = mode
-    entity._unit.demand = demand
-    entity._unit.temperature = temperature
+    unit = load_int.runtime_data._coolmaster._units["L1.102"]
+    unit["mode"] = mode
+    unit["demand"] = demand
+    unit["temperature"] = temperature
 
-    assert entity.hvac_action == expected
+    await async_update_entity(hass, "climate.l1_102")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.l1_102").attributes[ATTR_HVAC_ACTION] == expected
 
 
 async def test_climate_fan_mode(
