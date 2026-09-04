@@ -48,6 +48,9 @@
       }
     },
     "sensor": {
+      "air_outlet_temperature": {
+        "name": "Air outlet temperature"
+      },
       "central_heating_flow_volume": {
         "name": "Central heating pump flow"
       },
@@ -66,8 +69,21 @@
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
       },
+      "dhw_control_method": {
+        "name": "DHW control method",
+        "state": {
+          "boost": "Boost",
+          "fixed": "Fixed setpoint",
+          "none": "None",
+          "schedule": "Schedule",
+          "weheat_intelligence": "Weheat Intelligence"
+        }
+      },
       "dhw_flow_volume": {
         "name": "DHW pump flow"
+      },
+      "dhw_target_temperature": {
+        "name": "DHW target temperature"
       },
       "dhw_top_temperature": {
         "name": "DHW top temperature"
@@ -86,6 +102,9 @@
       },
       "electricity_used_heating": {
         "name": "Electricity used heating"
+      },
+      "electricity_used_indoor_unit": {
+        "name": "Electricity used indoor unit"
       },
       "electricity_used_standby": {
         "name": "Electricity used standby"
