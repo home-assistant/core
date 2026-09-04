@@ -14,10 +14,8 @@ CLIENT_ID = "homeassistant"
 
 SUBENTRY_TYPE_VEHICLE = "vehicle"
 
-# A vehicle subentry's CONF_ADDRESS (added once paired) is what enables Bluetooth-first routing.
 CONF_VIN = "vin"
 
-# EC private key that signs BLE commands; its public/virtual key is what the user pairs to the vehicle.
 VEHICLE_KEY_FILE = "tesla_vehicle.key"
 
 BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"
