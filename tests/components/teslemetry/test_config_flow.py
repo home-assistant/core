@@ -890,11 +890,21 @@ async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> 
     vehicle.disconnect.assert_awaited_once()
 
 
-async def test_subentry_handshake_error_aborts(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "handshake_error",
+    [
+        pytest.param(TeslaFleetError(), id="tesla_fleet_error"),
+        pytest.param(BleakError("boom"), id="bleak_error"),
+        pytest.param(TimeoutError(), id="timeout_error"),
+    ],
+)
+async def test_subentry_handshake_error_aborts(
+    hass: HomeAssistant, handshake_error: Exception
+) -> None:
     """A handshake failure aborts with cannot_connect; a disconnect error is swallowed."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle()
-    vehicle.handshakeVehicleSecurity = AsyncMock(side_effect=TeslaFleetError())
+    vehicle.handshakeVehicleSecurity = AsyncMock(side_effect=handshake_error)
     vehicle.disconnect = AsyncMock(side_effect=BleakError("boom"))
 
     with (
