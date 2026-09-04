@@ -617,6 +617,62 @@ async def test_coordinator_rate_periods(
     assert stats == snapshot
 
 
+async def test_coordinator_rate_periods_time_of_use_and_tiered(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a rate that is both time-of-use and tiered keeps both in the key.
+
+    Each combination is billed at its own price, so merging the tiers inside
+    a period would throw away the split the utility bills on.
+    """
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 2, 8)),
+            consumption=12.0,
+            provided_cost=4.5,
+            read_components=[
+                _read_component("OFF_PEAK", 6.0, 1.5, tier_number=1),
+                _read_component("OFF_PEAK", 4.0, 2.0, tier_number=2),
+                _read_component("PEAK", 2.0, 1.0, tier_number=1),
+            ],
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {
+            f"opower:pge_elec_111111_{key}_energy_{kind}"
+            for key in ("off_peak_tier_1", "off_peak_tier_2", "peak_tier_1")
+            for kind in ("consumption", "cost")
+        },
+        "hour",
+        None,
+        {"state"},
+    )
+    states = {
+        statistic_id.removeprefix("opower:pge_elec_111111_"): stat[0]["state"]
+        for statistic_id, stat in stats.items()
+    }
+    assert states == {
+        "off_peak_tier_1_energy_consumption": 6.0,
+        "off_peak_tier_1_energy_cost": 1.5,
+        "off_peak_tier_2_energy_consumption": 4.0,
+        "off_peak_tier_2_energy_cost": 2.0,
+        "peak_tier_1_energy_consumption": 2.0,
+        "peak_tier_1_energy_cost": 1.0,
+    }
+
+
 async def test_coordinator_rate_periods_net_metering(
     recorder_mock: Recorder,
     hass: HomeAssistant,

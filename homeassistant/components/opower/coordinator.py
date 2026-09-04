@@ -89,16 +89,15 @@ def _rate_period_key(component: ReadComponent) -> str | None:
     Time-of-use utilities report the period in day_part, e.g. "ON_PEAK+RT02/TOD"
     where the period is the part before the "+". Tiered utilities report the
     tier in tier_number. A rate that is both time-of-use and tiered reports
-    both; the time-of-use period wins and the tiers are merged inside it.
-    Returns None if the component has neither.
+    both, and each combination is billed at its own price, so the key keeps
+    both, e.g. "off_peak_tier_2". Returns None if the component has neither.
     """
+    parts = []
     if component.day_part:
-        key = component.day_part.split("+", 1)[0]
-    elif component.tier_number is not None:
-        key = f"tier_{component.tier_number}"
-    else:
-        return None
-    return slugify(key) or None
+        parts.append(component.day_part.split("+", 1)[0])
+    if component.tier_number is not None:
+        parts.append(f"tier_{component.tier_number}")
+    return slugify("_".join(parts)) or None
 
 
 def _rate_periods(
