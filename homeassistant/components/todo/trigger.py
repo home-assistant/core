@@ -10,11 +10,24 @@ from typing import TYPE_CHECKING, cast, override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.trigger import (
     Trigger,
@@ -79,6 +92,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
 
         self._pending_listener_task: asyncio.Task[None] | None = None
         self._unsubscribe_listeners: list[CALLBACK_TYPE] = []
+        self._state_change_unsub: CALLBACK_TYPE | None = None
 
     @override
     @callback
@@ -114,6 +128,27 @@ class ItemChangeListener(TargetEntityChangeTracker):
             )
             self._unsubscribe_listeners.append(unsub)
 
+        if self._state_change_unsub:
+            self._state_change_unsub()
+            self._state_change_unsub = None
+        if tracked_entities:
+            self._state_change_unsub = async_track_state_change_event(
+                self._hass, tracked_entities, self._async_todo_entity_state_changed
+            )
+
+    @callback
+    def _async_todo_entity_state_changed(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Config entry reload recreates the entity without a registry change."""
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
+            return
+        if old_state is not None and old_state.state != STATE_UNAVAILABLE:
+            return
+        self._handle_entities_update(self._referenced_entities())
+
     @override
     @callback
     def _unsubscribe(self) -> None:
@@ -122,6 +157,9 @@ class ItemChangeListener(TargetEntityChangeTracker):
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
             self._pending_listener_task = None
+        if self._state_change_unsub:
+            self._state_change_unsub()
+            self._state_change_unsub = None
         for unsub in self._unsubscribe_listeners:
             unsub()
 
