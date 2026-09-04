@@ -669,6 +669,9 @@ besen==0.4.0
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.blanco
+blanco-smart-home-api-client==1.1.0
+
 # homeassistant.components.esphome
 bleak-esphome==4.0.0
 
