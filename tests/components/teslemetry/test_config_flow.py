@@ -1047,7 +1047,53 @@ async def test_add_flow_aborts_when_all_sites_added(hass: HomeAssistant) -> None
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_energy_sites"
+    assert result["reason"] == "all_sites_added"
+
+
+async def test_add_flow_aborts_when_no_powerwall(hass: HomeAssistant) -> None:
+    """The add flow aborts when the account has no Powerwall-capable site."""
+    products = deepcopy(PRODUCTS)
+    products["response"] = [
+        product
+        for product in products["response"]
+        if product.get("energy_site_id") != SITE_ID
+    ]
+    products["response"].append(
+        {
+            "energy_site_id": WALL_CONNECTOR_SITE_ID,
+            "site_name": "Wall Connector Site",
+            "components": {
+                "battery": False,
+                "solar": False,
+                "grid": True,
+                "wall_connectors": [{"device_id": "wc-1", "din": "WC-DIN-1"}],
+            },
+        }
+    )
+    metadata = deepcopy(METADATA)
+    del metadata["energy_sites"][str(SITE_ID)]
+    metadata["energy_sites"][str(WALL_CONNECTOR_SITE_ID)] = {
+        "access": True,
+        "name": "Wall Connector Site",
+    }
+
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with (
+        patch("tesla_fleet_api.teslemetry.Teslemetry.products", return_value=products),
+        patch("tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=metadata),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_ENERGY_SITE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_powerwall"
 
 
 @pytest.mark.usefixtures("mock_rsa_key")

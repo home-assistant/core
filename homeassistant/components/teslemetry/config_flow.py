@@ -219,14 +219,20 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             for subentry in entry.subentries.values()
             if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
         }
-        available = {
-            str(energy_data.id): energy_data
+        local_control_sites = [
+            energy_data
             for energy_data in entry.runtime_data.energysites
             if energy_data.can_local_control
-            and str(energy_data.id) not in added_site_ids
+        ]
+        available = {
+            str(energy_data.id): energy_data
+            for energy_data in local_control_sites
+            if str(energy_data.id) not in added_site_ids
         }
         if not available:
-            return self.async_abort(reason="no_energy_sites")
+            return self.async_abort(
+                reason="all_sites_added" if local_control_sites else "no_powerwall"
+            )
 
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
