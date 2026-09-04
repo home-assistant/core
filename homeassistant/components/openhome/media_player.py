@@ -264,8 +264,8 @@ class OpenhomeDevice(MediaPlayerEntity):
                 await self._device.invoke_pin(pin)
             else:
                 _LOGGER.error("Pins service not supported")
-        except OpenhomeError:
-            _LOGGER.error("Error invoking pin %s", pin)
+        except OpenhomeError as err:
+            _LOGGER.error("Error invoking pin %s: %s", pin, err)
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
