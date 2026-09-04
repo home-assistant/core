@@ -186,6 +186,7 @@ class SetFanModeIntent(intent.IntentHandler):
             service_data={ATTR_FAN_MODE: fan_mode},
             target={ATTR_ENTITY_ID: climate_state.entity_id},
             blocking=True,
+            context=intent_obj.context,
         )
 
         response = intent_obj.create_response()
