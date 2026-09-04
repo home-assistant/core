@@ -1004,7 +1004,7 @@ evolutionhttp==0.0.19
 faadelays==2023.9.1
 
 # homeassistant.components.famn
-famnsdk==1.0.6
+famnsdk==1.0.7
 
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.6
