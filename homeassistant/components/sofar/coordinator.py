@@ -12,7 +12,7 @@ from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -73,12 +73,10 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
                         translation_key="no_component_answered",
-                        translation_placeholders={"name": self.name},
                     )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                    translation_placeholders={"name": self.name},
                 ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
@@ -86,30 +84,9 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
-            if "identity" in report.updated:
-                self._async_update_device_versions()
             return report
-
-    @callback
-    def _async_update_device_versions(self) -> None:
-        """Push versions onto the device; device_info is read once."""
-        identity = self.device.identity
-        hw_version = identity.hardware_version or None
-        sw_version = identity.software_version or None
-        serial = self.device.serial_number
-        assert serial is not None
-        registry = dr.async_get(self.hass)
-        device = registry.async_get_device_by_identifier(
-            (DOMAIN, serial), self.config_entry.entry_id
-        )
-        if device is None:
-            return
-        registry.async_update_device(
-            device.id, hw_version=hw_version, sw_version=sw_version
-        )
 
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
         """Retry failures once; skip if none answered, to avoid doubling timeout."""

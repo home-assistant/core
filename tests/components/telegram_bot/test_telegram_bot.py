@@ -27,6 +27,7 @@ from telegram.error import (
 )
 
 from homeassistant.components.telegram_bot import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
@@ -808,6 +809,39 @@ async def test_webhook_endpoint_generates_telegram_attachment_event(
 
     assert events[0].data["file_id"] == expected_file_id
     assert isinstance(events[0].context, Context)
+
+
+async def test_polling_platform_allowed_updates(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test polling asks for the updates the integration handles.
+
+    Telegram keeps the setting per bot and reuses the last one it was given
+    when it is omitted, so it has to be sent on every start.
+    """
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.updater.start_polling = AsyncMock()
+        application.updater.stop = AsyncMock()
+        application.initialize = AsyncMock()
+        application.start = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        application.updater.start_polling.call_args.kwargs["allowed_updates"]
+        == ALLOWED_UPDATES
+    )
 
 
 async def test_polling_platform_message_text_update(

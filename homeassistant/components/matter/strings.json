@@ -6,7 +6,6 @@
       "addon_install_failed": "Failed to install the Matter Server app.",
       "addon_start_failed": "Failed to start the Matter Server app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_matter_addon": "Discovered app is not the official Matter Server app.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
@@ -274,6 +273,9 @@
       "sensitivity_level": {
         "name": "Sensitivity"
       },
+      "slat_rotation_time": {
+        "name": "Slat rotation time"
+      },
       "speaker_setpoint": {
         "name": "Volume"
       },
@@ -282,6 +284,12 @@
       },
       "temperature_setpoint": {
         "name": "Temperature setpoint"
+      },
+      "travel_time_down": {
+        "name": "Travel time down"
+      },
+      "travel_time_up": {
+        "name": "Travel time up"
       },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"

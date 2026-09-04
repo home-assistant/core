@@ -1,13 +1,27 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please reconfigure the same inverter you originally set up."
     },
     "error": {
       "cannot_connect": "Failed to connect: {error}",
       "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "[%key:component::sofar::config::step::user::data_description::host%]",
+          "port": "[%key:component::sofar::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::sofar::config::step::user::data_description::unit_id%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -32,7 +46,97 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "active_power_limit_enabled": {
+        "name": "Active power limit enabled"
+      },
+      "fault_ac_output": {
+        "name": "AC output fault"
+      },
+      "fault_arc_fault": {
+        "name": "Arc fault (AFCI)"
+      },
+      "fault_battery": {
+        "name": "Battery fault"
+      },
+      "fault_battery_pack": {
+        "name": "Battery pack communication fault"
+      },
+      "fault_combiner_box": {
+        "name": "Combiner box fault"
+      },
+      "fault_communication": {
+        "name": "Communication fault"
+      },
+      "fault_dc_bus": {
+        "name": "DC bus fault"
+      },
+      "fault_derating": {
+        "name": "Derating"
+      },
+      "fault_fan": {
+        "name": "Fan fault"
+      },
+      "fault_grid": {
+        "name": "Grid fault"
+      },
+      "fault_input_fuse": {
+        "name": "Input fuse open"
+      },
+      "fault_insulation": {
+        "name": "Insulation fault"
+      },
+      "fault_internal": {
+        "name": "Internal fault"
+      },
+      "fault_pv": {
+        "name": "PV fault"
+      },
+      "fault_shutdown": {
+        "name": "Shutdown"
+      },
+      "fault_string_fuse": {
+        "name": "String fuse open"
+      },
+      "fault_thermal": {
+        "name": "Thermal fault"
+      }
+    },
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
+    "select": {
+      "charger_use_mode": {
+        "name": "Charger use mode",
+        "state": {
+          "feed_in_priority_mode": "Feed-in priority mode",
+          "generator_mode": "Generator mode",
+          "off_grid_mode": "Off-grid mode",
+          "passive_mode": "Passive mode",
+          "peak_cut_mode": "Peak cut mode",
+          "self_use": "Self use",
+          "time_of_use": "Time of use",
+          "timing_mode": "Timing mode"
+        }
+      },
+      "eps_control": {
+        "name": "EPS mode",
+        "state": {
+          "turn_off": "Turn off",
+          "turn_on_enable_cold_start": "Turn on, enable cold start",
+          "turn_on_prohibit_cold_start": "Turn on, prohibit cold start"
+        }
+      }
+    },
     "sensor": {
+      "active_power_export_limit": {
+        "name": "Active power limit"
+      },
       "active_power_load_sys": {
         "name": "Active power load system"
       },
@@ -219,6 +323,17 @@
       "export_energy_total": {
         "name": "Export energy total"
       },
+      "feedin_limitation_mode": {
+        "name": "Feed-in limitation mode",
+        "state": {
+          "disabled": "[%key:component::sofar::selector::feedin_limitation_mode::options::disabled%]",
+          "enabled_3_phase_limit": "[%key:component::sofar::selector::feedin_limitation_mode::options::enabled_3_phase_limit%]",
+          "enabled_feed_in_limitation": "[%key:component::sofar::selector::feedin_limitation_mode::options::enabled_feed_in_limitation%]"
+        }
+      },
+      "feedin_max_power": {
+        "name": "Feed-in maximum power"
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -348,6 +463,25 @@
       "passive_eps_wait_time": {
         "name": "EPS wait time"
       },
+      "passive_mode_battery_power_max": {
+        "name": "Passive mode maximum battery power"
+      },
+      "passive_mode_battery_power_min": {
+        "name": "Passive mode minimum battery power"
+      },
+      "passive_mode_grid_power": {
+        "name": "Passive mode grid power"
+      },
+      "passive_mode_timeout": {
+        "name": "Passive mode timeout"
+      },
+      "passive_mode_timeout_action": {
+        "name": "Passive mode timeout action",
+        "state": {
+          "force_standby": "[%key:component::sofar::selector::passive_mode_timeout_action::options::force_standby%]",
+          "return_to_previous_mode": "[%key:component::sofar::selector::passive_mode_timeout_action::options::return_to_previous_mode%]"
+        }
+      },
       "power": {
         "name": "Power"
       },
@@ -398,9 +532,6 @@
       },
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
-      },
-      "serial_number": {
-        "name": "Serial number"
       },
       "solar_generation_today": {
         "name": "Solar generation today"
@@ -470,21 +601,123 @@
       },
       "voltage_phase_l2n": {
         "name": "Voltage phase L2N"
-      },
-      "waiting_ends": {
-        "name": "Waiting ends"
       }
     }
   },
   "exceptions": {
+    "invalid_action_value": {
+      "message": "The provided value is not valid for this action."
+    },
+    "max_power_not_a_multiple_of_100": {
+      "message": "Maximum power must be a multiple of 100 W."
+    },
     "modbus_error": {
-      "message": "{error}"
+      "message": "Error communicating with the inverter."
     },
     "no_component_answered": {
-      "message": "{name}: no component answered."
+      "message": "No component answered."
     },
     "unrecognized_inverter_model": {
       "message": "Unrecognized Sofar inverter model for {title}."
+    },
+    "unsupported_action": {
+      "message": "{title} does not support this action."
+    },
+    "write_failed": {
+      "message": "Failed to write to the inverter."
+    }
+  },
+  "selector": {
+    "feedin_limitation_mode": {
+      "options": {
+        "disabled": "Disabled",
+        "enabled_3_phase_limit": "Enabled, three-phase limit",
+        "enabled_feed_in_limitation": "Enabled"
+      }
+    },
+    "passive_mode_timeout_action": {
+      "options": {
+        "force_standby": "Force standby",
+        "return_to_previous_mode": "Return to previous mode"
+      }
+    }
+  },
+  "services": {
+    "set_active_power_limit": {
+      "description": "Caps the inverter's own output as a percentage of its rated power, which is the power rating on the inverter's nameplate, usually also in its model name.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "enabled": {
+          "description": "Whether the inverter applies the limit. Limit is required either way: disabling still writes it, but the device ignores it until re-enabled.",
+          "name": "Enabled"
+        },
+        "limit": {
+          "description": "The output ceiling, as a percentage of rated power. On a 4.4 kW inverter, 50% caps it at 2.2 kW.",
+          "name": "Limit"
+        }
+      },
+      "name": "Set active power limit"
+    },
+    "set_feed_in_limit": {
+      "description": "Limits how much power the inverter exports to the grid.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "max_power": {
+          "description": "The export ceiling in watts. The inverter only accepts multiples of 100 W.",
+          "name": "Maximum power"
+        },
+        "mode": {
+          "description": "Whether to limit the total exported power, or per phase.",
+          "name": "Mode"
+        }
+      },
+      "name": "Set feed-in limit"
+    },
+    "set_passive_mode_power": {
+      "description": "Commands the passive-mode setpoints. Only for inverters with battery storage.",
+      "fields": {
+        "battery_power_max": {
+          "description": "The upper end of the battery power window.",
+          "name": "Maximum battery power"
+        },
+        "battery_power_min": {
+          "description": "The lower end of the battery power window.",
+          "name": "Minimum battery power"
+        },
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "grid_power": {
+          "description": "The power to draw from the grid, or to export when negative.",
+          "name": "Grid power"
+        }
+      },
+      "name": "Set passive mode power"
+    },
+    "set_passive_mode_timeout": {
+      "description": "Sets how long a passive-mode command holds, and what the inverter does when it expires. Only for inverters with battery storage.",
+      "fields": {
+        "action": {
+          "description": "What the inverter does once the timeout expires.",
+          "name": "Timeout action"
+        },
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "timeout": {
+          "description": "How long a passive-mode command holds, in seconds.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Set passive mode timeout"
     }
   }
 }
