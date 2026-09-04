@@ -697,3 +697,99 @@ async def test_coordinator_rate_period_returns_after_absence(
     )
     assert stats[off_peak_id][0]["start"] == hour[3].timestamp()
     assert stats[off_peak_id][0]["sum"] == 2.0
+
+
+async def test_coordinator_rate_periods_added_after_totals(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test rate periods that appear once the totals already have statistics.
+
+    This is the upgrade case: the totals continue from their stored statistic
+    at the first refetched read and skip that read, but the new period
+    statistics must include it.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
+
+    # First run: reads without components, so only the totals are stored
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=hour[0], end_time=hour[1], consumption=1.0, provided_cost=0.5
+        ),
+        CostRead(
+            start_time=hour[1], end_time=hour[2], consumption=2.0, provided_cost=1.0
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # Second run: the same reads now carry components, plus a new read
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=hour[0],
+            end_time=hour[1],
+            consumption=1.0,
+            provided_cost=0.5,
+            read_components=[_read_component("ON_PEAK", 1.0, 0.5)],
+        ),
+        CostRead(
+            start_time=hour[1],
+            end_time=hour[2],
+            consumption=2.0,
+            provided_cost=1.0,
+            read_components=[_read_component("ON_PEAK", 2.0, 1.0)],
+        ),
+        CostRead(
+            start_time=hour[2],
+            end_time=hour[2] + timedelta(hours=1),
+            consumption=4.0,
+            provided_cost=2.0,
+            read_components=[_read_component("ON_PEAK", 4.0, 2.0)],
+        ),
+    ]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {
+            "opower:pge_elec_111111_energy_consumption",
+            "opower:pge_elec_111111_on_peak_energy_consumption",
+            "opower:pge_elec_111111_on_peak_energy_cost",
+        },
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    # The totals are unchanged for the first read and continue from there
+    assert [s["sum"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.0,
+        3.0,
+        7.0,
+    ]
+    # The new period series starts at the first read, not the second
+    assert [
+        s["start"] for s in stats["opower:pge_elec_111111_on_peak_energy_consumption"]
+    ] == [
+        hour[0].timestamp(),
+        hour[1].timestamp(),
+        hour[2].timestamp(),
+    ]
+    assert [
+        s["sum"] for s in stats["opower:pge_elec_111111_on_peak_energy_consumption"]
+    ] == [
+        1.0,
+        3.0,
+        7.0,
+    ]
+    assert [s["sum"] for s in stats["opower:pge_elec_111111_on_peak_energy_cost"]] == [
+        0.5,
+        1.5,
+        3.5,
+    ]
