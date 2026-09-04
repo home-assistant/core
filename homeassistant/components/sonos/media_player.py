@@ -485,13 +485,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @override
     def media_seek(self, position: float) -> None:
         """Send seek command."""
-        self.coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
+        # Capture the target before the blocking call: a topology change while
+        # seeking must not update a different coordinator's media.
+        coordinator = self.coordinator
+        media = coordinator.media
+        coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
         # Sonos does not raise an event for position changes, so nothing else
         # refreshes the entity after a seek; the commanded position is
         # authoritative for the moment the command succeeded.
-        self.media.position = int(position)
-        self.media.position_updated_at = dt_util.utcnow()
-        self.media.write_media_player_states()
+        media.position = int(position)
+        media.position_updated_at = dt_util.utcnow()
+        media.write_media_player_states()
 
     @soco_error()
     @override
