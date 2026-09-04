@@ -103,6 +103,8 @@ async def test_outgoing_connection_shared_listener(
         call.args[0] for call in mock_outgoing_connection_server.register.call_args_list
     ]
     assert macs == [MAC, "aa:bb:cc:dd:ee:01"]
+    # One server for both entries; a lost @singleton would build two
+    assert mock_outgoing_connection_server.constructor.call_count == 1
 
 
 async def test_outgoing_connection_requires_mac_unique_id(

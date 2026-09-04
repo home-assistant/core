@@ -103,7 +103,9 @@ def mock_outgoing_connection_server() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
         return_value=server,
-    ):
+    ) as server_class:
+        # Tests assert the singleton builds exactly one server
+        server.constructor = server_class
         yield server
 
 

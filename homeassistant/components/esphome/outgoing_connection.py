@@ -20,6 +20,9 @@ def _async_get_server(hass: HomeAssistant) -> OutgoingConnectionServer:
 
     @callback
     def _async_hass_stop(event: Event) -> None:
+        # Evict the singleton too: a registration after stop must build a
+        # fresh server, not hand a route to this closed one
+        hass.data.pop(_KEY_OUTGOING_CONNECTION_SERVER, None)
         server.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_hass_stop)
