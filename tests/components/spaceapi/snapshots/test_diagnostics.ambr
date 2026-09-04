@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'logo': 'https://home-assistant.io/logo.png',
+      'space': 'Home',
+      'state': dict({
+        'entity_id': 'test.test_door',
+      }),
+      'url': 'https://home-assistant.io',
+    }),
+    'config_entry_options': dict({
+      'cam': list([
+        'https://home-assistant.io/cam1',
+        'https://home-assistant.io/cam2',
+      ]),
+      'contact': dict({
+        'email': 'hello@home-assistant.io',
+      }),
+      'feeds': dict({
+        'blog': dict({
+          'url': 'https://home-assistant.io/blog',
+        }),
+        'calendar': dict({
+          'type': 'ical',
+          'url': 'https://home-assistant.io/calendar',
+        }),
+        'flickr': dict({
+          'url': 'https://www.flickr.com/photos/home-assistant',
+        }),
+        'wiki': dict({
+          'type': 'rss',
+          'url': 'https://home-assistant.io/wiki',
+        }),
+      }),
+      'projects': list([
+        'https://home-assistant.io/projects/1',
+        'https://home-assistant.io/projects/2',
+        'https://home-assistant.io/projects/3',
+      ]),
+      'sensors': dict({
+        'humidity': list([
+          'test.hum1',
+        ]),
+        'temperature': list([
+          'test.temp1',
+          'test.temp2',
+          'test.temp3',
+        ]),
+      }),
+      'spacefed': dict({
+        'spacenet': True,
+        'spacesaml': False,
+      }),
+      'state': dict({
+        'icon_closed': 'https://home-assistant.io/close.png',
+        'icon_open': 'https://home-assistant.io/open.png',
+      }),
+    }),
+  })
+# ---
