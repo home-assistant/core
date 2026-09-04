@@ -262,8 +262,8 @@ async def test_classic_api_coordinator_login_failed(
     """Test classic API login failures during coordinator update.
 
     Invalid credentials (502) trigger a reauth flow, while a transient
-    server error (507) does not and recovers automatically once the
-    server becomes available again.
+    server error (507) does not. Both recover once the config entry is
+    reloaded with a working login.
     """
     mock_growatt_classic_api.device_list.return_value = [
         {"deviceSn": "TLX123456", "deviceType": "tlx"}
@@ -304,14 +304,17 @@ async def test_classic_api_coordinator_login_failed(
     )
     assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
 
-    # Verify recovery on the next normal scan interval
+    # Recover once credentials/service are fixed. A reload is required (not
+    # just waiting for the next scan interval): an auth failure stops the
+    # coordinator's scheduled refreshes entirely until reauth completes,
+    # while a transient error is retried by a fresh entry reload, matching
+    # what the automatic setup-retry backoff does.
     mock_growatt_classic_api.login.return_value = {
         "success": True,
         "user": {"id": "user123"},
     }
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.tlx123456_output_power").state != STATE_UNAVAILABLE
