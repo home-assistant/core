@@ -576,14 +576,15 @@ async def test_coordinator_rate_periods(
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    # Second run: the last hour is corrected and a new hour is added
+    # Second run: the last stored hour is refetched unchanged, as the
+    # coordinator always does, and a new hour is added
     mock_opower_api.async_get_cost_reads.return_value = [
         CostRead(
             start_time=dt_util.as_utc(datetime(2023, 1, 1, 10)),
             end_time=dt_util.as_utc(datetime(2023, 1, 1, 11)),
-            consumption=2.5,
-            provided_cost=0.75,
-            read_components=[_read_component(None, 2.5, 0.75, tier_number=1)],
+            consumption=2.0,
+            provided_cost=0.5,
+            read_components=[_read_component(None, 2.0, 0.5, tier_number=1)],
         ),
         CostRead(
             start_time=dt_util.as_utc(datetime(2023, 1, 1, 11)),
