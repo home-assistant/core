@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import climate
 from homeassistant.components.climate import HVACAction
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
@@ -618,5 +619,175 @@ async def test_bad_mode_group_config(
     assert len(hass.states.async_all(platform.domain)) == 0
     assert (
         f"Invalid config for 'template': Some required option(s) are missing from inclusive group '{group}', expected missing options"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("option", "option_type"),
+    [
+        ("max_humidity", "int"),
+        ("min_humidity", "int"),
+        ("max_temp", "float"),
+        ("min_temp", "float"),
+    ],
+)
+@pytest.mark.parametrize("value", ["not a number", None])
+async def test_bad_min_max_options(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    option: str,
+    option_type: str,
+    value: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad min max options in configuration."""
+    platform = TEST_CLIMATE
+    await setup_entity(
+        hass, platform, style, 0, {option: value, **MINIMUM_REQUIREMENTS}
+    )
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        f"Invalid config for 'template': expected {option_type} for dictionary value 'climate->0->{option}'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("option", "option_type"),
+    [
+        ("target_humidity_step", "int"),
+        ("target_temperature_step", "float"),
+    ],
+)
+@pytest.mark.parametrize("value", [-1, "not a number", None])
+async def test_bad_step_options(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    option: str,
+    option_type: str,
+    value: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad step options in configuration."""
+    platform = TEST_CLIMATE
+    await setup_entity(
+        hass, platform, style, 0, {option: value, **MINIMUM_REQUIREMENTS}
+    )
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        f"Invalid config for 'template': expected {option_type} for dictionary value 'climate->0->{option}'"
+        in caplog.text
+    ) or (
+        f"Invalid config for 'template': value must be at least 0 for dictionary value 'climate->0->{option}'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(0.5, 1.5), (0.1, 1.4), (1, 1)],
+)
+async def test_precision_option(
+    hass: HomeAssistant, style: ConfigurationStyle, value: float, expected: float
+) -> None:
+    """Test precision option."""
+    platform = TEST_CLIMATE
+    await setup_entity(
+        hass,
+        platform,
+        style,
+        1,
+        {
+            "precision": value,
+            "current_temperature": "{{ 1.4 }}",
+            **MINIMUM_REQUIREMENTS,
+        },
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes.get("current_temperature") == expected
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("value", [-1, 0.0, "not a number", False, None])
+async def test_bad_precision_option(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    value: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad precision option."""
+    platform = TEST_CLIMATE
+    await setup_entity(
+        hass, platform, style, 0, {"precision": value, **MINIMUM_REQUIREMENTS}
+    )
+
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': expected 0.5 or 0.1 or 1 for dictionary value 'climate->0->precision'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "value",
+    [UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS, UnitOfTemperature.KELVIN],
+)
+async def test_temperature_unit(
+    hass: HomeAssistant, style: ConfigurationStyle, value: float
+) -> None:
+    """Test temperature_unit option."""
+    platform = TEST_CLIMATE
+    await setup_entity(
+        hass,
+        platform,
+        style,
+        1,
+        {
+            "temperature_unit": value,
+            **MINIMUM_REQUIREMENTS,
+        },
+    )
+
+    assert len(hass.states.async_all(platform.domain)) == 1
+    assert hass.states.get(TEST_CLIMATE.entity_id)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("value", [-1, 0.0, "not a number", False, None])
+async def test_bad_temperature_unit(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    value: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad temperature_unit option."""
+    platform = TEST_CLIMATE
+    await setup_entity(
+        hass, platform, style, 0, {"temperature_unit": value, **MINIMUM_REQUIREMENTS}
+    )
+
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': value must be one of [<UnitOfTemperature.KELVIN: 'K'>, <UnitOfTemperature.CELSIUS: '°C'>, <UnitOfTemperature.FAHRENHEIT: '°F'>] for dictionary value 'climate->0->temperature_unit'"
         in caplog.text
     )
