@@ -218,6 +218,38 @@ async def test_white_mode_turn_on_remembers_brightness(
     assert state.state == STATE_ON
 
 
+async def test_white_mode_turn_on_enables_warm_dim_with_level(
+    hass: HomeAssistant,
+) -> None:
+    """Test warm dim mode is enabled and the requested level is sent.
+
+    set_warm_dim()'s signature is (device_id, enabled: bool, value=None, ...).
+    Regression test for passing the brightness positionally into `enabled`,
+    which silently dropped the requested level (only enabled/disabled based on
+    the truthiness of the int).
+    """
+    mock_entry = await async_setup_integration(hass, MockBridgeWithColorLight)
+
+    entity_id = "light.kitchen_kitchen_spectrum_light"
+    bridge = mock_entry.runtime_data.bridge
+
+    with patch.object(
+        bridge, "set_warm_dim", wraps=bridge.set_warm_dim
+    ) as mock_set_warm_dim:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_WHITE: 100},
+            target={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert mock_set_warm_dim.call_args is not None
+    assert mock_set_warm_dim.call_args.args[1] is True
+    assert mock_set_warm_dim.call_args.kwargs["value"] is not None
+
+
 async def test_async_update_syncs_previous_brightness(
     hass: HomeAssistant,
 ) -> None:
