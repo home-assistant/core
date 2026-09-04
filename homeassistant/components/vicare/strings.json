@@ -75,6 +75,11 @@
         "name": "Deactivate one-time charge"
       }
     },
+    "calendar": {
+      "circulation_schedule": {
+        "name": "Circulation schedule"
+      }
+    },
     "climate": {
       "heating": {
         "name": "Heating"
@@ -679,6 +684,18 @@
     }
   },
   "exceptions": {
+    "circulation_schedule_mode_not_supported": {
+      "message": "The device does not support circulation mode {mode} for {day}, supported modes are: {modes}"
+    },
+    "circulation_schedule_not_supported": {
+      "message": "This device does not support a DHW circulation pump schedule"
+    },
+    "circulation_schedule_overlap_not_allowed": {
+      "message": "The device does not support overlapping circulation slots, but {day} has overlapping slots"
+    },
+    "circulation_schedule_too_many_slots": {
+      "message": "The device supports at most {max_entries} circulation schedule slots per day, but {day} has more"
+    },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"
     },
@@ -698,7 +715,50 @@
       "title": "Update your API client in the Viessmann Developer Portal"
     }
   },
+  "selector": {
+    "circulation_schedule_mode": {
+      "options": {
+        "5_10_cycles": "5/10 cycles",
+        "5_25_cycles": "5/25 cycles",
+        "on": "On"
+      }
+    }
+  },
   "services": {
+    "set_circulation_schedule": {
+      "description": "Sets the DHW circulation pump weekly schedule.",
+      "fields": {
+        "friday": {
+          "description": "Circulation slots for Friday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::friday%]"
+        },
+        "monday": {
+          "description": "Circulation slots for Monday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::monday%]"
+        },
+        "saturday": {
+          "description": "Circulation slots for Saturday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::saturday%]"
+        },
+        "sunday": {
+          "description": "Circulation slots for Sunday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::sunday%]"
+        },
+        "thursday": {
+          "description": "Circulation slots for Thursday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::thursday%]"
+        },
+        "tuesday": {
+          "description": "Circulation slots for Tuesday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::tuesday%]"
+        },
+        "wednesday": {
+          "description": "Circulation slots for Wednesday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the circulation schedule calendar entity.",
+          "name": "[%key:common::time::wednesday%]"
+        }
+      },
+      "name": "Set circulation schedule"
+    },
     "set_vicare_mode": {
       "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {

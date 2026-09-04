@@ -1,3 +1,49 @@
+.circulation_day_fields: &circulation_day_fields
+  required: true
+  selector:
+    object:
+      multiple: true
+      label_field: start_time
+      description_field: end_time
+      fields:
+        start_time:
+          required: true
+          selector:
+            time:
+        end_time:
+          required: true
+          selector:
+            time:
+        mode:
+          required: true
+          selector:
+            select:
+              options:
+                - "on"
+                - "5_25_cycles"
+                - "5_10_cycles"
+              translation_key: circulation_schedule_mode
+              mode: dropdown
+        position:
+          required: true
+          selector:
+            number:
+              min: 0
+              mode: box
+
+set_circulation_schedule:
+  target:
+    entity:
+      integration: vicare
+      domain: water_heater
+  fields:
+    monday: *circulation_day_fields
+    tuesday: *circulation_day_fields
+    wednesday: *circulation_day_fields
+    thursday: *circulation_day_fields
+    friday: *circulation_day_fields
+    saturday: *circulation_day_fields
+    sunday: *circulation_day_fields
 set_vicare_mode:
   target:
     entity:
