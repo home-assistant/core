@@ -145,8 +145,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
         mode = self._unit.mode
         if mode == "fan":
-            # In fan only mode the fan runs for as long as the unit is on and the
-            # unit never calls for heating or cooling.
             return HVACAction.FAN
 
         if (demand := self._unit.demand) is None:

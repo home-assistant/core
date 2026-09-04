@@ -185,10 +185,8 @@ async def test_climate_hvac_action_derived_modes(
     """Test the hvac action for modes no fixture unit reports."""
     attributes = hass.states.get("climate.l1_102").attributes
 
-    if expected is None:
-        assert ATTR_HVAC_ACTION not in attributes
-    else:
-        assert attributes[ATTR_HVAC_ACTION] == expected
+    # The attribute is dropped entirely when hvac_action is None.
+    assert attributes.get(ATTR_HVAC_ACTION) == expected
 
 
 async def test_climate_fan_mode(
