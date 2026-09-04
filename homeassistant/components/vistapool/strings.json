@@ -3,7 +3,6 @@
     "abort": {
       "account_mismatch": "The credentials entered are for a different Vistapool account than the one being reconfigured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
@@ -163,6 +162,21 @@
           "slow": "[%key:component::vistapool::entity::select::pump_speed::state::slow%]"
         }
       },
+      "light_mode": {
+        "name": "Light mode",
+        "state": {
+          "auto": "Auto",
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "light_schedule_frequency": {
+        "name": "Light schedule frequency",
+        "state": {
+          "daily": "Daily",
+          "weekly": "Weekly"
+        }
+      },
       "pump_mode": {
         "name": "Pump mode",
         "state": {
@@ -208,12 +222,38 @@
         "name": "UV"
       }
     },
+    "switch": {
+      "electrolysis_boost": {
+        "name": "Electrolysis boost"
+      },
+      "electrolysis_cover": {
+        "name": "Electrolysis cover"
+      },
+      "filtration": {
+        "name": "Filtration"
+      },
+      "heating_climate": {
+        "name": "Heating climate"
+      },
+      "relay": {
+        "name": "Relay {number}"
+      },
+      "smart_mode_freeze": {
+        "name": "Smart mode freeze"
+      }
+    },
     "time": {
       "filtration_interval_end": {
         "name": "Filtration interval {number} end"
       },
       "filtration_interval_start": {
         "name": "Filtration interval {number} start"
+      },
+      "light_schedule_end": {
+        "name": "Light schedule end"
+      },
+      "light_schedule_start": {
+        "name": "Light schedule start"
       }
     }
   },

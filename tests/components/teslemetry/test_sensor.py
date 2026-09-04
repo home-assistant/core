@@ -1,7 +1,7 @@
 """Test the Teslemetry sensor platform."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -23,7 +23,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_conversion import PressureConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import ENERGY_HISTORY_EMPTY, METADATA, PRODUCTS, VEHICLE_DATA_ALT
+from .const import (
+    ENERGY_HISTORY_EMPTY,
+    LIVE_STATUS,
+    METADATA,
+    PRODUCTS,
+    VEHICLE_DATA_ALT,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -36,6 +42,59 @@ def _products_with_driver_assist(driver_assist: str) -> dict:
     products = deepcopy(PRODUCTS)
     products["response"][0]["vehicle_config"]["driver_assist"] = driver_assist
     return products
+
+
+def _live_status(**overrides: object) -> dict:
+    """Return a copy of the live_status document with overrides applied."""
+    data = deepcopy(LIVE_STATUS["response"])
+    data.update(overrides)
+    return data
+
+
+async def test_energy_live_status_stream_updates(
+    hass: HomeAssistant,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """A streamed live_status document drives the energy sensor states."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    # The REST cold read populated the fixture values.
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("sensor.wall_connector_power").state == "0.0"
+
+    live_status = _live_status(solar_power=456)
+    live_status["wall_connectors"][0]["wall_connector_power"] = 789
+    mock_energy_live_stream.send(live_status)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+    assert hass.states.get("sensor.wall_connector_power").state == "0.789"
+
+
+@pytest.mark.usefixtures("mock_energy_only")
+async def test_energy_only_account_streams_live_status(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_stream_listen: AsyncMock,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """An energy-only account starts one stream and streams live_status to sensors."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    assert entry.state is ConfigEntryState.LOADED
+
+    # The account-wide stream is started and the live_status listener registered.
+    mock_stream_listen.assert_called_once()
+    mock_energy_live_stream.assert_called_once()
+
+    mock_energy_live_stream.send(_live_status(solar_power=999))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.999"
+
+    # Credit sensors are still created for an energy-only account.
+    assert entry.unique_id is not None
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, "teslemetry", f"{entry.unique_id}_credit_quota"
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

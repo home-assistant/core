@@ -8,11 +8,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    service,
-)
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_INTERVAL,
@@ -53,27 +49,14 @@ def _async_get_target(
     hass: HomeAssistant, call: ServiceCall
 ) -> tuple[UnifiAccessConfigEntry, str]:
     """Resolve a service call to a UniFi Access config entry and door ID."""
-    device_id = call.data[ATTR_DEVICE_ID]
-    device, entry = dr.async_get_device_and_config_entry_for_domain(
-        hass, device_id, domain=DOMAIN
+    config_entry: UnifiAccessConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, call.data[ATTR_DEVICE_ID]
     )
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_target",
-        )
-
-    if entry is not None:
-        config_entry: UnifiAccessConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, entry.entry_id
-        )
-        coordinator = config_entry.runtime_data
-        for identifier_domain, identifier_value in device.identifiers:
-            if (
-                identifier_domain == DOMAIN
-                and identifier_value in coordinator.data.doors
-            ):
-                return config_entry, identifier_value
+    coordinator = config_entry.runtime_data
+    for identifier_domain, identifier_value in device.identifiers:
+        if identifier_domain == DOMAIN and identifier_value in coordinator.data.doors:
+            return config_entry, identifier_value
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -81,7 +64,8 @@ def _async_get_target(
     )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the UniFi Access integration."""
 
     async def _handle_set_lock_rule(call: ServiceCall) -> None:

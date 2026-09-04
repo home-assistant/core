@@ -39,7 +39,7 @@ on:
 env:
   CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.9"
+  HA_SHORT_VERSION: "2026.10"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
@@ -61,6 +61,18 @@ env:
   # 18 is the latest version
   # - 18.6 is the latest (as of 19 Aug 2026)
   POSTGRESQL_VERSIONS: "['postgres:12.22','postgres:15.19', 'postgres:18.6']"
+  # 3.40.1 is the oldest supported version (recorder MIN_VERSION_SQLITE),
+  # shipped in Debian 12 (bookworm)
+  # 3.53.4 is the latest (as of 25 Aug 2026) and the version shipped with
+  # HA OS and the official container images (Alpine 3.24); when bumping the
+  # latest, keep an entry for the version the container images ship
+  # The year is part of the sqlite.org amalgamation download URL
+  SQLITE_VERSIONS: '[{"version": "3.40.1", "year": "2022"}, {"version": "3.53.4", "year": "2026"}]'
+  RECORDER_TEST_DIRS: >-
+    tests/components/history
+    tests/components/logbook
+    tests/components/recorder
+    tests/components/sensor
   UV_CACHE_DIR: /tmp/uv-cache
   APT_CACHE_VERSION: 1
   SQLALCHEMY_WARN_20: 1
@@ -90,6 +102,7 @@ jobs:
       requirements: ${{ steps.core.outputs.requirements }}
       mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
       postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
+      sqlite_groups: ${{ steps.info.outputs.sqlite_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
       default_python: ${{ steps.info.outputs.default_python }}
       uv_version: ${{ steps.info.outputs.uv_version }}
@@ -156,6 +169,7 @@ jobs:
           integrations_glob=""
           mariadb_groups=${MARIADB_VERSIONS}
           postgresql_groups=${POSTGRESQL_VERSIONS}
+          sqlite_groups=${SQLITE_VERSIONS}
           test_full_suite="true"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
@@ -196,6 +210,7 @@ jobs:
 
             mariadb_groups="[]"
             postgresql_groups="[]"
+            sqlite_groups="[]"
             test_full_suite="false"
           fi
 
@@ -210,6 +225,7 @@ jobs:
           then
             mariadb_groups=${MARIADB_VERSIONS}
             postgresql_groups=${POSTGRESQL_VERSIONS}
+            sqlite_groups=${SQLITE_VERSIONS}
             test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
             test_group_count=10
             test_full_suite="true"
@@ -237,6 +253,8 @@ jobs:
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
           echo "postgresql_groups: ${postgresql_groups}"
           echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
+          echo "sqlite_groups: ${sqlite_groups}"
+          echo "sqlite_groups=${sqlite_groups}" >> $GITHUB_OUTPUT
           echo "python_versions: ${all_python_versions}"
           echo "python_versions=${all_python_versions}" >> $GITHUB_OUTPUT
           echo "default_python: ${default_python}"
@@ -1038,10 +1056,7 @@ jobs:
             -p no:sugar \
             --exclude-warning-annotations \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
-            tests/components/history \
-            tests/components/logbook \
-            tests/components/recorder \
-            tests/components/sensor \
+            ${RECORDER_TEST_DIRS} \
               2>&1 | tee pytest-${PYTHON_VERSION}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
@@ -1189,10 +1204,7 @@ jobs:
             -p no:sugar \
             --exclude-warning-annotations \
             --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
-            tests/components/history \
-            tests/components/logbook \
-            tests/components/recorder \
-            tests/components/sensor \
+            ${RECORDER_TEST_DIRS} \
               2>&1 | tee pytest-${PYTHON_VERSION}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
@@ -1223,6 +1235,119 @@ jobs:
           name: test-results-postgres-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: junit.xml
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  pytest-sqlite:
+    name: Run SQLite ${{ matrix.sqlite-group.version }} tests Python ${{ matrix.python-version }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    needs:
+      - info
+      - base
+      - gen-requirements-all
+      - hassfest
+      - prek
+      - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.sqlite_groups != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        sqlite-group: ${{ fromJson(needs.info.outputs.sqlite_groups) }}
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: >-
+            bluez
+            ffmpeg
+            libturbojpeg
+            libxml2-utils
+          version: ${{ env.APT_CACHE_VERSION }}
+          execute_install_scripts: true
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
+        id: python
+        uses: ./.github/actions/restore-or-build-venv
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ matrix.python-version }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Restore vendored sqlite3 wheel cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/sqlite3-vendor-wheel
+          key: >-
+            sqlite3-vendor-wheel-${{ runner.os }}-${{ runner.arch }}-${{
+            steps.python.outputs.python-version }}-${{
+            matrix.sqlite-group.version }}-${{
+            hashFiles('script/vendor_sqlite3.py', 'script/sqlite3_vendor/**') }}
+      - name: Install sqlite3 module with SQLite ${{ matrix.sqlite-group.version }}
+        env:
+          SQLITE_VERSION: ${{ matrix.sqlite-group.version }}
+          SQLITE_YEAR: ${{ matrix.sqlite-group.year }}
+        run: |
+          . venv/bin/activate
+          python3 -m script.vendor_sqlite3 \
+            --version "${SQLITE_VERSION}" \
+            --year "${SQLITE_YEAR}" \
+            --wheel-dir ~/sqlite3-vendor-wheel
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
+      - name: Run pytest (partially)
+        timeout-minutes: 20
+        id: pytest-partial
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
+          EXPECTED_SQLITE_VERSION: ${{ matrix.sqlite-group.version }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          . venv/bin/activate
+          python --version
+          set -o pipefail
+
+          # No coverage collection: these tests already run with coverage in
+          # the pytest-full job with the interpreter's own SQLite.
+          python3 -b -X dev -m pytest \
+            -qq \
+            --timeout=20 \
+            --numprocesses auto \
+            --dist=loadfile \
+            --snapshot-details \
+            -o console_output_style=count \
+            --durations=0 \
+            --durations-min=10 \
+            -p no:sugar \
+            -p tests.sqlite3_shim \
+            --exclude-warning-annotations \
+            ${RECORDER_TEST_DIRS} \
+              2>&1 | tee pytest-${PYTHON_VERSION}-sqlite-${EXPECTED_SQLITE_VERSION}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name:
+            pytest-${{ github.run_number }}-${{ matrix.python-version }}-sqlite-${{
+            matrix.sqlite-group.version }}
+          path: pytest-*.txt
+          overwrite: true
       - name: Check dirty
         run: |
           ./script/check_dirty

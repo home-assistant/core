@@ -7,11 +7,14 @@ from typing import TYPE_CHECKING, Any, Final
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import DOMAIN
 from .helpers import async_sync_device_time
@@ -126,34 +129,10 @@ def _resolve_config_entry(
     service_call: ServiceCall,
 ) -> tuple[BSBLanConfigEntry, dr.DeviceEntry]:
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
-    device_id: str = service_call.data[ATTR_DEVICE_ID]
-
-    config_entry: BSBLanConfigEntry | None
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        service_call.hass, device_id, domain=DOMAIN
+    config_entry: BSBLanConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        service_call.hass, DOMAIN, service_call.data[ATTR_DEVICE_ID]
     )
-
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    if config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="no_config_entry_for_device",
-            translation_placeholders={"device_id": device.name or device_id},
-        )
-
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_loaded",
-            translation_placeholders={"device_name": device.name or device_id},
-        )
-
     return config_entry, device
 
 
@@ -195,7 +174,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
         ) from err
 
     # Refresh the slow coordinator to get the updated schedule
-    await entry.runtime_data.slow_coordinator.async_request_refresh()
+    await entry.runtime_data.slow_coordinator.async_refresh_schedule_after_write()
 
 
 async def async_sync_time(service_call: ServiceCall) -> None:

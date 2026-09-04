@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube select entities."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     async_add_entities([QubeSGReadySelect(coordinator, entry)])
 
 
@@ -59,7 +59,7 @@ class QubeSGReadySelect(QubeEntity, SelectEntity):
         """Set the SG Ready mode."""
         try:
             success = await self.coordinator.client.set_sg_ready_mode(option)
-        except (ConnectionError, TimeoutError, OSError) as err:
+        except OSError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",

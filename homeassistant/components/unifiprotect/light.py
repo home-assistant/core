@@ -119,7 +119,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         if self._private is not None:
             super()._async_set_device_info()
             return
-        # market_name/firmware/URL and the NVR link are private-only.
+        # market_name/firmware/URL are private-only; the NVR link uses the
+        # device id registered at setup.
         public = cast(PublicLight, self.device)
         self._attr_device_info = DeviceInfo(
             name=public.display_name,
@@ -127,6 +128,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
             model_id=public.type,
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
+            via_device_id=self.data.nvr_device_id,
         )
 
     @callback
