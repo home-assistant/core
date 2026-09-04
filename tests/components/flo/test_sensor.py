@@ -119,4 +119,4 @@ async def test_manual_update_entity(
         {ATTR_ENTITY_ID: ["sensor.smart_water_shutoff_current_system_mode"]},
         blocking=True,
     )
-    assert aioclient_mock.call_count == call_count + 3
+    assert aioclient_mock.call_count == call_count + 4
