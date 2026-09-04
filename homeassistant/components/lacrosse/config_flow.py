@@ -57,11 +57,29 @@ RECEIVER_OPTION_KEYS: Final = (
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
 )
+
+STEP_SENSOR_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ID): cv.positive_int,
+        vol.Required(CONF_TEMPERATURE, default=True): cv.boolean,
+        vol.Required(CONF_HUMIDITY, default=False): cv.boolean,
+        vol.Required(CONF_BATTERY, default=False): cv.boolean,
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+    }
+)
+
+MIN_REQUIRED_SENSOR_TYPES = LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.HUMIDITY
+
 EMPTY_VALUES: Final = (None, "")
 
 
 async def _async_free_usb_ports(hass: HomeAssistant) -> list[SelectOptionDict]:
-    """Return the USB serial ports not already claimed by another integration."""
+    """Return the USB serial ports not already claimed by another integration.
+
+    The device VID/PID can't be matched for USB discovery since most users rely
+    on a custom made adapter, so free USB ports are offered as a select instead.
+    """
     ports = [
         port
         for port in await usb.async_scan_serial_ports(hass)
@@ -100,11 +118,7 @@ def _receiver_data(user_input: dict[str, Any]) -> dict[str, Any]:
 def _step_receiver_data_schema(
     ports: list[SelectOptionDict], defaults: dict[str, Any] | None = None
 ) -> vol.Schema:
-    """Return the schema for the receiver configuration step.
-
-    The device VID/PID can't be matched for USB discovery since most users rely
-    on a custom made adapter, so free USB ports are offered as a select instead.
-    """
+    """Return the schema for the receiver configuration step."""
     defaults = defaults or {}
     optional_fields: dict[Any, Any] = {}
     for key in RECEIVER_OPTION_KEYS:
@@ -146,20 +160,6 @@ def _sensor_select_options(
         )
         for sensor_id, name in sorted(options.items(), key=lambda item: int(item[0]))
     ]
-
-
-STEP_SENSOR_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ID): cv.positive_int,
-        vol.Required(CONF_TEMPERATURE, default=True): cv.boolean,
-        vol.Required(CONF_HUMIDITY, default=False): cv.boolean,
-        vol.Required(CONF_BATTERY, default=False): cv.boolean,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-    }
-)
-
-VALUE_SENSOR_TYPES = LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.HUMIDITY
 
 
 class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -272,6 +272,67 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
                     new_identifiers={(DOMAIN, f"{new_receiver}_{sensor_id}")},
                 )
 
+    async def async_step_add_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add a sensor received by the configured receiver."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            selected = LaCrosseSensorType(0)
+            for sensor_type in LaCrosseSensorType:
+                if user_input.pop(sensor_type.key):
+                    selected |= sensor_type
+
+            sensor_id = user_input[CONF_ID]
+            keys = {
+                sensor_type: sensor_type.sensor_key(sensor_id)
+                for sensor_type in LaCrosseSensorType
+                if sensor_type & selected
+            }
+            configured_types = {
+                (sensor[CONF_ID], sensor[CONF_TYPE])
+                for sensor in self._sensors.values()
+            }
+
+            if not selected & MIN_REQUIRED_SENSOR_TYPES:
+                errors["base"] = "value_type_required"
+            elif any(
+                (sensor_id, sensor_type.key) in configured_types for sensor_type in keys
+            ):
+                errors["base"] = "sensor_already_configured"
+            else:
+                for sensor_type, key in keys.items():
+                    self._sensors[key] = {
+                        **user_input,
+                        CONF_TYPE: sensor_type.key,
+                        CONF_UNIQUE_ID: uuid4().hex,
+                    }
+                return await self.async_step_add_sensor_or_finish()
+
+        return self.async_show_form(
+            step_id="add_sensor",
+            data_schema=STEP_SENSOR_DATA_SCHEMA,
+            errors=errors or None,
+        )
+
+    async def async_step_add_sensor_or_finish(self) -> ConfigFlowResult:
+        """Offer to add another sensor or complete the flow."""
+        return self.async_show_menu(
+            step_id="add_sensor_or_finish", menu_options=["add_sensor", "finish"]
+        )
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create or update an entry using the configured receiver and sensors."""
+        data = {**self._data, CONF_SENSORS: self._sensors}
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), title=self._data[CONF_DEVICE], data=data
+            )
+        return self.async_create_entry(title=self._data[CONF_DEVICE], data=data)
+
     async def async_step_update_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -368,15 +429,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
                 name=name or None,
             )
 
-    def _async_remove_device(self, sensor_id: int) -> None:
-        """Remove the device registry entry of a removed sensor."""
-        receiver = self._data[CONF_DEVICE]
-        device_registry = dr.async_get(self.hass)
-        if device := device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{receiver}_{sensor_id}"), self._get_reconfigure_entry().entry_id
-        ):
-            device_registry.async_remove_device(device.id)
-
     async def async_step_remove_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -403,63 +455,11 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_add_sensor(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Add a sensor received by the configured receiver."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            selected = LaCrosseSensorType(0)
-            for sensor_type in LaCrosseSensorType:
-                if user_input.pop(sensor_type.key):
-                    selected |= sensor_type
-
-            sensor_id = user_input[CONF_ID]
-            keys = {
-                sensor_type: sensor_type.sensor_key(sensor_id)
-                for sensor_type in LaCrosseSensorType
-                if sensor_type & selected
-            }
-            configured_types = {
-                (sensor[CONF_ID], sensor[CONF_TYPE])
-                for sensor in self._sensors.values()
-            }
-
-            if not selected & VALUE_SENSOR_TYPES:
-                errors["base"] = "value_type_required"
-            elif any(
-                (sensor_id, sensor_type.key) in configured_types for sensor_type in keys
-            ):
-                errors["base"] = "sensor_already_configured"
-            else:
-                for sensor_type, key in keys.items():
-                    self._sensors[key] = {
-                        **user_input,
-                        CONF_TYPE: sensor_type.key,
-                        CONF_UNIQUE_ID: uuid4().hex,
-                    }
-                return await self.async_step_add_sensor_or_finish()
-
-        return self.async_show_form(
-            step_id="add_sensor",
-            data_schema=STEP_SENSOR_DATA_SCHEMA,
-            errors=errors or None,
-        )
-
-    async def async_step_add_sensor_or_finish(self) -> ConfigFlowResult:
-        """Offer to add another sensor or complete the flow."""
-        return self.async_show_menu(
-            step_id="add_sensor_or_finish", menu_options=["add_sensor", "finish"]
-        )
-
-    async def async_step_finish(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Create or update an entry using the configured receiver and sensors."""
-        data = {**self._data, CONF_SENSORS: self._sensors}
-        if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), title=self._data[CONF_DEVICE], data=data
-            )
-        return self.async_create_entry(title=self._data[CONF_DEVICE], data=data)
+    def _async_remove_device(self, sensor_id: int) -> None:
+        """Remove the device registry entry of a removed sensor."""
+        receiver = self._data[CONF_DEVICE]
+        device_registry = dr.async_get(self.hass)
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{receiver}_{sensor_id}"), self._get_reconfigure_entry().entry_id
+        ):
+            device_registry.async_remove_device(device.id)

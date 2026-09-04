@@ -98,13 +98,6 @@ SENSOR_TYPES: Final[dict[str, LaCrosseSensorDescription]] = {
 }
 
 
-def sensor_device_name(config: ConfigType) -> str:
-    """Return the configured or default sensor device name."""
-    if isinstance(friendly_name := config.get(CONF_FRIENDLY_NAME), str):
-        return friendly_name
-    return f"LaCrosse sensor {config[CONF_ID]}"
-
-
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
@@ -179,6 +172,13 @@ def _add_sensors(
         )
 
     add_entities(sensors)
+
+
+def sensor_device_name(config: ConfigType) -> str:
+    """Return the configured or default sensor device name."""
+    if isinstance(friendly_name := config.get(CONF_FRIENDLY_NAME), str):
+        return friendly_name
+    return f"LaCrosse sensor {config[CONF_ID]}"
 
 
 class LaCrosseSensor(SensorEntity):
