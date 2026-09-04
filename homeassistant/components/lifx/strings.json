@@ -98,6 +98,9 @@
     "no_multizone_target": {
       "message": "The targets of action lifx.{service} include no LIFX multizone light"
     },
+    "not_loaded": {
+      "message": "LIFX is not loaded, so this action cannot be performed."
+    },
     "update_failed": {
       "message": "Error fetching the state of the LIFX device: {error}"
     }

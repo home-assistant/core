@@ -16,6 +16,7 @@ from .discovery import async_setup_discovery
 from .entity import async_repair_device_registry
 from .manager import LIFXManager
 from .migration import async_migrate_serials
+from .services import async_setup_services
 from .util import async_resolve_host, normalize_serial
 
 CONF_SERVER = "server"
@@ -54,9 +55,8 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
-    manager = LIFXManager(hass)
-    hass.data[DATA_LIFX_MANAGER] = manager
-    manager.async_setup()
+    async_setup_services(hass)
+    hass.data[DATA_LIFX_MANAGER] = LIFXManager(hass)
     async_setup_discovery(hass)
     return True
 

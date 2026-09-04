@@ -48,10 +48,6 @@ from .const import (
     DOMAIN,
     INFRARED_BRIGHTNESS,
     LOGGER,
-)
-from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
-from .entity import LIFXEntity
-from .manager import (
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
@@ -59,8 +55,10 @@ from .manager import (
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
-    LIFXManager,
 )
+from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
+from .entity import LIFXEntity
+from .manager import LIFXManager
 from .util import (
     device_error,
     find_hsbk,
