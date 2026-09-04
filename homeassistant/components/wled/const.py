@@ -63,7 +63,6 @@ LIGHT_CAPABILITIES_COLOR_MODE_MAPPING: dict[LightCapability, list[ColorMode]] = 
     | LightCapability.WHITE_CHANNEL
     | LightCapability.COLOR_TEMPERATURE: [
         ColorMode.RGBWW,
-        ColorMode.COLOR_TEMP,
     ],
     LightCapability.MANUAL_WHITE: [
         ColorMode.BRIGHTNESS,
@@ -88,7 +87,6 @@ LIGHT_CAPABILITIES_COLOR_MODE_MAPPING: dict[LightCapability, list[ColorMode]] = 
     | LightCapability.COLOR_TEMPERATURE
     | LightCapability.MANUAL_WHITE: [
         ColorMode.RGBWW,
-        ColorMode.COLOR_TEMP,
     ],
     LightCapability.WHITE_CHANNEL
     | LightCapability.COLOR_TEMPERATURE
@@ -101,6 +99,5 @@ LIGHT_CAPABILITIES_COLOR_MODE_MAPPING: dict[LightCapability, list[ColorMode]] = 
     | LightCapability.COLOR_TEMPERATURE
     | LightCapability.MANUAL_WHITE: [
         ColorMode.RGBWW,
-        ColorMode.COLOR_TEMP,
     ],
 }
