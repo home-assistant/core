@@ -54,6 +54,14 @@ class XboxCoordinators:
     status: XboxConsoleStatusCoordinator
     presence: XboxPresenceCoordinator
     subentries: Mapping[str, ConfigSubentryDataWithId]
+    auth_implementation: str
+
+    def all_updates_successful(self) -> bool:
+        """Return True if the last update of every coordinator succeeded."""
+        return all(
+            coordinator.last_update_success
+            for coordinator in (self.consoles, self.status, self.presence)
+        )
 
 
 class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
