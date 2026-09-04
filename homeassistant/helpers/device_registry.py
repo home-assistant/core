@@ -88,7 +88,8 @@ ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 # suggested_area can be removed when suggested_area is removed from DeviceEntry.
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
 # are removed from the device registry API.
-RUNTIME_ONLY_ATTRS = {"suggested_area", "pending_move"}
+# device_type is not persisted yet; integrations declare it again on every setup.
+RUNTIME_ONLY_ATTRS = {"suggested_area", "pending_move", "device_type"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +131,7 @@ class DeviceInfo(TypedDict, total=False):
 
     configuration_url: str | URL | None
     connections: set[tuple[str, str]]
+    device_type: str | None
     entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
@@ -154,6 +156,7 @@ class ChildDeviceInfo(TypedDict, total=False):
     """
 
     identifiers: Required[set[tuple[str, str]]]
+    device_type: str | None
     name: str | None
     parent_device_id: Required[str]
     suggested_area: str | None
@@ -384,6 +387,7 @@ class BaseDeviceEntry:
     area_id: str | None = attr.ib(default=None)
     config_subentry_id: str | None = attr.ib(default=None)
     created_at: datetime = attr.ib(factory=utcnow)
+    device_type: str | None = attr.ib(default=None)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
@@ -2213,6 +2217,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
         configuration_url: str | URL | UndefinedType | None = UNDEFINED,
         connections: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
+        device_type: str | UndefinedType | None = UNDEFINED,
         # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
@@ -2560,6 +2565,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self._async_update_device(
             device.id,
+            device_type=device_type,
             disabled_by=disabled_by,
             entry_type=entry_type,
             is_new=is_new,
@@ -2603,6 +2609,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        device_type: str | UndefinedType | None = UNDEFINED,
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         identifiers: set[tuple[str, str]],
         name: str | UndefinedType | None = UNDEFINED,
@@ -2803,6 +2810,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
+            device_type=device_type,
             disabled_by=disabled_by,
             is_new=is_new,
             merge_identifiers=identifiers,
@@ -2957,6 +2965,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         allow_collisions: bool = False,
         area_id: str | UndefinedType | None = UNDEFINED,
         configuration_url: str | URL | UndefinedType | None = UNDEFINED,
+        device_type: str | UndefinedType | None = UNDEFINED,
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
         hw_version: str | UndefinedType | None = UNDEFINED,
@@ -3357,6 +3366,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for attr_name, value in (
             ("area_id", area_id),
             ("configuration_url", configuration_url),
+            ("device_type", device_type),
             ("disabled_by", disabled_by),
             ("entry_type", entry_type),
             ("hw_version", hw_version),
@@ -3458,6 +3468,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         child_device_id: str,
         *,
         area_id: str | UndefinedType | None = UNDEFINED,
+        device_type: str | UndefinedType | None = UNDEFINED,
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         is_new: bool = False,
         labels: set[str] | UndefinedType = UNDEFINED,
@@ -3576,6 +3587,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         for attr_name, value in (
             ("area_id", area_id),
+            ("device_type", device_type),
             ("disabled_by", disabled_by),
             ("labels", labels),
             ("name", name),

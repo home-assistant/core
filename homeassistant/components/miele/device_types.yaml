@@ -1,0 +1,21 @@
+# Maps Miele entities onto the traits of the device types they belong to.
+#
+# Keyed by device type, then by entity domain, then by the entity's
+# translation_key - the same addressing icons.json already uses. Scoping by
+# device type matters here: Miele numbers its temperature zones rather than
+# naming them, so zone_2 is the freezer on a fridge-freezer but the second wine
+# zone on a wine cabinet, and only the mapping below gives it meaning.
+#
+# Zone 1 and the door sensor are missing on purpose: those entity descriptions
+# carry no translation_key, so there is nothing to address them by. Miele has to
+# give them one before they can fill a trait.
+
+appliance.refrigerator:
+  entity:
+    climate:
+      zone_2: freezer_compartment_target_temperature
+    sensor:
+      temperature_zone_2: freezer_compartment_temperature
+    switch:
+      supercooling: fast_cool
+      superfreezing: fast_freeze

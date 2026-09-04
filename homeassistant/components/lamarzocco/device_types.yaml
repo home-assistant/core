@@ -1,0 +1,32 @@
+# Maps La Marzocco entities onto the traits of the device types they belong to.
+#
+# Keyed by device type, then by entity domain, then by the entity's
+# translation_key - the same addressing icons.json already uses. Scoping by
+# device type means the same translation_key can carry a different trait on a
+# different appliance.
+#
+# Only entities that fill a trait defined by the core vocabulary appear here.
+# Vendor specific entities (smart standby, auto on/off, prebrew mode, firmware
+# updates) have no core trait and are deliberately left out.
+
+appliance.espresso_machine:
+  entity:
+    binary_sensor:
+      backflush_enabled: cleaning_active
+      brew_active: brewing
+      water_tank: water_tank_empty
+    button:
+      start_backflush: start_cleaning
+    number:
+      coffee_temp: coffee_boiler_target_temperature
+      steam_temp: steam_boiler_target_temperature
+    select:
+      # Linea Mini and Micra pick a steam temperature from three steps rather
+      # than setting a free value, so the trait is filled by a select here.
+      steam_temp_select: steam_boiler_target_temperature
+    sensor:
+      coffee_boiler_ready_time: coffee_boiler_ready_time
+      steam_boiler_ready_time: steam_boiler_ready_time
+    switch:
+      main: power
+      steam_boiler: steam_boiler_power
