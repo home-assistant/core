@@ -5,6 +5,7 @@ from typing import override
 from aioindiallsky import IndiAllSkyError
 
 from homeassistant.components.camera import Camera
+from homeassistant.components.image import infer_image_type
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -49,4 +50,6 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
         except IndiAllSkyError:
             return None
         else:
+            if content_type := infer_image_type(image):
+                self.content_type = content_type
             return image

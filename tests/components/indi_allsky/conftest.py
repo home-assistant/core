@@ -41,7 +41,9 @@ def mock_indi_allsky_client() -> Generator[AsyncMock]:
         ),
     ):
         client_instance = mock_client.return_value
-        client_instance.fetch_image = AsyncMock(return_value=b"fake_jpeg_data")
+        client_instance.fetch_image = AsyncMock(
+            return_value=b"\xff\xd8\xff\xe0fake_jpeg_data"
+        )
         yield client_instance
 
 
