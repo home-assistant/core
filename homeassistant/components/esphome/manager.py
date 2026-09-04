@@ -891,7 +891,12 @@ class ESPHomeManager:
         """
         unique_id = self.entry.unique_id
         cli = async_create_api_client(
-            self.hass, self.entry, self.zeroconf_instance, noise_psk=ZERO_NOISE_PSK
+            self.hass,
+            self.entry,
+            self.zeroconf_instance,
+            noise_psk=ZERO_NOISE_PSK,
+            # A key exchange session must not become a dial-back target
+            declare_outgoing_target=False,
         )
         device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
         try:
