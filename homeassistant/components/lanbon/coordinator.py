@@ -67,12 +67,12 @@ def _patch_availability(snap: DeviceSnapshot, event: Event) -> DeviceSnapshot | 
 class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
     """Fetch LOIP device snapshot and optionally listen for events."""
 
-    config_entry: "LanbonConfigEntry"
+    config_entry: LanbonConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: "LanbonConfigEntry",
+        config_entry: LanbonConfigEntry,
         client: LanbonClient,
     ) -> None:
         """Initialize the coordinator."""

@@ -224,4 +224,3 @@ async def test_zeroconf_updates_host_when_already_configured(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "10.0.0.9"
     assert entry.data[CONF_PORT] == 9000
-
