@@ -216,15 +216,29 @@ async def test_migration_v5_1_to_v5_2(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_1_adguard")},
         via_device_id=endpoint_device.id,
+        model="Container",
         name="Test Container",
     )
+    # Pre-migration container unique IDs didn't include the endpoint ID; the
+    # migration must rewrite them so containers with the same name on
+    # different environments don't collide on one entity.
     container_entity = entity_registry.async_get_or_create(
         domain="switch",
         platform=DOMAIN,
-        unique_id=f"{entry.entry_id}_1_adguard_container",
+        unique_id=f"{entry.entry_id}_adguard_container",
         config_entry=entry,
         device_id=container_device.id,
         original_name="Test Container Switch",
+    )
+    # Non-container entities already include the endpoint ID and must be
+    # re-parented onto the subentry without their unique ID being touched.
+    endpoint_entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_1_api_version",
+        config_entry=entry,
+        device_id=endpoint_device.id,
+        original_name="Test Endpoint API Version",
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -239,9 +253,13 @@ async def test_migration_v5_1_to_v5_2(
     endpoint_after = device_registry.async_get(endpoint_device.id)
     container_after = device_registry.async_get(container_device.id)
     entity_after = entity_registry.async_get(container_entity.entity_id)
+    endpoint_entity_after = entity_registry.async_get(endpoint_entity.entity_id)
     assert endpoint_after.config_subentry_id == subentry.subentry_id
     assert container_after.config_subentry_id == subentry.subentry_id
     assert entity_after.config_subentry_id == subentry.subentry_id
+    assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+    assert endpoint_entity_after.config_subentry_id == subentry.subentry_id
+    assert endpoint_entity_after.unique_id == f"{entry.entry_id}_1_api_version"
 
 
 async def test_unload_entry(

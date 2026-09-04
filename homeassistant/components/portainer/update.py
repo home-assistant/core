@@ -145,8 +145,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self.entity_description = entity_description
         super().__init__(coordinator, entity_description, device_info, via_device)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @override
     @property
     def title(self) -> str | None:

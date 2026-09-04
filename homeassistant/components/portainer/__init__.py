@@ -259,13 +259,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 
         devices_by_endpoint_id: dict[str, list[DeviceEntry]] = defaultdict(list)
         for device in devices:
-            for _, identifier in device.identifiers:
+            for domain, identifier in device.identifiers:
+                if domain != DOMAIN:
+                    continue
                 candidate = identifier.removeprefix(f"{entry.entry_id}_").split("_", 1)[
                     0
                 ]
-
-                devices_by_endpoint_id[candidate].append(device)
-                break
+                if candidate.isdigit():
+                    devices_by_endpoint_id[candidate].append(device)
+                    break
 
         for endpoint_id, endpoint_devices in devices_by_endpoint_id.items():
             endpoint_device = next(
@@ -286,10 +288,24 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
                 for reg_entry in er.async_entries_for_device(
                     entity_registry, device.id, include_disabled_entities=True
                 ):
-                    entity_registry.async_update_entity(
-                        reg_entry.entity_id,
-                        config_subentry_id=subentry.subentry_id,
-                    )
+                    if device.model == "Container":
+                        # Container unique IDs didn't include the endpoint ID,
+                        # so identically named containers on different
+                        # environments collided on the same entity.
+                        old_prefix = f"{entry.entry_id}_"
+                        entity_registry.async_update_entity(
+                            reg_entry.entity_id,
+                            config_subentry_id=subentry.subentry_id,
+                            new_unique_id=(
+                                f"{entry.entry_id}_{endpoint_id}_"
+                                f"{reg_entry.unique_id.removeprefix(old_prefix)}"
+                            ),
+                        )
+                    else:
+                        entity_registry.async_update_entity(
+                            reg_entry.entity_id,
+                            config_subentry_id=subentry.subentry_id,
+                        )
                 device_registry.async_update_device(
                     device.id,
                     new_config_entry_id=entry.entry_id,
