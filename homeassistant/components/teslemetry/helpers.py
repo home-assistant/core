@@ -21,12 +21,14 @@ async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
         return parent
     lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
     async with lock:
-        parent = hass.data.get(BLE_PARENT_KEY)
-        if parent is None:
-            parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
-            await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
-            hass.data[BLE_PARENT_KEY] = parent
-    return parent
+        # Another task may have created it while we waited for the lock.
+        existing: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
+        if existing is not None:
+            return existing
+        parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
+        await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
+        hass.data[BLE_PARENT_KEY] = parent
+        return parent
 
 
 def flatten(
