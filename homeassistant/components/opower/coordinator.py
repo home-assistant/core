@@ -90,7 +90,11 @@ def _rate_period_key(component: ReadComponent) -> str | None:
     where the period is the part before the "+". Tiered utilities report the
     tier in tier_number. A rate that is both time-of-use and tiered reports
     both, and each combination is billed at its own price, so the key keeps
-    both, e.g. "off_peak_tier_2". Returns None if the component has neither.
+    both, e.g. "off_peak_tier_2". Merging the tiers inside a period would
+    store a blended price that matches no tariff and hide how much usage
+    went over the baseline allowance, which is the split those customers
+    manage, and statistics cannot be split again once written. Returns None
+    if the component has neither.
     """
     parts = []
     if component.day_part:
