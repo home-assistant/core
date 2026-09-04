@@ -44,7 +44,7 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert last_event is not None
     assert last_event.state == "2.4"
     assert last_event.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert last_event.attributes["fixture_type"] == "faucet"
+    assert last_event.attributes["fixture_type"] == "Faucet"
     assert last_event.attributes["duration_seconds"] == 158
     assert last_event.attributes["start_time"] == "2026-07-12T10:12:03-04:00"
     assert last_event.attributes["end_time"] == "2026-07-12T10:14:41-04:00"
@@ -52,7 +52,7 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
 
     assert (
         hass.states.get("sensor.smart_water_shutoff_last_water_event_fixture").state
-        == "faucet"
+        == "Faucet"
     )
 
     assert hass.states.get("sensor.smart_water_shutoff_water_flow_rate").state == "0"

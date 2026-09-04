@@ -21,9 +21,7 @@ type FloConfigEntry = ConfigEntry[FloRuntimeData]
 
 def _event_sort_key(event: dict[str, Any]) -> datetime:
     """Return a comparable timestamp for a Flo Detect event."""
-    parsed = dt_util.parse_datetime(
-        event.get("endTime") or event.get("startTime") or ""
-    )
+    parsed = dt_util.parse_datetime(event.get("endAt") or event.get("startAt") or "")
     return parsed or dt_util.utc_from_timestamp(0)
 
 
@@ -172,10 +170,10 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def last_water_event(self) -> dict[str, Any] | None:
         """Return the most recent Flo Detect water-flow event, if any."""
-        items = self._events.get("items") or []
-        if not items:
+        events = self.api_client.flodetect.parse_events(self._events)
+        if not events:
             return None
-        return max(items, key=_event_sort_key)
+        return max(events, key=_event_sort_key)
 
     @property
     def firmware_version(self) -> str:
