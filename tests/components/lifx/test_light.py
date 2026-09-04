@@ -533,7 +533,7 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
             ATTR_SKY_TYPE: "Clouds",
             ATTR_CLOUD_SATURATION_MIN: 50,
             ATTR_CLOUD_SATURATION_MAX: 180,
-            ATTR_PALETTE: [(200, 100, 1, 3500), (40, 50, 100, 3500)],
+            ATTR_PALETTE: [(200, 1, 0.01, 3500), (40, 50, 100, 3500)],
         },
         blocking=True,
     )
@@ -640,7 +640,12 @@ async def test_effect_stop_uses_compatible_public_firmware_api(
         pytest.param(
             {ATTR_PALETTE: [(0, 100, 100, 3500), (240, 50, 25, 6500)]},
             [HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.25, 6500)],
-            id="palette",
+            id="percentage_palette",
+        ),
+        pytest.param(
+            {ATTR_PALETTE: [(0, 1, 1, 3500), (240, 0.5, 0.25, 6500)]},
+            [HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.25, 6500)],
+            id="fraction_palette",
         ),
     ],
 )

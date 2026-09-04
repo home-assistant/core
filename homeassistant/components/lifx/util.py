@@ -151,3 +151,10 @@ def find_hsbk(base: HSBK, **kwargs: Any) -> HSBK | None:
     if all(value is None for value in changes.values()):
         return None
     return replace_hsbk(base, changes)
+
+
+def palette_fraction(value: float) -> float:
+    """Return a palette saturation or brightness as a fraction of one."""
+    # The action examples give these as either a fraction or a percentage, so a
+    # value of one or less is a fraction and anything larger is a percentage
+    return value if value <= 1 else value / 100
