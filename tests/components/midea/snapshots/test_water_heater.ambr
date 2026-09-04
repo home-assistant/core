@@ -1,0 +1,374 @@
+# serializer version: 1
+# name: test_midea_water_heater_default_state[c3][water_heater.heat_pump_wi_fi_controller-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.heat_pump_wi_fi_controller',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'translation_key': 'water_heater',
+    'unique_id': '12345678_water_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_midea_water_heater_default_state[c3][water_heater.heat_pump_wi_fi_controller-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 9>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 25,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.heat_pump_wi_fi_controller',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_midea_water_heater_default_state[cd][water_heater.heat_pump_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.heat_pump_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'translation_key': 'water_heater',
+    'unique_id': '12345678_water_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_midea_water_heater_default_state[cd][water_heater.heat_pump_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 41,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Water Heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 9>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 40,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.heat_pump_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_midea_water_heater_default_state[e2][water_heater.electric_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.electric_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'translation_key': 'water_heater',
+    'unique_id': '12345678_water_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_midea_water_heater_default_state[e2][water_heater.electric_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Water Heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 9>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 40,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.electric_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_midea_water_heater_default_state[e3][water_heater.gas_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.gas_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'translation_key': 'water_heater',
+    'unique_id': '12345678_water_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_midea_water_heater_default_state[e3][water_heater.gas_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 38.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas Water Heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 9>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 40.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.gas_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_midea_water_heater_default_state[e6][water_heater.gas_boiler_bathing_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.gas_boiler_bathing_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bathing water heater',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bathing water heater',
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'translation_key': 'water_heater_bathing',
+    'unique_id': '12345678_water_heater_bathing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_midea_water_heater_default_state[e6][water_heater.gas_boiler_bathing_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas Boiler Bathing water heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 9>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 40,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.gas_boiler_bathing_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_midea_water_heater_default_state[e6][water_heater.gas_boiler_heating_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 80,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.gas_boiler_heating_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heating water heater',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating water heater',
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 13>,
+    'translation_key': 'water_heater_heating',
+    'unique_id': '12345678_water_heater_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_midea_water_heater_default_state[e6][water_heater.gas_boiler_heating_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas Boiler Heating water heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 80,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 13>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 50,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.gas_boiler_heating_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

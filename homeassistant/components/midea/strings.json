@@ -712,6 +712,14 @@
       "timing_regeneration": {
         "name": "Regeneration time"
       }
+    },
+    "water_heater": {
+      "water_heater_bathing": {
+        "name": "Bathing water heater"
+      },
+      "water_heater_heating": {
+        "name": "Heating water heater"
+      }
     }
   },
   "exceptions": {
