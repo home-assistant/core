@@ -12,7 +12,7 @@ def normalize_host(host: str) -> str:
     try:
         return str(ipaddress.ip_address(host_clean))
     except ValueError:
-        return host_clean
+        return host_clean.lower().removesuffix(".")
 
 
 def get_ssl_context(ssl_enabled: bool, verify_ssl: bool) -> bool | ssl.SSLContext:
