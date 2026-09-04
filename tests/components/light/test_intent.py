@@ -6,9 +6,15 @@ from homeassistant.components import light
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    floor_registry as fr,
+)
 from homeassistant.helpers.intent import (
+    IntentHandleError,
     IntentResponseTargetType,
     MatchFailedError,
     MatchFailedReason,
@@ -395,3 +401,63 @@ async def test_intent_set_brightness_relative_response_targets(
             "id": entry.entity_id,
         },
     ]
+
+
+async def test_intent_set_brightness_relative_floor_response_targets(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the response reports the floor when a floor is targeted."""
+    ground = floor_registry.async_create("Ground")
+    kitchen = area_registry.async_create("Kitchen")
+    area_registry.async_update(kitchen.id, floor_id=ground.floor_id)
+    entry = entity_registry.async_get_or_create("light", "test", "l1")
+    entity_registry.async_update_entity(entry.entity_id, area_id=kitchen.id)
+    hass.states.async_set(entry.entity_id, "on", DIMMABLE_ATTRIBUTES)
+
+    async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    response = await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+        {"floor": {"value": "Ground"}, "brightness_step": {"value": "up"}},
+    )
+    await hass.async_block_till_done()
+
+    assert response.as_dict()["data"]["success"] == [
+        {
+            "type": IntentResponseTargetType.FLOOR,
+            "name": "Ground",
+            "id": ground.floor_id,
+        },
+        {
+            "type": IntentResponseTargetType.ENTITY,
+            "name": "test l1",
+            "id": entry.entity_id,
+        },
+    ]
+
+
+async def test_intent_set_brightness_relative_service_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a failing turn_on call is reported as an intent handling error."""
+    hass.states.async_set("light.test", "on", DIMMABLE_ATTRIBUTES)
+
+    async def raise_error(call: ServiceCall) -> None:
+        raise HomeAssistantError("Boom")
+
+    hass.services.async_register(light.DOMAIN, light.SERVICE_TURN_ON, raise_error)
+    await intent.async_setup_intents(hass)
+
+    with pytest.raises(IntentHandleError):
+        await async_handle(
+            hass,
+            "test",
+            intent.INTENT_SET_BRIGHTNESS_RELATIVE,
+            {"name": {"value": "test"}, "brightness_step": {"value": "up"}},
+        )
