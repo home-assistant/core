@@ -13,10 +13,10 @@
     'entry': dict({
       'created_at': '2020-06-12T08:00:00+00:00',
       'data': dict({
-        'host': '**REDACTED**',
-        'port': 443,
-        'ignore_hostname': False,
         'ca_data': None,
+        'host': '**REDACTED**',
+        'ignore_hostname': False,
+        'port': 443,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -52,10 +52,10 @@
     'entry': dict({
       'created_at': '2020-06-12T08:00:00+00:00',
       'data': dict({
-        'host': '**REDACTED**',
-        'port': 443,
-        'ignore_hostname': False,
         'ca_data': None,
+        'host': '**REDACTED**',
+        'ignore_hostname': False,
+        'port': 443,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
