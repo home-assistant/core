@@ -6,11 +6,14 @@ import pytest
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
+    CONF_AZIMUTH_SENSOR,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
+    CONF_DECLINATION_SENSOR,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    CONF_TRACK_HOME_LOCATION,
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
@@ -38,6 +41,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
+            CONF_TRACK_HOME_LOCATION: False,
             CONF_LATITUDE: 52.42,
             CONF_LONGITUDE: 4.42,
             CONF_AZIMUTH: 142,
@@ -70,6 +74,169 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert subentry.title == "42° / 142° / 4242W"
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_tracks_home_location_by_default(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the default flow choice stores no fixed location."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+            CONF_AZIMUTH: 142,
+            CONF_DECLINATION: 42,
+            CONF_MODULES_POWER: 4242,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data == {}
+
+
+async def test_user_flow_requires_location_when_not_tracking(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test omitting lat/long without tracking shows an error, and recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_HOME_LOCATION: False,
+            CONF_AZIMUTH: 142,
+            CONF_DECLINATION: 42,
+            CONF_MODULES_POWER: 4242,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "location_required"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_HOME_LOCATION: False,
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+            CONF_AZIMUTH: 142,
+            CONF_DECLINATION: 42,
+            CONF_MODULES_POWER: 4242,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data == {
+        CONF_LATITUDE: 52.42,
+        CONF_LONGITUDE: 4.42,
+    }
+
+
+async def test_reconfigure_flow_switch_to_fixed_location(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test switching an existing entry from home tracking to fixed coordinates."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_HOME_LOCATION: False,
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_LATITUDE: 52.42,
+        CONF_LONGITUDE: 4.42,
+    }
+
+
+async def test_reconfigure_flow_switch_to_home_tracking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test switching an existing entry from fixed coordinates to home tracking."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACK_HOME_LOCATION: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {}
+
+
+async def test_reconfigure_flow_requires_location_when_not_tracking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test omitting lat/long without tracking shows an error, and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, data={})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACK_HOME_LOCATION: False},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "location_required"}
+    suggested_track_home = next(
+        key.description["suggested_value"]
+        for key in result["data_schema"].schema
+        if key == CONF_TRACK_HOME_LOCATION
+    )
+    assert suggested_track_home is False  # attempted submission is preserved
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_HOME_LOCATION: False,
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -464,3 +631,108 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
         CONF_MODULES_POWER: 6000,
     }
     assert subentry.title == "50° / 200° / 6000W"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_add_plane_with_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a plane with both fixed values and overriding sensors."""
+    hass.states.async_set("sensor.roof_azimuth", "270", {"unit_of_measurement": "°"})
+    hass.states.async_set("sensor.roof_declination", "45", {"unit_of_measurement": "°"})
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 45,
+            CONF_AZIMUTH: 270,
+            CONF_MODULES_POWER: 3000,
+            CONF_DECLINATION_SENSOR: "sensor.roof_declination",
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_DECLINATION: 45,
+        CONF_AZIMUTH: 270,
+        CONF_MODULES_POWER: 3000,
+        CONF_DECLINATION_SENSOR: "sensor.roof_declination",
+        CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+    }
+    # Title reflects the sensors' friendly names, not the fixed values.
+    assert result["title"] == "roof declination / roof azimuth / 3000W"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_no_angle_sensors_hides_sensor_fields(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the sensor fields are absent from the form when no angle sensors exist."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_USER},
+    )
+
+    schema_keys = {str(key) for key in result["data_schema"].schema}
+    assert CONF_DECLINATION_SENSOR not in schema_keys
+    assert CONF_AZIMUTH_SENSOR not in schema_keys
+
+
+@pytest.mark.usefixtures("mock_forecast_solar", "mock_setup_entry")
+async def test_subentry_flow_reconfigure_to_sensor_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an existing fixed plane to add a sensor override."""
+    hass.states.async_set("sensor.roof_azimuth", "270", {"unit_of_measurement": "°"})
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
+        0
+    ].subentry_id
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
+    )
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH: 200,
+            CONF_MODULES_POWER: 5100,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.data == {
+        CONF_DECLINATION: 30,
+        CONF_AZIMUTH: 200,
+        CONF_MODULES_POWER: 5100,
+        CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+    }

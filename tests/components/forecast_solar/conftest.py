@@ -88,6 +88,13 @@ def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
         autospec=True,
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
+
+        # Store planes when passed to constructor so strict=True zip works
+        def init_side_effect(*args, **kwargs):
+            forecast_solar.planes = kwargs.get("planes")
+            return forecast_solar
+
+        forecast_solar_mock.side_effect = init_side_effect
         now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.get_default_time_zone())
 
         estimate = MagicMock(spec=models.Estimate)
@@ -130,6 +137,7 @@ def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
         }
 
         forecast_solar.estimate.return_value = estimate
+        forecast_solar._mock_class = forecast_solar_mock
         yield forecast_solar
 
 
