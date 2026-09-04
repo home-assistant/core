@@ -19,7 +19,7 @@ DoorBirdPy==3.0.12
 HAP-python==5.0.0
 
 # homeassistant.components.tasmota
-HATasmota==0.10.1
+HATasmota==0.10.2
 
 # homeassistant.components.hue_ble
 HueBLE==2.2.3
