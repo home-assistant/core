@@ -1,5 +1,6 @@
 """Support for OpenEVSE select entities."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
@@ -70,6 +71,7 @@ class OpenEVSESelect(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SelectEnt
     _attr_has_entity_name = True
     entity_description: OpenEVSESelectDescription
     _attr_current_option: str | None = None
+    _update_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
@@ -93,6 +95,12 @@ class OpenEVSESelect(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SelectEnt
             }
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._attr_current_option is not None
+
     async def _async_update_current_option(self) -> None:
         """Update the current option from the charger."""
         with openevse_exception_handler():
@@ -109,7 +117,11 @@ class OpenEVSESelect(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SelectEnt
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.hass.async_create_task(self._async_update_and_write_ha_state())
+        super()._handle_coordinator_update()
+        if self._update_task is None or self._update_task.done():
+            self._update_task = self.hass.async_create_task(
+                self._async_update_and_write_ha_state()
+            )
 
     async def _async_update_and_write_ha_state(self) -> None:
         """Fetch updated option and write HA state."""

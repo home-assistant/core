@@ -195,3 +195,19 @@ async def test_select_raises(
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_placeholders == translation_placeholders
+
+
+async def test_select_unavailable_when_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test select entity is unavailable when override state is unsupported."""
+    mock_charger.get_override_state.return_value = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.openevse_mock_config_override_state")
+    assert state is not None
+    assert state.state == "unavailable"
