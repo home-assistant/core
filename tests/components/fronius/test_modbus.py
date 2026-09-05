@@ -386,6 +386,7 @@ async def test_modbus_retried_after_setup(
     aioclient_mock: AiohttpClientMocker,
     mock_modbus_unavailable: MagicMock,
     mock_modbus_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an inverter asleep at setup time gets its Modbus entities later.
@@ -416,6 +417,10 @@ async def test_modbus_retried_after_setup(
 
     assert config_entry.runtime_data.modbus_inverter_coordinators
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
+    # the Modbus sensors of the re-scan are told apart from the SolarAPI ones
+    entry = entity_registry.async_get("sensor.gen24_storage_mppt_1_dc_power")
+    assert entry
+    assert "-modbus-" in entry.unique_id
     # the hold on the shared connection is taken once, not once per re-scan
     assert mock_modbus_unavailable.call_count == 1
 
@@ -451,3 +456,42 @@ async def test_control_refused_creates_no_control_entities(
         )
         if entry.domain == "number"
     ]
+
+
+async def test_controls_enabled_later_get_their_entities(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entities appear for controls a re-scan finds after setup.
+
+    The platforms are set up once, so a coordinator that only comes up on a
+    later re-scan has to be handed to them through the dispatcher.
+    """
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map([], include_mppt_model=False)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    with (
+        patch(
+            "homeassistant.components.fronius.PLATFORMS",
+            [Platform.NUMBER, Platform.SWITCH],
+        ),
+        patch(
+            "fronius_modbus.Controls.probe_write_access", AsyncMock(return_value=False)
+        ),
+    ):
+        config_entry = await setup_fronius_integration(
+            hass, is_logger=False, unique_id="12345678"
+        )
+    assert hass.states.get("number.gen24_storage_ac_power_limit") is None
+
+    # inverter control via Modbus is enabled on the device web interface
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.runtime_data.modbus_settings_coordinators
+    assert hass.states.get("number.gen24_storage_ac_power_limit")
+    assert hass.states.get("switch.gen24_storage_ac_power_limiting")

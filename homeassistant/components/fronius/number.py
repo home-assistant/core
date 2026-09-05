@@ -5,14 +5,19 @@ from typing import TYPE_CHECKING, Final, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import SOLAR_NET_DISCOVERY_NEW
 from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
-    from .coordinator import FroniusModbusSettingsUpdateCoordinator
+    from .coordinator import (
+        FroniusCoordinatorBase,
+        FroniusModbusSettingsUpdateCoordinator,
+    )
 
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
@@ -84,10 +89,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fronius number entities based on a config entry."""
-    for coordinator in config_entry.runtime_data.modbus_settings_coordinators:
+    solar_net = config_entry.runtime_data
+    for coordinator in solar_net.modbus_settings_coordinators:
         coordinator.add_entities_for_seen_keys(
             async_add_entities, Platform.NUMBER, ModbusSetpointNumber
         )
+
+    @callback
+    def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
+        """Add the entities of a coordinator found after setup."""
+        if coordinator not in solar_net.modbus_settings_coordinators:
+            return
+        coordinator.add_entities_for_seen_keys(
+            async_add_entities, Platform.NUMBER, ModbusSetpointNumber
+        )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SOLAR_NET_DISCOVERY_NEW, async_add_new_entities)
+    )
 
 
 class ModbusSetpointNumber(FroniusEntity, NumberEntity):

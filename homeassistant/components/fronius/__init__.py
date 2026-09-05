@@ -41,6 +41,7 @@ from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
+    FroniusModbusCoordinatorBase,
     FroniusModbusInverterUpdateCoordinator,
     FroniusModbusSettingsUpdateCoordinator,
     FroniusOhmpilotUpdateCoordinator,
@@ -377,8 +378,9 @@ class FroniusSolarNet:
                 modbus_inverter=modbus_inverter,
                 config_entry=self.config_entry,
             )
-            if await self._start_modbus_coordinator(readings):
-                self.modbus_inverter_coordinators.append(readings)
+            await self._start_modbus_coordinator(
+                readings, self.modbus_inverter_coordinators
+            )
         else:
             _LOGGER.debug(
                 "No MPPT model exposed by inverter %s at Modbus unit %s",
@@ -396,8 +398,9 @@ class FroniusSolarNet:
                 modbus_inverter=modbus_inverter,
                 config_entry=self.config_entry,
             )
-            if await self._start_modbus_coordinator(settings):
-                self.modbus_settings_coordinators.append(settings)
+            await self._start_modbus_coordinator(
+                settings, self.modbus_settings_coordinators
+            )
 
         _LOGGER.debug(
             "Modbus enabled for inverter %s (UID: %s, unit ID: %s)",
@@ -406,8 +409,10 @@ class FroniusSolarNet:
             unit_id,
         )
 
-    async def _start_modbus_coordinator(
-        self, coordinator: FroniusCoordinatorBase
+    async def _start_modbus_coordinator[
+        _ModbusCoordinatorT: FroniusModbusCoordinatorBase
+    ](
+        self, coordinator: _ModbusCoordinatorT, coordinators: list[_ModbusCoordinatorT]
     ) -> bool:
         """Do the first refresh of a Modbus coordinator, reporting success.
 
@@ -418,6 +423,9 @@ class FroniusSolarNet:
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
             return False
+        # the platforms tell the coordinators apart by the list they are in,
+        # so it is kept before they are told about this one
+        coordinators.append(coordinator)
         # Only for re-scans. Initial setup adds entities through the
         # platforms' async_setup_entry.
         if self.config_entry.state is ConfigEntryState.LOADED:
