@@ -1,9 +1,9 @@
 blueprint:
-  name: Motion-activated Light
-  description: Turn on a light when motion is detected.
+  name: Motion-activated Light (with Direct Empty-Room Off)
+  description: Turns on light when motion detected. Also turns off light after a delay if manually turned on when no motion is present.
   domain: automation
-  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
-  author: Home Assistant
+  source_url: https://github.com/rarunkarthik/home-assistant-core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
+  author: Arun Karthik Ravishankar
   input:
     motion_entity:
       name: Motion Sensor
@@ -15,11 +15,9 @@ blueprint:
             - device_class: motion
               domain: binary_sensor
     light_target:
-      name: Light
+      name: Light or Switch Entity
       selector:
-        target:
-          entity:
-            domain: light
+        entity: {}
     no_motion_wait:
       name: Wait time
       description: Time to leave the light on after last motion is detected.
@@ -30,29 +28,47 @@ blueprint:
           max: 3600
           unit_of_measurement: seconds
 
-# If motion is detected within the delay,
-# we restart the script.
 mode: restart
 max_exceeded: silent
 
 triggers:
-  trigger: state
-  entity_id: !input motion_entity
-  from: "off"
-  to: "on"
+  - trigger: state
+    entity_id: !input motion_entity
+    from: "off"
+    to: "on"
+    id: motion_triggered
+  - trigger: state
+    entity_id: !input light_target
+    from: "off"
+    to: "on"
+    id: switch_triggered
 
 actions:
-  - alias: "Turn on the light"
-    action: light.turn_on
-    target: !input light_target
-  - alias: "Wait until there is no motion from device"
-    wait_for_trigger:
-      trigger: state
-      entity_id: !input motion_entity
-      from: "on"
-      to: "off"
+  - if:
+      - condition: trigger
+        id: motion_triggered
+    then:
+      - action: homeassistant.turn_on
+        target:
+          entity_id: !input light_target
+
+  # Conditional Wait block: Only wait for a state change if there is ACTIVE motion right now
+  - if:
+      - condition: state
+        entity_id: !input motion_entity
+        state: "on"
+    then:
+      - alias: "Wait until motion clears"
+        wait_for_trigger:
+          - trigger: state
+            entity_id: !input motion_entity
+            from: "on"
+            to: "off"
+
   - alias: "Wait the number of seconds that has been set"
     delay: !input no_motion_wait
-  - alias: "Turn off the light"
-    action: light.turn_off
-    target: !input light_target
+
+  - alias: "Turn off the light or switch"
+    action: homeassistant.turn_off
+    target:
+      entity_id: !input light_target
