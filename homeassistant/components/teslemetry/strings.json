@@ -52,7 +52,8 @@
         "all_sites_added": "Every accessible energy site with a Powerwall on your Teslemetry account has already been added for local control.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
-        "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account."
+        "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later."
       },
       "entry_type": "Energy site",
       "error": {
@@ -60,7 +61,8 @@
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
         "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
-        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later."
       },
       "initiate_flow": {
         "user": "Add local energy site"
