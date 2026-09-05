@@ -1,7 +1,8 @@
 {
   "common": {
-    "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
     "data_description_password": "Password for the user to connect Home Assistant to your FRITZ!Box.",
+    "data_description_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your FRITZ!Box.",
+    "data_description_url": "The URL of your FRITZ!Box.",
     "data_description_username": "Name of the user to connect Home Assistant to your FRITZ!Box."
   },
   "config": {
@@ -44,23 +45,27 @@
       },
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::fritzbox::common::data_description_host%]"
+          "url": "[%key:component::fritzbox::common::data_description_url%]",
+          "verify_ssl": "[%key:component::fritzbox::common::data_description_ssl_verify%]"
         },
         "description": "Update your configuration information for {name}."
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::fritzbox::common::data_description_host%]",
           "password": "[%key:component::fritzbox::common::data_description_password%]",
-          "username": "[%key:component::fritzbox::common::data_description_username%]"
+          "url": "[%key:component::fritzbox::common::data_description_url%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]",
+          "verify_ssl": "[%key:component::fritzbox::common::data_description_ssl_verify%]"
         },
         "description": "Enter your FRITZ!Box information."
       }
