@@ -2029,7 +2029,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.5
+pyHik==0.4.6
 
 # homeassistant.components.homee
 pyHomee==1.4.4
@@ -2391,7 +2391,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.6.4
+pylitterbot==2025.6.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0

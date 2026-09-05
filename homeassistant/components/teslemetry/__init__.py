@@ -333,9 +333,13 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     pem: bytes | None = hass.data.get(RSA_PARENT_KEY)
     if pem is None:
         path = hass.config.path(POWERWALL_KEY_FILE)
-        await Teslemetry(
-            session=async_get_clientsession(hass), access_token=""
-        ).get_rsa_private_key(path)
+        try:
+            await Teslemetry(
+                session=async_get_clientsession(hass), access_token=""
+            ).get_rsa_private_key(path)
+        except TypeError as err:
+            # An encrypted PEM surfaces as TypeError from the cryptography loader.
+            raise ValueError("RSA private key file is encrypted") from err
         pem = await hass.async_add_executor_job(Path(path).read_bytes)
         hass.data[RSA_PARENT_KEY] = pem
     return pem
