@@ -2594,7 +2594,7 @@ pyscorpiontrack==0.1.1
 pysensibo==1.2.1
 
 # homeassistant.components.senz
-pysenz==1.0.2
+pysenz==1.1.0
 
 # homeassistant.components.sesame
 pysesame2==1.0.2
