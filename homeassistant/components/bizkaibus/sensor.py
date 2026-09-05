@@ -34,8 +34,10 @@ from .const import (
     CONF_LINES,
     CONF_STOP_ID,
     DOMAIN,
+    OLD_CONF_NAME,
     OLD_CONF_ROUTE_ID,
     OLD_CONF_STOP_ID,
+    OLD_DEFAULT_NAME,
 )
 from .coordinator import ArrivalData, BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
@@ -45,6 +47,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(OLD_CONF_STOP_ID): cv.string,
         vol.Required(OLD_CONF_ROUTE_ID): cv.string,
+        vol.Optional(OLD_CONF_NAME, default=OLD_DEFAULT_NAME): cv.string,
     }
 )
 
