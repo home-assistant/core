@@ -2798,9 +2798,6 @@ python-qube-heatpump==1.12.0
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
 
-# homeassistant.components.ripple
-python-ripple-api==0.0.3
-
 # homeassistant.components.roborock
 python-roborock==7.2.3
 
@@ -3487,6 +3484,9 @@ xknxproject==3.10.0
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
 xmltodict==1.0.4
+
+# homeassistant.components.ripple
+xrpl-py==5.0.0
 
 # homeassistant.components.xs1
 xs1-api-client==3.0.0
