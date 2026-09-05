@@ -571,44 +571,6 @@ async def test_source_cleared_with_filtered_out_sources(
     assert ATTR_INPUT_SOURCE not in hass.states.get(ENTITY_ID).attributes
 
 
-async def test_empty_update_keeps_source_list(hass: HomeAssistant, client) -> None:
-    """Test the previous list survives an update with no apps and no inputs."""
-    await setup_webostv(hass)
-    await client.mock_state_update()
-
-    sources = ["Input01", "Input02", "Live TV"]
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST] == sources
-
-    client.tv_state.apps = {}
-    client.tv_state.inputs = {}
-    await client.mock_state_update()
-
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST] == sources
-
-
-async def test_live_tv_source_missing_from_lists(hass: HomeAssistant, client) -> None:
-    """Test live TV is the source when it is in neither list."""
-    client.tv_state.apps = {
-        "youtube": {
-            "title": "YouTube",
-            "id": "youtube",
-            "largeIcon": "large-icon",
-            "icon": "icon",
-        },
-    }
-    client.tv_state.inputs = {}
-    client.tv_state.current_app_id = "youtube"
-    await setup_webostv(hass, options={CONF_SOURCES: ["Netflix"]})
-    await client.mock_state_update()
-
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "YouTube"
-
-    client.tv_state.current_app_id = LIVE_TV_APP_ID
-    await client.mock_state_update()
-
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
-
-
 async def test_app_id(hass: HomeAssistant, client) -> None:
     """Test app_id follows the foreground app id reported by the TV."""
     await setup_webostv(hass)

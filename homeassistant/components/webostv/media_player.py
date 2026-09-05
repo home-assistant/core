@@ -74,7 +74,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
         # Assume that the TV is not paused
         self._paused = False
-        self._current_source: str | None = None
+        self._current_source = None
         self._source_list: dict = {}
 
         self._supported_features = MediaPlayerEntityFeature(0)
@@ -233,12 +233,12 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             ):
                 self._source_list[source["label"]] = source
 
-        # decided before the live tv insert below can mask an empty update
-        keep_previous_list = not self._source_list and bool(source_list)
-
+        # empty list, TV may be off, keep previous list
+        if not self._source_list and source_list:
+            self._source_list = source_list
         # special handling of live tv since this might
         # not appear in the app or input lists in some cases
-        if not found_live_tv:
+        elif not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
             if tv_state.current_app_id == LIVE_TV_APP_ID:
                 self._current_source = app["title"]
@@ -250,10 +250,6 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
                 or any(word in app["id"] for word in conf_sources)
             ):
                 self._source_list["Live TV"] = app
-
-        # empty list, TV may be off, keep previous list
-        if keep_previous_list:
-            self._source_list = source_list
 
     @property
     @override
