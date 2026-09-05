@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
-from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -220,9 +219,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )
-                if vehicle.poll
-                or not firmware_at_least(vehicle.firmware, "2024.26")
-                or description.streaming_listener is None
+                if description.streaming_listener is None or vehicle.poll_for("2024.26")
                 else TeslemetryStreamingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )
@@ -233,6 +230,7 @@ async def async_setup_entry(
                     .get(vehicle.vin, {})
                     .get("config", {})
                 )
+                and (description.streaming_listener is not None or vehicle.pollable)
             ),
             (
                 TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)

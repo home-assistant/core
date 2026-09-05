@@ -187,9 +187,16 @@ async def test_energy_site_refresh_error(
 async def test_vehicle_stream(
     hass: HomeAssistant,
     mock_add_listener: MagicMock,
+    mock_metadata: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
+
+    # is_user_present is a polling-only entity, so the vehicle must qualify for
+    # polling; it still streams, updating via the vehicle_data push below.
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["discounted"] = True
+    mock_metadata.return_value = metadata
 
     await setup_platform(hass, [Platform.BINARY_SENSOR])
     mock_add_listener.assert_called()
@@ -921,6 +928,108 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
     await hass.async_block_till_done()
 
     assert (mock_vehicle_data.call_count > 0) is expected_polled
+
+
+@pytest.mark.parametrize(
+    ("polling", "discounted", "has_polling_only"),
+    [
+        (True, False, True),
+        (False, True, True),
+        (False, False, False),
+    ],
+    ids=["non_streaming", "discounted_streaming", "plain_streaming"],
+)
+async def test_polling_only_entities_require_metadata(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    polling: bool,
+    discounted: bool,
+    has_polling_only: bool,
+) -> None:
+    """Create a polling-only entity only for a polling or discounted vehicle.
+
+    A plain streaming vehicle gets none, so nothing can be enabled that keeps
+    its coordinator running the charged vehicle_data poll.
+    """
+    vin = "LRW3F7EK4NC700000"
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][vin]["polling"] = polling
+    metadata["vehicles"][vin]["discounted"] = discounted
+    mock_metadata.return_value = metadata
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    # is_user_present is a polling-only binary sensor (no streaming source).
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-vehicle_state_is_user_present"
+        )
+        is not None
+    ) is has_polling_only
+    # A feature with a streaming source exists regardless of the polling flags.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-state"
+        )
+        is not None
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_streaming_vehicle_coordinator_never_polls(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A plain streaming vehicle is never polled.
+
+    Default metadata is a plain streaming vehicle; with no polling-only entity
+    listening to its coordinator, core never runs the charged vehicle_data poll.
+    """
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 0
+
+
+async def test_stale_polling_only_entity_removed_on_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Prune a polling-only entity when its vehicle no longer qualifies.
+
+    On upgrade a plain streaming vehicle drops its polling-only entities; any a
+    user had enabled are removed so its coordinator stops being charged.
+    """
+    vin = "LRW3F7EK4NC700000"
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Left over from before the vehicle stopped qualifying for polling.
+    stale = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{vin}-vehicle_state_is_user_present",
+        config_entry=entry,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Default metadata is a plain streaming vehicle, which no longer qualifies.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, stale.unique_id
+        )
+        is None
+    )
 
 
 async def test_energy_site_version_update(

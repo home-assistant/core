@@ -3,7 +3,6 @@
 from itertools import chain
 from typing import Any, override
 
-from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -41,7 +40,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.poll_for("2024.26")
                 else TeslemetryStreamingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -51,7 +50,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.poll_for("2024.26")
                 else TeslemetryStreamingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
