@@ -1229,3 +1229,33 @@ async def test_unloaded_pinned_router_refuses_the_migration(
     assert exc_info.value.translation_key == "pinned_router_unreachable"
     assert exc_info.value.translation_placeholders == {"router": pinned_entry.title}
     assert not pending_calls(aioclient_mock)
+
+
+async def test_a_source_network_without_an_extended_pan_id_is_refused(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A router whose active dataset names no network is not migrated.
+
+    Every guarantee of a migration is keyed by the extended PAN ID of the
+    network being left; without one the action would have to go without
+    them and still report success. OpenThread does not count such a router
+    as commissioned, so the dataset is one the router should not have
+    returned.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    nameless = dict(tlv_parser.parse_tlv(DATASET_CH16.hex()))
+    del nameless[MeshcopTLVType.EXTPANID]
+
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs",
+            return_value=bytes.fromhex(tlv_parser.encode_tlv(nameless)),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await call_migrate(hass, dataset=TARGET)
+
+    assert exc_info.value.translation_key == "router_dataset_invalid"
+    assert not pending_calls(aioclient_mock)
