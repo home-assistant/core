@@ -7665,6 +7665,62 @@ async def test_update_subentry_and_abort(
     else:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
+        assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
+
+
+@pytest.mark.parametrize(
+    "update_and_abort",
+    ["async_update_and_abort", "async_update_reload_and_abort"],
+)
+async def test_update_subentry_custom_reason_stays_local(
+    hass: HomeAssistant, update_and_abort: str
+) -> None:
+    """Test a caller supplied reason resolves against the integration itself."""
+    subentry_id = "blabla"
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="entry_unique_id",
+        title="entry_title",
+        data={},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"vendor": "data"},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="1234",
+                title="Test",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            async def async_step_reconfigure(self, user_input=None):
+                return getattr(self, update_and_abort)(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    reason="custom_reason",
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: config_entries.ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    with mock_config_flow("comp", TestFlow):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "custom_reason"
+    assert "translation_domain" not in result
 
 
 @pytest.mark.parametrize(
@@ -7694,6 +7750,7 @@ async def test_update_subentry_and_abort(
             {
                 "type": FlowResultType.ABORT,
                 "reason": "reconfigure_successful",
+                "translation_domain": HOMEASSISTANT_DOMAIN,
                 "description_placeholders": None,
             },
         ),
@@ -7712,6 +7769,7 @@ async def test_update_subentry_and_abort(
             {
                 "type": FlowResultType.ABORT,
                 "reason": "reconfigure_successful",
+                "translation_domain": HOMEASSISTANT_DOMAIN,
                 "description_placeholders": None,
             },
         ),
@@ -7730,6 +7788,7 @@ async def test_update_subentry_and_abort(
             {
                 "type": FlowResultType.ABORT,
                 "reason": "reconfigure_successful",
+                "translation_domain": HOMEASSISTANT_DOMAIN,
                 "description_placeholders": None,
             },
         ),
@@ -7744,6 +7803,7 @@ async def test_update_subentry_and_abort(
             {
                 "type": FlowResultType.ABORT,
                 "reason": "reconfigure_successful",
+                "translation_domain": HOMEASSISTANT_DOMAIN,
                 "description_placeholders": None,
             },
         ),
@@ -7760,6 +7820,7 @@ async def test_update_subentry_and_abort(
             {
                 "type": FlowResultType.ABORT,
                 "reason": "reconfigure_successful",
+                "translation_domain": HOMEASSISTANT_DOMAIN,
                 "description_placeholders": None,
             },
         ),
@@ -7774,6 +7835,7 @@ async def test_update_subentry_and_abort(
             {
                 "type": FlowResultType.ABORT,
                 "reason": "reconfigure_successful",
+                "translation_domain": HOMEASSISTANT_DOMAIN,
                 "description_placeholders": None,
             },
         ),
