@@ -20,7 +20,6 @@ from aioesphomeapi import (
     VoiceAssistantEventType,
     VoiceAssistantExternalWakeWord,
     VoiceAssistantFeature,
-    VoiceAssistantTimerEventType,
 )
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -32,11 +31,6 @@ from homeassistant.components.assist_pipeline import (
     PipelineStage,
 )
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.intent import (
-    TimerEventType,
-    TimerInfo,
-    async_register_timer_handler,
-)
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -92,25 +86,6 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
             PipelineEventType.STT_VAD_END
         ),
     }
-)
-
-_TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventType] = (
-    EsphomeEnumMapper(
-        {
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: (
-                TimerEventType.STARTED
-            ),
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: (
-                TimerEventType.UPDATED
-            ),
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: (
-                TimerEventType.CANCELLED
-            ),
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: (
-                TimerEventType.FINISHED
-            ),
-        }
-    )
 )
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
@@ -289,16 +264,8 @@ class EsphomeAssistSatellite(
                 )
             )
 
-        if feature_flags & VoiceAssistantFeature.TIMERS:
-            # Device supports timers
-            assert (self.registry_entry is not None) and (
-                self.registry_entry.device_id is not None
-            )
-            self.async_on_remove(
-                async_register_timer_handler(
-                    self.hass, self.registry_entry.device_id, self.handle_timer_event
-                )
-            )
+        # Timers are handled by the timer_list entity (see timer_list.py), which
+        # forwards events to the device over this same API connection.
 
         assert self._attr_supported_features is not None
         if feature_flags & VoiceAssistantFeature.ANNOUNCE:
@@ -639,25 +606,6 @@ class EsphomeAssistSatellite(
         self._stop_udp_server()
         self._active_pipeline_index = 0
         _LOGGER.debug("Pipeline finished")
-
-    def handle_timer_event(
-        self, event_type: TimerEventType, timer_info: TimerInfo
-    ) -> None:
-        """Handle timer events."""
-        try:
-            native_event_type = _TIMER_EVENT_TYPES.from_hass(event_type)
-        except KeyError:
-            _LOGGER.debug("Received unknown timer event type: %s", event_type)
-            return
-
-        self.cli.send_voice_assistant_timer_event(
-            native_event_type,
-            timer_info.id,
-            timer_info.name,
-            timer_info.created_seconds,
-            timer_info.seconds_left,
-            timer_info.is_active,
-        )
 
     async def handle_announcement_finished(
         self, announce_finished: VoiceAssistantAnnounceFinished

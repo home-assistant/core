@@ -47,6 +47,10 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.timer_list import (
+    DATA_COMPONENT as TIMER_LIST_DATA_COMPONENT,
+    DOMAIN as TIMER_LIST_DOMAIN,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
@@ -833,13 +837,31 @@ async def test_timer_events(
     )
 
 
+async def test_no_timer_list_without_timers_flag(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a voice device without the TIMERS flag gets no timer list entity."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids("timer_list") == []
+
+
 async def test_unknown_timer_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that unknown (new) timer event types do not result in api calls."""
+    """Test that timer event types ESPHome has no equivalent for are dropped."""
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
@@ -856,24 +878,32 @@ async def test_unknown_timer_event(
     )
     assert dev is not None
 
-    with patch(
-        "homeassistant.components.esphome.assist_satellite._TIMER_EVENT_TYPES.from_hass",
-        side_effect=KeyError,
-    ):
-        await intent_helper.async_handle(
-            hass,
-            "test",
-            intent_helper.INTENT_START_TIMER,
-            {
-                "name": {"value": "test timer"},
-                "hours": {"value": 1},
-                "minutes": {"value": 2},
-                "seconds": {"value": 3},
-            },
-            device_id=dev.id,
-        )
+    await intent_helper.async_handle(
+        hass,
+        "test",
+        intent_helper.INTENT_START_TIMER,
+        {
+            "name": {"value": "test timer"},
+            "hours": {"value": 1},
+            "minutes": {"value": 2},
+            "seconds": {"value": 3},
+        },
+        device_id=dev.id,
+    )
+    mock_client.send_voice_assistant_timer_event.reset_mock()
 
-        mock_client.send_voice_assistant_timer_event.assert_not_called()
+    # REMOVED has no ESPHome equivalent, so nothing is sent to the device.
+    entity_id = hass.states.async_entity_ids("timer_list")[0]
+    timer_id = hass.data[TIMER_LIST_DATA_COMPONENT].get_entity(entity_id).timers[0]
+    await hass.services.async_call(
+        TIMER_LIST_DOMAIN,
+        "remove_timer",
+        {"timer_id": timer_id.timer_id},
+        target={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_client.send_voice_assistant_timer_event.assert_not_called()
 
 
 async def test_streaming_tts_errors(

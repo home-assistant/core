@@ -8,7 +8,8 @@
     "assist_pipeline",
     "intent",
     "conversation",
-    "ffmpeg"
+    "ffmpeg",
+    "timer_list"
   ],
   "documentation": "https://www.home-assistant.io/integrations/wyoming",
   "integration_type": "service",
