@@ -1,7 +1,10 @@
 """The tests for Z-Wave JS automation triggers."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import copy
-from unittest.mock import patch
+from datetime import timedelta
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -11,19 +14,38 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.components.zwave_js.trigger import TRIGGERS
-from homeassistant.components.zwave_js.triggers.trigger_helpers import (
+from homeassistant.components.zwave_js.const import NODE_STATUSES
+from homeassistant.components.zwave_js.helpers import (
     async_bypass_dynamic_config_validation,
+    async_get_node_status_sensor_entity_id,
+    get_device_id,
 )
+from homeassistant.components.zwave_js.trigger import TRIGGERS
+from homeassistant.components.zwave_js.triggers.event import (
+    _OPTIONS_SCHEMA_DICT as EVENT_OPTIONS_SCHEMA_DICT,
+)
+from homeassistant.components.zwave_js.triggers.node_status import (
+    _OPTIONS_SCHEMA_DICT as NODE_STATUS_OPTIONS_SCHEMA_DICT,
+)
+from homeassistant.components.zwave_js.triggers.value_updated import (
+    _OPTIONS_SCHEMA_DICT as VALUE_UPDATED_OPTIONS_SCHEMA_DICT,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    trigger,
+)
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from .common import SCHLAGE_BE469_LOCK_ENTITY
+from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 async def test_zwave_js_value_updated(
@@ -1042,6 +1064,84 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("event_source", "event", "option_keys", "expectation"),
+    [
+        pytest.param(
+            "controller",
+            "inclusion started",
+            ["config_entry_id", "device_id"],
+            pytest.raises(vol.Invalid, match="must not contain"),
+            id="controller_with_device_id",
+        ),
+        pytest.param(
+            "driver",
+            "logging",
+            ["config_entry_id", "entity_id"],
+            pytest.raises(vol.Invalid, match="must not contain"),
+            id="driver_with_entity_id",
+        ),
+        pytest.param(
+            "node",
+            "interview stage completed",
+            [],
+            pytest.raises(vol.Invalid, match="must contain"),
+            id="node_without_targets",
+        ),
+        pytest.param(
+            "controller",
+            "inclusion started",
+            ["config_entry_id"],
+            does_not_raise(),
+            id="controller_without_targets",
+        ),
+        pytest.param(
+            "controller",
+            "inclusion started",
+            [],
+            pytest.raises(vol.Invalid, match="must contain config_entry_id"),
+            id="controller_without_config_entry",
+        ),
+    ],
+)
+async def test_zwave_js_event_source_target_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    event_source: str,
+    event: str,
+    option_keys: list[str],
+    expectation: AbstractContextManager,
+) -> None:
+    """Test that zwave_js.event targets are validated against the event source."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    options = {
+        "config_entry_id": integration.entry_id,
+        "device_id": device.id,
+        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+    }
+
+    with expectation:
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.event",
+                    "options": {
+                        "event_source": event_source,
+                        "event": event,
+                        **{key: options[key] for key in option_keys},
+                    },
+                }
+            ],
+        )
+
+
 async def test_zwave_js_trigger_config_entry_unloaded(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1059,12 +1159,9 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     assert not async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.value_updated",
-            "options": {
-                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
-            },
+            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
         },
     )
 
@@ -1099,64 +1196,103 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.value_updated",
-            "options": {
-                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
-            },
+            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.value_updated",
-            "options": {
-                "device_id": device.id,
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
-                "from": "ajar",
-            },
+            "device_id": [device.id],
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+            "from": "ajar",
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.event",
-            "options": {
-                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                "event_source": "node",
-                "event": "interview stage completed",
-            },
+            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
+            "event_source": "node",
+            "event": "interview stage completed",
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.event",
-            "options": {
-                "device_id": device.id,
-                "event_source": "node",
-                "event": "interview stage completed",
-                "event_data": {"stageName": "ProtocolInfo"},
-            },
+            "device_id": [device.id],
+            "event_source": "node",
+            "event": "interview stage completed",
+            "event_data": {"stageName": "ProtocolInfo"},
         },
     )
 
     assert async_bypass_dynamic_config_validation(
         hass,
         {
-            "platform": f"{DOMAIN}.event",
-            "options": {
-                "config_entry_id": integration.entry_id,
-                "event_source": "controller",
-                "event": "nvm convert progress",
-            },
+            "config_entry_id": integration.entry_id,
+            "event_source": "controller",
+            "event": "nvm convert progress",
         },
     )
+
+
+@pytest.mark.parametrize(
+    ("config_key", "driver", "expected"),
+    [
+        pytest.param("loaded_device", MagicMock(), False, id="loaded_device"),
+        pytest.param("loaded_entity", MagicMock(), False, id="loaded_entity"),
+        pytest.param("unloaded_device", MagicMock(), True, id="unloaded_device"),
+        pytest.param(
+            "unloaded_entry", MagicMock(), True, id="unloaded_config_entry_id"
+        ),
+        pytest.param("nothing", MagicMock(), False, id="nothing_referenced"),
+        pytest.param("loaded_device", None, True, id="loaded_device_driver_not_ready"),
+        pytest.param("nothing", None, False, id="nothing_referenced_driver_not_ready"),
+    ],
+)
+async def test_bypass_dynamic_config_validation_scoped(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    config_key: str,
+    driver: MagicMock | None,
+    expected: bool,
+) -> None:
+    """Test the bypass check only considers config entries referenced by the config."""
+    lock_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert lock_device
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://test2.org"}, unique_id="other"
+    )
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={(DOMAIN, "other-node")}
+    )
+    assert other_entry.state is not ConfigEntryState.LOADED
+
+    configs = {
+        "loaded_device": {"device_id": [lock_device.id]},
+        "loaded_entity": {"entity_id": [SCHLAGE_BE469_LOCK_ENTITY]},
+        "unloaded_device": {"device_id": [other_device.id]},
+        "unloaded_entry": {"config_entry_id": other_entry.entry_id},
+        "nothing": {},
+    }
+
+    with patch.object(client, "driver", driver):
+        assert (
+            async_bypass_dynamic_config_validation(hass, configs[config_key])
+            is expected
+        )
 
 
 async def test_server_reconnect_event(
@@ -1495,3 +1631,334 @@ async def test_zwave_js_old_syntax(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(zwavejs_value_updated) == 1
+
+
+@pytest.mark.usefixtures("integration")
+async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
+    """Test the command class options and translations match the CommandClass enum."""
+    expected = {str(cc.value) for cc in CommandClass if cc not in COMMAND_CLASS_MARKERS}
+
+    descriptions = await trigger.async_get_all_descriptions(hass)
+    options = descriptions[f"{DOMAIN}.value_updated"]["fields"]["command_class"][
+        "selector"
+    ]["select"]["options"]
+    assert len(options) == len(expected)
+    assert set(options) == expected
+
+    translations = await async_get_translations(hass, "en", "selector", {DOMAIN})
+    prefix = f"component.{DOMAIN}.selector.command_class.options."
+    assert {
+        key.removeprefix(prefix) for key in translations if key.startswith(prefix)
+    } == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_type", "options_schema"),
+    [
+        pytest.param(f"{DOMAIN}.event", EVENT_OPTIONS_SCHEMA_DICT, id="event"),
+        pytest.param(
+            f"{DOMAIN}.value_updated",
+            VALUE_UPDATED_OPTIONS_SCHEMA_DICT,
+            id="value_updated",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("integration")
+async def test_trigger_description_fields_match_schema(
+    hass: HomeAssistant, trigger_type: str, options_schema: dict[vol.Marker, object]
+) -> None:
+    """Test the described fields match the trigger's options schema."""
+    descriptions = await trigger.async_get_all_descriptions(hass)
+    fields = descriptions[trigger_type]["fields"]
+    assert set(fields) == {str(key) for key in options_schema}
+    assert {name for name, field in fields.items() if field["required"]} == {
+        str(key) for key in options_schema if isinstance(key, vol.Required)
+    }
+
+
+def _node_event(node: Node, event: str) -> None:
+    """Emit a node status event."""
+    node.receive_event(
+        Event(event, data={"source": "node", "event": event, "nodeId": node.node_id})
+    )
+
+
+async def _setup_node_status_automation(
+    hass: HomeAssistant, target: dict[str, Any], options: dict[str, Any] | None = None
+) -> None:
+    """Set up one automation on the node status trigger."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "trigger": f"{DOMAIN}.node_status",
+                    "target": target,
+                    **({"options": options} if options is not None else {}),
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "entity_id": "{{ trigger.entity_id }}",
+                        "from_state": "{{ trigger.from_state.state }}",
+                        "to_state": "{{ trigger.to_state.state }}",
+                    },
+                },
+            }
+        },
+    )
+
+
+@pytest.mark.parametrize("target_kind", ["device", "area", "entity"])
+async def test_node_status_trigger_fires(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    service_calls: list[ServiceCall],
+    target_kind: str,
+) -> None:
+    """Test the trigger fires on a status change for device, area, and entity targets."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    area = area_registry.async_create("Hall")
+    device_registry.async_update_device(device.id, area_id=area.id)
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, entity_registry, device_registry
+    )
+    assert entity_id
+    targets = {
+        "device": {"device_id": device.id},
+        "area": {"area_id": area.id},
+        "entity": {"entity_id": entity_id},
+    }
+    await _setup_node_status_automation(hass, targets[target_kind], {})
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data == {
+        "entity_id": entity_id,
+        "from_state": "alive",
+        "to_state": "dead",
+    }
+
+
+@pytest.mark.parametrize(
+    ("options", "events", "expected_calls"),
+    [
+        pytest.param({"to": ["dead"]}, ["sleep", "dead"], 1, id="to_filter"),
+        pytest.param(
+            {"from": ["alive", "awake"]},
+            ["dead", "alive", "sleep"],
+            2,
+            id="from_filter",
+        ),
+        pytest.param(
+            {"from": "alive", "to": "dead"}, ["dead", "alive", "dead"], 2, id="scalar"
+        ),
+        pytest.param({"to": ["asleep"]}, ["dead", "alive"], 0, id="no_match"),
+        pytest.param(None, ["dead"], 1, id="no_options"),
+    ],
+)
+async def test_node_status_trigger_filters(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    options: dict[str, Any] | None,
+    events: list[str],
+    expected_calls: int,
+) -> None:
+    """Test from and to filters, including scalar values and no options at all."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    await _setup_node_status_automation(hass, {"device_id": device.id}, options)
+
+    for event in events:
+        _node_event(lock_schlage_be469, event)
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == expected_calls
+
+
+async def test_node_status_trigger_for(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the for duration fires late and is cancelled by a recovery."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    # The firmware update entities poll once the fake clock passes their delay.
+    client.async_send_command.return_value = {"updates": []}
+    await _setup_node_status_automation(
+        hass, {"device_id": device.id}, {"to": ["dead"], "for": {"minutes": 1}}
+    )
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    _node_event(lock_schlage_be469, "alive")
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("behavior", "calls_after_first_node", "expected_from_states"),
+    [
+        pytest.param("each", 1, {"alive", "asleep"}, id="each"),
+        pytest.param("all", 0, {"asleep"}, id="all"),
+    ],
+)
+async def test_node_status_trigger_behavior(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    behavior: str,
+    calls_after_first_node: int,
+    expected_from_states: set[str],
+) -> None:
+    """Test each fires once per node while all waits for the last node."""
+    device_ids = [
+        device_registry.async_get_device_by_identifier(
+            get_device_id(client.driver, node), integration.entry_id
+        ).id
+        for node in (lock_schlage_be469, multisensor_6)
+    ]
+    await _setup_node_status_automation(
+        hass, {"device_id": device_ids}, {"behavior": behavior, "to": ["dead"]}
+    )
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+    assert len(service_calls) == calls_after_first_node
+
+    _node_event(multisensor_6, "dead")
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == len(expected_from_states)
+    assert {call.data["from_state"] for call in service_calls} == expected_from_states
+
+
+@pytest.mark.parametrize(
+    ("second_event", "expected_calls"),
+    [
+        pytest.param("alive", 0, id="back_to_from_status_cancels"),
+        pytest.param("sleep", 1, id="further_change_stays_armed"),
+    ],
+)
+async def test_node_status_trigger_from_only_for(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    second_event: str,
+    expected_calls: int,
+) -> None:
+    """Test a from-only timer only survives while the node has left the status."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    # The firmware update entities poll once the fake clock passes their delay.
+    client.async_send_command.return_value = {"updates": []}
+    await _setup_node_status_automation(
+        hass, {"device_id": device.id}, {"from": ["alive"], "for": {"minutes": 1}}
+    )
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+    _node_event(lock_schlage_be469, second_event)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == expected_calls
+
+
+async def test_node_status_trigger_ignores_other_entities(
+    hass: HomeAssistant,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test targeting a non node status entity of a node never fires."""
+    assert integration.state is ConfigEntryState.LOADED
+    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    await _setup_node_status_automation(hass, {"entity_id": SCHLAGE_BE469_LOCK_ENTITY})
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 0
+
+
+async def test_node_status_trigger_invalid_status(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an unknown status is rejected."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.node_status",
+                    "target": {"device_id": device.id},
+                    "options": {"to": ["sleeping"]},
+                }
+            ],
+        )
+
+
+@pytest.mark.usefixtures("integration")
+async def test_node_status_trigger_description(hass: HomeAssistant) -> None:
+    """Test the described node status fields match the schema and statuses."""
+    descriptions = await trigger.async_get_all_descriptions(hass)
+    description = descriptions[f"{DOMAIN}.node_status"]
+    assert description["target"]["primary_entities_only"] is False
+    fields = description["fields"]
+    assert set(fields) == {"behavior", "for"} | {
+        str(key) for key in NODE_STATUS_OPTIONS_SCHEMA_DICT
+    }
+    for name in ("from", "to"):
+        assert set(fields[name]["selector"]["select"]["options"]) == set(NODE_STATUSES)
