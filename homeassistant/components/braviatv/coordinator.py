@@ -146,11 +146,22 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
-            if not title or not uri:
+            # "label" is the name set on the TV, "title" the generic connector name.
+            name = item.get("label") or title
+            if not name or not uri:
                 continue
-            self.source_map[uri] = {**item, "type": source_type}
-            if add_to_list and title not in self.source_list:
-                self.source_list.append(title)
+            if add_to_list:
+                # Reuse the spelling already listed, so the source reported while
+                # playing is always one of the names offered in the list.
+                known = next(
+                    (s for s in self.source_list if s.casefold() == name.casefold()),
+                    None,
+                )
+                if known is None:
+                    self.source_list.append(name)
+                else:
+                    name = known
+            self.source_map[uri] = {**item, "name": name, "type": source_type}
 
     @override
     async def _async_update_data(self) -> None:
@@ -254,7 +265,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if self.media_uri:
             self.media_content_id = self.media_uri
             if self.media_uri[:8] == "extInput":
-                self.source = playing_info.get("title")
+                source = self.source_map.get(self.media_uri, {})
+                self.source = source.get("name") or playing_info.get("title")
             if self.media_uri[:2] == "tv":
                 self.media_content_id = playing_info.get("dispNum")
                 self.media_title = (
@@ -294,6 +306,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if query.startswith(("extInput:", "tv:", "com.sony.dtv.")):
             return await self.async_source_start(query, source_type)
         coarse_uri = None
+        label_uri = None
         is_numeric_search = source_type == SourceType.CHANNEL and query.isnumeric()
         for uri, item in self.source_map.items():
             if item["type"] == source_type:
@@ -302,11 +315,19 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    title: str = item["title"]
-                    if query.lower() == title.lower():
+                    folded = query.casefold()
+                    title = (item.get("title") or "").casefold()
+                    name = (item.get("name") or "").casefold()
+                    # A generic name wins over a label, so labelling an input with
+                    # another one's name cannot capture it from an automation.
+                    if folded == title:
                         return await self.async_source_start(uri, source_type)
-                    if query.lower() in title.lower():
+                    if folded == name:
+                        label_uri = label_uri or uri
+                    elif folded in title or folded in name:
                         coarse_uri = uri
+        if label_uri:
+            return await self.async_source_start(label_uri, source_type)
         if coarse_uri:
             return await self.async_source_start(coarse_uri, source_type)
         raise ValueError(f"Not found {source_type}: {query}")
