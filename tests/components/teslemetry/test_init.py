@@ -1379,11 +1379,6 @@ async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
         pytest.param(PowerwallError("client boom"), id="powerwall_error"),
-        # An encrypted key PEM surfaces as TypeError from the cryptography loader.
-        pytest.param(
-            TypeError("Password was not given but private key is encrypted"),
-            id="type_error",
-        ),
     ],
 )
 async def test_local_control_failure_falls_back_to_cloud(
@@ -1421,6 +1416,71 @@ async def test_local_control_failure_falls_back_to_cloud(
         record.levelname == "WARNING" and str(SITE_ID) in record.message
         for record in caplog.records
     )
+
+
+async def test_local_control_encrypted_key_falls_back_to_cloud(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An encrypted RSA key PEM degrades the site to cloud control.
+
+    The cryptography loader raises TypeError for an encrypted PEM; the key
+    helper converts that to ValueError so the site falls back to cloud control
+    instead of tearing the integration down. Raise from the real
+    ``get_rsa_private_key`` call so the conversion is exercised end to end.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
+            side_effect=TypeError(
+                "Password was not given but private key is encrypted"
+            ),
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    energysite = entry.runtime_data.energysites[0]
+    assert isinstance(energysite.api, EnergySite)
+    assert not isinstance(energysite.api, EnergySiteRouter)
+    assert energysite.can_local_control
+    assert "falling back to cloud control" in caplog.text
+
+
+async def test_local_control_unexpected_typeerror_is_not_swallowed(
+    hass: HomeAssistant,
+) -> None:
+    """A TypeError outside the key load is a real bug and must not degrade silently.
+
+    ``_LOCAL_CONTROL_ERRORS`` deliberately excludes TypeError: only the key
+    loader's encrypted-PEM TypeError is converted to ValueError. A TypeError
+    from anywhere else in the resolve path (here, client construction) must
+    fail setup rather than silently falling back to cloud control.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.PowerwallClient",
+            side_effect=TypeError("unexpected argument"),
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None:
