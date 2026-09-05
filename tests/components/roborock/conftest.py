@@ -95,6 +95,8 @@ from .mock_data import (
     USER_DATA,
     USER_EMAIL,
     VALLEY_ELECTRICITY_TIMER,
+    ZEO_NO_COUNTDOWN_DEVICE,
+    ZEO_NO_COUNTDOWN_PRODUCT,
 )
 
 from tests.common import MockConfigEntry
@@ -596,6 +598,20 @@ def fake_q7_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
 def fake_q10_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
     """Get the fake Q10 vacuum device."""
     return fake_devices[4]
+
+
+@pytest.fixture
+def fake_zeo_without_countdown(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Add a Zeo washing machine whose schema lacks the countdown data point."""
+    fake_device = FakeDevice(
+        device_info=deepcopy(ZEO_NO_COUNTDOWN_DEVICE),
+        product=deepcopy(ZEO_NO_COUNTDOWN_PRODUCT),
+    )
+    fake_device.is_connected = True
+    fake_device.is_local_connected = True
+    fake_device.zeo = create_zeo_trait()
+    fake_devices.append(fake_device)
+    return fake_device
 
 
 @pytest.fixture(name="send_message_exception")
