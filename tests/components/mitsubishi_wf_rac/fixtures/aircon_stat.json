@@ -1,0 +1,17 @@
+{
+  "airconId": "0011223344aa",
+  "airconStat": "AAAAAAD/AAAIAAAAAAAAAAAAAf////+XyIEECAAsngAAiAAABAAAAAAAAAOAIJ7/gBC3/5QQGABIRA==",
+  "logStat": 0,
+  "updatedBy": "local",
+  "expires": 1788630278,
+  "ledStat": 1,
+  "autoHeating": 0,
+  "highTemp": "AB",
+  "lowTemp": "66",
+  "wireless": {"firmVer": "025"},
+  "mcu": {"firmVer": "200"},
+  "timezone": "Europe/Berlin",
+  "remoteList": ["", "", "", ""],
+  "numOfAccount": 2,
+  "firmType": "WF-RAC-HTTPS"
+}

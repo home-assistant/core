@@ -1,0 +1,37 @@
+{
+  "entity": {
+    "climate": {
+      "mitsubishi_wf_rac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "mdi:fan-minus"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "left_left": "mdi:arrow-left-thick",
+              "left_center": "mdi:arrow-left",
+              "center_right": "mdi:arrow-right",
+              "right_right": "mdi:arrow-right-thick",
+              "left_right": "mdi:arrow-left-right",
+              "right_left": "mdi:arrow-left-right",
+              "left_right_auto": "mdi:refresh-auto",
+              "3d_auto": "mdi:video-3d"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "highest": "mdi:arrow-up-thick",
+              "middle": "mdi:arrow-up",
+              "normal": "mdi:circle-medium",
+              "lowest": "mdi:arrow-down",
+              "up_down_auto": "mdi:arrow-up-down",
+              "3d_auto": "mdi:video-3d"
+            }
+          }
+        }
+      }
+    }
+  }
+}
