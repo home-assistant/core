@@ -1,0 +1,12 @@
+{
+  "domain": "willow",
+  "name": "Willow",
+  "codeowners": ["@paxprz"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/willow",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pywillow==0.1.2"]
+}
