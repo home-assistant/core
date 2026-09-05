@@ -234,24 +234,29 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
         """Manage the selected bus lines."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and not errors:
-            return self.async_create_entry(
-                title="",
-                data={
-                    CONF_LINE_IDS: user_input[CONF_LINE_IDS],
-                    CONF_LINES: self._lines,
-                },
+        if user_input is None:
+            api, self._line_ids, self._lines = await _async_get_lines(
+                self.config_entry.data[CONF_STOP_ID]
+            )
+            if api is None:
+                errors["base"] = "cannot_connect"
+
+            selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
+            return self.async_show_form(
+                step_id="init",
+                data_schema=_lines_schema(
+                    self._line_ids, self._lines, selected_line_ids
+                ),
+                errors=errors,
             )
 
-        api, self._line_ids, self._lines = await _async_get_lines(
-            self.config_entry.data[CONF_STOP_ID]
-        )
-        if api is None:
-            errors["base"] = "cannot_connect"
+        if errors:
+            return self.async_abort(reason="Error: " + str(errors))
 
-        selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
-        return self.async_show_form(
-            step_id="init",
-            data_schema=_lines_schema(self._line_ids, self._lines, selected_line_ids),
-            errors=errors,
+        return self.async_create_entry(
+            title="",
+            data={
+                CONF_LINE_IDS: user_input[CONF_LINE_IDS],
+                CONF_LINES: self._lines,
+            },
         )
