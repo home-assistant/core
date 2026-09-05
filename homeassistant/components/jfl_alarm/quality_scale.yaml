@@ -1,0 +1,208 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration registers no actions.
+  appropriate-polling:
+    status: done
+    comment: >-
+      The coordinator has no `update_interval`; the panel is polled for status every 30 s on the
+      connection's own task, because only that task knows whether there is a socket to poll over.
+  brands:
+    status: done
+    comment: Submitted as home-assistant/brands#10971.
+  common-modules:
+    status: done
+    comment: Config flow and coordinator follow the standard shape.
+  config-flow:
+    status: done
+    comment: One question, the port, because everything else is read from the panel.
+  config-flow-test-coverage:
+    status: done
+    comment: 100% on `config_flow.py`.
+  dependency-transparency:
+    status: done
+    comment: >-
+      `pyjfl` is Apache-2.0, published to PyPI from a public repository through a CI trusted
+      publisher, and pinned to an exact version.
+  docs-actions:
+    status: exempt
+    comment: The integration registers no actions.
+  docs-conditions:
+    status: exempt
+    comment: >-
+      The integration registers no conditions. A partition's state is already entity state, so the
+      built-in state condition answers it.
+  docs-high-level-description:
+    status: done
+    comment: The documentation opens with the inverted dial-out topology.
+  docs-installation-instructions:
+    status: done
+    comment: The one question asked, and how the panel is pointed at Home Assistant.
+  docs-triggers:
+    status: exempt
+    comment: >-
+      The integration registers no triggers. Arming, disarming and triggering are state changes the
+      built-in state trigger already fires on.
+  docs-removal-instructions:
+    status: done
+    comment: >-
+      Including the part that is easy to miss: the panel keeps dialling out until somebody clears
+      the reporting destination.
+  entity-event-setup:
+    status: done
+    comment: Dispatcher subscriptions in `async_added_to_hass`, removed via `async_on_remove`.
+  entity-unique-id:
+    status: done
+    comment: Derived from the panel serial, never from `entry_id`, so it survives a re-add.
+  has-entity-name:
+    status: done
+    comment: "`_attr_has_entity_name = True` on the shared `JflEntity` base."
+  runtime-data:
+    status: done
+    comment: "`JflConfigEntry = ConfigEntry[JflRuntimeData]`; nothing is stashed in `hass.data`."
+  test-before-configure:
+    status: done
+    comment: The config flow binds the port to prove nothing else holds it.
+  test-before-setup:
+    status: done
+    comment: >-
+      `ConfigEntryNotReady` when the port cannot be bound. Deliberately not raised for "no panel has
+      connected", which is the normal state for the first minute after a restart.
+  unique-config-entry:
+    status: done
+    comment: The port is the entry's unique id; two listeners on one port cannot work.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: >-
+      Arming and disarming raise `ServiceValidationError` or `HomeAssistantError` with a translation
+      key. Nothing fails silently.
+  config-entry-unloading:
+    status: done
+    comment: >-
+      Platforms unload, then the listener stops. Closing the server before its connections deadlocks
+      `wait_closed` and the port is never freed, so the order is covered by a test.
+  docs-configuration-parameters:
+    status: done
+    comment: The listening port is documented.
+  docs-installation-parameters:
+    status: done
+    comment: The listening port is the only installation-time parameter.
+  entity-unavailable:
+    status: done
+    comment: >-
+      Availability follows the panel's connection rather than `last_update_success`: a coordinator
+      that has never been updated is not a panel in trouble.
+  integration-owner:
+    status: done
+    comment: '`codeowners: ["@jmceara"]` in manifest.json.'
+  log-when-unavailable:
+    status: done
+    comment: Once per transition, never per retry, in both directions.
+  parallel-updates:
+    status: done
+    comment: 1 on `alarm_control_panel`, because it sends commands.
+  reauthentication-flow:
+    status: exempt
+    comment: >-
+      There are no credentials. The panel authenticates itself by serial in its connection frame,
+      and no command this integration sends carries a password.
+  test-coverage:
+    status: done
+    comment: 96% overall, with three of the seven modules at 100%.
+
+  # Gold
+  devices:
+    status: done
+    comment: One device per panel, with a sub-device per partition.
+  diagnostics:
+    status: todo
+    comment: Planned as a follow-up PR.
+  discovery:
+    status: exempt
+    comment: Nothing to discover on the network — the panel connects to Home Assistant.
+  discovery-update-info:
+    status: exempt
+    comment: A panel that changes IP simply reconnects; it is keyed by serial, not by address.
+  docs-data-update:
+    status: done
+    comment: >-
+      The documentation explains the push model, and why a command is followed by re-reads rather
+      than an optimistic state write.
+  docs-examples:
+    status: done
+    comment: The documentation walks through an arm/disarm automation on a partition.
+  docs-known-limitations:
+    status: done
+    comment: The untested models, and the Active 8W's different protocol generation.
+  docs-supported-devices:
+    status: done
+    comment: A table of supported panels, with a verified-on-hardware column.
+  docs-supported-functions:
+    status: done
+    comment: This PR ships `alarm_control_panel`, which the documentation describes.
+  docs-troubleshooting:
+    status: done
+    comment: >-
+      Covers the question this topology creates most often: the panel was never programmed to dial
+      out, so nothing appears and nothing is logged above debug.
+  docs-use-cases:
+    status: done
+    comment: Arming and disarming a partition from Home Assistant.
+  dynamic-devices:
+    status: done
+    comment: >-
+      Discovery re-runs on every coordinator update. This is not optional here: at setup time the
+      panel has usually not connected, so a platform that enumerates once produces an empty
+      integration.
+  entity-category:
+    status: exempt
+    comment: >-
+      `alarm_control_panel` is the only platform in this PR and is always a primary entity; neither
+      `CONFIG` nor `DIAGNOSTIC` fits an arm/disarm control.
+  entity-device-class:
+    status: exempt
+    comment: "`alarm_control_panel` has no device class — the domain itself is the classification."
+  entity-disabled-by-default:
+    status: exempt
+    comment: >-
+      The only entity this PR creates is the one someone installs the integration for; nothing here
+      is noisy enough to be created disabled.
+  entity-translations:
+    status: done
+    comment: Names come from `strings.json` through a translation key, never from a literal.
+  exception-translations:
+    status: done
+    comment: Every raised exception carries a `translation_key`.
+  icon-translations:
+    status: exempt
+    comment: >-
+      No custom icons. `alarm_control_panel` provides its own, and there is no `_attr_icon`
+      anywhere.
+  reconfiguration-flow:
+    status: todo
+    comment: Planned as a follow-up PR.
+  repair-issues:
+    status: todo
+    comment: Planned as a follow-up PR.
+  stale-devices:
+    status: done
+    comment: >-
+      `async_remove_config_entry_device` allows deleting the device of a panel that no longer has a
+      subentry.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: "`pyjfl` is pure asyncio."
+  inject-websession:
+    status: exempt
+    comment: No HTTP anywhere. This is a raw TCP listener.
+  strict-typing:
+    status: done
+    comment: >-
+      `mypy --strict` runs over the whole integration. The three `type: ignore` comments are all in
+      `device.py`, each with an explicit error code, guarding the runtime shim for Home Assistant
+      2026.9's `ChildDeviceInfo` symbols, which no released version's stubs carry yet.

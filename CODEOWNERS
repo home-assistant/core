@@ -960,6 +960,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/jellyfin/ @RunC0deRun @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
+/homeassistant/components/jfl_alarm/ @jmceara
+/tests/components/jfl_alarm/ @jmceara
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley

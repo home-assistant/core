@@ -3564,6 +3564,12 @@
       "iot_class": "calculated",
       "single_config_entry": true
     },
+    "jfl_alarm": {
+      "name": "JFL Alarm",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "joaoapps_join": {
       "name": "Joaoapps Join",
       "integration_type": "hub",

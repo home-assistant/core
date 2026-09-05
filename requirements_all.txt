@@ -2339,6 +2339,9 @@ pyitachip2ir2==0.0.8
 # homeassistant.components.ituran
 pyituran==0.1.6
 
+# homeassistant.components.jfl_alarm
+pyjfl==0.3.0
+
 # homeassistant.components.jvc_projector
 pyjvcprojector==2.0.6
 
