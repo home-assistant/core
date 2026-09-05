@@ -1,15 +1,23 @@
 """Support for Renault services."""
 
-from datetime import datetime
+from datetime import UTC, datetime, time
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
+from renault_api.kamereon.models import KamereonVehicleChargingSettingsData
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .renault_vehicle import RenaultVehicleProxy
@@ -18,6 +26,16 @@ if TYPE_CHECKING:
     from . import RenaultConfigEntry
 
 LOGGER = logging.getLogger(__name__)
+
+CHARGE_SCHEDULE_DAYS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
 
 
 class RenaultServiceArgument(StrEnum):
@@ -153,6 +171,55 @@ async def charge_set_schedules(service_call: ServiceCall) -> None:
     )
 
 
+def _format_charge_schedule_time(start_time: str | None) -> str | None:
+    """Format charge schedule start time for the service response."""
+    if start_time is None:
+        return None
+
+    utc_time = time.fromisoformat(start_time.removeprefix("T").removesuffix("Z"))
+    utc_datetime = datetime.combine(dt_util.utcnow().date(), utc_time, UTC)
+    return dt_util.as_local(utc_datetime).strftime("%H:%M")
+
+
+def _serialize_charge_schedules(
+    charge_schedules: KamereonVehicleChargingSettingsData,
+) -> ServiceResponse:
+    """Serialize charge schedules for the service response."""
+    schedules = charge_schedules.schedules or []
+    return {
+        "schedule_count": len(schedules),
+        "active_schedule_count": sum(
+            schedule.activated is True for schedule in schedules
+        ),
+        "schedules": [
+            {
+                "id": schedule.id,
+                "activated": schedule.activated,
+                **{
+                    day: {
+                        "start_time": _format_charge_schedule_time(
+                            day_schedule.startTime
+                        ),
+                        "duration": day_schedule.duration,
+                    }
+                    for day in CHARGE_SCHEDULE_DAYS
+                    if (day_schedule := getattr(schedule, day)) is not None
+                },
+            }
+            for schedule in schedules
+        ],
+    }
+
+
+async def charge_get_schedules(service_call: ServiceCall) -> ServiceResponse:
+    """Get charge schedules."""
+    proxy = get_vehicle_proxy(service_call)
+
+    LOGGER.debug("Charge get schedules attempt")
+    charge_schedules = await proxy.get_charging_settings()
+    return _serialize_charge_schedules(charge_schedules)
+
+
 async def ac_set_schedules(service_call: ServiceCall) -> None:
     """Set A/C schedules."""
     schedules: list[dict[str, Any]] = service_call.data[
@@ -230,6 +297,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "charge_set_schedules",
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "charge_get_schedules",
+        charge_get_schedules,
+        schema=SERVICE_VEHICLE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,

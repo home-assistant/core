@@ -1,4 +1,88 @@
 # serializer version: 1
+# name: test_service_get_charge_schedule[zoe_40]
+  dict({
+    'active_schedule_count': 2,
+    'schedule_count': 5,
+    'schedules': list([
+      dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+        'id': 1,
+        'monday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+        'saturday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+        'sunday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+        'thursday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+        'tuesday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+        'wednesday': dict({
+          'duration': 450,
+          'start_time': '17:00',
+        }),
+      }),
+      dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+        'id': 2,
+        'monday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+        'saturday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+        'sunday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+        'thursday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+        'tuesday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+        'wednesday': dict({
+          'duration': 15,
+          'start_time': '16:30',
+        }),
+      }),
+      dict({
+        'activated': False,
+        'id': 3,
+      }),
+      dict({
+        'activated': False,
+        'id': 4,
+      }),
+      dict({
+        'activated': False,
+        'id': 5,
+      }),
+    ]),
+  })
+# ---
 # name: test_service_set_ac_schedule[zoe_40]
   list([
     dict({
