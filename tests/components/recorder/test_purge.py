@@ -15,6 +15,7 @@ from voluptuous.error import MultipleInvalid
 from homeassistant.components.recorder import DOMAIN, Recorder
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
+    EventData,
     Events,
     EventTypes,
     RecorderRuns,
@@ -1425,6 +1426,80 @@ async def test_purge_filtered_events(
         states = session.query(States)
         assert events_purge.count() == 0
         assert states.count() == 10
+
+
+@pytest.mark.parametrize(
+    ("recorder_config", "event_data", "expected_event_data"),
+    [
+        (
+            {
+                "exclude": {
+                    "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
+                }
+            },
+            [{"command": "keep"}, {"command": "drop"}],
+            [{"command": "keep"}],
+        ),
+        (
+            {
+                "include": {
+                    "event_data": [
+                        {
+                            "event_type": "test",
+                            "match": {"command": "keep"},
+                        }
+                    ]
+                }
+            },
+            [{"command": "drop"}, {"command": "keep"}],
+            [{"command": "keep"}],
+        ),
+    ],
+)
+async def test_purge_filtered_event_data(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    event_data: list[dict[str, str]],
+    expected_event_data: list[dict[str, str]],
+) -> None:
+    """Test historical event data filters are applied during purge."""
+
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with session_scope(hass=hass) as session:
+            timestamp = dt_util.utcnow() - timedelta(days=1)
+            event_type = EventTypes(event_type="test")
+            session.add(event_type)
+            session.flush()
+            for data in event_data:
+                shared_data = EventData(shared_data=json.dumps(data))
+                session.add(shared_data)
+                session.flush()
+                session.add(
+                    Events(
+                        event_type_id=event_type.event_type_id,
+                        data_id=shared_data.data_id,
+                        origin_idx=0,
+                        time_fired_ts=timestamp.timestamp(),
+                    )
+                )
+
+    await recorder_mock.async_add_executor_job(_add_db_entries, hass)
+    with patch.object(recorder_mock, "max_bind_vars", 1):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        events = (
+            session.query(EventData.shared_data)
+            .join(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("test",))))
+        )
+        assert [
+            json.loads(event_data) for (event_data,) in events
+        ] == expected_event_data
 
 
 @pytest.mark.parametrize(

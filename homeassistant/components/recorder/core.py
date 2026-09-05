@@ -1,7 +1,7 @@
 """Support for recording details."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
@@ -142,6 +142,30 @@ CONNECTIVITY_ERR = "Error in database connectivity during commit"
 # Pool size must accommodate Recorder thread + All db executors
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
+_MISSING_EVENT_DATA_VALUE = object()
+
+
+def _event_data_filter_matches(
+    event: Event,
+    filters: dict[str, tuple[tuple[tuple[str, object], ...], ...]],
+) -> bool:
+    """Return if an event matches an event data filter."""
+    if not (rules := filters.get(cast(str, event.event_type))) or not isinstance(
+        event.data, Mapping
+    ):
+        return False
+
+    return any(
+        all(
+            (actual_value := event.data.get(key, _MISSING_EVENT_DATA_VALUE))
+            is not _MISSING_EVENT_DATA_VALUE
+            and type(actual_value) is type(expected_value)
+            and actual_value == expected_value
+            for key, expected_value in rule
+        )
+        for rule in rules
+    )
+
 
 class Recorder(threading.Thread):
     """A threaded recorder class."""
@@ -160,6 +184,10 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool] | None,
         exclude_event_types: set[EventType[Any] | str],
+        include_event_data: dict[str, tuple[tuple[tuple[str, object], ...], ...]]
+        | None = None,
+        exclude_event_data: dict[str, tuple[tuple[tuple[str, object], ...], ...]]
+        | None = None,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -195,6 +223,8 @@ class Recorder(threading.Thread):
         # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
         self.exclude_event_types = exclude_event_types
+        self.include_event_data = include_event_data or {}
+        self.exclude_event_data = exclude_event_data or {}
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -286,12 +316,23 @@ class Recorder(threading.Thread):
         """Initialize the recorder."""
         entity_filter = self.entity_filter
         exclude_event_types = self.exclude_event_types
+        include_event_data = self.include_event_data
+        exclude_event_data = self.exclude_event_data
         queue_put = self._queue.put_nowait
 
         @callback
         def _event_listener(event: Event) -> None:
             """Listen for new events and put them in the process queue."""
             if event.event_type in exclude_event_types:
+                return
+
+            if _event_data_filter_matches(event, exclude_event_data):
+                return
+
+            if (
+                event.event_type in include_event_data
+                and not _event_data_filter_matches(event, include_event_data)
+            ):
                 return
 
             if entity_filter is None or not (

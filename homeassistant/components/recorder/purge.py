@@ -1,6 +1,6 @@
 """Purge old data helper."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 import time
@@ -9,8 +9,16 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm.session import Session
 
 from homeassistant.util.collection import chunked_or_all
+from homeassistant.util.json import json_loads
 
-from .db_schema import Events, States, StatesMeta
+from .db_schema import (
+    SHARED_DATA_OR_LEGACY_EVENT_DATA,
+    EventData,
+    Events,
+    EventTypes,
+    States,
+    StatesMeta,
+)
 from .models import DatabaseEngine
 from .queries import (
     attributes_ids_exist_in_states,
@@ -622,8 +630,95 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
             instance, session, excluded_event_type_ids, now_timestamp
         )
 
+    if instance.include_event_data or instance.exclude_event_data:
+        has_more_to_purge |= not _purge_filtered_event_data(
+            instance, session, now_timestamp
+        )
+
     # Purge has completed if there are not more state or events to purge
     return not has_more_to_purge
+
+
+def _purge_filtered_event_data(
+    instance: Recorder, session: Session, purge_before_timestamp: float
+) -> bool:
+    """Remove historical events that match event data filters."""
+    include_event_data = instance.include_event_data
+    exclude_event_data = instance.exclude_event_data
+    event_types = set(include_event_data) | set(exclude_event_data)
+    last_event_id = 0
+    to_purge: list[tuple[int, int | None]] = []
+    while len(to_purge) < instance.max_bind_vars:
+        events = (
+            session.query(
+                Events.event_id,
+                Events.data_id,
+                EventTypes.event_type,
+                SHARED_DATA_OR_LEGACY_EVENT_DATA,
+            )
+            .join(EventTypes)
+            .outerjoin(EventData)
+            .filter(EventTypes.event_type.in_(event_types))
+            .filter(Events.time_fired_ts < purge_before_timestamp)
+            .filter(Events.event_id > last_event_id)
+            .order_by(Events.event_id)
+            .limit(instance.max_bind_vars)
+            .all()
+        )
+        if not events:
+            return True
+
+        last_event_id = events[-1].event_id
+        for event_id, data_id, event_type, shared_data in events:
+            data = json_loads(shared_data) if shared_data else {}
+            matches_exclude = _event_data_filter_matches(
+                event_type, data, exclude_event_data
+            )
+            matches_include = _event_data_filter_matches(
+                event_type, data, include_event_data
+            )
+            if matches_exclude or (
+                event_type in include_event_data and not matches_include
+            ):
+                to_purge.append((event_id, data_id))
+                if len(to_purge) == instance.max_bind_vars:
+                    break
+
+        if len(events) < instance.max_bind_vars:
+            break
+
+    if not to_purge:
+        return True
+
+    event_ids, data_ids = zip(*to_purge, strict=False)
+    event_ids_set = set(event_ids)
+    _purge_event_ids(session, event_ids_set)
+    database_engine = instance.database_engine
+    assert database_engine is not None
+    if unused_data_ids_set := _select_unused_event_data_ids(
+        instance, session, set(data_ids), database_engine
+    ):
+        _purge_batch_data_ids(instance, session, unused_data_ids_set)
+    return len(to_purge) < instance.max_bind_vars
+
+
+def _event_data_filter_matches(
+    event_type: str,
+    data: object,
+    filters: dict[str, tuple[tuple[tuple[str, object], ...], ...]],
+) -> bool:
+    """Return if event data matches a filter."""
+    if not (rules := filters.get(event_type)) or not isinstance(data, Mapping):
+        return False
+    return any(
+        all(
+            key in data
+            and type(data[key]) is type(expected_value)
+            and data[key] == expected_value
+            for key, expected_value in rule
+        )
+        for rule in rules
+    )
 
 
 def _purge_filtered_states(
