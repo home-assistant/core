@@ -33,7 +33,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
@@ -44,6 +44,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.helpers.update_coordinator import DATA_RESTORE_STORE
 
 from . import setup_platform
 from .conftest import create_config_entry
@@ -79,6 +80,33 @@ async def test_load_unload(
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hasattr(normal_config_entry, "runtime_data")
+
+
+async def test_restore_store_cleaned_up_on_removal(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test the coordinator restore store is cleared when the entry is removed."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    store_manager = hass.data[DATA_RESTORE_STORE]
+    # The vehicle coordinator persists its data under the vehicle VIN
+    assert (
+        store_manager.async_get(normal_config_entry.entry_id, "LRWXF7EK4KC700000")
+        is not None
+    )
+
+    assert await hass.config_entries.async_remove(normal_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        store_manager.async_get(normal_config_entry.entry_id, "LRWXF7EK4KC700000")
+        is None
+    )
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
