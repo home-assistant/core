@@ -18,6 +18,10 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.bsblan.const import DOMAIN
+from homeassistant.components.bsblan.services import (
+    SERVICE_SET_HEATING_SCHEDULE_SCHEMA,
+    SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -27,6 +31,17 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test constants
 TEST_DEVICE_MAC = "00:80:41:19:69:90"
+
+
+@pytest.mark.parametrize(
+    "service_schema",
+    [SERVICE_SET_HEATING_SCHEDULE_SCHEMA, SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA],
+    ids=["heating", "hot_water"],
+)
+def test_set_schedule_requires_a_day(service_schema: vol.Schema) -> None:
+    """Test that setting a schedule requires at least one day."""
+    with pytest.raises(vol.Invalid):
+        service_schema({"device_id": "test-device"})
 
 
 @pytest.fixture
@@ -419,6 +434,7 @@ async def test_api_error(
     water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when BSB-LAN API call fails."""
+    mock_bsblan.hot_water_schedule.reset_mock()
     mock_bsblan.set_hot_water_schedule.side_effect = BSBLANError("API Error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -435,6 +451,7 @@ async def test_api_error(
         )
 
     assert exc_info.value.translation_key == "set_schedule_failed"
+    mock_bsblan.hot_water_schedule.assert_awaited_once_with()
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -1164,6 +1181,7 @@ async def test_set_heating_schedule_api_error(
         (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
     )
     assert circuit_device is not None
+    mock_bsblan.heating_schedule.reset_mock()
     mock_bsblan.set_heating_schedule.side_effect = BSBLANError("API Error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -1180,3 +1198,4 @@ async def test_set_heating_schedule_api_error(
         )
 
     assert exc_info.value.translation_key == "set_heating_schedule_failed"
+    mock_bsblan.heating_schedule.assert_awaited_once_with(circuit=1)

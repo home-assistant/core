@@ -63,19 +63,21 @@ _WEEKLY_SCHEDULE_FIELDS: Final[dict[vol.Marker, Any]] = {
 }
 
 
-SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        **_WEEKLY_SCHEDULE_FIELDS,
-    }
+_WEEKLY_SCHEDULE_SCHEMA = {
+    vol.Required(ATTR_DEVICE_ID): cv.string,
+    **_WEEKLY_SCHEDULE_FIELDS,
+}
+
+
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.All(
+    _WEEKLY_SCHEDULE_SCHEMA,
+    cv.has_at_least_one_key(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
 )
 
 
-SERVICE_SET_HEATING_SCHEDULE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        **_WEEKLY_SCHEDULE_FIELDS,
-    }
+SERVICE_SET_HEATING_SCHEDULE_SCHEMA = vol.All(
+    _WEEKLY_SCHEDULE_SCHEMA,
+    cv.has_at_least_one_key(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
 )
 
 
@@ -200,9 +202,8 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
             translation_key="set_schedule_failed",
             translation_placeholders={"error": str(err)},
         ) from err
-
-    # Refresh the slow coordinator to get the updated schedule
-    await entry.runtime_data.slow_coordinator.async_refresh_schedule_after_write()
+    finally:
+        await entry.runtime_data.slow_coordinator.async_refresh_schedule_after_write()
 
 
 async def set_heating_schedule(service_call: ServiceCall) -> None:
@@ -232,13 +233,10 @@ async def set_heating_schedule(service_call: ServiceCall) -> None:
             translation_key="set_heating_schedule_failed",
             translation_placeholders={"error": str(err)},
         ) from err
-
-    # Refresh the slow coordinator to get the updated schedule
-    await (
-        entry.runtime_data.slow_coordinator.async_refresh_heating_schedule_after_write(
+    finally:
+        await entry.runtime_data.slow_coordinator.async_refresh_heating_schedule_after_write(
             circuit
         )
-    )
 
 
 async def async_sync_time(service_call: ServiceCall) -> None:
