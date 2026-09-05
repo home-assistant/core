@@ -121,6 +121,7 @@ def mock_button() -> AsyncMock:
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = False
     channel.is_closed.return_value = True
+    channel.get_channel_info.return_value = {"long": False}
     channel.is_on.return_value = False
     return channel
 
