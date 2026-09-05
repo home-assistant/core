@@ -1,23 +1,26 @@
 """Test the MELCloud Home integration init behavior."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
-from aiomelcloudhome import UserContext
+from aiomelcloudhome import UnitStateDelta, UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
     MelCloudHomeTimeoutError,
+    MelCloudHomeWebSocketError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.components.melcloud_home.coordinator import (
     ENERGY_UPDATE_INTERVAL,
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -28,6 +31,9 @@ from tests.common import (
     async_fire_time_changed,
     async_load_json_object_fixture,
 )
+
+ATA_ENTITY_ID = "climate.living_room_ac"
+ATW_ZONE1_ENTITY_ID = "climate.heat_pump_zone_1"
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
@@ -199,6 +205,167 @@ async def test_new_atw_unit_callback(
     assert atw_entities
 
 
+async def test_websocket_delta_updates_ata_state(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+) -> None:
+    """Test a websocket delta updates ATA state without triggering a poll."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+
+    websocket_updates.put_nowait(
+        UnitStateDelta(
+            unit_id="ata-unit-uuid-1",
+            unit_type="ata",
+            changes={"Power": False, "SetTemperature": 25.0},
+        )
+    )
+    await websocket_updates.join()
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_TEMPERATURE] == 25.0
+    assert mock_melcloud_client.get_context.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_melcloud_client")
+async def test_websocket_delta_updates_atw_zone_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+) -> None:
+    """Test a websocket delta updates ATW zone state."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ATW_ZONE1_ENTITY_ID)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
+
+    websocket_updates.put_nowait(
+        UnitStateDelta(
+            unit_id="atw-unit-uuid-1",
+            unit_type="atw",
+            changes={"RoomTemperatureZone1": 21.5, "SetTemperatureZone1": 22.0},
+        )
+    )
+    await websocket_updates.join()
+
+    state = hass.states.get(ATW_ZONE1_ENTITY_ID)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.5
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+
+
+@pytest.mark.parametrize(
+    "delta",
+    [
+        pytest.param(
+            UnitStateDelta(
+                unit_id="unknown-unit", unit_type="ata", changes={"Power": False}
+            ),
+            id="unknown_unit_id",
+        ),
+        pytest.param(
+            UnitStateDelta(
+                unit_id="ata-unit-uuid-1",
+                unit_type="unknown",
+                changes={"Power": False},
+            ),
+            id="unknown_unit_type",
+        ),
+        pytest.param(
+            UnitStateDelta(
+                unit_id="ata-unit-uuid-1",
+                unit_type="ata",
+                changes={"OperationMode": None},
+            ),
+            id="all_none_changes",
+        ),
+        pytest.param(
+            UnitStateDelta(
+                unit_id="ata-unit-uuid-1",
+                unit_type="ata",
+                changes={"SomethingNew": "value"},
+            ),
+            id="unknown_setting_name",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_melcloud_client")
+async def test_websocket_delta_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+    delta: UnitStateDelta,
+) -> None:
+    """Test deltas that must not change entity state."""
+    await setup_integration(hass, mock_config_entry)
+
+    before = hass.states.get(ATA_ENTITY_ID)
+
+    websocket_updates.put_nowait(delta)
+    await websocket_updates.join()
+
+    after = hass.states.get(ATA_ENTITY_ID)
+    assert after.state == before.state
+    assert after.attributes == before.attributes
+    assert after.last_updated == before.last_updated
+
+
+@pytest.mark.usefixtures("mock_melcloud_client")
+async def test_websocket_delta_skips_none_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+) -> None:
+    """Test None change values are skipped while others are applied."""
+    await setup_integration(hass, mock_config_entry)
+
+    websocket_updates.put_nowait(
+        UnitStateDelta(
+            unit_id="ata-unit-uuid-1",
+            unit_type="ata",
+            changes={"OperationMode": None, "SetTemperature": 25.0},
+        )
+    )
+    await websocket_updates.join()
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 25.0
+
+
+async def test_websocket_error_falls_back_to_polling(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a websocket failure keeps entities updating through polling."""
+    await setup_integration(hass, mock_config_entry)
+
+    websocket_updates.put_nowait(MelCloudHomeWebSocketError("boom"))
+    await hass.async_block_till_done()
+
+    assert (
+        "Live updates are unavailable. Falling back to polling. Error received: boom"
+        in caplog.text
+    )
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_melcloud_client.get_context.call_count == 3
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state.state != STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize(
     "exception",
     [
@@ -212,6 +379,7 @@ async def test_energy_update_cycle_fails(
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
     exception: Exception,
 ) -> None:
     """Test that a failing energy fetch clears the value without unloading the entry."""
@@ -220,6 +388,9 @@ async def test_energy_update_cycle_fails(
 
     assert energy_coordinator.data["ata-unit-uuid-1"] is not None
     assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+
+    websocket_updates.put_nowait(MelCloudHomeWebSocketError("closed"))
+    await hass.async_block_till_done()
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
     freezer.tick(ENERGY_UPDATE_INTERVAL)
