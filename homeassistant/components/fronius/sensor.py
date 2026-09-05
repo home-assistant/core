@@ -101,6 +101,8 @@ async def async_setup_entry(
     @callback
     def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
         """Add newly found inverter entities."""
+        if Platform.SENSOR not in coordinator.valid_descriptions:
+            return
         constructor = (
             ModbusInverterSensor
             if coordinator in solar_net.modbus_inverter_coordinators

@@ -77,7 +77,7 @@ async def async_setup_entry(
     @callback
     def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
         """Add the entities of a coordinator found after setup."""
-        if coordinator not in solar_net.modbus_settings_coordinators:
+        if Platform.SWITCH not in coordinator.valid_descriptions:
             return
         coordinator.add_entities_for_seen_keys(
             async_add_entities, Platform.SWITCH, ModbusControlSwitch

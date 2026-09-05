@@ -337,10 +337,17 @@ class FroniusSolarNet:
 
     async def _init_modbus_inverter(self, inverter_info: FroniusDeviceInfo) -> None:
         """Set up a Modbus coordinator for an inverter exposing SunSpec MPPT data."""
-        if inverter_info.solar_net_id in [
+        # each coordinator is retried on its own: a device may answer for one
+        # of them and not the other, and recover on a later re-scan
+        needs_readings = inverter_info.solar_net_id not in {
             coordinator.inverter_info.solar_net_id
             for coordinator in self.modbus_inverter_coordinators
-        ]:
+        }
+        needs_settings = inverter_info.solar_net_id not in {
+            coordinator.inverter_info.solar_net_id
+            for coordinator in self.modbus_settings_coordinators
+        }
+        if not needs_readings and not needs_settings:
             return
         if (unit_id := self._modbus_unit_id(inverter_info.solar_net_id)) is None:
             return
@@ -368,7 +375,7 @@ class FroniusSolarNet:
                 err,
             )
             return
-        if modbus_inverter.mppt is not None:
+        if needs_readings and modbus_inverter.mppt is not None:
             readings = FroniusModbusInverterUpdateCoordinator(
                 hass=self.hass,
                 solar_net=self,
@@ -381,14 +388,16 @@ class FroniusSolarNet:
             await self._start_modbus_coordinator(
                 readings, self.modbus_inverter_coordinators
             )
-        else:
+        elif needs_readings:
             _LOGGER.debug(
                 "No MPPT model exposed by inverter %s at Modbus unit %s",
                 inverter_info.solar_net_id,
                 unit_id,
             )
 
-        if await self._modbus_control_allowed(modbus_inverter, unit_id):
+        if needs_settings and await self._modbus_control_allowed(
+            modbus_inverter, unit_id
+        ):
             settings = FroniusModbusSettingsUpdateCoordinator(
                 hass=self.hass,
                 solar_net=self,

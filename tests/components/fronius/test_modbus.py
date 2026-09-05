@@ -1,10 +1,13 @@
 """Tests for the Fronius Modbus TCP (SunSpec) support."""
 
 from datetime import timedelta
+from logging import ERROR
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from fronius_modbus import Mppt
 from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
+from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusConnection
 import pytest
 
@@ -250,6 +253,7 @@ async def test_no_mppt_model(
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a SunSpec device without MPPT model still gets its controls.
 
@@ -276,6 +280,13 @@ async def test_no_mppt_model(
     # no MPPT sensors, but the controls and their derived values are there
     assert not [entry for entry in modbus_entities if "mppt" in entry.unique_id]
     assert "number" in {entry.domain for entry in modbus_entities}
+
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # the re-scan finds the controls already set up
+    assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -463,24 +474,20 @@ async def test_controls_enabled_later_get_their_entities(
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test entities appear for controls a re-scan finds after setup.
 
     The platforms are set up once, so a coordinator that only comes up on a
-    later re-scan has to be handed to them through the dispatcher.
+    later re-scan has to be handed to them through the dispatcher - which
+    every platform listens to, including those it has nothing for.
     """
     mock_fronius_modbus.for_unit(1).holding.update(
         build_sunspec_map([], include_mppt_model=False)
     )
     mock_responses(aioclient_mock, fixture_set="gen24_storage")
-    with (
-        patch(
-            "homeassistant.components.fronius.PLATFORMS",
-            [Platform.NUMBER, Platform.SWITCH],
-        ),
-        patch(
-            "fronius_modbus.Controls.probe_write_access", AsyncMock(return_value=False)
-        ),
+    with patch(
+        "fronius_modbus.Controls.probe_write_access", AsyncMock(return_value=False)
     ):
         config_entry = await setup_fronius_integration(
             hass, is_logger=False, unique_id="12345678"
@@ -495,3 +502,37 @@ async def test_controls_enabled_later_get_their_entities(
     assert config_entry.runtime_data.modbus_settings_coordinators
     assert hass.states.get("number.gen24_storage_ac_power_limit")
     assert hass.states.get("switch.gen24_storage_ac_power_limiting")
+    assert not [record for record in caplog.records if record.levelno >= ERROR]
+
+
+async def test_readings_recover_when_only_the_controls_came_up(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a re-scan still adds the MPPT data after it failed once.
+
+    The two coordinators are independent: one of them answering is no reason
+    to stop retrying the other.
+    """
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES, storage_wcha_max=12800)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    with patch.object(
+        Mppt, "async_update", side_effect=ModbusConnectionError("no answer")
+    ):
+        config_entry = await setup_fronius_integration(
+            hass, is_logger=False, unique_id="12345678"
+        )
+        assert not config_entry.runtime_data.modbus_inverter_coordinators
+        assert config_entry.runtime_data.modbus_settings_coordinators
+
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.runtime_data.modbus_inverter_coordinators
+    # the settings coordinator that was already up is not added a second time
+    assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
