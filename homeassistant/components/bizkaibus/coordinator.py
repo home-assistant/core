@@ -31,8 +31,6 @@ class ArrivalData:
 class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
     """Bizkaibus Update Coordinator class."""
 
-    config_entry: BizkaibusConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -50,7 +48,6 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
-        self.config_entry = config_entry
 
     def __arrival_time(
         self, arrivalTime: BizkaibusArrivalTime | None

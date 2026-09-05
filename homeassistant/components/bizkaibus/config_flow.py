@@ -16,7 +16,14 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_LINE_IDS, CONF_LINES, CONF_STOP_ID, DOMAIN
+from .const import (
+    CONF_LINE_IDS,
+    CONF_LINES,
+    CONF_STOP_ID,
+    DOMAIN,
+    OLD_CONF_ROUTE_ID,
+    OLD_CONF_STOP_ID,
+)
 
 USER_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_STOP_ID): vol.All(cv.string, vol.Match(r"^[0-9]{4}$"))}
@@ -66,6 +73,15 @@ async def _async_get_lines(
     )
 
 
+async def _get_title_name(api: BizkaibusAPI, stop_id: str) -> str:
+    timetable = await api.GetTimetable()
+
+    if timetable is not None:
+        return f"{stop_id} {timetable.name if timetable.name is not None else timetable.id}"
+
+    return f"{DOMAIN.capitalize()} {stop_id}"
+
+
 class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bizkaibus."""
 
@@ -102,12 +118,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
             if api is None:
                 errors["base"] = "cannot_connect"
             else:
-                timetable = await api.GetTimetable()
-
-                if timetable is not None:
-                    self._title = f"{user_input[CONF_STOP_ID]} {timetable.name if timetable.name is not None else timetable.id}"
-                else:
-                    self._title = f"{DOMAIN.capitalize()} {user_input[CONF_STOP_ID]}"
+                self._title = await _get_title_name(api, self._stop_id)
 
                 return await self.async_step_lines(user_input=user_input)
 
@@ -166,13 +177,8 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
             if api is None:
                 errors["base"] = "cannot_connect"
             else:
-                timetable = await api.GetTimetable()
                 self._stop_id = stop_id
-                self._title = (
-                    f"{stop_id} {timetable.name if timetable.name is not None else timetable.id}"
-                    if timetable is not None
-                    else f"{DOMAIN.capitalize()} {stop_id}"
-                )
+                self._title = await _get_title_name(api, self._stop_id)
                 return await self.async_step_lines()
 
         return self.async_show_form(
@@ -185,15 +191,32 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Handle the import step of the config flow."""
-        if not info or CONF_STOP_ID not in info:
+
+        stop_id = info.get(CONF_STOP_ID, info.get(OLD_CONF_STOP_ID))
+        if not stop_id:
             return self.async_abort(reason="invalid_stop_id")
 
-        stop_id = info[CONF_STOP_ID]
         await self.async_set_unique_id(stop_id)
         self._abort_if_unique_id_configured()
+
+        options: dict[str, Any] = {}
+        if route_id := info.get(OLD_CONF_ROUTE_ID):
+            api, line_ids, lines = await _async_get_lines(stop_id)
+            if api is None or route_id not in line_ids:
+                return self.async_abort(reason="cannot_connect")
+            options = {
+                CONF_LINE_IDS: [route_id],
+                CONF_LINES: {route_id: lines[route_id]},
+            }
+
+        title = await _get_title_name(
+            BizkaibusAPI(BizkaibusLanguages.ES, stop_id), stop_id
+        )
+
         return self.async_create_entry(
-            title=stop_id,
+            title=title,
             data={CONF_STOP_ID: stop_id},
+            options=options,
         )
 
 

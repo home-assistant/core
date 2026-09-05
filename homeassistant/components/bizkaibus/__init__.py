@@ -7,6 +7,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_S
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_LINES, CONF_STOP_ID
 from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
@@ -17,8 +18,8 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup(hass: HomeAssistant, entry: BizkaibusConfigEntry) -> bool:
-    """Set up entry."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration."""
     return True
 
 

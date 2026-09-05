@@ -10,6 +10,8 @@ from homeassistant.components.bizkaibus.const import (
     CONF_LINES,
     CONF_STOP_ID,
     DOMAIN,
+    OLD_CONF_ROUTE_ID,
+    OLD_CONF_STOP_ID,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -388,6 +390,33 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1234"
     assert result["data"] == {CONF_STOP_ID: "1234"}
+
+
+async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:
+    """Test importing a legacy YAML configuration creates a config entry."""
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_api_class.return_value.TestConnection = AsyncMock(return_value=True)
+        mock_api_class.return_value.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+        mock_setup.return_value = True
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={OLD_CONF_STOP_ID: "1234", OLD_CONF_ROUTE_ID: "A"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_STOP_ID: "1234"}
+    assert result["options"] == {
+        CONF_LINE_IDS: ["A"],
+        CONF_LINES: {"A": "Route A"},
+    }
 
 
 async def test_import_flow_without_stop_id(hass: HomeAssistant) -> None:
