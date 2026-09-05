@@ -1546,6 +1546,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/redfish/ @jyundt
+/tests/components/redfish/ @jyundt
 /homeassistant/components/redgtech/ @jonhsady @luan-nvg
 /tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/refoss/ @ashionky
