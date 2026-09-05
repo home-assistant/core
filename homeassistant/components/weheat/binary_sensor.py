@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -62,6 +63,27 @@ BINARY_SENSORS = [
 ]
 
 
+def _cooling_start_condition(condition: str) -> WeHeatBinarySensorEntityDescription:
+    """Describe one condition that must be met before cooling can start."""
+    return WeHeatBinarySensorEntityDescription(
+        translation_key=f"cooling_start_condition_{condition}",
+        key=f"cooling_start_condition_{condition}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda status: (
+            status.cooling_start_conditions[condition]
+            if status.cooling_start_conditions is not None
+            else None
+        ),
+    )
+
+
+COOLING_START_CONDITION_SENSORS = [
+    _cooling_start_condition(condition)
+    for condition in HeatPump.COOLING_START_CONDITION_BITS
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WeheatConfigEntry,
@@ -78,6 +100,16 @@ async def async_setup_entry(
         for entity_description in BINARY_SENSORS
         if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
     ]
+    entities.extend(
+        WeheatHeatPumpBinarySensor(
+            weheatdata.heat_pump_info,
+            weheatdata.data_coordinator,
+            entity_description,
+        )
+        for weheatdata in entry.runtime_data
+        if weheatdata.data_coordinator.data.cooling_start_conditions is not None
+        for entity_description in COOLING_START_CONDITION_SENSORS
+    )
 
     async_add_entities(entities)
 
