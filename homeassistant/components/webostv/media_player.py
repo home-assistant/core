@@ -233,6 +233,10 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             ):
                 self._source_list[source["label"]] = source
 
+        # live tv is the source even when both lists leave it out
+        if not found_live_tv and tv_state.current_app_id == LIVE_TV_APP_ID:
+            current_source = "Live TV"
+
         # empty list, TV may be off, keep previous list
         if not self._source_list and source_list:
             self._source_list = source_list
@@ -243,11 +247,9 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         # not appear in the app or input lists in some cases
         elif not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
-            if tv_state.current_app_id == LIVE_TV_APP_ID:
-                current_source = app["title"]
-                self._source_list["Live TV"] = app
-            elif (
-                not conf_sources
+            if (
+                tv_state.current_app_id == LIVE_TV_APP_ID
+                or not conf_sources
                 or app["id"] in conf_sources
                 or any(word in app["title"] for word in conf_sources)
                 or any(word in app["id"] for word in conf_sources)
