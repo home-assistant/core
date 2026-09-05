@@ -1,10 +1,12 @@
 """Common fixtures for the Cookidoo tests."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from unittest.mock import AsyncMock, patch
 
 from cookidoo_api import (
     CookidooAdditionalItem,
+    CookidooAuthData,
     CookidooIngredientItem,
     CookidooSubscription,
     CookidooUserInfo,
@@ -13,7 +15,13 @@ from cookidoo_api.types import CookidooCalendarDay, CookidooCalendarDayRecipe
 import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -23,6 +31,17 @@ COUNTRY = "CH"
 LANGUAGE = "de-CH"
 
 TEST_UUID = "sub_uuid"
+
+AUTH_DATA = CookidooAuthData(
+    access_token="test-access-token",
+    refresh_token="test-refresh-token",
+    expires_at=1762000000.0,
+)
+STALE_AUTH_DATA = CookidooAuthData(
+    access_token="stale-access-token",
+    refresh_token="stale-refresh-token",
+    expires_at=1761000000.0,
+)
 
 
 @pytest.fixture
@@ -43,6 +62,10 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
     ) as mock_client:
         client = mock_client.return_value
         client.login.return_value = None
+        client.auth_data = AUTH_DATA
+        client.apply_auth_data.side_effect = lambda auth_data: setattr(
+            client, "auth_data", auth_data
+        )
         client.get_ingredient_items.return_value = [
             CookidooIngredientItem(**item)
             for item in load_json_object_fixture("ingredient_items.json", DOMAIN)[
@@ -94,6 +117,25 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: PASSWORD,
             CONF_COUNTRY: COUNTRY,
             CONF_LANGUAGE: LANGUAGE,
+        },
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
+        unique_id=TEST_UUID,
+    )
+
+
+@pytest.fixture(name="cookidoo_config_entry_with_token")
+def mock_cookidoo_config_entry_with_token() -> MockConfigEntry:
+    """Mock a cookidoo configuration entry holding persisted OAuth2 tokens."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=3,
+        data={
+            CONF_EMAIL: EMAIL,
+            CONF_PASSWORD: PASSWORD,
+            CONF_COUNTRY: COUNTRY,
+            CONF_LANGUAGE: LANGUAGE,
+            CONF_TOKEN: asdict(STALE_AUTH_DATA),
         },
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
         unique_id=TEST_UUID,

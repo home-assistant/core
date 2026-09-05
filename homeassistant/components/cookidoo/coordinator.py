@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the Cookidoo integration."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -18,7 +18,7 @@ from cookidoo_api import (
 from cookidoo_api.types import CookidooCalendarDay
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL
+from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -60,11 +60,32 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         )
         self.cookidoo = cookidoo
 
+    async def _async_login(self) -> CookidooUserInfo:
+        """Return the user info, reusing the persisted tokens while they are valid."""
+        if self.cookidoo.auth_data is not None:
+            try:
+                return await self.cookidoo.get_user_info()
+            except CookidooAuthException:
+                _LOGGER.debug("Stored tokens are no longer valid, logging in again")
+        await self.cookidoo.login()
+        return await self.cookidoo.get_user_info()
+
+    def _async_save_auth_data(self) -> None:
+        """Persist the OAuth2 tokens so a restart does not need a new login."""
+        if (auth_data := self.cookidoo.auth_data) is None:
+            return
+        token = asdict(auth_data)
+        if self.config_entry.data.get(CONF_TOKEN) == token:
+            return
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data={**self.config_entry.data, CONF_TOKEN: token},
+        )
+
     @override
     async def _async_setup(self) -> None:
         try:
-            await self.cookidoo.login()
-            self.user = await self.cookidoo.get_user_info()
+            self.user = await self._async_login()
         except CookidooRequestException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -78,6 +99,8 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                 },
             ) from e
+
+        self._async_save_auth_data()
 
     @override
     async def _async_update_data(self) -> CookidooData:
@@ -104,6 +127,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     translation_domain=DOMAIN,
                     translation_key="setup_request_exception",
                 ) from exc
+            self._async_save_auth_data()
             _LOGGER.debug(
                 "Authentication failed but re-authentication"
                 " was successful, trying again later"
@@ -114,6 +138,9 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 translation_domain=DOMAIN,
                 translation_key="update_exception",
             ) from e
+
+        # The library refreshes the access token transparently on expiry
+        self._async_save_auth_data()
 
         return CookidooData(
             ingredient_items=ingredient_items,
