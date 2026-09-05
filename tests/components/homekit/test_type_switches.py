@@ -244,7 +244,7 @@ async def test_valve_set_state(
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {})
     acc.run()
     await hass.async_block_till_done()
 
@@ -284,6 +284,39 @@ async def test_valve_set_state(
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
+
+
+@pytest.mark.parametrize(
+    ("valve_type", "category", "homekit_valve_type"),
+    [
+        pytest.param(TYPE_FAUCET, 29, 3, id="faucet"),
+        pytest.param(TYPE_SHOWER, 30, 2, id="shower"),
+        pytest.param(TYPE_SPRINKLER, 28, 1, id="sprinkler"),
+        pytest.param(TYPE_VALVE, 29, 0, id="generic"),
+    ],
+)
+async def test_valve_type(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    valve_type: str,
+    category: int,
+    homekit_valve_type: int,
+) -> None:
+    """Test native valve HomeKit type configuration."""
+    entity_id = f"valve.{valve_type}"
+    hass.states.async_set(entity_id, STATE_CLOSED)
+
+    acc = Valve(
+        hass,
+        hk_driver,
+        "Valve",
+        entity_id,
+        5,
+        {CONF_TYPE: valve_type},
+    )
+
+    assert acc.category == category
+    assert acc.char_valve_type.value == homekit_valve_type
 
 
 async def test_vacuum_set_state_with_returnhome_and_start_support(

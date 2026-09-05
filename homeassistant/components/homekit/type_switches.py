@@ -505,13 +505,28 @@ class ValveSwitch(ValveBase):
 class Valve(ValveBase):
     """Generate a Valve accessory from a HomeAssistant valve."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+    ) -> None:
         """Initialize a Valve accessory object."""
         super().__init__(
-            TYPE_VALVE,
+            config.get(CONF_TYPE, TYPE_VALVE),
             VALVE_OPEN_STATES,
             SERVICE_OPEN_VALVE,
             SERVICE_CLOSE_VALVE,
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
             *args,
         )
 

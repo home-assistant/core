@@ -304,6 +304,10 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In((TYPE_FAUCET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_VALVE)),
+        ),
         vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
         vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
