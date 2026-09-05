@@ -87,6 +87,10 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
+        # Register this listen-based entity with the device-specific Ring
+        # API identifier so coordinator updates for this doorbot are
+        # delivered to the entity.
+        self.coordinator_context = device.device_api_id
 
     @callback
     def _async_handle_event(self, event: str) -> None:
