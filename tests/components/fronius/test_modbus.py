@@ -1,10 +1,11 @@
 """Tests for the Fronius Modbus TCP (SunSpec) support."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from fronius_modbus import Mppt
+from fronius_modbus import Controls, Mppt
 from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
 from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
@@ -789,3 +790,92 @@ async def test_readings_recover_when_only_the_controls_came_up(
     assert config_entry.runtime_data.modbus_inverter_coordinators
     # the settings coordinator that was already up is not added a second time
     assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
+
+
+async def test_unloading_stops_the_heartbeat(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test no beat outlives the config entry.
+
+    A limit that is already in force when the entry is set up schedules a
+    beat during the first refresh, before the heartbeat is started.
+    """
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
+    )
+    await _turn_on_power_limit(hass, 60)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unit = mock_fronius_modbus.for_unit(1)
+    unit.read_events.clear()
+    freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not unit.read_events
+
+
+async def test_heartbeat_does_not_undo_a_write_it_overlaps(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a beat under way cannot re-assert a limit the user just released."""
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
+    )
+    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    controls = coordinator.modbus_inverter.controls
+    # silence the pollers and drain what they had scheduled, so that the beat
+    # is the only thing reading the device
+    for poller in (
+        *config_entry.runtime_data.modbus_inverter_coordinators,
+        *config_entry.runtime_data.modbus_settings_coordinators,
+    ):
+        poller.update_interval = None
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await _turn_on_power_limit(hass, 60)
+
+    writing = asyncio.Event()
+    release = asyncio.Event()
+    original_write = Controls.write
+
+    async def blocking_write(self: Controls, field: str, value: float | bool) -> None:
+        """Hold the beat after it decided the limit is still in force."""
+        if not writing.is_set():
+            writing.set()
+            await release.wait()
+        await original_write(self, field, value)
+
+    with patch.object(Controls, "write", blocking_write):
+        freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await writing.wait()
+
+        switched_off = hass.async_create_task(
+            hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: POWER_LIMITING},
+                blocking=True,
+            )
+        )
+        for _ in range(10):
+            await asyncio.sleep(0)
+        release.set()
+        await switched_off
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # what the device holds, not what the last refresh happened to leave behind
+    await controls.async_update()
+    assert controls.enabled is False

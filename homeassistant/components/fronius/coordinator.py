@@ -1,6 +1,7 @@
 """DataUpdateCoordinators for the Fronius integration."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast, override
@@ -292,6 +293,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     }
 
     _heartbeat_unsub: CALLBACK_TYPE | None = None
+    _heartbeat_stopped = False
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Set up a coordinator that also writes to the device."""
+        super().__init__(*args, **kwargs)
+        # the heartbeat and a user's write must not interleave on the device
+        self._device_lock = asyncio.Lock()
 
     @property
     def revert_seconds(self) -> int:
@@ -308,7 +316,9 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         period is up - starting right away, because the device may have been
         counting down while Home Assistant was not running.
         """
-        self.config_entry.async_on_unload(self._async_cancel_heartbeat)
+        self.config_entry.async_on_unload(self._async_stop_heartbeat)
+        # the first refresh may have scheduled a beat already
+        self._async_cancel_heartbeat()
         if self.revert_seconds:
             await self._async_send_heartbeat()
             return
@@ -329,13 +339,24 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     def _async_update_heartbeat(self) -> None:
         """Beat only while there is a limit to keep alive."""
         controls = self.modbus_inverter.controls
-        if not self.revert_seconds or controls is None or not controls.enabled:
+        if (
+            self._heartbeat_stopped
+            or not self.revert_seconds
+            or controls is None
+            or not controls.enabled
+        ):
             self._async_cancel_heartbeat()
             return
         if self._heartbeat_unsub is None:
             self._heartbeat_unsub = async_call_later(
                 self.hass, HEARTBEAT_INTERVAL, self._async_send_heartbeat
             )
+
+    @callback
+    def _async_stop_heartbeat(self) -> None:
+        """Stop beating for good, even from a beat that is under way."""
+        self._heartbeat_stopped = True
+        self._async_cancel_heartbeat()
 
     @callback
     def _async_cancel_heartbeat(self) -> None:
@@ -360,14 +381,15 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         if controls is None:
             return
         try:
-            await controls.async_update()
-            if not controls.enabled or (limit := controls.power_limit) is None:
-                return
-            # the same registers `set_power_limit` writes - but that one would
-            # enable the limit, and this may only refresh a running one
-            await controls.write("revert_seconds", self.revert_seconds)
-            await controls.write("power_limit", limit)
-            await controls.write("enabled", True)
+            async with self._device_lock:
+                await controls.async_update()
+                if not controls.enabled or (limit := controls.power_limit) is None:
+                    return
+                # the same registers `set_power_limit` writes - but that one
+                # would enable the limit, and this may only refresh a running one
+                await controls.write("revert_seconds", self.revert_seconds)
+                await controls.write("power_limit", limit)
+                await controls.write("enabled", True)
         except (ModbusError, SunSpecError) as err:
             self.logger.warning(
                 "Could not send the AC power limit to inverter %s again: %s",
@@ -424,15 +446,16 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 translation_key="modbus_model_unavailable",
             )
         try:
-            await component.async_update()
-            if (
-                isinstance(component, Controls)
-                and component.revert_seconds != self.revert_seconds
-            ):
-                await component.write("revert_seconds", self.revert_seconds)
-            await component.write(field, value)
-            if enable_field is not None and getattr(component, enable_field):
-                await component.write(enable_field, True)
+            async with self._device_lock:
+                await component.async_update()
+                if (
+                    isinstance(component, Controls)
+                    and component.revert_seconds != self.revert_seconds
+                ):
+                    await component.write("revert_seconds", self.revert_seconds)
+                await component.write(field, value)
+                if enable_field is not None and getattr(component, enable_field):
+                    await component.write(enable_field, True)
         except (ModbusError, SunSpecError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
