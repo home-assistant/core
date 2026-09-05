@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     STATE_OFF,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -394,3 +395,27 @@ async def test_binary_sensor_update_callback(
     state = hass.states.get("binary_sensor.front_camera_motion")
     assert state is not None
     assert state.state == "on"
+
+
+async def test_binary_sensor_unavailable_when_stream_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test sensors go unavailable when the event stream disconnects."""
+    camera = mock_hikcamera.return_value
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.front_camera_motion")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # pyhik notifies every registered callback when the stream drops
+    camera.stream_connected = False
+    callback_func = camera.add_update_callback.call_args_list[0][0][0]
+    callback_func("stream disconnected")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.front_camera_motion")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
