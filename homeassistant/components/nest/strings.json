@@ -129,12 +129,6 @@
     }
   },
   "exceptions": {
-    "auth_client_error": {
-      "message": "Client error during authentication, please check your network connection."
-    },
-    "auth_server_error": {
-      "message": "Error response from authentication server, please see logs for details."
-    },
     "device_api_error": {
       "message": "Error communicating with the Device Access API, please see logs for details."
     },
