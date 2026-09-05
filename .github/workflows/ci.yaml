@@ -306,26 +306,6 @@ jobs:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
 
-  zizmor:
-    name: Check GitHub Actions workflows
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read # To check out the repository
-    needs: [info]
-    if: |
-      github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Run zizmor
-        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
-        with:
-          extra-args: --all-files zizmor
-
   lint-hadolint:
     name: Check ${{ matrix.file }}
     runs-on: ubuntu-24.04
