@@ -57,19 +57,49 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
-    if entry.runtime_data.bulb.bulbtype.bulb_type != BulbClass.SOCKET:
-        async_add_entities([WizBulbEntity(entry.runtime_data, entry.title)])
+    bulb_type = entry.runtime_data.bulb.bulbtype
+    if bulb_type.bulb_type == BulbClass.SOCKET:
+        return
+    if len(entry.runtime_data.bulb.state) > 1:
+        async_add_entities(
+            [
+                WizBulbEntity(entry.runtime_data, entry.title, zone="A"),
+                WizBulbEntity(
+                    entry.runtime_data,
+                    entry.title,
+                    state_index=1,
+                    zone="B",
+                ),
+            ]
+        )
+        return
+    async_add_entities([WizBulbEntity(entry.runtime_data, entry.title)])
 
 
 class WizBulbEntity(WizToggleEntity, LightEntity):
     """Representation of WiZ Light bulb."""
 
-    _attr_name = None
+    _attr_translation_key = "zone"
     _fixed_color_mode: ColorMode | None = None
 
-    def __init__(self, wiz_data: WizData, name: str) -> None:
+    def __init__(
+        self,
+        wiz_data: WizData,
+        device_name: str,
+        state_index: int = 0,
+        zone: str | None = None,
+    ) -> None:
         """Initialize an WiZLight."""
-        super().__init__(wiz_data, name)
+        if zone is None:
+            self._attr_name = None
+        else:
+            self._attr_translation_placeholders = {"zone": zone}
+        super().__init__(
+            wiz_data,
+            device_name,
+            state_index,
+            target_device=state_index + 1 if zone is not None else None,
+        )
         bulb_type: BulbType = self._device.bulbtype
         features: Features = bulb_type.features
         color_modes = {ColorMode.ONOFF}
@@ -95,7 +125,10 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        state = self._device.state
+        state = self._state
+        if state is None:
+            super()._async_update_attrs()
+            return
 
         if (brightness := state.get_brightness()) is not None:
             self._attr_brightness = max(0, min(255, brightness))
@@ -136,5 +169,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        await self._device.turn_on(_async_pilot_builder(**kwargs))
+        pilot_builder = _async_pilot_builder(**kwargs)
+        if self._target_device is not None:
+            await self._device.turn_on(pilot_builder, device=self._target_device)
+        else:
+            await self._device.turn_on(pilot_builder)
         await self.coordinator.async_request_refresh()
