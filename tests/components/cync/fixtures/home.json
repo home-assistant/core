@@ -1,20 +1,34 @@
 {
   "name": "My Home",
-  "home_id": 1000,
+  "home_id": 10000,
   "rooms": [
     {
       "name": "Bedroom",
       "room_id": 1100,
-      "home_id": 1000,
+      "home_id": 10000,
       "groups": [],
       "devices": [
+        {
+          "name": "Bedroom Plug",
+          "is_online": true,
+          "wifi_connected": true,
+          "device_id": 1201,
+          "mesh_device_id": 10004,
+          "home_id": 10000,
+          "device_type_id": 64,
+          "device_type": "PLUG",
+          "mac_address": "AABBCC112233",
+          "product_id": "product456",
+          "authorize_code": "efgh_code",
+          "is_on": false
+        },
         {
           "name": "Bedroom Lamp",
           "is_online": true,
           "wifi_connected": true,
           "device_id": 1101,
           "mesh_device_id": 10001,
-          "home_id": 1000,
+          "home_id": 10000,
           "device_type_id": 137,
           "device_type": "LIGHT",
           "mac_address": "ABCDEF123456",
@@ -29,12 +43,12 @@
     {
       "name": "Office",
       "room_id": 1200,
-      "home_id": 1000,
+      "home_id": 10000,
       "groups": [
         {
           "name": "Office Lamp",
           "group_id": 1110,
-          "home_id": 1000,
+          "home_id": 10000,
           "devices": [
             {
               "name": "Lamp Bulb 1",
@@ -42,7 +56,7 @@
               "wifi_connected": false,
               "device_id": 1111,
               "mesh_device_id": 10002,
-              "home_id": 1000,
+              "home_id": 10000,
               "device_type_id": 137,
               "device_type": "LIGHT",
               "mac_address": "654321ABCDEF",
@@ -59,7 +73,7 @@
               "wifi_connected": false,
               "device_id": 1112,
               "mesh_device_id": 10003,
-              "home_id": 1000,
+              "home_id": 10000,
               "device_type_id": 137,
               "device_type": "LIGHT",
               "mac_address": "FEDCBA654321",
@@ -72,5 +86,64 @@
       "devices": []
     }
   ],
-  "global_devices": []
+  "global_devices": [
+    {
+      "name": "Porch Plug",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1301,
+      "mesh_device_id": 10005,
+      "home_id": 10000,
+      "device_type_id": 64,
+      "device_type": "PLUG",
+      "mac_address": "AABBCC334455",
+      "product_id": "product456",
+      "authorize_code": "ijkl_code",
+      "is_on": true
+    },
+    {
+      "name": "Garage Light",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1501,
+      "mesh_device_id": 10007,
+      "home_id": 10000,
+      "device_type_id": 137,
+      "device_type": "LIGHT",
+      "mac_address": "AABBCC778899",
+      "product_id": "product123",
+      "authorize_code": "qrst_code",
+      "is_on": false,
+      "brightness": 70,
+      "color_temp": 30
+    },
+    {
+      "name": "Patio Plug Left",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1401,
+      "mesh_device_id": 11006,
+      "home_id": 10000,
+      "device_type_id": 67,
+      "device_type": "PLUG",
+      "mac_address": "AABBCC556677",
+      "product_id": "product789",
+      "authorize_code": "mnop_code",
+      "is_on": true
+    },
+    {
+      "name": "Patio Plug Right",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1401,
+      "mesh_device_id": 12006,
+      "home_id": 10000,
+      "device_type_id": 67,
+      "device_type": "PLUG",
+      "mac_address": "AABBCC556677",
+      "product_id": "product789",
+      "authorize_code": "mnop_code",
+      "is_on": false
+    }
+  ]
 }
