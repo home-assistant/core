@@ -61,6 +61,14 @@ def get_channels_from_device(device: Device, channel_type: FunctionalChannelType
     ]
 
 
+def get_channel_index_by_type(
+    device: Device, channel_type: FunctionalChannelType
+) -> int | None:
+    """Return the index of the device's first channel of the given type."""
+    channels = get_channels_from_device(device, channel_type)
+    return channels[0].index if channels else None
+
+
 def smoke_detector_channel_data_exists(device: Device, field: str) -> bool:
     """Check if a smoke detector's channel payload contains a specific field.
 
