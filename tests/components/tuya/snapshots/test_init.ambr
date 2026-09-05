@@ -2189,6 +2189,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[anmj1w0gnz2avbauqgg]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'anmj1w0gnz2avbauqgg',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'WiFi Watering Pump',
+    'model_id': 'uabva2zng0w1jmna',
+    'name': 'WiFi Watering Pump',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ao3z3oeyvepe8o3xqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -3263,6 +3293,36 @@
     'model': 'DOLCECLIMA 10 HP WIFI (unsupported)',
     'model_id': 'jevroj5aguwdbs2e',
     'name': 'DOLCECLIMA 10 HP WIFI',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[eikafwrmuhdvizruqzktk]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'eikafwrmuhdvizruqzktk',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'VITAL+ (unsupported)',
+    'model_id': 'urzivdhumrwfakie',
+    'name': 'VITAL+',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
@@ -8060,7 +8120,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'GIEX Watering Timer (unsupported)',
+    'model': 'GIEX Watering Timer',
     'model_id': '7ytb3h8u',
     'name': 'GIEX Watering Timer',
     'name_by_user': None,
@@ -8213,36 +8273,6 @@
     'model': 'WiFi Temperature & Humidity Sensor',
     'model_id': 'yqiqbaldtr0i7mru',
     'name': 'WiFi Temperature & Humidity Sensor',
-    'name_by_user': None,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_device_registry[eikafwrmuhdvizruqzktk]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tuya',
-        'eikafwrmuhdvizruqzktk',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Tuya',
-    'model': 'VITAL+ (unsupported)',
-    'model_id': 'urzivdhumrwfakie',
-    'name': 'VITAL+',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
