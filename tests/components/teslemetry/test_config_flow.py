@@ -739,12 +739,11 @@ def _mock_vehicle(*, on_whitelist: bool = True) -> AsyncMock:
     return vehicle
 
 
-def _mock_ble_parent(vehicle: AsyncMock | None = None) -> MagicMock:
+def _mock_ble_parent(vehicle: AsyncMock) -> MagicMock:
     """Return a mock shared TeslaBluetooth parent for the pairing flow."""
     parent = MagicMock()
     parent.get_name.return_value = TeslaBluetooth().get_name(VIN)
-    if vehicle is not None:
-        parent.vehicles.createBluetooth.return_value = vehicle
+    parent.vehicles.createBluetooth.return_value = vehicle
     return parent
 
 
@@ -1135,7 +1134,7 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
-            return_value=_mock_ble_parent(),
+            return_value=MagicMock(),
         ),
     ):
         result = await _start_pairing_at_scan(hass, entry)
