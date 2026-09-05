@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "fertilise_days": {
+        "default": "mdi:nutrition"
+      },
+      "health_score": {
+        "default": "mdi:heart-pulse"
+      },
+      "light_quality": {
+        "default": "mdi:white-balance-sunny"
+      },
+      "moisture": {
+        "default": "mdi:water-percent"
+      }
+    }
+  }
+}

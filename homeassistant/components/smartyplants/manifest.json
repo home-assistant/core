@@ -1,0 +1,12 @@
+{
+  "domain": "smartyplants",
+  "name": "SmartyPlants",
+  "codeowners": ["@bigbimbs"],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/smartyplants",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pysmartyplants==0.2.0"]
+}

@@ -1,0 +1,107 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      Polled every minute. The backend caches each account's payload and
+      answers an unchanged poll with a 304 carrying no body, so a poll that
+      finds nothing new costs very little. A configured webhook delivers
+      changes immediately and makes the poll a fallback.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
+  entity-event-setup:
+    status: done
+    comment: |
+      Push updates arrive on a single integration-level webhook and are fed
+      into the coordinator, so entities subscribe only to the coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: Handled by async_config_entry_first_refresh.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Entities go unavailable when the backend reports the sensor as offline
+      or it disappears from the account.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator.
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: |
+      The sensors report raw measurements to the SmartyPlants cloud, which
+      derives the readings from them using the plant's species profile. A
+      sensor found on the network would have nothing usable to offer. Setup is
+      account-level in any case: one config entry covers every sensor on the
+      account and is authenticated with an API key, not per device.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The integration never talks to the sensors directly, so there is no
+      network information to keep current.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Every entity is a distinct measurement of the plant's condition, so none
+      of them is noise that should start out disabled.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

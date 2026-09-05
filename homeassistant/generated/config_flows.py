@@ -730,6 +730,7 @@ FLOWS = {
         "smartthings",
         "smarttub",
         "smarty",
+        "smartyplants",
         "smhi",
         "smlight",
         "smtp",
