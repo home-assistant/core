@@ -1259,7 +1259,7 @@ habluetooth==6.26.11
 hanna-cloud==0.0.7
 
 # homeassistant.components.harbor
-harbor-python==1.5.0
+harbor-python==1.6.0
 
 # homeassistant.components.cloud
 hass-nabucasa==2.7.0
