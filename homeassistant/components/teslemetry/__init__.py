@@ -64,7 +64,7 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_polling_entity_ids, async_update_device_sw_version, flatten
+from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -647,13 +647,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         metadata_coordinator=metadata_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    for vehicle_data in vehicles:
-        LOGGER.debug(
-            "Vehicle %s polling for enabled entities: %s",
-            vehicle_data.vin,
-            ", ".join(async_polling_entity_ids(vehicle_data.coordinator)) or "none",
-        )
 
     _setup_subentry_change_reload(hass, entry)
 

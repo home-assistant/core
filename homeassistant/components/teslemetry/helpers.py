@@ -1,19 +1,15 @@
 """Teslemetry helper functions."""
 
 from collections.abc import Awaitable
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER
-
-if TYPE_CHECKING:
-    from .coordinator import TeslemetryVehicleDataCoordinator
 
 
 def flatten(
@@ -81,22 +77,6 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
-
-
-@callback
-def async_polling_entity_ids(
-    coordinator: TeslemetryVehicleDataCoordinator,
-) -> list[str]:
-    """Return the entity ids keeping a vehicle coordinator polling.
-
-    The coordinator only polls while it has listeners, so these enabled
-    entities are what drive its credit usage.
-    """
-    return sorted(
-        entity.entity_id
-        for entity in coordinator.async_contexts()
-        if isinstance(entity, Entity)
-    )
 
 
 @callback
