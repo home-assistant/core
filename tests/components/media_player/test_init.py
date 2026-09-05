@@ -697,6 +697,20 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     assert "group_members" in state.attributes
 
 
+async def test_group_members_without_grouping_support(hass: HomeAssistant) -> None:
+    """Test that group_members are available for a player that can not be regrouped."""
+    entity = MediaPlayerEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    entity._attr_supported_features = media_player.MediaPlayerEntityFeature(0)
+
+    assert "group_members" not in entity.state_attributes
+
+    entity._attr_group_members = ["media_player.kitchen"]
+
+    assert entity.state_attributes["group_members"] == ["media_player.kitchen"]
+
+
 @pytest.mark.parametrize(
     ("input", "expected"),
     [
