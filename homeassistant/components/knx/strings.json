@@ -1285,6 +1285,15 @@
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
     },
+    "llm_no_project_loaded": {
+      "message": "No ETS project is loaded."
+    },
+    "llm_telegram_store_unavailable": {
+      "message": "The KNX telegram store is not configured or unavailable."
+    },
+    "llm_tool_failed": {
+      "message": "KNX tool call failed: {error}"
+    },
     "service_event_register_ga_not_found": {
       "message": "Could not find registered event for `{group_addresses}` to remove."
     },

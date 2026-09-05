@@ -1,5 +1,6 @@
 """Handle KNX project data."""
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Final
@@ -63,6 +64,7 @@ class KNXProject:
     devices: dict[str, Device]
     group_addresses: dict[str, GroupAddressInfo]
     info: ProjectInfo | None
+    _project: KNXProjectModel | None
 
     def __init__(
         self,
@@ -72,6 +74,9 @@ class KNXProject:
         """Initialize project data."""
         self.hass = hass
         self._store = Store[KNXProjectModel](hass, STORAGE_VERSION, STORAGE_KEY)
+        # Serializes the cached project against upload and removal, so a load
+        # in flight cannot resurrect a project that was replaced or removed.
+        self._project_lock = asyncio.Lock()
 
         self.initial_state()
 
@@ -81,6 +86,7 @@ class KNXProject:
         self.devices = {}
         self.group_addresses = {}
         self.info = None
+        self._project = None
 
     async def load_project(
         self, xknx: XKNX, data: KNXProjectModel | None = None
@@ -122,17 +128,28 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
-        await self._store.async_save(project)
-        await self.load_project(xknx, data=project)
+        async with self._project_lock:
+            await self._store.async_save(project)
+            self._project = project
+            await self.load_project(xknx, data=project)
 
     async def remove_project_file(self) -> None:
         """Remove project file from storage."""
-        await self._store.async_remove()
-        self.initial_state()
+        async with self._project_lock:
+            await self._store.async_remove()
+            self.initial_state()
 
     async def get_knxproject(self) -> KNXProjectModel | None:
-        """Load the project file from local storage."""
-        return await self._store.async_load()
+        """Return the full project, loading it from local storage on first use.
+
+        `Store.async_load` re-reads and re-parses the file on every call - its
+        cache is skipped for keys containing "/" - and the full project is
+        multiple megabytes, so it is kept in memory once something asks for it.
+        """
+        async with self._project_lock:
+            if self._project is None:
+                self._project = await self._store.async_load()
+            return self._project
 
     def get_address_format(self) -> GroupAddressType:
         """Return the address format for group addresses used in the project."""
