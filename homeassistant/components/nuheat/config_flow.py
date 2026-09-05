@@ -1,109 +1,195 @@
-"""Config flow for NuHeat integration."""
+"""OAuth config flow for NuHeat."""
 
-from http import HTTPStatus
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import nuheat
-import requests.exceptions
+from chemelex_nuheat import (
+    NuHeatApiError,
+    NuHeatAuthError,
+    NuHeatClient,
+    NuHeatDataError,
+)
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .account_identity import (
+    InvalidAccountSubjectError,
+    account_subject_from_entry_data,
+)
+from .const import DOMAIN, OAUTH_SCOPES
+from .migration import (
+    OAUTH_CONFIG_ENTRY_VERSION,
+    MigrationAccountMismatchError,
+    async_consolidate_legacy_entries,
+    async_resume_migration_cleanup,
+    is_legacy_entry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SERIAL_NUMBER): str,
-    }
-)
 
+class NuHeatConfigFlow(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
+    """Handle NuHeat OAuth2 setup, migration, and reauthentication."""
 
-async def validate_input(hass: HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    api = nuheat.NuHeat(data[CONF_USERNAME], data[CONF_PASSWORD])
-
-    try:
-        await hass.async_add_executor_job(api.authenticate)
-    except requests.exceptions.Timeout as ex:
-        raise CannotConnect from ex
-    except requests.exceptions.HTTPError as ex:
-        if (
-            ex.response.status_code > HTTPStatus.BAD_REQUEST
-            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
-        ):
-            raise InvalidAuth from ex
-        raise CannotConnect from ex
-    #
-    # The underlying module throws a generic exception on login failure
-    #
-    except Exception as ex:
-        raise InvalidAuth from ex
-
-    try:
-        thermostat = await hass.async_add_executor_job(
-            api.get_thermostat, data[CONF_SERIAL_NUMBER]
-        )
-    except requests.exceptions.HTTPError as ex:
-        raise InvalidThermostat from ex
-
-    return {"title": thermostat.room, "serial_number": thermostat.serial_number}
-
-
-class NuHeatConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NuHeat."""
-
-    VERSION = 1
+    DOMAIN = DOMAIN
+    VERSION = OAUTH_CONFIG_ENTRY_VERSION
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        errors = {}
-        if user_input is not None:
+        """Start with any HA-registered local or cloud OAuth provider."""
+        if user_input is None:
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except InvalidThermostat:
-                errors["base"] = "invalid_thermostat"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                implementations = (
+                    await config_entry_oauth2_flow.async_get_implementations(
+                        self.hass, DOMAIN
+                    )
+                )
+            except ImplementationUnavailableError:
+                return self.async_abort(reason="oauth_implementation_unavailable")
+            if not implementations:
+                return self.async_abort(reason="missing_oauth_credentials")
+        return await super().async_step_user(user_input)
 
-            if "base" not in errors:
-                await self.async_set_unique_id(info["serial_number"])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+    @property
+    @override
+    def logger(self) -> logging.Logger:
+        return _LOGGER
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={"nuheat_url": "https://MyNuHeat.com"},
-        )
+    @property
+    @override
+    def extra_authorize_data(self) -> dict[str, str]:
+        return {"scope": " ".join(OAUTH_SCOPES)}
 
+    @override
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        token = data[CONF_TOKEN]
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+        try:
+            unique_id = account_subject_from_entry_data(data)
+        except InvalidAccountSubjectError:
+            return self.async_abort(reason="invalid_account_identity")
 
+        async def async_access_token(force_refresh: bool) -> str:
+            return token[CONF_ACCESS_TOKEN]
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+        api = NuHeatClient(async_get_clientsession(self.hass), async_access_token)
+        try:
+            account = await api.get_account()
+            thermostats = await api.list_thermostats()
+        except NuHeatAuthError:
+            return self.async_abort(reason="invalid_auth")
+        except NuHeatApiError, NuHeatDataError:
+            return self.async_abort(reason="cannot_connect")
 
+        account_title = account.username or "NuHeat"
+        await self.async_set_unique_id(unique_id)
 
-class InvalidThermostat(HomeAssistantError):
-    """Error to indicate there is invalid thermostat."""
+        if self.source == SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+            if is_legacy_entry(entry):
+                try:
+                    migration_result = await async_consolidate_legacy_entries(
+                        self.hass,
+                        entry,
+                        oauth_data=data,
+                        account_unique_id=unique_id,
+                        account_title=account_title,
+                        thermostats=thermostats,
+                    )
+                except MigrationAccountMismatchError:
+                    return self.async_abort(reason="migration_account_mismatch")
+                except Exception:  # noqa: BLE001
+                    return self.async_abort(reason="migration_failed")
+                result = self.async_abort(reason="migration_successful")
+                if migration_result.pending_cleanup_entry_ids:
+                    migration_result.anchor_entry.async_create_task(
+                        self.hass,
+                        async_resume_migration_cleanup(
+                            self.hass, migration_result.anchor_entry
+                        ),
+                        "deferred NuHeat migration cleanup",
+                        eager_start=False,
+                    )
+                return result
+
+            if entry.unique_id != unique_id:
+                try:
+                    stored_subject = account_subject_from_entry_data(entry.data)
+                except InvalidAccountSubjectError:
+                    stored_subject = None
+                if stored_subject == unique_id:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        unique_id=unique_id,
+                        version=OAUTH_CONFIG_ENTRY_VERSION,
+                    )
+            self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+            self.hass.config_entries.async_update_entry(
+                entry, version=OAUTH_CONFIG_ENTRY_VERSION
+            )
+            return self.async_update_reload_and_abort(
+                entry, title=account_title, data=data
+            )
+
+        for existing_entry in self.hass.config_entries.async_entries(DOMAIN):
+            if existing_entry.unique_id == unique_id:
+                continue
+            try:
+                stored_subject = account_subject_from_entry_data(existing_entry.data)
+            except InvalidAccountSubjectError:
+                continue
+            if stored_subject == unique_id:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    unique_id=unique_id,
+                    version=OAUTH_CONFIG_ENTRY_VERSION,
+                )
+                break
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=account_title, data=data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauthentication."""
+        if is_legacy_entry(self._get_reauth_entry()):
+            return await self.async_step_migration_confirm()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_migration_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask a legacy user to replace obsolete credentials with OAuth."""
+        entry = self._get_reauth_entry()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="migration_confirm",
+                data_schema=vol.Schema({}),
+                description_placeholders={"thermostat": entry.title},
+            )
+        return await self.async_step_user()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user to relink the existing account."""
+        entry = self._get_reauth_entry()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+                description_placeholders={"account": entry.title},
+            )
+        return await self.async_step_user()
