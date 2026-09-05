@@ -1,16 +1,40 @@
 """Common test tools for the Infrared integration."""
 
 from infrared_protocols.commands import Command as InfraredCommand
+from infrared_protocols.commands.nec import NECCommand
 
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
     InfraredEmitterEntity,
     InfraredEntity,
+    InfraredReceivedSignal,
     InfraredReceiverEntity,
 )
+from homeassistant.components.infrared.code import signal_to_code
 from homeassistant.components.infrared.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+RECEIVER_ENTITY_ID = "infrared.test_ir_receiver"
+
+
+def received_signal(
+    command: NECCommand, *, repeat_count: int = 0
+) -> InfraredReceivedSignal:
+    """Return the signal a receiver reports for a command."""
+    return InfraredReceivedSignal(
+        timings=NECCommand(
+            address=command.address,
+            command=command.command,
+            repeat_count=repeat_count,
+        ).get_raw_timings(),
+        modulation=command.modulation,
+    )
+
+
+def captured_code(command: NECCommand) -> str:
+    """Return the stored code for a command, as the frontend captures it."""
+    return signal_to_code(received_signal(command))
 
 
 class MockInfraredEntity(InfraredEntity):

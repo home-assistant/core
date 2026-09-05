@@ -1279,6 +1279,32 @@ class InfraredCommandSelector(Selector[InfraredCommandSelectorConfig]):
         return commands
 
 
+class InfraredCommandNameSelectorConfig(BaseSelectorConfig):
+    """Class to represent an infrared command name selector config."""
+
+
+@SELECTORS.register("infrared_command_name")
+class InfraredCommandNameSelector(Selector[InfraredCommandNameSelectorConfig]):
+    """Selector for the names given to captured infrared commands.
+
+    The names are not known to core - they are chosen per automation - so the
+    frontend offers the ones captured by the automation being edited.
+    """
+
+    selector_type = "infrared_command_name"
+
+    CONFIG_SCHEMA = make_selector_config_schema()
+
+    def __init__(self, config: InfraredCommandNameSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> list[str]:
+        """Validate the passed selection."""
+        names: list[str] = vol.Schema([vol.All(str, vol.Length(min=1))])(data)
+        return names
+
+
 class LabelSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a label selector config."""
 

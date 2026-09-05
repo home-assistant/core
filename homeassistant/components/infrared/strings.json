@@ -1,4 +1,16 @@
 {
+  "conditions": {
+    "_": {
+      "description": "Tests which of the infrared commands of the trigger was received.",
+      "fields": {
+        "command": {
+          "description": "The condition passes when the automation was started by one of these infrared commands.",
+          "name": "Commands"
+        }
+      },
+      "name": "Infrared command"
+    }
+  },
   "entity_component": {
     "emitter": {
       "name": "Infrared emitter"

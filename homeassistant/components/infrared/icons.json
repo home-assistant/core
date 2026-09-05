@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "_": {
+      "condition": "mdi:remote"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:led-on"

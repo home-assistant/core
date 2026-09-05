@@ -1866,6 +1866,25 @@ def test_infrared_command_selector_schema(
     [
         (
             {},
+            ([], ["Power"], ["Power", "Volume up"]),
+            (None, "Power", [""], [None]),
+        ),
+    ],
+)
+def test_infrared_command_name_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test infrared command name selector."""
+    _test_selector(
+        "infrared_command_name", schema, valid_selections, invalid_selections
+    )
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
             ("abc",),
             (None,),
         ),

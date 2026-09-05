@@ -6,36 +6,20 @@ from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.infrared import InfraredReceivedSignal
-from homeassistant.components.infrared.code import signal_to_code
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
-from .common import MockInfraredReceiverEntity
-
-RECEIVER_ENTITY_ID = "infrared.test_ir_receiver"
+from .common import (
+    RECEIVER_ENTITY_ID,
+    MockInfraredReceiverEntity,
+    captured_code as _code,
+    received_signal as _signal,
+)
 
 POWER = NECCommand(address=0x04FB, command=0xF7)
 VOLUME_UP = NECCommand(address=0x04FB, command=0xF6)
 OTHER_REMOTE = NECCommand(address=0x0102, command=0xF7)
-
-
-def _signal(command: NECCommand, *, repeat_count: int = 0) -> InfraredReceivedSignal:
-    """Return the signal a receiver reports for a command."""
-    return InfraredReceivedSignal(
-        timings=NECCommand(
-            address=command.address,
-            command=command.command,
-            repeat_count=repeat_count,
-        ).get_raw_timings(),
-        modulation=command.modulation,
-    )
-
-
-def _code(command: NECCommand) -> str:
-    """Return the stored code for a command, as the frontend captures it."""
-    return signal_to_code(_signal(command))
 
 
 async def _setup_automation(hass: HomeAssistant, *commands: NECCommand) -> None:
