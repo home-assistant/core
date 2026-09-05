@@ -44,6 +44,31 @@
     }
   },
   "config_subentries": {
+    "line": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Transit line",
+      "error": {
+        "invalid_line": "Enter a line code."
+      },
+      "initiate_flow": {
+        "user": "Add transit line"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "line": "Line"
+          },
+          "data_description": {
+            "line": "Pick a line, or enter a line code directly."
+          }
+        }
+      }
+    },
     "park_and_ride": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -126,6 +151,11 @@
     "binary_sensor": {
       "station_open": {
         "name": "Station open"
+      }
+    },
+    "calendar": {
+      "alerts": {
+        "name": "Alerts"
       }
     },
     "sensor": {
@@ -213,6 +243,9 @@
   "exceptions": {
     "auth_failed": {
       "message": "Authentication failed for Data Grand Lyon."
+    },
+    "update_failed_alerts": {
+      "message": "Error fetching TCL traffic alerts from Data Grand Lyon."
     },
     "update_failed_park_and_ride": {
       "message": "Error fetching park & ride availability from Data Grand Lyon."
