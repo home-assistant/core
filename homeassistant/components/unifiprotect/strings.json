@@ -390,6 +390,9 @@
       "package": {
         "name": "Package",
         "state_attributes": {
+          "event_source": {
+            "name": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_source::name%]"
+          },
           "event_type": {
             "state": {
               "detected": "Detected"
@@ -400,6 +403,9 @@
       "smart_detection": {
         "name": "Smart detection",
         "state_attributes": {
+          "event_source": {
+            "name": "Event source"
+          },
           "event_type": {
             "state": {
               "animal": "Animal",

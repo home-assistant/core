@@ -9,6 +9,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_SOURCE,
     ATTR_SMART_DETECT_TYPES,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
@@ -63,13 +64,18 @@ async def test_exclude_attributes(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert state.attributes[ATTR_EVENT_SOURCE] == EventType.SMART_DETECT.value
     assert ATTR_SMART_DETECT_TYPES in state.attributes
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
         get_significant_states, hass, now, None, hass.states.async_entity_ids()
     )
-    assert len(states) >= 1
+    assert entity_id in states
+    assert (
+        states[entity_id][-1].attributes[ATTR_EVENT_SOURCE]
+        == EventType.SMART_DETECT.value
+    )
     for entity_states in states.values():
         for state in entity_states:
             assert ATTR_EVENT_ID not in state.attributes
