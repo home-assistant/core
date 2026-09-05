@@ -3,8 +3,7 @@
 import logging
 from typing import Any, override
 
-import aiohttp
-from async_upnp_client.client import UpnpError
+from openhomedevice.exceptions import OpenhomeError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -92,7 +91,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
         try:
             if self.latest_version:
                 await self._device.update_firmware()
-        except (TimeoutError, aiohttp.ClientError, UpnpError) as err:
+        except OpenhomeError as err:
             raise HomeAssistantError(
                 f"Error updating {self._device.device.friendly_name}: {err}"
             ) from err

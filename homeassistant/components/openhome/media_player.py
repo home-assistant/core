@@ -5,8 +5,7 @@ import functools
 import logging
 from typing import Any, Concatenate, override
 
-import aiohttp
-from async_upnp_client.client import UpnpError
+from openhomedevice.exceptions import OpenhomeError
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -58,7 +57,7 @@ type _ReturnFuncType[_T, **_P, _R] = Callable[
 def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callable[
     [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
 ]:
-    """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
+    """Catch OpenhomeError errors."""
 
     def call_wrapper(
         func: _FuncType[_OpenhomeDeviceT, _P, _R],
@@ -69,11 +68,11 @@ def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callab
         async def wrapper(
             self: _OpenhomeDeviceT, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R | None:
-            """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
+            """Catch OpenhomeError errors."""
             try:
                 return await func(self, *args, **kwargs)
-            except TimeoutError, aiohttp.ClientError, UpnpError:
-                _LOGGER.error("Error during call %s", func.__name__)
+            except OpenhomeError as err:
+                _LOGGER.error("Error during call %s: %s", func.__name__, err)
             return None
 
         return wrapper
@@ -169,7 +168,9 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except TimeoutError, aiohttp.ClientError, UpnpError:
+        except OpenhomeError as err:
+            if self._attr_available:
+                _LOGGER.warning("Error updating %s: %s", self.entity_id, err)
             self._attr_available = False
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
@@ -263,8 +264,8 @@ class OpenhomeDevice(MediaPlayerEntity):
                 await self._device.invoke_pin(pin)
             else:
                 _LOGGER.error("Pins service not supported")
-        except UpnpError:
-            _LOGGER.error("Error invoking pin %s", pin)
+        except OpenhomeError as err:
+            _LOGGER.error("Error invoking pin %s: %s", pin, err)
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
