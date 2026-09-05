@@ -1,0 +1,11 @@
+{
+  "domain": "threema",
+  "name": "Threema",
+  "codeowners": ["@LukasQ"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/threema",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "quality_scale": "silver",
+  "requirements": ["PyNaCl==1.6.2"]
+}

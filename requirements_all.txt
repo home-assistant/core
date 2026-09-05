@@ -73,6 +73,7 @@ PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
+# homeassistant.components.threema
 PyNaCl==1.6.2
 
 # homeassistant.auth.mfa_modules.totp
