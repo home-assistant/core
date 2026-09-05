@@ -14,12 +14,14 @@ from aioesphomeapi import (
     SensorInfo,
     SensorState,
     SubDeviceInfo,
+    TemperatureUnit,
     build_device_unique_id,
     build_unique_id,
 )
 import pytest
 
 from homeassistant.components.esphome import DOMAIN
+from homeassistant.components.esphome.const import TEMPERATURE_UNIT_MAP
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -3481,3 +3483,8 @@ async def test_mover_does_not_adopt_other_movers_state(
 
     assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_UNKNOWN
+
+
+def test_temperature_unit_map_covers_all_units() -> None:
+    """Every aioesphomeapi TemperatureUnit must be mapped."""
+    assert set(TEMPERATURE_UNIT_MAP) == set(TemperatureUnit)
