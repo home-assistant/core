@@ -91,7 +91,13 @@ class DlnaDmsData:
 
 @callback
 def get_domain_data(hass: HomeAssistant) -> DlnaDmsData:
-    """Obtain this integration's domain data, creating it if needed."""
+    """Obtain this integration's domain data, creating it if needed.
+
+    Creation is deferred to the first caller rather than done at setup, to
+    avoid building DlnaDmsData and its dependencies until a device is
+    actually connected to. This module is imported to run the config flow
+    for any DMS device discovered on the network, including ignored ones.
+    """
     if (data := hass.data.get(DOMAIN_DATA)) is not None:
         return data
 
