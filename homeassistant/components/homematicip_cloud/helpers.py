@@ -7,6 +7,7 @@ import logging
 from typing import Any, Concatenate, TypeGuard
 
 from homematicip.base.enums import FunctionalChannelType
+from homematicip.base.functionalChannels import AccessAuthorizationChannel
 from homematicip.device import Device
 
 from homeassistant.exceptions import HomeAssistantError
@@ -50,6 +51,19 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
             )
 
     return inner
+
+
+def get_door_opener_authorization_channel(
+    device: Device,
+) -> AccessAuthorizationChannel | None:
+    """Return the AccessAuthorizationChannel routed to the door opener."""
+    for channel in getattr(device, "functionalChannels", []):
+        if (
+            isinstance(channel, AccessAuthorizationChannel)
+            and getattr(channel, "channelRole", None) == "DOOR_OPENER_ACTUATOR"
+        ):
+            return channel
+    return None
 
 
 def get_channels_from_device(device: Device, channel_type: FunctionalChannelType):
