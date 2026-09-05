@@ -1,0 +1,13 @@
+{
+  "domain": "lanbon",
+  "name": "LANBON",
+  "codeowners": ["@LANBON2026"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lanbon",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["aiolanbon"],
+  "quality_scale": "bronze",
+  "requirements": ["aiolanbon==0.2.0"],
+  "zeroconf": ["_lanbon._tcp.local."]
+}
