@@ -46,13 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         async_dispatcher_send(hass, f"{ANTHEMAV_UPDATE_SIGNAL}_{entry.entry_id}")
 
     try:
-        # anthemav.Connection.create() retries the initial connection
-        # internally with its own backoff and only returns once it
-        # succeeds, so it will not raise OSError on its own when the
-        # receiver is unreachable. Bound the attempt so an unreachable
-        # receiver fails fast into the normal ConfigEntryNotReady retry
-        # path, rather than blocking setup (and, at startup, Home
-        # Assistant's bootstrap) for as long as the receiver stays off.
+        # See CONNECT_TIMEOUT_SECONDS for why this needs a timeout.
         async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
             avr = await anthemav.Connection.create(
                 host=entry.data[CONF_HOST],

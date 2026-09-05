@@ -76,17 +76,9 @@ async def test_config_entry_not_ready_when_oserror(
 async def test_config_entry_not_ready_when_connect_hangs(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup fails fast (instead of hanging) when the AVR never connects.
+    """Test setup fails fast (instead of hanging) when the AVR never connects."""
 
-    anthemav.Connection.create() retries its initial connection internally
-    and only returns once it succeeds, so it never raises OSError on its
-    own when the receiver is unreachable — nothing bounds that wait except
-    our own timeout. Simulate that by having the mocked create() hang
-    indefinitely, and confirm setup still resolves to SETUP_RETRY rather
-    than blocking forever.
-    """
     async def _hang(*args, **kwargs) -> None:
-        """Simulate Connection.create() never returning."""
         await asyncio.sleep(3600)
 
     with (
