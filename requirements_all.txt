@@ -3149,6 +3149,9 @@ specialized-turbo[cloud]==0.8.2
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.3
 
+# homeassistant.components.spinev
+spinev-ble[bleak]==0.3.0
+
 # homeassistant.components.spotify
 spotifyaio==2.0.2
 
