@@ -11,7 +11,7 @@ from airtouch4pyapi.airtouch import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.airtouch4.const import DOMAIN
+from homeassistant.components.airtouch4.const import DOMAIN, PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
     mock_ac = AirTouchAc()
     mock_groups = AirTouchGroup()
-    mock_airtouch = AirTouch("")
+    mock_airtouch = AirTouch("", AirTouchVersion.AIRTOUCH4, PORT)
     mock_airtouch.UpdateInfo = AsyncMock()
     mock_airtouch.Status = AirTouchStatus.OK
     mock_airtouch.GetAcs = Mock(return_value=[mock_ac])
@@ -62,7 +62,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mock_airtouch = AirTouch("")
+    mock_airtouch = AirTouch("", AirTouchVersion.AIRTOUCH4, PORT)
     mock_airtouch.UpdateInfo = AsyncMock()
     mock_airtouch.status = AirTouchStatus.CONNECTION_INTERRUPTED
     with patch(
@@ -81,7 +81,7 @@ async def test_form_library_error_message(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mock_airtouch = AirTouch("")
+    mock_airtouch = AirTouch("", AirTouchVersion.AIRTOUCH4, PORT)
     mock_airtouch.UpdateInfo = AsyncMock()
     mock_airtouch.status = AirTouchStatus.ERROR
     with patch(
@@ -100,7 +100,7 @@ async def test_form_connection_refused(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mock_airtouch = AirTouch("")
+    mock_airtouch = AirTouch("", AirTouchVersion.AIRTOUCH4, PORT)
     mock_airtouch.UpdateInfo = AsyncMock()
     mock_airtouch.status = AirTouchStatus.NOT_CONNECTED
     with patch(
@@ -120,7 +120,7 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     mock_ac = AirTouchAc()
-    mock_airtouch = AirTouch("")
+    mock_airtouch = AirTouch("", AirTouchVersion.AIRTOUCH4, PORT)
     mock_airtouch.UpdateInfo = AsyncMock()
     mock_airtouch.Status = AirTouchStatus.OK
     mock_airtouch.GetAcs = Mock(return_value=[mock_ac])

@@ -10,7 +10,7 @@ from airtouch4pyapi.airtouch import (
     AirTouchVersion,
 )
 
-from homeassistant.components.airtouch4.const import DOMAIN
+from homeassistant.components.airtouch4.const import DOMAIN, PORT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 def _mock_airtouch(acs, groups, status=AirTouchStatus.OK):
     """Build an AirTouch whose network calls are stubbed out."""
-    airtouch = AirTouch("")
+    airtouch = AirTouch("", AirTouchVersion.AIRTOUCH4, PORT)
     airtouch.UpdateInfo = AsyncMock()
     airtouch.Status = status
     airtouch.GetAcs = Mock(return_value=acs)
@@ -80,12 +80,9 @@ async def test_setup_entry_no_acs_is_retryable(hass: HomeAssistant) -> None:
 async def test_setup_dropped_connection_is_retryable(hass: HomeAssistant) -> None:
     """Regression: a dropped console connection must be retryable, not fatal.
 
-    Exercises the real library with only the socket layer mocked. On
-    airtouch4pyapi 1.0.5 a failed connect left a local unbound and UpdateInfo()
-    raised UnboundLocalError, which is not ConfigEntryNotReady, so HA latched the
-    entry to the terminal setup_error state and never retried. This proves setup
-    now ends in SETUP_RETRY, and that the blocking findVersion()/isOpen() probe
-    never runs because the version is supplied explicitly.
+    Exercises the real library with only the socket layer mocked. A dropped
+    connect must surface as SETUP_RETRY rather than the terminal setup_error
+    state, and the blocking findVersion()/isOpen() probe must not run.
     """
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.2.3.4"})
     entry.add_to_hass(hass)
