@@ -12,7 +12,18 @@ CONF_MODBUS_PORT: Final = "modbus_port"
 DEFAULT_MODBUS_PORT: Final = 502
 
 type SolarNetId = str
-SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
+_SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
+
+
+def discovery_signal(entry_id: str) -> str:
+    """Return the signal carrying coordinators of an entry found after setup.
+
+    One signal per config entry: a device found by one entry's re-scan has
+    nothing to do with the platforms of another.
+    """
+    return f"{_SOLAR_NET_DISCOVERY_NEW}_{entry_id}"
+
+
 SOLAR_NET_ID_POWER_FLOW: SolarNetId = "power_flow"
 SOLAR_NET_ID_SYSTEM: SolarNetId = "system"
 SOLAR_NET_RESCAN_TIMER: Final = 60

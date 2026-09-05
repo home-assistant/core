@@ -30,11 +30,11 @@ from .const import (
     CONF_MODBUS_PORT,
     DEFAULT_MODBUS_PORT,
     DOMAIN,
-    SOLAR_NET_DISCOVERY_NEW,
     SOLAR_NET_ID_SYSTEM,
     SOLAR_NET_RESCAN_TIMER,
     FroniusDeviceInfo,
     SolarNetId,
+    discovery_signal,
 )
 from .coordinator import (
     FroniusCoordinatorBase,
@@ -291,7 +291,11 @@ class FroniusSolarNet:
             # Only for re-scans. Initial setup adds entities
             # through sensor.async_setup_entry
             if self.config_entry.state is ConfigEntryState.LOADED:
-                async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
+                async_dispatcher_send(
+                    self.hass,
+                    discovery_signal(self.config_entry.entry_id),
+                    _coordinator,
+                )
 
             _LOGGER.debug(
                 "New inverter added (UID: %s)",
@@ -468,7 +472,9 @@ class FroniusSolarNet:
         # Only for re-scans. Initial setup adds entities through the
         # platforms' async_setup_entry.
         if self.config_entry.state is ConfigEntryState.LOADED:
-            async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, coordinator)
+            async_dispatcher_send(
+                self.hass, discovery_signal(self.config_entry.entry_id), coordinator
+            )
         return True
 
     async def _modbus_control_allowed(

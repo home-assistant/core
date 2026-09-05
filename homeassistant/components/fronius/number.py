@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SOLAR_NET_DISCOVERY_NEW
+from .const import discovery_signal
 from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 
 if TYPE_CHECKING:
@@ -105,7 +105,9 @@ async def async_setup_entry(
         )
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, SOLAR_NET_DISCOVERY_NEW, async_add_new_entities)
+        async_dispatcher_connect(
+            hass, discovery_signal(config_entry.entry_id), async_add_new_entities
+        )
     )
 
 
