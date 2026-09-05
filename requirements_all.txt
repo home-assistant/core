@@ -1986,6 +1986,9 @@ py-madvr2==1.6.40
 # homeassistant.components.melissa
 py-melissa-climate==3.0.3
 
+# homeassistant.components.national_grid_us
+py-nationalgrid==0.6.5
+
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
 
