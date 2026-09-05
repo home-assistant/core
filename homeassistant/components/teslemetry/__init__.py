@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from typing import Any, Final, cast
@@ -774,6 +775,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 live_coordinator,
                 info_coordinator,
                 history_coordinator,
+                raw_live_status,
             ) = await _async_setup_energy_site(
                 hass,
                 entry,
@@ -791,6 +793,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             ) = await _async_resolve_local_control(
                 hass, entry, bool(battery), site_id, energy_site
             )
+
+            # A paired site polls its LAN gateway and merges it over the cloud.
+            # The live coordinator can start now (it is not first-refreshed); the
+            # info coordinator's local poll is enabled after its cloud cold read
+            # below, so that fatal first refresh reads the cloud, not the gateway.
+            if (
+                isinstance(energy_site_api, EnergySiteRouter)
+                and live_coordinator is not None
+                and raw_live_status is not None
+            ):
+                live_coordinator.enable_local_polling(
+                    energy_site_api.primary, raw_live_status
+                )
 
             energysites.append(
                 TeslemetryEnergyData(
@@ -815,6 +830,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ),
         *(_async_refresh_energy_site(energysite) for energysite in energysites),
     )
+
+    # The cloud site_info cold read above is done; a paired site now starts
+    # polling its LAN config.json, whose failures are non-fatal.
+    for energysite in energysites:
+        if isinstance(energysite.api, EnergySiteRouter):
+            energysite.info_coordinator.enable_local_polling(energysite.api.primary)
 
     # Setup energy devices with models, versions, and listeners
     for energysite in energysites:
@@ -942,8 +963,14 @@ async def _async_setup_energy_site(
     TeslemetryEnergySiteLiveCoordinator | None,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergyHistoryCoordinator | None,
+    dict[str, Any] | None,
 ]:
-    """Cold-read live status, build the energy coordinators, and register listeners."""
+    """Cold-read live status, build the energy coordinators, and register listeners.
+
+    Also returns the raw pre-index ``live_status`` document (or None), captured
+    before the live coordinator indexes it in place, so a paired site can seed
+    the merge from an independent cloud snapshot.
+    """
     # The stream has no ready boundary, so keep a deterministic REST cold read
     # for setup auth/error handling before switching to listener-driven updates.
     try:
@@ -979,6 +1006,9 @@ async def _async_setup_energy_site(
             translation_key="not_ready_connection_error",
         ) from e
 
+    # Snapshot before the live coordinator indexes wall_connectors in place.
+    raw_live_status = deepcopy(live_status) if isinstance(live_status, dict) else None
+
     live_coordinator = (
         TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
         if isinstance(live_status, dict)
@@ -1013,7 +1043,7 @@ async def _async_setup_energy_site(
             )
         )
 
-    return live_coordinator, info_coordinator, history_coordinator
+    return live_coordinator, info_coordinator, history_coordinator, raw_live_status
 
 
 async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
