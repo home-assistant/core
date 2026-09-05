@@ -5,7 +5,8 @@ from contextlib import contextmanager
 from io import StringIO
 from pathlib import Path
 from random import getrandbits
-from typing import Any
+import threading
+from typing import Any, Self
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import BodyPartReader
@@ -282,3 +283,81 @@ async def test_upload_cancelled_releases_consumer(hass: HomeAssistant) -> None:
     assert not pending
     with pytest.raises(asyncio.CancelledError):
         task.result()
+
+
+async def test_receive_file_field_cancelled_while_joining_writer(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test a cancel while joining the writer waits for the writer to finish.
+
+    A cancellation delivered while _receive_file_field is awaiting the executor
+    writer (the whole field already streamed, sentinel queued) must not return
+    until the writer thread has finished, so the caller's cleanup cannot race it.
+    """
+    file_path = tmp_path / "uploaded.bin"
+    writing_started = asyncio.Event()
+    release_writer = threading.Event()  # blocks the writer thread mid-write
+    writes: list[bytes] = []
+    blocked_once = False
+
+    class _BlockingHandle:
+        """A file handle whose first write parks the writer thread until released."""
+
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *exc: object) -> bool:
+            return False
+
+        def write(self, data: bytes) -> int:
+            nonlocal blocked_once
+            if not blocked_once:
+                blocked_once = True
+                hass.loop.call_soon_threadsafe(writing_started.set)
+                release_writer.wait()
+            writes.append(bytes(data))
+            return len(data)
+
+    real_open = Path.open
+
+    def _blocking_open(self: Path, *args: object, **kwargs: object) -> object:
+        if self != file_path:
+            return real_open(self, *args, **kwargs)
+        return _BlockingHandle()
+
+    chunks = iter([b"chunk1", b"chunk2"])
+
+    class _Part:
+        """Fake BodyPartReader yielding two chunks then EOF."""
+
+        async def read_chunk(self, size: int) -> bytes:
+            return next(chunks, b"")
+
+    with patch.object(Path, "open", _blocking_open):
+        task = asyncio.create_task(
+            file_upload._receive_file_field(hass, _Part(), file_path)
+        )
+        try:
+            # The writer thread is now blocked on its first write, so the task has
+            # queued every chunk plus the sentinel and is parked at the join; let it
+            # settle there so the cancel lands on the join.
+            await writing_started.wait()
+            for _ in range(3):
+                await asyncio.sleep(0)
+            task.cancel()
+            for _ in range(10):
+                await asyncio.sleep(0)
+            # Without the cancellation-safe join the task would finish here (returning
+            # while the writer thread runs on); the fix keeps it waiting for the writer.
+            assert not task.done()
+        finally:
+            # Always release the writer so a failed assertion can't leak the blocked
+            # thread and hang teardown.
+            release_writer.set()
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
+    # The writer finished writing both chunks before the cancellation propagated.
+    assert b"".join(writes) == b"chunk1chunk2"

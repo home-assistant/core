@@ -109,6 +109,61 @@ class FileUploadData:
         return self.file_dir(file_id) / self.files[file_id]
 
 
+async def _receive_file_field(
+    hass: HomeAssistant,
+    file_field_reader: BodyPartReader,
+    file_path: Path,
+) -> None:
+    """Stream a multipart file field to file_path using an executor writer."""
+    queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = SimpleQueue()
+
+    def _sync_queue_consumer() -> None:
+        with file_path.open("wb") as file_handle:
+            while True:
+                if (_chunk_future := queue.get()) is None:
+                    break
+                _chunk, _future = _chunk_future
+                if _future is not None:
+                    hass.loop.call_soon_threadsafe(_future.set_result, None)
+                file_handle.write(_chunk)
+
+    fut: asyncio.Future[None] | None = None
+    try:
+        fut = hass.async_add_executor_job(_sync_queue_consumer)
+        chunks_sent = 0
+        while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
+            chunks_sent += 1
+            if chunks_sent % 5 != 0:
+                queue.put_nowait((chunk, None))
+                continue
+
+            chunk_future = hass.loop.create_future()
+            queue.put_nowait((chunk, chunk_future))
+            await asyncio.wait((fut, chunk_future), return_when=asyncio.FIRST_COMPLETED)
+            if fut.done():
+                # The executor job failed
+                break
+    finally:
+        # Always terminate the queue consumer, also if the stream raised or the task
+        # was cancelled, otherwise awaiting the consumer future deadlocks.
+        queue.put_nowait(None)
+        if fut is not None:
+            # The executor thread can't be cancelled and is guaranteed to finish once
+            # it reads the sentinel queued above. Await it even if this task is
+            # cancelled: awaiting only through a shield keeps the executor future
+            # itself uncancelled, so the thread is fully done (file written and closed)
+            # before the caller cleans up. Re-raise any cancellation after.
+            cancelled: asyncio.CancelledError | None = None
+            while not fut.done():
+                try:
+                    await asyncio.shield(fut)
+                except asyncio.CancelledError as err:
+                    cancelled = err
+            if cancelled is not None:
+                raise cancelled
+            fut.result()
+
+
 class FileUploadView(HomeAssistantView):
     """HTTP View to upload files."""
 
@@ -159,50 +214,14 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data = hass.data[_DATA]
         file_dir = file_upload_data.file_dir(file_id)
-        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
-            SimpleQueue()
-        )
 
-        def _sync_queue_consumer() -> None:
-            file_dir.mkdir()
-            with (file_dir / filename).open("wb") as file_handle:
-                while True:
-                    if (_chunk_future := queue.get()) is None:
-                        break
-                    _chunk, _future = _chunk_future
-                    if _future is not None:
-                        hass.loop.call_soon_threadsafe(_future.set_result, None)
-                    file_handle.write(_chunk)
-
-        fut: asyncio.Future[None] | None = None
         try:
-            try:
-                fut = hass.async_add_executor_job(_sync_queue_consumer)
-                chunks_sent = 0
-                while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-                    chunks_sent += 1
-                    if chunks_sent % 5 != 0:
-                        queue.put_nowait((chunk, None))
-                        continue
-
-                    chunk_future = hass.loop.create_future()
-                    queue.put_nowait((chunk, chunk_future))
-                    await asyncio.wait(
-                        (fut, chunk_future), return_when=asyncio.FIRST_COMPLETED
-                    )
-                    if fut.done():
-                        # The executor job failed
-                        break
-            finally:
-                # Always terminate the queue consumer, also if the stream raised or
-                # the task was cancelled.
-                queue.put_nowait(None)
-                if fut is not None:
-                    await fut
+            await hass.async_add_executor_job(file_dir.mkdir)
+            await _receive_file_field(hass, file_field_reader, file_dir / filename)
         except Exception, asyncio.CancelledError:
-            # Upload failed: the consumer has finished and closed the file (inner
-            # finally above), so removing the directory now cannot race the writer.
-            # ignore_errors covers a failure that happened before the dir was created.
+            # Upload failed: _receive_file_field has joined the writer and closed the
+            # file, so removing the directory now cannot race the writer. ignore_errors
+            # covers a failure that happened before the directory was created.
             await hass.async_add_executor_job(
                 lambda: shutil.rmtree(file_dir, ignore_errors=True)
             )

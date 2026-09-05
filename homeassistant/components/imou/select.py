@@ -3,6 +3,7 @@
 from typing import override
 
 from pyimouapi.const import (
+    PARAM_COLLECTION_POINT,
     PARAM_CURRENT_OPTION,
     PARAM_DEVICE_VOLUME,
     PARAM_NIGHT_VISION_MODE,
@@ -32,6 +33,10 @@ SELECT_TYPES: tuple[SelectEntityDescription, ...] = (
         key=PARAM_NIGHT_VISION_MODE,
         entity_category=EntityCategory.CONFIG,
         translation_key=PARAM_NIGHT_VISION_MODE,
+    ),
+    SelectEntityDescription(
+        key=PARAM_COLLECTION_POINT,
+        translation_key=PARAM_COLLECTION_POINT,
     ),
 )
 
