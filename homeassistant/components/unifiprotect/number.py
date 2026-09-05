@@ -52,8 +52,8 @@ def _get_pir_duration_public(obj: PublicDeviceModel) -> int | None:
     return None if duration is None else round(duration / 1000)
 
 
-async def _set_pir_duration(obj: Light, value: float) -> None:
-    await obj.set_duration_public(timedelta(seconds=value))
+async def _set_pir_duration(obj: PublicLight, value: float) -> None:
+    await obj.set_duration(timedelta(seconds=value))
 
 
 def _get_chime_duration(obj: Camera) -> int:
@@ -91,7 +91,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_required_field="has_mic",
         ufp_public_value="mic_volume",
-        ufp_set_method="set_mic_volume_public",
+        ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
@@ -174,7 +174,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_max=100,
         ufp_step=1,
         ufp_public_value="light_device_settings.pir_sensitivity",
-        ufp_set_method="set_sensitivity_public",
+        ufp_set_method="set_sensitivity",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription[Light](
@@ -201,7 +201,7 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_max=100,
         ufp_step=1,
         ufp_public_value="motion_settings.sensitivity",
-        ufp_set_method="set_motion_sensitivity_public",
+        ufp_set_method="set_motion_sensitivity",
         ufp_capability=SensorFeatureCapability.MOTION,
     ),
 )
@@ -337,7 +337,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.entity_description.ufp_set(self.device, value)
+        await self.entity_description.ufp_set(self._ufp_set_target(), value)
 
 
 class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):

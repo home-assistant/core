@@ -808,6 +808,9 @@
     "command_error": {
       "message": "Error communicating with UniFi Protect while sending command: {error}"
     },
+    "device_not_available": {
+      "message": "{device_name} is no longer available"
+    },
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },

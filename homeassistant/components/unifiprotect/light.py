@@ -14,12 +14,10 @@ from uiprotect.data.public_devices import PublicLight
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_BRAND, DOMAIN
+from .const import DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import async_ufp_instance_command
@@ -107,29 +105,10 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         private: Light | None,
     ) -> None:
         """Initialize the light."""
-        self._private = private
         self._ufp_public_obj = public
         # unique_id and device info derive from the base device, so hybrid must
         # keep the private one to leave existing entities unchanged.
         super().__init__(data, cast(ProtectDeviceType, private or public))
-
-    @callback
-    @override
-    def _async_set_device_info(self) -> None:
-        if self._private is not None:
-            super()._async_set_device_info()
-            return
-        # market_name/firmware/URL are private-only; the NVR link uses the
-        # device id registered at setup.
-        public = cast(PublicLight, self.device)
-        self._attr_device_info = DeviceInfo(
-            name=public.display_name,
-            model=public.type,
-            model_id=public.type,
-            manufacturer=DEFAULT_BRAND,
-            connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
-            via_device_id=self.data.nvr_device_id,
-        )
 
     @callback
     @override

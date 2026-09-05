@@ -86,6 +86,7 @@ PUBLIC_ONLY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.CAMERA,
     Platform.LIGHT,
+    Platform.SWITCH,
 ]
 
 # Stored local-user credentials do not imply the mode: they are kept on a
