@@ -1,6 +1,8 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'active_faults': list([
+    ]),
     'inverter_type': 1537,
     'model': '4.4 KTLX-G3',
     'raw': dict({

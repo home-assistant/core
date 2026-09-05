@@ -73,12 +73,10 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
                         translation_key="no_component_answered",
-                        translation_placeholders={"name": self.name},
                     )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                    translation_placeholders={"name": self.name},
                 ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
@@ -86,7 +84,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             return report
