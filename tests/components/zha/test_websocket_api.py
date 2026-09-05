@@ -42,25 +42,27 @@ from homeassistant.components.websocket_api import (
     TYPE_RESULT,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
+from homeassistant.components.zha.const import (
+    ATTR_DURATION,
+    ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
+    ATTR_SOURCE_IEEE,
+    EZSP_OVERWRITE_EUI64,
+)
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
+from homeassistant.components.zha.services import SERVICE_PERMIT
 from homeassistant.components.zha.websocket_api import (
-    ATTR_DURATION,
-    ATTR_INSTALL_CODE,
-    ATTR_QR_CODE,
-    ATTR_SOURCE_IEEE,
     ATTR_TARGET_IEEE,
     BINDINGS,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
     ID,
-    SERVICE_PERMIT,
     TYPE,
     async_load_api,
 )
