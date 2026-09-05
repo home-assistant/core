@@ -1850,6 +1850,10 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
     [
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
+        pytest.param(
+            TypeError("Password was not given but private key is encrypted"),
+            id="encrypted_key",
+        ),
     ],
 )
 async def test_vehicle_bluetooth_key_load_falls_back_to_cloud(
