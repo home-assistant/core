@@ -1422,13 +1422,7 @@ async def test_local_control_encrypted_key_falls_back_to_cloud(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """An encrypted RSA key PEM degrades the site to cloud control.
-
-    The cryptography loader raises TypeError for an encrypted PEM; the key
-    helper converts that to ValueError so the site falls back to cloud control
-    instead of tearing the integration down. Raise from the real
-    ``get_rsa_private_key`` call so the conversion is exercised end to end.
-    """
+    """Fall back to cloud control when RSA key loading reports an encrypted PEM."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
