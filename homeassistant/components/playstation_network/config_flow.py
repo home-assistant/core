@@ -30,7 +30,14 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_ACCOUNT_ID, CONF_NPSSO, DOMAIN, NPSSO_LINK, PSN_LINK
+from .const import (
+    CONF_ACCOUNT_ID,
+    CONF_NPSSO,
+    CONF_TOKEN_RESPONSE,
+    DOMAIN,
+    NPSSO_LINK,
+    PSN_LINK,
+)
 from .coordinator import PlaystationNetworkConfigEntry
 from .helpers import PlaystationNetwork
 
@@ -90,7 +97,10 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     return self.async_create_entry(
                         title=user.online_id,
-                        data={CONF_NPSSO: npsso},
+                        data={
+                            CONF_NPSSO: npsso,
+                            CONF_TOKEN_RESPONSE: psn.token_response,
+                        },
                     )
 
         return self.async_show_form(
@@ -152,7 +162,10 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_and_abort(
                     entry,
-                    data_updates={CONF_NPSSO: npsso},
+                    data_updates={
+                        CONF_NPSSO: npsso,
+                        CONF_TOKEN_RESPONSE: psn.token_response,
+                    },
                 )
 
         return self.async_show_form(
