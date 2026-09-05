@@ -1,7 +1,7 @@
 """Tests for the Duco number platform."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 from duco_connectivity import (
     BypassSupplyTemperatureTarget,
@@ -98,22 +98,29 @@ async def test_set_bypass_supply_temperature_target(
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test setting a bypass target refreshes the number from the box."""
+    """Test consecutive bypass target writes update directly from their responses."""
     target = mock_bypass_supply_temperature_targets[1]
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
-        blocking=True,
-    )
+    for value in (20.5, 21.0):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": value},
+            blocking=True,
+        )
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5, target=target
+        state = hass.states.get(_ZONE_1_ENTITY_ID)
+        assert state is not None
+        assert state.state == str(value)
+
+    assert (
+        mock_duco_client.async_set_bypass_supply_temperature_target.await_args_list
+        == [
+            call(1, 20.5, target=target),
+            call(1, 21.0, target=replace(target, value=20.5)),
+        ]
     )
-    state = hass.states.get(_ZONE_1_ENTITY_ID)
-    assert state is not None
-    assert state.state == "20.5"
+    mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
 
 async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
