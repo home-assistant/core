@@ -371,6 +371,7 @@ FLOWS = {
         "improv_ble",
         "incomfort",
         "indevolt",
+        "indi_allsky",
         "inels",
         "influxdb",
         "inkbird",
