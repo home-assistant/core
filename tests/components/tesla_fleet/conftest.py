@@ -9,7 +9,13 @@ import jwt
 import pytest
 from tesla_fleet_api.const import Scope
 
-from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
+from homeassistant.components.tesla_fleet.const import (
+    CONF_AUTHORIZATION_PROFILE,
+    DOMAIN,
+    ENERGY_SITE_READ_ONLY_SCOPES,
+    SCOPES,
+    AuthorizationProfile,
+)
 
 from .const import (
     COMMAND_OK,
@@ -37,6 +43,7 @@ def create_config_entry(
     scopes: list[Scope],
     implementation: str = DOMAIN,
     region: str = "NA",
+    authorization_profile: AuthorizationProfile | None = None,
 ) -> MockConfigEntry:
     """Create Tesla Fleet entry in Home Assistant."""
     access_token = jwt.encode(
@@ -56,6 +63,11 @@ def create_config_entry(
         unique_id=UID,
         data={
             "auth_implementation": implementation,
+            **(
+                {CONF_AUTHORIZATION_PROFILE: authorization_profile}
+                if authorization_profile is not None
+                else {}
+            ),
             "token": {
                 "status": 0,
                 "userid": UID,
@@ -91,6 +103,16 @@ def readonly_config_entry(expires_at: int) -> MockConfigEntry:
             Scope.VEHICLE_DEVICE_DATA,
             Scope.ENERGY_DEVICE_DATA,
         ],
+    )
+
+
+@pytest.fixture
+def energy_site_read_only_config_entry(expires_at: int) -> MockConfigEntry:
+    """Create a Tesla Fleet Energy Site read-only entry."""
+    return create_config_entry(
+        expires_at,
+        list(ENERGY_SITE_READ_ONLY_SCOPES),
+        authorization_profile=AuthorizationProfile.ENERGY_SITE_READ_ONLY,
     )
 
 

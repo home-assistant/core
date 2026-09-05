@@ -8,6 +8,7 @@ from tesla_fleet_api.const import SERVERS, Scope
 DOMAIN = "tesla_fleet"
 
 CONF_REFRESH_TOKEN = "refresh_token"
+CONF_AUTHORIZATION_PROFILE = "authorization_profile"
 
 # Regions the user can register in; China uses separate infrastructure.
 REGION_SERVERS: dict[str, str] = {
@@ -20,6 +21,14 @@ LOGGER = logging.getLogger(__package__)
 AUTHORIZE_URL = "https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/authorize"
 TOKEN_URL = "https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token"
 
+
+class AuthorizationProfile(StrEnum):
+    """Tesla Fleet authorization profiles."""
+
+    STANDARD = "standard"
+    ENERGY_SITE_READ_ONLY = "energy_site_read_only"
+
+
 SCOPES = [
     Scope.OPENID,
     Scope.OFFLINE_ACCESS,
@@ -30,6 +39,17 @@ SCOPES = [
     Scope.ENERGY_DEVICE_DATA,
     Scope.ENERGY_CMDS,
 ]
+
+ENERGY_SITE_READ_ONLY_SCOPES = (
+    Scope.OPENID,
+    Scope.OFFLINE_ACCESS,
+    Scope.ENERGY_DEVICE_DATA,
+)
+
+AUTHORIZATION_PROFILE_SCOPES = {
+    AuthorizationProfile.STANDARD: SCOPES,
+    AuthorizationProfile.ENERGY_SITE_READ_ONLY: ENERGY_SITE_READ_ONLY_SCOPES,
+}
 
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
