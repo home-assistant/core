@@ -1,7 +1,6 @@
 """Fixtures for the Mitsubishi WF-RAC integration."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from . import AIRCO_ID, ENTRY_DATA, ENTRY_OPTIONS
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -27,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def aircon_stat() -> dict:
     """Return one getAirconStat response, as the module sends it."""
-    return json.loads(load_fixture("aircon_stat.json", DOMAIN))
+    return load_json_object_fixture("aircon_stat.json", DOMAIN)
 
 
 @pytest.fixture

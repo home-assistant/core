@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 import re
@@ -22,6 +23,7 @@ from pywfrac.repository import MIN_TIME_BETWEEN_REQUESTS, REQUEST_TIMEOUT
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
@@ -181,7 +183,18 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
 
     @override
     async def async_shutdown(self) -> None:
-        """Shut the coordinator down."""
+        """Shut the coordinator down.
+
+        The consolidation task is created on hass, not owned by
+        DataUpdateCoordinator, so it has to be cancelled here: otherwise a
+        command queued moments before the entry unloads would still be sent
+        afterwards and publish data to entities that are already gone.
+        """
+        if self._consolidation_task is not None:
+            self._consolidation_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._consolidation_task
+            self._consolidation_task = None
         await super().async_shutdown()
 
     async def update(self) -> bool:
@@ -386,7 +399,16 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
                 self._airco = new_airco
             except (WfRacError, KeyError, TypeError, ValueError) as ex:
                 _LOGGER.warning("Could not send airco data: %s", str(ex))
-                raise
+                # The action that issued this command awaits it, so hand it
+                # something it can show the user rather than a library error.
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_failed",
+                    translation_placeholders={
+                        "device": self.device_name,
+                        "error": str(ex),
+                    },
+                ) from ex
 
     async def async_queue_command(self, params: dict[AirconCommands, Any]) -> None:
         """Queue an airco command, coalescing calls made close together.
@@ -402,6 +424,13 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             self._consolidation_task = self.hass.async_create_task(
                 self._async_flush_queued_command()
             )
+        # Every caller awaits the one flush its parameters ended up in, so a
+        # refusal by the unit reaches the action that caused it instead of
+        # being logged into the void - which is what action-exceptions asks
+        # for. Shielded because the task is shared: a caller giving up (a
+        # cancelled service call) must not take the other callers' command
+        # down with it.
+        await asyncio.shield(self._consolidation_task)
 
     def _carry_forward_home_leave_mode(self, new_airco: Aircon) -> None:
         """Carry the HomeLeaveMode segment forward across updates.
@@ -427,16 +456,16 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         params = self._consolidated_params.copy()
         self._consolidated_params.clear()
         self._consolidation_task = None
-        try:  # noqa: SIM105
+        try:
             await self.set_airco(params)
-        except WfRacError, KeyError, TypeError, ValueError:
-            # Already logged in set_airco(). This runs as a detached task
-            # (nothing awaits it), so without this the re-raised error becomes
-            # an orphaned "Task exception was never retrieved" with zero
-            # HA-visible feedback that the command never reached the unit.
-            # Still notify below so entities pick up self.available if the
-            # same failure already flipped it.
-            pass
+        except HomeAssistantError:
+            # Already logged in set_airco(). Push the current state out first
+            # so entities pick up self.available if the same failure flipped
+            # it, then re-raise: async_queue_command() awaits this task, so
+            # the error lands on the action that issued the command instead
+            # of becoming an orphaned "Task exception was never retrieved".
+            self.async_set_updated_data(self._airco)
+            raise
         # Immediately push the (possibly unchanged, on failure) state to all
         # entities instead of leaving them to wait for the next poll (up to
         # MIN_TIME_BETWEEN_UPDATES later).

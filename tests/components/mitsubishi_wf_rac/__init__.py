@@ -12,9 +12,10 @@ PORT = 51443
 
 ENTRY_DATA = {
     CONF_NAME: "Living room",
+    CONF_HOST: HOST,
     CONF_DEVICE_ID: "homeassistant-device-0123456789a",
     CONF_OPERATOR_ID: "hassio-00000000-0000-0000-0000-000000000000",
     CONF_PORT: PORT,
     CONF_AIRCO_ID: AIRCO_ID,
 }
-ENTRY_OPTIONS = {CONF_HOST: HOST, "availability_retry_limit": 3}
+ENTRY_OPTIONS = {"availability_retry_limit": 3}

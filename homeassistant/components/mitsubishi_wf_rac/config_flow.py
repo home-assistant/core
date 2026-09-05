@@ -9,7 +9,7 @@ from uuid import uuid4
 from pywfrac import Repository, WfRacError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
@@ -52,7 +52,7 @@ SECTION_SENSOR_OFFSETS = "sensor_offsets"
 class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 5
+    VERSION = 6
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     _discovery_info: dict[str, Any] = {}
     DOMAIN = DOMAIN
@@ -72,15 +72,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Returns the first entry where matches(entry.data[key]) returns True."""
         for entry in self._async_current_entries():
             if key in entry.data and matches(entry.data[key]):
-                return entry
-        return None
-
-    def _find_entry_matching_option(
-        self, key: str, matches: Callable[[Any], bool]
-    ) -> config_entries.ConfigEntry | None:
-        """Returns the first entry where matches(entry.options[key]) returns True."""
-        for entry in self._async_current_entries():
-            if key in entry.options and matches(entry.options[key]):
                 return entry
         return None
 
@@ -105,8 +96,8 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not data.get(CONF_FORCE_UPDATE):
             # Is this hostname or IP address already configured on a *different*
             # entry? During reconfigure, the entry being edited already owns
-            # this host among its own options, so it must not flag itself.
-            existing_entry = self._find_entry_matching_option(
+            # this host, so it must not flag itself.
+            existing_entry = self._find_entry_matching(
                 CONF_HOST, lambda h: h == data[CONF_HOST]
             )
             if existing_entry and existing_entry.entry_id != exclude_entry_id:
@@ -158,11 +149,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not airco_id:
             raise CannotConnect(reason="unknown reason")
 
-        _LOGGER.info(
-            "Trying to register OperatorId[%s] on Airco[%s]",
-            data[CONF_OPERATOR_ID],
-            data[CONF_AIRCO_ID],
-        )
+        _LOGGER.debug("Registering with airco [%s]", data[CONF_AIRCO_ID])
         result = await repository.update_account_info(airco_id, hass.config.time_zone)
         if not result:
             raise CannotConnect(reason="no answer to the registration request")
@@ -207,12 +194,22 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input, allow_port_fallback=allow_port_fallback
                 )
 
+                # The manual step has no unique id to abort on - a unit reached
+                # at a second address would otherwise become a second entry
+                # whose entities collide with the first one's. The airco id is
+                # the unit's own identity, so match on that.
+                if self._find_entry_matching(
+                    CONF_AIRCO_ID, lambda a: a == info[CONF_AIRCO_ID]
+                ):
+                    return self.async_abort(reason="already_configured")
+
                 data_input = user_input.copy()
+                # Form-only: it decides whether a duplicate host is accepted
+                # while adding, and means nothing to a stored entry.
+                data_input.pop(CONF_FORCE_UPDATE, None)
                 options_input = {
-                    CONF_HOST: user_input[CONF_HOST],
                     CONF_AVAILABILITY_RETRY_LIMIT: AVAILABILITY_FAILURE_LIMIT_MIN,
                 }
-                data_input.pop(CONF_HOST)
 
                 return self.async_create_entry(
                     title=info[CONF_NAME],
@@ -220,19 +217,21 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     options=options_input,
                 )
             except KnownError as error:
-                _LOGGER.exception("create failed")
+                # Expected outcomes of user input, not faults: the user sees
+                # them in the form, and a stack trace in the log would only
+                # be noise.
+                _LOGGER.debug("Create failed: %s", error)
                 errors, placeholders = error.get_errors_and_placeholders(
                     data_schema.schema
                 )
-                errors.update(errors)
                 description_placeholders.update(
                     {k: str(v) for k, v in placeholders.items()}
                 )
-            except Exception:  # noqa: BLE001  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 # Intentionally broad: this is the outermost boundary of the config
                 # flow step, so any bug here should show the user a graceful
                 # "unexpected_error" instead of crashing the flow.
-                _LOGGER.error("Unexpected exception")
+                _LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unexpected_error"
 
         # If there is no user input or there were errors, show the form again, including any errors
@@ -329,7 +328,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         current = {
             CONF_NAME: reconfigure_entry.data[CONF_NAME],
-            CONF_HOST: reconfigure_entry.options[CONF_HOST],
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
             CONF_PORT: reconfigure_entry.data[CONF_PORT],
         }
 
@@ -356,16 +355,11 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 new_data = {**reconfigure_entry.data, **data}
-                new_options = {
-                    **reconfigure_entry.options,
-                    CONF_HOST: new_data.pop(CONF_HOST),
-                }
 
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     title=info[CONF_NAME],
                     data=new_data,
-                    options=new_options,
                 )
             except KnownError as error:
                 errors, placeholders = error.get_errors_and_placeholders(
@@ -410,9 +404,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(node_name)
         self._abort_if_unique_id_configured(updates=info)
 
-        existing_entry = self._find_entry_matching_option(
-            CONF_HOST, lambda h: h == host
-        )
+        existing_entry = self._find_entry_matching(CONF_HOST, lambda h: h == host)
         if existing_entry:
             _LOGGER.debug("already configured!")
             return self.async_abort(reason="already_configured")
@@ -476,10 +468,6 @@ class WfRacOptionsFlowHandler(config_entries.OptionsFlowWithReload):
             for key, value in self.config_entry.options.items():
                 if key not in self._rendered_option_keys():
                     data.setdefault(key, value)
-            # Host moved to the reconfigure flow (validated against the
-            # device) - keep the entry's existing value, since this form no
-            # longer collects it.
-            data[CONF_HOST] = self.config_entry.options[CONF_HOST]
             return self.async_create_entry(title="", data=data)
 
         options = self.config_entry.options
@@ -546,8 +534,13 @@ class WfRacOptionsFlowHandler(config_entries.OptionsFlowWithReload):
 # pylint: disable=too-few-public-methods
 
 
-class KnownError(exceptions.HomeAssistantError):
+class KnownError(Exception):
     """Base class for errors known to this config flow.
+
+    Deliberately not a HomeAssistantError: none of these ever leaves the flow.
+    Every one is caught here and turned into an entry in the [errors] dict
+    that async_show_form renders from strings.json, so they carry an
+    error_name rather than a translation key.
 
     [error_name] is the value passed to [errors] in async_show_form, which should match a key
     under "errors" in strings.json

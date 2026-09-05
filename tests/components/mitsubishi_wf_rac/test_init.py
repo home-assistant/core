@@ -109,10 +109,10 @@ async def test_migration_from_version_1(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 5
+    assert entry.version == 6
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.options[CONF_HOST] == HOST
-    assert CONF_HOST not in entry.data
+    assert entry.data[CONF_HOST] == HOST
+    assert CONF_HOST not in entry.options
     # v1 entries ran with no tolerance at all; the module reassociates hourly.
     assert entry.options["availability_retry_limit"] == 3
 
@@ -134,5 +134,5 @@ async def test_migration_lifts_a_retry_limit_below_the_floor(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 5
+    assert entry.version == 6
     assert entry.options["availability_retry_limit"] == 3

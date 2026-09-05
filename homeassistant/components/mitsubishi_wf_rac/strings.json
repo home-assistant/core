@@ -102,6 +102,9 @@
     "cannot_connect": {
       "message": "Could not reach the Airco at {device}."
     },
+    "command_failed": {
+      "message": "Sending the command to the Airco at {device} failed: {error}"
+    },
     "home_leave_mode_not_supported": {
       "message": "This model does not report the Home Leave Mode capability."
     },

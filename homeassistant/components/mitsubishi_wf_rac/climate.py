@@ -5,11 +5,11 @@ from typing import Any, override
 
 from pywfrac import Aircon, AirconCommands
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -17,7 +17,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MitsubishiWfRacConfigEntry
 from .const import (
@@ -55,9 +55,9 @@ REGULATING_HVAC_MODES = (HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.D
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MitsubishiWfRacConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Setup climate entities."""
+    """Set up the climate entity."""
     device: Device = entry.runtime_data.device
     _LOGGER.info("Setup climate for: %s, %s", device.device_name, device.airco_id)
     async_add_entities([AircoClimate(device)])
@@ -89,11 +89,19 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     _attr_preset_modes: list[str] | None = None
     _attr_preset_mode: str | None = None
     _attr_translation_key = "mitsubishi_wf_rac"
+    # The airco itself is the device, and this entity is the device - so it
+    # carries the device name alone rather than a suffix behind it.
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: Device) -> None:
         """Initialize the climate entity."""
         super().__init__(device)
-        self._attr_name = device.device_name
+        # The domain and platform segments are redundant for the registry,
+        # but this id is already stored in ~1900 installations of the custom
+        # component that share this domain; shortening it would orphan every
+        # entity they have named, hidden or wired into an automation.
+        # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         self._attr_unique_id = f"{DOMAIN}-{self._device.airco_id}-climate"
         # Away is the unit's own Home Leave mode, offered here as the preset a
         # thermostat card and a voice assistant already know how to ask for.
@@ -185,7 +193,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         set_temp = kwargs.get(ATTR_TEMPERATURE)
         if set_temp is None:
             raise ServiceValidationError(
-                "Temperature is required",
                 translation_domain=DOMAIN,
                 translation_key="temperature_required",
             )
@@ -205,7 +212,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         # rejection and a fix (#317).
         if set_temp < min_temp:
             raise ServiceValidationError(
-                f"Temperature {set_temp} is below minimum {min_temp}",
                 translation_domain=DOMAIN,
                 translation_key="temperature_below_minimum",
                 translation_placeholders={
@@ -217,7 +223,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
 
         if set_temp > max_temp:
             raise ServiceValidationError(
-                f"Temperature {set_temp} is above maximum {max_temp}",
                 translation_domain=DOMAIN,
                 translation_key="temperature_above_maximum",
                 translation_placeholders={
@@ -296,8 +301,9 @@ class AircoClimate(WfRacEntity, ClimateEntity):
             )
 
     @override
-    async def async_set_swing_horizontal_mode(self, swing_mode: str) -> None:
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new target horizontal swing operation."""
+        swing_mode = swing_horizontal_mode
         _swing_auto = swing_mode == SWING_3D_AUTO
         if _swing_auto:
             await self._device.async_queue_command(
@@ -342,7 +348,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
             away_temp = HOME_LEAVE_TEMP_HEAT
         else:
             raise ServiceValidationError(
-                f"Home Leave mode needs cooling or heating, not {self._attr_hvac_mode}",
                 translation_domain=DOMAIN,
                 translation_key="preset_away_needs_cool_or_heat",
                 translation_placeholders={"hvac_mode": str(self._attr_hvac_mode)},
@@ -359,7 +364,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     def _require_home_leave_mode_capability(self) -> None:
         if not self._device.airco.Capabilities.home_leave_mode:
             raise ServiceValidationError(
-                "This model does not report the HomeLeaveMode capability",
                 translation_domain=DOMAIN,
                 translation_key="home_leave_mode_not_supported",
             )
@@ -426,8 +430,10 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     def _determine_hvac_action(self, airco: Aircon) -> HVACAction:
         """Determine the current HVAC action from operation mode and state.
 
-        CoolHotJudge (content[8] & 8) reflects what the unit's own AUTO logic
-        is doing - set means COOLING, clear means HEATING. CompressorRunning
+        CoolHotJudge reflects what the unit's own AUTO logic is doing. Mind
+        the inversion: the parser reads it as (content[8] & 8) == 0, so the
+        raw bit set means COOLING and the resulting flag is then False -
+        a true CoolHotJudge is HEATING. CompressorRunning
         (content[9] & 2) distinguishes "unit on" from "compressor actually
         running" (e.g. setpoint satisfied), same signal as the Compressor
         binary sensor - used here so COOL/HEAT/AUTO can report IDLE instead

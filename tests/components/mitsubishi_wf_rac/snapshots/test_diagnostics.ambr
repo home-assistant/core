@@ -62,15 +62,15 @@
         'airco_id': '**REDACTED**',
         'connection_method': 'https',
         'device_id': '**REDACTED**',
+        'host': '**REDACTED**',
         'name': 'Living room',
         'operator_id': '**REDACTED**',
         'port': 51443,
       }),
       'options': dict({
         'availability_retry_limit': 3,
-        'host': '**REDACTED**',
       }),
-      'version': 5,
+      'version': 6,
     }),
     'device': dict({
       'account_expires': 1788630278,

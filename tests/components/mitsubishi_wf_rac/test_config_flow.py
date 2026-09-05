@@ -54,7 +54,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living room"
     assert result["data"][CONF_AIRCO_ID] == AIRCO_ID
-    assert result["options"][CONF_HOST] == HOST
+    assert result["data"][CONF_HOST] == HOST
     mock_repository.update_account_info.assert_awaited_once()
 
 
@@ -271,7 +271,7 @@ async def test_reconfigure_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.options[CONF_HOST] == "192.168.1.9"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.9"
 
 
 async def test_options_flow(
@@ -296,8 +296,9 @@ async def test_options_flow(
     assert options["availability_retry_limit"] == 5
     assert options["target_offset"] == 1.0
     assert options["indoor_offset"] == -0.5
-    # Never collected by this form, and it must not be dropped by saving it.
-    assert options[CONF_HOST] == HOST
+    # The host is connection data now, so saving options must not touch it.
+    assert init_integration.data[CONF_HOST] == HOST
+    assert CONF_HOST not in options
 
 
 async def test_zeroconf_flow_port_fallback_also_fails(

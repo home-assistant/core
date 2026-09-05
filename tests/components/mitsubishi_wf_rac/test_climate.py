@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
+from pywfrac import WfRacError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -29,7 +30,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -218,15 +219,39 @@ async def test_horizontal_swing(
     mock_repository.send_airco_command.assert_awaited()
 
 
-async def test_commands_close_together_become_one_frame(
+async def test_a_refused_command_reaches_the_caller(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Coalesce commands issued together into one frame.
+    """A blocking action reports a write the unit did not take.
 
-    The module takes one connection at a time and wants a second between
-    requests, so two changes made at once have to leave as a single write.
+    The command is queued and flushed on a task, so this only holds because
+    the caller awaits that task - see Device.async_queue_command().
+    """
+    mock_repository.send_airco_command.side_effect = WfRacError("refused")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+            blocking=True,
+        )
+
+
+async def test_commands_close_together_are_sent_separately(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Two blocking commands on this entity leave as two frames.
+
+    The consolidation window still merges whatever reaches it, but climate
+    runs with PARALLEL_UPDATES = 1 and every command is awaited to its
+    result, so two calls on the same entity can no longer land in the same
+    window. That is the price of reporting a refusal back to the action that
+    caused it - see Device.async_queue_command().
     """
     mock_repository.send_airco_command.reset_mock()
 
@@ -246,4 +271,4 @@ async def test_commands_close_together_become_one_frame(
     )
     await hass.async_block_till_done()
 
-    assert mock_repository.send_airco_command.await_count == 1
+    assert mock_repository.send_airco_command.await_count == 2

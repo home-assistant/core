@@ -1,4 +1,4 @@
-"""The WF-RAC sensor integration."""  # pylint: disable=invalid-name
+"""The Mitsubishi WF-RAC integration."""
 
 from dataclasses import dataclass
 import logging
@@ -101,6 +101,22 @@ async def async_migrate_entry(
         )
 
         hass.config_entries.async_update_entry(entry, options=new_options, version=5)
+    if entry.version == 5:
+        # Move the host back into entry.data, where connection-critical data
+        # belongs. It lived in options since v2 so it could be edited there,
+        # which the reconfigure flow now does instead - and options was the
+        # wrong home for a second reason: the discovery helper that refreshes
+        # a changed address (_abort_if_unique_id_configured(updates=...))
+        # only ever merges into entry.data, so the refresh wrote a key setup
+        # never read and the address silently stayed stale.
+        new_data = dict(entry.data)
+        new_options = dict(entry.options)
+        if CONF_HOST in new_options:
+            new_data[CONF_HOST] = new_options.pop(CONF_HOST)
+
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, version=6
+        )
 
     return True
 
@@ -109,7 +125,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: MitsubishiWfRacConfigEntry
 ) -> bool:
     """Establish connection with mitsubishi-wf-rac."""
-    device: str = entry.options[CONF_HOST]
+    device: str = entry.data[CONF_HOST]
     _device = await create_device_from_entry(entry, hass)
 
     await _device.update()  # initial update to get fresh values
@@ -119,7 +135,6 @@ async def async_setup_entry(
     # rather than a silently "loaded" entry with no working entities.
     if not _device.available:
         raise ConfigEntryNotReady(
-            f"Could not reach device [{device}]",
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
             translation_placeholders={"device": device},
@@ -148,7 +163,7 @@ async def create_device_from_entry(
     entry: MitsubishiWfRacConfigEntry, hass: HomeAssistant
 ) -> Device:
     """Build the coordinator for a config entry."""
-    device: str = entry.options[CONF_HOST]
+    device: str = entry.data[CONF_HOST]
     name: str = entry.data[CONF_NAME]
     device_id: str = entry.data[CONF_DEVICE_ID]
     operator_id: str = entry.data[CONF_OPERATOR_ID]
@@ -182,9 +197,12 @@ async def async_unload_entry(
     # Unload entities for this entry/device.
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    # Only tear the coordinator down once the entities are really gone: if
+    # unloading the platforms failed they stay loaded, and stopping their
+    # coordinator would leave a loaded entry that never updates again.
     # An entry whose setup never got as far as storing its runtime data can
     # still be unloaded - there is simply no coordinator to shut down then.
-    if (data := getattr(entry, "runtime_data", None)) is not None:
+    if unload_ok and (data := getattr(entry, "runtime_data", None)) is not None:
         await data.device.async_shutdown()
 
     if unload_ok:
