@@ -856,21 +856,18 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
         patch.object(hass.config_entries, "async_schedule_reload"),
     ):
         result = await _start_pairing_at_scan(hass, entry)
-        # scan -> connect -> handshake raises NotOnWhitelistFault -> instructions
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "instructions"
 
-        # confirm instructions -> authorize runs pair() as a progress task
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "pair"
 
-        # pair() completes -> progress done -> handshake ok -> finish
         release.set()
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
@@ -951,13 +948,11 @@ async def test_subentry_authorize_failure(
         )
         assert result["step_id"] == "instructions"
 
-        # confirm instructions -> authorize runs pair() as a progress task
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-        # pair() fails -> progress done -> instructions re-shown with the error
         release.set()
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
@@ -1007,26 +1002,22 @@ async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> 
         )
         assert result["step_id"] == "instructions"
 
-        # confirm instructions -> authorize runs pair() as a progress task
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-        # the vehicle never confirms -> instructions re-shown, asking for approval
         releases[0].set()
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "timeout"}
 
-        # the user approves the key and retries -> pair() runs again
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-        # the vehicle reports the key already exists -> handshake confirms -> finish
         releases[1].set()
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
@@ -1107,13 +1098,11 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
-        # confirm instructions -> authorize runs pair() as a progress task
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-        # abandon the flow while pairing is still running
         hass.config_entries.subentries.async_abort(result["flow_id"])
         await hass.async_block_till_done()
 
@@ -1249,11 +1238,9 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # async_schedule_reload is deliberately left unpatched: the subentry is
-    # committed only after the flow step returns, so the real reload the parent
-    # entry's subentry-change listener schedules must run here with the BLE
-    # address present. Keep the setup-time Bluetooth mocks active so that reload
-    # neither writes the vehicle key file nor opens a real connection.
+    # async_schedule_reload is left unpatched so the real reload runs here with the
+    # committed BLE address; keep the setup-time Bluetooth mocks active so it neither
+    # writes the vehicle key file nor opens a real connection.
     with (
         patch(
             "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
