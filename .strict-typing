@@ -659,6 +659,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.wibeee.*
 homeassistant.components.wiim.*
 homeassistant.components.withings.*
 homeassistant.components.wiz.*

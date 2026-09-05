@@ -2895,6 +2895,9 @@ pywebpush==2.3.0
 # homeassistant.components.wemo
 pywemo==1.4.0
 
+# homeassistant.components.wibeee
+pywibeee==0.1.8
+
 # homeassistant.components.wilight
 pywilight==0.0.74
 
