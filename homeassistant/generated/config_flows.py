@@ -563,6 +563,7 @@ FLOWS = {
         "onedrive",
         "onedrive_for_business",
         "onewire",
+        "onida_infrared",
         "onkyo",
         "onvif",
         "open_meteo",

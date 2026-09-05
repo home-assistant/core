@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+    },
+    "error": {
+      "no_hvac_modes": "Select at least one supported mode."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "hvac_modes": "Supported modes",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
+          "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
+        },
+        "description": "Select an infrared emitter and the modes your Onida AC supports.",
+        "title": "Set up Onida AC"
+      }
+    }
+  },
+  "selector": {
+    "hvac_modes": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "cool": "Cool",
+        "dry": "Dry",
+        "fan_only": "Fan only",
+        "heat": "Heat"
+      }
+    }
+  }
+}
