@@ -118,12 +118,6 @@
     "end_time_before_start_time": {
       "message": "End time ({end_time}) must be after start time ({start_time})"
     },
-    "invalid_device_id": {
-      "message": "Invalid device ID: {device_id}"
-    },
-    "no_config_entry_for_device": {
-      "message": "No configuration entry found for device: {device_id}"
-    },
     "not_a_heating_circuit_device": {
       "message": "The selected device ({device_name}) is not a heating circuit. Please select a heating circuit sub-device."
     },
