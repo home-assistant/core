@@ -83,6 +83,12 @@
     },
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data."
+    },
+    "schlage_start_after_end": {
+      "message": "Start datetime must be before end datetime."
+    },
+    "schlage_temporary_dates_required": {
+      "message": "Both start and end datetimes must be provided for a temporary PIN."
     }
   },
   "services": {
@@ -93,6 +99,10 @@
           "description": "The PIN code to add. Must be unique to the lock and be between 4 and 8 digits long.",
           "name": "PIN code"
         },
+        "end_datetime": {
+          "description": "When the PIN code should stop working. Providing an end time makes the PIN temporary; both a start and an end time are required. Leave both fields empty for a permanent PIN.",
+          "name": "End time"
+        },
         "name": {
           "description": "Name for PIN code. Must be case insensitively unique to the lock.",
           "name": "PIN name"
@@ -100,6 +110,10 @@
         "notify_on_use": {
           "description": "Whether the native Schlage notification should be sent when this PIN is used.",
           "name": "Notify when PIN is used"
+        },
+        "start_datetime": {
+          "description": "When the PIN code should become active. Providing a start time makes the PIN temporary; both a start and an end time are required. Leave both fields empty for a permanent PIN.",
+          "name": "Start time"
         }
       },
       "name": "Add PIN code"
