@@ -74,6 +74,11 @@
         }
       },
       "voltage": { "name": "Voltage {phase}" }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
     }
   }
 }

@@ -1,21 +1,29 @@
 """Tests for NexBlue sensors."""
 
+from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from nexblue_api import NexBlueConnectionError, NexBlueDeviceOfflineError, NexBlueError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import CHARGER, CHARGER_STATUS
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms() -> Generator[None]:
+    """Limit this module's setup to the sensor platform."""
+    with patch("homeassistant.components.nexblue.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def test_sensor_entities_snapshot(
