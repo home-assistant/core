@@ -241,6 +241,7 @@ async def test_a1_pump_services(
     device = DummyDevice(
         DeviceType.A1,
         attributes={A1Attributes.pump: False},
+        capabilities={"pump": True},
     )
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
@@ -272,6 +273,23 @@ async def test_a1_pump_services(
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "off"
+
+
+async def test_a1_pump_not_created_without_capability(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test that unsupported A1 pump switches are not created."""
+    device = DummyDevice(
+        DeviceType.A1,
+        attributes={A1Attributes.pump: False},
+        capabilities={"pump": False},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_pump" not in entity_entries(hass, config_entry)
 
 
 async def test_switch_unknown_when_attribute_becomes_non_bool(
