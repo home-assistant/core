@@ -1,6 +1,7 @@
 """Satel Integra client."""
 
 from collections.abc import Callable
+import logging
 
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
@@ -26,6 +27,8 @@ from .const import (
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SatelClient:
@@ -101,6 +104,7 @@ class SatelClient:
                 translation_key="connection_initialization_failed",
             ) from ex
 
+        self.controller.add_connection_status_callback(self._on_connection_state_change)
         self.controller.register_callbacks(
             alarm_status_callback=partitions_update_callback,
             zone_changed_callback=zones_update_callback,
@@ -113,3 +117,10 @@ class SatelClient:
         """Close the connection."""
 
         await self.controller.close()
+
+    def _on_connection_state_change(self) -> None:
+        """Handle connection state changes."""
+        if self.controller.connected:
+            _LOGGER.info("Satel Integra device is back online")
+        else:
+            _LOGGER.info("Satel Integra device is unavailable")
