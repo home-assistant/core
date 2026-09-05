@@ -3064,11 +3064,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "add_config_entry_id or remove_config_entry_id"
             )
 
-        if not new_connections and not new_identifiers:
-            raise HomeAssistantError(
-                "A device must have at least one of identifiers or connections"
-            )
-
         if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
             raise HomeAssistantError(
                 "Cannot define both merge_connections and new_connections"
@@ -3077,6 +3072,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
+            )
+
+        if new_identifiers is not UNDEFINED:
+            resulting_identifiers = new_identifiers
+        elif merge_identifiers is not UNDEFINED:
+            resulting_identifiers = old.identifiers | merge_identifiers
+        else:
+            resulting_identifiers = old.identifiers
+        if new_connections is not UNDEFINED:
+            resulting_connections = new_connections
+        elif merge_connections is not UNDEFINED:
+            resulting_connections = old.connections | merge_connections
+        else:
+            resulting_connections = old.connections
+        if not resulting_identifiers and not resulting_connections:
+            raise HomeAssistantError(
+                "A device must have at least one of identifiers or connections"
             )
 
         if (
