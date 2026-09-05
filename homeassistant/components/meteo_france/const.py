@@ -18,9 +18,15 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
 )
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "meteo_france"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+
+# Departments that already have a city providing weather alerts. Only one city
+# per department may do so, so this is shared between config entries rather than
+# owned by any one of them.
+DEPARTMENTS_WITH_ALERT: HassKey[set[str]] = HassKey(f"{DOMAIN}_departments_with_alert")
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"
