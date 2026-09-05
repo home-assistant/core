@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from typing import Any, override
+from typing import Any, Final, override
 
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
@@ -32,6 +32,11 @@ from .const import (
 )
 
 type YouTubeConfigEntry = ConfigEntry[YouTubeDataUpdateCoordinator]
+
+# Twice youtubeaio's 10s per-call timeout: single slow calls are handled by
+# the library's own timeout (backend error / non-Short fallback); this budget
+# only aborts the serial accumulation of several slow checks per channel.
+_SHORTS_DETECTION_TIMEOUT: Final = 20
 
 
 def _build_video_dict(video: Any, is_short: bool) -> dict[str, Any]:
@@ -76,31 +81,42 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         channel_ids = self.config_entry.options[CONF_CHANNELS]
         try:
             async for channel in youtube.get_channels(channel_ids):
-                # Fetch up to 10 recent videos to find a Short and a non-Short.
-                videos = [
-                    v
-                    async for v in youtube.get_playlist_items(
-                        channel.upload_playlist_id, 10
-                    )
-                ]
-                LOGGER.debug(
-                    "Fetched %d videos for channel %s", len(videos), channel.channel_id
-                )
-                is_short_flags = await self._get_is_short_flags(youtube, videos)
-
+                checked = 0
                 latest_video: dict[str, Any] | None = None
                 latest_short: dict[str, Any] | None = None
                 latest_video_non_short: dict[str, Any] | None = None
-                for video, is_short in zip(videos, is_short_flags, strict=False):
-                    entry = _build_video_dict(video, is_short)
-                    if latest_video is None:
-                        latest_video = entry
-                    if is_short and latest_short is None:
-                        latest_short = entry
-                    if not is_short and latest_video_non_short is None:
-                        latest_video_non_short = entry
-                    if latest_short is not None and latest_video_non_short is not None:
-                        break
+                try:
+                    async with asyncio.timeout(_SHORTS_DETECTION_TIMEOUT):
+                        # Only examine the first page (10 items): paginating
+                        # further burns API quota for no benefit.
+                        async for video in youtube.get_playlist_items(
+                            channel.upload_playlist_id, 10
+                        ):
+                            checked += 1
+                            is_short = await self._resolve_is_short(youtube, video)
+                            entry = _build_video_dict(video, is_short)
+                            if latest_video is None:
+                                latest_video = entry
+                            if is_short and latest_short is None:
+                                latest_short = entry
+                            if not is_short and latest_video_non_short is None:
+                                latest_video_non_short = entry
+                            if (
+                                latest_short is not None
+                                and latest_video_non_short is not None
+                            ):
+                                break
+                            if checked >= 10:
+                                break
+                except TimeoutError:
+                    LOGGER.warning(
+                        "Timed out processing recent uploads for channel %s; "
+                        "continuing with partial results",
+                        channel.channel_id,
+                    )
+                LOGGER.debug(
+                    "Examined %d videos for channel %s", checked, channel.channel_id
+                )
 
                 res[channel.channel_id] = {
                     ATTR_ID: channel.channel_id,
@@ -119,27 +135,25 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed("Couldn't connect to YouTube") from err
         return res
 
-    async def _get_is_short_flags(self, youtube: Any, videos: list[Any]) -> list[bool]:
-        """Return is_short flags for each video, using cache when available."""
-        uncached = [
-            v for v in videos if v.content_details.video_id not in self._is_short_cache
-        ]
-        if uncached:
-            results = await asyncio.gather(
-                *[youtube.is_short(v.content_details.video_id) for v in uncached],
-                return_exceptions=True,
+    async def _resolve_is_short(self, youtube: Any, video: Any) -> bool:
+        """Return whether a single video is a Short.
+
+        Uses the cache when available. Videos can stop being checked as soon
+        as both a Short and a non-Short have been found. On error the result
+        is treated as non-Short without caching so the next refresh can retry.
+        """
+        video_id = video.content_details.video_id
+        if video_id in self._is_short_cache:
+            return self._is_short_cache[video_id]
+        try:
+            result = await youtube.is_short(video_id)
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning(
+                "Error determining if video %s is a Short; treating as non-Short: %s",
+                video_id,
+                exc,
             )
-            for video, result in zip(uncached, results, strict=False):
-                if isinstance(result, Exception):
-                    LOGGER.warning(
-                        "Error determining if video %s is a Short; "
-                        "treating as non-Short: %s",
-                        video.content_details.video_id,
-                        result,
-                    )
-                    # Don't cache on error — let the next refresh retry.
-                else:
-                    self._is_short_cache[video.content_details.video_id] = bool(result)
-        return [
-            self._is_short_cache.get(v.content_details.video_id, False) for v in videos
-        ]
+            return False
+        is_short = bool(result)
+        self._is_short_cache[video_id] = is_short
+        return is_short
