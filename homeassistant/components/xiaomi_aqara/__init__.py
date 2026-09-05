@@ -1,7 +1,7 @@
 """Support for Xiaomi Gateways."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from dataclasses import dataclass, field
 import logging
 
 import voluptuous as vol
@@ -17,20 +17,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_INTERFACE,
-    CONF_KEY,
-    CONF_SID,
-    DEFAULT_DISCOVERY_RETRY,
-    DOMAIN,
-    KEY_SETUP_LOCK,
-    KEY_UNSUB_STOP,
-    LISTENER_KEY,
-)
+from .const import CONF_INTERFACE, CONF_KEY, CONF_SID, DEFAULT_DISCOVERY_RETRY, DOMAIN
 
 type XiaomiAqaraConfigEntry = ConfigEntry[XiaomiGateway]
 
@@ -139,10 +131,23 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass
+class XiaomiAqaraData:
+    """Multicast listener shared by every gateway."""
+
+    setup_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    multicast: AsyncXiaomiGatewayMulticast | None = None
+    unsub_stop: CALLBACK_TYPE | None = None
+
+
+# One multicast listener serves every gateway, so it is shared between config
+# entries rather than owned by any one of them.
+XIAOMI_AQARA_DATA: HassKey[XiaomiAqaraData] = HassKey(DOMAIN)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    setup_lock = hass.data[DOMAIN].setdefault(KEY_SETUP_LOCK, asyncio.Lock())
+    data = hass.data.setdefault(XIAOMI_AQARA_DATA, XiaomiAqaraData())
 
     # Connect to Xiaomi Aqara Gateway
     xiaomi_gateway = await hass.async_add_executor_job(
@@ -157,12 +162,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
     )
     entry.runtime_data = xiaomi_gateway
 
-    async with setup_lock:
-        if LISTENER_KEY not in hass.data[DOMAIN]:
+    async with data.setup_lock:
+        if (multicast := data.multicast) is None:
             multicast = AsyncXiaomiGatewayMulticast(
                 interface=entry.data[CONF_INTERFACE]
             )
-            hass.data[DOMAIN][LISTENER_KEY] = multicast
+            data.multicast = multicast
 
             # start listining for local pushes (only once)
             await multicast.start_listen()
@@ -174,10 +179,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
                 _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
                 multicast.stop_listen()
 
-            unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
-            hass.data[DOMAIN][KEY_UNSUB_STOP] = unsub
+            data.unsub_stop = hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, stop_xiaomi
+            )
 
-    multicast = hass.data[DOMAIN][LISTENER_KEY]
     multicast.register_gateway(entry.data[CONF_HOST], xiaomi_gateway.multicast_callback)
     _LOGGER.debug(
         "Gateway with host '%s' connected, listening for broadcasts",
@@ -219,11 +224,14 @@ async def async_unload_entry(
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # No gateways left, stop Xiaomi socket
-        unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
-        unsub_stop()
+        data = hass.data[XIAOMI_AQARA_DATA]
+        if data.unsub_stop is not None:
+            data.unsub_stop()
+            data.unsub_stop = None
         _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
-        multicast = hass.data[DOMAIN].pop(LISTENER_KEY)
-        multicast.stop_listen()
+        if data.multicast is not None:
+            data.multicast.stop_listen()
+            data.multicast = None
 
     return unload_ok
 
