@@ -95,6 +95,24 @@ async def test_validate_credentials_connection_error(
             await client.validate_credentials()
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientPayloadError("connection dropped"), TimeoutError()],
+    ids=["payload_error", "timeout"],
+)
+async def test_validate_credentials_read_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test a failure reading the validation response raises ThreemaConnectionError."""
+    resp = _make_resp(200)
+    resp.text = AsyncMock(side_effect=side_effect)
+    session = _make_session(get_resp=resp)
+    with _patch_session(session):
+        client = ThreemaAPIClient(hass, MOCK_GATEWAY_ID, MOCK_API_SECRET)
+        with pytest.raises(ThreemaConnectionError):
+            await client.validate_credentials()
+
+
 # ── send_text_message: simple mode ───────────────────────────────────────────
 
 
@@ -137,6 +155,24 @@ async def test_send_simple_connection_error(
     """Test that a connection error or timeout during simple send raises ThreemaSendError."""
     session = MagicMock()
     session.post = AsyncMock(side_effect=side_effect)
+    with _patch_session(session):
+        client = ThreemaAPIClient(hass, MOCK_GATEWAY_ID, MOCK_API_SECRET)
+        with pytest.raises(ThreemaSendError):
+            await client.send_text_message("ABCD1234", "Hello!")
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientPayloadError("connection dropped"), TimeoutError()],
+    ids=["payload_error", "timeout"],
+)
+async def test_send_simple_read_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test a failure reading the send response raises ThreemaSendError."""
+    resp = _make_resp(200)
+    resp.text = AsyncMock(side_effect=side_effect)
+    session = _make_session(post_resp=resp)
     with _patch_session(session):
         client = ThreemaAPIClient(hass, MOCK_GATEWAY_ID, MOCK_API_SECRET)
         with pytest.raises(ThreemaSendError):
@@ -206,6 +242,29 @@ async def test_send_e2e_pubkey_malformed(hass: HomeAssistant) -> None:
     sender_hex, _ = _e2e_keys()
     session = MagicMock()
     session.get = AsyncMock(return_value=_make_resp(200, "not-hex-and-wrong-length"))
+
+    with _patch_session(session):
+        client = ThreemaAPIClient(
+            hass, MOCK_GATEWAY_ID, MOCK_API_SECRET, private_key=sender_hex
+        )
+        with pytest.raises(ThreemaSendError):
+            await client.send_text_message("ABCD1234", "Hello E2E!")
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientPayloadError("connection dropped"), TimeoutError()],
+    ids=["payload_error", "timeout"],
+)
+async def test_send_e2e_pubkey_read_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test a failure reading the pubkey response raises ThreemaSendError."""
+    sender_hex, _ = _e2e_keys()
+    resp = _make_resp(200)
+    resp.text = AsyncMock(side_effect=side_effect)
+    session = MagicMock()
+    session.get = AsyncMock(return_value=resp)
 
     with _patch_session(session):
         client = ThreemaAPIClient(

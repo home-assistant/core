@@ -69,7 +69,12 @@ class ThreemaAPIClient:
                 f"Gateway error validating credentials: HTTP {resp.status}"
             )
 
-        remaining_credits = await resp.text()
+        try:
+            remaining_credits = await resp.text()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise ThreemaConnectionError(
+                f"Connection error reading validation response: {err}"
+            ) from err
         _LOGGER.debug("Gateway credentials validated, credits: %s", remaining_credits)
 
     async def _fetch_recipient_public_key(
@@ -94,7 +99,12 @@ class ThreemaAPIClient:
                 f"Failed to fetch public key for {recipient_id}: HTTP {resp.status}"
             )
 
-        key_hex = await resp.text()
+        try:
+            key_hex = await resp.text()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise ThreemaSendError(
+                f"Connection error reading public key response for {recipient_id}: {err}"
+            ) from err
         try:
             return nacl.public.PublicKey(bytes.fromhex(key_hex.strip()))
         except ValueError as err:
@@ -169,7 +179,12 @@ class ThreemaAPIClient:
                 f"Gateway error sending message to {recipient_id}: HTTP {resp.status}"
             )
 
-        message_id = await resp.text()
+        try:
+            message_id = await resp.text()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise ThreemaSendError(
+                f"Connection error reading send response for {recipient_id}: {err}"
+            ) from err
         _LOGGER.debug("Message sent to %s (ID: %s)", recipient_id, message_id)
         return message_id
 
