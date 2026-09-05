@@ -126,6 +126,9 @@
       "person_detected": {
         "default": "mdi:walk"
       },
+      "relay_input": {
+        "default": "mdi:import"
+      },
       "siren_detected": {
         "default": "mdi:alarm-bell"
       },

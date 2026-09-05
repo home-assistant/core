@@ -25,7 +25,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
@@ -540,6 +544,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    platform = async_get_current_platform()
     async_remove_unsupported_sense_entities(hass, Platform.SWITCH, data, SENSE_SWITCHES)
 
     @callback
@@ -564,17 +569,24 @@ async def async_setup_entry(
         )
     async_add_entities(entities)
 
-    # Public API: relay output switches. Only available when the public
-    # bootstrap has been primed (requires API key + supported NVR firmware).
+    @callback
+    def _add_relay_outputs(relay: Relay) -> None:
+        live_unique_ids = {entity.unique_id for entity in platform.entities.values()}
+        async_add_entities(
+            [
+                ProtectRelayOutputSwitch(data, relay, output)
+                for output in relay.outputs
+                if f"{relay.mac}_relay_output_{output.id}" not in live_unique_ids
+            ]
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.relay_signal, _add_relay_outputs)
+    )
     api = data.api
     if api.has_public_bootstrap:
-        relay_entities: list[ProtectRelayOutputSwitch] = [
-            ProtectRelayOutputSwitch(data, relay, output)
-            for relay in api.public_bootstrap.relays.values()
-            for output in relay.outputs
-        ]
-        if relay_entities:
-            async_add_entities(relay_entities)
+        for relay in api.public_bootstrap.relays.values():
+            _add_relay_outputs(relay)
 
 
 class ProtectRelayOutputSwitch(SwitchEntity):

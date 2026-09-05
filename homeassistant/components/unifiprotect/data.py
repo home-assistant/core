@@ -21,6 +21,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    Relay,
     WSAction,
     WSSubscriptionMessage,
 )
@@ -48,6 +49,7 @@ from .const import (
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DISPATCH_PUBLIC_ADD,
+    DISPATCH_RELAYS,
     DOMAIN,
 )
 from .utils import async_get_devices_by_type
@@ -144,6 +146,7 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
@@ -377,6 +380,12 @@ class ProtectData:
             elif message.action is WSAction.ADD:
                 self._async_dispatch_new_public_device(new_obj)
             self._async_signal_public_update(new_obj.mac, new_obj)
+            if (
+                isinstance(new_obj, Relay)
+                and self.api.has_public_bootstrap
+                and new_obj.id in self.api.public_bootstrap.relays
+            ):
+                async_dispatcher_send(self._hass, self.relay_signal, new_obj)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -481,7 +490,7 @@ class ProtectData:
             return
         self._async_process_public_updates()
         # A device that appeared during the gap gets no add frame, so re-offer
-        # everything; the dispatch helper drops what platforms already know.
+        # everything. Platforms and dispatch helpers drop what they already know.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)
@@ -489,6 +498,8 @@ class ProtectData:
                 for device in list(self.api.public_bootstrap.all_devices()):
                     if isinstance(device, PublicDeviceModel):
                         self._async_dispatch_new_public_device(device)
+            for relay in list(self.api.public_bootstrap.relays.values()):
+                async_dispatcher_send(self._hass, self.relay_signal, relay)
 
     @callback
     def _async_signal_nvr_update(self) -> None:
