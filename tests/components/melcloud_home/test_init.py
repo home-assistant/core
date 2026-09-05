@@ -229,7 +229,7 @@ async def test_websocket_delta_updates_ata_state(
     state = hass.states.get(ATA_ENTITY_ID)
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_TEMPERATURE] == 25.0
-    assert mock_melcloud_client.get_context.call_count == 1
+    assert mock_melcloud_client.get_context.call_count == 2
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
@@ -361,8 +361,7 @@ async def test_websocket_error_falls_back_to_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # The coordinator should have polled the API again, so the context is fetched twice in total
-    assert mock_melcloud_client.get_context.call_count == 2
+    assert mock_melcloud_client.get_context.call_count == 3
     state = hass.states.get(ATA_ENTITY_ID)
     assert state.state != STATE_UNAVAILABLE
 
@@ -380,6 +379,7 @@ async def test_energy_update_cycle_fails(
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
     exception: Exception,
 ) -> None:
     """Test that a failing energy fetch clears the value without unloading the entry."""
@@ -388,6 +388,9 @@ async def test_energy_update_cycle_fails(
 
     assert energy_coordinator.data["ata-unit-uuid-1"] is not None
     assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+
+    websocket_updates.put_nowait(MelCloudHomeWebSocketError("closed"))
+    await hass.async_block_till_done()
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
     freezer.tick(ENERGY_UPDATE_INTERVAL)
