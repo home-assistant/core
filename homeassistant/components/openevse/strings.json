@@ -90,6 +90,16 @@
         "name": "Charge rate"
       }
     },
+    "select": {
+      "override_state": {
+        "name": "Override state",
+        "state": {
+          "active": "Active",
+          "auto": "Auto",
+          "disabled": "Disabled"
+        }
+      }
+    },
     "sensor": {
       "ambient_temp": {
         "name": "Ambient temperature"
