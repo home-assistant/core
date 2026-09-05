@@ -13,8 +13,8 @@ async def test_load_entry(
     hass: HomeAssistant, load_int: ConfigEntry, unit_count: int
 ) -> None:
     """Test Coolmaster initial load."""
-    # 4 units times 4 entities (climate, binary_sensor, sensor, button).
-    assert hass.states.async_entity_ids_count() == unit_count * 4
+    # Every unit has five entities: climate, two binary sensors, sensor, button.
+    assert hass.states.async_entity_ids_count() == unit_count * 5
     assert load_int.state is ConfigEntryState.LOADED
 
 

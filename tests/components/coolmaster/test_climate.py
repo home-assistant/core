@@ -1,5 +1,7 @@
 """The test for the Coolmaster climate platform."""
 
+from typing import Any
+
 from pycoolmasternet_async import SWING_MODES
 import pytest
 
@@ -7,6 +9,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
@@ -20,6 +23,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.coolmaster.climate import FAN_MODES
@@ -34,6 +38,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from .conftest import TEST_UNITS
 
 
 async def test_climate_state(
@@ -124,6 +130,63 @@ async def test_climate_hvac_modes(
             hass.states.get(unit).attributes[ATTR_HVAC_MODES]
             == hass.states.get("climate.l1_100").attributes[ATTR_HVAC_MODES]
         )
+
+
+async def test_climate_hvac_action(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+) -> None:
+    """Test the Coolmaster climate hvac action."""
+    assert (
+        hass.states.get("climate.l1_100").attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+    )
+    assert (
+        hass.states.get("climate.l1_101").attributes[ATTR_HVAC_ACTION]
+        == HVACAction.HEATING
+    )
+    assert (
+        hass.states.get("climate.l1_102").attributes[ATTR_HVAC_ACTION]
+        == HVACAction.IDLE
+    )
+    assert (
+        hass.states.get("climate.l1_103").attributes[ATTR_HVAC_ACTION]
+        == HVACAction.COOLING
+    )
+    # The legacy status format does not report demand, so the action is unknown.
+    assert ATTR_HVAC_ACTION not in hass.states.get("climate.l1_104").attributes
+
+
+def only_unit(**overrides: Any) -> dict[str, dict[str, Any]]:
+    """Build a single unit table based on L1.102, which is on and set to 20."""
+    return {"L1.102": {**TEST_UNITS["L1.102"], **overrides}}
+
+
+@pytest.mark.parametrize(
+    ("units", "expected"),
+    [
+        # In fan only mode the fan runs whenever the unit is on.
+        (only_unit(mode="fan", demand=False), HVACAction.FAN),
+        (only_unit(mode="dry", demand=True), HVACAction.DRYING),
+        (only_unit(mode="dry", demand=False), HVACAction.IDLE),
+        # A unit in automatic mode does not say which way it is working, so the
+        # room temperature is compared against the set point of 20, and the
+        # action stays unknown when the two are equal.
+        (only_unit(mode="auto", demand=True, temperature=25), HVACAction.COOLING),
+        (only_unit(mode="auto", demand=True, temperature=15), HVACAction.HEATING),
+        (only_unit(mode="auto", demand=True, temperature=20), None),
+    ],
+    indirect=["units"],
+)
+async def test_climate_hvac_action_derived_modes(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    expected: HVACAction | None,
+) -> None:
+    """Test the hvac action for modes no fixture unit reports."""
+    attributes = hass.states.get("climate.l1_102").attributes
+
+    # The attribute is dropped entirely when hvac_action is None.
+    assert attributes.get(ATTR_HVAC_ACTION) == expected
 
 
 async def test_climate_fan_mode(

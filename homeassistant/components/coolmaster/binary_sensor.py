@@ -23,7 +23,9 @@ async def async_setup_entry(
     """Set up the CoolMasterNet binary_sensor platform."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        CoolmasterCleanFilter(coordinator, unit_id) for unit_id in coordinator.data
+        entity_class(coordinator, unit_id)
+        for unit_id in coordinator.data
+        for entity_class in (CoolmasterCleanFilter, CoolmasterDemand)
     )
 
 
@@ -42,3 +44,19 @@ class CoolmasterCleanFilter(CoolmasterEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._unit.clean_filter
+
+
+class CoolmasterDemand(CoolmasterEntity, BinarySensorEntity):
+    """Representation of a unit's demand (true means calling for heating or cooling)."""
+
+    entity_description = BinarySensorEntityDescription(
+        key="demand",
+        translation_key="demand",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if the unit is calling for heating or cooling."""
+        return self._unit.demand

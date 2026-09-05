@@ -83,6 +83,9 @@
     "binary_sensor": {
       "clean_filter": {
         "name": "Clean filter"
+      },
+      "demand": {
+        "name": "Demand"
       }
     },
     "button": {

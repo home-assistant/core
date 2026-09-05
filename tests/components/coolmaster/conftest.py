@@ -1,6 +1,7 @@
 """Fixtures for the Coolmaster integration."""
 
 import copy
+from functools import partial
 from typing import Any
 from unittest.mock import patch
 
@@ -26,6 +27,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "low",
         "mode": "cool",
         "error_code": None,
+        "demand": False,
         "clean_filter": False,
         "swing": None,
     },
@@ -37,6 +39,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "high",
         "mode": "heat",
         "error_code": "Err1",
+        "demand": True,
         "clean_filter": True,
         "swing": "horizontal",
     },
@@ -48,6 +51,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "vlow",
         "mode": "cool",
         "error_code": None,
+        "demand": False,
         "clean_filter": False,
         "swing": None,
     },
@@ -59,6 +63,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "Med",  # Test case insensitivity for fan speed
         "mode": "cool",
         "error_code": None,
+        "demand": True,
         "clean_filter": False,
         "swing": None,
     },
@@ -70,6 +75,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "fan_speed": "ULTRA",  # Test unknown fan speed handling
         "mode": "cool",
         "error_code": None,
+        "demand": None,  # Test a bridge that does not report demand
         "clean_filter": False,
         "swing": None,
     },
@@ -77,9 +83,18 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
 
 
 @pytest.fixture
-def unit_count():
+def units(request: pytest.FixtureRequest) -> dict[str, dict[str, Any]]:
+    """Fixture for the units the mocked bridge reports.
+
+    Parametrise indirectly to have the bridge report units in a given state.
+    """
+    return getattr(request, "param", TEST_UNITS)
+
+
+@pytest.fixture
+def unit_count(units: dict[str, dict[str, Any]]) -> int:
     """Fixture to expose the number of pre-defined units."""
-    return len(TEST_UNITS)
+    return len(units)
 
 
 class CoolMasterNetUnitMock:
@@ -133,9 +148,14 @@ class CoolMasterNetUnitMock:
 class CoolMasterNetMock:
     """Mock for CoolMasterNet."""
 
-    def __init__(self, *_args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *_args: Any,
+        units: dict[str, dict[str, Any]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize the CoolMasterNetMock."""
-        self._units = copy.deepcopy(TEST_UNITS)
+        self._units = copy.deepcopy(TEST_UNITS if units is None else units)
 
     async def info(self) -> dict[str, Any]:
         """Return info about the bridge device."""
@@ -198,7 +218,9 @@ class CoolMasterNetEmptyStatusMock:
 
 @pytest.fixture
 async def load_int(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    units: dict[str, dict[str, Any]],
 ) -> MockConfigEntry:
     """Set up the Coolmaster integration in Home Assistant."""
     config_entry = MockConfigEntry(
@@ -214,7 +236,7 @@ async def load_int(
 
     with patch(
         "homeassistant.components.coolmaster.CoolMasterNet",
-        new=CoolMasterNetMock,
+        new=partial(CoolMasterNetMock, units=units),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
