@@ -12,6 +12,7 @@ import tarfile
 import threading
 from typing import IO, Any, cast
 
+import aiohttp
 from securetar import (
     InvalidPasswordError,
     SecureTarArchive,
