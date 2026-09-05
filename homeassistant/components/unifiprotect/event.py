@@ -5,8 +5,9 @@ import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import ModelType, SmartDetectObjectType
+from uiprotect.data import Fob, ModelType, PublicDeviceModel, SmartDetectObjectType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
+from uiprotect.data.types import EventButtonType
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -15,6 +16,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
@@ -40,7 +42,12 @@ from .data import (
     ProtectDeviceType,
     UFPConfigEntry,
 )
-from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
+from .entity import (
+    EventEntityMixin,
+    ProtectDeviceEntity,
+    ProtectEventMixin,
+    ProtectFobEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -100,24 +107,15 @@ class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
     ufp_public_event_types: tuple[EventType, ...]
 
 
-class ProtectDevicePublicEventEntity(
-    EventEntityMixin, ProtectDeviceEntity, EventEntity
-):
-    """Base for entities driven by the public events WS.
+class ProtectFireOnceMixin(EventEntity):
+    """Dedup mixin for entities fired from the public events WS.
 
-    A detection type can surface at the event start, on a later update, or only
-    as the event ends, and every non-eviction change is dispatched — so firing is
-    deduped per ``(event id, event type)``.
-
-    Availability follows the public API (device present and connected) plus the
-    events websocket, which is the only channel these entities fire from.
+    Every non-eviction change to an event is dispatched, so the same event can
+    reach a subscriber as it starts, updates and ends; firing is deduped per
+    ``(event id, event type)``.
     """
 
-    _ufp_uses_public = True
-    _ufp_requires_events_ws = True
-
-    entity_description: ProtectEventEntityDescription
-    # A camera can run two overlapping events of the same category whose
+    # A device can run two overlapping events of the same category whose
     # dispatches interleave, so dedup tracks fired types per recent event id
     # (bounded), not just the current one.
     _fired: dict[str, frozenset[str]] | None = None
@@ -141,6 +139,21 @@ class ProtectDevicePublicEventEntity(
             del fired[next(iter(fired))]  # evict the least-recently-seen event id
         self._trigger_event(event_type, event_data)
         self.async_write_ha_state()
+
+
+class ProtectDevicePublicEventEntity(
+    ProtectFireOnceMixin, EventEntityMixin, ProtectDeviceEntity, EventEntity
+):
+    """Base for entities driven by the public events WS.
+
+    Availability follows the public API (device present and connected) plus the
+    events websocket, which is the only channel these entities fire from.
+    """
+
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    entity_description: ProtectEventEntityDescription
 
 
 class ProtectDeviceRingEventEntity(ProtectDevicePublicEventEntity):
@@ -543,6 +556,60 @@ class ProtectDeviceMotionEventEntity(ProtectDeviceDetectionEventEntity):
         self._fire_once(event, EventType.MOTION.value, {ATTR_EVENT_ID: event.id})
 
 
+# Real hardware reports an empty ``feature_flags.buttons``, so the whole
+# vocabulary is declared. Sourced from the enum matched against
+# ``metadata.button`` below so the two cannot drift apart.
+_FOB_EVENT_TYPES: list[str] = [
+    button.name.lower()
+    for button in EventButtonType
+    if button is not EventButtonType.UNKNOWN
+]
+
+
+class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventEntity):
+    """A UniFi Protect key fob button-press event entity.
+
+    Each fob exposes one event entity that fires the pressed button (from a
+    public ``sensorButtonPressed`` event's ``metadata.button``) as its event
+    type.
+    """
+
+    _attr_translation_key = "keyfob"
+    _attr_event_types = _FOB_EVENT_TYPES
+    # Presses arrive only on the events websocket, so its health gates
+    # availability on top of the devices websocket.
+    _ufp_requires_events_ws = True
+
+    def __init__(self, data: ProtectData, fob: Fob) -> None:
+        """Initialize the key fob button event entity."""
+        self._attr_unique_id = f"{fob.mac}_keyfob"
+        super().__init__(data, fob)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public key-fob button-press events."""
+        await super().async_added_to_hass()
+        # A press arrives as a ``sensorButtonPressed`` event whose ``device`` is
+        # the fob and whose ``metadata.button`` is the pressed button.
+        self.async_on_remove(
+            self.data.async_subscribe_public_event(
+                self._fob_id, EventType.SENSOR_BUTTON_PRESSED, self._async_button_event
+            )
+        )
+
+    @callback
+    def _async_button_event(self, event: ProtectEvent) -> None:
+        if (metadata := event.metadata) is None or (button := metadata.button) is None:
+            return
+        # Skip a button added by newer firmware that coerces to
+        # ``EventButtonType.UNKNOWN`` (not among the declared event types).
+        if (button_type := button.name.lower()) not in self.event_types:
+            return
+        # A press is dispatched on every non-eviction change to its event, so
+        # the same press can arrive more than once.
+        self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
+
+
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
@@ -643,3 +710,21 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(_async_event_entities(data))
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities([ProtectFobButtonEventEntity(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobButtonEventEntity(data, fob)
+            for fob in api.public_bootstrap.fobs.values()
+        )
