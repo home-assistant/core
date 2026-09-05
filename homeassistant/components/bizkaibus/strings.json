@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This stop is already configured.",
+      "invalid_stop_id": "The stop identifier is not valid.",
+      "reconfigure_successful": "Reconfiguration was successful."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Bizkaibus.",
+      "invalid_stop_id": "The stop identifier is not valid."
+    },
+    "flow_title": "Adding Bizkaibus integration",
+    "step": {
+      "import": {
+        "data": {
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "data_description": {
+          "stop_id": "The bus stop ID to monitor."
+        },
+        "description": "Import a stop to monitor.",
+        "title": "Import stop"
+      },
+      "lines": {
+        "data": {
+          "line_ids": "Bus lines",
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "data_description": {
+          "line_ids": "Select the bus lines to monitor for this stop.",
+          "stop_id": "The bus stop ID to monitor."
+        },
+        "description": "Choose the bus lines to monitor for this stop.",
+        "title": "Select lines"
+      },
+      "reconfigure": {
+        "data": {
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "data_description": {
+          "stop_id": "The bus stop ID to monitor."
+        },
+        "description": "Update the stop identifier.",
+        "title": "Reconfigure stop"
+      },
+      "user": {
+        "data": {
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "data_description": {
+          "stop_id": "The bus stop ID to monitor."
+        },
+        "description": "Enter the stop identifier you want to monitor.",
+        "title": "Configure stop"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bus_id": {
+        "name": "Id"
+      },
+      "bus_name": {
+        "name": "Name"
+      },
+      "nearest_arrival": {
+        "name": "Arrival"
+      },
+      "next_arrival": {
+        "name": "Next arrival"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "Failed to connect to Bizkaibus."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "line_ids": "Bus lines"
+        },
+        "data_description": {
+          "line_ids": "Select the bus lines to monitor for this stop."
+        },
+        "description": "Choose the bus lines to monitor for this stop.",
+        "title": "Select lines"
+      }
+    }
+  }
+}
