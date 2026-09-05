@@ -1,0 +1,104 @@
+[
+  {
+    "id": "device_12345",
+    "deviceName": "Test Hinen Device",
+    "serialNumber": "SN123456789",
+    "status": 1,
+    "alertStatus": 0,
+    "properties": [
+      {
+        "identifier": "LoadFirstStopSOC",
+        "name": "负载优先停止SOC",
+        "value": 80
+      },
+      {
+        "identifier": "ChargeStopSOC",
+        "name": "充电停止SOC",
+        "value": 90
+      },
+      {
+        "identifier": "WorkModeSetting",
+        "name": "工作模式设置",
+        "value": 10
+      },
+      {
+        "identifier": "GridFirstStopSOC",
+        "name": "电网优先停止SOC",
+        "value": 70
+      },
+      {
+        "identifier": "CDPeriodTimes2",
+        "name": "CD时段2",
+        "value": [
+          {
+            "periodEnable": 1,
+            "periodTimeStart": 0,
+            "periodTimeRate": 50,
+            "periodTimeEnd": 360,
+            "periodTimeStopSoc": 80
+          },
+          {
+            "periodEnable": 1,
+            "periodTimeStart": 360,
+            "periodTimeRate": 60,
+            "periodTimeEnd": 720,
+            "periodTimeStopSoc": 85
+          },
+          {
+            "periodEnable": 1,
+            "periodTimeStart": 720,
+            "periodTimeRate": 70,
+            "periodTimeEnd": 1080,
+            "periodTimeStopSoc": 90
+          },
+          {
+            "periodEnable": 1,
+            "periodTimeStart": 1080,
+            "periodTimeRate": 80,
+            "periodTimeEnd": 1440,
+            "periodTimeStopSoc": 95
+          },
+          {
+            "periodEnable": 1,
+            "periodTimeStart": 480,
+            "periodTimeRate": 55,
+            "periodTimeEnd": 1020,
+            "periodTimeStopSoc": 88
+          },
+          {
+            "periodEnable": 1,
+            "periodTimeStart": 1320,
+            "periodTimeRate": 65,
+            "periodTimeEnd": 480,
+            "periodTimeStopSoc": 82
+          }
+        ]
+      },
+      {
+        "identifier": "CumulativeConsumption",
+        "name": "累计消耗",
+        "value": 1000.5
+      },
+      {
+        "identifier": "CumulativeProductionActive",
+        "name": "累计生产有功",
+        "value": 1200.3
+      },
+      {
+        "identifier": "CumulativeGridFeedIn",
+        "name": "累计电网馈入",
+        "value": 800.2
+      },
+      {
+        "identifier": "TotalChargingEnergy",
+        "name": "总充电能量",
+        "value": 5000
+      },
+      {
+        "identifier": "TotalDischargingEnergy",
+        "name": "总放电能量",
+        "value": 4800
+      }
+    ]
+  }
+]
