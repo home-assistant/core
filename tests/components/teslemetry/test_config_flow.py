@@ -1365,40 +1365,6 @@ async def test_pair_step_second_lookup_errors(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_pair_step_timeout_offers_retry(hass: HomeAssistant) -> None:
-    """A window that expires while waiting surfaces a retry instead of aborting."""
-    entry = await _setup_account_no_subentry(hass)
-
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(
-                side_effect=[
-                    _empty_clients(),
-                    _own_key_clients(
-                        AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT
-                    ),
-                ]
-            ),
-        ),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(),
-        ),
-    ):
-        result = await _start_add_flow_select_site(hass, entry)
-        assert result["step_id"] == "pair"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "key_expired"}
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
 async def test_pair_step_timeout_retry_reopens_window_and_succeeds(
     hass: HomeAssistant,
 ) -> None:
