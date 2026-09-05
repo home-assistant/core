@@ -8,6 +8,7 @@ from typing import Any, Final, cast
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallClient, PowerwallEnergySite, PowerwallError
+from bleak.exc import BleakError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -16,8 +17,9 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
-from tesla_fleet_api.teslemetry import EnergySite, Teslemetry
+from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream import TeslemetryStream
 from teslemetry_stream.const import SseTopic
 
@@ -25,8 +27,15 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -50,11 +59,13 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CLIENT_ID,
+    CONF_VIN,
     DOMAIN,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
     SUBENTRY_TYPE_ENERGY_SITE,
+    SUBENTRY_TYPE_VEHICLE,
     VEHICLE_ISSUE_LEARN_MORE,
 )
 from .coordinator import (
@@ -64,7 +75,7 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_update_device_sw_version, flatten
+from .helpers import async_get_ble_parent, async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -269,6 +280,66 @@ def _setup_vehicle_repairs(
     entry.async_on_unload(
         metadata_coordinator.async_add_listener(_handle_metadata_update)
     )
+
+
+def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
+    """Return the paired Bluetooth address for a vehicle, if one was added."""
+    for subentry in entry.subentries.values():
+        if (
+            subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+            and subentry.data.get(CONF_VIN) == vin
+        ):
+            return subentry.data.get(CONF_ADDRESS)
+    return None
+
+
+# Loading the BLE key raises OSError (I/O), ValueError (bad PEM),
+# AssertionError (a valid PEM that is not an EC private key), or TypeError
+# (an encrypted PEM, which cryptography rejects when no password is given).
+_BLE_KEY_ERRORS: Final = (OSError, ValueError, AssertionError, TypeError)
+
+
+async def _async_resolve_vehicle_api(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    vin: str,
+    cloud_vehicle: Vehicle,
+) -> Vehicle | VehicleRouter:
+    """Return the API a vehicle's platforms should call."""
+    address = _ble_address_for_vin(entry, vin)
+    if not address:
+        return cloud_vehicle
+
+    # A bad BLE key file for one vehicle must not tear down the whole entry.
+    try:
+        parent = await async_get_ble_parent(hass)
+    except _BLE_KEY_ERRORS:
+        LOGGER.warning(
+            "Failed to load the Bluetooth key for vehicle %s; "
+            "falling back to cloud control",
+            vin,
+            exc_info=True,
+        )
+        return cloud_vehicle
+    # raise_unconfirmed=False avoids re-sending a non-idempotent command to cloud; keepalive_interval=None avoids holding the link open and keeping the car awake.
+    bluetooth_vehicle = parent.vehicles.createBluetooth(
+        vin,
+        confirmation="verify",
+        raise_unconfirmed=False,
+        keepalive_interval=None,
+    )
+
+    @callback
+    def _in_range() -> bool:
+        """Report whether the vehicle is currently reachable over Bluetooth."""
+        device = async_ble_device_from_address(hass, address, connectable=True)
+        if device is None:
+            return False
+        # The library never refreshes the BLE handle, so set it here while it is known fresh.
+        bluetooth_vehicle.set_device(device)
+        return True
+
+    return VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range)
 
 
 def _find_energy_subentry_id(entry: TeslemetryConfigEntry, site_id: int) -> str | None:
@@ -526,9 +597,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
+            vehicle_api = await _async_resolve_vehicle_api(
+                hass,
+                entry,
+                vin,
+                vehicle,
+            )
+
             vehicles.append(
                 TeslemetryVehicleData(
-                    api=vehicle,
+                    api=vehicle_api,
                     config_entry=entry,
                     coordinator=coordinator,
                     poll=poll,
@@ -689,7 +767,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 def _setup_subentry_change_reload(
     hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> None:
-    """Reload the entry when a local-energy-site subentry is added or removed."""
+    """Reload the entry when a subentry is added or removed."""
     known = set(entry.subentries)
 
     async def _handle_update(
@@ -810,7 +888,18 @@ async def _async_setup_energy_site(
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        # Release any on-demand Bluetooth link only after platforms unloaded, or the still-loaded entry's backends must keep working.
+        for vehicle in entry.runtime_data.vehicles:
+            if isinstance(vehicle.api, VehicleRouter):
+                try:
+                    await vehicle.api.primary.disconnect()
+                except (BleakError, TeslaFleetError, TimeoutError) as err:
+                    LOGGER.debug(
+                        "Error disconnecting Bluetooth for %s: %s", vehicle.vin, err
+                    )
+    return unloaded
 
 
 async def async_migrate_entry(

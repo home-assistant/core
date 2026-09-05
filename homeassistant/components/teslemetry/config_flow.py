@@ -1,5 +1,6 @@
 """Config Flow for Teslemetry integration."""
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from pathlib import Path
@@ -7,16 +8,22 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
+from bleak.exc import BleakError
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
     AuthorizedClientState,
     AuthorizedClientType,
 )
 from tesla_fleet_api.exceptions import (
+    BluetoothTimeout,
+    BluetoothTransportError,
     InvalidToken,
+    NotOnWhitelistFault,
     SubscriptionRequired,
     TeslaFleetError,
+    WhitelistOperationAttemptingToAddExistingKey,
 )
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
 import voluptuous as vol
@@ -24,6 +31,10 @@ import voluptuous as vol
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
+)
+from homeassistant.components.bluetooth import (
+    async_discovered_service_info,
+    async_request_active_scan,
 )
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -34,20 +45,29 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from . import TeslemetryConfigEntry
+from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
 from .const import (
     CLIENT_ID,
     CONF_SITE_ID,
+    CONF_VIN,
     DOMAIN,
     LOGGER,
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
+    SUBENTRY_TYPE_VEHICLE,
 )
+from .helpers import async_get_ble_parent
 
 
 class PowerwallLookupError(Exception):
@@ -85,7 +105,10 @@ class OAuth2FlowHandler(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types supported by this integration."""
-        return {SUBENTRY_TYPE_ENERGY_SITE: EnergySiteSubentryFlowHandler}
+        return {
+            SUBENTRY_TYPE_VEHICLE: VehicleSubentryFlowHandler,
+            SUBENTRY_TYPE_ENERGY_SITE: EnergySiteSubentryFlowHandler,
+        }
 
     @override
     async def async_step_user(
@@ -185,6 +208,209 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         return await self.async_step_user()
+
+
+class VehicleSubentryFlowHandler(ConfigSubentryFlow):
+    """Add local Bluetooth control to one of the account's vehicles."""
+
+    def __init__(self) -> None:
+        """Initialize the vehicle subentry flow."""
+        self._vin: str | None = None
+        self._title: str | None = None
+        self._address: str | None = None
+        self._vehicle: VehicleBluetooth | None = None
+        self._pair_task: asyncio.Task[None] | None = None
+        self._pair_error: dict[str, str] = {}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select an account vehicle to add over Bluetooth, then pair it."""
+        entry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        already_added = {
+            subentry.data[CONF_VIN]
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+            if CONF_VIN in subentry.data
+        }
+        # A paired vehicle reuses the existing device, so no new device is created here.
+        choices = {
+            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            for vehicle in entry.runtime_data.vehicles
+            if vehicle.vin not in already_added
+        }
+        if not choices:
+            return self.async_abort(reason="no_vehicles")
+
+        if user_input is not None:
+            self._vin = user_input[CONF_VIN]
+            self._title = choices[self._vin]
+            return await self.async_step_scan()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_VIN): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=vin, label=name)
+                                for vin, name in choices.items()
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_scan(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Find the vehicle over Bluetooth and connect to it."""
+        if TYPE_CHECKING:
+            assert self._vin is not None
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                parent = await async_get_ble_parent(self.hass)
+            except _BLE_KEY_ERRORS as err:
+                LOGGER.debug("Bluetooth key load failed: %s", err)
+                return self.async_abort(reason="cannot_connect")
+            # The advertised BLE name is a hash of the VIN; match on its prefix.
+            expected = parent.get_name(self._vin)[:17]
+            device = None
+            # The name is only in scan responses, so an active scan may be needed to see it.
+            await async_request_active_scan(self.hass)
+            for info in async_discovered_service_info(self.hass, connectable=True):
+                if info.name and info.name.startswith(expected):
+                    device = info.device
+                    self._address = info.address
+                    break
+
+            if device is None:
+                errors["base"] = "device_not_found"
+            else:
+                # Keep the default keepalive (unlike command routing) so the link survives the on-screen key-approval wait.
+                self._vehicle = parent.vehicles.createBluetooth(
+                    self._vin, device=device
+                )
+                try:
+                    await self._vehicle.connect()
+                except (BleakError, TeslaFleetError, TimeoutError) as err:
+                    LOGGER.error("Failed to connect over Bluetooth: %s", err)
+                    await self._async_disconnect()
+                    errors["base"] = "cannot_connect"
+                else:
+                    return await self.async_step_pair()
+
+        return self.async_show_form(
+            step_id="scan",
+            errors=errors,
+            description_placeholders={"vin": self._vin},
+        )
+
+    async def async_step_pair(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Check whether the virtual key is already whitelisted on the vehicle."""
+        if TYPE_CHECKING:
+            assert self._vehicle is not None
+        try:
+            await self._vehicle.handshakeVehicleSecurity()
+        except NotOnWhitelistFault:
+            return await self.async_step_instructions()
+        except (BleakError, TeslaFleetError, TimeoutError) as err:
+            LOGGER.error("Bluetooth security handshake failed: %s", err)
+            await self._async_disconnect()
+            return self.async_abort(reason="cannot_connect")
+        if TYPE_CHECKING:
+            assert self._address is not None
+            assert self._vin is not None
+        await self._async_disconnect()
+        return self.async_create_entry(
+            title=self._title or self._vin,
+            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
+            unique_id=self._vin,
+        )
+
+    async def async_step_instructions(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Ask the user to approve the virtual key on the vehicle touchscreen."""
+        if user_input is not None:
+            return await self.async_step_authorize()
+        errors = self._pair_error
+        self._pair_error = {}
+        return self.async_show_form(
+            step_id="instructions",
+            errors=errors,
+            description_placeholders={"vin": self._vin or ""},
+        )
+
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add the virtual key to the vehicle while showing pairing progress."""
+        if self._pair_task is None:
+            if TYPE_CHECKING:
+                assert self._vehicle is not None
+            # pair() can take minutes, so run it as a progress task rather than blocking the flow.
+            self._pair_task = self.hass.async_create_task(self._vehicle.pair())
+
+        if not self._pair_task.done():
+            return self.async_show_progress(
+                step_id="authorize",
+                progress_action="pair",
+                progress_task=self._pair_task,
+                description_placeholders={"vin": self._vin or ""},
+            )
+
+        task = self._pair_task
+        self._pair_task = None
+        try:
+            task.result()
+        except (BluetoothTransportError, BleakError) as err:
+            # Transport failure (link dropped), not the user failing to approve in time.
+            LOGGER.debug("Bluetooth transport failed during pairing: %s", err)
+            self._pair_error = {"base": "cannot_connect"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except (BluetoothTimeout, TimeoutError) as err:
+            # The key was sent but never confirmed - the user has not approved it yet.
+            LOGGER.debug("Bluetooth pairing timed out: %s", err)
+            self._pair_error = {"base": "timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationAttemptingToAddExistingKey as err:
+            # This exception means the key is already whitelisted, so pairing succeeded; fall through to re-handshake.
+            LOGGER.debug("Virtual key is already on the whitelist: %s", err)
+        except TeslaFleetError as err:
+            # The vehicle rejected the key (whitelist full, denied, or valet mode) - not a waitable timeout.
+            LOGGER.error("Bluetooth pairing was rejected: %s", err)
+            self._pair_error = {"base": "pair_failed"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        return self.async_show_progress_done(next_step_id="pair")
+
+    async def _async_disconnect(self) -> None:
+        """Disconnect the BLE link, if any, and drop the reference to it."""
+        vehicle = self._vehicle
+        if vehicle is not None:
+            try:
+                await vehicle.disconnect()
+            except (BleakError, TeslaFleetError, TimeoutError) as err:
+                LOGGER.debug("Error disconnecting Bluetooth: %s", err)
+            finally:
+                self._vehicle = None
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Release resources if the flow is abandoned mid-pairing."""
+        if self._pair_task is not None and not self._pair_task.done():
+            self._pair_task.cancel()
+        if self._vehicle is not None:
+            self.hass.async_create_task(self._async_disconnect())
 
 
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):

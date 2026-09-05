@@ -1,15 +1,32 @@
 """Teslemetry helper functions."""
 
-from collections.abc import Awaitable
-from typing import Any
+import asyncio
+from collections.abc import Awaitable, Callable
+from typing import Any, cast
 
 from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, LOGGER
+from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+
+
+async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
+    """Return a shared TeslaBluetooth parent with the private key loaded."""
+    lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
+    async with lock:
+        # Another task may have created it while we waited for the lock.
+        existing: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
+        if existing is not None:
+            return existing
+        # TeslaBluetooth.__init__ is unannotated upstream; remove cast once tesla-fleet-api types it.
+        parent = cast("Callable[[], TeslaBluetooth]", TeslaBluetooth)()
+        await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
+        hass.data[BLE_PARENT_KEY] = parent
+        return parent
 
 
 def flatten(

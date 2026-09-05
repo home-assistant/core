@@ -86,6 +86,46 @@
           "title": "Add local energy site"
         }
       }
+    },
+    "vehicle": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
+        "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth."
+      },
+      "entry_type": "Bluetooth vehicle",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
+        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
+      },
+      "initiate_flow": {
+        "user": "Add Bluetooth vehicle"
+      },
+      "progress": {
+        "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
+      },
+      "step": {
+        "instructions": {
+          "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to approve Home Assistant's virtual key. This only needs to be done once.",
+          "title": "Approve the virtual key"
+        },
+        "scan": {
+          "description": "Home Assistant will look for vehicle {vin} over Bluetooth to enable local command control. Make sure the vehicle is awake and within Bluetooth range of a Home Assistant Bluetooth adapter, then continue.",
+          "title": "Set up Bluetooth control"
+        },
+        "user": {
+          "data": {
+            "vin": "Vehicle"
+          },
+          "data_description": {
+            "vin": "The account vehicle to enable local Bluetooth control for."
+          },
+          "description": "Select which of your Teslemetry account vehicles to add over Bluetooth for local command control.",
+          "title": "Add Bluetooth vehicle"
+        }
+      }
     }
   },
   "entity": {
