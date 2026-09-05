@@ -10,6 +10,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
+from . import websocket_api
 from .connection import async_get_temporary_unit, async_get_unit
 from .const import DOMAIN
 from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
@@ -51,6 +52,8 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
+    websocket_api.async_setup(hass)
+
     if DOMAIN not in config:
         return True
 
