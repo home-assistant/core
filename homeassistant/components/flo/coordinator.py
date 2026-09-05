@@ -19,6 +19,12 @@ from .const import DOMAIN, LOGGER
 type FloConfigEntry = ConfigEntry[FloRuntimeData]
 
 
+def _event_sort_key(event: dict[str, Any]) -> datetime:
+    """Return a comparable timestamp for a Flo Detect event."""
+    parsed = dt_util.parse_datetime(event.get("endAt") or event.get("startAt") or "")
+    return parsed or dt_util.utc_from_timestamp(0)
+
+
 @dataclass
 class FloRuntimeData:
     """Flo runtime data."""
@@ -49,6 +55,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._manufacturer: str = "Flo by Moen"
         self._device_information: dict[str, Any] = {}
         self._water_usage: dict[str, Any] = {}
+        self._events: dict[str, Any] = {}
         super().__init__(
             hass,
             LOGGER,
@@ -65,6 +72,8 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()
+                if self.device_type != "puck_oem":
+                    await self._update_flodetect_events()
                 self._failure_count = 0
         except (RequestError, TimeoutError, JSONDecodeError) as error:
             self._failure_count += 1
@@ -157,6 +166,14 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def consumption_today(self) -> float:
         """Return the current consumption for today in gallons."""
         return self._water_usage["aggregations"]["sumTotalGallonsConsumed"]
+
+    @property
+    def last_water_event(self) -> dict[str, Any] | None:
+        """Return the most recent Flo Detect water-flow event, if any."""
+        events = self.api_client.flodetect.parse_events(self._events)
+        if not events:
+            return None
+        return max(events, key=_event_sort_key)
 
     @property
     def firmware_version(self) -> str:
@@ -253,3 +270,10 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             device_mac_address=self.mac_address,
         )
         LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
+
+    async def _update_flodetect_events(self) -> None:
+        """Update Flo Detect water-flow events from the API."""
+        self._events = await self.api_client.flodetect.get_events(
+            self.mac_address, limit=20
+        )
+        LOGGER.debug("Updated Flo Detect events: %s", self._events)

@@ -24,7 +24,7 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # we should have 5 entities for the valve
+    # we should have 7 entities for the valve
     assert (
         hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
         == "home"
@@ -38,6 +38,21 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
             ATTR_STATE_CLASS
         ]
         == SensorStateClass.TOTAL_INCREASING
+    )
+
+    last_event = hass.states.get("sensor.smart_water_shutoff_last_water_event")
+    assert last_event is not None
+    assert last_event.state == "2.4"
+    assert last_event.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert last_event.attributes["fixture_type"] == "Faucet"
+    assert last_event.attributes["duration_seconds"] == 158
+    assert last_event.attributes["start_time"] == "2026-07-12T10:12:03-04:00"
+    assert last_event.attributes["end_time"] == "2026-07-12T10:14:41-04:00"
+    assert last_event.attributes["event_id"] == "evt-001"
+
+    assert (
+        hass.states.get("sensor.smart_water_shutoff_last_water_event_fixture").state
+        == "Faucet"
     )
 
     assert hass.states.get("sensor.smart_water_shutoff_water_flow_rate").state == "0"
@@ -104,4 +119,4 @@ async def test_manual_update_entity(
         {ATTR_ENTITY_ID: ["sensor.smart_water_shutoff_current_system_mode"]},
         blocking=True,
     )
-    assert aioclient_mock.call_count == call_count + 3
+    assert aioclient_mock.call_count == call_count + 4
