@@ -186,6 +186,31 @@ class EnergyPreferencesValidation:
 
 
 @callback
+def _register_usage_stat_validation(
+    hass: HomeAssistant,
+    stat_id: str,
+    statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
+    wanted_statistics_metadata: set[str],
+    validate_calls: list[functools.partial[None]],
+    source_result: ValidationIssues,
+) -> None:
+    """Queue validation of a stat_energy_from-style usage statistic."""
+    wanted_statistics_metadata.add(stat_id)
+    validate_calls.append(
+        functools.partial(
+            _async_validate_usage_stat,
+            hass,
+            statistics_metadata,
+            stat_id,
+            ENERGY_USAGE_DEVICE_CLASSES,
+            ENERGY_USAGE_UNITS,
+            ENERGY_UNIT_ERROR,
+            source_result,
+        )
+    )
+
+
+@callback
 def _async_validate_stat_common(
     hass: HomeAssistant,
     metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
@@ -745,46 +770,55 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             )
 
         elif source["type"] == "solar":
-            wanted_statistics_metadata.add(source["stat_energy_from"])
-            validate_calls.append(
-                functools.partial(
-                    _async_validate_usage_stat,
-                    hass,
-                    statistics_metadata,
-                    source["stat_energy_from"],
-                    ENERGY_USAGE_DEVICE_CLASSES,
-                    ENERGY_USAGE_UNITS,
-                    ENERGY_UNIT_ERROR,
-                    source_result,
-                )
+            _register_usage_stat_validation(
+                hass,
+                source["stat_energy_from"],
+                statistics_metadata,
+                wanted_statistics_metadata,
+                validate_calls,
+                source_result,
             )
 
-        elif source["type"] == "battery":
-            wanted_statistics_metadata.add(source["stat_energy_from"])
-            validate_calls.append(
-                functools.partial(
-                    _async_validate_usage_stat,
-                    hass,
-                    statistics_metadata,
-                    source["stat_energy_from"],
-                    ENERGY_USAGE_DEVICE_CLASSES,
-                    ENERGY_USAGE_UNITS,
-                    ENERGY_UNIT_ERROR,
-                    source_result,
-                )
+        elif source["type"] == "ev":
+            _register_usage_stat_validation(
+                hass,
+                source["stat_energy_from"],
+                statistics_metadata,
+                wanted_statistics_metadata,
+                validate_calls,
+                source_result,
             )
-            wanted_statistics_metadata.add(source["stat_energy_to"])
-            validate_calls.append(
-                functools.partial(
-                    _async_validate_usage_stat,
-                    hass,
-                    statistics_metadata,
-                    source["stat_energy_to"],
-                    ENERGY_USAGE_DEVICE_CLASSES,
-                    ENERGY_USAGE_UNITS,
-                    ENERGY_UNIT_ERROR,
-                    source_result,
+            if stat_rate := source.get("stat_rate"):
+                wanted_statistics_metadata.add(stat_rate)
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_power_stat,
+                        hass,
+                        statistics_metadata,
+                        stat_rate,
+                        POWER_USAGE_DEVICE_CLASSES,
+                        POWER_USAGE_UNITS,
+                        POWER_UNIT_ERROR,
+                        source_result,
+                    )
                 )
+
+        elif source["type"] == "battery":
+            _register_usage_stat_validation(
+                hass,
+                source["stat_energy_from"],
+                statistics_metadata,
+                wanted_statistics_metadata,
+                validate_calls,
+                source_result,
+            )
+            _register_usage_stat_validation(
+                hass,
+                source["stat_energy_to"],
+                statistics_metadata,
+                wanted_statistics_metadata,
+                validate_calls,
+                source_result,
             )
 
     for device in manager.data["device_consumption"]:
