@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from fronius_modbus import Mppt
 from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
 from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
@@ -663,3 +664,84 @@ async def test_a_failed_resend_of_the_limit_is_logged(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Could not send the AC power limit" in caplog.text
+
+
+async def test_unconfigured_device_is_left_alone(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test a setup without the option touching nothing but the write probe.
+
+    Whatever period such a device holds was put there by something else, so
+    clearing it would take away another controller's safety net.
+    """
+    config_entry = await _setup_with_controls(hass, aioclient_mock, mock_fronius_modbus)
+    await _turn_on_power_limit(hass, 60)
+
+    writes: list[WriteEvent] = []
+    mock_fronius_modbus.for_unit(1).on_write(writes.append)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # only the write access probe, the limit itself is not sent again
+    assert len(writes) == 1
+
+
+async def test_heartbeat_leaves_a_limit_released_on_the_device_released(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the heartbeat decides on a fresh read, not on the last poll.
+
+    Something else may release the limit between two polls - the heartbeat
+    must not take that back.
+    """
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+    )
+    controls = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.controls
+    await _turn_on_power_limit(hass, 60)
+
+    await controls.write("enabled", False)
+    # the write leaves the coordinator's picture of the device behind
+    assert controls.enabled is True
+
+    freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert controls.enabled is False
+
+
+async def test_readings_recover_when_only_the_controls_came_up(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a re-scan still adds the MPPT data after it failed once.
+
+    The two coordinators are independent: one of them answering is no reason
+    to stop retrying the other.
+    """
+    with patch.object(
+        Mppt, "async_update", side_effect=ModbusConnectionError("no answer")
+    ):
+        config_entry = await _setup_with_controls(
+            hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        )
+        assert not config_entry.runtime_data.modbus_inverter_coordinators
+        assert config_entry.runtime_data.modbus_settings_coordinators
+
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.runtime_data.modbus_inverter_coordinators
+    # the settings coordinator that was already up is not added a second time
+    assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
