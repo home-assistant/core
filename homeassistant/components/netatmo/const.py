@@ -36,8 +36,6 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
     "access_camerapro",
     "access_doorbell",
     "read_doorbell",
-    "read_mhs1",
-    "write_mhs1",
 ]
 
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
