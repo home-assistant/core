@@ -36,7 +36,7 @@ STEP_TWO_FACTOR_SCHEMA = vol.Schema({vol.Required(CONF_TWO_FACTOR_CODE): str})
 class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cync."""
 
-    VERSION = 1
+    VERSION = 2
 
     cync_auth: Auth = None
 
@@ -152,7 +152,9 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                entry=self._get_reauth_entry(), title=user_email, data=config_data
+                entry=self._get_reauth_entry(),
+                title=user_email,
+                data_updates=config_data,
             )
 
         self._abort_if_unique_id_configured()
