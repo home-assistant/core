@@ -1379,6 +1379,11 @@ async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
         pytest.param(PowerwallError("client boom"), id="powerwall_error"),
+        # An encrypted key PEM surfaces as TypeError from the cryptography loader.
+        pytest.param(
+            TypeError("Password was not given but private key is encrypted"),
+            id="type_error",
+        ),
     ],
 )
 async def test_local_control_failure_falls_back_to_cloud(

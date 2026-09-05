@@ -342,7 +342,8 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
 
 
 # aiopowerwall raises PowerwallError; key I/O and parsing raise OSError/ValueError.
-_LOCAL_CONTROL_ERRORS: Final = (OSError, ValueError, PowerwallError)
+# An encrypted key PEM surfaces as TypeError from the cryptography loader.
+_LOCAL_CONTROL_ERRORS: Final = (OSError, TypeError, ValueError, PowerwallError)
 
 
 async def _async_resolve_local_control(
