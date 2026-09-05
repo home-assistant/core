@@ -1,13 +1,30 @@
 """Test the Mitsubishi WF-RAC coordinator."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pywfrac import WfRacConnectionError
+import pytest
+from pywfrac import (
+    WfRacConnectionError,
+    WfRacError,
+    WfRacRegistrationError,
+    WfRacWriteRefusedError,
+)
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
+)
+from homeassistant.components.mitsubishi_wf_rac.const import DOMAIN
+from homeassistant.components.mitsubishi_wf_rac.coordinator import (
+    registration_full_issue_id,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -98,3 +115,151 @@ async def test_an_unreachable_airco_does_not_re_register(
     await _advance(hass, freezer, 1)
 
     mock_repository.update_account_info.assert_not_awaited()
+
+
+async def test_a_refused_write_is_retried_once_the_lock_lapses(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Another client's 60-second write lock is waited out, not fought.
+
+    The delay comes from the unit's own `expires`, so the retry lands on the
+    far side of the lapse instead of at a guessed interval.
+    """
+    aircon_stat = mock_repository.get_aircon_stats.return_value
+    mock_repository.send_airco_command.side_effect = [
+        WfRacWriteRefusedError("locked"),
+        aircon_stat["airconStat"],
+    ]
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert mock_repository.send_airco_command.await_count == 2
+
+
+async def test_an_evicted_account_re_registers_before_retrying(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Losing the account slot mid-command costs a registration, not the command."""
+    aircon_stat = mock_repository.get_aircon_stats.return_value
+    mock_repository.send_airco_command.side_effect = [
+        WfRacRegistrationError("evicted"),
+        aircon_stat["airconStat"],
+    ]
+    mock_repository.update_account_info.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_repository.update_account_info.assert_awaited()
+    assert mock_repository.send_airco_command.await_count == 2
+
+
+async def test_a_full_account_table_raises_a_repair_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """result:2 means the module has no free account slot left.
+
+    Nothing the integration can do about it from here, so it says so in
+    Repairs rather than retrying forever.
+    """
+    device = init_integration.runtime_data.device
+    mock_repository.update_account_info.return_value = {"result": 2}
+
+    await device.add_account()
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, registration_full_issue_id(init_integration.entry_id)
+    )
+
+
+async def test_a_freed_account_table_clears_the_repair_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The issue must not outlive the condition that raised it."""
+    device = init_integration.runtime_data.device
+    mock_repository.update_account_info.return_value = {"result": 2}
+    await device.add_account()
+
+    mock_repository.update_account_info.return_value = {"result": 0}
+    await device.add_account()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, registration_full_issue_id(init_integration.entry_id)
+    )
+
+
+@pytest.mark.parametrize(
+    ("method", "mocked"),
+    [("add_account", "update_account_info"), ("delete_account", "del_account_info")],
+)
+async def test_account_calls_swallow_their_errors(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    method: str,
+    mocked: str,
+) -> None:
+    """Both run on paths that have nothing better to do with a failure."""
+    device = init_integration.runtime_data.device
+    getattr(mock_repository, mocked).side_effect = WfRacError("no answer")
+
+    assert await getattr(device, method)() is None
+
+
+async def test_unparseable_data_marks_the_airco_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A frame that answers but does not parse is a failed poll like any other."""
+    mock_repository.get_aircon_stats.return_value = {"airconStat": "not base64"}
+
+    await _advance(hass, freezer, 3)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_a_poll_that_never_answers_counts_as_a_missed_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The outer deadline can expire before the request's own does.
+
+    That has to stay as quiet as any other missed poll, or a transient outage
+    would mark the airco unavailable ahead of the configured threshold.
+    """
+
+    async def _never_answers(*args: object, **kwargs: object) -> None:
+        await asyncio.sleep(3600)
+
+    mock_repository.get_aircon_stats.side_effect = _never_answers
+
+    freezer.tick(POLL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE

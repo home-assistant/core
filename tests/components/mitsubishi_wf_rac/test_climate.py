@@ -1,6 +1,7 @@
 """Test the Mitsubishi WF-RAC climate platform."""
 
 import asyncio
+from dataclasses import replace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -15,19 +16,23 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
+    PRESET_NONE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
+from homeassistant.components.mitsubishi_wf_rac.const import SWING_3D_AUTO
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -273,3 +278,226 @@ async def test_commands_issued_together_become_one_frame(
     await hass.async_block_till_done()
 
     assert mock_repository.send_airco_command.await_count == 1
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "compressor", "cool_hot_judge", "expected"),
+    [
+        (3, False, False, HVACAction.FAN),
+        (4, False, False, HVACAction.DRYING),
+        (1, False, False, HVACAction.IDLE),
+        (0, True, True, HVACAction.HEATING),
+        (0, True, False, HVACAction.COOLING),
+        (1, True, False, HVACAction.COOLING),
+        (2, True, False, HVACAction.HEATING),
+    ],
+    ids=["fan", "dry", "satisfied", "auto-heat", "auto-cool", "cool", "heat"],
+)
+async def test_hvac_action_while_running(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    operation_mode: int,
+    compressor: bool,
+    cool_hot_judge: bool,
+    expected: HVACAction,
+) -> None:
+    """What the unit reports it is doing, per mode.
+
+    CoolHotJudge is inverted against its raw bit, which is why the two AUTO
+    cases are spelled out rather than left to the reader.
+    """
+    device = init_integration.runtime_data.device
+    device.airco.Operation = True
+    device.airco.OperationMode = operation_mode
+    device.airco.CompressorRunning = compressor
+    device.airco.CoolHotJudge = cool_hot_judge
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["hvac_action"] is expected
+
+
+async def test_hvac_action_is_off_while_the_unit_is(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """The captured frame has the unit off."""
+    assert hass.states.get(ENTITY_ID).attributes["hvac_action"] is HVACAction.OFF
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "expected"),
+    [
+        (0, HVACMode.AUTO),
+        (1, HVACMode.COOL),
+        (2, HVACMode.HEAT),
+        (3, HVACMode.FAN_ONLY),
+        (4, HVACMode.DRY),
+    ],
+)
+async def test_every_operation_mode_maps_to_an_hvac_mode(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    operation_mode: int,
+    expected: HVACMode,
+) -> None:
+    """The unit's mode byte, as Home Assistant names it."""
+    device = init_integration.runtime_data.device
+    device.airco.Operation = True
+    device.airco.OperationMode = operation_mode
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+async def test_temperature_below_the_units_range_is_refused(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """The floor depends on the mode, and naming it is the whole message."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 5.0,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+
+
+async def test_setting_temperature_and_mode_together(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A setpoint measured against the mode the call switches to.
+
+    The range depends on the mode, and an automation that sets both at once
+    must not be judged against the mode the unit is leaving (#317).
+    """
+    mock_repository.send_airco_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 19.0,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_repository.send_airco_command.assert_awaited()
+
+
+async def test_preset_none_returns_the_unit_to_a_normal_setpoint(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Leaving Home Leave is a setpoint, not a mode of its own."""
+    mock_repository.send_airco_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_repository.send_airco_command.assert_awaited()
+
+
+@pytest.mark.parametrize(
+    ("service", "attribute"),
+    [
+        (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
+        (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
+    ],
+)
+async def test_3d_auto_hands_both_louvers_to_the_unit(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    service: str,
+    attribute: str,
+) -> None:
+    """3D auto is the unit's own vane logic, entrusted from either axis."""
+    mock_repository.send_airco_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID, attribute: SWING_3D_AUTO},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_repository.send_airco_command.assert_awaited()
+
+
+async def test_a_model_with_the_wider_heating_range(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """PresetTempRange2 models heat down to 10 degrees, not 18."""
+    device = init_integration.runtime_data.device
+    device.airco.Capabilities = replace(
+        device.airco.Capabilities, preset_temp_range_2=True
+    )
+    device.airco.Operation = True
+    device.airco.OperationMode = 2
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["min_temp"] == 10
+
+
+async def test_the_wider_range_leaves_cooling_alone(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Only the heating floor moves - the cooling floor is the same 16."""
+    device = init_integration.runtime_data.device
+    device.airco.Capabilities = replace(
+        device.airco.Capabilities, preset_temp_range_2=True
+    )
+    device.airco.Operation = True
+    device.airco.OperationMode = 1
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["min_temp"] == 16
+
+
+async def test_cooling_tops_out_lower_than_heating(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """The unit takes 30 in cooling where heating and auto take 33."""
+    device = init_integration.runtime_data.device
+    device.airco.Operation = True
+    device.airco.OperationMode = 1
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["max_temp"] == 30
+
+
+async def test_a_frame_the_entity_cannot_read_marks_it_unavailable(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """A frame the entity cannot read ends at the entity.
+
+    It reads the coordinator's state directly, so a shape it does not expect
+    has to become unavailability rather than a traceback.
+    """
+    device = init_integration.runtime_data.device
+    device.airco.OperationMode = 99
+    for _ in range(3):
+        device.async_set_updated_data(device.airco)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
