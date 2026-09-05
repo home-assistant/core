@@ -2895,6 +2895,9 @@ pywebpush==2.3.0
 # homeassistant.components.wemo
 pywemo==1.4.0
 
+# homeassistant.components.mitsubishi_wf_rac
+pywfrac==0.1.0
+
 # homeassistant.components.wilight
 pywilight==0.0.74
 
