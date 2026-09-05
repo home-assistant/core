@@ -29,6 +29,8 @@ from .const import API_URL, DOMAIN, INTEGRATION_NAME, SCOPE
 # does not end with space or dot
 VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")
 
+DELETION_POLL_INTERVAL = 5
+
 
 class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
     """Authentication implementation used during config flow, without refresh.
@@ -276,4 +278,4 @@ class OAuth2FlowHandler(
             ][0]
             if self._data["system"].function_webhook_quotas["used"] == 0:
                 break
-            await asyncio.sleep(5)
+            await asyncio.sleep(DELETION_POLL_INTERVAL)

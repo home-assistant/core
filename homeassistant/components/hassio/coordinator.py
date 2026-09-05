@@ -16,6 +16,7 @@ from aiohasupervisor.models import (
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
+    IngressPanel,
     InstalledAddon,
     InstalledAddonComplete,
     Issue as SupervisorIssue,
@@ -40,7 +41,7 @@ from homeassistant.core import (
     callback,
     is_callback_check_partial,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -48,6 +49,11 @@ from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
+)
+from homeassistant.helpers.translation import (
+    LOCALE_EN,
+    async_get_cached_translations,
+    async_load_integrations,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -83,6 +89,7 @@ from .const import (
     EVENT_ISSUE_CHANGED,
     EVENT_ISSUE_REMOVED,
     EVENT_JOB,
+    EVENT_STORE_RELOADED,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
@@ -91,6 +98,7 @@ from .const import (
     HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
@@ -102,6 +110,7 @@ from .const import (
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
+    PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REASON,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
@@ -131,6 +140,7 @@ UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 
 # Keys (type + context) of issues that when found should be made into a repair.
 ISSUE_KEYS_FOR_REPAIRS = {
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_MOUNT_MOUNT_FAILED,
     "issue_system_multiple_data_disks",
@@ -180,6 +190,46 @@ class SupervisorIssuesData:
     unhealthy_reasons: set[str]
     unsupported_reasons: set[str]
     issues: dict[UUID, Issue]
+
+
+@callback
+def presentable_issue_suggestions(
+    hass: HomeAssistant, issue: Issue
+) -> list[Suggestion]:
+    """Return the issue's suggestions the repair fix flow can present.
+
+    Filters out suggestions this Core version has no fix flow translation
+    for; an empty result means the repair is not fixable here. Filtered
+    suggestions stay applicable via the Supervisor API and CLI.
+    """
+    if not issue.suggestions:
+        return []
+
+    # Key availability is language independent — check against English,
+    # which is always cached, unlike the configured language right after
+    # a language switch
+    translations = async_get_cached_translations(hass, LOCALE_EN, "issues", DOMAIN)
+    prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
+    if not any(key.startswith(prefix) for key in translations):
+        # This version of Core shipped an unfixable repair for this issue
+        # (a repair is either always or never fixable per issue key) —
+        # drop all suggestions, including any would break the repair
+        return []
+
+    presentable = [
+        suggestion
+        for suggestion in issue.suggestions
+        # Either a menu option label or a dedicated step (e.g. the
+        # confirmation of a formerly sole suggestion) proves this Core
+        # knows the suggestion for this issue
+        if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
+        or f"{prefix}.{suggestion.key}.description" in translations
+    ]
+    # If nothing is presentable, keep everything: the fix flow strings for
+    # this issue exist, so the repair must stay fixable — and an unlabeled
+    # menu still beats a dead end. The frontend falls back to the raw
+    # option keys.
+    return presentable or issue.suggestions
 
 
 class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
@@ -337,7 +387,12 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
             return
 
-        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+        presentable = presentable_issue_suggestions(self.hass, issue)
+
+        # A non-fixable repair renders the issue description, which may
+        # use the extra placeholders; a fixable one uses the fix flow,
+        # which computes its own placeholders
+        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
             placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
         else:
             placeholders = {}
@@ -346,6 +401,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
 
             if issue.key in {
+                ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
                 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
                 ISSUE_KEY_ADDON_PWNED,
             }:
@@ -359,6 +415,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                         placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
                         break
 
+                if (
+                    issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT
+                    and issue.reference_extra
+                ):
+                    placeholders[PLACEHOLDER_KEY_PORT] = str(
+                        issue.reference_extra["port"]
+                    )
+
         elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
             host_info = get_host_info(self.hass)
             if host_info and "disk_free" in host_info:
@@ -370,7 +434,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(issue.suggestions),
+            is_fixable=bool(presentable),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
@@ -387,15 +451,27 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         current_data: SupervisorIssuesData,
     ) -> None:
         """Create/delete issue repairs and notify subscribers based on issue deltas."""
+        issue_registry = ir.async_get(self.hass)
         for issue in current_data.issues.values():
             previous_issue = previous_data.issues.get(issue.uuid)
-            if previous_issue is not None and self._issue_equal(previous_issue, issue):
-                continue
-
-            self._create_or_update_issue_repair(issue)
-            self._process_issue_change(
-                IssueSubscriptionEvent(event="changed", issue=issue)
+            changed = previous_issue is None or not self._issue_equal(
+                previous_issue, issue
             )
+
+            # Update the repair on changes, and re-create it if the registry
+            # entry went missing: a finished repair flow deletes the entry
+            # even when applying the suggestion failed in Supervisor and the
+            # issue is unchanged.
+            if changed or (
+                issue.key in ISSUE_KEYS_FOR_REPAIRS
+                and not issue_registry.async_get_issue(DOMAIN, issue.uuid.hex)
+            ):
+                self._create_or_update_issue_repair(issue)
+
+            if changed:
+                self._process_issue_change(
+                    IssueSubscriptionEvent(event="changed", issue=issue)
+                )
 
         for issue_uuid, issue in previous_data.issues.items():
             if issue_uuid not in current_data.issues:
@@ -407,6 +483,11 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
     @override
     async def _async_update_data(self) -> SupervisorIssuesData:
         """Update issues data from Supervisor resolution center."""
+        # Translations decide which suggestions a repair can present and
+        # with that its fixable state — make sure they are loaded before
+        # the repairs are created (no-op once cached).
+        await async_load_integrations(self.hass, {DOMAIN})
+
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
@@ -447,12 +528,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             type=str(data.type),
             context=data.context,
             reference=data.reference,
+            reference_extra=data.reference_extra,
             suggestions=[
                 Suggestion(
                     uuid=suggestion.uuid,
                     type=str(suggestion.type),
                     context=suggestion.context,
                     reference=suggestion.reference,
+                    reference_extra=suggestion.reference_extra,
                 )
                 for suggestion in suggestions
             ],
@@ -750,6 +833,7 @@ class HassioMainData:
     host: HostInfo
     mounts: dict[str, CIFSMountResponse | NFSMountResponse]
     os: OSInfo | None
+    panels: dict[str, IngressPanel]
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the data."""
@@ -759,6 +843,7 @@ class HassioMainData:
             "host": self.host.to_dict(),
             "mounts": {name: mount.to_dict() for name, mount in self.mounts.items()},
             "os": self.os.to_dict() if self.os is not None else None,
+            "panels": {slug: panel.to_dict() for slug, panel in self.panels.items()},
         }
 
 
@@ -1270,6 +1355,23 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
+        self._dispatcher_disconnect = async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
+        )
+
+    @callback
+    def _supervisor_event(self, event: dict[str, Any]) -> None:
+        """Refresh add-on data when Supervisor reloads the store."""
+        if event.get(ATTR_WS_EVENT) != EVENT_STORE_RELOADED:
+            return
+        # Without listeners there are no add-on entities to keep in sync.
+        # Scheduled polling is paused in that case as well, so don't let
+        # store reload events trigger refreshes either.
+        if not self._listeners:
+            return
+        self.config_entry.async_create_task(
+            self.hass, self.async_refresh_after_store_reload()
+        )
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -1333,9 +1435,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
@@ -1438,6 +1538,12 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
             addon_info_cache[slug] = info
 
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
+        self._dispatcher_disconnect()
+
 
 class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
     """Class to retrieve Hass.io status."""
@@ -1478,6 +1584,25 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @callback
+    def async_push_panel(self, addon: str, panel: IngressPanel) -> None:
+        """Apply a Supervisor panel push to cached data without touching refresh state."""
+        self.data = replace(self.data, panels={**self.data.panels, addon: panel})
+        self.async_update_listeners()
+
+    @callback
+    def async_push_panel_removal(self, addon: str) -> None:
+        """Apply a Supervisor panel removal push to cached data."""
+        if addon not in self.data.panels:
+            return
+        self.data = replace(
+            self.data,
+            panels={
+                slug: panel for slug, panel in self.data.panels.items() if slug != addon
+            },
+        )
+        self.async_update_listeners()
+
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
@@ -1487,7 +1612,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         try:
             # Cast is required here because asyncio.gather only has overloads to
             # maintain typing for 6 arguments. It falls back to list[<common parent>]
-            # after that which is what mypy sees here since we have 7 API calls.
+            # after that which is what mypy sees here since we have 8 API calls.
             (
                 info,
                 core_info,
@@ -1496,6 +1621,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 host_info,
                 store_info,
                 network_info,
+                panels_info,
             ) = cast(
                 tuple[
                     RootInfo,
@@ -1505,6 +1631,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     HostInfo,
                     StoreInfo,
                     NetworkInfo,
+                    dict[str, IngressPanel],
                 ],
                 await asyncio.gather(
                     client.info(),
@@ -1514,6 +1641,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     client.host.info(),
                     client.store.info(),
                     client.network.info(),
+                    client.ingress.panels(),
                 ),
             )
             mounts_info = await client.mounts.info()
@@ -1528,6 +1656,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             host=host_info,
             mounts={mount.name: mount for mount in mounts_info.mounts},
             os=os_info if self.is_hass_os else None,
+            panels=panels_info,
         )
 
         # Update hass.data for legacy accessor functions
@@ -1555,9 +1684,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # Remove mounts that no longer exists from device registry
         supervisor_mount_devices = {
             device.name
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.MOUNT
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):

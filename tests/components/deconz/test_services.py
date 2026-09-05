@@ -363,7 +363,7 @@ async def test_remove_orphaned_entries_service(
         len(
             [
                 entry
-                for entry in device_registry.devices.values()
+                for entry in device_registry.devices
                 if config_entry_setup.entry_id in entry.config_entries
             ]
         )
@@ -399,7 +399,7 @@ async def test_remove_orphaned_entries_service(
         len(
             [
                 entry
-                for entry in device_registry.devices.values()
+                for entry in device_registry.devices
                 if config_entry_setup.entry_id in entry.config_entries
             ]
         )

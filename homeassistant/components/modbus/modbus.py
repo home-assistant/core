@@ -349,13 +349,6 @@ class ModbusHub:
         )
         return True
 
-    async def async_restart(self) -> None:
-        """Reconnect client."""
-        if self._client:
-            await self.async_close()
-
-        await self.async_setup()
-
     async def async_close(self) -> None:
         """Disconnect client."""
         self.event_connected.set()

@@ -227,6 +227,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 
+    # Ensure the gateway is torn down if setup fails after this point
+    config_entry.async_on_unload(ha_zha_data.gateway_proxy.shutdown)
+
     manufacturer = zha_gateway.state.node_info.manufacturer
     model = zha_gateway.state.node_info.model
 
@@ -285,11 +288,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
-
-    if ha_zha_data.gateway_proxy is not None:
-        await ha_zha_data.gateway_proxy.shutdown()
-        ha_zha_data.gateway_proxy = None
-
+    ha_zha_data.gateway_proxy = None
     ha_zha_data.update_coordinator = None
 
     # clean up any remaining entity metadata

@@ -7,6 +7,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import hdrs
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
@@ -62,7 +63,10 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        # A colon cannot be encoded into basic credentials, RFC 7617#section-2
+        vol.Inclusive(CONF_USERNAME, "authentication"): vol.All(
+            cv.string, vol.Match(r"^[^:]*$")
+        ),
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
@@ -116,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         template_url = command_config[CONF_URL]
         skip_url_encoding = command_config[CONF_SKIP_URL_ENCODING]
 
-        auth = None
+        basic_auth: tuple[str, str] | None = None
         digest_auth: tuple[str, str] | None = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
@@ -124,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
                 digest_auth = (username, password)
             else:
-                auth = aiohttp.BasicAuth(username, password=password)
+                basic_auth = (username, password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
@@ -166,18 +170,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 payload,
             )
 
+            # Kept out of the debug log above so the credentials are not logged.
+            # Encoding here rather than at registration keeps a credential
+            # outside latin-1 a failure of this call, not of the whole setup.
+            request_headers = CIMultiDict(headers)
+            if basic_auth is not None and hdrs.AUTHORIZATION not in request_headers:
+                request_headers[hdrs.AUTHORIZATION] = aiohttp.encode_basic_auth(
+                    *basic_auth, encoding="latin1"
+                )
+
             try:
                 # Prepare request kwargs
                 request_kwargs = {
                     "data": payload,
-                    "headers": headers or None,
+                    "headers": request_headers or None,
                     "timeout": timeout,
                 }
 
                 # Add authentication
-                if auth is not None:
-                    request_kwargs["auth"] = auth
-                elif digest_auth is not None:
+                if digest_auth is not None:
                     request_kwargs["middlewares"] = (
                         aiohttp.DigestAuthMiddleware(*digest_auth),
                     )
