@@ -211,6 +211,12 @@ async def set_heating_schedule(service_call: ServiceCall) -> None:
     client = entry.runtime_data.client
 
     circuit = _circuit_from_device(device_entry)
+    if circuit not in entry.runtime_data.available_circuits:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_a_heating_circuit_device",
+            translation_placeholders={"device_name": _device_name(device_entry)},
+        )
     days = _build_weekly_schedule_days(service_call)
     heating_schedule = HeatingSchedule(**days)
 
