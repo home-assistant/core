@@ -148,11 +148,9 @@ CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 SERVICE_STOP = "stop"
-SERVICE_RESTART = "restart"
 
 # dispatcher signals
 SIGNAL_STOP_ENTITY = "modbus.stop"
-SIGNAL_START_ENTITY = "modbus.start"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
@@ -188,4 +186,4 @@ LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
 DEFAULT_SCALE = 1.0
 DEFAULT_OFFSET = 0
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)

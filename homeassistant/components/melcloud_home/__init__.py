@@ -7,7 +7,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import (
+    MelCloudHomeConfigEntry,
+    MelCloudHomeCoordinator,
+    MelCloudHomeEnergyCoordinator,
+    MelCloudHomeRuntimeData,
+)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -31,8 +36,15 @@ async def async_setup_entry(
     client = MELCloudHome(auth=auth, session=session)
 
     coordinator = MelCloudHomeCoordinator(hass, entry, client)
+    energy_coordinator = MelCloudHomeEnergyCoordinator(hass, entry, client)
+
+    # It has to be this order, to avoid a race condition
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    await energy_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MelCloudHomeRuntimeData(
+        coordinator=coordinator, energy_coordinator=energy_coordinator
+    )
 
     entry.async_create_background_task(
         hass, coordinator.listen(), f"{DOMAIN}_websocket"

@@ -10,11 +10,12 @@ from uiprotect.data import (
     DeviceState,
     IRLEDMode,
     Light,
+    Permission,
     RingSetting,
     Sensor,
 )
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
     LIGHT_NUMBERS,
@@ -167,8 +168,9 @@ async def test_number_setup_camera_missing_attr(
 async def test_number_light_sensitivity(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ) -> None:
-    """Test sensitivity number entity for lights."""
+    """Test sensitivity number entity for lights (public API)."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
@@ -180,7 +182,7 @@ async def test_number_light_sensitivity(
     )
 
     with patch_ufp_method(
-        light, "set_sensitivity", new_callable=AsyncMock
+        light, "set_sensitivity_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "number",
@@ -190,6 +192,39 @@ async def test_number_light_sensitivity(
         )
 
         mock_method.assert_called_once_with(15.0)
+
+
+async def test_number_light_sensitivity_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Sensitivity reads from the public object and refreshes on a public WS update."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, LIGHT_NUMBERS[0]
+    )
+
+    # A value the private fixture (45) would not produce proves the public source.
+    public = make_public_light(light, pir_sensitivity=30)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "30"
+
+
+async def test_number_light_sensitivity_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated sensitivity number is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, LIGHT_NUMBERS[0]
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_number_light_duration(
@@ -403,6 +438,35 @@ async def test_number_sense_sensitivity_public_value(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "42"
+
+
+async def test_number_sense_sensitivity_ignores_local_permissions(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A read-only local user keeps the motion sensitivity number.
+
+    It writes through the API key, so the local user's write bit must not gate it.
+    Its read-only mirror stays until the deprecation runs out.
+    """
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
+    ]
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, sensor_all, SENSE_NUMBERS[0]
+    )
+    assert entity_registry.async_get(entity_id) is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{sensor_all.mac}_sensitivity"
+        )
+        is not None
+    )
 
 
 async def test_number_sense_sensitivity_set(

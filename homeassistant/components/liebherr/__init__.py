@@ -78,6 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Start SSE push streams for the initial devices
+    for coordinator in data.coordinators.values():
+        coordinator.async_start_stream()
+
     # Schedule periodic scan for new devices
     async def _async_scan_for_new_devices(_now: datetime) -> None:
         """Scan for new devices added to the account."""
@@ -102,14 +106,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                 if identifier[0] == DOMAIN
             }
             if device_ids - current_device_ids:
-                # Shut down coordinator if one exists
                 for device_id in device_ids:
                     if coordinator := data.coordinators.pop(device_id, None):
                         await coordinator.async_shutdown()
-                device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
+                device_registry.async_remove_device(device_entry.id)
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
@@ -127,6 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                     continue
                 data.coordinators[device.device_id] = coordinator
                 new_coordinators.append(coordinator)
+                coordinator.async_start_stream()
 
         if new_coordinators:
             async_dispatcher_send(

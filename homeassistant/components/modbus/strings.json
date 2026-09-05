@@ -26,16 +26,6 @@
       "description": "Reloads all Modbus entities.",
       "name": "[%key:common::action::reload%]"
     },
-    "restart": {
-      "description": "Restarts a Modbus hub (if running, stops then starts).",
-      "fields": {
-        "hub": {
-          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]",
-          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]"
-        }
-      },
-      "name": "[%key:common::action::restart%]"
-    },
     "stop": {
       "description": "Stops a Modbus hub.",
       "fields": {
@@ -90,6 +80,5 @@
       },
       "name": "Write register"
     }
-  },
-  "title": "Manual Modbus"
+  }
 }

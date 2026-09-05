@@ -73,13 +73,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             or f"{client.controllers[1].mac_address}-{controller_id}"
         )
         connections = None
-        via_device = None
+        via_device_id: str | None = None
         configuration_url = None
         if controller_id != 1:
             assert client.controllers[1].mac_address
-            via_device = (
-                DOMAIN,
-                client.controllers[1].mac_address,
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, client.controllers[1].mac_address),
+                config_entry_id=entry.entry_id,
             )
         else:
             assert controller.mac_address
@@ -94,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             model=controller.controller_type,
             sw_version=controller.firmware_version,
             connections=connections,
-            via_device=via_device,
+            via_device_id=via_device_id,
             configuration_url=configuration_url,
         )
 
