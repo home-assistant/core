@@ -57,6 +57,10 @@ DEFAULT_ROTARY_EVENT_SUBTYPES = (
     RelativeRotaryDirection.COUNTER_CLOCK_WISE,
 )
 
+FALLBACK_MIN_MIREDS = 153  # hue default for most lights
+FALLBACK_MAX_MIREDS = 500  # hue default for most lights
+FALLBACK_KELVIN = 5800  # halfway
+
 DEVICE_SPECIFIC_EVENT_TYPES = {
     # device specific overrides of specific supported button events
     "Hue tap switch": (ButtonEvent.INITIAL_PRESS,),
