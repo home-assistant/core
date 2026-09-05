@@ -38,6 +38,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     HomeAssistantError,
     ServiceNotSupported,
     ServiceValidationError,
@@ -788,7 +789,14 @@ async def _async_handle_entity_calls(
         entity: Entity, coro: Coroutine[Any, Any, ServiceResponse]
     ) -> ServiceResponse:
         entity.async_set_context(context)
-        return await coro
+        try:
+            return await coro
+        except ConfigEntryAuthFailed:
+            if (platform := entity.platform) is not None and (
+                entry := platform.config_entry
+            ) is not None:
+                entry.async_start_reauth_if_available(entity.hass)
+            raise
 
     if len(entity_calls) == 1:
         # Single entity case avoids creating task

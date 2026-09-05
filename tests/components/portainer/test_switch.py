@@ -10,14 +10,16 @@ from pyportainer.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -108,7 +110,7 @@ async def test_turn_off_on(
 @pytest.mark.parametrize(
     ("raise_exception", "expected_exception"),
     [
-        (PortainerAuthenticationError, HomeAssistantError),
+        (PortainerAuthenticationError, ConfigEntryAuthFailed),
         (PortainerConnectionError, HomeAssistantError),
         (PortainerTimeoutError, HomeAssistantError),
     ],
@@ -140,3 +142,37 @@ async def test_turn_off_on_exceptions(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "entity_id", ["switch.practical_morse_container", "switch.webstack_stack"]
+)
+@pytest.mark.parametrize("service_call", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_turn_off_on_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    service_call: str,
+) -> None:
+    """Test a switch action failing to authenticate starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    for method in ("start_container", "stop_container", "start_stack", "stop_stack"):
+        getattr(
+            mock_portainer_client, method
+        ).side_effect = PortainerAuthenticationError
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service_call,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
