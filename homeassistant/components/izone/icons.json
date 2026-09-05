@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "sensor": {
+      "control_zone": {
+        "default": "mdi:thermostat-auto"
+      }
+    }
+  },
   "services": {
     "airflow_max": {
       "service": "mdi:fan-plus"

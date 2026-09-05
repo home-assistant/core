@@ -26,6 +26,12 @@
   },
   "entity": {
     "sensor": {
+      "control_zone": {
+        "name": "Control zone"
+      },
+      "control_zone_setpoint": {
+        "name": "Control zone setpoint"
+      },
       "return_temperature": {
         "name": "Return temperature"
       },

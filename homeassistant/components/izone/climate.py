@@ -106,24 +106,8 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_ON
         )
 
-        # Typically, iZone will automatically set the controller's target
-        # temperature; but there are situations where Home Assistant should be
-        # allowed to set it:
-        #
-        # 1. The controller is in RAS mode (i.e., not in master/slave mode).
-        # 2. The controller is in master mode, but the control zone is set to
-        #    zone 13 (i.e., the master unit itself), or an invalid zone
-        #    (greater than the total number of zones). In this case, the
-        #    master unit is controlling the temperature directly.
-        # 3. Any of the zones do not have a temperature sensor
-        if (
-            controller.ras_mode == "RAS"
-            or (
-                controller.ras_mode == "master"
-                and controller.zone_ctrl > controller.zones_total
-            )
-            or any(zone.temp_current is None for zone in controller.zones)
-        ):
+        # Frozen at init: RAS / master unit / missing AUTO CTS (see pizone).
+        if controller.control_setpoint_owner is controller:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._state_to_pizone = {
@@ -240,16 +224,20 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             return self.controller.temp_supply
         return self.controller.temp_return
 
+    def _active_control_zone(self) -> Zone | None:
+        """Return the pizone zone currently driving the unit, if any."""
+        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+            return None
+        owner = self.controller.control_setpoint_owner
+        return owner if isinstance(owner, Zone) else None
+
     @property
-    def control_zone_name(self):
+    def control_zone_name(self) -> str | None:
         """Return the zone that currently controls the AC unit.
 
         Only relevant if target temp not set by controller.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
-            return None
-        zone_ctrl = self.controller.zone_ctrl
-        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+        zone = self._active_control_zone()
         if zone is None:
             return None
         return zone.name
@@ -262,11 +250,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
-        zone_ctrl = self.controller.zone_ctrl
-        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
-        if zone is None:
-            return None
-        return zone.target_temperature
+        return self.controller.control_setpoint
 
     @property
     @override
@@ -277,7 +261,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self.controller.temp_setpoint
-        return self.control_zone_setpoint
+        return self.controller.control_setpoint
 
     @property
     def supply_temperature(self) -> float | None:
