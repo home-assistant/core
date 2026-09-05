@@ -169,6 +169,8 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_PRIVATE_KEY] = "invalid_key"
                 elif public_key and not _is_valid_key_hex(public_key):
                     errors[_CONF_PUBLIC_KEY] = "invalid_key"
+                elif public_key and not private_key:
+                    errors[_CONF_PUBLIC_KEY] = "public_key_requires_private_key"
                 elif (
                     private_key
                     and public_key

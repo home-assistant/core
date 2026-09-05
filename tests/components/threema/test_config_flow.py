@@ -365,6 +365,33 @@ async def test_credentials_private_key_in_public_key_field_rejected(
     assert result["errors"] == {_CONF_PUBLIC_KEY: "invalid_key"}
 
 
+async def test_credentials_public_key_without_private_key_rejected(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test a public key given alone (no private key) is rejected, not discarded."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            _CONF_PUBLIC_KEY: "a" * 64,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {_CONF_PUBLIC_KEY: "public_key_requires_private_key"}
+
+
 async def test_credentials_public_key_matches(
     hass: HomeAssistant,
     mock_credentials: AsyncMock,

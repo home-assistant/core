@@ -11,6 +11,7 @@
             "invalid_gateway_id": "Gateway ID must be 8 characters long and start with *.",
             "invalid_key": "Key must be a 64-character hex string (32 bytes).",
             "key_mismatch": "The public key does not match the private key.",
+            "public_key_requires_private_key": "Enter the private key too to verify it against the public key.",
             "unknown": "Unexpected error"
         },
         "step": {
