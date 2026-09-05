@@ -2151,10 +2151,63 @@ async def test_overlapping_local_live_poll_skips_second_tick(
     assert mock_powerwall_live_status.await_count == 1
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_stream_push_restores_availability_after_disconnect(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_live_stream: MagicMock,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """A paired site's stream push restores coordinator success after a drop.
+
+    The stream owns the live coordinator's success state, so a push through
+    ``handle_stream_update`` must restore ``last_update_success`` and bring the
+    paired live entities back once the stream resumes.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
+        assert (
+            hass.states.get("sensor.energy_site_solar_power").state != STATE_UNAVAILABLE
+        )
+
+        # The stream drops, failing the stream-owned live coordinator.
+        mock_add_connection_listener.send(False)
+        await hass.async_block_till_done()
+        assert live_coordinator.last_update_success is False
+        assert (
+            hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+        )
+
+        # A streamed live_status document arrives once the stream resumes.
+        push = deepcopy(LIVE_STATUS["response"])
+        push["solar_power"] = 456
+        mock_energy_live_stream.send(push)
+        await hass.async_block_till_done()
+
+    # The push restored the coordinator's success state, so the paired live
+    # entities are available again.
+    assert live_coordinator.last_update_success is True
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+
 async def test_local_config_poll_does_not_clear_stream_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
+    mock_energy_info_stream: MagicMock,
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
     """A local config poll never clears the info coordinator's stream error.
@@ -2162,7 +2215,8 @@ async def test_local_config_poll_does_not_clear_stream_error(
     Cloud-only site-info entities have no local source, so their availability is
     stream-owned. A successful local poll refreshes the locally-owned keys in the
     coordinator data without clearing the stream error or making the cloud-only
-    entities available with stale values.
+    entities available with stale values. Only a stream document, which owns the
+    success state, restores those entities once the stream resumes.
     """
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
@@ -2198,13 +2252,31 @@ async def test_local_config_poll_does_not_clear_stream_error(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert mock_powerwall_local_config.await_count == 1
-    # The locally-owned key is refreshed in the coordinator data...
+        assert mock_powerwall_local_config.await_count == 1
+        # The locally-owned key is refreshed in the coordinator data...
+        assert info_coordinator.data["default_real_mode"] == "autonomous"
+        # ...but the poll left the stream error untouched, so the cloud-only
+        # entity stays unavailable rather than surfacing a stale cloud value.
+        assert info_coordinator.last_update_success is False
+        assert (
+            hass.states.get("select.energy_site_allow_export").state
+            == STATE_UNAVAILABLE
+        )
+
+        # A streamed site_info document, which owns the success state, is what
+        # restores the cloud-only entities once the stream resumes.
+        slim_site_info = {
+            key: value
+            for key, value in deepcopy(SITE_INFO["response"]).items()
+            if key != "tariff_content_v2"
+        }
+        mock_energy_info_stream.send(slim_site_info)
+        await hass.async_block_till_done()
+
+    assert info_coordinator.last_update_success is True
+    assert hass.states.get("select.energy_site_allow_export").state != STATE_UNAVAILABLE
+    # The locally-owned key stays overlaid across the stream recovery.
     assert info_coordinator.data["default_real_mode"] == "autonomous"
-    # ...but the poll left the stream error untouched, so the cloud-only entity
-    # stays unavailable rather than surfacing a stale cloud value.
-    assert info_coordinator.last_update_success is False
-    assert hass.states.get("select.energy_site_allow_export").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

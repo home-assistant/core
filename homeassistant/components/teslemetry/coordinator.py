@@ -202,11 +202,12 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
     ``update_interval``, so a burst of stream pushes cannot postpone it) and
     overlays the locally-owned keys onto the cloud document via
     ``merge_live_status``, re-running the merge on every update from either side
-    so neither cadence can transiently clobber the other's keys. Both the local
-    poll and a paired stream push publish directly with ``async_update_listeners``
-    rather than through the update path, so a local poll never touches the
-    stream-owned success/error state; a key the gateway does not serve, or a
-    failed poll, falls back to the cloud value.
+    so neither cadence can transiently clobber the other's keys. A stream push
+    publishes through ``async_set_updated_data`` so the stream owns the
+    coordinator's success/error state and restores it on recovery, while the
+    local poll publishes with ``async_update_listeners`` and deliberately never
+    touches that state; a key the gateway does not serve, or a failed poll, falls
+    back to the cloud value.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -295,13 +296,14 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         if self._local is None:
             self.async_set_updated_data(_index_wall_connectors(data))
             return
-        # A paired site's local poll is timer-driven and its success/error state
-        # is stream-owned, so publish the re-merged push directly: this resets no
-        # timer and does not run through the update path. The re-merge keeps a
-        # push from reverting a locally-owned key between local polls.
+        # The stream owns this coordinator's success state, so publish the
+        # re-merged push through async_set_updated_data: it restores
+        # last_update_success on recovery and resets no timer, since this
+        # coordinator has no update_interval. The local poll deliberately does
+        # not touch that state. The re-merge keeps a push from reverting a
+        # locally-owned key between local polls.
         self._cloud_live = data
-        self.data = self._merged()
-        self.async_update_listeners()
+        self.async_set_updated_data(self._merged())
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
