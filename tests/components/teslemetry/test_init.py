@@ -2312,7 +2312,7 @@ async def test_subentry_removal_keeps_vehicle_device_and_entities(
         assert hass.config_entries.async_remove_subentry(entry, subentry_id)
         await hass.async_block_till_done()
 
-    # The vehicle device and every entity on it survive the removal.
+    # The Teslemetry vehicle device and every entity on it survive the removal.
     device_after = device_registry.async_get_device_by_identifier(
         (DOMAIN, VIN), entry.entry_id
     )
