@@ -37,6 +37,7 @@ class DummyDevice:
         device_type: DeviceType,
         *,
         attributes: dict | None = None,
+        capabilities: dict | None = None,
     ) -> None:
         """Initialize fake device."""
         self.device_type = device_type
@@ -46,7 +47,7 @@ class DummyDevice:
         self.subtype = TEST_SUBTYPE
         self.available = False
         self.attributes = attributes or {}
-        self.capabilities: dict[str, Any] = {}
+        self.capabilities: dict[str, Any] = capabilities or {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1

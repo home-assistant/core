@@ -23,6 +23,11 @@ class MideaSwitchEntityDescription(SwitchEntityDescription):
 
 SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
+        key="pump",
+        translation_key="pump",
+        models=[DeviceType.A1],
+    ),
+    MideaSwitchEntityDescription(
         key="aux_heating",
         translation_key="aux_heating",
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF],
@@ -118,6 +123,10 @@ async def async_setup_entry(
         for description in SWITCHES
         if device.device_type in description.models
         and description.key in device.attributes
+        and (
+            description.key != "pump"
+            or device.capabilities.get("pump", False)
+        )
     )
 
 
