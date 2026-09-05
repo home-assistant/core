@@ -198,7 +198,18 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         key = config_entry.entry_id
 
         if (platform := self._platforms.pop(key, None)) is None:
-            raise ValueError("Config entry was never loaded!")
+            self.logger.warning(
+                (
+                    "Config entry %s (%s) for %s.%s was never loaded, "
+                    "possibly because its platform setup failed earlier; "
+                    "there is nothing to unload"
+                ),
+                config_entry.title,
+                key,
+                config_entry.domain,
+                self.domain,
+            )
+            return True
 
         await platform.async_reset()
         return True
