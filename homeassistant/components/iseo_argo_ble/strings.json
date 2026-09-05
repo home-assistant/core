@@ -17,7 +17,7 @@
         "title": "ISEO lock discovered"
       },
       "gw_register": {
-        "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
+        "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.\n\nThe same scan also turns on the lock's **Door Status Advice** setting, which makes it report door state in its Bluetooth advertisements. Home Assistant then follows the lock without ever connecting to it on a timer.",
         "title": "Register gateway"
       },
       "user": {
@@ -43,6 +43,20 @@
     },
     "lock_rejected_identity": {
       "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_polling": "Connect to the lock to read door status"
+        },
+        "data_description": {
+          "enable_polling": "Also connect to the lock every 30 seconds to read the door state."
+        },
+        "description": "Home Assistant always follows the door state the lock broadcasts in its advertisements, which is immediate and costs the lock nothing.\n\nTurning this on adds a connection to the lock every 30 seconds to read the door state as well, for when the advertisements do not reach Home Assistant reliably — at the edge of Bluetooth range, or with no Bluetooth proxy nearby. It wakes the lock each time.\n\nEither route needs the lock's **Door Status Advice** setting, which Home Assistant enables during setup and you can also turn on for the lock in the ISEO Argo app.",
+        "title": "Door status updates"
+      }
     }
   }
 }
