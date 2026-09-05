@@ -85,6 +85,10 @@ async def test_config_entry_not_ready_when_connect_hangs(
     indefinitely, and confirm setup still resolves to SETUP_RETRY rather
     than blocking forever.
     """
+    async def _hang(*args, **kwargs) -> None:
+        """Simulate Connection.create() never returning."""
+        await asyncio.sleep(3600)
+
     with (
         patch(
             "homeassistant.components.anthemav.CONNECT_TIMEOUT_SECONDS",
@@ -92,7 +96,7 @@ async def test_config_entry_not_ready_when_connect_hangs(
         ),
         patch(
             "anthemav.Connection.create",
-            side_effect=lambda *args, **kwargs: asyncio.sleep(3600),
+            side_effect=_hang,
         ),
     ):
         mock_config_entry.add_to_hass(hass)
