@@ -6,8 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
 
@@ -87,6 +90,32 @@ async def test_diagnostics_no_entities(
     assert diag["vehicles"]
     for vehicle in diag["vehicles"]:
         assert vehicle["entities"] == {}
+
+
+@pytest.mark.usefixtures("mock_legacy")
+async def test_diagnostics_enabled_entity_source(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test diagnostics reports an enabled entity whose platform is not loaded."""
+
+    entry = await setup_platform(hass, platforms=[])
+    vehicle = entry.runtime_data.vehicles[0]
+
+    # An enabled entity with no platform loaded is neither a coordinator
+    # listener nor a live streaming entity, so it falls back to "enabled".
+    registry_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{vehicle.vin}-charge_state_usable_battery_level",
+        config_entry=entry,
+    )
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    entities = diag["vehicles"][0]["entities"]
+    assert entities[registry_entry.entity_id] == "enabled"
 
 
 async def test_streaming_vehicle_does_not_poll(
