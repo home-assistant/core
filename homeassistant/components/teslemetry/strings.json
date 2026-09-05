@@ -49,7 +49,7 @@
   "config_subentries": {
     "energy_site": {
       "abort": {
-        "all_sites_added": "Every energy site with a Powerwall on your Teslemetry account has already been added for local control.",
+        "all_sites_added": "Every accessible energy site with a Powerwall on your Teslemetry account has already been added for local control.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
         "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account."
