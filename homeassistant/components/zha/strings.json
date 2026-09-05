@@ -257,6 +257,18 @@
       "consumer_connected": {
         "name": "Consumer connected"
       },
+      "emergency_overcurrent": {
+        "name": "Emergency overcurrent"
+      },
+      "emergency_overheat": {
+        "name": "Emergency overheat"
+      },
+      "emergency_overvoltage": {
+        "name": "Emergency overvoltage"
+      },
+      "emergency_undervoltage": {
+        "name": "Emergency undervoltage"
+      },
       "error_or_battery_low": {
         "name": "Error or battery low"
       },
@@ -310,6 +322,9 @@
       },
       "muted": {
         "name": "Muted"
+      },
+      "neutral_presence": {
+        "name": "Neutral presence"
       },
       "open_window_detection_status": {
         "name": "Open window detection status"
@@ -514,6 +529,9 @@
       }
     },
     "number": {
+      "acceleration_time": {
+        "name": "Acceleration time"
+      },
       "additional_steps": {
         "name": "Additional steps"
       },
@@ -576,6 +594,9 @@
       },
       "calibration_rotation_run_time_up": {
         "name": "Calibration rotation run time up"
+      },
+      "calibration_time": {
+        "name": "Calibration time"
       },
       "calibration_vertical_run_time_down": {
         "name": "Calibration vertical run time down"
@@ -642,6 +663,9 @@
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
+      },
+      "deceleration_time": {
+        "name": "Deceleration time"
       },
       "default_level_local": {
         "name": "Local default dimming level"
@@ -793,6 +817,42 @@
       "led_color_when_on": {
         "name": "Default all LED on color"
       },
+      "led_indicator_off_b": {
+        "name": "LED brightness (off)"
+      },
+      "led_indicator_off_b_id": {
+        "name": "LED brightness (off) {id}"
+      },
+      "led_indicator_off_h": {
+        "name": "LED hue (off)"
+      },
+      "led_indicator_off_h_id": {
+        "name": "LED hue (off) {id}"
+      },
+      "led_indicator_off_s": {
+        "name": "LED saturation (off)"
+      },
+      "led_indicator_off_s_id": {
+        "name": "LED saturation (off) {id}"
+      },
+      "led_indicator_on_b": {
+        "name": "LED brightness (on)"
+      },
+      "led_indicator_on_b_id": {
+        "name": "LED brightness (on) {id}"
+      },
+      "led_indicator_on_h": {
+        "name": "LED hue (on)"
+      },
+      "led_indicator_on_h_id": {
+        "name": "LED hue (on) {id}"
+      },
+      "led_indicator_on_s": {
+        "name": "LED saturation (on)"
+      },
+      "led_indicator_on_s_id": {
+        "name": "LED saturation (on) {id}"
+      },
       "led_intensity_when_off": {
         "name": "Default all LED off intensity"
       },
@@ -825,6 +885,9 @@
       },
       "long_press_duration": {
         "name": "Long press duration"
+      },
+      "lower_voltage_threshold": {
+        "name": "Lower voltage threshold"
       },
       "max_brightness": {
         "name": "Maximum brightness"
@@ -915,6 +978,9 @@
       },
       "motor_start_delay": {
         "name": "Motor start delay"
+      },
+      "motor_timeout": {
+        "name": "Motor timeout"
       },
       "move_sensitivity": {
         "name": "Motion sensitivity"
@@ -1117,6 +1183,9 @@
       "temperature_sensitivity": {
         "name": "Temperature sensitivity"
       },
+      "temperature_threshold": {
+        "name": "Overtemperature threshold"
+      },
       "temporary_mode_duration": {
         "name": "Temporary mode duration"
       },
@@ -1180,6 +1249,12 @@
       "update_frequency": {
         "name": "Update frequency"
       },
+      "upper_current_threshold": {
+        "name": "Upper current threshold"
+      },
+      "upper_voltage_threshold": {
+        "name": "Upper voltage threshold"
+      },
       "valve_closing_degree": {
         "name": "Valve closing degree"
       },
@@ -1203,6 +1278,9 @@
       },
       "valve_state_auto_shutdown": {
         "name": "Valve state auto-shutdown"
+      },
+      "velocity": {
+        "name": "Velocity"
       },
       "water_duration": {
         "name": "Water duration"
@@ -1259,6 +1337,9 @@
       },
       "breaker_status": {
         "name": "Breaker status"
+      },
+      "buttons_mode": {
+        "name": "Buttons mode"
       },
       "calibration_mode": {
         "name": "Calibration mode"
@@ -1317,6 +1398,15 @@
       "eco_mode": {
         "name": "Eco mode"
       },
+      "emergency_shutoff_recovery": {
+        "name": "Emergency recovery"
+      },
+      "event_mode": {
+        "name": "Event mode"
+      },
+      "event_mode_id": {
+        "name": "Event mode {id}"
+      },
       "exercise_day_of_week": {
         "name": "Exercise day of the week"
       },
@@ -1370,6 +1460,9 @@
       },
       "led_brightness": {
         "name": "LED brightness"
+      },
+      "led_indication_type": {
+        "name": "LED indication type"
       },
       "led_scaling_mode": {
         "name": "LED scaling mode"
@@ -1443,6 +1536,9 @@
       "power_on_state": {
         "name": "Power on state"
       },
+      "power_profile": {
+        "name": "Power profile"
+      },
       "presence_sensitivity": {
         "name": "Presence sensitivity"
       },
@@ -1454,6 +1550,12 @@
       },
       "regulator_period": {
         "name": "Regulator period"
+      },
+      "relay_mode": {
+        "name": "Relay mode"
+      },
+      "relay_mode_id": {
+        "name": "Relay mode {id}"
       },
       "reverse": {
         "name": "Reverse"
@@ -1598,6 +1700,9 @@
       "brightness_level": {
         "name": "Brightness level"
       },
+      "button_clicks_1": {
+        "name": "Button 1 clicks"
+      },
       "calibrated": {
         "name": "Calibrated"
       },
@@ -1606,6 +1711,9 @@
       },
       "control_status": {
         "name": "Control status"
+      },
+      "cover_mode": {
+        "name": "Cover mode"
       },
       "dc_current": {
         "name": "DC current"
@@ -1627,6 +1735,9 @@
       },
       "distance": {
         "name": "Target distance"
+      },
+      "emergency_shutoff_state": {
+        "name": "Emergency shutoff state"
       },
       "energy_ph_a": {
         "name": "Energy phase A"
@@ -1750,6 +1861,9 @@
       "leaf_wetness": {
         "name": "Leaf wetness"
       },
+      "left_button_clicks": {
+        "name": "Left button clicks"
+      },
       "lifetime": {
         "name": "Lifetime"
       },
@@ -1798,6 +1912,9 @@
       "overheated": {
         "name": "Overheat protection"
       },
+      "pairing_button_clicks": {
+        "name": "Pairing button clicks"
+      },
       "pi_heating_demand": {
         "name": "Pi heating demand"
       },
@@ -1825,11 +1942,23 @@
       "rejoined_count": {
         "name": "Rejoined count"
       },
+      "relay_switches_1": {
+        "name": "Relay 1 switches"
+      },
+      "relay_switches_2": {
+        "name": "Relay 2 switches"
+      },
       "remaining_watering_time": {
         "name": "Remaining watering time"
       },
       "reported_packages": {
         "name": "Reported packages"
+      },
+      "resets_count": {
+        "name": "Reset count"
+      },
+      "right_button_clicks": {
+        "name": "Right button clicks"
       },
       "rms_current_ph_b": {
         "name": "Current phase B"
@@ -1969,6 +2098,9 @@
       "total_volatile_organic_compounds": {
         "name": "Total volatile organic compounds"
       },
+      "uptime": {
+        "name": "Uptime"
+      },
       "uv_index": {
         "name": "UV index"
       },
@@ -1993,6 +2125,9 @@
       "voc_index": {
         "name": "VOC index"
       },
+      "wall_button_clicks": {
+        "name": "Wall button clicks"
+      },
       "water_flow": {
         "name": "Water flow"
       },
@@ -2015,6 +2150,12 @@
       },
       "alarm_switch": {
         "name": "Alarm switch"
+      },
+      "allow_double_click": {
+        "name": "Allow double click"
+      },
+      "allow_double_click_id": {
+        "name": "Allow double click {id}"
       },
       "auto_clean": {
         "name": "Autoclean"
@@ -2042,6 +2183,15 @@
       },
       "child_lock": {
         "name": "Child lock"
+      },
+      "cover_calibration_mode": {
+        "name": "Cover calibration mode"
+      },
+      "cover_led_feedback": {
+        "name": "Cover LED feedback"
+      },
+      "cover_maintenance_mode": {
+        "name": "Cover maintenance mode"
       },
       "detach_relay": {
         "name": "Detach relay"
@@ -2151,6 +2301,18 @@
       "led_indicator": {
         "name": "LED indicator"
       },
+      "led_indicator_off_enable": {
+        "name": "LED indicator (off)"
+      },
+      "led_indicator_off_enable_id": {
+        "name": "LED indicator (off) {id}"
+      },
+      "led_indicator_on_enable": {
+        "name": "LED indicator (on)"
+      },
+      "led_indicator_on_enable_id": {
+        "name": "LED indicator (on) {id}"
+      },
       "linkage_alarm": {
         "name": "Linkage alarm"
       },
@@ -2195,6 +2357,9 @@
       },
       "relay_click_in_on_off_mode": {
         "name": "Disable relay click in on off mode"
+      },
+      "relay_id": {
+        "name": "Switch {id}"
       },
       "remote_protection": {
         "name": "Remote protection"
