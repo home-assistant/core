@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the ViCare integration."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import override
@@ -16,7 +17,7 @@ from PyViCare.PyViCareUtils import (
 )
 import requests
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -55,6 +56,17 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         )
         self._device = device
         self._accessor = accessor
+        self._value_readers: list[Callable[[], None]] = []
+
+    @callback
+    def async_add_value_reader(self, reader: Callable[[], None]) -> Callable[[], None]:
+        """Register a reader to run in the executor after each fetch."""
+        self._value_readers.append(reader)
+
+        def remove_value_reader() -> None:
+            self._value_readers.remove(reader)
+
+        return remove_value_reader
 
     @override
     async def _async_update_data(self) -> None:
@@ -81,3 +93,13 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             requests.RequestException,
         ) as err:
             raise UpdateFailed(str(err)) from err
+        else:
+            # Only after a successful fetch: the cache was emptied above, and a
+            # reader must not be the one to refill it from the event loop.
+            # Iterate a copy, entities deregister from the event loop thread.
+            for reader in list(self._value_readers):
+                try:
+                    reader()
+                except Exception:
+                    # One unreadable value must not take the whole device down.
+                    _LOGGER.exception("Error reading a ViCare entity value")
