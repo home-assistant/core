@@ -7,14 +7,25 @@ from typing import Any, Final, override
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT, DOMAIN, FroniusConfigEntryData
+from . import FroniusConfigEntry
+from .const import (
+    CONF_AUTO_REVERT,
+    CONF_MODBUS_PORT,
+    DEFAULT_MODBUS_PORT,
+    DOMAIN,
+    FroniusConfigEntryData,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -73,6 +84,13 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self.info: FroniusConfigEntryData
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: FroniusConfigEntry) -> FroniusOptionsFlow:
+        """Get the options flow for this handler."""
+        return FroniusOptionsFlow()
 
     @override
     async def async_step_user(
@@ -192,6 +210,25 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={"device": reconfigure_entry.title},
             errors=errors,
+        )
+
+
+class FroniusOptionsFlow(OptionsFlowWithReload):
+    """Handle the Fronius options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage how the inverter handles a setpoint Home Assistant left."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        auto_revert = self.config_entry.options.get(CONF_AUTO_REVERT, False)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_AUTO_REVERT, default=auto_revert): bool}
+            ),
         )
 
 

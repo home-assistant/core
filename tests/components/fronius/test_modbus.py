@@ -5,21 +5,33 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
-from modbus_connection.mock import MockModbusConnection
+from modbus_connection import ModbusConnectionError
+from modbus_connection.mock import MockModbusConnection, WriteEvent
 import pytest
 
-from homeassistant.components.fronius.const import SOLAR_NET_RESCAN_TIMER
+from homeassistant.components.fronius.const import (
+    AUTO_REVERT_SECONDS,
+    CONF_AUTO_REVERT,
+    HEARTBEAT_INTERVAL,
+    SOLAR_NET_RESCAN_TIMER,
+)
 from homeassistant.components.fronius.coordinator import (
     FroniusModbusInverterUpdateCoordinator,
 )
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import mock_responses, setup_fronius_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 # module names as reported by real GEN24 hybrid inverters
@@ -35,6 +47,9 @@ GEN24_HYBRID_MODULES = [
         id_str="StDisCha 4", current=12, voltage=3990, power=480, energy=150_000
     ),
 ]
+
+POWER_LIMIT = "number.gen24_storage_ac_power_limit"
+POWER_LIMITING = "switch.gen24_storage_ac_power_limiting"
 
 
 def assert_state(
@@ -250,6 +265,7 @@ async def test_no_mppt_model(
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a SunSpec device without MPPT model still gets its controls.
 
@@ -276,6 +292,13 @@ async def test_no_mppt_model(
     # no MPPT sensors, but the controls and their derived values are there
     assert not [entry for entry in modbus_entities if "mppt" in entry.unique_id]
     assert "number" in {entry.domain for entry in modbus_entities}
+
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # the re-scan finds the controls already set up
+    assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -451,3 +474,192 @@ async def test_control_refused_creates_no_control_entities(
         )
         if entry.domain == "number"
     ]
+
+
+async def _setup_with_controls(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    connection: MockModbusConnection,
+    options: dict[str, bool] | None = None,
+) -> MockConfigEntry:
+    """Set up an inverter that accepts control writes."""
+    connection.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES, storage_wcha_max=12800)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    with patch(
+        "homeassistant.components.fronius.PLATFORMS",
+        [Platform.NUMBER, Platform.SWITCH],
+    ):
+        return await setup_fronius_integration(
+            hass, is_logger=False, unique_id="12345678", options=options
+        )
+
+
+async def _turn_on_power_limit(hass: HomeAssistant, limit: float) -> None:
+    """Set the AC power limit and put it into effect."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: POWER_LIMIT, ATTR_VALUE: limit},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: POWER_LIMITING},
+        blocking=True,
+    )
+
+
+async def test_limit_carries_the_configured_fallback_period(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test the inverter is told when to revert a limit Home Assistant set."""
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+    )
+    controls = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.controls
+
+    await _turn_on_power_limit(hass, 60)
+
+    assert_state(hass, POWER_LIMIT, 60.0)
+    assert controls.enabled is True
+    assert controls.revert_seconds == AUTO_REVERT_SECONDS
+
+
+async def test_active_limit_is_sent_again_before_it_reverts(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an active limit is refreshed, so only an outage lets it revert."""
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+    )
+    controls = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.controls
+    await _turn_on_power_limit(hass, 60)
+
+    writes: list[WriteEvent] = []
+    mock_fronius_modbus.for_unit(1).on_write(writes.append)
+    freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # the fallback period, the limit and the enable register that arms it
+    assert len(writes) == 3
+    assert controls.power_limit == 60
+    assert controls.enabled is True
+
+
+async def test_heartbeat_leaves_a_released_limit_released(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the heartbeat doesn't take control back that the user handed over.
+
+    While no limit is in force there is no period counting down either, so
+    the inverter is left to whatever source it fell back to.
+    """
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+    )
+    controls = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.controls
+    assert controls.enabled is False
+
+    writes: list[WriteEvent] = []
+    mock_fronius_modbus.for_unit(1).on_write(writes.append)
+    freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not writes
+    assert controls.enabled is False
+
+
+async def test_limit_without_a_fallback_period_is_left_alone(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a limit is not refreshed while the inverter is not to revert it."""
+    config_entry = await _setup_with_controls(hass, aioclient_mock, mock_fronius_modbus)
+    controls = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.controls
+    await _turn_on_power_limit(hass, 60)
+    assert controls.revert_seconds == 0
+
+    writes: list[WriteEvent] = []
+    mock_fronius_modbus.for_unit(1).on_write(writes.append)
+    freezer.tick(timedelta(hours=9))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not writes
+
+
+async def test_clearing_the_fallback_period_frees_a_running_limit(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test a limit stops reverting as soon as the fallback period is off.
+
+    The inverter would otherwise keep counting down the period it was given
+    with the limit, and drop it once Home Assistant stops refreshing it.
+    """
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+    )
+    await _turn_on_power_limit(hass, 60)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with patch(
+        "homeassistant.components.fronius.PLATFORMS",
+        [Platform.NUMBER, Platform.SWITCH],
+    ):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_AUTO_REVERT: False}
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry.options == {CONF_AUTO_REVERT: False}
+    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    await coordinator.async_refresh()
+    controls = coordinator.modbus_inverter.controls
+    assert controls.enabled is True
+    assert controls.revert_seconds == 0
+
+
+async def test_a_failed_resend_of_the_limit_is_logged(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an inverter gone quiet while a limit is kept alive doesn't raise."""
+    await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+    )
+    await _turn_on_power_limit(hass, 60)
+    mock_fronius_modbus.for_unit(1).fail_requests(ModbusConnectionError("gone"))
+
+    freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Could not send the AC power limit" in caplog.text

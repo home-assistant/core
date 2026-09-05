@@ -338,7 +338,10 @@ class FroniusSolarNet:
         """Set up a Modbus coordinator for an inverter exposing SunSpec MPPT data."""
         if inverter_info.solar_net_id in [
             coordinator.inverter_info.solar_net_id
-            for coordinator in self.modbus_inverter_coordinators
+            for coordinator in (
+                *self.modbus_inverter_coordinators,
+                *self.modbus_settings_coordinators,
+            )
         ]:
             return
         if (unit_id := self._modbus_unit_id(inverter_info.solar_net_id)) is None:
@@ -398,6 +401,7 @@ class FroniusSolarNet:
             )
             if await self._start_modbus_coordinator(settings):
                 self.modbus_settings_coordinators.append(settings)
+                await settings.async_start_heartbeat()
 
         _LOGGER.debug(
             "Modbus enabled for inverter %s (UID: %s, unit ID: %s)",
