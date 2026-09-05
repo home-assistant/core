@@ -6,6 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from . import TeslemetryConfigEntry
+from .helpers import async_polling_entity_ids
 
 VEHICLE_REDACT = [
     "id",
@@ -33,6 +34,7 @@ async def async_get_config_entry_diagnostics(
     vehicles = [
         {
             "data": async_redact_data(x.coordinator.data, VEHICLE_REDACT),
+            "polling_entities": async_polling_entity_ids(x.coordinator),
             "stream": {
                 "config": x.stream_vehicle.config,
             },
