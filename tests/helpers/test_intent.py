@@ -1101,3 +1101,42 @@ async def test_intent_response_dict() -> None:
 
     # The original dict should not be affected by the mutations
     assert response_dict1 == response_dict2
+
+
+async def test_service_result_attribution(hass: HomeAssistant) -> None:
+    """Test that failures are attributed to the entities whose calls failed.
+
+    A service call that fails instantly must not steal the failed label from
+    an entity whose call succeeds more slowly: results arrive in completion
+    order, not submission order.
+    """
+    hass.states.async_set("light.a_slow_ok", "off", {ATTR_FRIENDLY_NAME: "Slow"})
+    hass.states.async_set("light.b_fast_fail", "off", {ATTR_FRIENDLY_NAME: "Fast"})
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Fail instantly for one entity, succeed slowly for the other."""
+        if call.data["entity_id"] == "light.b_fast_fail":
+            raise HomeAssistantError("boom")
+        await asyncio.sleep(0.05)
+
+    hass.services.async_register("light", "turn_on", mock_service)
+
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"domain": {"value": "light"}},
+    )
+
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
+    success_ids = {
+        target.id
+        for target in result.success_results
+        if target.type is intent.IntentResponseTargetType.ENTITY
+    }
+    failed_ids = {target.id for target in result.failed_results}
+    assert success_ids == {"light.a_slow_ok"}
+    assert failed_ids == {"light.b_fast_fail"}
