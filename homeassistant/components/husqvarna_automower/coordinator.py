@@ -325,11 +325,15 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 _LOGGER.debug("Removing work areas: %s", removed_areas)
                 device_registry = dr.async_get(self.hass)
                 for area_id in removed_areas:
-                    if (
-                        child_to_remove
-                        := device_registry.async_get_child_device_by_identifier(
+                    child_to_remove = (
+                        device_registry.async_get_child_device_by_identifier(
                             (DOMAIN, f"{mower_id}_{area_id}"),
                             self.config_entry.entry_id,
                         )
-                    ):
+                    )
+                    if child_to_remove is not None:
                         device_registry.async_remove_device(child_to_remove.id)
+                        continue
+                    for entry in entries:
+                        if entry.unique_id.startswith(f"{mower_id}_{area_id}_"):
+                            entity_registry.async_remove(entry.entity_id)
