@@ -116,16 +116,21 @@ async def test_migrate(
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_migrate_v3_to_v4(
+async def test_migrate_v3_to_v5(
     hass: HomeAssistant,
     mock_blink_api: MagicMock,
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 3 to 4 (device_id to hardware_id)."""
+    """Test migration from version 3 to 5.
+
+    device_id is renamed to hardware_id (v3->v4), then the legacy
+    "Home Assistant" value carried over from device_id is dropped (v4->v5)
+    since Blink's OAuth endpoint rejects it.
+    """
     mock_config_entry.add_to_hass(hass)
 
-    # Set up v3 config entry with device_id
+    # Set up v3 config entry with device_id set to the legacy literal
     data = {**mock_config_entry.data}
     data.pop("hardware_id", None)
     data["device_id"] = "Home Assistant"
@@ -139,7 +144,50 @@ async def test_migrate_v3_to_v4(
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 4
-    assert "hardware_id" in entry.data
+    assert entry.version == 5
     assert "device_id" not in entry.data
-    assert entry.data["hardware_id"] == "Home Assistant"
+    assert "hardware_id" not in entry.data
+
+
+async def test_migrate_v4_drops_legacy_hardware_id(
+    hass: HomeAssistant,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migrating a v4 entry whose hardware_id is the rejected legacy value."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        version=4,
+        data={**mock_config_entry.data, "hardware_id": "Home Assistant"},
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 5
+    assert "hardware_id" not in entry.data
+
+
+async def test_migrate_v4_keeps_valid_hardware_id(
+    hass: HomeAssistant,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a v4 entry with an already-valid hardware_id is left untouched."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        version=4,
+        data={**mock_config_entry.data, "hardware_id": "some-valid-uuid"},
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 5
+    assert entry.data["hardware_id"] == "some-valid-uuid"
