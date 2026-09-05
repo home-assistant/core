@@ -114,7 +114,8 @@ class Sun(Entity):
     next_dusk: datetime
     next_midnight: datetime
     next_noon: datetime
-    solar_elevation: float
+    solar_elevation: float  # Solar elevation corrected for refraction
+    _solar_elevation_geometric: float  # Geometric solar elevation (without refraction)
     solar_azimuth: float
     rising: bool
     _next_change: datetime
@@ -162,7 +163,9 @@ class Sun(Entity):
     @override
     def state(self) -> str:
         """Return the state of the sun."""
-        if self.solar_elevation > ELEVATION_HORIZON:
+        # Compare the geometric (refraction-free) elevation: ELEVATION_HORIZON
+        # already accounts for refraction.
+        if self._solar_elevation_geometric > ELEVATION_HORIZON:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
@@ -249,7 +252,11 @@ class Sun(Entity):
         # even in the day at the poles, so we can't rely on it.
         # Need to calculate phase if next is noon or midnight
         if self.phase is None:
-            elevation = astral.sun.elevation(self.observer, self._next_change)
+            # Geometric elevation (without refraction): the phase bands below are
+            # geometric depressions, so astral's refraction must not be applied.
+            elevation = astral.sun.elevation(
+                self.observer, self._next_change, with_refraction=False
+            )
             if elevation >= 10:
                 self.phase = PHASE_DAY
             elif elevation >= 0:
@@ -289,6 +296,9 @@ class Sun(Entity):
         )
         self.solar_elevation = round(
             astral.sun.elevation(self.observer, utc_point_in_time), 2
+        )
+        self._solar_elevation_geometric = astral.sun.elevation(
+            self.observer, utc_point_in_time, with_refraction=False
         )
 
         _LOGGER.debug(

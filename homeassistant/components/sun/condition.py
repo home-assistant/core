@@ -217,9 +217,14 @@ def _solar_position(hass: HomeAssistant) -> tuple[float, bool]:
     """Return the sun's current elevation in degrees and whether it is rising."""
     observer = get_astral_observer(hass)
     now = dt_util.utcnow()
-    elevation = astral.sun.elevation(observer, now)
-    rising = astral.sun.elevation(observer, now + timedelta(minutes=1)) > elevation
-    return elevation, rising
+    # Geometric elevation (without refraction): the twilight/horizon bands it is
+    # compared against are geometric depressions, so applying astral's refraction
+    # here too would double-count it.
+    elevation = astral.sun.elevation(observer, now, with_refraction=False)
+    elevation_later = astral.sun.elevation(
+        observer, now + timedelta(minutes=1), with_refraction=False
+    )
+    return elevation, elevation_later > elevation
 
 
 class _SunStateCondition(Condition):
@@ -436,7 +441,9 @@ def _elevation_at_last_solar_extreme(
         else:
             # Candidates only move later, so the first one past now ends the scan.
             break
-    elevation: float = astral.sun.elevation(observer, latest)
+    # Geometric elevation (without refraction) to match ELEVATION_HORIZON, which
+    # already accounts for refraction; applying it here too would double-count it.
+    elevation: float = astral.sun.elevation(observer, latest, with_refraction=False)
     return elevation
 
 
