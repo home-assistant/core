@@ -1,6 +1,7 @@
 """Test the Teslemetry init."""
 
 from copy import deepcopy
+from datetime import timedelta
 import logging
 import time
 from types import MappingProxyType
@@ -1831,7 +1832,8 @@ async def test_paired_site_live_reads_merge_over_cloud(
         await hass.async_block_till_done()
 
         live_coordinator = entry.runtime_data.energysites[0].live_coordinator
-        assert live_coordinator.update_interval == ENERGY_LIVE_INTERVAL
+        # The local poll runs on its own timer, never through update_interval.
+        assert live_coordinator.update_interval is None
         # Before the first LAN poll the merge base is the cloud cold read.
         assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
 
@@ -1881,7 +1883,8 @@ async def test_paired_site_config_reads_merge_over_cloud(
         await hass.async_block_till_done()
 
         info_coordinator = entry.runtime_data.energysites[0].info_coordinator
-        assert info_coordinator.update_interval == ENERGY_CONFIG_INTERVAL
+        # The local poll runs on its own timer, never through update_interval.
+        assert info_coordinator.update_interval is None
         # Before the first LAN poll the config-backed entities read the cloud.
         assert (
             hass.states.get("select.energy_site_operation_mode").state
@@ -2048,3 +2051,139 @@ async def test_unpaired_site_reads_cloud_only(
     assert (
         hass.states.get("select.energy_site_operation_mode").state == "self_consumption"
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_live_poll_survives_stream_push_storm(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """The local live poll keeps its 5s cadence under a storm of stream pushes.
+
+    A stream push must never reset the local poll timer. Against a poll driven by
+    ``update_interval`` each push restarts the timer, so a push every second
+    perpetually postpones the poll and it never fires; on its own timer the poll
+    fires on every 5-second boundary regardless of the push rate.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_powerwall_live_status.await_count == 0
+
+        # A stream push arrives every second for 20 seconds.
+        for second in range(1, 21):
+            push = deepcopy(LIVE_STATUS["response"])
+            push["solar_power"] = 1000 * second
+            mock_energy_live_stream.send(push)
+            freezer.tick(timedelta(seconds=1))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    # The 5-second poll fired on each of its four boundaries despite a push every
+    # second, and the owned key reflects the local reading, not the last push.
+    assert mock_powerwall_live_status.await_count == 4
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+
+
+async def test_local_config_poll_does_not_clear_stream_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+    mock_powerwall_local_config: AsyncMock,
+) -> None:
+    """A local config poll never clears the info coordinator's stream error.
+
+    Cloud-only site-info entities have no local source, so their availability is
+    stream-owned. A successful local poll refreshes the locally-owned keys in the
+    coordinator data without clearing the stream error or making the cloud-only
+    entities available with stale values.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SELECT]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        info_coordinator = entry.runtime_data.energysites[0].info_coordinator
+
+        # The stream drops, failing the stream-owned info coordinator.
+        mock_add_connection_listener.send(False)
+        await hass.async_block_till_done()
+        assert info_coordinator.last_update_success is False
+        assert (
+            hass.states.get("select.energy_site_operation_mode").state
+            == STATE_UNAVAILABLE
+        )
+        assert (
+            hass.states.get("select.energy_site_allow_export").state
+            == STATE_UNAVAILABLE
+        )
+
+        # A successful local config poll fires while the stream is still down.
+        freezer.tick(ENERGY_CONFIG_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_powerwall_local_config.await_count == 1
+    # The locally-owned key is refreshed in the coordinator data...
+    assert info_coordinator.data["default_real_mode"] == "autonomous"
+    # ...but the poll left the stream error untouched, so the cloud-only entity
+    # stays unavailable rather than surfacing a stale cloud value.
+    assert info_coordinator.last_update_success is False
+    assert hass.states.get("select.energy_site_allow_export").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_poll_timer_cancelled_on_unload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """Unloading the entry cancels the local poll timer; no timer is leaked."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_powerwall_live_status.await_count == 1
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Advancing past the interval after unload polls the gateway no further.
+    freezer.tick(ENERGY_LIVE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_powerwall_live_status.await_count == 1
