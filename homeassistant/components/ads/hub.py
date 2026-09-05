@@ -1,12 +1,17 @@
 """Support for Automation Device Specification (ADS)."""
 
+import asyncio
 from collections import namedtuple
 import ctypes
+from enum import Enum
 import logging
 import struct
 import threading
 
 import pyads
+import pyads.errorcodes
+
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,6 +19,19 @@ _LOGGER = logging.getLogger(__name__)
 NotificationItem = namedtuple(  # noqa: PYI024
     "NotificationItem", "hnotify huser name plc_datatype callback"
 )
+
+DEFAULT_TIMEOUT_MS = 5000
+OFFLINE_TIMEOUT_MS = 100
+WATCHDOG_INTERVAL = 5.0
+WATCHDOG_MAX_BACKOFF = 120.0
+
+
+class ConnectionState(Enum):
+    """Representation of the ADS connection state."""
+
+    CONNECTED = 1
+    READY_TO_RECONNECT = 2
+    DISCONNECTED = 3
 
 
 class AdsHub:
@@ -23,6 +41,7 @@ class AdsHub:
         """Initialize the ADS hub."""
         self._client = ads_client
         self._client.open()
+        self._is_running = True
 
         # All ADS devices are registered here
         self._devices = []
@@ -33,22 +52,25 @@ class AdsHub:
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
-        for notification_item in self._notification_items.values():
-            _LOGGER.debug(
-                "Deleting device notification %d, %d",
-                notification_item.hnotify,
-                notification_item.huser,
-            )
-            try:
-                self._client.del_device_notification(
-                    notification_item.hnotify, notification_item.huser
+        self._is_running = False
+
+        with self._lock:
+            for notification_item in self._notification_items.values():
+                _LOGGER.debug(
+                    "Deleting device notification %d, %d",
+                    notification_item.hnotify,
+                    notification_item.huser,
                 )
+                try:
+                    self._client.del_device_notification(
+                        notification_item.hnotify, notification_item.huser
+                    )
+                except pyads.ADSError as err:
+                    _LOGGER.error(err)
+            try:
+                self._client.close()
             except pyads.ADSError as err:
                 _LOGGER.error(err)
-        try:
-            self._client.close()
-        except pyads.ADSError as err:
-            _LOGGER.error(err)
 
     def register_device(self, device):
         """Register a new device."""
@@ -93,6 +115,110 @@ class AdsHub:
                 _LOGGER.debug(
                     "Added device notification %d for variable %s", hnotify, name
                 )
+
+    async def async_watch_connection(
+        self,
+        hass: HomeAssistant,
+        interval: float = WATCHDOG_INTERVAL,
+        max_backoff: float = WATCHDOG_MAX_BACKOFF,
+    ) -> None:
+        """Watch the connection and restore it after an outage."""
+        was_disconnected = False
+        wait_time = interval
+
+        while self._is_running:
+            try:
+                state = await hass.async_add_executor_job(self._check_connection)
+
+                if state is ConnectionState.CONNECTED:
+                    if was_disconnected:
+                        _LOGGER.info("Reconnected to the ADS device")
+                        await hass.async_add_executor_job(self._restore_notifications)
+                        was_disconnected = False
+                        wait_time = interval
+
+                    await asyncio.sleep(wait_time)
+                    continue
+
+                if not was_disconnected:
+                    _LOGGER.warning(
+                        "Lost connection to the ADS device, waiting for it to return"
+                    )
+                    was_disconnected = True
+                    wait_time = interval
+                    await hass.async_add_executor_job(self._suspend_notifications)
+
+                if state is ConnectionState.READY_TO_RECONNECT:
+                    await hass.async_add_executor_job(self._reconnect)
+                    if self._client.is_open:
+                        wait_time = interval
+
+                await asyncio.sleep(wait_time)
+                wait_time = min(wait_time * 2, max_backoff)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                _LOGGER.exception("Unexpected error while watching the ADS connection")
+                await asyncio.sleep(interval)
+
+    def _check_connection(self) -> ConnectionState:
+        """Return the current state of the connection."""
+
+        with self._lock:
+            if not self._client.is_open:
+                return ConnectionState.READY_TO_RECONNECT
+
+            try:
+                state = self._client.read_state()
+            except pyads.ADSError as err:
+                if getattr(err, "err_code", None) not in pyads.errorcodes.ERROR_CODES:
+                    return ConnectionState.READY_TO_RECONNECT
+                return ConnectionState.DISCONNECTED
+
+            if state is None:
+                return ConnectionState.READY_TO_RECONNECT
+
+            return ConnectionState.CONNECTED
+
+    def _reconnect(self) -> None:
+        """Reopen the connection to the device."""
+
+        with self._lock:
+            try:
+                self._client.close()
+                self._client.open()
+            except pyads.ADSError as err:
+                _LOGGER.debug("Reconnect attempt failed: %s", err)
+
+    def _suspend_notifications(self) -> None:
+        """Shorten the timeout and drop the notifications the device still holds."""
+
+        self._client.set_timeout(OFFLINE_TIMEOUT_MS)
+
+        with self._lock:
+            for notification_item in self._notification_items.values():
+                try:
+                    self._client.del_device_notification(
+                        notification_item.hnotify, notification_item.huser
+                    )
+                except pyads.ADSError as err:
+                    _LOGGER.debug(
+                        "Could not delete notification for %s: %s",
+                        notification_item.name,
+                        err,
+                    )
+
+    def _restore_notifications(self) -> None:
+        """Restore the timeout and subscribe again to every variable."""
+
+        self._client.set_timeout(DEFAULT_TIMEOUT_MS)
+
+        with self._lock:
+            items = list(self._notification_items.values())
+            self._notification_items.clear()
+
+        for item in items:
+            self.add_device_notification(item.name, item.plc_datatype, item.callback)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
