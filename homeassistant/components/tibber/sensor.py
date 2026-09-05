@@ -688,10 +688,10 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.translation_key
 
-        self._attr_unique_id = f"{device.external_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{device.id}_{self.entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.external_id)},
+            identifiers={(DOMAIN, device.id)},
             name=device.name,
             manufacturer=device.brand,
             model=device.model,
