@@ -308,6 +308,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
+/homeassistant/components/clicky/ @avclicky
+/tests/components/clicky/ @avclicky
 /homeassistant/components/climate/ @home-assistant/core
 /tests/components/climate/ @home-assistant/core
 /homeassistant/components/cloud/ @home-assistant/cloud
