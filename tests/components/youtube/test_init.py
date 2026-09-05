@@ -15,6 +15,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
+from . import MockYouTube
 from .conftest import GOOGLE_TOKEN_URI, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -137,6 +138,67 @@ async def test_device_info(
     assert device.identifiers == {(DOMAIN, f"{entry.entry_id}_{channel_id}")}
     assert device.manufacturer == "Google, Inc."
     assert device.name == "Google for Developers"
+
+
+async def test_delete_devices_for_removed_channels(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test that devices for channels removed from the options are deleted."""
+    await setup_integration()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    channel_id = entry.options[CONF_CHANNELS][0]
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry.entry_id}_{channel_id}"), entry.entry_id
+    )
+    assert device is not None
+
+    hass.config_entries.async_update_entry(entry, options={CONF_CHANNELS: []})
+    with patch(
+        "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
+        return_value=MockYouTube(hass, channel_fixture="get_no_channel.json"),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry.entry_id}_{channel_id}"), entry.entry_id
+        )
+        is None
+    )
+
+
+async def test_keep_device_for_channel_missing_from_api(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test that the device is kept when the API omits a configured channel."""
+    await setup_integration()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    channel_id = entry.options[CONF_CHANNELS][0]
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry.entry_id}_{channel_id}"), entry.entry_id
+    )
+    assert device is not None
+
+    with patch(
+        "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
+        return_value=MockYouTube(hass, channel_fixture="get_no_channel.json"),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry.entry_id}_{channel_id}"), entry.entry_id
+        )
+        is not None
+    )
 
 
 async def test_oauth_implementation_not_available(
