@@ -3200,6 +3200,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hydroquebec_peak": {
+      "name": "Hydro-Qu\u00e9bec Peak Events",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "hyperion": {
       "name": "Hyperion",
       "integration_type": "hub",

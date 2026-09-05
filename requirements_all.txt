@@ -1335,6 +1335,9 @@ huawei-lte-api==1.11.0
 # homeassistant.components.huum
 huum==0.8.2
 
+# homeassistant.components.hydroquebec_peak
+hydropeak-opendata==0.2.0
+
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
 

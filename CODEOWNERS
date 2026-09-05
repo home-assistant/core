@@ -839,6 +839,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
+/homeassistant/components/hydroquebec_peak/ @Beat-YT
+/tests/components/hydroquebec_peak/ @Beat-YT
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/hypontech/ @jcisio
