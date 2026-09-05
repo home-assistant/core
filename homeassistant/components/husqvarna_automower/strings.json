@@ -32,6 +32,11 @@
       }
     }
   },
+  "device": {
+    "my_lawn": {
+      "name": "My lawn"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "leaving_dock": {
@@ -238,12 +243,6 @@
     "number": {
       "cutting_height": {
         "name": "Cutting height"
-      },
-      "my_lawn_cutting_height_work_area": {
-        "name": "My lawn cutting height"
-      },
-      "work_area_cutting_height_work_area": {
-        "name": "{work_area} cutting height"
       }
     },
     "select": {
@@ -451,12 +450,6 @@
           "secondary_area": "Secondary area"
         }
       },
-      "my_lawn_last_time_completed": {
-        "name": "My lawn last time completed"
-      },
-      "my_lawn_progress": {
-        "name": "My lawn progress"
-      },
       "next_start_timestamp": {
         "name": "Next start"
       },
@@ -527,18 +520,15 @@
         }
       },
       "work_area_last_time_completed": {
-        "name": "{work_area} last time completed"
+        "name": "Last time completed"
       },
       "work_area_progress": {
-        "name": "{work_area} progress"
+        "name": "Progress"
       }
     },
     "switch": {
       "enable_schedule": {
         "name": "Enable schedule"
-      },
-      "my_lawn_work_area": {
-        "name": "My lawn"
       },
       "stay_out_zones": {
         "name": "Avoid {stay_out_zone}"

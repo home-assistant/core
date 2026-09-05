@@ -293,7 +293,7 @@ async def test_constant_polling(
     state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "100"
-    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_front_lawn_progress")
     assert state is not None
     assert state.state == "40"
 
@@ -309,7 +309,7 @@ async def test_constant_polling(
     state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
-    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_front_lawn_progress")
     assert state is not None
     assert state.state == "40"
 
@@ -322,7 +322,7 @@ async def test_constant_polling(
     state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
-    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_front_lawn_progress")
     assert state is not None
     assert state.state == "50"
 
@@ -419,6 +419,7 @@ async def test_add_and_remove_work_area(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test adding a work area in runtime."""
@@ -439,6 +440,10 @@ async def test_add_and_remove_work_area(
     current_entites_start = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
+    child_devices_start = len(
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert child_devices_start == 3
     await hass.async_block_till_done()
 
     assert mock_automower_client.register_data_callback.called
@@ -481,12 +486,16 @@ async def test_add_and_remove_work_area(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.called
 
-    state = hass.states.get("sensor.garden_test_mower_1_new_work_area_progress")
+    state = hass.states.get("sensor.garden_new_work_area_progress")
     assert state is not None
     assert state.state == "12"
     current_entites_after_addition = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
+    child_devices_after_addition = len(
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert child_devices_after_addition == 4
     assert (
         current_entites_after_addition
         == current_entites_start
@@ -523,6 +532,48 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
+    child_devices_after_deletion = len(
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert child_devices_after_deletion == 2
+
+
+async def test_rename_work_area(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test changing a work area name in runtime."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+    child_device = next(
+        device
+        for device in child_devices
+        if (DOMAIN, f"{TEST_MOWER_ID}_123456") in device.identifiers
+    )
+    assert child_device.name == "Front lawn"
+    values[TEST_MOWER_ID].work_areas[123456].name = "New name"
+    values[TEST_MOWER_ID].work_area_names = ["New name"]
+    values[TEST_MOWER_ID].work_area_dict = {123456: "New name"}
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+    child_device = next(
+        device
+        for device in child_devices
+        if (DOMAIN, f"{TEST_MOWER_ID}_123456") in device.identifiers
+    )
+    assert child_device.name == "New name"
 
 
 async def test_dynamic_polling(

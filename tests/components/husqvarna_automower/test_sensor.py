@@ -137,13 +137,15 @@ async def test_work_area_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    for entity_id in (
-        "sensor.garden_test_mower_1_work_area",
-        "sensor.garden_test_mower_1_front_lawn_progress",
-    ):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNAVAILABLE
+    entity_id = "sensor.garden_test_mower_1_work_area"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    entity_id = "sensor.garden_front_lawn_progress"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_work_area_sensor_creation(
@@ -172,13 +174,11 @@ async def test_work_area_sensor_creation(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get(
-        "sensor.garden_test_mower_1_new_systematic_work_area_progress"
-    )
+    state = hass.states.get("sensor.garden_new_systematic_work_area_progress")
     assert state is not None
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(
-        "sensor.garden_test_mower_1_new_systematic_work_area_last_time_completed"
+        "sensor.garden_new_systematic_work_area_last_time_completed"
     )
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -200,11 +200,9 @@ async def test_work_area_sensor_creation(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.garden_test_mower_1_new_random_work_area_progress")
+    state = hass.states.get("sensor.garden_new_random_work_area_progress")
     assert state is None
-    state = hass.states.get(
-        "sensor.garden_test_mower_1_new_random_work_area_last_time_completed"
-    )
+    state = hass.states.get("sensor.garden_new_random_work_area_last_time_completed")
     assert state is None
 
 
