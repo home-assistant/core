@@ -149,7 +149,7 @@ async def async_setup_entry(
     roomba = domain_data.roomba
     blid = domain_data.blid
 
-    sensor_list: list[RoombaSensorEntityDescription] = SENSORS
+    sensor_list: list[RoombaSensorEntityDescription] = list(SENSORS)
 
     has_dock: bool = len(roomba_reported_state(roomba).get("dock", {})) > 0
 
