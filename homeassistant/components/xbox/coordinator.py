@@ -1,6 +1,7 @@
 """Coordinator for the xbox integration."""
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -18,8 +19,12 @@ from pythonxbox.api.provider.smartglass.models import (
 )
 from pythonxbox.api.provider.titlehub.models import Title
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentryDataWithId
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -52,6 +57,19 @@ class XboxCoordinators:
     consoles: XboxConsolesCoordinator
     status: XboxConsoleStatusCoordinator
     presence: XboxPresenceCoordinator
+    subentries: Mapping[str, ConfigSubentryDataWithId]
+    auth_implementation: str
+
+    def has_auth_failure(self) -> bool:
+        """Return True if a coordinator stopped polling after an auth failure."""
+        return any(
+            not coordinator.last_update_success
+            and isinstance(
+                coordinator.last_exception,
+                (ConfigEntryAuthFailed, OAuth2TokenRequestReauthError),
+            )
+            for coordinator in (self.consoles, self.status, self.presence)
+        )
 
 
 class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):

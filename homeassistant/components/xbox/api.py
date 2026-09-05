@@ -47,7 +47,9 @@ class AsyncConfigEntryAuth(AuthenticationManager):
                     translation_domain=DOMAIN,
                     translation_key="request_exception",
                 ) from e
-            self.oauth = self._get_oauth_token()
+
+        # A reauth can replace the token without the entry being reloaded.
+        self.oauth = self._get_oauth_token()
 
         # This will skip the OAuth refresh and only refresh User and XSTS tokens
         try:
