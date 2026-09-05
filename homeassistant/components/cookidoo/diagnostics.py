@@ -4,13 +4,14 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .coordinator import CookidooConfigEntry
 
 TO_REDACT = [
     CONF_PASSWORD,
+    CONF_TOKEN,
 ]
 
 

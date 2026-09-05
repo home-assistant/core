@@ -797,7 +797,7 @@ connect-box==0.3.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.17.2
+cookidoo-api==0.18.1
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
