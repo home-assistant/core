@@ -1,15 +1,21 @@
 """The Bizkaibus bus tracker component."""
 
 from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
+import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STOP_ID
+from .const import CONF_LINES, CONF_STOP_ID
 from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_STOP_ID): cv.string, vol.Optional(CONF_LINES): cv.string}
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
