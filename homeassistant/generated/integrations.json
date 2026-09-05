@@ -1857,6 +1857,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "engie_be": {
+      "name": "ENGIE Belgium",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
       "integration_type": "device",

@@ -1,0 +1,11 @@
+{
+  "domain": "engie_be",
+  "name": "ENGIE Belgium",
+  "codeowners": ["@DaanVervacke"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/engie_be",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aioengiebelgium==0.1.3"]
+}

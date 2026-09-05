@@ -1,0 +1,156 @@
+{
+  "entity": {
+    "sensor": {
+      "electricity_price_injection": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_offpeak": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_offpeak_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_peak": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_peak_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_slot": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_slot_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_superoffpeak": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_injection_superoffpeak_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "electricity_price_offtake": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_offpeak": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_offpeak_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_peak": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_peak_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_slot": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_slot_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_superoffpeak": {
+        "default": "mdi:cash-minus"
+      },
+      "electricity_price_offtake_superoffpeak_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_injection": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_offpeak": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_offpeak_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_peak": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_peak_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_slot": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_slot_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_superoffpeak": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_injection_superoffpeak_excl_vat": {
+        "default": "mdi:cash-plus"
+      },
+      "energy_price_offtake": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_offpeak": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_offpeak_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_peak": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_peak_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_slot": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_slot_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_superoffpeak": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_price_offtake_superoffpeak_excl_vat": {
+        "default": "mdi:cash-minus"
+      },
+      "gas_price_offtake": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_excl_vat": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_offpeak": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_offpeak_excl_vat": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_peak": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_peak_excl_vat": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_slot": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_slot_excl_vat": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_superoffpeak": {
+        "default": "mdi:meter-gas"
+      },
+      "gas_price_offtake_superoffpeak_excl_vat": {
+        "default": "mdi:meter-gas"
+      }
+    }
+  }
+}
