@@ -102,11 +102,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         if self.data is not None:
             self._async_add_remove_devices()
             if any(
-                mower_data.capabilities.work_areas for mower_data in self.data.values()
-            ):
-                self._async_add_remove_work_areas()
-                self._update_work_area_devices()
-            if any(
                 mower_data.capabilities.stay_out_zones
                 for mower_data in self.data.values()
             ):
@@ -115,6 +110,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 mower_data.capabilities.work_areas for mower_data in self.data.values()
             ):
                 self._async_add_remove_work_areas()
+                self._update_work_area_devices()
             if (
                 not self._should_poll()
                 and self.update_interval is not None
