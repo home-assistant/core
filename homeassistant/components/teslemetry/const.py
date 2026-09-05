@@ -12,6 +12,9 @@ AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
 
+# Where users can purchase more command credits
+CREDITS_URL = "https://teslemetry.com/console/credits"
+
 SUBENTRY_TYPE_ENERGY_SITE = "energy_site"
 CONF_SITE_ID = "site_id"
 POWERWALL_KEY_FILE = "tesla_powerwall.key"

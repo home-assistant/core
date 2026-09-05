@@ -64,7 +64,12 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_update_device_sw_version, flatten
+from .helpers import (
+    async_handle_credits,
+    async_update_device_sw_version,
+    flatten,
+    insufficient_credits_issue_id,
+)
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -672,6 +677,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     if stream:
         entry.async_on_unload(stream.close)
+        entry.async_on_unload(
+            stream.listen_Credits(partial(async_handle_credits, hass, entry))
+        )
         # The stream is the only freshness signal for the energy coordinators, so
         # a dropped connection must mark their entities unavailable rather than
         # leaving stale live/info/tariff data available indefinitely.
@@ -810,7 +818,13 @@ async def _async_setup_energy_site(
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # The repair issue is not tied to the config entry, so clear it here (this
+        # also runs on removal) once the entry has actually unloaded. Gate on a
+        # successful unload so a FAILED_UNLOAD entry keeps its still-relevant repair.
+        ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
+    return unload_ok
 
 
 async def async_migrate_entry(

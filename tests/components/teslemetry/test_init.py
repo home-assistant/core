@@ -34,6 +34,7 @@ from homeassistant.components.teslemetry import (
 from homeassistant.components.teslemetry.const import (
     CLIENT_ID,
     CONF_SITE_ID,
+    CREDITS_URL,
     DOMAIN,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
@@ -68,7 +69,11 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -249,6 +254,140 @@ async def test_vehicle_asleep_polling(
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("credits", "resolved"),
+    [
+        pytest.param(
+            {"type": "topup", "cost": -100, "name": "topup", "balance": 100},
+            True,
+            id="balance_topup",
+        ),
+        pytest.param(
+            {
+                "type": "command",
+                "cost": 1,
+                "quota": {
+                    "used": 5,
+                    "fraction": 0.5,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
+                },
+                "balance": 0,
+            },
+            True,
+            id="quota_available",
+        ),
+        pytest.param(
+            {
+                "type": "command",
+                "cost": 1,
+                "quota": {
+                    "used": 10,
+                    "fraction": 1.0,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
+                },
+                "balance": 0,
+            },
+            False,
+            id="still_insufficient",
+        ),
+        pytest.param(
+            # The listen_Credits filter fires for any event with a top-level
+            # credits object, so one lacking a quota/balance snapshot must not
+            # clear the repair or raise while parsing the missing shape.
+            {"type": "command", "cost": 1},
+            False,
+            id="malformed_missing_quota_and_balance",
+        ),
+    ],
+)
+async def test_insufficient_credits_resolved_by_stream(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+    credits: dict[str, object],
+    resolved: bool,
+) -> None:
+    """Test the insufficient credits issue is resolved by a credits event."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
+    )
+
+    mock_add_listener.send(
+        {"credits": credits, "createdAt": "2024-10-04T10:45:17.537Z"}
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue is None) is resolved
+
+
+async def test_insufficient_credits_cleared_on_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the insufficient credits issue is cleared when the entry unloads."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_insufficient_credits_kept_on_failed_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the insufficient credits issue survives a failed platform unload."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_no_live_status(
