@@ -50,6 +50,15 @@
       "ethernet": {
         "name": "Ethernet status"
       }
+    },
+    "sensor": {
+      "arm_status": {
+        "name": "Arm status",
+        "state": {
+          "bypass_needed": "Bypass needed",
+          "ready": "Ready"
+        }
+      }
     }
   },
   "exceptions": {

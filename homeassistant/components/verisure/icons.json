@@ -1,4 +1,15 @@
 {
+  "entity": {
+    "sensor": {
+      "arm_status": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "bypass_needed": "mdi:shield-alert",
+          "ready": "mdi:shield-check"
+        }
+      }
+    }
+  },
   "services": {
     "capture_smartcam": {
       "service": "mdi:camera"
