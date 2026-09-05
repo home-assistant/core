@@ -1378,6 +1378,12 @@ async def test_pair_step_second_lookup_errors(
             ValueError,
             id="key_read_valueerror",
         ),
+        # An encrypted key PEM surfaces as TypeError from the cryptography loader.
+        pytest.param(
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
+            TypeError,
+            id="key_fetch_typeerror",
+        ),
     ],
 )
 async def test_rsa_key_load_failure_aborts(
