@@ -124,7 +124,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     @override
     def available(self) -> bool:
         """If the webhook is not established, mark as unavailable."""
-        return super().available and bool(self.data_handler.webhook)
+        return super().available and self.data_handler.webhook_delivering
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

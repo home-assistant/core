@@ -6,7 +6,6 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
 from .coordinator import NetatmoConfigEntry, async_get_loaded_entry
-from .webhook import async_register_webhook, async_unregister_webhook
 
 SERVICE_REGISTER_WEBHOOK = "register_webhook"
 SERVICE_UNREGISTER_WEBHOOK = "unregister_webhook"
@@ -38,17 +37,17 @@ def _deprecate(hass: HomeAssistant, service: str) -> None:
 async def _register_webhook(call: ServiceCall) -> None:
     """Handle the deprecated register_webhook action."""
     _deprecate(call.hass, SERVICE_REGISTER_WEBHOOK)
-    entry = _get_loaded_entry(call.hass)
+    manager = _get_loaded_entry(call.hass).runtime_data.webhook_manager
     # Drop any existing registration first so re-registering an already-active
     # webhook does not raise "Handler is already defined!".
-    await async_unregister_webhook(call.hass, entry)
-    await async_register_webhook(call.hass, entry)
+    await manager.async_unregister()
+    await manager.async_ensure_registered()
 
 
 async def _unregister_webhook(call: ServiceCall) -> None:
     """Handle the deprecated unregister_webhook action."""
     _deprecate(call.hass, SERVICE_UNREGISTER_WEBHOOK)
-    await async_unregister_webhook(call.hass, _get_loaded_entry(call.hass))
+    await _get_loaded_entry(call.hass).runtime_data.webhook_manager.async_unregister()
 
 
 @callback
