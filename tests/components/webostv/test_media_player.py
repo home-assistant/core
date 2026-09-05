@@ -28,6 +28,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.webostv.const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
+    CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
     WebOsTvCommandError,
@@ -551,6 +552,28 @@ async def test_source_unlisted_current_app(hass: HomeAssistant, client) -> None:
     attributes = hass.states.get(ENTITY_ID).attributes
     assert ATTR_INPUT_SOURCE not in attributes
     assert attributes[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
+
+
+async def test_source_cleared_with_filtered_out_sources(
+    hass: HomeAssistant, client
+) -> None:
+    """Test source is cleared when configured sources match nothing."""
+    config_entry = await setup_webostv(hass)
+    new_options = config_entry.options.copy()
+    new_options[CONF_SOURCES] = ["Netflix"]
+    hass.config_entries.async_update_entry(config_entry, options=new_options)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client.tv_state.inputs = {}
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
+
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    assert ATTR_INPUT_SOURCE not in hass.states.get(ENTITY_ID).attributes
 
 
 async def test_source_kept_on_empty_update(hass: HomeAssistant, client) -> None:
