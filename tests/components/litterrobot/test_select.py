@@ -12,12 +12,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_integration
+from .conftest import create_mock_account, setup_integration
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
 
@@ -202,3 +202,27 @@ async def test_litterrobot_5_panel_brightness(
         )
 
         assert robot.set_panel_brightness.call_count == count + 1
+
+
+async def test_globe_brightness_unmapped_level(hass: HomeAssistant) -> None:
+    """A brightness matching no level leaves the select unknown, not "None".
+
+    The LR5 firmware accepts any 0-100 brightness, so a value set outside the
+    discrete levels has no matching option. current_option must return None so
+    the entity reads as unknown, rather than the string "None".
+    """
+    mock_account = create_mock_account(
+        robot_data={
+            "nightLightSettings": {
+                "brightness": 60,
+                "color": "#FFFFFF",
+                "mode": "Auto",
+            }
+        },
+        v5=True,
+    )
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
+
+    select = hass.states.get("select.test_globe_brightness")
+    assert select
+    assert select.state == STATE_UNKNOWN
