@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
 
@@ -10,6 +10,7 @@ from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .patchers import (
@@ -123,6 +124,50 @@ async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
             await entry.runtime_data.async_refresh()
 
         assert hass.states.get(entity_id).state == str(1 + 0.01572462736977)
+
+
+async def test_additional_local_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test additional sensors sourced from the local dish API."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    status_data = deepcopy(STATUS_DATA_FIXTURE)
+    status_data[0]["fraction_obstructed"] = 0.1234
+    status_data[0]["gps_sats"] = 1
+
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{status_data[0]['id']}_gps_satellites",
+        suggested_object_id="starlink_gps_satellites",
+    )
+    status_data_mock = MagicMock(return_value=status_data)
+
+    with (
+        LOCATION_DATA_SUCCESS_PATCHER,
+        SLEEP_DATA_SUCCESS_PATCHER,
+        patch(STATUS_DATA_TARGET, status_data_mock),
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.starlink_obstruction").state == "12.34"
+        assert hass.states.get("sensor.starlink_gps_satellites").state == "1"
+
+        status_data_unavailable = deepcopy(status_data)
+        status_data_unavailable[0]["fraction_obstructed"] = None
+        status_data_mock.return_value = status_data_unavailable
+        await entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.starlink_obstruction").state == "unknown"
 
 
 async def test_last_restart_state(hass: HomeAssistant) -> None:
