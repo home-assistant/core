@@ -107,7 +107,7 @@
             "progress": 40,
             "lastTimeCompleted": 1723449269,
             "lastTimeAbandoned": 0,
-            "useGlobalCuttingHeight": true
+            "useGlobalCuttingHeight": false
           },
           {
             "workAreaId": 654321,
@@ -116,7 +116,7 @@
             "cuttingHeight": 25,
             "enabled": true,
             "lastTimeAbandoned": 0,
-            "useGlobalCuttingHeight": true
+            "useGlobalCuttingHeight": false
           },
           {
             "workAreaId": 0,

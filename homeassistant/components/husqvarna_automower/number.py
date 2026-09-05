@@ -11,6 +11,7 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -85,6 +86,7 @@ MOWER_NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
 class WorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower work area number entity."""
 
+    exists_fn: Callable[[WorkArea], bool] = lambda _: True
     value_fn: Callable[[WorkArea], int]
     translation_key_fn: Callable[[int, str], str]
     set_value_fn: Callable[
@@ -98,6 +100,7 @@ WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
         translation_key_fn=_work_area_translation_key,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
+        exists_fn=lambda data: data.use_global_cutting_height is False,
         value_fn=lambda data: data.cutting_height,
         set_value_fn=async_set_work_area_cutting_height,
     ),
@@ -111,6 +114,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up number platform."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
+    registered_entries = {
+        registry_entry.unique_id: registry_entry
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, coordinator.config_entry.entry_id
+        )
+    }
+    description = WORK_AREA_NUMBER_TYPES[0]
+    for mower_id, mower_data in coordinator.data.items():
+        work_areas = mower_data.work_areas
+        if work_areas is None:
+            continue
+        for work_area_id, work_area in work_areas.items():
+            if description.exists_fn(work_area):
+                continue
+            unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+            if registry_entry := registered_entries.get(unique_id):
+                entity_registry.async_remove(registry_entry.entity_id)
+
     entities: list[NumberEntity] = []
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
@@ -122,6 +144,7 @@ async def async_setup_entry(
                     )
                     for description in WORK_AREA_NUMBER_TYPES
                     for work_area_id in _work_areas
+                    if description.exists_fn(_work_areas[work_area_id])
                 )
         entities.extend(
             AutomowerNumberEntity(mower_id, coordinator, description)
@@ -131,11 +154,46 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        work_areas = coordinator.data[mower_id].work_areas
+        if work_areas is None:
+            return
         async_add_entities(
             WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
             for description in WORK_AREA_NUMBER_TYPES
             for work_area_id in work_area_ids
+            if description.exists_fn(work_areas[work_area_id])
         )
+
+    def _async_update_work_area_cutting_heights(
+        mower_id: str,
+        enabled_area_ids: set[int],
+        disabled_area_ids: set[int],
+    ) -> None:
+        """Create or remove cutting height entities after a setting transition."""
+        work_areas = coordinator.data[mower_id].work_areas
+        if work_areas is None:
+            return
+
+        entity_registry = er.async_get(hass)
+        entries = {
+            entry.unique_id: entry
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, coordinator.config_entry.entry_id
+            )
+        }
+        description = WORK_AREA_NUMBER_TYPES[0]
+
+        async_add_entities(
+            WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
+            for work_area_id in enabled_area_ids
+            if description.exists_fn(work_areas[work_area_id])
+            and f"{mower_id}_{work_area_id}_{description.key}" not in entries
+        )
+
+        for work_area_id in disabled_area_ids:
+            unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+            if entry := entries.get(unique_id):
+                entity_registry.async_remove(entry.entity_id)
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
         async_add_entities(
@@ -151,6 +209,9 @@ async def async_setup_entry(
                 _async_add_new_work_areas(mower_id, work_area_ids)
 
     coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
+    coordinator.work_area_cutting_height_callbacks.append(
+        _async_update_work_area_cutting_heights
+    )
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
