@@ -57,6 +57,7 @@ def mock_iseo_client() -> Generator[MagicMock]:
         client.gw_register_log_notif = AsyncMock(return_value=None)
         client.setup_gateway = AsyncMock(return_value=None)
         client.update_ble_device = MagicMock()
+        client.gw_read_unread_logs = AsyncMock(return_value=[])
         yield client
 
 

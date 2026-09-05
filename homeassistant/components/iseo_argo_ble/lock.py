@@ -5,21 +5,30 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
-from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockState
+from iseo_argo_ble import (
+    IseoAuthError,
+    IseoClient,
+    IseoConnectionError,
+    LockState,
+    LogEntry,
+    describe_event,
+)
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from . import IseoConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, signal_access_log
+from .event import EVENT_TYPE_ACCESS_DENIED, EVENT_TYPE_FAULT, EVENT_TYPE_OPENED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +42,23 @@ _RELOCK_POLL_DELAY = 2
 
 # How often to poll the lock for door state (when door status is supported).
 _POLL_INTERVAL = timedelta(seconds=30)
+
+# Trailing debounce for the access log read. An unlock followed by the poll
+# that notices the door is open would otherwise read the log twice.
+_ACCESS_LOG_DEBOUNCE = 5
+
+# Access log event codes, grouped into the event types the log reports. Codes
+# outside these groups (door closed, mode changes, enrolments) are read and
+# discarded — they are not access events. See the library's event code table.
+_OPEN_EVENT_CODES = frozenset({7, 8, 32, 33, 34, 45, 75, 102, 103})
+_ACCESS_DENIED_EVENT_CODES = frozenset({5, 44, 51, 52, 53, 68, 77, 86, 88, 89, 99})
+_FAULT_EVENT_CODES = frozenset({21, 61, 90})
+
+_EVENT_TYPE_CODES = (
+    (EVENT_TYPE_OPENED, _OPEN_EVENT_CODES),
+    (EVENT_TYPE_ACCESS_DENIED, _ACCESS_DENIED_EVENT_CODES),
+    (EVENT_TYPE_FAULT, _FAULT_EVENT_CODES),
+)
 
 
 async def async_setup_entry(
@@ -68,6 +94,8 @@ class IseoLockEntity(LockEntity):
         self._ble_lock = asyncio.Lock()
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
+        self._access_log_unsub: CALLBACK_TYPE | None = None
+        self._access_log_task: asyncio.Task[None] | None = None
         self.client: IseoClient = entry.runtime_data
 
         self._attr_unique_id = entry.unique_id
@@ -96,6 +124,7 @@ class IseoLockEntity(LockEntity):
             )
         )
         self.async_on_remove(self._cancel_relock_task)
+        self.async_on_remove(self._cancel_access_log_read)
 
     async def _async_poll_interval(self, _now: datetime) -> None:
         """Poll the lock on the configured interval."""
@@ -105,6 +134,14 @@ class IseoLockEntity(LockEntity):
         """Cancel any pending relock task."""
         if self._relock_task and not self._relock_task.done():
             self._relock_task.cancel()
+
+    def _cancel_access_log_read(self) -> None:
+        """Cancel a pending or running access log read."""
+        if self._access_log_unsub is not None:
+            self._access_log_unsub()
+            self._access_log_unsub = None
+        if self._access_log_task and not self._access_log_task.done():
+            self._access_log_task.cancel()
 
     def _set_available(self, available: bool, reason: object = None) -> None:
         """Update availability, logging only when it actually changes."""
@@ -211,8 +248,13 @@ class IseoLockEntity(LockEntity):
         ):
             return False
 
+        # `is_locked` is None until the first reading, so the first poll of a
+        # standing-open door is not mistaken for someone opening it.
+        door_opened = bool(self._attr_is_locked) and not state.door_closed
         self._attr_is_locked = state.door_closed
         self.async_write_ha_state()
+        if door_opened:
+            self._schedule_access_log_read()
         return True
 
     def _set_unlocking(self, available: bool = True) -> None:
@@ -247,6 +289,134 @@ class IseoLockEntity(LockEntity):
 
         await asyncio.sleep(_RELOCK_DELAY)
         self._set_locked(available=self._attr_available)
+
+    @callback
+    def _schedule_access_log_read(self) -> None:
+        """(Re)arm the trailing debounce for the access log read.
+
+        Restarting the timer means one read once the door has settled, rather
+        than one per event: the read drains everything unread anyway.
+        """
+        if self._access_log_unsub is not None:
+            self._access_log_unsub()
+        self._access_log_unsub = async_call_later(
+            self.hass, _ACCESS_LOG_DEBOUNCE, self._start_access_log_read
+        )
+
+    @callback
+    def _start_access_log_read(self, _now: datetime) -> None:
+        """Debounce elapsed — read the log in the background."""
+        self._access_log_unsub = None
+        self.hass.async_create_task(self._async_background_read())
+
+    def _async_shared_read(self) -> asyncio.Task[None]:
+        """Return the read already running, or start one.
+
+        Every caller joins the same read. Reading is destructive, so a second
+        one would spend another BLE session to find the log already emptied by
+        the first.
+        """
+        if self._access_log_task is None or self._access_log_task.done():
+            self._access_log_task = self.hass.async_create_task(self._async_read_log())
+        return self._access_log_task
+
+    async def _async_background_read(self) -> None:
+        """Read the log without troubling anyone if it fails.
+
+        Nothing is lost: a failed read leaves the entries on the lock, and the
+        next read picks them up.
+        """
+        try:
+            await self._async_shared_read()
+        except HomeAssistantError as err:
+            _LOGGER.debug("Could not read the access log: %s", err)
+
+    async def async_read_access_log(self) -> None:
+        """Read the lock's unread access log now.
+
+        The same read the lock does after a door open, on demand: useful to
+        pick up entries recorded while the door state was not being watched.
+        """
+        if self._access_log_unsub is not None:
+            self._access_log_unsub()
+            self._access_log_unsub = None
+        await self._async_shared_read()
+
+    async def _async_read_log(self) -> None:
+        """Drain the unread access log and report what it holds.
+
+        Reading is destructive — the lock marks the entries read — so every
+        entry is only ever seen once, by whichever read gets there first.
+        """
+        address = self._entry.data[CONF_ADDRESS]
+        if not (
+            ble_device := async_ble_device_from_address(
+                self.hass, address, connectable=True
+            )
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"address": address},
+            )
+
+        try:
+            async with self._ble_lock:
+                self.client.update_ble_device(ble_device)
+                entries = await self.client.gw_read_unread_logs()
+        except IseoAuthError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="lock_rejected_identity",
+            ) from err
+        except (TimeoutError, IseoConnectionError, OSError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+
+        self._report_log_entries(entries)
+
+    @callback
+    def _report_log_entries(self, entries: list[LogEntry]) -> None:
+        """Report the newest entry of each kind, oldest first.
+
+        A read can return a long backlog — every open since the last one, plus
+        closes and mode changes. Reporting all of it would replay history as if
+        it had just happened, so only the newest of each kind is reported, in
+        timestamp order so the entity ends up on the most recent one.
+        """
+        newest: list[tuple[str, LogEntry]] = []
+        for event_type, codes in _EVENT_TYPE_CODES:
+            matching = [entry for entry in entries if entry.event_code in codes]
+            if matching:
+                newest.append(
+                    (event_type, max(matching, key=lambda entry: entry.timestamp))
+                )
+
+        for event_type, entry in sorted(newest, key=lambda item: item[1].timestamp):
+            _LOGGER.debug(
+                "Access log: %s (code %s) at %s",
+                describe_event(entry.event_code),
+                entry.event_code,
+                entry.timestamp,
+            )
+            async_dispatcher_send(
+                self.hass,
+                signal_access_log(self._entry.entry_id),
+                event_type,
+                {
+                    "event_code": entry.event_code,
+                    "description": describe_event(entry.event_code),
+                    # The lock puts the opener's name in extra_description and
+                    # their credential's UUID in user_info. Falling back to the
+                    # UUID would put a 32-character hex string where a name
+                    # belongs, so the two are reported separately.
+                    "opened_by": entry.extra_description.strip() or None,
+                    "credential_id": entry.user_info.strip() or None,
+                    "occurred_at": entry.timestamp.isoformat(),
+                },
+            )
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:
@@ -295,3 +465,7 @@ class IseoLockEntity(LockEntity):
 
         self._set_unlocked()
         self._relock_task = self.hass.async_create_task(self._auto_relock())
+        # An unlock from Home Assistant marks the entity unlocked before the
+        # poll ever sees the door move, so it never looks like a door open —
+        # read the log directly to report who pressed the button.
+        self._schedule_access_log_read()

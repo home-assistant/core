@@ -1,17 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: This integration does not provide any service actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: This integration does not provide any service actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not provide any conditions.
@@ -64,20 +60,18 @@ rules:
     comment: This integration connects to a single device.
   entity-category:
     status: exempt
-    comment: The lock is the primary entity; no secondary entities exist.
+    comment: Both entities are primary information about the door, not configuration or diagnostics.
   entity-device-class:
     status: exempt
-    comment: Lock entities do not have device classes.
+    comment: Lock entities have no device classes, and no event device class describes an access log.
   entity-disabled-by-default:
     status: exempt
-    comment: The lock is the only entity and should be enabled by default.
-  entity-translations:
-    status: exempt
-    comment: The only entity uses the device name directly via _attr_name = None.
+    comment: The lock and its access log are the point of the integration and should both be enabled.
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: Uses default platform icons; no custom icons defined.
+    comment: Entities use the default platform icons; only the action has an icon.
   reconfiguration-flow:
     status: exempt
     comment: Configuration is a BLE address and generated identity; nothing to reconfigure.

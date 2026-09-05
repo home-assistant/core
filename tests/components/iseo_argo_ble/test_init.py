@@ -4,8 +4,10 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.iseo_argo_ble.const import DOMAIN, SERVICE_READ_ACCESS_LOG
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -42,3 +44,16 @@ async def test_setup_retries_when_device_not_found(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_action_is_registered_without_a_loaded_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test the action exists even when no lock has been set up.
+
+    Registering it with the config entry would leave automations that call it
+    unvalidatable whenever the lock is out of range.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert hass.services.has_service(DOMAIN, SERVICE_READ_ACCESS_LOG)
