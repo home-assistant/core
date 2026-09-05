@@ -2,6 +2,7 @@
   "domain": "infrared",
   "name": "Infrared",
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/infrared",
   "integration_type": "entity",
   "quality_scale": "internal",

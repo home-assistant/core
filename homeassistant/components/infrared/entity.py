@@ -13,9 +13,11 @@ from propcache.api import cached_property
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.deprecation import deprecated_class
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
+from homeassistant.util.signal_type import SignalType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +35,14 @@ class InfraredReceivedSignal:
 
     timings: list[int]
     modulation: int | None = None
+
+
+# Broadcasts every received signal as (receiver entity id, signal). Consumers
+# that are not tied to the lifetime of a specific receiver entity subscribe to
+# this instead of to the entity itself.
+SIGNAL_INFRARED_RECEIVED: SignalType[str, InfraredReceivedSignal] = SignalType(
+    "infrared_received"
+)
 
 
 class InfraredEmitterEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -153,6 +163,9 @@ class InfraredReceiverEntity(RestoreEntity):
             timespec="milliseconds"
         )
         self.async_write_ha_state()
+        async_dispatcher_send(
+            self.hass, SIGNAL_INFRARED_RECEIVED, self.entity_id, signal
+        )
         for signal_callback in tuple(self.__signal_callbacks):
             try:
                 signal_callback(signal)

@@ -6,5 +6,10 @@
     "receiver": {
       "default": "mdi:led-off"
     }
+  },
+  "triggers": {
+    "_": {
+      "trigger": "mdi:remote"
+    }
   }
 }

@@ -1,0 +1,14 @@
+# Describes the format for infrared triggers
+
+_:
+  target:
+    entity:
+      domain: infrared
+      device_class: receiver
+  fields:
+    commands:
+      required: true
+      selector:
+        infrared_command:
+      context:
+        filter_target: target

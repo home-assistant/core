@@ -1839,6 +1839,33 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> N
     [
         (
             {},
+            (
+                [],
+                [{"name": "Power", "code": "0000 006d 0002 0000 0004 0007"}],
+            ),
+            (
+                None,
+                "0000 006d",
+                [{"name": "Power"}],
+                [{"code": "0000 006d 0002 0000 0004 0007"}],
+                [{"name": "", "code": "0000 006d 0002 0000 0004 0007"}],
+                [{"name": "Power", "code": ""}],
+            ),
+        ),
+    ],
+)
+def test_infrared_command_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test infrared command selector."""
+    _test_selector("infrared_command", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
             ("abc",),
             (None,),
         ),

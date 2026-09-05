@@ -1241,6 +1241,44 @@ class IconSelector(Selector[IconSelectorConfig]):
         return icon
 
 
+class InfraredCommandSelectorConfig(BaseSelectorConfig):
+    """Class to represent an infrared command selector config."""
+
+
+@SELECTORS.register("infrared_command")
+class InfraredCommandSelector(Selector[InfraredCommandSelectorConfig]):
+    """Selector for a list of named infrared commands.
+
+    The frontend captures the codes from an infrared receiver, so the
+    receiver to listen on is passed in as context.
+    """
+
+    selector_type = "infrared_command"
+
+    allowed_context_keys = {
+        # The infrared receiver to capture commands from
+        "filter_target": {"target"}
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema()
+
+    DATA_SCHEMA = vol.Schema(
+        {
+            vol.Required("name"): vol.All(str, vol.Length(min=1)),
+            vol.Required("code"): vol.All(str, vol.Length(min=1)),
+        }
+    )
+
+    def __init__(self, config: InfraredCommandSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> list[dict[str, str]]:
+        """Validate the passed selection."""
+        commands: list[dict[str, str]] = vol.Schema([self.DATA_SCHEMA])(data)
+        return commands
+
+
 class LabelSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a label selector config."""
 
