@@ -42,6 +42,10 @@ PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 # Growatt Classic API error codes
 LOGIN_INVALID_AUTH_CODE = "502"
 
+# Growatt reports an unset setting as the string "null" or as an empty string,
+# not by omitting the key.
+NULL_SENTINELS = (None, "null", "")
+
 
 # Config flow error types (also used as abort reasons)
 ERROR_CANNOT_CONNECT = "cannot_connect"  # Used for both form errors and aborts
