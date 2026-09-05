@@ -52,7 +52,13 @@ from .frame import (
     get_integration_frame,
     report_usage,
 )
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
+from .json import (
+    JSON_DUMP,
+    cached_json_bytes,
+    cached_json_fragment,
+    find_paths_unserializable_data,
+    json_fragment,
+)
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .typing import UNDEFINED, UndefinedType
 
@@ -435,7 +441,7 @@ class BaseDeviceEntry:
         """Return a cached JSON representation of the entry."""
         try:
             dict_repr = self.dict_repr
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -564,39 +570,35 @@ class DeviceEntry(BaseDeviceEntry):
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "area_id": self.area_id,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "configuration_url": self.configuration_url,
-                    "connections": list(self.connections),
-                    "created_at": self.created_at,
-                    "disabled_by": self.disabled_by,
-                    "entry_type": self.entry_type,
-                    "hw_version": self.hw_version,
-                    "id": self.id,
-                    "identifiers": list(self.identifiers),
-                    "labels": list(self.labels),
-                    "composite_device_id": self.composite_device_id,
-                    "composite_primary_config_entry": (
-                        self.composite_primary_config_entry
-                    ),
-                    "split_at": self.split_at,
-                    "manufacturer": self.manufacturer,
-                    "model": self.model,
-                    "model_id": self.model_id,
-                    "modified_at": self.modified_at,
-                    "name_by_user": self.name_by_user,
-                    "name": self.name,
-                    "has_composite_identifiers": (self.has_composite_identifiers),
-                    "primary_config_entry": self.primary_config_entry,
-                    "serial_number": self.serial_number,
-                    "sw_version": self.sw_version,
-                    "via_device_id": self.via_device_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "area_id": self.area_id,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "configuration_url": self.configuration_url,
+                "connections": list(self.connections),
+                "created_at": self.created_at,
+                "disabled_by": self.disabled_by,
+                "entry_type": self.entry_type,
+                "hw_version": self.hw_version,
+                "id": self.id,
+                "identifiers": list(self.identifiers),
+                "labels": list(self.labels),
+                "composite_device_id": self.composite_device_id,
+                "composite_primary_config_entry": self.composite_primary_config_entry,
+                "split_at": self.split_at,
+                "manufacturer": self.manufacturer,
+                "model": self.model,
+                "model_id": self.model_id,
+                "modified_at": self.modified_at,
+                "name_by_user": self.name_by_user,
+                "name": self.name,
+                "has_composite_identifiers": (self.has_composite_identifiers),
+                "primary_config_entry": self.primary_config_entry,
+                "serial_number": self.serial_number,
+                "sw_version": self.sw_version,
+                "via_device_id": self.via_device_id,
+            }
         )
 
     @property
@@ -686,23 +688,21 @@ class ChildDeviceEntry(BaseDeviceEntry):
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "area_id": self.area_id,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "disabled_by": self.disabled_by,
-                    "id": self.id,
-                    "identifiers": list(self.identifiers),
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name_by_user": self.name_by_user,
-                    "name": self.name,
-                    "parent_device_id": self.parent_device_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "area_id": self.area_id,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "disabled_by": self.disabled_by,
+                "id": self.id,
+                "identifiers": list(self.identifiers),
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name_by_user": self.name_by_user,
+                "name": self.name,
+                "parent_device_id": self.parent_device_id,
+            }
         )
 
 
@@ -849,27 +849,25 @@ class DeletedDeviceEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "area_id": self.area_id,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "connections": list(self.connections),
-                    "created_at": self.created_at,
-                    "disabled_by": self.disabled_by
-                    if self.disabled_by is not UNDEFINED
-                    else None,
-                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
-                    "identifiers": list(self.identifiers),
-                    "id": self.id,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name_by_user": self.name_by_user,
-                    "orphaned_timestamp": self.orphaned_timestamp,
-                    "domain": self.domain,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "area_id": self.area_id,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "connections": list(self.connections),
+                "created_at": self.created_at,
+                "disabled_by": self.disabled_by
+                if self.disabled_by is not UNDEFINED
+                else None,
+                "disabled_by_undefined": self.disabled_by is UNDEFINED,
+                "identifiers": list(self.identifiers),
+                "id": self.id,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name_by_user": self.name_by_user,
+                "orphaned_timestamp": self.orphaned_timestamp,
+                "domain": self.domain,
+            }
         )
 
 

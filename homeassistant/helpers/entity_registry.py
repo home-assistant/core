@@ -53,7 +53,13 @@ from .device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from .frame import ReportBehavior, report_usage
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
+from .json import (
+    JSON_DUMP,
+    cached_json_bytes,
+    cached_json_fragment,
+    find_paths_unserializable_data,
+    json_fragment,
+)
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
@@ -319,7 +325,9 @@ class RegistryEntry:
         """
         try:
             dict_repr = self._as_display_dict
-            json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
+            json_repr: bytes | None = (
+                cached_json_bytes(dict_repr) if dict_repr else None
+            )
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -386,7 +394,7 @@ class RegistryEntry:
         """Return a cached partial JSON representation of the entry."""
         try:
             dict_repr = self.as_partial_dict
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -400,43 +408,41 @@ class RegistryEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": self.compat_aliases,
-                    "aliases_v2": _serialize_aliases(self.aliases),
-                    "area_id": self.area_id,
-                    "categories": self.categories,
-                    "capabilities": self.capabilities,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "device_class": self.device_class,
-                    "device_id": self.device_id,
-                    "disabled_by": self.disabled_by,
-                    "entity_category": self.entity_category,
-                    "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by,
-                    "icon": self.icon,
-                    "id": self.id,
-                    "has_entity_name": self.has_entity_name,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name": self.name,
-                    "object_id_base": self.object_id_base,
-                    "options": self.options,
-                    "original_device_class": self.original_device_class,
-                    "original_icon": self.original_icon,
-                    "original_name": self.original_name,
-                    "platform": self.platform,
-                    "suggested_object_id": self.suggested_object_id,
-                    "supported_features": self.supported_features,
-                    "translation_key": self.translation_key,
-                    "unique_id": self.unique_id,
-                    "previous_unique_id": self.previous_unique_id,
-                    "unit_of_measurement": self.unit_of_measurement,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": self.compat_aliases,
+                "aliases_v2": _serialize_aliases(self.aliases),
+                "area_id": self.area_id,
+                "categories": self.categories,
+                "capabilities": self.capabilities,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "device_class": self.device_class,
+                "device_id": self.device_id,
+                "disabled_by": self.disabled_by,
+                "entity_category": self.entity_category,
+                "entity_id": self.entity_id,
+                "hidden_by": self.hidden_by,
+                "icon": self.icon,
+                "id": self.id,
+                "has_entity_name": self.has_entity_name,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name": self.name,
+                "object_id_base": self.object_id_base,
+                "options": self.options,
+                "original_device_class": self.original_device_class,
+                "original_icon": self.original_icon,
+                "original_name": self.original_name,
+                "platform": self.platform,
+                "suggested_object_id": self.suggested_object_id,
+                "supported_features": self.supported_features,
+                "translation_key": self.translation_key,
+                "unique_id": self.unique_id,
+                "previous_unique_id": self.previous_unique_id,
+                "unit_of_measurement": self.unit_of_measurement,
+            }
         )
 
     @callback
@@ -738,38 +744,36 @@ class DeletedRegistryEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": self.compat_aliases,
-                    "aliases_v2": _serialize_aliases(self.aliases),
-                    "area_id": self.area_id,
-                    "categories": self.categories,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "device_class": self.device_class,
-                    "disabled_by": self.disabled_by
-                    if self.disabled_by is not UNDEFINED
-                    else None,
-                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
-                    "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by
-                    if self.hidden_by is not UNDEFINED
-                    else None,
-                    "hidden_by_undefined": self.hidden_by is UNDEFINED,
-                    "icon": self.icon,
-                    "id": self.id,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name": self.name,
-                    "options": self.options if self.options is not UNDEFINED else {},
-                    "options_undefined": self.options is UNDEFINED,
-                    "orphaned_timestamp": self.orphaned_timestamp,
-                    "platform": self.platform,
-                    "unique_id": self.unique_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": self.compat_aliases,
+                "aliases_v2": _serialize_aliases(self.aliases),
+                "area_id": self.area_id,
+                "categories": self.categories,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "device_class": self.device_class,
+                "disabled_by": self.disabled_by
+                if self.disabled_by is not UNDEFINED
+                else None,
+                "disabled_by_undefined": self.disabled_by is UNDEFINED,
+                "entity_id": self.entity_id,
+                "hidden_by": self.hidden_by
+                if self.hidden_by is not UNDEFINED
+                else None,
+                "hidden_by_undefined": self.hidden_by is UNDEFINED,
+                "icon": self.icon,
+                "id": self.id,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name": self.name,
+                "options": self.options if self.options is not UNDEFINED else {},
+                "options_undefined": self.options is UNDEFINED,
+                "orphaned_timestamp": self.orphaned_timestamp,
+                "platform": self.platform,
+                "unique_id": self.unique_id,
+            }
         )
 
 
