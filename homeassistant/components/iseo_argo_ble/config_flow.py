@@ -18,18 +18,30 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
+from .const import (
+    CONF_ADMIN_PRIV_SCALAR,
+    CONF_ADMIN_UUID,
+    CONF_ENABLE_ADMIN,
+    CONF_PRIV_SCALAR,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +90,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._uuid_hex: str = ""
         self._priv_scalar: str = ""
         self._gw_priv: ec.EllipticCurvePrivateKey | None = None
+        self._admin_uuid_hex: str = ""
+        self._admin_priv_scalar: str = ""
+        self._admin_priv: ec.EllipticCurvePrivateKey | None = None
 
     @override
     async def async_step_user(
@@ -176,10 +191,31 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._device_name},
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Offer to enrol the admin identity on an entry that does not have one."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        self._device_name = reconfigure_entry.title
+        self.context["title_placeholders"] = {"name": self._device_name}
+
+        if CONF_ADMIN_UUID in reconfigure_entry.data:
+            return self.async_abort(reason="admin_already_enabled")
+
+        self._address = reconfigure_entry.data[CONF_ADDRESS]
+        self._uuid_hex = reconfigure_entry.data[CONF_UUID]
+        self._priv_scalar = reconfigure_entry.data[CONF_PRIV_SCALAR]
+        self._gw_priv = await self.hass.async_add_executor_job(
+            ec.derive_private_key, int(self._priv_scalar, 16), ec.SECP224R1()
+        )
+
+        return await self.async_step_gw_register()
+
     async def async_step_gw_register(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Register the gateway and enable log notifications (requires Master Card)."""
+        reconfiguring = self.source == SOURCE_RECONFIGURE
         errors: dict[str, str] = {}
         if user_input is not None:
             if not (
@@ -189,6 +225,32 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "cannot_connect"
             else:
+                # The Master Card scan authorises a single session, so the admin
+                # identity has to be enrolled alongside the gateway one or not
+                # at all. Reconfiguring only ever enrols it — an entry that
+                # already has one aborts before reaching this step.
+                enable_admin: bool = (
+                    True if reconfiguring else user_input[CONF_ENABLE_ADMIN]
+                )
+                if self._admin_priv is not None:
+                    # An earlier attempt already offered this identity to the
+                    # lock, which is sent it before acknowledging it — so the
+                    # lock may hold it even though that attempt failed. Keep
+                    # offering the same one and keep its key: generating another
+                    # or dropping this one would leave a credential on the lock
+                    # that nobody can use, and that only the Argo app can
+                    # remove. Re-offering it is harmless, as the lock stores
+                    # credentials by UUID.
+                    enable_admin = True
+                elif enable_admin:
+                    self._admin_priv = await self.hass.async_add_executor_job(
+                        _generate_identity
+                    )
+                    self._admin_uuid_hex = uuid_module.uuid4().bytes.hex()
+                    self._admin_priv_scalar = hex(
+                        self._admin_priv.private_numbers().private_value
+                    )
+
                 assert self._gw_priv is not None
                 client = IseoClient(
                     address=self._address,
@@ -198,8 +260,16 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     ble_device=ble_device,
                 )
                 try:
-                    await client.setup_gateway(name="Home Assistant")
-                    return self._async_create_iseo_entry()
+                    await client.setup_gateway(
+                        name="Home Assistant",
+                        admin_uuid_bytes=bytes.fromhex(self._admin_uuid_hex)
+                        if enable_admin
+                        else None,
+                        admin_identity_priv=self._admin_priv if enable_admin else None,
+                    )
+                    if reconfiguring:
+                        return self._async_update_iseo_entry()
+                    return self._async_create_iseo_entry(with_admin=enable_admin)
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
                 except IseoAuthError as exc:
@@ -211,16 +281,37 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gw_register",
+            data_schema=None
+            if reconfiguring
+            else vol.Schema(
+                {
+                    vol.Required(CONF_ENABLE_ADMIN, default=True): BooleanSelector(),
+                }
+            ),
             errors=errors,
         )
 
-    def _async_create_iseo_entry(self) -> ConfigFlowResult:
+    def _async_create_iseo_entry(self, *, with_admin: bool) -> ConfigFlowResult:
         """Create the final config entry."""
+        data: dict[str, Any] = {
+            CONF_ADDRESS: self._address,
+            CONF_UUID: self._uuid_hex,
+            CONF_PRIV_SCALAR: self._priv_scalar,
+        }
+        if with_admin:
+            data[CONF_ADMIN_UUID] = self._admin_uuid_hex
+            data[CONF_ADMIN_PRIV_SCALAR] = self._admin_priv_scalar
         return self.async_create_entry(
             title=self._device_name or f"ISEO Lock ({self._address})",
-            data={
-                CONF_ADDRESS: self._address,
-                CONF_UUID: self._uuid_hex,
-                CONF_PRIV_SCALAR: self._priv_scalar,
+            data=data,
+        )
+
+    def _async_update_iseo_entry(self) -> ConfigFlowResult:
+        """Add the admin identity to the config entry being reconfigured."""
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            data_updates={
+                CONF_ADMIN_UUID: self._admin_uuid_hex,
+                CONF_ADMIN_PRIV_SCALAR: self._admin_priv_scalar,
             },
         )
