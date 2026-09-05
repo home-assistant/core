@@ -5,12 +5,24 @@
       "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
     },
     "step": {
+      "heater_cooler": {
+        "data": {
+          "temperature_unit": "Temperature unit"
+        },
+        "data_description": {
+          "temperature_unit": "The unit the heater/cooler itself is set to display, since each command steps the target temperature by one degree in that unit."
+        },
+        "description": "Configure the settings specific to your heater/cooler.",
+        "title": "Set up heater/cooler"
+      },
       "user": {
         "data": {
+          "command_step_delay": "Delay between repeated commands",
           "device_type": "Device type",
           "infrared_emitter_entity_id": "Infrared transmitter"
         },
         "data_description": {
+          "command_step_delay": "How long to wait between commands when stepping fan speed or temperature by more than one level at a time.",
           "device_type": "The type of device to control.",
           "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
         },
@@ -20,16 +32,41 @@
     }
   },
   "entity": {
+    "climate": {
+      "heater_cooler": {
+        "name": "Dyson Heater/Cooler",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "diffused": "Diffused",
+              "focused": "Focused"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "name": "Dyson Fan"
       }
     }
   },
+  "exceptions": {
+    "unknown_device_type": {
+      "message": "The configuration entry has an unsupported device type \"{device_type}\". Delete the entry and set it up again."
+    }
+  },
   "selector": {
     "device_type": {
       "options": {
-        "fan": "Fan"
+        "fan": "Fan",
+        "heater_cooler": "Heater/Cooler"
+      }
+    },
+    "temperature_unit": {
+      "options": {
+        "celsius": "Celsius",
+        "fahrenheit": "Fahrenheit"
       }
     }
   }

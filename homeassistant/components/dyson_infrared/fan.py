@@ -12,11 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
+from .const import (
+    CONF_COMMAND_STEP_DELAY,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
+    DEFAULT_COMMAND_STEP_DELAY,
+    DOMAIN,
+)
 
 PARALLEL_UPDATES = 0
-
-_SPEED_STEP_DELAY = 0.2
 
 
 async def async_setup_entry(
@@ -26,8 +29,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Dyson infrared fan platform from a config entry."""
     infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
+    step_delay = entry.data.get(CONF_COMMAND_STEP_DELAY, DEFAULT_COMMAND_STEP_DELAY)
     async_add_entities(
-        [DysonInfraredFan(infrared_emitter_entity_id, entry.entry_id, entry.title)]
+        [
+            DysonInfraredFan(
+                infrared_emitter_entity_id, entry.entry_id, entry.title, step_delay
+            )
+        ]
     )
 
 
@@ -46,10 +54,15 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
     )
 
     def __init__(
-        self, infrared_emitter_entity_id: str, unique_id: str, name: str
+        self,
+        infrared_emitter_entity_id: str,
+        unique_id: str,
+        name: str,
+        step_delay: float = DEFAULT_COMMAND_STEP_DELAY,
     ) -> None:
         """Initialize the Dyson infrared fan entity."""
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
+        self._step_delay = step_delay
 
         self._attr_unique_id = unique_id
         self._attr_percentage = 50
@@ -125,9 +138,10 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
                 if target_speed > current_speed
                 else DysonCoolCode.SPEED_DOWN
             )
-            for _ in range(abs(target_speed - current_speed)):
+            for step in range(abs(target_speed - current_speed)):
+                if step:
+                    await asyncio.sleep(self._step_delay)
                 await self._async_send_dyson_action(code)
-                await asyncio.sleep(_SPEED_STEP_DELAY)
 
         self._attr_percentage = normalized_percentage
         self._attr_is_on = True

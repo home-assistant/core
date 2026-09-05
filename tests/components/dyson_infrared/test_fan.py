@@ -1,9 +1,18 @@
 """Tests for the Dyson Infrared fan platform."""
 
+from unittest.mock import call, patch
+
 from infrared_protocols.codes.dyson.cool import DysonCoolCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.dyson_infrared.const import (
+    CONF_COMMAND_STEP_DELAY,
+    CONF_DEVICE_TYPE,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
+    DOMAIN,
+    DysonDeviceType,
+)
 from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
@@ -13,18 +22,13 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
-
-
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Return platforms to set up."""
-    return [Platform.FAN]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -253,3 +257,41 @@ async def test_oscillate_sends_swing_command(
     state = hass.states.get(fan_entity_id)
     assert state
     assert state.attributes[ATTR_OSCILLATING] is True
+
+
+async def test_custom_command_step_delay_is_used_when_stepping(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_make_dyson_cool_command: None,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a configured command_step_delay is used as the inter-command delay."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE_TYPE: DysonDeviceType.FAN,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_COMMAND_STEP_DELAY: 1.5,
+        },
+        unique_id="fan_test",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    fan_entity_id = entities[0].entity_id
+
+    with patch(
+        "homeassistant.components.dyson_infrared.fan.asyncio.sleep"
+    ) as mock_sleep:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 80},
+            blocking=True,
+        )
+
+    # Stepping speed 5 to 8 sends three commands, delayed only between them.
+    assert mock_sleep.call_args_list == [call(1.5), call(1.5)]
