@@ -50,10 +50,10 @@ TEST_BEDROCK_STATUS_RESPONSE = BedrockStatusResponse.build(
     [
         "MCPE",  # version.brand
         "Dummy MOTD",  # motd
-        123,  # version.protocol
+        "123",  # version.protocol
         "Dummy Version",  # version.name
-        3,  # players.online
-        10,  # players.max
+        "3",  # players.online
+        "10",  # players.max
         "Dummy Server ID",  # server unique ID
         "Dummy Map Name",  # map_name
         "Dummy Game Mode",  # gamemode
@@ -76,11 +76,11 @@ TEST_BEDROCK_DATA = MinecraftServerData(
 
 TEST_LEGACY_JAVA_STATUS_RESPONSE = LegacyStatusResponse.build(
     [
-        78,  # version.protocol
+        "78",  # version.protocol
         "1.6.4",  # version.name
         "Dummy MOTD",  # motd
-        3,  # players online
-        10,  # players max
+        "3",  # players online
+        "10",  # players max
     ],
     latency=5,
 )
