@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.xiaomi_aqara import config_flow, const
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -21,7 +21,6 @@ TEST_HOST = "1.2.3.4"
 TEST_HOST_2 = "5.6.7.8"
 TEST_KEY = "1234567890123456"
 TEST_PORT = 1234
-TEST_NAME = "Test_Aqara_Gateway"
 TEST_SID = "abcdefghijkl"
 TEST_PROTOCOL = "1.1.1"
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
@@ -104,12 +103,11 @@ async def test_config_flow_user_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == TEST_MAC
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
@@ -156,12 +154,11 @@ async def test_config_flow_user_multiple_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == TEST_MAC
     assert result["data"] == {
         CONF_HOST: TEST_HOST_2,
         CONF_PORT: TEST_PORT,
@@ -194,11 +191,11 @@ async def test_config_flow_user_no_key_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_NAME: TEST_NAME},
+        {},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == TEST_MAC
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
@@ -241,11 +238,11 @@ async def test_config_flow_user_host_mac_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_NAME: TEST_NAME},
+        {},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == TEST_MAC
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
@@ -395,8 +392,7 @@ async def test_config_flow_user_invalid_key(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -434,12 +430,11 @@ async def test_zeroconf_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == TEST_MAC
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
