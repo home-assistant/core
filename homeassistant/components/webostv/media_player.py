@@ -74,7 +74,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
         # Assume that the TV is not paused
         self._paused = False
-        self._current_source = None
+        self._current_source: str | None = None
         self._source_list: dict = {}
 
         self._supported_features = MediaPlayerEntityFeature(0)
@@ -201,16 +201,17 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         """Update list of sources from current source and apps."""
         tv_state = self._client.tv_state
         source_list = self._source_list
+        current_source = self._current_source
         self._source_list = {}
+        self._current_source = None
         conf_sources = self._sources
-        current_source = None
 
         found_live_tv = False
         for app in tv_state.apps.values():
             if app["id"] == LIVE_TV_APP_ID:
                 found_live_tv = True
             if app["id"] == tv_state.current_app_id:
-                current_source = app["title"]
+                self._current_source = app["title"]
                 self._source_list[app["title"]] = app
             elif (
                 not conf_sources
@@ -224,7 +225,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             if source["appId"] == LIVE_TV_APP_ID:
                 found_live_tv = True
             if source["appId"] == tv_state.current_app_id:
-                current_source = source["label"]
+                self._current_source = source["label"]
                 self._source_list[source["label"]] = source
             elif (
                 not conf_sources
@@ -235,28 +236,28 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
         # live tv is the source even when both lists leave it out
         if not found_live_tv and tv_state.current_app_id == LIVE_TV_APP_ID:
-            current_source = "Live TV"
+            self._current_source = "Live TV"
 
         # empty list, TV may be off, keep previous list
         if not self._source_list and source_list:
             self._source_list = source_list
             # only a TV reporting nothing keeps its previous source
             if not tv_state.apps and not tv_state.inputs:
-                return
+                self._current_source = current_source
         # special handling of live tv since this might
         # not appear in the app or input lists in some cases
         elif not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
-            if (
-                tv_state.current_app_id == LIVE_TV_APP_ID
-                or not conf_sources
+            if tv_state.current_app_id == LIVE_TV_APP_ID:
+                self._current_source = app["title"]
+                self._source_list["Live TV"] = app
+            elif (
+                not conf_sources
                 or app["id"] in conf_sources
                 or any(word in app["title"] for word in conf_sources)
                 or any(word in app["id"] for word in conf_sources)
             ):
                 self._source_list["Live TV"] = app
-
-        self._current_source = current_source
 
     @property
     @override
