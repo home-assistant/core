@@ -51,6 +51,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Xiaomi Bluetooth."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -360,7 +361,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+                self._get_reauth_entry(), data_updates=data
             )
 
         return self.async_create_entry(

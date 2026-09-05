@@ -11,6 +11,7 @@ from xiaomi_ble import (
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
+from homeassistant.components.xiaomi_ble import DATA_S400_IMPEDANCE_CACHE_PURGED
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -1471,3 +1472,64 @@ async def test_async_step_reauth_abort_early(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_async_step_reauth_preserves_existing_entry_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauth merges into entry.data instead of replacing it.
+
+    Regression test for a bug where the reauth flow used data=data on
+    async_update_reload_and_abort, replacing entry.data entirely and
+    dropping internal keys set outside of the config flow -- such as the
+    S400 restore-cache purge marker.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="F8:24:41:C5:98:8B",
+        data={DATA_S400_IMPEDANCE_CACHE_PURGED: True},
+    )
+    entry.add_to_hass(hass)
+    saved_callback = None
+
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
+    saved_callback(
+        make_advertisement(
+            "F8:24:41:C5:98:8B",
+            b"X0\xb6\x03\xd2\x8b\x98\xc5A$\xf8\xc3I\x14vu~\x00\x00\x00\x99",
+        ),
+        BluetoothChange.ADVERTISEMENT,
+    )
+    await hass.async_block_till_done()
+
+    results = hass.config_entries.flow.async_progress()
+    assert len(results) == 1
+    result = results[0]
+    assert result["step_id"] == "get_encryption_key_legacy"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"bindkey": "b853075158487ca39a5b5ea9"},
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+    # The pre-existing internal key must survive the reauth, merged
+    # alongside the new bindkey rather than replaced.
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+    assert "bindkey" in entry.data
