@@ -127,6 +127,20 @@ def substitute_references(
             )
             if sub_dict:
                 result[key] = sub_dict
+        elif isinstance(value, list):
+            sub_list = []
+            for item in value:
+                try:
+                    sub_list.append(substitute_reference(item, substitutions))
+                except MissingReference as err:
+                    if fail_on_missing:
+                        raise ExitApp(
+                            f"Missing reference"
+                            f" '{err.reference_key}'"
+                            f" in translation for key '{key}'"
+                        ) from err
+            if sub_list:
+                result[key] = sub_list
         elif isinstance(value, str):
             try:
                 substituted = substitute_reference(value, substitutions)
