@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DOMAIN,
@@ -119,6 +121,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=USER_INPUT,
         options={
             CONF_TIMEOUT: 1312,
+            CONF_REPLY_TO: "replyto@example.com",
+            CONF_REPLY_TO_NAME: "Reply To Name",
         },
         entry_id="123456789",
         subentries_data=[

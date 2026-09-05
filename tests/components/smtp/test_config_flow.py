@@ -6,6 +6,8 @@ from aiosmtplib import SMTPAuthenticationError, SMTPException, SMTPTimeoutError
 import pytest
 
 from homeassistant.components.smtp.const import (
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     DOMAIN,
     SECTION_OPTIONS,
@@ -53,7 +55,10 @@ async def test_form(
         result["flow_id"],
         {
             **USER_INPUT,
-            SECTION_OPTIONS: {},
+            SECTION_OPTIONS: {
+                CONF_REPLY_TO: "replyto@example.com",
+                CONF_REPLY_TO_NAME: "Reply To Name",
+            },
         },
     )
     await hass.async_block_till_done()
@@ -61,7 +66,10 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant"
     assert result["data"] == USER_INPUT
-    assert result["options"] == {}
+    assert result["options"] == {
+        CONF_REPLY_TO: "replyto@example.com",
+        CONF_REPLY_TO_NAME: "Reply To Name",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
     await hass.async_block_till_done(wait_background_tasks=True)

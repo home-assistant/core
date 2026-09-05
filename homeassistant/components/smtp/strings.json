@@ -70,9 +70,13 @@
         "sections": {
           "options": {
             "data": {
+              "reply_to": "[%key:component::smtp::options::step::init::data::reply_to%]",
+              "reply_to_name": "[%key:component::smtp::options::step::init::data::reply_to_name%]",
               "timeout": "[%key:component::smtp::options::step::init::data::timeout%]"
             },
             "data_description": {
+              "reply_to": "[%key:component::smtp::options::step::init::data_description::reply_to%]",
+              "reply_to_name": "[%key:component::smtp::options::step::init::data_description::reply_to_name%]",
               "timeout": "[%key:component::smtp::options::step::init::data_description::timeout%]"
             },
             "name": "Additional options"
@@ -151,9 +155,13 @@
     "step": {
       "init": {
         "data": {
+          "reply_to": "Reply-To email address",
+          "reply_to_name": "Reply-To name",
           "timeout": "Connection timeout"
         },
         "data_description": {
+          "reply_to": "Email address to use for recipient replies. If not specified, the sender's email address is used.",
+          "reply_to_name": "Display name shown as the Reply-To name.",
           "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted. Defaults to 60 seconds."
         }
       }
