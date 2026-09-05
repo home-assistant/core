@@ -1,5 +1,4 @@
 """The Nmap Tracker integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from dataclasses import dataclass
@@ -33,7 +32,7 @@ from .const import (
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
-    NMAP_TRACKED_DEVICES,
+    NMAP_TRACKER_DATA,
     PLATFORMS,
     TRACKER_SCAN_INTERVAL,
 )
@@ -90,8 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
     """Set up Nmap Tracker from a config entry."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
+    devices = hass.data.setdefault(NMAP_TRACKER_DATA, NmapTrackedDevices())
     scanner = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
     entry.runtime_data = scanner
@@ -144,9 +142,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    devices = hass.data[DOMAIN][NMAP_TRACKED_DEVICES]
+    devices = hass.data[NMAP_TRACKER_DATA]
     remove_mac_addresses = [
         mac_address
         for mac_address, entry_id in devices.config_entry_owner.items()
