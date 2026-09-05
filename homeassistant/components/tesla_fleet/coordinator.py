@@ -64,6 +64,7 @@ def _is_stale_site_info_error(err: TeslaFleetError) -> bool:
 
 
 ENDPOINTS = [
+    VehicleDataEndpoint.CHARGE_SCHEDULE_DATA,
     VehicleDataEndpoint.CHARGE_STATE,
     VehicleDataEndpoint.CLIMATE_STATE,
     VehicleDataEndpoint.DRIVE_STATE,
@@ -108,6 +109,33 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     return result
 
 
+def _schedule_without_location(schedule: Any) -> Any:
+    """Return a charge schedule without the coordinates it is anchored to."""
+    if not isinstance(schedule, dict):
+        return schedule
+    return {
+        key: value
+        for key, value in schedule.items()
+        if key not in ("latitude", "longitude")
+    }
+
+
+def _without_schedule_locations(charge_schedule_data: dict[str, Any]) -> dict[str, Any]:
+    """Return charge schedule data with every schedule's coordinates removed.
+
+    Schedules carry the location the vehicle must be at, so they are withheld
+    from users who did not grant the vehicle location scope.
+    """
+    result = dict(charge_schedule_data)
+    if (schedules := result.get("charge_schedules")) is not None:
+        result["charge_schedules"] = [
+            _schedule_without_location(schedule) for schedule in schedules
+        ]
+    if (window := result.get("charge_schedule_window")) is not None:
+        result["charge_schedule_window"] = _schedule_without_location(window)
+    return result
+
+
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the TeslaFleet API."""
 
@@ -115,6 +143,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     updated_once: bool
     pre2021: bool
     last_active: float
+    location: bool
     endpoints: list[VehicleDataEndpoint]
 
     def __init__(
@@ -137,6 +166,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = time()
+        self.location = location
         self.endpoints = (
             ENDPOINTS
             if location
@@ -157,6 +187,15 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             response = await self.api.vehicle_data(endpoints=self.endpoints)
             data = response["response"]
+            if not self.location and (
+                charge_schedule_data := data.get("charge_schedule_data")
+            ):
+                data = {
+                    **data,
+                    "charge_schedule_data": _without_schedule_locations(
+                        charge_schedule_data
+                    ),
+                }
 
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP

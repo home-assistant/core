@@ -346,6 +346,9 @@
       "battery_power": {
         "name": "Battery power"
       },
+      "charge_schedule_data_charge_schedules": {
+        "name": "Charge schedules"
+      },
       "charge_state_battery_level": {
         "name": "Battery level"
       },
@@ -596,6 +599,9 @@
     }
   },
   "exceptions": {
+    "charge_schedule_requires_time": {
+      "message": "A start time or an end time is required."
+    },
     "command_error": {
       "message": "Command returned an error: {error}"
     },
@@ -635,6 +641,9 @@
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
     },
+    "no_vehicle_data_for_device": {
+      "message": "No vehicle data available for {device}."
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },
@@ -646,11 +655,76 @@
     }
   },
   "selector": {
+    "days_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    },
     "region": {
       "options": {
         "eu": "Europe, Middle East & Africa",
         "na": "North America & Asia-Pacific"
       }
+    }
+  },
+  "services": {
+    "add_charge_schedule": {
+      "description": "Adds or modifies a charging schedule for a vehicle.",
+      "fields": {
+        "days_of_week": {
+          "description": "Select which days this schedule should be enabled on. You can select multiple days.",
+          "name": "Days of week"
+        },
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "If this schedule should be considered for execution.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "end_time": {
+          "description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
+          "name": "End time"
+        },
+        "id": {
+          "description": "The ID of the schedule, use an existing ID to modify.",
+          "name": "Schedule ID"
+        },
+        "location": {
+          "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+          "name": "Location"
+        },
+        "one_time": {
+          "description": "If this is a one-time schedule.",
+          "name": "One-time"
+        },
+        "start_time": {
+          "description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
+          "name": "Start time"
+        }
+      },
+      "name": "Add charge schedule"
+    },
+    "remove_charge_schedule": {
+      "description": "Removes a charging schedule from a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to remove the schedule from.",
+          "name": "[%key:component::tesla_fleet::services::add_charge_schedule::fields::device_id::name%]"
+        },
+        "id": {
+          "description": "The ID of the schedule to remove.",
+          "name": "[%key:component::tesla_fleet::services::add_charge_schedule::fields::id::name%]"
+        }
+      },
+      "name": "Remove charge schedule"
     }
   }
 }

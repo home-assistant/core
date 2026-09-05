@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from itertools import chain
-from typing import cast, override
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -34,7 +34,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslaFleetConfigEntry
-from .const import ENERGY_HISTORY_FIELDS, TeslaFleetState
+from .const import DAYS_OF_WEEK_BITS, ENERGY_HISTORY_FIELDS, TeslaFleetState
 from .entity import (
     TeslaFleetEnergyHistoryEntity,
     TeslaFleetEnergyInfoEntity,
@@ -448,6 +448,35 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 )
 
 
+def _schedule_days(bitmask: int) -> list[str]:
+    """Return the day names covered by a schedule's day bitmask."""
+    return [day for day, bit in DAYS_OF_WEEK_BITS.items() if bitmask & bit]
+
+
+def _schedule_time(minutes: int) -> str:
+    """Return minutes after midnight as a HH:MM string."""
+    return f"{minutes // 60:02d}:{minutes % 60:02d}"
+
+
+def _schedule_attributes(schedule: dict[str, Any]) -> dict[str, Any]:
+    """Return the user facing attributes of a single charge schedule."""
+    attributes: dict[str, Any] = {
+        "id": schedule.get("id"),
+        "enabled": schedule.get("enabled"),
+        "one_time": schedule.get("one_time"),
+        "days_of_week": _schedule_days(schedule.get("days_of_week", 0)),
+    }
+    if name := schedule.get("name"):
+        attributes["name"] = name
+    # A time is only part of the schedule when its matching flag is set; the
+    # other value is still populated but unused.
+    if schedule.get("start_enabled"):
+        attributes["start_time"] = _schedule_time(schedule.get("start_time", 0))
+    if schedule.get("end_enabled"):
+        attributes["end_time"] = _schedule_time(schedule.get("end_time", 0))
+    return attributes
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
@@ -465,6 +494,10 @@ async def async_setup_entry(
                 TeslaFleetVehicleTimeSensorEntity(vehicle, description)
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_TIME_DESCRIPTIONS
+            ),
+            (  # Add vehicle charge schedules
+                TeslaFleetChargeSchedulesSensorEntity(vehicle)
+                for vehicle in entry.runtime_data.vehicles
             ),
             (  # Add energy site live
                 TeslaFleetEnergyLiveSensorEntity(energysite, description)
@@ -553,6 +586,35 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
             self._attr_native_value = new_value
         else:
             self._attr_native_value = None
+
+
+class TeslaFleetChargeSchedulesSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
+    """Charge schedules configured on a vehicle."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    # A vehicle allows up to 100 schedules, which would exceed the recorder's
+    # attribute size limit and has no value as history.
+    _unrecorded_attributes = frozenset({"schedules"})
+
+    def __init__(self, data: TeslaFleetVehicleData) -> None:
+        """Initialize the charge schedules sensor."""
+        super().__init__(data, "charge_schedule_data_charge_schedules")
+
+    @override
+    def _async_update_attrs(self) -> None:
+        """Update the charge schedules from coordinator data."""
+        schedules = self._value
+        if not isinstance(schedules, list):
+            self._attr_available = False
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
+
+        self._attr_available = True
+        self._attr_native_value = len(schedules)
+        self._attr_extra_state_attributes = {
+            "schedules": [_schedule_attributes(schedule) for schedule in schedules]
+        }
 
 
 class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
