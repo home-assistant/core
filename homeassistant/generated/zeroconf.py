@@ -700,6 +700,16 @@ ZEROCONF = {
             "name": "velux_klf_lan_*",
         },
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds_*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc_*",
+        },
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue",
