@@ -240,18 +240,19 @@ async def test_a_refused_command_reaches_the_caller(
         )
 
 
-async def test_commands_close_together_are_sent_separately(
+async def test_commands_issued_together_become_one_frame(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Two blocking commands on this entity leave as two frames.
+    """Two actions issued together still leave as one frame.
 
-    The consolidation window still merges whatever reaches it, but climate
-    runs with PARALLEL_UPDATES = 1 and every command is awaited to its
-    result, so two calls on the same entity can no longer land in the same
-    window. That is the price of reporting a refusal back to the action that
-    caused it - see Device.async_queue_command().
+    Every command is awaited to its result now, so this only holds because
+    the platform does not serialise them on top of that: with
+    PARALLEL_UPDATES = 1 the second call would not start until the first had
+    been sent, and the consolidation window would be over. Commands issued
+    one after another - a script awaiting each step - do leave separately;
+    there is no window to join once the first has been sent and answered.
     """
     mock_repository.send_airco_command.reset_mock()
 
@@ -271,4 +272,4 @@ async def test_commands_close_together_are_sent_separately(
     )
     await hass.async_block_till_done()
 
-    assert mock_repository.send_airco_command.await_count == 2
+    assert mock_repository.send_airco_command.await_count == 1
