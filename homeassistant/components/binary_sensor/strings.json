@@ -7,6 +7,7 @@
       "is_cold": "{entity_name} is cold",
       "is_connected": "{entity_name} is connected",
       "is_gas": "{entity_name} is detecting gas",
+      "is_glass_break": "{entity_name} is detecting glass break",
       "is_hot": "{entity_name} is hot",
       "is_light": "{entity_name} is detecting light",
       "is_locked": "{entity_name} is locked",
@@ -15,6 +16,7 @@
       "is_moving": "{entity_name} is moving",
       "is_no_co": "{entity_name} is not detecting carbon monoxide",
       "is_no_gas": "{entity_name} is not detecting gas",
+      "is_no_glass_break": "{entity_name} is not detecting glass break",
       "is_no_light": "{entity_name} is not detecting light",
       "is_no_motion": "{entity_name} is not detecting motion",
       "is_no_problem": "{entity_name} is not detecting problem",
@@ -64,6 +66,7 @@
       "cold": "{entity_name} became cold",
       "connected": "{entity_name} connected",
       "gas": "{entity_name} started detecting gas",
+      "glass_break": "{entity_name} detected glass break",
       "hot": "{entity_name} became hot",
       "light": "{entity_name} started detecting light",
       "locked": "{entity_name} locked",
@@ -72,6 +75,7 @@
       "moving": "{entity_name} started moving",
       "no_co": "{entity_name} stopped detecting carbon monoxide",
       "no_gas": "{entity_name} stopped detecting gas",
+      "no_glass_break": "{entity_name} stopped detecting glass break",
       "no_light": "{entity_name} stopped detecting light",
       "no_motion": "{entity_name} stopped detecting motion",
       "no_problem": "{entity_name} stopped detecting problem",
@@ -174,6 +178,13 @@
       "state": {
         "off": "Clear",
         "on": "Detected"
+      }
+    },
+    "glass_break": {
+      "name": "Glass break",
+      "state": {
+        "off": "Clear",
+        "on": "Glass break detected"
       }
     },
     "heat": {

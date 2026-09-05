@@ -31,6 +31,8 @@ CONF_CONNECTED = "connected"
 CONF_NOT_CONNECTED = "not_connected"
 CONF_GAS = "gas"
 CONF_NO_GAS = "no_gas"
+CONF_GLASS_BREAK = "glass_break"
+CONF_NO_GLASS_BREAK = "no_glass_break"
 CONF_HOT = "hot"
 CONF_NOT_HOT = "not_hot"
 CONF_LIGHT = "light"
@@ -103,6 +105,10 @@ ENTITY_TRIGGERS = {
     BinarySensorDeviceClass.GAS: [
         {CONF_TYPE: CONF_GAS},
         {CONF_TYPE: CONF_NO_GAS},
+    ],
+    BinarySensorDeviceClass.GLASS_BREAK: [
+        {CONF_TYPE: CONF_GLASS_BREAK},
+        {CONF_TYPE: CONF_NO_GLASS_BREAK},
     ],
     BinarySensorDeviceClass.HEAT: [
         {CONF_TYPE: CONF_HOT},

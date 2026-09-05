@@ -55,6 +55,9 @@ class BinarySensorDeviceClass(StrEnum):
     # On means gas detected, Off means no gas (clear)
     GAS = "gas"
 
+    # On means glass break detected, Off means no glass break (clear)
+    GLASS_BREAK = "glass_break"
+
     # On means hot, Off means normal
     HEAT = "heat"
 
