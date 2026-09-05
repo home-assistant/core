@@ -742,6 +742,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
+        },
+    ],
     "_linkplay._tcp.local.": [
         {
             "domain": "linkplay",
