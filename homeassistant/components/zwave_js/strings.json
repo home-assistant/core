@@ -426,6 +426,137 @@
     }
   },
   "selector": {
+    "command_class": {
+      "options": {
+        "0": "No Operation (0)",
+        "32": "Basic (32)",
+        "33": "Controller Replication (33)",
+        "34": "Application Status (34)",
+        "35": "Z/IP (35)",
+        "37": "Binary Switch (37)",
+        "38": "Multilevel Switch (38)",
+        "39": "All Switch (39)",
+        "40": "Binary Toggle Switch (40)",
+        "41": "Multilevel Toggle Switch (41)",
+        "43": "Scene Activation (43)",
+        "44": "Scene Actuator Configuration (44)",
+        "45": "Scene Controller Configuration (45)",
+        "48": "Binary Sensor (48)",
+        "49": "Multilevel Sensor (49)",
+        "50": "Meter (50)",
+        "51": "Color Switch (51)",
+        "52": "Network Management Inclusion (52)",
+        "53": "Pulse Meter (53)",
+        "54": "Basic Tariff Information (54)",
+        "55": "HRV Status (55)",
+        "57": "HRV Control (57)",
+        "58": "Demand Control Plan Configuration (58)",
+        "59": "Demand Control Plan Monitor (59)",
+        "60": "Meter Table Configuration (60)",
+        "61": "Meter Table Monitor (61)",
+        "62": "Meter Table Push Configuration (62)",
+        "63": "Prepayment (63)",
+        "64": "Thermostat Mode (64)",
+        "65": "Prepayment Encapsulation (65)",
+        "66": "Thermostat Operating State (66)",
+        "67": "Thermostat Setpoint (67)",
+        "68": "Thermostat Fan Mode (68)",
+        "69": "Thermostat Fan State (69)",
+        "70": "Climate Control Schedule (70)",
+        "71": "Thermostat Setback (71)",
+        "72": "Rate Table Configuration (72)",
+        "73": "Rate Table Monitor (73)",
+        "74": "Tariff Table Configuration (74)",
+        "75": "Tariff Table Monitor (75)",
+        "76": "Door Lock Logging (76)",
+        "77": "Network Management Basic Node (77)",
+        "78": "Schedule Entry Lock (78)",
+        "79": "Z/IP 6LoWPAN (79)",
+        "80": "Basic Window Covering (80)",
+        "81": "Move To Position Window Covering (81)",
+        "82": "Network Management Proxy (82)",
+        "83": "Schedule (83)",
+        "84": "Network Management Primary (84)",
+        "85": "Transport Service (85)",
+        "86": "CRC-16 Encapsulation (86)",
+        "87": "Application Capability (87)",
+        "88": "Z/IP ND (88)",
+        "89": "Association Group Information (89)",
+        "90": "Device Reset Locally (90)",
+        "91": "Central Scene (91)",
+        "92": "IP Association (92)",
+        "93": "Anti-Theft (93)",
+        "94": "Z-Wave Plus Info (94)",
+        "95": "Z/IP Gateway (95)",
+        "96": "Multi Channel (96)",
+        "97": "Z/IP Portal (97)",
+        "98": "Door Lock (98)",
+        "99": "User Code (99)",
+        "100": "Humidity Control Setpoint (100)",
+        "102": "Barrier Operator (102)",
+        "103": "Network Management Installation and Maintenance (103)",
+        "104": "Z/IP Naming and Location (104)",
+        "105": "Mailbox (105)",
+        "106": "Window Covering (106)",
+        "107": "Irrigation (107)",
+        "108": "Supervision (108)",
+        "109": "Humidity Control Mode (109)",
+        "110": "Humidity Control Operating State (110)",
+        "111": "Entry Control (111)",
+        "112": "Configuration (112)",
+        "113": "Notification (113)",
+        "114": "Manufacturer Specific (114)",
+        "115": "Powerlevel (115)",
+        "116": "Inclusion Controller (116)",
+        "117": "Protection (117)",
+        "118": "Lock (118)",
+        "119": "Node Naming and Location (119)",
+        "120": "Node Provisioning (120)",
+        "121": "Sound Switch (121)",
+        "122": "Firmware Update Meta Data (122)",
+        "123": "Grouping Name (123)",
+        "124": "Remote Association Activation (124)",
+        "125": "Remote Association Configuration (125)",
+        "126": "Anti-Theft Unlock (126)",
+        "128": "Battery (128)",
+        "129": "Clock (129)",
+        "130": "Hail (130)",
+        "132": "Wake Up (132)",
+        "133": "Association (133)",
+        "134": "Version (134)",
+        "135": "Indicator (135)",
+        "136": "Proprietary (136)",
+        "137": "Language (137)",
+        "138": "Time (138)",
+        "139": "Time Parameters (139)",
+        "140": "Geographic Location (140)",
+        "142": "Multi Channel Association (142)",
+        "143": "Multi Command (143)",
+        "144": "Energy Production (144)",
+        "145": "Manufacturer Proprietary (145)",
+        "146": "Screen Meta Data (146)",
+        "147": "Screen Attributes (147)",
+        "148": "Simple AV Control (148)",
+        "152": "Security (152)",
+        "154": "IP Configuration (154)",
+        "155": "Association Command Configuration (155)",
+        "156": "Alarm Sensor (156)",
+        "157": "Alarm Silence (157)",
+        "158": "Sensor Configuration (158)",
+        "159": "Security 2 (159)",
+        "160": "IR Repeater (160)",
+        "161": "Authentication (161)",
+        "162": "Authentication Media Write (162)",
+        "163": "Generic Schedule (163)"
+      }
+    },
+    "event_source": {
+      "options": {
+        "controller": "Controller",
+        "driver": "Driver",
+        "node": "Node"
+      }
+    },
     "network_type": {
       "options": {
         "existing": "It already exists",
@@ -889,6 +1020,80 @@
         }
       },
       "name": "Set a value"
+    }
+  },
+  "triggers": {
+    "event": {
+      "description": "Triggers when a Z-Wave JS controller, driver, or node emits an event.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Z-Wave JS config entry to listen to. Required for controller and driver events.",
+          "name": "Config entry"
+        },
+        "device_id": {
+          "description": "Devices whose node events to listen to. Node events need at least one device or entity, and controller or driver events must not have any.",
+          "name": "Devices"
+        },
+        "entity_id": {
+          "description": "Entities whose node events to listen to. Node events need at least one device or entity, and controller or driver events must not have any.",
+          "name": "Entities"
+        },
+        "event": {
+          "description": "Name of the Z-Wave JS event, for example `value notification`.",
+          "name": "Event"
+        },
+        "event_data": {
+          "description": "Key-value pairs the event data must contain for the trigger to fire.",
+          "name": "Event data"
+        },
+        "event_source": {
+          "description": "Whether the event is emitted by the controller, the driver, or a node.",
+          "name": "Event source"
+        },
+        "partial_dict_match": {
+          "description": "Match nested dictionaries in the event data on the given keys only, instead of requiring an exact match.",
+          "name": "Partial dictionary match"
+        }
+      },
+      "name": "Z-Wave JS event received"
+    },
+    "value_updated": {
+      "description": "Triggers when a Z-Wave value on one or more nodes changes.",
+      "fields": {
+        "command_class": {
+          "description": "Command class of the value.",
+          "name": "Command class"
+        },
+        "device_id": {
+          "description": "Devices whose values to watch. At least one device or entity is required.",
+          "name": "Devices"
+        },
+        "endpoint": {
+          "description": "Endpoint of the value.",
+          "name": "Endpoint"
+        },
+        "entity_id": {
+          "description": "Entities whose values to watch. At least one device or entity is required.",
+          "name": "Entities"
+        },
+        "from": {
+          "description": "Only trigger when the value changes from this value, or from any value in this list.",
+          "name": "From"
+        },
+        "property": {
+          "description": "Property of the value.",
+          "name": "Property"
+        },
+        "property_key": {
+          "description": "Property key of the value.",
+          "name": "Property key"
+        },
+        "to": {
+          "description": "Only trigger when the value changes to this value, or to any value in this list.",
+          "name": "To"
+        }
+      },
+      "name": "Z-Wave JS value updated"
     }
   }
 }
