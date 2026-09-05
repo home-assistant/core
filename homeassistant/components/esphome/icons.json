@@ -22,5 +22,10 @@
         "default": "mdi:microphone"
       }
     }
+  },
+  "services": {
+    "reload_custom_wake_words": {
+      "service": "mdi:microphone-plus"
+    }
   }
 }

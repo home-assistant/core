@@ -41,8 +41,12 @@ from homeassistant.components.assist_satellite import (
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
-from homeassistant.components.esphome.const import NO_WAKE_WORD
+from homeassistant.components.esphome.assist_satellite import (
+    _DATA_WAKE_WORDS,
+    SERVICE_RELOAD_CUSTOM_WAKE_WORDS,
+    VoiceAssistantUDPServer,
+)
+from homeassistant.components.esphome.const import DOMAIN, NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -2234,7 +2238,7 @@ async def test_custom_wake_words(
 
     Expects 2 models in testing_config/custom_wake_words:
     - hey_home_assistant
-    - choo_choo_homie
+    - choo_choo_homie (in choo_choo_homie sub-directory)
     """
     http_client = await hass_client()
     expected_config = AssistSatelliteConfiguration(
@@ -2266,7 +2270,7 @@ async def test_custom_wake_words(
 
     assert {external_wake_words[0].id, external_wake_words[1].id} == {
         "hey_home_assistant",
-        "choo_choo_homie",
+        "choo_choo_homie/choo_choo_homie",
     }
 
     # Verify details
@@ -2299,6 +2303,56 @@ async def test_custom_wake_words(
     # Check non-existent wake word
     req = await http_client.get("/api/esphome/wake_words/wrong_wake_word.json")
     assert req.status == HTTPStatus.NOT_FOUND
+
+
+async def test_reload_custom_wake_words_service(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the reload service invalidates the cache and refreshes satellites."""
+    expected_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("1234", "okay nabu", ["en"]),
+        ],
+        active_wake_words=["1234"],
+        max_active_wake_words=1,
+    )
+    gvac = mock_client.get_voice_assistant_configuration
+    gvac.return_value = expected_config
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # Config was pushed once at setup, populating the inventory cache.
+    gvac.assert_called_once()
+    assert _DATA_WAKE_WORDS in hass.data
+
+    # Poison the cache so the service must re-scan disk to recover.
+    hass.data[_DATA_WAKE_WORDS] = {}
+    gvac.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_RELOAD_CUSTOM_WAKE_WORDS, {}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    # The satellite re-pushed its config using the freshly re-scanned models.
+    gvac.assert_called_once()
+    external_wake_words = gvac.call_args_list[0].kwargs["external_wake_words"]
+    assert {eww.id for eww in external_wake_words} == {
+        "hey_home_assistant",
+        "choo_choo_homie/choo_choo_homie",
+    }
 
 
 async def test_multichannel_audio(

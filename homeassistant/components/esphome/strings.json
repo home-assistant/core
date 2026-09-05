@@ -228,5 +228,11 @@
         "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     }
+  },
+  "services": {
+    "reload_custom_wake_words": {
+      "description": "Rescans the custom wake words directory and updates satellites with the available models.",
+      "name": "Reload custom wake words"
+    }
   }
 }
