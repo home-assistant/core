@@ -1,5 +1,17 @@
 {
   "services": {
+    "select_first": {
+      "service": "mdi:page-first"
+    },
+    "select_last": {
+      "service": "mdi:page-last"
+    },
+    "select_next": {
+      "service": "mdi:chevron-right"
+    },
+    "select_previous": {
+      "service": "mdi:chevron-left"
+    },
     "shuffle": {
       "service": "mdi:shuffle"
     }

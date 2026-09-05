@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import random
-from typing import override
+from typing import Literal, override
 
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.components.media_player import (
@@ -53,6 +53,7 @@ class CollectionImageImageEntity(ImageEntity):
     """Implement the image entity for Collection Image."""
 
     path: Path | None
+    _current_image_id: str | None = None
 
     def __init__(
         self,
@@ -109,8 +110,68 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
+    async def get_first_image(self) -> None:
+        """Get the first image."""
+        await self._get_image_at_position(0)
+
+    async def get_last_image(self) -> None:
+        """Get the last image."""
+        await self._get_image_at_position(-1)
+
+    async def get_next_image(self, wrap: bool = False) -> None:
+        """Get the next image."""
+        await self._get_next_sequential_image(False, wrap)
+
+    async def get_previous_image(self, wrap: bool = False) -> None:
+        """Get the previous image."""
+        await self._get_next_sequential_image(True, wrap)
+
+    async def _get_image_at_position(self, position: Literal[0, -1]) -> None:
+        """Get the first or last image."""
+
+        filtered = await self.get_valid_images()
+        if not filtered:
+            self.set_unavailable()
+            return
+
+        child = filtered[position]
+        self._attr_available = True
+        await self.update_image(child.media_content_id)
+
+    async def _get_next_sequential_image(
+        self, reverse: bool = False, wrap: bool = False
+    ) -> None:
+        """Get the next or previous image."""
+
+        filtered = await self.get_valid_images()
+        if not filtered:
+            self.set_unavailable()
+            return
+
+        current_index = next(
+            (
+                i
+                for i, item in enumerate(filtered)
+                if item.media_content_id == self._current_image_id
+            ),
+            None,
+        )
+        if current_index is None:
+            new_index = -1 if reverse else 0
+        else:
+            new_index = current_index + (-1 if reverse else 1)
+            if new_index < 0:
+                new_index = -1 if wrap else 0
+            elif new_index >= len(filtered):
+                new_index = 0 if wrap else (len(filtered) - 1)
+
+        child = filtered[new_index]
+        self._attr_available = True
+        await self.update_image(child.media_content_id)
+
     async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
+        self._current_image_id = image_id
         self._cached_image = None
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
