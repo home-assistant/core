@@ -1,9 +1,10 @@
 """Support for Google Assistant SDK."""
 
+import asyncio
 from typing import override
 
 from aiohttp import ClientError
-from gassist_text import TextAssistant
+from gassist_text import TextAssistantAsync
 from google.oauth2.credentials import Credentials
 
 from homeassistant.components import conversation
@@ -70,6 +71,7 @@ async def async_setup_entry(
         session=session, mem_storage=mem_storage
     )
     agent = GoogleAssistantConversationAgent(hass, entry)
+    entry.async_on_unload(agent.async_close)
     conversation.async_set_agent(hass, entry, agent)
 
     return True
@@ -93,9 +95,13 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
-        self.assistant: TextAssistant | None = None
+        self.assistant: TextAssistantAsync | None = None
         self.session: OAuth2Session | None = None
         self.language: str | None = None
+        # The assistant holds the state of a single conversation and is shared
+        # by every request, so the requests have to be serialized. This also
+        # keeps a replacement from closing a channel that is still in use.
+        self._lock = asyncio.Lock()
 
     @property
     @override
@@ -103,34 +109,45 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         """Return a list of supported languages."""
         return SUPPORTED_LANGUAGE_CODES
 
+    async def async_close(self) -> None:
+        """Close the assistant, releasing its gRPC channel."""
+        async with self._lock:
+            await self._async_close_assistant()
+
+    async def _async_close_assistant(self) -> None:
+        """Close the assistant. The caller must hold the lock."""
+        if self.assistant:
+            await self.assistant.close()
+            self.assistant = None
+
     @override
     async def async_process(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        if self.session:
-            session = self.session
-        else:
-            session = self.entry.runtime_data.session
-            self.session = session
-        if not session.valid_token:
-            await session.async_ensure_token_valid()
-            self.assistant = None
+        async with self._lock:
+            if self.session:
+                session = self.session
+            else:
+                session = self.entry.runtime_data.session
+                self.session = session
+            if not session.valid_token:
+                await session.async_ensure_token_valid()
+                await self._async_close_assistant()
 
-        language = best_matching_language_code(
-            self.hass,
-            user_input.language,
-            self.entry.options.get(CONF_LANGUAGE_CODE),
-        )
+            language = best_matching_language_code(
+                self.hass,
+                user_input.language,
+                self.entry.options.get(CONF_LANGUAGE_CODE),
+            )
 
-        if not self.assistant or language != self.language:
-            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
-            self.language = language
-            self.assistant = TextAssistant(credentials, self.language)
+            if not self.assistant or language != self.language:
+                await self._async_close_assistant()
+                credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
+                self.language = language
+                self.assistant = TextAssistantAsync(credentials, self.language)
 
-        resp = await self.hass.async_add_executor_job(
-            self.assistant.assist, user_input.text
-        )
+            resp = await self.assistant.assist(user_input.text)
         text_response = resp[0] or "<empty response>"
 
         intent_response = intent.IntentResponse(language=language)
