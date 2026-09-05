@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -115,27 +116,36 @@ class IcloudAccount:
             )
 
         except PyiCloudFailedLoginException:
-            self.api = None
-            # Login failed which means credentials/2fa need to be updated.
-            _LOGGER.error(
-                (
-                    "Your iCloud account for '%s' is no longer working; Go to the "
-                    "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again"
-                ),
-                self._config_entry.data[CONF_USERNAME],
-            )
+            # PyiCloudService authenticates while constructing, so this means
+            # the stored password was rejected. A 2FA challenge does not raise
+            # here; it sets requires_2fa on the service and is handled below.
+            self._handle_auth_required(requires_2fa=False)
+            return
 
-            self._require_reauth()
+        except PyiCloudAuthRequiredException:
+            # self.api was never assigned, so there is no service to ask
+            # whether a code is what is missing. Treat it as a login failure.
+            self._handle_auth_required(requires_2fa=False)
             return
 
         if self.api.requires_2fa:
-            self._require_reauth()
+            self._handle_auth_required(requires_2fa=True)
             return
 
         try:
             # Gets device owners infos
             user_info = self.api.devices.user_info
+        except (PyiCloudFailedLoginException, PyiCloudAuthRequiredException) as err:
+            # Reading the devices refreshes the session, and a stored token
+            # that iCloud has since invalidated is only rejected here, not
+            # while logging in. Ask for reauth so the user has something to
+            # act on, and still raise: the fetch timer is only armed at the
+            # end of update_devices(), so returning here would leave an entry
+            # that is loaded and never polls again.
+            self._handle_auth_required(
+                requires_2fa=self.api is not None and self.api.requires_2fa
+            )
+            raise ConfigEntryNotReady from err
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
@@ -160,6 +170,32 @@ class IcloudAccount:
 
         self._devices = {}
         self.update_devices()
+
+    def _handle_auth_required(self, requires_2fa: bool) -> None:
+        """Report why authentication failed and start the reauth flow."""
+        if requires_2fa:
+            # Keep the API around: the reauth flow reuses this session to send
+            # and validate the 2FA code rather than asking for the password
+            # again. Dropping it would send the user back to the setup form.
+            _LOGGER.warning(
+                (
+                    "2FA authentication required for '%s'; go to the Integrations "
+                    "menu and click on Configure on the discovered Apple iCloud "
+                    "card to enter your verification code"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        else:
+            self.api = None
+            _LOGGER.error(
+                (
+                    "Your iCloud account for '%s' is no longer working; Go to the "
+                    "Integrations menu and click on Configure on the discovered Apple "
+                    "iCloud card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        self._require_reauth()
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
