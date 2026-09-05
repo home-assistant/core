@@ -31,6 +31,7 @@ class FroniusConfigEntryData(TypedDict):
     host: str
     is_logger: bool
     modbus_port: int
+    auto_revert: bool
 
 
 class FroniusDeviceInfo(NamedTuple):

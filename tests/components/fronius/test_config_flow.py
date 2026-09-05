@@ -6,7 +6,7 @@ from pyfronius import FroniusError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.fronius.const import CONF_AUTO_REVERT, DOMAIN
+from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -64,6 +64,7 @@ async def assert_finish_flow_with_logger(hass: HomeAssistant, flow_id: str) -> N
         "host": "10.9.8.1",
         "is_logger": True,
         "modbus_port": 502,
+        "auto_revert": False,
     }
     assert result["result"].unique_id == "123.4567"
 
@@ -122,6 +123,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
             {
                 "host": "10.9.1.1",
                 "modbus_port": 1502,
+                "auto_revert": True,
             },
         )
         await hass.async_block_till_done()
@@ -132,6 +134,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         "host": "10.9.1.1",
         "is_logger": False,
         "modbus_port": 1502,
+        "auto_revert": True,
     }
     assert result2["result"].unique_id == "1234567"
 
@@ -256,6 +259,7 @@ async def test_config_flow_already_configured(
         "host": old_host,  # not updated from config flow - only from reconfigure flow
         "is_logger": True,
         "modbus_port": 502,  # added by migration
+        "auto_revert": False,  # added by migration
     }
 
 
@@ -283,6 +287,7 @@ async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
         "host": MOCK_DHCP_DATA.ip,
         "is_logger": True,
         "modbus_port": 502,
+        "auto_revert": False,
     }
     assert result["result"].unique_id == "123.4567"
 
@@ -373,6 +378,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         "host": new_host,
         "is_logger": False,
         "modbus_port": 1502,
+        "auto_revert": False,
     }
 
 
@@ -467,25 +473,3 @@ async def test_reconfigure_to_different_device(hass: HomeAssistant) -> None:
     await assert_abort_flow_with_logger(
         hass, result["flow_id"], reason="unique_id_mismatch"
     )
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test turning on the fallback for setpoints."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="123.4567890",
-        data={CONF_HOST: "10.1.2.3", "is_logger": True},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_AUTO_REVERT: True}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == {CONF_AUTO_REVERT: True}

@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_AUTO_REVERT,
     CONF_MODBUS_PORT,
     DEFAULT_MODBUS_PORT,
     DOMAIN,
@@ -85,6 +86,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) ->
         # add the Modbus port setting
         data = {CONF_MODBUS_PORT: DEFAULT_MODBUS_PORT, **entry.data}
         hass.config_entries.async_update_entry(entry, data=data, minor_version=2)
+    if entry.minor_version < 3:
+        # add the Modbus setpoint fallback setting
+        data = {CONF_AUTO_REVERT: False, **entry.data}
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=3)
     return True
 
 

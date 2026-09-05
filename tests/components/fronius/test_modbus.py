@@ -26,11 +26,17 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import mock_responses, setup_fronius_integration
+from . import MOCK_HOST, mock_responses, setup_fronius_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -481,7 +487,7 @@ async def _setup_with_controls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     connection: MockModbusConnection,
-    options: dict[str, bool] | None = None,
+    auto_revert: bool = False,
 ) -> MockConfigEntry:
     """Set up an inverter that accepts control writes."""
     connection.for_unit(1).holding.update(
@@ -493,7 +499,7 @@ async def _setup_with_controls(
         [Platform.NUMBER, Platform.SWITCH],
     ):
         return await setup_fronius_integration(
-            hass, is_logger=False, unique_id="12345678", options=options
+            hass, is_logger=False, unique_id="12345678", auto_revert=auto_revert
         )
 
 
@@ -520,7 +526,7 @@ async def test_limit_carries_the_configured_fallback_period(
 ) -> None:
     """Test the inverter is told when to revert a limit Home Assistant set."""
     config_entry = await _setup_with_controls(
-        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
     )
     controls = config_entry.runtime_data.modbus_settings_coordinators[
         0
@@ -541,7 +547,7 @@ async def test_active_limit_is_sent_again_before_it_reverts(
 ) -> None:
     """Test an active limit is refreshed, so only an outage lets it revert."""
     config_entry = await _setup_with_controls(
-        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
     )
     controls = config_entry.runtime_data.modbus_settings_coordinators[
         0
@@ -572,7 +578,7 @@ async def test_heartbeat_leaves_a_released_limit_released(
     the inverter is left to whatever source it fell back to.
     """
     config_entry = await _setup_with_controls(
-        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
     )
     controls = config_entry.runtime_data.modbus_settings_coordinators[
         0
@@ -612,37 +618,75 @@ async def test_limit_without_a_fallback_period_is_left_alone(
     assert not writes
 
 
-async def test_clearing_the_fallback_period_frees_a_running_limit(
+async def test_turning_the_setting_off_frees_a_running_limit(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
 ) -> None:
-    """Test a limit stops reverting as soon as the fallback period is off.
+    """Test a limit stops reverting as soon as the setting is turned off.
 
     The inverter would otherwise keep counting down the period it was given
     with the limit, and drop it once Home Assistant stops refreshing it.
     """
     config_entry = await _setup_with_controls(
-        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
     )
     await _turn_on_power_limit(hass, 60)
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await config_entry.start_reconfigure_flow(hass)
     with patch(
         "homeassistant.components.fronius.PLATFORMS",
         [Platform.NUMBER, Platform.SWITCH],
     ):
-        await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_AUTO_REVERT: False}
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_AUTO_REVERT: False}
         )
         await hass.async_block_till_done()
 
-    assert config_entry.options == {CONF_AUTO_REVERT: False}
+    assert config_entry.data[CONF_AUTO_REVERT] is False
     coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
     await coordinator.async_refresh()
     controls = coordinator.modbus_inverter.controls
     assert controls.enabled is True
     assert controls.revert_seconds == 0
+
+
+async def test_heartbeat_stops_with_the_limit(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test no beat is left running once the limit is switched off."""
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
+    )
+    # silence the pollers and let the runs they had scheduled drain, so that
+    # anything reaching the device from here on is the heartbeat
+    for coordinator in (
+        *config_entry.runtime_data.modbus_inverter_coordinators,
+        *config_entry.runtime_data.modbus_settings_coordinators,
+    ):
+        coordinator.update_interval = None
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await _turn_on_power_limit(hass, 60)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: POWER_LIMITING},
+        blocking=True,
+    )
+
+    unit = mock_fronius_modbus.for_unit(1)
+    unit.read_events.clear()
+    freezer.tick(HEARTBEAT_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not unit.read_events
 
 
 async def test_a_failed_resend_of_the_limit_is_logged(
@@ -654,7 +698,7 @@ async def test_a_failed_resend_of_the_limit_is_logged(
 ) -> None:
     """Test an inverter gone quiet while a limit is kept alive doesn't raise."""
     await _setup_with_controls(
-        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
     )
     await _turn_on_power_limit(hass, 60)
     mock_fronius_modbus.for_unit(1).fail_requests(ModbusConnectionError("gone"))
@@ -700,7 +744,7 @@ async def test_heartbeat_leaves_a_limit_released_on_the_device_released(
     must not take that back.
     """
     config_entry = await _setup_with_controls(
-        hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
     )
     controls = config_entry.runtime_data.modbus_settings_coordinators[
         0
@@ -733,7 +777,7 @@ async def test_readings_recover_when_only_the_controls_came_up(
         Mppt, "async_update", side_effect=ModbusConnectionError("no answer")
     ):
         config_entry = await _setup_with_controls(
-            hass, aioclient_mock, mock_fronius_modbus, options={CONF_AUTO_REVERT: True}
+            hass, aioclient_mock, mock_fronius_modbus, auto_revert=True
         )
         assert not config_entry.runtime_data.modbus_inverter_coordinators
         assert config_entry.runtime_data.modbus_settings_coordinators
