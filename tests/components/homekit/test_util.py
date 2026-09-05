@@ -135,8 +135,6 @@ def test_validate_entity_config() -> None:
         {
             "switch.test": {
                 CONF_TYPE: "sprinkler",
-                # Must be input_number entity
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
                 # Must be sensor (timestamp) entity
                 CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
             }
@@ -147,8 +145,6 @@ def test_validate_entity_config() -> None:
             "valve.test": {
                 # Must be sensor (timestamp) entity
                 CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
-                # Must be input_number
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             }
         },
         {
@@ -258,6 +254,17 @@ def test_validate_entity_config() -> None:
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }
     }
+    config = {
+        CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"valve.sprinkler": config}) == {
+        "valve.sprinkler": {
+            CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
     assert vec({"sensor.co": {CONF_THRESHOLD_CO: 500}}) == {
         "sensor.co": {CONF_THRESHOLD_CO: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
@@ -297,6 +304,19 @@ def test_validate_entity_config() -> None:
     assert vec({"valve.demo": config}) == {
         "valve.demo": {
             CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
+    config = {
+        CONF_TYPE: TYPE_SPRINKLER,
+        CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"switch.sprinkler": config}) == {
+        "switch.sprinkler": {
+            CONF_TYPE: TYPE_SPRINKLER,
+            CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }

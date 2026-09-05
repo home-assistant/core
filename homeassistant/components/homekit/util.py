@@ -31,6 +31,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -290,7 +291,9 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
+            [INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
@@ -304,7 +307,9 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
+            [INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
