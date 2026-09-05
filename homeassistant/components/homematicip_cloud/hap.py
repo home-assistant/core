@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
@@ -29,6 +30,7 @@ from .const import (
     HMIPC_NAME,
     HMIPC_PIN,
     PLATFORMS,
+    SIGNAL_ARMING_PROBLEMS,
 )
 from .errors import HmipcConnectionError
 
@@ -125,6 +127,19 @@ class HomematicipHAP:
         self._get_state_task: asyncio.Task | None = None
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
+        self.arming_problems: list[str] = []
+        self.arming_problem_channels: list[str] = []
+
+    @callback
+    def async_set_arming_problems(
+        self, problems: list[str], channels: list[str]
+    ) -> None:
+        """Publish the devices that refused the last arming attempt."""
+        self.arming_problems = problems
+        self.arming_problem_channels = channels
+        async_dispatcher_send(
+            self.hass, SIGNAL_ARMING_PROBLEMS.format(self.config_entry.entry_id)
+        )
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
