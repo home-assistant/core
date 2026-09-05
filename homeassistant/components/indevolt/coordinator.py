@@ -15,7 +15,7 @@ from indevolt_api import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,12 +27,12 @@ from .const import (
     CONF_SERIAL_NUMBER,
     DEFAULT_PORT,
     DOMAIN,
+    SCAN_INTERVAL_MEDIUM,
     SENSOR_KEYS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_BATCH_SIZE: Final = 50
-SCAN_INTERVAL: Final = 30
 
 type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
 
@@ -54,7 +54,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
+            update_interval=timedelta(
+                seconds=entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_MEDIUM)
+            ),
             config_entry=entry,
         )
 

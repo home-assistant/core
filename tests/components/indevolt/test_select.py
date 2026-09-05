@@ -8,7 +8,9 @@ from indevolt_api import IndevoltConfig, IndevoltEnergyMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
+from homeassistant.components.indevolt.const import (
+    SCAN_INTERVAL_MEDIUM as SCAN_INTERVAL,
+)
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,

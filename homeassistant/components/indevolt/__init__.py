@@ -1,14 +1,15 @@
 """Home Assistant integration for indevolt device."""
 
+from datetime import timedelta
 from typing import Any
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL_MEDIUM
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .services import async_setup_services
 
@@ -52,6 +53,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    async def _async_update_interval(
+        hass: HomeAssistant, entry: IndevoltConfigEntry
+    ) -> None:
+        coordinator.update_interval = timedelta(
+            seconds=entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_MEDIUM)
+        )
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_interval))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
