@@ -51,7 +51,7 @@ async def async_setup_entry(
         chain(
             (
                 TeslemetryVehiclePollingWindowEntity(vehicle, entry.runtime_data.scopes)
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.poll_for("2024.26")
                 else TeslemetryStreamingWindowEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
             ),
@@ -59,7 +59,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
+                if vehicle.poll_for("2024.44.25")
                 else TeslemetryStreamingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -69,7 +69,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.poll_for("2024.26")
                 else TeslemetryStreamingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -79,7 +79,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.poll_for("2024.26")
                 else TeslemetryStreamingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -88,7 +88,7 @@ async def async_setup_entry(
             (
                 TeslemetrySunroofEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
-                if vehicle.poll
+                if vehicle.pollable
                 and vehicle.coordinator.data.get("vehicle_config_sun_roof_installed")
             ),
             (

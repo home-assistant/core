@@ -2,7 +2,6 @@
 
 from typing import override
 
-from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -55,7 +54,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll or not firmware_at_least(vehicle.firmware, "2025.2.6")
+        if vehicle.poll_for("2025.2.6")
         else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
     )

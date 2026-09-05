@@ -7,7 +7,7 @@ from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, LOGGER
 
@@ -77,6 +77,30 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_remove_stale_vehicle_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    domain: str,
+    vins: set[str],
+    valid_unique_ids: set[str],
+) -> None:
+    """Remove registry entries for vehicle entities that are no longer created.
+
+    When a vehicle stops qualifying for polling its polling-only entities are
+    not created; their disabled registry entries would otherwise linger and,
+    if re-enabled, silently resume charged polling.
+    """
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, config_entry_id):
+        if (
+            entity.domain == domain
+            and entity.unique_id not in valid_unique_ids
+            and any(entity.unique_id.startswith(f"{vin}-") for vin in vins)
+        ):
+            entity_registry.async_remove(entity.entity_id)
 
 
 @callback

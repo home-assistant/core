@@ -19,6 +19,7 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -45,6 +46,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -1658,19 +1660,17 @@ async def async_setup_entry(
                 )
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
-            elif description.polling:
+            elif description.polling and vehicle.pollable:
                 entities.append(TeslemetryVehicleSensorEntity(vehicle, description))
 
         for time_description in VEHICLE_TIME_DESCRIPTIONS:
-            if not vehicle.poll and firmware_at_least(
-                vehicle.firmware, time_description.streaming_firmware
-            ):
+            if vehicle.poll_for(time_description.streaming_firmware):
                 entities.append(
-                    TeslemetryStreamTimeSensorEntity(vehicle, time_description)
+                    TeslemetryVehicleTimeSensorEntity(vehicle, time_description)
                 )
             else:
                 entities.append(
-                    TeslemetryVehicleTimeSensorEntity(vehicle, time_description)
+                    TeslemetryStreamTimeSensorEntity(vehicle, time_description)
                 )
 
     entities.extend(
@@ -1716,6 +1716,13 @@ async def async_setup_entry(
             )
         )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.SENSOR,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 

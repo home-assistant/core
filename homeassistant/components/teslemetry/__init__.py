@@ -517,6 +517,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
 
             poll = vehicle_metadata[vin].get("polling", False)
+            discounted = vehicle_metadata[vin].get("discounted", False)
 
             entry.async_on_unload(
                 stream.async_add_listener(
@@ -532,6 +533,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     config_entry=entry,
                     coordinator=coordinator,
                     poll=poll,
+                    discounted=discounted,
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,

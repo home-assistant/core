@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass, field
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -39,12 +40,32 @@ class TeslemetryVehicleData:
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     poll: bool
+    discounted: bool
     stream: TeslemetryStream
     stream_vehicle: TeslemetryStreamVehicle
     vin: str
     firmware: str
     device: DeviceInfo
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
+
+    @property
+    def pollable(self) -> bool:
+        """Return whether polling-only entities may be created for this vehicle.
+
+        A streaming, non-discounted vehicle gets none so its coordinator is
+        never woken and nothing can be enabled that starts charged polling.
+        """
+        return self.poll or self.discounted
+
+    def poll_for(self, streaming_firmware: str) -> bool:
+        """Return whether a streamable feature uses its polling entity.
+
+        Streaming is preferred; polling is a fallback only for a non-streaming
+        vehicle, or a discounted one on firmware predating streaming support.
+        """
+        return self.poll or (
+            self.discounted and not firmware_at_least(self.firmware, streaming_firmware)
+        )
 
 
 @dataclass
