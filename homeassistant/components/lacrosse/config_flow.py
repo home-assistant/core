@@ -23,8 +23,9 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -201,10 +202,23 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             sensor_input = dict(sensor_config)
             sensor_input[CONF_FRIENDLY_NAME] = sensor_input.pop(CONF_NAME, slug)
             sensor_input[CONF_UNIQUE_ID] = uuid4().hex
-            sensor_type = LaCrosseSensorType[sensor_input[CONF_TYPE].upper()]
-            sensor_id = sensor_type.sensor_key(sensor_input[CONF_ID])
-            sensors[sensor_id] = sensor_input
+            sensors[slug] = sensor_input
         entry_input[CONF_SENSORS] = sensors
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2027.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LaCrosse",
+            },
+        )
 
         self._async_abort_entries_match({CONF_DEVICE: entry_input[CONF_DEVICE]})
         return self.async_create_entry(title=entry_input[CONF_DEVICE], data=entry_input)

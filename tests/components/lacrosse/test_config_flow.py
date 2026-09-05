@@ -8,9 +8,9 @@ from serial import SerialException
 
 from homeassistant import config_entries
 from homeassistant.components.lacrosse.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -225,7 +225,11 @@ async def test_duplicate_receiver(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_import_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test importing a receiver and sensors from YAML."""
     with patch(
         "homeassistant.components.lacrosse.config_flow.uuid4",
@@ -239,6 +243,11 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/pts/6"
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
     assert result["data"] == {
         "device": "/dev/pts/6",
         "baud": 57600,
@@ -248,31 +257,31 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "toggle_interval": None,
         "toggle_mask": None,
         "sensors": {
-            "34_humidity": {
+            "heating": {
                 "id": 34,
                 "type": "humidity",
                 "friendly_name": "heating",
                 "unique_id": "00000000000000000000000000000001",
             },
-            "34_temperature": {
+            "heating_temperature": {
                 "id": 34,
                 "type": "temperature",
                 "friendly_name": "heating",
                 "unique_id": "00000000000000000000000000000002",
             },
-            "34_battery": {
+            "heating_lacrosse_battery": {
                 "id": 34,
                 "type": "battery",
                 "friendly_name": "Heating battery",
                 "unique_id": "00000000000000000000000000000003",
             },
-            "9_temperature": {
+            "livingroom_temperature": {
                 "id": 9,
                 "type": "temperature",
                 "friendly_name": "Living room temperature",
                 "unique_id": "00000000000000000000000000000004",
             },
-            "9_battery": {
+            "livingroom_lacrosse_battery": {
                 "id": 9,
                 "type": "battery",
                 "friendly_name": "Living room battery",
