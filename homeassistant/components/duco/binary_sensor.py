@@ -1,6 +1,5 @@
 """Binary sensor platform for the Duco integration."""
 
-from dataclasses import dataclass
 from typing import override
 
 from duco_connectivity.models import DiagStatus, Node
@@ -27,44 +26,31 @@ DIAGNOSTIC_STATUS_TO_PROBLEM = {
 }
 
 
-@dataclass(frozen=True, kw_only=True)
-class DucoDiagnosticBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describe a Duco diagnostic subsystem binary sensor."""
-
-    component: str
-
-
 # Ventilation and filter problems are directly actionable. Model-specific
 # subsystem diagnostics remain opt-in.
-DIAGNOSTIC_BINARY_SENSOR_DESCRIPTIONS: dict[
-    str, DucoDiagnosticBinarySensorEntityDescription
-] = {
-    "Filter": DucoDiagnosticBinarySensorEntityDescription(
+DIAGNOSTIC_BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
+    "Filter": BinarySensorEntityDescription(
         key="filter",
-        component="Filter",
         translation_key="diagnostic_filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "SunCtrl": DucoDiagnosticBinarySensorEntityDescription(
+    "SunCtrl": BinarySensorEntityDescription(
         key="sun_control",
-        component="SunCtrl",
         translation_key="diagnostic_sun_control",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "VentCool": DucoDiagnosticBinarySensorEntityDescription(
+    "VentCool": BinarySensorEntityDescription(
         key="ventilation_cooling",
-        component="VentCool",
         translation_key="diagnostic_ventilation_cooling",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "Ventilation": DucoDiagnosticBinarySensorEntityDescription(
+    "Ventilation": BinarySensorEntityDescription(
         key="ventilation",
-        component="Ventilation",
         translation_key="diagnostic_ventilation",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -79,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Duco diagnostic binary sensors."""
     coordinator = entry.runtime_data
-    known_components: set[str] = set()
+    added_components: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -89,16 +75,18 @@ async def async_setup_entry(
 
         new_entities: list[DucoDiagnosticBinarySensorEntity] = []
         for component in coordinator.data.diagnostic_subsystems:
-            if component in known_components:
+            if component in added_components:
                 continue
             # Only expose components whose problem semantics are confirmed.
             if (
                 description := DIAGNOSTIC_BINARY_SENSOR_DESCRIPTIONS.get(component)
             ) is None:
                 continue
-            known_components.add(component)
+            added_components.add(component)
             new_entities.append(
-                DucoDiagnosticBinarySensorEntity(coordinator, box_node, description)
+                DucoDiagnosticBinarySensorEntity(
+                    coordinator, box_node, component, description
+                )
             )
 
         if new_entities:
@@ -111,18 +99,20 @@ async def async_setup_entry(
 class DucoDiagnosticBinarySensorEntity(DucoEntity, BinarySensorEntity):
     """Binary sensor for a Duco diagnostic subsystem."""
 
-    entity_description: DucoDiagnosticBinarySensorEntityDescription
-
     def __init__(
         self,
         coordinator: DucoCoordinator,
         node: Node,
-        description: DucoDiagnosticBinarySensorEntityDescription,
+        component: str,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the diagnostic binary sensor."""
         self.entity_description = description
+        self._component = component
         super().__init__(coordinator, node)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{description.component}_diagnostic"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{node.node_id}_{description.key}"
+        )
 
     @property
     @override
@@ -135,9 +125,7 @@ class DucoDiagnosticBinarySensorEntity(DucoEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return whether the diagnostic subsystem reports a problem."""
         if (
-            status := self.coordinator.data.diagnostic_subsystems.get(
-                self.entity_description.component
-            )
+            status := self.coordinator.data.diagnostic_subsystems.get(self._component)
         ) is None:
             return None
         return DIAGNOSTIC_STATUS_TO_PROBLEM.get(status)

@@ -38,12 +38,10 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
-) -> MockConfigEntry:
+) -> None:
     """Set up only the binary sensor platform for testing."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    return await setup_platform_integration(
-        hass, mock_config_entry, [Platform.BINARY_SENSOR]
-    )
+    await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
 
 async def test_diagnostic_binary_sensor_entity_registry_defaults(
@@ -252,7 +250,7 @@ async def test_diagnostic_binary_sensor_becomes_unknown_without_known_status(
         pytest.param(DucoError("api error"), id="duco_error"),
     ],
 )
-async def test_diagnostic_binary_sensor_becomes_unavailable_on_refresh_error(
+async def test_diagnostics_refresh_failure_is_isolated_and_recovers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -260,7 +258,7 @@ async def test_diagnostic_binary_sensor_becomes_unavailable_on_refresh_error(
     freezer: FrozenDateTimeFactory,
     exception: DucoError,
 ) -> None:
-    """Test diagnostics failures do not affect other Duco entities."""
+    """Test a diagnostics refresh failure is isolated and recovers."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     await setup_platform_integration(
         hass, mock_config_entry, [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -302,7 +300,7 @@ async def test_diagnostic_binary_sensor_becomes_unavailable_on_refresh_error(
         pytest.param(DucoError("api error"), id="duco_error"),
     ],
 )
-async def test_initial_diagnostics_failure_is_retried(
+async def test_initial_diagnostics_failure_is_isolated_and_recovers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -310,7 +308,7 @@ async def test_initial_diagnostics_failure_is_retried(
     freezer: FrozenDateTimeFactory,
     exception: DucoError,
 ) -> None:
-    """Test setup succeeds and diagnostics recover after an initial failure."""
+    """Test an initial diagnostics failure is isolated and recovers."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_duco_client.async_get_diagnostics_info.side_effect = exception
 

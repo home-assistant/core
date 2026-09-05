@@ -301,19 +301,15 @@ async def async_setup_entry(
                 description_key = (node.node_id, description.key)
                 if description_key in known_box_sensors:
                     continue
-                # Optional box sensors can appear later when a startup
-                # capability probe fails transiently, so keep late entity
-                # creation for them.
                 if not description.supported_fn(coordinator):
                     continue
                 known_box_sensors.add(description_key)
                 new_entities.append(DucoBoxSensorEntity(coordinator, node, description))
-
         if new_entities:
             async_add_entities(new_entities)
 
-    _async_add_new_entities()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+    _async_add_new_entities()
 
 
 class DucoSensorEntity(DucoEntity, SensorEntity):
