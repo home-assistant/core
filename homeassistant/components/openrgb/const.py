@@ -15,6 +15,14 @@ DOMAIN = "openrgb"
 
 UID_SEPARATOR = "||"
 
+# Some location types hold the current connection path, which the system
+# reassigns when the device reconnects and on every reboot. For a device that
+# can be identified by its serial such a location is replaced with a constant
+# naming the bus. OpenRGB does something analogous when matching a saved profile
+# to a live controller in ProfileManager.cpp, though it ignores a HID location
+# even for a device without a serial, which would not be safe for a unique id.
+UNSTABLE_LOCATIONS = {"HID: ": "hid", "USB: ": "usb"}
+
 # Defaults
 DEFAULT_PORT = 6742
 DEFAULT_CLIENT_NAME = "Home Assistant"
