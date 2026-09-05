@@ -5140,6 +5140,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "okokscale": {
+      "name": "OKOK Scale",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "olimpia_splendid": {
       "name": "Olimpia Splendid",
       "integration_type": "virtual",
