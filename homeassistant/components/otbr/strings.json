@@ -49,7 +49,7 @@
       "message": "The preferred Thread network changed while the border router was being read, so nothing was migrated. Try again."
     },
     "router_dataset_invalid": {
-      "message": "The border router returned a dataset that could not be parsed."
+      "message": "The border router returned a dataset that could not be parsed or has no extended PAN ID."
     },
     "timestamp_exhausted": {
       "message": "The network's dataset timestamp cannot be increased any further."
