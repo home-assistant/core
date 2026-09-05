@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
 
 from homeassistant.components.litterrobot.sensor import icon_for_gauge_level
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
@@ -147,13 +149,31 @@ async def test_pet_visits_today_sensor(
     assert sensor.state == "2"
 
 
+@pytest.mark.parametrize(
+    ("account_fixture", "expected_state"),
+    [
+        pytest.param("mock_account_with_litterhopper", "enabled", id="litter_robot_4"),
+        pytest.param(
+            "mock_account_with_litterhopper_5", "litter_low", id="litter_robot_5"
+        ),
+    ],
+)
 async def test_litterhopper_sensor(
-    hass: HomeAssistant, mock_account_with_litterhopper: MagicMock
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    account_fixture: str,
+    expected_state: str,
 ) -> None:
     """Tests LitterHopper sensors."""
-    await setup_integration(hass, mock_account_with_litterhopper, SENSOR_DOMAIN)
+    await setup_integration(
+        hass, request.getfixturevalue(account_fixture), SENSOR_DOMAIN
+    )
     sensor = hass.states.get("sensor.test_hopper_status")
-    assert sensor.state == "enabled"
+    assert sensor.state == expected_state
+    # a status the library can report but the sensor does not declare is invalid
+    assert {status.name.lower() for status in HopperStatus} <= set(
+        sensor.attributes[ATTR_OPTIONS]
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

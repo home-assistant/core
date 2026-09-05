@@ -155,6 +155,23 @@ def mock_account_with_litterhopper() -> MagicMock:
 
 
 @pytest.fixture
+def mock_account_with_litterhopper_5() -> MagicMock:
+    """Mock account with LitterHopper attached to Litter-Robot 5."""
+    return create_mock_account(
+        robot_data={
+            "state": {
+                **ROBOT_5_DATA["state"],
+                "hopperStatusIndicator": {
+                    "title": "Litter low",
+                    "value": HopperStatus.LITTER_LOW.value,
+                },
+            }
+        },
+        v5=True,
+    )
+
+
+@pytest.fixture
 def mock_account_with_feederrobot() -> MagicMock:
     """Mock account with Feeder-Robot."""
     return create_mock_account(feeder=True)
