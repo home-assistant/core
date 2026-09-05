@@ -1669,6 +1669,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "ecowitt_modbus": {
+      "name": "Ecowitt Modbus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "edifier_infrared": {
       "name": "Edifier Infrared",
       "integration_type": "device",

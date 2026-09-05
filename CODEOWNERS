@@ -461,6 +461,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ecovacs/ @mib1185 @edenhaus @Augar
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
+/homeassistant/components/ecowitt_modbus/ @iainchesworth
+/tests/components/ecowitt_modbus/ @iainchesworth
 /homeassistant/components/edifier_infrared/ @abmantis
 /tests/components/edifier_infrared/ @abmantis
 /homeassistant/components/efergy/ @tkdrob
