@@ -1,6 +1,6 @@
 """Coordinator to handle Opower connections."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
@@ -12,6 +12,7 @@ from opower import (
     Forecast,
     MeterType,
     Opower,
+    ReadComponent,
     ReadResolution,
     create_cookie_jar,
 )
@@ -35,7 +36,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.unit_conversion import EnergyConverter, VolumeConverter
 
 from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
@@ -53,6 +54,108 @@ class OpowerData:
     forecast: Forecast | None
     last_changed: datetime | None
     last_updated: datetime
+
+
+# The four statistics kept per rate period, mirroring the account totals:
+# consumption and cost hold the positive side of the period's components,
+# return and compensation the negative side (energy exported to the grid
+# and the money received for it).
+_RATE_PERIOD_KINDS = ("consumption", "return", "cost", "compensation")
+
+
+@dataclass
+class _RatePeriodStatistics:
+    """Statistics of one rate period (a time-of-use period or a tier)."""
+
+    metadata: dict[str, StatisticMetaData]
+    sums: dict[str, float] = field(
+        default_factory=lambda: dict.fromkeys(_RATE_PERIOD_KINDS, 0.0)
+    )
+    statistics: dict[str, list[StatisticData]] = field(
+        default_factory=lambda: {kind: [] for kind in _RATE_PERIOD_KINDS}
+    )
+    # Start of the stored statistics the sums continue from, None if the
+    # period has no stored statistics yet.
+    last_stats_time: float | None = None
+
+    def statistic_ids(self) -> set[str]:
+        """Return the statistic ids of this period."""
+        return {metadata["statistic_id"] for metadata in self.metadata.values()}
+
+
+def _rate_period_key(component: ReadComponent) -> str | None:
+    """Return the rate period key of a read component.
+
+    Time-of-use utilities report the period in day_part, e.g. "ON_PEAK+RT02/TOD"
+    where the period is the part before the "+". Tiered utilities report the
+    tier in tier_number. A rate that is both time-of-use and tiered reports
+    both, and each combination is billed at its own price, so the key keeps
+    both, e.g. "off_peak_tier_2". Merging the tiers inside a period would
+    store a blended price that matches no tariff and hide how much usage
+    went over the baseline allowance, which is the split those customers
+    manage, and statistics cannot be split again once written. Returns None
+    if the component has neither.
+    """
+    parts = []
+    if component.day_part:
+        parts.append(component.day_part.split("+", 1)[0])
+    if component.tier_number is not None:
+        parts.append(f"tier_{component.tier_number}")
+    return slugify("_".join(parts)) or None
+
+
+def _rate_periods(
+    cost_reads: list[CostRead],
+    id_prefix: str,
+    name_prefix: str,
+    consumption_unit_class: str,
+    consumption_unit: str,
+) -> dict[str, _RatePeriodStatistics]:
+    """Return the rate periods (time-of-use periods or tiers) found in the reads.
+
+    Utilities on time-of-use or tiered rates break each read down into
+    components, one per rate period. The same four statistics as for the
+    account totals are created for every period so the Energy dashboard can
+    show how much energy and money went to each one. Utilities without
+    components get no additional statistics.
+    """
+    rate_periods: dict[str, _RatePeriodStatistics] = {}
+    for cost_read in cost_reads:
+        for component in cost_read.read_components:
+            if (key := _rate_period_key(component)) is None or key in rate_periods:
+                continue
+            label = key.replace("_", " ")
+            rate_periods[key] = _RatePeriodStatistics(
+                metadata={
+                    kind: StatisticMetaData(
+                        mean_type=StatisticMeanType.NONE,
+                        has_sum=True,
+                        name=f"{name_prefix} {label} {kind}",
+                        source=DOMAIN,
+                        statistic_id=f"{DOMAIN}:{id_prefix}_{key}_energy_{kind}",
+                        unit_class=(
+                            consumption_unit_class
+                            if kind in ("consumption", "return")
+                            else None
+                        ),
+                        unit_of_measurement=(
+                            consumption_unit
+                            if kind in ("consumption", "return")
+                            else None
+                        ),
+                    )
+                    for kind in _RATE_PERIOD_KINDS
+                }
+            )
+    if rate_periods:
+        _LOGGER.debug("Found rate periods: %s", list(rate_periods))
+    return rate_periods
+
+
+def _safe_get_sum(records: list[Any]) -> float:
+    if records and "sum" in records[0]:
+        return float(records[0]["sum"])
+    return 0.0
 
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
@@ -298,11 +401,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 # so statistics_during_period should also have found at least one.
                 assert stats
 
-                def _safe_get_sum(records: list[Any]) -> float:
-                    if records and "sum" in records[0]:
-                        return float(records[0]["sum"])
-                    return 0.0
-
                 cost_sum = _safe_get_sum(stats.get(cost_statistic_id, []))
                 compensation_sum = _safe_get_sum(
                     stats.get(compensation_statistic_id, [])
@@ -320,6 +418,44 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     dt_util.utc_from_timestamp(last_stats_time)
                 )
 
+            rate_periods = _rate_periods(
+                cost_reads,
+                id_prefix,
+                name_prefix,
+                consumption_unit_class,
+                consumption_unit,
+            )
+            if rate_periods and last_stats_time is not None:
+                await self._async_init_rate_period_sums(
+                    rate_periods, dt_util.utc_from_timestamp(last_stats_time)
+                )
+                if new_rate_periods := [
+                    key
+                    for key, rate_period in rate_periods.items()
+                    if rate_period.last_stats_time is None
+                ]:
+                    # The reads only cover the last few weeks once statistics exist.
+                    # A period without stored statistics, e.g. right after upgrading
+                    # or a seasonal period seen for the first time, gets the same
+                    # full history as the totals got on their first run.
+                    _LOGGER.debug(
+                        "Fetching full history for new rate periods: %s",
+                        new_rate_periods,
+                    )
+                    cost_reads = await self._async_get_cost_reads(
+                        account, self.api.utility.timezone()
+                    )
+                    rate_periods = _rate_periods(
+                        cost_reads,
+                        id_prefix,
+                        name_prefix,
+                        consumption_unit_class,
+                        consumption_unit,
+                    )
+                    await self._async_init_rate_period_sums(
+                        rate_periods, dt_util.utc_from_timestamp(last_stats_time)
+                    )
+
             cost_statistics = []
             compensation_statistics = []
             consumption_statistics = []
@@ -327,6 +463,38 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
             for cost_read in cost_reads:
                 start = cost_read.start_time
+
+                # The account totals and each rate period continue from their own
+                # stored statistics, so each skips the reads up to its own last
+                # stored point. A period that has none yet, e.g. right after
+                # upgrading, must not skip the reads the totals already have.
+                period_consumption = dict.fromkeys(rate_periods, 0.0)
+                period_cost = dict.fromkeys(rate_periods, 0.0)
+                for component in cost_read.read_components:
+                    if (key := _rate_period_key(component)) is None:
+                        continue
+                    period_consumption[key] += component.consumption
+                    period_cost[key] += component.cost
+                for key, rate_period in rate_periods.items():
+                    if (
+                        rate_period.last_stats_time is not None
+                        and start.timestamp() <= rate_period.last_stats_time
+                    ):
+                        continue
+                    states = {
+                        "consumption": max(0, period_consumption[key]),
+                        "return": max(0, -period_consumption[key]),
+                        "cost": max(0, period_cost[key]),
+                        "compensation": max(0, -period_cost[key]),
+                    }
+                    for kind, state in states.items():
+                        rate_period.sums[kind] += state
+                        rate_period.statistics[kind].append(
+                            StatisticData(
+                                start=start, state=state, sum=rate_period.sums[kind]
+                            )
+                        )
+
                 if last_stats_time is not None and start.timestamp() <= last_stats_time:
                     continue
 
@@ -385,8 +553,70 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 return_statistic_id,
             )
             async_add_external_statistics(self.hass, return_metadata, return_statistics)
+            for rate_period in rate_periods.values():
+                for kind, metadata in rate_period.metadata.items():
+                    statistics = rate_period.statistics[kind]
+                    _LOGGER.debug(
+                        "Adding %s statistics for %s",
+                        len(statistics),
+                        metadata["statistic_id"],
+                    )
+                    async_add_external_statistics(self.hass, metadata, statistics)
 
         return last_changed_per_account
+
+    async def _async_init_rate_period_sums(
+        self, rate_periods: dict[str, _RatePeriodStatistics], start: datetime
+    ) -> None:
+        """Continue the rate period sums from the statistics stored at start.
+
+        The four statistics of a period are always written together, so they
+        are only resumed together: all four must have a stored point at the
+        same time. A period without a stored point at start, e.g. a summer-only
+        period seen again after winter, continues from its last stored point
+        instead. A period that has never been stored, or whose statistics have
+        been partly deleted, starts from zero and keeps last_stats_time None so
+        it is backfilled from the full history.
+        """
+        statistic_ids = set().union(
+            *(rate_period.statistic_ids() for rate_period in rate_periods.values())
+        )
+        stats = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            start,
+            start + timedelta(seconds=1),
+            statistic_ids,
+            "hour",
+            None,
+            {"sum"},
+        )
+        for rate_period in rate_periods.values():
+            if not rate_period.statistic_ids() <= set(stats):
+                # Not stored at start. Look for the last stored point instead.
+                last_stats: dict[str, list[Any]] = {}
+                for statistic_id in rate_period.statistic_ids():
+                    last_stat = await get_instance(self.hass).async_add_executor_job(
+                        get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+                    )
+                    if (
+                        last_stat
+                        and last_stat[statistic_id][0]["start"] < start.timestamp()
+                    ):
+                        last_stats.update(last_stat)
+                stats.update(last_stats)
+            records: dict[str, list[Any]] = {}
+            for kind, metadata in rate_period.metadata.items():
+                if record := stats.get(metadata["statistic_id"]):
+                    records[kind] = record
+            if len(records) != len(_RATE_PERIOD_KINDS) or (
+                len({record[0]["start"] for record in records.values()}) != 1
+            ):
+                # Never stored, or partly deleted: start over from zero.
+                continue
+            rate_period.last_stats_time = float(records["consumption"][0]["start"])
+            for kind, record in records.items():
+                rate_period.sums[kind] = _safe_get_sum(record)
 
     async def _async_maybe_migrate_statistics(
         self,

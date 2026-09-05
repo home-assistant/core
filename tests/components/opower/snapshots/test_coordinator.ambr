@@ -91,6 +91,374 @@
     ]),
   })
 # ---
+# name: test_coordinator_rate_periods
+  defaultdict({
+    'opower:pge_elec_111111_energy_consumption': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 3.0,
+        'sum': 3.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 1.5,
+        'sum': 4.5,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 2.0,
+        'sum': 6.5,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 4.0,
+        'sum': 10.5,
+      }),
+    ]),
+    'opower:pge_elec_111111_energy_cost': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.75,
+        'sum': 0.75,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.25,
+        'sum': 1.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.5,
+        'sum': 1.5,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 1.0,
+        'sum': 2.5,
+      }),
+    ]),
+    'opower:pge_elec_111111_off_peak_energy_compensation': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_off_peak_energy_consumption': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 2.0,
+        'sum': 2.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 2.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 2.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 1.0,
+        'sum': 3.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_off_peak_energy_cost': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.25,
+        'sum': 0.25,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.25,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.25,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.25,
+        'sum': 0.5,
+      }),
+    ]),
+    'opower:pge_elec_111111_off_peak_energy_return': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_on_peak_energy_compensation': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_on_peak_energy_consumption': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 1.0,
+        'sum': 1.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 1.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 1.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 3.0,
+        'sum': 4.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_on_peak_energy_cost': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.5,
+        'sum': 0.5,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.5,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.5,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.75,
+        'sum': 1.25,
+      }),
+    ]),
+    'opower:pge_elec_111111_on_peak_energy_return': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_tier_1_energy_compensation': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_tier_1_energy_consumption': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 2.0,
+        'sum': 2.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 2.0,
+      }),
+    ]),
+    'opower:pge_elec_111111_tier_1_energy_cost': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.5,
+        'sum': 0.5,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.5,
+      }),
+    ]),
+    'opower:pge_elec_111111_tier_1_energy_return': list([
+      dict({
+        'end': 1672592400.0,
+        'start': 1672588800.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672596000.0,
+        'start': 1672592400.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672599600.0,
+        'start': 1672596000.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+      dict({
+        'end': 1672603200.0,
+        'start': 1672599600.0,
+        'state': 0.0,
+        'sum': 0.0,
+      }),
+    ]),
+  })
+# ---
 # name: test_coordinator_subsequent_run
   defaultdict({
     'opower:pge_elec_111111_energy_compensation': list([
