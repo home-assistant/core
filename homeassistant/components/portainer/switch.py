@@ -32,6 +32,7 @@ from .entity import (
     PortainerCoordinatorData,
     PortainerStackEntity,
 )
+from .util import async_add_entities_by_subentry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -119,30 +120,44 @@ async def async_setup_entry(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container switch sensors."""
-        async_add_entities(
-            PortainerContainerSwitch(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_SWITCHES
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerSwitch(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_SWITCHES
+            ),
         )
 
     def _async_add_new_stacks(
         stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
     ) -> None:
         """Add new stack switch sensors."""
-        async_add_entities(
-            PortainerStackSwitch(
-                coordinator,
-                entity_description,
-                stack,
-                endpoint,
-            )
-            for (endpoint, stack) in stacks
-            for entity_description in STACK_SWITCHES
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerStackSwitch(
+                        coordinator,
+                        entity_description,
+                        stack,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, stack) in stacks
+                for entity_description in STACK_SWITCHES
+            ),
         )
 
     coordinator.new_containers_callbacks.append(_async_add_new_containers)

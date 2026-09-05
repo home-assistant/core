@@ -169,6 +169,17 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="timeout_connect",
             ) from err
 
+    def subentry_id_for_endpoint(self, endpoint_id: int) -> str | None:
+        """Return the subentry ID an endpoint belongs to, if any."""
+        return next(
+            (
+                subentry_id
+                for subentry_id, subentry in self.config_entry.subentries.items()
+                if subentry.unique_id == str(endpoint_id)
+            ),
+            None,
+        )
+
     @abstractmethod
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
@@ -239,6 +250,17 @@ class PortainerCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
+
+        subentry_endpoint_ids = {
+            subentry.unique_id
+            for subentry in self.config_entry.subentries.values()
+            if subentry.unique_id
+        }
+        endpoints = [
+            endpoint
+            for endpoint in endpoints
+            if str(endpoint.id) in subentry_endpoint_ids
+        ]
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
@@ -463,6 +485,7 @@ class PortainerCoordinator(
             endpoint = mapped_endpoints[endpoint_id].endpoint
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
+                config_subentry_id=self.subentry_id_for_endpoint(endpoint_id),
                 identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}")},
                 configuration_url=URL(
                     f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"
@@ -477,6 +500,7 @@ class PortainerCoordinator(
             stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
+                config_subentry_id=self.subentry_id_for_endpoint(endpoint_id),
                 identifiers={
                     (
                         DOMAIN,
@@ -713,9 +737,17 @@ class PortainerDockerDiskSpaceCoordinator(
     async def update_data(self) -> dict[int, DockerSystemDF]:
         """Fetch Docker disk space data independently from Portainer API."""
         endpoints = await self.portainer.get_endpoints()
+        subentry_endpoint_ids = {
+            subentry.unique_id
+            for subentry in self.config_entry.subentries.values()
+            if subentry.unique_id
+        }
         results: dict[int, DockerSystemDF] = {}
         for endpoint in endpoints:
-            if endpoint.status == EndpointStatus.DOWN:
+            if (
+                endpoint.status == EndpointStatus.DOWN
+                or str(endpoint.id) not in subentry_endpoint_ids
+            ):
                 continue
             try:
                 results[endpoint.id] = await self.portainer.docker_system_df(
