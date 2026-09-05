@@ -1,6 +1,6 @@
 """iCloud account."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 import operator
 from typing import TYPE_CHECKING, Any
@@ -42,8 +42,10 @@ from .const import (
     DEVICE_ID,
     DEVICE_LOCATION,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+    DEVICE_LOCATION_IS_OLD,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
+    DEVICE_LOCATION_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
@@ -362,6 +364,11 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
+    def max_interval(self) -> int:
+        """Return the longest interval between two fetches, in minutes."""
+        return self._max_interval
+
+    @property
     def devices(self) -> dict[str, Any]:
         """Return the account devices."""
         return self._devices
@@ -429,12 +436,56 @@ class IcloudDevice:
 
             if (
                 self._status[DEVICE_LOCATION]
-                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
+                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
+                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LONGITUDE] is not None
             ):
                 location = self._status[DEVICE_LOCATION]
-                if self._location is None:
-                    dispatcher_send(self._account.hass, self._account.signal_device_new)
-                self._location = location
+                if self._is_stale(location):
+                    # Without a location the tracker reports "unknown" rather
+                    # than the place the device has since left.
+                    self._location = None
+                else:
+                    if self._location is None:
+                        dispatcher_send(
+                            self._account.hass, self._account.signal_device_new
+                        )
+                    self._location = location
+
+    def _is_stale(self, location: dict[str, Any]) -> bool:
+        """Return whether a location fix is too old to be trusted.
+
+        Both signals are needed, because neither is sufficient alone:
+
+        `isOld` says iCloud served a cached fix rather than a fresh one, but
+        not why. A device that was briefly unreachable looks exactly like one
+        that has genuinely moved away, so acting on the flag by itself would
+        drop locations that are still perfectly good.
+
+        The age of the fix alone is no better: a device sitting still keeps
+        reporting the same old timestamp while iCloud still considers that fix
+        current, and discarding those would throw away the only location such
+        a device ever reports.
+
+        Requiring both means a fix is only discarded once iCloud has marked it
+        cached *and* it is older than the longest gap between two fetches - by
+        which point a fresher one should already have superseded it. The half
+        interval of headroom keeps a fix that merely lands late from being
+        treated as stale.
+
+        The configured maximum is used rather than the current fetch interval,
+        which is recomputed after this runs and drops as low as fifteen
+        seconds while devices are still pending - a threshold that short would
+        discard every cached fix there is.
+        """
+        if not location.get(DEVICE_LOCATION_IS_OLD):
+            return False
+
+        if (timestamp := location.get(DEVICE_LOCATION_TIMESTAMP)) is None:
+            return False
+
+        # iCloud reports the fix time in milliseconds.
+        age = utcnow() - datetime.fromtimestamp(timestamp / 1000, tz=UTC)
+        return age.total_seconds() > self._account.max_interval * 60 * 1.5
 
     def play_sound(self) -> None:
         """Play sound on the device."""
