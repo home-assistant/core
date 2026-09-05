@@ -1,5 +1,56 @@
 # serializer version: 1
-# name: test_speed_sensor_snapshot[sensor.ab12_cde_speed-entry]
+# name: test_sensor_snapshot[sensor.ab12_cde_last_reported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ab12_cde_last_reported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last reported',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last reported',
+    'platform': 'scorpiontrack',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_reported',
+    'unique_id': '101_1_last_reported',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.ab12_cde_last_reported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AB12 CDE Last reported',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ab12_cde_last_reported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-09T12:00:00+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.ab12_cde_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -44,7 +95,7 @@
     'unit_of_measurement': <UnitOfSpeed.MILES_PER_HOUR: 'mph'>,
   })
 # ---
-# name: test_speed_sensor_snapshot[sensor.ab12_cde_speed-state]
+# name: test_sensor_snapshot[sensor.ab12_cde_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speed',
