@@ -232,7 +232,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "compensation",
     "concord232",
     "control4",
-    "coolmaster",
     "cppm_tracker",
     "cpuspeed",
     "crownstone",
