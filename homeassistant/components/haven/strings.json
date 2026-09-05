@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "Unexpected discovery state",
+      "unsupported_api_version": "The device uses an unsupported local API version",
+      "unsupported_product": "The device reported an unsupported product type"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_api_version": "The device uses an unsupported local API version",
+      "unsupported_product": "The device reported an unsupported product type"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the HAVEN device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "airflow": { "name": "Airflow" },
+      "airflow_duration": { "name": "Airflow duration" },
+      "dew_point": { "name": "Dew point" },
+      "nox_index": { "name": "NOx index" },
+      "pm05_count": { "name": "PM0.5 count" },
+      "pm10_count": { "name": "PM10 count" },
+      "pm1_count": { "name": "PM1.0 count" },
+      "pm25_count": { "name": "PM2.5 count" },
+      "pm4_count": { "name": "PM4.0 count" },
+      "tvoc_index": { "name": "tVOC index" }
+    }
+  },
+  "exceptions": {
+    "unsupported_api_version": {
+      "message": "The HAVEN device uses an unsupported local API version"
+    },
+    "unsupported_product": {
+      "message": "The HAVEN device reported an unsupported product type"
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with the HAVEN device"
+    }
+  }
+}

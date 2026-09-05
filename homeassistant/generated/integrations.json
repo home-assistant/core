@@ -2875,6 +2875,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "haven": {
+      "name": "HAVEN IAQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hddtemp": {
       "name": "hddtemp",
       "integration_type": "hub",

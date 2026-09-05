@@ -743,6 +743,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/haven/ @krhtzoa
+/tests/components/haven/ @krhtzoa
 /homeassistant/components/hdfury/ @glenndehaan
 /tests/components/hdfury/ @glenndehaan
 /homeassistant/components/hdmi_cec/ @inytar
