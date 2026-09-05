@@ -57,7 +57,7 @@ class ThreemaAPIClient:
                 f"{_BASE_URL}/credits",
                 params={"from": self.gateway_id, "secret": self.api_secret},
             )
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, TimeoutError) as err:
             raise ThreemaConnectionError(
                 f"Connection error validating credentials: {err}"
             ) from err
@@ -82,7 +82,7 @@ class ThreemaAPIClient:
                 f"{_BASE_URL}/pubkeys/{recipient_id}",
                 params={"from": self.gateway_id, "secret": self.api_secret},
             )
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, TimeoutError) as err:
             raise ThreemaSendError(
                 f"Failed to fetch public key for {recipient_id}: {err}"
             ) from err
@@ -157,7 +157,7 @@ class ThreemaAPIClient:
                         "text": text,
                     },
                 )
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, TimeoutError) as err:
             raise ThreemaSendError(
                 f"Connection error sending message to {recipient_id}: {err}"
             ) from err

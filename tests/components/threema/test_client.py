@@ -78,10 +78,17 @@ async def test_validate_credentials_server_error(hass: HomeAssistant) -> None:
             await client.validate_credentials()
 
 
-async def test_validate_credentials_client_error(hass: HomeAssistant) -> None:
-    """Test that aiohttp.ClientError raises ThreemaConnectionError."""
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientError("connection reset"), TimeoutError()],
+    ids=["client_error", "timeout"],
+)
+async def test_validate_credentials_connection_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test that a connection error or timeout raises ThreemaConnectionError."""
     session = MagicMock()
-    session.get = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
+    session.get = AsyncMock(side_effect=side_effect)
     with _patch_session(session):
         client = ThreemaAPIClient(hass, MOCK_GATEWAY_ID, MOCK_API_SECRET)
         with pytest.raises(ThreemaConnectionError):
@@ -119,10 +126,17 @@ async def test_send_simple_server_error(hass: HomeAssistant) -> None:
             await client.send_text_message("ABCD1234", "Hello!")
 
 
-async def test_send_simple_client_error(hass: HomeAssistant) -> None:
-    """Test that aiohttp.ClientError during simple send raises ThreemaSendError."""
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientError("connection reset"), TimeoutError()],
+    ids=["client_error", "timeout"],
+)
+async def test_send_simple_connection_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test that a connection error or timeout during simple send raises ThreemaSendError."""
     session = MagicMock()
-    session.post = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
+    session.post = AsyncMock(side_effect=side_effect)
     with _patch_session(session):
         client = ThreemaAPIClient(hass, MOCK_GATEWAY_ID, MOCK_API_SECRET)
         with pytest.raises(ThreemaSendError):
@@ -201,11 +215,18 @@ async def test_send_e2e_pubkey_malformed(hass: HomeAssistant) -> None:
             await client.send_text_message("ABCD1234", "Hello E2E!")
 
 
-async def test_send_e2e_pubkey_client_error(hass: HomeAssistant) -> None:
-    """Test that aiohttp.ClientError fetching pubkey raises ThreemaSendError."""
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientError("connection reset"), TimeoutError()],
+    ids=["client_error", "timeout"],
+)
+async def test_send_e2e_pubkey_connection_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test that a connection error or timeout fetching pubkey raises ThreemaSendError."""
     sender_hex, _ = _e2e_keys()
     session = MagicMock()
-    session.get = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
+    session.get = AsyncMock(side_effect=side_effect)
 
     with _patch_session(session):
         client = ThreemaAPIClient(
@@ -215,14 +236,21 @@ async def test_send_e2e_pubkey_client_error(hass: HomeAssistant) -> None:
             await client.send_text_message("ABCD1234", "Hello E2E!")
 
 
-async def test_send_e2e_post_client_error(hass: HomeAssistant) -> None:
-    """Test that aiohttp.ClientError on POST raises ThreemaSendError."""
+@pytest.mark.parametrize(
+    "side_effect",
+    [aiohttp.ClientError("connection reset"), TimeoutError()],
+    ids=["client_error", "timeout"],
+)
+async def test_send_e2e_post_connection_error(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test that a connection error or timeout on POST raises ThreemaSendError."""
     sender_hex, recipient_priv = _e2e_keys()
     pub_hex = bytes(recipient_priv.public_key).hex()
 
     session = MagicMock()
     session.get = AsyncMock(return_value=_make_resp(200, pub_hex))
-    session.post = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
+    session.post = AsyncMock(side_effect=side_effect)
 
     with _patch_session(session):
         client = ThreemaAPIClient(
