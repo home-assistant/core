@@ -1217,6 +1217,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/music_assistant/ @music-assistant @arturpragacz
 /homeassistant/components/mutesync/ @currentoor
 /tests/components/mutesync/ @currentoor
+/homeassistant/components/mvglive/ @danielpotthast
+/tests/components/mvglive/ @danielpotthast
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
 /homeassistant/components/myneomitis/ @Epyes
