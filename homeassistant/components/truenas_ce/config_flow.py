@@ -36,6 +36,7 @@ from .const import (
     ERR_INVALID_KEY,
     ERR_MALFORMED_RESULT,
     ERR_PROXY_INTERCEPTED,
+    ERR_TIMEOUT,
     ERR_TLS_NOT_SUPPORTED,
     ERR_UNKNOWN_HOSTNAME,
     ERR_WS_NOT_SUPPORTED,
@@ -89,6 +90,7 @@ def _map_error_to_ha(errorcode: str) -> str:
         ERR_HANDSHAKE_TIMEOUT,
         ERR_API_NOT_FOUND,
         ERR_MALFORMED_RESULT,
+        ERR_TIMEOUT,
     }
     return errorcode if errorcode in valid_errors else "unknown"
 

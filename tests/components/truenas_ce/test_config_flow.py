@@ -23,6 +23,7 @@ from homeassistant.components.truenas_ce.const import (
     DOMAIN,
     ERR_CONNECTION_REFUSED,
     ERR_INVALID_KEY,
+    ERR_TIMEOUT,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -251,6 +252,19 @@ async def test_user_flow_connection_error_maps_to_ha_error(hass: HomeAssistant) 
             result["flow_id"], _user_input()
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_timeout_error_maps_to_ha_error(hass: HomeAssistant) -> None:
+    """A connection timeout surfaces its own error code, not the generic fallback."""
+    with _mock_connection_failure(ERR_TIMEOUT):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input()
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: ERR_TIMEOUT}
 
 
 # ---------------------------

@@ -15,6 +15,7 @@
       "invalid_key": "Login failed, invalid API key.",
       "malformed_result": "API response is malformed.",
       "proxy_intercepted": "Connection intercepted by a reverse proxy or SSO portal (e.g. Cloudflare Access). Point the integration at the TrueNAS host directly over your LAN/VPN, or exempt the WebSocket endpoint from the proxy's authentication.",
+      "timeout": "Connection failed, the API call timed out.",
       "tlsv1_not_supported": "TLSv1 not supported. Reverse proxy?",
       "unknown": "Unknown error occurred.",
       "unknown_hostname": "Unknown hostname, check DNS.",

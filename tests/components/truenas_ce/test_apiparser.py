@@ -620,6 +620,16 @@ def test_parse_api_convert_human_date_unparsable_becomes_none() -> None:
     assert result["1"]["until"] is None
 
 
+def test_parse_api_convert_human_date_non_string_becomes_none() -> None:
+    """A non-string until value becomes None."""
+    result = ap.parse_api(
+        source=[{"id": "1", "until": 12345}],
+        key="id",
+        vals=[{"name": "until", "convert": "human_date_to_utc"}],
+    )
+    assert result["1"]["until"] is None
+
+
 def test_parse_api_val_proc_runs_alongside_vals() -> None:
     """val_proc combine actions run alongside regular vals to build derived fields."""
     source = [{"id": "1", "host": "truenas", "port": "443"}]
