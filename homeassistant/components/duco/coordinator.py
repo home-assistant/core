@@ -14,6 +14,7 @@ from duco_connectivity.exceptions import (
 from duco_connectivity.models import (
     BoardInfo,
     BypassSupplyTemperatureTarget,
+    DiagStatus,
     Node,
     NodeListActionItemList,
     NodeName,
@@ -40,6 +41,8 @@ class DucoData:
 
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
+    diagnostics_available: bool
+    diagnostic_subsystems: dict[str, DiagStatus | None]
     rssi_wifi: int | None
     time_filter_remain: int | None
     ventilation_temperatures: VentilationTemperatureInfo | None
@@ -174,6 +177,21 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
+        # Diagnostics only back optional binary sensors. Preserve known components
+        # but mark their data unavailable without failing the shared coordinator.
+        diagnostics_available = True
+        diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
+        try:
+            diagnostic_info = await self.client.async_get_diagnostics_info()
+        except DucoError as err:
+            diagnostics_available = False
+            _LOGGER.debug("Could not fetch Duco diagnostics", exc_info=err)
+        else:
+            diagnostic_subsystems = {
+                diagnostic.component: diagnostic.status
+                for diagnostic in diagnostic_info.diagnostic_subsystems
+            }
+
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
         # node entities unavailable. A None result leaves the sensor absent
@@ -211,6 +229,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
+            diagnostics_available=diagnostics_available,
+            diagnostic_subsystems=diagnostic_subsystems,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
             ventilation_temperatures=ventilation_temperatures,

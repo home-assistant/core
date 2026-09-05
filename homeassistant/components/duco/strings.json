@@ -36,6 +36,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "diagnostic_filter": {
+        "name": "Filter"
+      },
+      "diagnostic_sun_control": {
+        "name": "Sun control"
+      },
+      "diagnostic_ventilation": {
+        "name": "Ventilation"
+      },
+      "diagnostic_ventilation_cooling": {
+        "name": "Ventilation cooling"
+      }
+    },
     "fan": {
       "ventilation": {
         "state_attributes": {
