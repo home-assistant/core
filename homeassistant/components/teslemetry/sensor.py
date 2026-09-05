@@ -33,6 +33,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import PressureConverter
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslemetryConfigEntry
@@ -48,9 +49,6 @@ from .entity import (
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
-
-# Teslemetry streams TPMS pressure in atmospheres; entities are declared in bar.
-ATM_TO_BAR = 1.01325
 
 # Tesla only reports the self-driving/mileage-since-reset fields (258-259) on HW4
 # vehicles, identified by this driver-assist capability in the vehicle config.
@@ -401,11 +399,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="vehicle_state_tpms_pressure_fl",
         polling=True,
+        polling_value_fn=lambda x: (
+            PressureConverter.convert(x, UnitOfPressure.BAR, UnitOfPressure.ATM)
+            if isinstance(x, (int, float))
+            else x
+        ),
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureFl(
-            lambda x: callback(None) if x is None else callback(x * ATM_TO_BAR)
+            callback
         ),
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.BAR,
+        native_unit_of_measurement=UnitOfPressure.ATM,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
@@ -415,11 +418,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="vehicle_state_tpms_pressure_fr",
         polling=True,
+        polling_value_fn=lambda x: (
+            PressureConverter.convert(x, UnitOfPressure.BAR, UnitOfPressure.ATM)
+            if isinstance(x, (int, float))
+            else x
+        ),
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureFr(
-            lambda x: callback(None) if x is None else callback(x * ATM_TO_BAR)
+            callback
         ),
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.BAR,
+        native_unit_of_measurement=UnitOfPressure.ATM,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
@@ -429,11 +437,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="vehicle_state_tpms_pressure_rl",
         polling=True,
+        polling_value_fn=lambda x: (
+            PressureConverter.convert(x, UnitOfPressure.BAR, UnitOfPressure.ATM)
+            if isinstance(x, (int, float))
+            else x
+        ),
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureRl(
-            lambda x: callback(None) if x is None else callback(x * ATM_TO_BAR)
+            callback
         ),
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.BAR,
+        native_unit_of_measurement=UnitOfPressure.ATM,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
@@ -443,11 +456,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="vehicle_state_tpms_pressure_rr",
         polling=True,
+        polling_value_fn=lambda x: (
+            PressureConverter.convert(x, UnitOfPressure.BAR, UnitOfPressure.ATM)
+            if isinstance(x, (int, float))
+            else x
+        ),
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureRr(
-            lambda x: callback(None) if x is None else callback(x * ATM_TO_BAR)
+            callback
         ),
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.BAR,
+        native_unit_of_measurement=UnitOfPressure.ATM,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,

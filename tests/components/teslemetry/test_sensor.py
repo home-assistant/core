@@ -321,29 +321,25 @@ async def test_hw4_mileage_sensors_gating(
             Signal.TPMS_PRESSURE_FL,
             "sensor.test_tire_pressure_front_left",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.PSI),
         ),
         (
             Signal.TPMS_PRESSURE_FR,
             "sensor.test_tire_pressure_front_right",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.PSI),
         ),
         (
             Signal.TPMS_PRESSURE_RL,
             "sensor.test_tire_pressure_rear_left",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.PSI),
         ),
         (
             Signal.TPMS_PRESSURE_RR,
             "sensor.test_tire_pressure_rear_right",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.PSI),
         ),
         (
             Signal.ISOLATION_RESISTANCE,
