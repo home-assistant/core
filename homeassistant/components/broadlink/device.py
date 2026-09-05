@@ -1,7 +1,7 @@
 """Support for Broadlink devices."""
 
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from functools import partial
 import logging
 
 import broadlink as blk
@@ -10,6 +10,7 @@ from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     ConnectionClosedError,
+    EndpointClosedError,
     NetworkTimeoutError,
 )
 
@@ -88,11 +89,11 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
-    def _get_firmware_version(self) -> int | None:
+    async def _async_get_firmware_version(self) -> int | None:
         """Get firmware version."""
-        self.api.auth()
+        await self.api.auth()
         with suppress(BroadlinkException, OSError):
-            return self.api.get_fwversion()
+            return await self.api.get_fwversion()
         return None
 
     async def async_setup(self) -> bool:
@@ -109,9 +110,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         self.api = api
 
         try:
-            self.fw_version = await self.hass.async_add_executor_job(
-                self._get_firmware_version
-            )
+            self.fw_version = await self._async_get_firmware_version()
 
         except AuthenticationError:
             await self._async_handle_auth_error()
@@ -160,14 +159,17 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         while self.reset_jobs:
             self.reset_jobs.pop()()
 
-        return await self.hass.config_entries.async_unload_platforms(
+        unloaded = await self.hass.config_entries.async_unload_platforms(
             self.config, get_domains(self.api.type)
         )
+        if unloaded:
+            await self.api.aclose()
+        return unloaded
 
     async def async_auth(self) -> bool:
         """Authenticate to the device."""
         try:
-            await self.hass.async_add_executor_job(self.api.auth)
+            await self.api.auth()
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug(
                 "Failed to authenticate to the device at %s: %s", self.api.host[0], err
@@ -177,15 +179,29 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return False
         return True
 
-    async def async_request(self, function, *args, **kwargs):
-        """Send a request to the device."""
-        request = partial(function, *args, **kwargs)
+    async def async_request[**_P, _R](
+        self,
+        function: Callable[_P, Awaitable[_R]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
+        """Send a request to the device.
+
+        The library re-authenticates on its own when the device reports an
+        expired session and repeats the request. If that fails, it raises
+        the error the device gave the request, so the retry here runs the
+        same way it always has and a locked device ends up in the reauth
+        flow through async_auth.
+        """
         try:
-            return await self.hass.async_add_executor_job(request)
+            return await function(*args, **kwargs)
+        except EndpointClosedError:
+            # We closed the device ourselves (unload); do not re-open it.
+            raise
         except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
                 raise
-            return await self.hass.async_add_executor_job(request)
+            return await function(*args, **kwargs)
 
     async def _async_handle_auth_error(self) -> None:
         """Handle an authentication error."""

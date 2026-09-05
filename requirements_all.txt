@@ -733,9 +733,6 @@ boto3==1.42.97
 # homeassistant.components.bring
 bring-api==1.1.2
 
-# homeassistant.components.broadlink
-broadlink==0.19.0
-
 # homeassistant.components.brother
 brother==6.2.0
 
@@ -2703,6 +2700,9 @@ python-awair==0.2.5
 
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
+
+# homeassistant.components.broadlink
+python-broadlink==1.0.6
 
 # homeassistant.components.bsblan
 python-bsblan==6.1.8
