@@ -284,7 +284,9 @@ def mock_duco_client(
         target: BypassSupplyTemperatureTarget,
     ) -> BypassSupplyTemperatureTarget:
         target.validate_value(temperature)
-        return replace(target, zone_id=zone_id, value=temperature)
+        updated_target = replace(target, zone_id=zone_id, value=temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = updated_target
+        return updated_target
 
     with (
         patch(

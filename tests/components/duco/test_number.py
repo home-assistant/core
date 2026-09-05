@@ -66,6 +66,36 @@ async def test_bypass_supply_temperature_target_numbers_support_all_exposed_zone
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
 
+async def test_successful_write_does_not_recover_failed_coordinator(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test a successful write does not recover a failed coordinator."""
+    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+        blocking=True,
+    )
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_bypass_supply_temperature_target_number_entities_state(
     hass: HomeAssistant,
@@ -121,6 +151,7 @@ async def test_set_bypass_supply_temperature_target(
         ]
     )
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
+    assert mock_bypass_supply_temperature_targets[1] == replace(target, value=21.0)
 
 
 async def test_set_bypass_supply_temperature_target_honors_increment_metadata(

@@ -158,12 +158,13 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 translation_key="failed_to_set_bypass_supply_temperature_target",
             ) from err
 
-        self.coordinator.async_set_updated_data(
-            replace(
-                self.coordinator.data,
-                bypass_supply_temperature_targets={
-                    **self.coordinator.data.bypass_supply_temperature_targets,
-                    self._zone_id: updated_target,
-                },
+        if self.coordinator.last_update_success:
+            self.coordinator.async_set_updated_data(
+                replace(
+                    self.coordinator.data,
+                    bypass_supply_temperature_targets={
+                        **self.coordinator.data.bypass_supply_temperature_targets,
+                        self._zone_id: updated_target,
+                    },
+                )
             )
-        )
