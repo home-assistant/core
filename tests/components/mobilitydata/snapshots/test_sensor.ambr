@@ -1,0 +1,170 @@
+# serializer version: 1
+# name: test_sensors[sensor.1st_grand_next_departure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1st_grand_next_departure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next departure',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next departure',
+    'platform': 'mobilitydata',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_departure',
+    'unique_id': 'stop_subentry_1_departure_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.1st_grand_next_departure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'delay_seconds': 30,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1st & Grand Next departure',
+      'headsign': 'Downtown',
+      'predicted_departure': datetime.datetime(2026, 8, 1, 8, 5, 30, tzinfo=datetime.timezone.utc),
+      'realtime': True,
+      'route_id': 'R1',
+      'route_name': 'A Downtown Loop',
+      'scheduled_departure': datetime.datetime(2026, 8, 1, 8, 5, tzinfo=datetime.timezone.utc),
+      'trip_id': 'T5',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1st_grand_next_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-01T08:05:30+00:00',
+  })
+# ---
+# name: test_sensors[sensor.1st_grand_second_departure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1st_grand_second_departure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second departure',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Second departure',
+    'platform': 'mobilitydata',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'second_departure',
+    'unique_id': 'stop_subentry_1_departure_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.1st_grand_second_departure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'delay_seconds': None,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1st & Grand Second departure',
+      'headsign': 'Uptown',
+      'predicted_departure': None,
+      'realtime': False,
+      'route_id': 'R2',
+      'route_name': 'B Crosstown',
+      'scheduled_departure': datetime.datetime(2026, 8, 1, 8, 12, tzinfo=datetime.timezone.utc),
+      'trip_id': 'T12',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1st_grand_second_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-01T08:12:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.1st_grand_third_departure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1st_grand_third_departure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Third departure',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Third departure',
+    'platform': 'mobilitydata',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'third_departure',
+    'unique_id': 'stop_subentry_1_departure_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.1st_grand_third_departure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1st & Grand Third departure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1st_grand_third_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
