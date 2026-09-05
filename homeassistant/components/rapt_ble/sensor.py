@@ -28,7 +28,7 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import RAPTBLEConfigEntry
 
-SENSOR_DESCRIPTIONS = {
+SENSOR_DESCRIPTIONS: dict[tuple[str | None, str | None], SensorEntityDescription] = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
         key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -81,7 +81,8 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            if (description.device_class, description.native_unit_of_measurement)
+            in SENSOR_DESCRIPTIONS
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value

@@ -61,7 +61,10 @@ dependencies = [
   "Pillow==12.3.0",
   "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
-  "orjson==3.12.0",
+  # Do not bump orjson until the very aggressive buffer resizing introduced in
+  # 3.12.0, which causes memory use to balloon, has been adjusted or a workaround
+  # is available.
+  "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -74,7 +77,7 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.5",
+  "uv==0.12.7",
   "probatio==0.11.4",
   "yarl==1.24.5",
   "webrtc-models==0.3.0",
@@ -638,7 +641,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.4"
+required-version = ">=0.16.5"
 
 [tool.ruff.lint]
 select = [
