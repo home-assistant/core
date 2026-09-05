@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
 from pyportainer.exceptions import PortainerError
+from pyportainer.watcher import PortainerImageWatcherResult
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -115,7 +116,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     @callback
     def _stop_watcher(_event: Event) -> None:
         """Stop the image watcher in the event loop."""
+        watcher.unregister_callback(_handle_watcher_result)
         watcher.stop()
+
+    async def _handle_watcher_result(_result: PortainerImageWatcherResult) -> None:
+        """Request a coordinator refresh so watcher detected updates surface."""
+        await coordinator.async_request_refresh()
+
+    watcher.register_callback(_handle_watcher_result)
 
     entry.async_on_unload(async_at_started(hass, _start_watcher))
     entry.async_on_unload(watcher.stop)
