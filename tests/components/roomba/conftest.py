@@ -54,6 +54,9 @@ def mock_roomba() -> Generator[AsyncMock]:
         }
     }
     mock_roomba.roomba_connected = True
+    mock_roomba.current_state = "Charging"
+    mock_roomba.error_code = 0
+    mock_roomba.error_message = None
 
     with patch(
         "homeassistant.components.roomba.RoombaFactory.create_roomba",

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from cookidoo_api import (
     CookidooAuthException,
@@ -68,6 +68,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reconfigure upon an user action."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

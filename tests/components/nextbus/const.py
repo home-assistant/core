@@ -7,7 +7,6 @@ from homeassistant.const import CONF_STOP
 VALID_AGENCY = "sfmta-cis"
 VALID_ROUTE = "F"
 VALID_STOP = "5184"
-VALID_COORDINATOR_KEY = f"{VALID_AGENCY}-{VALID_STOP}"
 VALID_AGENCY_TITLE = "San Francisco Muni"
 VALID_ROUTE_TITLE = "F-Market & Wharves"
 VALID_STOP_TITLE = "Market St & 7th St"

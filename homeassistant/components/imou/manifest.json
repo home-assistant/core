@@ -1,0 +1,24 @@
+{
+  "domain": "imou",
+  "name": "Imou",
+  "codeowners": ["@Imou-OpenPlatform"],
+  "config_flow": true,
+  "dhcp": [
+    { "macaddress": "1C4D89*" },
+    { "macaddress": "302450*" },
+    { "macaddress": "38AF29*" },
+    { "macaddress": "3CE36B*" },
+    { "macaddress": "3CEF8C*" },
+    { "macaddress": "906A94*" },
+    { "macaddress": "A0BD1D*" },
+    { "macaddress": "A83162*" },
+    { "macaddress": "AC3DFA*" },
+    { "macaddress": "B44C3B*" },
+    { "macaddress": "FCB69D*" }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/imou",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyimouapi==1.3.4"]
+}

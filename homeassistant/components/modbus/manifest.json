@@ -5,5 +5,9 @@
   "documentation": "https://www.home-assistant.io/integrations/modbus",
   "iot_class": "local_polling",
   "loggers": ["pymodbus"],
-  "requirements": ["pymodbus==3.11.2"]
+  "requirements": [
+    "pymodbus==3.13.1",
+    "modbus-connection[tmodbus]==4.10.0",
+    "tmodbus==0.6.2"
+  ]
 }

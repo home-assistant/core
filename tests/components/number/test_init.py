@@ -586,7 +586,7 @@ async def test_restore_number_save_state(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Trigger saving state
@@ -659,7 +659,7 @@ async def test_restore_number_restore_state(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert hass.states.get(entity0.entity_id)
@@ -751,7 +751,7 @@ async def test_custom_unit(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -821,7 +821,7 @@ async def test_custom_unit_change(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Default unit conversion according to unit system
@@ -882,7 +882,7 @@ async def test_translated_unit(
         setup_test_component_platform(hass, DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "number", {"number": {"platform": "test"}}
+            hass, DOMAIN, {"number": {"platform": "test"}}
         )
         await hass.async_block_till_done()
 
@@ -916,7 +916,7 @@ async def test_translated_unit_with_native_unit_raises(
         setup_test_component_platform(hass, DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "number", {"number": {"platform": "test"}}
+            hass, DOMAIN, {"number": {"platform": "test"}}
         )
         await hass.async_block_till_done()
         # Setup fails so entity_id is None
@@ -941,7 +941,7 @@ async def test_ambiguous_unit_of_measurement_compat(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Check compatible unit is applied

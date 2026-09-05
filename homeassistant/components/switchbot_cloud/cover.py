@@ -1,7 +1,7 @@
 """Support for the Switchbot BlindTilt, Curtain, Curtain3, RollerShade as Cover."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import (
     BlindTiltCommands,
@@ -45,6 +45,7 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
     _attr_name = None
     _attr_is_closed: bool | None = None
 
+    @override
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
@@ -67,18 +68,21 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         | CoverEntityFeature.SET_POSITION
     )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.send_api_command(CommonCommands.OFF)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int | None = kwargs.get("position")
@@ -90,6 +94,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
             await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.send_api_command(CurtainCommands.PAUSE)
@@ -106,18 +111,21 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
         | CoverEntityFeature.CLOSE
     )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=0)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=100)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int | None = kwargs.get("position")
@@ -140,6 +148,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         | CoverEntityFeature.CLOSE_TILT
     )
 
+    @override
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
@@ -156,6 +165,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         direction = self.coordinator.data.get("direction")
         self._attr_direction = direction.lower() if direction else None
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         percent: int | None = kwargs.get("tilt_position")
@@ -167,12 +177,14 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
             await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._attr_direction is not None:
@@ -192,18 +204,21 @@ class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     )
 
+    @override
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
         door_status: int | None = self.coordinator.data.get("doorStatus")
         self._attr_is_closed = None if door_status is None else door_status == 1
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.send_api_command(CommonCommands.OFF)

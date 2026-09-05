@@ -1,5 +1,7 @@
 """Reads vehicle status from StarLine API."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -97,6 +99,7 @@ class StarlineSensor(StarlineEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self._device.car_state.get(self._key)

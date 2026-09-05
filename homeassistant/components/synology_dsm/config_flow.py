@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from ipaddress import ip_address as ip
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
@@ -20,6 +20,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -128,6 +129,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SynologyDSMConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
@@ -235,7 +237,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             self.shares = await self.api.file.get_shared_folders(only_writable=True)
 
         if self.shares and not backup_path:
-            return await self.async_step_backup_share(user_input)
+            self.saved_user_input = user_input
+            return await self.async_step_backup_share()
 
         # unique_id should be serial for services purpose
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
@@ -272,6 +275,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             title=friendly_name or host, data=config_data, options=config_options
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -281,6 +285,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -296,6 +301,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = discovery_info.name.removesuffix(HTTP_SUFFIX)
         return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -404,16 +410,13 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_backup_share(
-        self, user_input: dict[str, Any], errors: dict[str, str] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select backup location."""
         if TYPE_CHECKING:
             assert self.shares is not None
 
-        if not self.saved_user_input:
-            self.saved_user_input = user_input
-
-        if CONF_BACKUP_PATH not in user_input and CONF_BACKUP_SHARE not in user_input:
+        if user_input is None:
             return self.async_show_form(
                 step_id="backup_share",
                 data_schema=vol.Schema(
@@ -430,15 +433,15 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                         vol.Required(
                             CONF_BACKUP_PATH,
                             default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): str,
+                        ): vol.All(str, vol.Length(min=1)),
                     }
                 ),
             )
 
-        user_input = {**self.saved_user_input, **user_input}
-        self.saved_user_input = {}
-
-        return await self.async_step_user(user_input)
+        # The credentials stay available, so a retry after a failure still has them
+        return await self.async_validate_input_create_entry(
+            {**self.saved_user_input, **user_input}, step_id="user"
+        )
 
     def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
         """See if we already have a configured NAS with this MAC address."""
@@ -459,6 +462,10 @@ class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
+        # The shares to pick from come from the running connection
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

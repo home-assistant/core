@@ -1,7 +1,7 @@
 """Data update coordinator for SimpliSafe."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,6 +38,7 @@ class SimpliSafeDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self._simplisafe = simplisafe
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from SimpliSafe."""
         await self._simplisafe.async_update()

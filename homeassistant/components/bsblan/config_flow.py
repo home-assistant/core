@@ -1,7 +1,7 @@
 """Config flow for BSB-LAN integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
 import voluptuous as vol
@@ -40,6 +40,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.password: str | None = None
         self._auth_required = True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,6 +56,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_create(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

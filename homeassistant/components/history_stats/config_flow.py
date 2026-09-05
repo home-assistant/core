@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -26,6 +26,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateClassSelector,
+    StateClassSelectorConfig,
     StateSelector,
     StateSelectorConfig,
     TemplateSelector,
@@ -44,7 +46,7 @@ from .const import (
     CONF_TYPE_TIME,
     DEFAULT_NAME,
     DOMAIN,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -142,14 +144,10 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             vol.Optional(CONF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
-            vol.Optional(CONF_STATE_CLASS): SelectSelector(
-                SelectSelectorConfig(
-                    options=state_class_options,
-                    translation_key=CONF_STATE_CLASS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                ),
+            vol.Optional(CONF_STATE_CLASS): StateClassSelector(
+                StateClassSelectorConfig(state_classes=state_class_options),
             ),
-            vol.Optional(SECTION_ADVANCED_SETTINGS): section(
+            vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
                 vol.Schema(
                     {
                         vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
@@ -189,17 +187,19 @@ OPTIONS_FLOW = {
 class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
-    MINOR_VERSION = 3
+    VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -288,8 +288,8 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
-    advanced_settings = validated_data.get(SECTION_ADVANCED_SETTINGS, {})
-    min_state_duration = advanced_settings.get(CONF_MIN_STATE_DURATION)
+    additional_settings = validated_data.get(SECTION_ADDITIONAL_SETTINGS, {})
+    min_state_duration = additional_settings.get(CONF_MIN_STATE_DURATION)
     state_class = validated_data.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(
@@ -305,12 +305,10 @@ async def ws_start_preview(
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name, True)
     await coordinator.async_refresh()
     preview_entity = HistoryStatsSensor(
-        hass,
         coordinator=coordinator,
         sensor_type=sensor_type,
         name=name,
         unique_id=None,
-        source_entity_id=entity_id,
         state_class=state_class,
     )
     preview_entity.hass = hass

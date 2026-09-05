@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
@@ -79,6 +79,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
         self._com_ports_list: list[str] | None = None
         self._default_com_port: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

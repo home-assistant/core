@@ -1,6 +1,6 @@
 """Support for Rflink binary sensors."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -98,6 +98,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink BinarySensor state."""
         await super().async_added_to_hass()
@@ -107,6 +108,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
             else:
                 self._state = False
 
+    @override
     def _handle_event(self, event):
         """Domain specific event handler."""
         command = event["command"]
@@ -131,6 +133,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state

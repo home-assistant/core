@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyrituals import Diffuser
 
@@ -40,6 +41,7 @@ ENTITY_DESCRIPTIONS = (
         key="fill",
         translation_key="fill",
         value_fn=lambda diffuser: diffuser.fill,
+        has_fn=lambda diffuser: "fillc" in diffuser.hub_data.get("sensors", {}),
     ),
     RitualsSensorEntityDescription(
         key="perfume",
@@ -78,6 +80,7 @@ class RitualsSensorEntity(DiffuserEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def native_value(self) -> str | int:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.diffuser)

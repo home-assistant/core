@@ -102,6 +102,7 @@ async def test_hassio_system_health(
     )
     hass.data[DATA_OS_INFO] = OSInfo(
         version="5.9",
+        version_pending=None,
         version_latest="5.9",
         update_available=False,
         board="odroid-n2",
@@ -126,6 +127,7 @@ async def test_hassio_system_health(
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     hass.data[DATA_ADDONS_LIST] = [
         InstalledAddon(
@@ -292,6 +294,7 @@ async def test_hassio_system_health_with_issues(
     )
     hass.data[DATA_OS_INFO] = OSInfo(
         version=None,
+        version_pending=None,
         version_latest=None,
         update_available=False,
         board=None,
@@ -316,6 +319,7 @@ async def test_hassio_system_health_with_issues(
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     hass.data[DATA_NETWORK_INFO] = NetworkInfo(
         interfaces=[],

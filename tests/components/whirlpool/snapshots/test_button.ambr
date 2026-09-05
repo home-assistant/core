@@ -1,0 +1,151 @@
+# serializer version: 1
+# name: test_all_entities[button.dual_cavity_oven_lower_oven_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.dual_cavity_oven_lower_oven_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lower oven stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lower oven stop',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_stop_lower',
+    'unique_id': 'said_oven_dual-stop_lower',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.dual_cavity_oven_lower_oven_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Lower oven stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dual_cavity_oven_lower_oven_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.dual_cavity_oven_upper_oven_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.dual_cavity_oven_upper_oven_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upper oven stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Upper oven stop',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_stop_upper',
+    'unique_id': 'said_oven_dual-stop_upper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.dual_cavity_oven_upper_oven_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Upper oven stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dual_cavity_oven_upper_oven_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.single_cavity_oven_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.single_cavity_oven_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_stop',
+    'unique_id': 'said_oven_single-stop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.single_cavity_oven_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single cavity oven Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.single_cavity_oven_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

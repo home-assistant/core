@@ -17,6 +17,7 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_pin": "Invalid PIN",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -34,7 +35,7 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
-        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen. Leading zeros shall be omitted, i.e. enter 123 if the displayed code is 0123.",
+        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen, including any leading zeros.",
         "title": "Pairing"
       },
       "password": {
@@ -81,6 +82,12 @@
     },
     "not_connected": {
       "message": "Apple TV is not connected"
+    },
+    "stream_failed": {
+      "message": "Failed to stream media to the Apple TV"
+    },
+    "streaming_not_supported": {
+      "message": "Streaming the requested media is not supported"
     }
   },
   "options": {

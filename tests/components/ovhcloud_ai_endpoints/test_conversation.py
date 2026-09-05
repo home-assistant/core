@@ -17,7 +17,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
+from homeassistant.components.ovhcloud_ai_endpoints.entity import (
+    _convert_content_to_chat_message,
+    _decode_tool_arguments,
+)
+from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, intent
 from homeassistant.helpers.llm import ToolInput
 
@@ -459,3 +465,58 @@ async def test_openai_error(
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
+
+
+async def test_supported_languages(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """The conversation entity must advertise universal language support."""
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
+
+    agent = conversation.async_get_agent(
+        hass, "conversation.meta_llama_3_3_70b_instruct"
+    )
+    assert agent is not None
+    assert agent.supported_languages == MATCH_ALL
+
+
+async def test_converse_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """A ConverseError from chat_log.async_provide_llm_data surfaces as ERROR."""
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_LLM_HASS_API: "invalid_llm_api"},
+    )
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        Context(),
+        agent_id="conversation.meta_llama_3_3_70b_instruct",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+
+
+def test_decode_tool_arguments_invalid_json() -> None:
+    """Malformed tool-call JSON arguments raise HomeAssistantError."""
+    with pytest.raises(HomeAssistantError, match="Unexpected tool argument response"):
+        _decode_tool_arguments("{not-json")
+
+
+def test_convert_content_unmapped() -> None:
+    """Content that cannot be mapped to a Completions message returns None."""
+    assert (
+        _convert_content_to_chat_message(conversation.SystemContent(content="")) is None
+    )

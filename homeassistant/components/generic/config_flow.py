@@ -3,11 +3,11 @@
 import asyncio
 from collections.abc import Mapping
 import contextlib
-from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from typing import Any, cast
+import time
+from typing import Any, cast, override
 
 from aiohttp import web
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -332,12 +332,14 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self.title = ""
 
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -408,6 +410,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -502,6 +505,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
         )
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -583,8 +587,7 @@ async def ws_start_preview(
 
     if user_input.get(CONF_STILL_IMAGE_URL):
         ha_still_url = (
-            "/api/generic/preview_flow_image"
-            f"/{msg['flow_id']}?t={datetime.now().isoformat()}"
+            f"/api/generic/preview_flow_image/{msg['flow_id']}?t={time.time()}"
         )
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 

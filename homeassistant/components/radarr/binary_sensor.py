@@ -1,5 +1,7 @@
 """Support for Radarr binary sensors."""
 
+from typing import override
+
 from aiopyarr import Health
 
 from homeassistant.components.binary_sensor import (
@@ -37,6 +39,7 @@ class RadarrBinarySensor(RadarrEntity[list[Health]], BinarySensorEntity):
     """Implementation of a Radarr binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return any(report.source in HEALTH_ISSUES for report in self.coordinator.data)

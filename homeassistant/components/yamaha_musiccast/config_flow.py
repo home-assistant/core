@@ -1,7 +1,7 @@
 """Config flow for MusicCast."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError, DummyCookieJar
@@ -32,6 +32,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     upnp_description: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,6 +83,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

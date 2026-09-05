@@ -1,5 +1,7 @@
 """Support for RAPT Pill hydrometers."""
 
+from typing import override
+
 from rapt_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -26,7 +28,7 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import RAPTBLEConfigEntry
 
-SENSOR_DESCRIPTIONS = {
+SENSOR_DESCRIPTIONS: dict[tuple[str | None, str | None], SensorEntityDescription] = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
         key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -79,7 +81,8 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            if (description.device_class, description.native_unit_of_measurement)
+            in SENSOR_DESCRIPTIONS
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
@@ -119,6 +122,7 @@ class RAPTPillBluetoothSensorEntity(
     """Representation of a RAPT Pill BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

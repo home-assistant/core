@@ -64,8 +64,8 @@
   },
   "title": "Schedule",
   "triggers": {
-    "turned_off": {
-      "description": "Triggers when a schedule block ends.",
+    "block_ended": {
+      "description": "Triggers when one or more schedule blocks end.",
       "fields": {
         "behavior": {
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
@@ -76,8 +76,8 @@
       },
       "name": "Schedule block ended"
     },
-    "turned_on": {
-      "description": "Triggers when a schedule block starts.",
+    "block_started": {
+      "description": "Triggers when one or more schedule blocks start.",
       "fields": {
         "behavior": {
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"

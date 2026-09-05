@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohttp import ClientSession
@@ -45,6 +45,7 @@ class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

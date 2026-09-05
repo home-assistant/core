@@ -1,7 +1,7 @@
 """Config flow for Dexcom integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pydexcom import Dexcom, Region
 from pydexcom.errors import AccountError, SessionError
@@ -28,6 +28,7 @@ class DexcomConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 import socket
+from typing import override
 
 import motionmount
 
@@ -105,6 +106,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
             self._update_options(self._presets)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current option."""
         # When the mount is moving we return the currently selected option
@@ -127,6 +129,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
         return self._attr_current_option
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
         index = self._name_to_index.get(option)

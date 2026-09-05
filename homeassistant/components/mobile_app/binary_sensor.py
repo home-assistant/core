@@ -1,6 +1,6 @@
 """Binary sensor platform for mobile_app."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -73,6 +73,7 @@ async def async_setup_entry(
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
     """Representation of a mobile app binary sensor."""
 
+    @override
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         if self._config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
@@ -81,6 +82,7 @@ class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
         self._async_update_attr_from_config()
 
     @callback
+    @override
     def _async_update_attr_from_config(self) -> None:
         """Update the entity from the config."""
         super()._async_update_attr_from_config()

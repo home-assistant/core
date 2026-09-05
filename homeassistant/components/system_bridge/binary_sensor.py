@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -104,6 +105,7 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

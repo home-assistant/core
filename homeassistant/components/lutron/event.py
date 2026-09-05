@@ -1,7 +1,7 @@
 """Support for Lutron events."""
 
 from enum import StrEnum
-from typing import cast
+from typing import cast, override
 
 from pylutron import Button, Keypad, Lutron, LutronEntity, LutronEvent
 
@@ -39,7 +39,9 @@ async def async_setup_entry(
     entry_data = config_entry.runtime_data
 
     async_add_entities(
-        LutronEventEntity(area_name, keypad, button, entry_data.client)
+        LutronEventEntity(
+            hass, area_name, keypad, button, entry_data.client, config_entry.entry_id
+        )
         for area_name, keypad, button in entry_data.buttons
     )
 
@@ -51,13 +53,15 @@ class LutronEventEntity(LutronKeypad, EventEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         keypad: Keypad,
         button: Button,
         controller: Lutron,
+        config_entry_id: str,
     ) -> None:
         """Initialize the button."""
-        super().__init__(area_name, button, controller, keypad)
+        super().__init__(hass, area_name, button, controller, keypad, config_entry_id)
         if (name := button.name) == "Unknown Button":
             name += f" {button.number}"
         self._attr_name = name
@@ -72,6 +76,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -89,7 +94,8 @@ class LutronEventEntity(LutronKeypad, EventEntity):
                 action = LutronEventType.PRESS
             else:
                 action = LutronEventType.RELEASE
-        elif event == Button.Event.PRESSED:
+        elif event in (Button.Event.PRESSED, Button.Event.RELEASED):
+            # Buttons carrying a hold action report only a release, never a press.
             action = LutronEventType.SINGLE_PRESS
 
         if action:

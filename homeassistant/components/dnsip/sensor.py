@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 import aiodns
 from aiodns.error import DNSError
+import pycares
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PORT
@@ -34,14 +35,14 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
-def sort_ips(ips: list, querytype: Literal["A", "AAAA"]) -> list:
+def sort_ips(ips: list[str], querytype: Literal["A", "AAAA"]) -> list[str]:
     """Join IPs into a single string."""
-
+    _ips: list[IPv4Address | IPv6Address]
     if querytype == "AAAA":
-        ips = [IPv6Address(ip) for ip in ips]
+        _ips = [IPv6Address(ip) for ip in ips]
     else:
-        ips = [IPv4Address(ip) for ip in ips]
-    return [str(ip) for ip in sorted(ips)][:MAX_RESULTS]
+        _ips = [IPv4Address(ip) for ip in ips]
+    return [str(ip) for ip in sorted(_ips)][:MAX_RESULTS]
 
 
 async def async_setup_entry(
@@ -141,25 +142,34 @@ class WanIpSensor(SensorEntity):
         else:
             self.entry.runtime_data.resolver_ipv4 = new_resolver
 
+    async def async_resolve(self, hostname: str) -> list[str]:
+        """Resolve a hostname to its IP addresses."""
+        ips: list[str] = []
+        try:
+            async with asyncio.timeout(10):
+                response = await self._resolver.query_dns(hostname, self.querytype)
+        except TimeoutError as err:
+            _LOGGER.debug("Timeout while resolving host: %s", err)
+            await self._resolver.close()
+            return ips
+        except DNSError as err:
+            _LOGGER.warning("Exception while resolving host: %s", err)
+            await self._resolver.close()
+            return ips
+
+        for res in response.answer:
+            if isinstance(res.data, (pycares.AAAARecordData, pycares.ARecordData)):
+                addr = res.data.addr
+                ips.append(addr)
+        return ips
+
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
         if self._resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
-        response = None
-        try:
-            async with asyncio.timeout(10):
-                response = await self._resolver.query(self.hostname, self.querytype)
-        except TimeoutError as err:
-            _LOGGER.debug("Timeout while resolving host: %s", err)
-            await self._resolver.close()
-        except DNSError as err:
-            _LOGGER.warning("Exception while resolving host: %s", err)
-            await self._resolver.close()
 
-        if response:
-            sorted_ips = sort_ips(
-                [res.host for res in response], querytype=self.querytype
-            )
+        if ips := await self.async_resolve(self.hostname):
+            sorted_ips = sort_ips(ips, querytype=self.querytype)
             self._attr_native_value = sorted_ips[0]
             self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
             self._attr_available = True

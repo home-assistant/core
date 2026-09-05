@@ -6,7 +6,6 @@
       "addon_install_failed": "Failed to install the Matter Server app.",
       "addon_start_failed": "Failed to start the Matter Server app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_matter_addon": "Discovered app is not the official Matter Server app.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
@@ -274,6 +273,9 @@
       "sensitivity_level": {
         "name": "Sensitivity"
       },
+      "slat_rotation_time": {
+        "name": "Slat rotation time"
+      },
       "speaker_setpoint": {
         "name": "Volume"
       },
@@ -282,6 +284,12 @@
       },
       "temperature_setpoint": {
         "name": "Temperature setpoint"
+      },
+      "travel_time_down": {
+        "name": "Travel time down"
+      },
+      "travel_time_up": {
+        "name": "Travel time up"
       },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"
@@ -346,6 +354,9 @@
           "normal": "[%key:common::state::normal%]"
         }
       },
+      "selected_chime": {
+        "name": "Chime sound"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {
@@ -361,6 +372,20 @@
           "on": "[%key:common::state::on%]",
           "previous": "Previous state",
           "toggle": "[%key:common::action::toggle%]"
+        }
+      },
+      "switch_connection_mode": {
+        "name": "Connection mode",
+        "state": {
+          "directly_connected": "Directly connected",
+          "matter_only": "Matter only"
+        }
+      },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "button": "Button",
+          "switch": "Switch"
         }
       },
       "temperature_display_mode": {
@@ -615,6 +640,25 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "thread_channel": {
+        "name": "Thread channel"
+      },
+      "thread_network_name": {
+        "name": "Thread network name"
+      },
+      "thread_routing_role": {
+        "name": "Thread routing role",
+        "state": {
+          "end_device": "End device",
+          "leader": "Leader",
+          "reed": "Router eligible end device",
+          "router": "Router",
+          "sleepy_end_device": "Sleepy end device",
+          "unassigned": "Unassigned",
+          "unknown": "Unknown",
+          "unspecified": "Unspecified"
+        }
+      },
       "tvoc_level": {
         "name": "TVOC level",
         "state": {
@@ -633,6 +677,9 @@
       "voltage": {
         "name": "Voltage"
       },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
       "window_covering_target_position": {
         "name": "Target opening position"
       }
@@ -645,6 +692,9 @@
     "switch": {
       "child_lock": {
         "name": "Child lock"
+      },
+      "display": {
+        "name": "Display"
       },
       "evse_charging_switch": {
         "name": "Enable charging"
@@ -679,6 +729,15 @@
     }
   },
   "exceptions": {
+    "addon_not_installed": {
+      "message": "The Matter Server app is not installed yet."
+    },
+    "addon_not_ready": {
+      "message": "The Matter Server app is not ready yet."
+    },
+    "addon_not_running": {
+      "message": "The Matter Server app is not running yet."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },
@@ -690,6 +749,10 @@
     }
   },
   "issues": {
+    "ipv6_disabled": {
+      "description": "Matter relies on IPv6 to communicate with some devices, but IPv6 is disabled on all of your connected network interfaces. Locally connected Wi-Fi and Ethernet devices may still work, but features such as using an external Thread border router need IPv6 enabled. Select \"Learn more\" to open the network settings.",
+      "title": "IPv6 is disabled but required by Matter"
+    },
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
       "title": "Older version of Matter Server needed"

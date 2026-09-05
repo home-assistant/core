@@ -113,7 +113,7 @@
             "partition_number": "Partition number"
           },
           "data_description": {
-            "arm_home_mode": "The mode in which the partition is armed when 'arm home' is used. For more information on what the differences are between them, please refer to Satel Integra manual.",
+            "arm_home_mode": "The arming mode to use for 'arm home':\nMode 1 fully arms and bypasses zones that have the 'Bypassed if no exit' option enabled.\nMode 2 disarms interior zones; exterior zones trigger silent alarms and other alarm zones trigger loud alarms.\nMode 3 is like mode 2, but delayed zones are instant.",
             "name": "The name to give to the alarm panel",
             "partition_number": "Enter partition number to configure"
           },
@@ -203,6 +203,9 @@
     "connection_initialization_failed": {
       "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
     },
+    "missing_alarm_access_code": {
+      "message": "Cannot disarm the alarm panel because no user code was provided."
+    },
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
     },
@@ -223,36 +226,11 @@
     }
   },
   "selector": {
-    "binary_sensor_device_class": {
+    "arm_home_mode": {
       "options": {
-        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
-        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
-        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
-        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
-        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
-        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
-        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
-        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
-        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
-        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
-        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
-        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
-        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
-        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
-        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
-        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
-        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
-        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
-        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
-        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
-        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
-        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
-        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
-        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
-        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
-        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
-        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
-        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+        "1": "1 - Full arming + bypasses",
+        "2": "2 - No interior zones",
+        "3": "3 - No interior zones or entry delay"
       }
     }
   }

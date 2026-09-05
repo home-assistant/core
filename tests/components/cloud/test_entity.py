@@ -31,7 +31,7 @@ def cloud_entity(hass: HomeAssistant) -> BaseCloudLLMEntity:
     cloud.llm = MagicMock()
     cloud.is_logged_in = True
     cloud.valid_subscription = True
-    entry = MockConfigEntry(domain="cloud")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entity = BaseCloudLLMEntity(cloud, entry)
     entity.entity_id = "ai_task.cloud_ai_task"

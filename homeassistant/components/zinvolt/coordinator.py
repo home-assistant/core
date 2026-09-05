@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltError
@@ -39,6 +40,7 @@ class BatteryData:
 class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
     """Class for Zinvolt devices."""
 
+    config_entry: ZinvoltConfigEntry
     battery_units: dict[str, Unit]
 
     def __init__(
@@ -59,6 +61,7 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
         self.battery = battery
         self.client = client
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Zinvolt integration."""
         try:
@@ -71,6 +74,7 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
             unit.serial_number: unit for unit in units if unit.type is UnitType.BATTERY
         }
 
+    @override
     async def _async_update_data(self) -> ZinvoltData:
         """Update data from Zinvolt."""
         try:

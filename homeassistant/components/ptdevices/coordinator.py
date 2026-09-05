@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 import aioptdevices
 from aioptdevices.interface import Interface, PTDevicesResponseData
@@ -54,6 +54,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
 
         self.interface = ptdevices_interface
 
+    @override
     async def _async_update_data(self) -> PTDevicesResponseData:
         try:
             data = await self.interface.get_data()
@@ -81,8 +82,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
         ):
             if not set(device.identifiers) & identifiers:
                 _LOGGER.debug("Removing stale device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
         return data["body"]

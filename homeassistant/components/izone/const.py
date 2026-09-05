@@ -1,14 +1,12 @@
 """Constants used by the izone component."""
 
-IZONE = "izone"
+from datetime import timedelta
 
-DATA_DISCOVERY_SERVICE = "izone_discovery"
+DOMAIN = "izone"
+
 DATA_CONFIG = "izone_config"
 
-DISPATCH_CONTROLLER_DISCOVERED = "izone_controller_discovered"
-DISPATCH_CONTROLLER_DISCONNECTED = "izone_controller_disconnected"
-DISPATCH_CONTROLLER_RECONNECTED = "izone_controller_reconnected"
-DISPATCH_CONTROLLER_UPDATE = "izone_controller_update"
-DISPATCH_ZONE_UPDATE = "izone_zone_update"
-
-TIMEOUT_DISCOVERY = 20
+TIMEOUT_DISCOVERY = 5
+DISCOVERY_IDLE_SECONDS = 4 * TIMEOUT_DISCOVERY
+# Match legacy pizone DISCOVERY_SLEEP (~5 min) for new-device hunt cadence.
+DISCOVERY_SCAN_INTERVAL = timedelta(minutes=5)

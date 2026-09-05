@@ -4,7 +4,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from incomfortclient import InvalidGateway, InvalidHeaterList
+from incomfortclient import (
+    Gateway as InComfortGateway,
+    InvalidGateway,
+    InvalidHeaterList,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -17,6 +21,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -28,7 +33,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
-from .coordinator import InComfortConfigEntry, async_connect_gateway
+from .coordinator import InComfortConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
@@ -81,7 +86,13 @@ async def async_try_connect_gateway(
 ) -> dict[str, str] | None:
     """Try to connect to the Lan2RF gateway."""
     try:
-        await async_connect_gateway(hass, config)
+        client = InComfortGateway(
+            hostname=config[CONF_HOST],
+            username=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD),
+            session=async_get_clientsession(hass),
+        )
+        await client.heaters()
     except InvalidGateway:
         return {"base": "auth_error"}
     except InvalidHeaterList:

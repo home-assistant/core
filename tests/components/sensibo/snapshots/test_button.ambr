@@ -39,7 +39,7 @@
 # name: test_button[load_platforms0][button.bedroom_bedroom_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Reset filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Reset filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.bedroom_bedroom_reset_filter',
@@ -89,7 +89,7 @@
 # name: test_button[load_platforms0][button.hallway_hallway_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Reset filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Reset filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.hallway_hallway_reset_filter',
@@ -139,7 +139,7 @@
 # name: test_button[load_platforms0][button.kitchen_kitchen_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Reset filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Reset filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.kitchen_kitchen_reset_filter',

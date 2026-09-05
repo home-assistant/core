@@ -3,9 +3,11 @@
 import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+import math
+from typing import TYPE_CHECKING, Any, override
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 from requests import RequestException
 
 from homeassistant.components.sensor import SensorStateClass
@@ -27,7 +29,6 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_NO_PRIVILEGE,
     V1_DEVICE_TYPES,
 )
 from .models import GrowattRuntimeData
@@ -38,8 +39,44 @@ if TYPE_CHECKING:
 type GrowattConfigEntry = ConfigEntry[GrowattRuntimeData]
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
+_MAX_POWER_READING_AGE = datetime.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _latest_power_value(
+    power_overview: dict[str, Any], now: datetime.datetime
+) -> float | None:
+    """Return the newest recent power value from a plant power overview."""
+    latest_time: datetime.datetime | None = None
+    latest_power: float | None = None
+
+    for reading in power_overview.get("powers", []):
+        power = reading.get("power")
+        timestamp = reading.get("time")
+        if power is None or not isinstance(timestamp, str):
+            continue
+        try:
+            reading_time = dt_util.parse_datetime(timestamp)
+        except ValueError:
+            continue
+        if reading_time is None:
+            continue
+        if reading_time.tzinfo is None:
+            reading_time = reading_time.replace(tzinfo=dt_util.get_default_time_zone())
+        if reading_time > now or now - reading_time > _MAX_POWER_READING_AGE:
+            continue
+        try:
+            power_value = float(power)
+        except TypeError, ValueError:
+            continue
+        if not math.isfinite(power_value):
+            continue
+        if latest_time is None or reading_time > latest_time:
+            latest_time = reading_time
+            latest_power = power_value
+
+    return latest_power
 
 
 class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -72,6 +109,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
+        # api is an OpenApiV1 (v1) or its base class GrowattApi (classic), chosen
+        # by api_version. The two expose different method sets, and mypy cannot
+        # narrow self.api by api_version at each call site, so it is typed as Any.
+        self.api: Any
         if self.api_version == "v1":
             self.username = None
             self.password = None
@@ -113,9 +154,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     if device.get("type") in V1_DEVICE_TYPES
                 ]
             except growattServer.GrowattV1ApiError as err:
-                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
                 _LOGGER.debug("Failed to fetch V1 device list during scan: %s", err)
                 self.device_list = None
@@ -157,9 +200,14 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 msg = login_response.get("msg", "Unknown error")
                 if msg == LOGIN_INVALID_AUTH_CODE:
                     raise ConfigEntryAuthFailed(
-                        "Username, password, or URL may be incorrect"
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_credentials",
                     )
-                raise UpdateFailed(f"Growatt login failed: {msg}")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="login_failed",
+                    translation_placeholders={"message": msg},
+                )
 
         if self.device_type == "total":
             if self.api_version == "v1":
@@ -179,17 +227,42 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 try:
                     total_info = self.api.plant_energy_overview(self.plant_id)
                 except growattServer.GrowattV1ApiError as err:
-                    if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                         raise ConfigEntryAuthFailed(
-                            "Authentication failed for Growatt API:"
-                            f" {err.error_msg or str(err)}"
+                            translation_domain=DOMAIN,
+                            translation_key="auth_failed",
+                            translation_placeholders={
+                                "error": err.error_msg or str(err)
+                            },
                         ) from err
                     raise UpdateFailed(
-                        f"Error fetching plant energy overview: {err}"
+                        translation_domain=DOMAIN,
+                        translation_key="fetch_data_failed",
+                        translation_placeholders={"error": str(err)},
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
-                total_info["invTodayPpv"] = total_info["current_power"]
+                # The plant power overview is authoritative for instantaneous power.
+                # Plant energy overview's current_power is only a fallback on error;
+                # it can report zero while production continues.
+                current_power = total_info["current_power"] * 1000
+                now = dt_util.now()
+                try:
+                    power_overview = self.api.plant_power_overview(
+                        self.plant_id, now.date()
+                    )
+                except (growattServer.GrowattV1ApiError, RequestException) as err:
+                    _LOGGER.debug(
+                        "Failed to fetch plant power overview for %s: %s",
+                        self.plant_id,
+                        err,
+                    )
+                else:
+                    if (
+                        latest_power := _latest_power_value(power_overview, now)
+                    ) is not None:
+                        current_power = latest_power
+                total_info["invTodayPpv"] = current_power
             else:
                 # Classic API: use plant_info as before.
                 # Copy the response to avoid mutating the dict returned by the library
@@ -212,12 +285,17 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
-                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        "Authentication failed for Growatt API:"
-                        f" {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
-                raise UpdateFailed(f"Error fetching min device data: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_data_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             min_info = {**min_details, **min_settings, **min_energy}
             self.data = min_info
@@ -240,12 +318,17 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 sph_detail = self.api.sph_detail(self.device_id)
                 sph_energy = self.api.sph_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
-                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        "Authentication failed for Growatt API:"
-                        f" {err.error_msg or str(err)}"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                        translation_placeholders={"error": err.error_msg or str(err)},
                     ) from err
-                raise UpdateFailed(f"Error fetching SPH device data: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_data_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             combined = {**sph_detail, **sph_energy}
 
@@ -308,12 +391,17 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return self.data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Asynchronously update data via library."""
         try:
             return await self.hass.async_add_executor_job(self._sync_update_data)
         except json.decoder.JSONDecodeError as err:
-            raise UpdateFailed(f"Error fetching data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="fetch_data_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     def request_device_list_scan(self) -> None:
         """Request that the next _sync_update_data also fetches the device list.

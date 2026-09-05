@@ -1,27 +1,39 @@
 """Fixtures for Duco tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from duco_connectivity import (
+    ActionItem,
+    ActionValueType,
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
+    BypassSupplyTemperatureTarget,
+    ConfigNode,
+    ConfigNodeOverview,
+    ConfigValueString,
     DiagComponent,
-    DiagStatus,
+    KnownActionName,
     LanInfo,
     Node,
+    NodeActionItemList,
     NodeGeneralInfo,
+    NodeListActionItemList,
     NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
+    VentilationTemperatureInfo,
 )
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry, load_json_array_fixture
 
@@ -97,6 +109,19 @@ def load_nodes_fixture(filename: str) -> list[Node]:
     return [_node_from_dict(node) for node in load_json_array_fixture(filename, DOMAIN)]
 
 
+def node_configs_from_nodes(nodes: list[Node]) -> ConfigNodeOverview:
+    """Build node config names from node fixtures."""
+    return ConfigNodeOverview(
+        nodes=[
+            ConfigNode(
+                node_id=node.node_id,
+                name=ConfigValueString(node.general.name),
+            )
+            for node in nodes
+        ]
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -157,114 +182,73 @@ def mock_lan_info() -> LanInfo:
 
 
 @pytest.fixture
+def mock_ventilation_temperature_info() -> VentilationTemperatureInfo:
+    """Return mock ventilation temperatures in Celsius."""
+    return VentilationTemperatureInfo(
+        temp_oda=5.5,
+        temp_sup=18.2,
+        temp_eta=21.4,
+        temp_eha=8.1,
+    )
+
+
+@pytest.fixture
+def mock_bypass_supply_temperature_targets() -> dict[
+    int, BypassSupplyTemperatureTarget
+]:
+    """Return mock bypass supply temperature targets in Celsius."""
+    return {
+        1: BypassSupplyTemperatureTarget(
+            zone_id=1,
+            value=20.0,
+            minimum=15.0,
+            increment=0.1,
+            maximum=25.0,
+        ),
+        2: BypassSupplyTemperatureTarget(
+            zone_id=2,
+            value=21.0,
+            minimum=15.0,
+            increment=0.1,
+            maximum=25.0,
+        ),
+    }
+
+
+@pytest.fixture
 def mock_nodes() -> list[Node]:
     """Return a list of nodes covering all supported types."""
-    return [
-        Node(
-            node_id=1,
-            general=NodeGeneralInfo(
-                node_type="BOX",
-                sub_type=1,
-                network_type="VIRT",
-                parent=0,
-                asso=0,
-                name="Living",
-                identify=0,
+    return load_nodes_fixture("nodes.json")
+
+
+@pytest.fixture
+def mock_node_actions() -> NodeListActionItemList:
+    """Return node actions for supported ventilation control nodes."""
+    return NodeListActionItemList(
+        nodes=[
+            NodeActionItemList(
+                node_id=1,
+                actions=[
+                    ActionItem(
+                        action=KnownActionName.SET_VENTILATION_STATE,
+                        val_type=ActionValueType.ENUM,
+                        enum_values=[
+                            "AUTO",
+                            "CNT1",
+                            "CNT2",
+                            "CNT3",
+                            "MAN1",
+                            "MAN2",
+                            "MAN3",
+                        ],
+                    )
+                ],
             ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="AUTO",
-                flow_lvl_tgt=0,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=None,
-                iaq_rh=None,
-                temp=27.9,
-            ),
-        ),
-        Node(
-            node_id=2,
-            general=NodeGeneralInfo(
-                node_type="UCCO2",
-                sub_type=0,
-                network_type="RF",
-                parent=1,
-                asso=1,
-                name="Office CO2",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=405,
-                iaq_co2=80,
-                rh=None,
-                iaq_rh=None,
-                temp=19.8,
-            ),
-        ),
-        Node(
-            node_id=113,
-            general=NodeGeneralInfo(
-                node_type="BSRH",
-                sub_type=0,
-                network_type="RF",
-                parent=1,
-                asso=1,
-                name="Bathroom RH",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=42.0,
-                iaq_rh=85,
-                temp=27.9,
-            ),
-        ),
-        Node(
-            node_id=50,
-            general=NodeGeneralInfo(
-                node_type="UCRH",
-                sub_type=0,
-                network_type="RF",
-                parent=1,
-                asso=1,
-                name="Kitchen RH",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=61.0,
-                iaq_rh=90,
-                temp=22.5,
-            ),
-        ),
-    ]
+            NodeActionItemList(node_id=2, actions=[]),
+            NodeActionItemList(node_id=50, actions=[]),
+            NodeActionItemList(node_id=113, actions=[]),
+        ]
+    )
 
 
 @pytest.fixture
@@ -285,10 +269,25 @@ def dynamic_sensor_nodes() -> dict[int, Node]:
 def mock_duco_client(
     mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_node_actions: NodeListActionItemList,
+    mock_ventilation_temperature_info: VentilationTemperatureInfo,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
+
+    def set_bypass_supply_temperature_target(
+        zone_id: int,
+        temperature: float,
+        *,
+        target: BypassSupplyTemperatureTarget,
+    ) -> None:
+        target.validate_value(temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = replace(
+            target, value=temperature
+        )
+
     with (
         patch(
             "homeassistant.components.duco.DucoClient",
@@ -304,8 +303,20 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
+        client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_time_filter_remaining.return_value = 180
+        client.async_get_ventilation_temperature_info.return_value = (
+            mock_ventilation_temperature_info
+        )
+        client.async_get_bypass_supply_temperature_targets.side_effect = (
+            mock_bypass_supply_temperature_targets.copy
+        )
+        client.async_set_bypass_supply_temperature_target.side_effect = (
+            set_bypass_supply_temperature_target
+        )
         client.async_get_diagnostics.return_value = [
-            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+            DiagComponent(component="Ventilation", status="Ok")
         ]
         client.async_get_write_requests_remaining.return_value = 100
         yield client
@@ -327,7 +338,4 @@ async def init_integration(
     mock_duco_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up the Duco integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_integration(hass, mock_config_entry)

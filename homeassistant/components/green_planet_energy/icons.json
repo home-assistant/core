@@ -1,0 +1,10 @@
+{
+  "services": {
+    "get_cheapest_duration": {
+      "service": "mdi:clock-check"
+    },
+    "get_prices": {
+      "service": "mdi:lightning-bolt-circle"
+    }
+  }
+}

@@ -119,9 +119,15 @@ async def test_form_duplicate_account(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={"username": "user123", "password": "password123"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"username": "user123", "password": "password123"},
         )
 
     assert result["type"] is FlowResultType.ABORT

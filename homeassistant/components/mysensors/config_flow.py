@@ -1,7 +1,7 @@
 """Config flow for MySensors."""
 
 import os
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import (
     AwesomeVersion,
@@ -124,6 +124,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up config flow."""
         self._gw_type: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

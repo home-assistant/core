@@ -6,12 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 from tesla_powerwall import (
     AccessDeniedError,
+    ApiError,
     MissingAttributeError,
     PowerwallUnreachableError,
 )
 
 from homeassistant import config_entries
 from homeassistant.components.powerwall.const import DOMAIN
+from homeassistant.components.powerwall.helpers import is_api_404
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -21,6 +23,7 @@ from homeassistant.util import dt as dt_util
 
 from .mocks import (
     MOCK_GATEWAY_DIN,
+    _mock_powerwall_restricted,
     _mock_powerwall_side_effect,
     _mock_powerwall_site_name,
     _mock_powerwall_with_fixtures,
@@ -107,6 +110,63 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+async def test_form_pw3_restricted(hass: HomeAssistant) -> None:
+    """Test config flow succeeds for a PW3-style restricted gateway."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == f"Powerwall {VALID_CONFIG[CONF_IP_ADDRESS]}"
+    assert result2["data"] == VALID_CONFIG
+    # Restricted gateways expose no stable hardware id, so we set no unique id
+    # rather than deriving one from the credential.
+    assert result2["result"].unique_id is None
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_non_404_api_error_propagates(hass: HomeAssistant) -> None:
+    """Non-404 ApiError from get_gateway_din must surface as unknown."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "MySite")
+    mock_powerwall.get_gateway_din.side_effect = ApiError(
+        "GET request to /api/gateway returned error 500"
+    )
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
@@ -261,6 +321,99 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_dhcp_discovery_restricted_clears_unique_id(hass: HomeAssistant) -> None:
+    """Test DHCP discovery of a restricted PW3 stores no unique id.
+
+    A PW3 advertises a ``TeslaPW_*`` hostname that is not the DIN, so the
+    default password fails and we fall back to the user form. Once the user
+    provides a password the gateway is detected as restricted (no DIN over
+    HTTP), and the entry must be stored without a unique id rather than pinning
+    to the discovery hostname.
+    """
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall.login",
+        side_effect=AccessDeniedError("xyz"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="aabbcceeddff",
+                hostname="TeslaPW_BLGZUP",
+            ),
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == VALID_CONFIG
+    assert result2["result"].unique_id is None
+
+
+async def test_dhcp_discovery_auto_configure_restricted(hass: HomeAssistant) -> None:
+    """Test DHCP auto-configure of a restricted gateway stores no unique id.
+
+    When the default password is accepted but the gateway is restricted (no DIN
+    over HTTP), the discovery hostname must not be persisted as the unique id.
+    """
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="aabbcceeddff",
+                hostname="00GGX",
+            ),
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
+    assert result2["result"].unique_id is None
+
+
 async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
     """Test we can process the discovery from dhcp and auto configure."""
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
@@ -324,6 +477,34 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_dhcp_discovery_aborts_with_restricted_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery aborts when a restricted gateway (no unique id) is set up.
+
+    The restricted gateway is stored without a unique id, so we cannot tell
+    whether a discovery belongs to it. We abort rather than risk a duplicate.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="aabbcceeddff",
+            hostname=MOCK_GATEWAY_DIN.lower(),
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_reauth(hass: HomeAssistant) -> None:
@@ -640,3 +821,51 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
+
+
+def test_is_api_404() -> None:
+    """The 404 helper matches the upstream message format and nothing else."""
+    not_found = ApiError("The url https://1.2.3.4/api/powerwalls returned error 404")
+    server_error = ApiError(
+        "API returned status code '500: Internal Server Error' with body: boom"
+    )
+    assert is_api_404(not_found) is True
+    assert is_api_404(server_error) is False
+
+
+async def test_dhcp_discovery_does_not_overwrite_real_din(
+    hass: HomeAssistant,
+) -> None:
+    """DHCP must not stomp an existing real-DIN unique_id with a different DIN."""
+    existing_din = "111-0----2-000000000AAA"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=existing_din,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.2.3.4",
+                macaddress="aabbcceeddff",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == existing_din

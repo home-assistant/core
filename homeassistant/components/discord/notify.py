@@ -3,7 +3,7 @@
 from io import BytesIO
 import logging
 import os.path
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 import nextcord
@@ -113,6 +113,7 @@ class DiscordNotificationService(BaseNotificationService):
 
             return byte_chunks
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False

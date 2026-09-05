@@ -1,7 +1,7 @@
 """Data update coordinator for the Jellyfin integration."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from jellyfin_apiclient_python import JellyfinClient
 
@@ -46,6 +46,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
         self.remote_session_ids: set[str] = set()
         self.device_ids: set[str] = set()
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from Jellyfin."""
         sessions = await self.hass.async_add_executor_job(

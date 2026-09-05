@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -14,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
@@ -111,6 +113,15 @@ SENSORS = [
         value_fn=lambda status: status.air_inlet_temperature,
     ),
     WeHeatSensorEntityDescription(
+        translation_key="air_outlet_temperature",
+        key="air_outlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.air_outlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="thermostat_water_setpoint",
         key="thermostat_water_setpoint",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -202,6 +213,30 @@ DHW_SENSORS = [
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         value_fn=lambda status: status.dhw_flow_volume,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_target_temperature",
+        key="dhw_target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        # A target of zero is how the heat pump says DHW control is off.
+        value_fn=lambda status: status.dhw_target_temperature or None,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_control_method",
+        key="dhw_control_method",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=[method.name.lower() for method in HeatPump.DhwControlMethod],
+        value_fn=(
+            lambda status: (
+                status.dhw_control_method.name.lower()
+                if status.dhw_control_method is not None
+                else None
+            )
+        ),
+    ),
 ]
 
 ENERGY_SENSORS = [
@@ -212,6 +247,14 @@ ENERGY_SENSORS = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_total,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_indoor_unit",
+        key="electricity_used_indoor_unit",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_indoor_unit,
     ),
     WeHeatSensorEntityDescription(
         translation_key="energy_output",
@@ -325,8 +368,6 @@ async def async_setup_entry(
                     entity_description,
                 )
                 for entity_description in DHW_SENSORS
-                if entity_description.value_fn(weheatdata.data_coordinator.data)
-                is not None
             )
             entities.extend(
                 WeheatHeatPumpSensor(
@@ -335,8 +376,6 @@ async def async_setup_entry(
                     entity_description,
                 )
                 for entity_description in DHW_ENERGY_SENSORS
-                if entity_description.value_fn(weheatdata.energy_coordinator.data)
-                is not None
             )
         entities.extend(
             WeheatHeatPumpSensor(
@@ -372,6 +411,7 @@ class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
         self._attr_unique_id = f"{heat_pump_info.heatpump_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

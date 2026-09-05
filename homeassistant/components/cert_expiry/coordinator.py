@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -46,6 +47,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:

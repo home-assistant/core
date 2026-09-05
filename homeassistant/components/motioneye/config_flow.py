@@ -1,7 +1,7 @@
 """Config flow for motionEye integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -47,6 +47,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _hassio_discovery: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,7 +71,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                         **url_schema,
                         vol.Optional(
                             CONF_ADMIN_USERNAME,
-                            default=user_input.get(CONF_ADMIN_USERNAME),
+                            default=user_input.get(CONF_ADMIN_USERNAME, ""),
                         ): str,
                         vol.Optional(
                             CONF_ADMIN_PASSWORD,
@@ -78,7 +79,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                         ): str,
                         vol.Optional(
                             CONF_SURVEILLANCE_USERNAME,
-                            default=user_input.get(CONF_SURVEILLANCE_USERNAME),
+                            default=user_input.get(CONF_SURVEILLANCE_USERNAME, ""),
                         ): str,
                         vol.Optional(
                             CONF_SURVEILLANCE_PASSWORD,
@@ -156,6 +157,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a reauthentication flow."""
         return await self.async_step_user()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -179,6 +181,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: MotionEyeConfigEntry,
     ) -> MotionEyeOptionsFlow:

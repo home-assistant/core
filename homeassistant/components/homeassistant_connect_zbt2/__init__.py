@@ -108,10 +108,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
             serial_number = config_entry.data[SERIAL_NUMBER]
@@ -135,7 +131,24 @@ async def async_migrate_entry(
             )
 
             if canonical.entry_id != config_entry.entry_id:
-                # The canonical entry's migration will remove this duplicate.
+                if canonical.minor_version < 2:
+                    # The canonical entry has not been migrated yet and its
+                    # migration will remove this duplicate.
+                    return False
+
+                # The canonical entry is already fully migrated and will not run
+                # a migration that removes this duplicate, so remove it here. The
+                # entry can't remove itself while its setup lock is held, so
+                # schedule the removal instead.
+                _LOGGER.debug(
+                    "Removing duplicate config entry %s for serial %s in favor of %s",
+                    config_entry.entry_id,
+                    serial_number,
+                    canonical.entry_id,
+                )
+                hass.async_create_task(
+                    hass.config_entries.async_remove(config_entry.entry_id)
+                )
                 return False
 
             for duplicate in duplicates:

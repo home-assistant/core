@@ -1,7 +1,7 @@
 """Support for Homekit switches."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import (
     Characteristic,
@@ -82,24 +82,29 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
 class HomeKitSwitch(HomeKitEntity, SwitchEntity):
     """Representation of a Homekit switch."""
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.ON, CharacteristicsTypes.OUTLET_IN_USE]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ON)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
         await self.async_put_characteristics({CharacteristicsTypes.ON: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified switch off."""
         await self.async_put_characteristics({CharacteristicsTypes.ON: False})
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         outlet_in_use = self.service.value(CharacteristicsTypes.OUTLET_IN_USE)
@@ -111,19 +116,23 @@ class HomeKitSwitch(HomeKitEntity, SwitchEntity):
 class HomeKitFaucet(HomeKitEntity, SwitchEntity):
     """Representation of a Homekit faucet."""
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.ACTIVE]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified faucet on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified faucet off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
@@ -134,6 +143,7 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
 
     _attr_translation_key = "valve"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -143,20 +153,24 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
             CharacteristicsTypes.REMAINING_DURATION,
         ]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified valve on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         attrs = {}
@@ -191,27 +205,32 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         super().__init__(conn, info, char)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [self._char.type]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._char.value == self.entity_description.true_value
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
         await self.async_put_characteristics(
             {self._char.type: self.entity_description.true_value}
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified switch off."""
         await self.async_put_characteristics(

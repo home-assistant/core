@@ -8,9 +8,15 @@ rules:
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: todo
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Entities use coordinator polling, no explicit event subscriptions.

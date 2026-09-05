@@ -1,7 +1,7 @@
 """Number platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from indevolt_api import IndevoltConfig
 
@@ -119,6 +119,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current value of the entity."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
@@ -127,6 +128,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
 
         return int(raw_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value for the entity."""
 
@@ -136,7 +138,9 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, int_value
+            )
 
         else:
             raise HomeAssistantError(

@@ -1,7 +1,7 @@
 """Config flow for LD2410BLE integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
 from ld2410_ble import BLEAK_EXCEPTIONS, LD2410BLE
@@ -30,6 +30,7 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -44,6 +45,7 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

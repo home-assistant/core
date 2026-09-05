@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -44,8 +44,8 @@
 # name: test_selects[select.fakespa_temperature_range-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Temperature range',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Temperature range',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),

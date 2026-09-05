@@ -27,6 +27,7 @@ from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
     BaseHaRemoteScanner,
     BaseHaScanner,
+    BluetoothReachabilityIntent,
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBluetoothConnector,
@@ -55,6 +56,7 @@ from . import passive_update_processor, websocket_api
 from .api import (
     _get_manager,
     async_address_present,
+    async_address_reachability_diagnostics,
     async_ble_device_from_address,
     async_clear_address_from_match_history,
     async_clear_advertisement_history,
@@ -92,7 +94,7 @@ from .const import (
 )
 from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import BluetoothCallback, BluetoothChange
+from .models import BluetoothCallback, BluetoothCallbackReplay, BluetoothChange
 from .storage import BluetoothStorage
 from .util import adapter_title, resolve_scanning_mode
 
@@ -107,13 +109,16 @@ __all__ = [
     "BaseHaScanner",
     "BluetoothCallback",
     "BluetoothCallbackMatcher",
+    "BluetoothCallbackReplay",
     "BluetoothChange",
+    "BluetoothReachabilityIntent",
     "BluetoothScannerDevice",
     "BluetoothScanningMode",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "HaBluetoothConnector",
     "async_address_present",
+    "async_address_reachability_diagnostics",
     "async_ble_device_from_address",
     "async_clear_address_from_match_history",
     "async_clear_advertisement_history",
@@ -340,9 +345,14 @@ async def async_update_device(
         hw_version=details.get(ADAPTER_HW_VERSION),
     )
     if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
+        # The bluetooth scanner may be child device; link to its parent.
+        if isinstance(via_device_entry, dr.ChildDeviceEntry):
+            via_device_id = via_device_entry.parent_device_id
         kwargs: dict[str, Any] = {"via_device_id": via_device_id}
-        if not device_entry.area_id and via_device_entry.area_id:
-            kwargs["area_id"] = via_device_entry.area_id
+        # The source device may be an area-inheriting child, so use its effective area.
+        via_area_id = dr.async_get_effective_area_id(hass, via_device_entry)
+        if not device_entry.area_id and via_area_id:
+            kwargs["area_id"] = via_area_id
         device_registry.async_update_device(device_entry.id, **kwargs)
 
 
@@ -397,7 +407,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if mode is BluetoothScanningMode.AUTO and not details.get(ADAPTER_PASSIVE_SCAN):
         mode = BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
-    scanner.async_setup()
+    entry.async_on_unload(scanner.async_setup())
     if entry.title == address:
         hass.config_entries.async_update_entry(
             entry, title=adapter_title(adapter, details)

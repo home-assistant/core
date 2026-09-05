@@ -3,19 +3,18 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from . import RenaultConfigEntry
-from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOGIN_TOKEN
+from .const import RenaultConfigurationKeys
 from .renault_vehicle import RenaultVehicleProxy
 
 TO_REDACT = {
-    CONF_KAMEREON_ACCOUNT_ID,
-    CONF_LOGIN_TOKEN,
-    CONF_PASSWORD,
-    CONF_USERNAME,
+    RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID,
+    RenaultConfigurationKeys.LOGIN_TOKEN,
+    RenaultConfigurationKeys.PASSWORD,
+    RenaultConfigurationKeys.USERNAME,
     "radioCode",
     "registrationNumber",
     "vin",
@@ -41,7 +40,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: RenaultConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: RenaultConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     vin = next(iter(device.identifiers))[1]

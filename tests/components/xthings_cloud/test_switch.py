@@ -40,35 +40,19 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "device_id", "device_type", "service", "method"),
+    ("entity_id", "device_id", "service", "method"),
     [
         (
             "switch.smart_plug_50",
             "dev_plug_001",
-            "plug",
             SERVICE_TURN_ON,
             "async_plug_on",
         ),
         (
             "switch.smart_plug_50",
             "dev_plug_001",
-            "plug",
             SERVICE_TURN_OFF,
             "async_plug_off",
-        ),
-        (
-            "switch.smart_plug_100",
-            "dev_plug_002",
-            "switch",
-            SERVICE_TURN_ON,
-            "async_switch_on",
-        ),
-        (
-            "switch.smart_plug_100",
-            "dev_plug_002",
-            "switch",
-            SERVICE_TURN_OFF,
-            "async_switch_off",
         ),
     ],
 )
@@ -78,13 +62,10 @@ async def test_turn_on_off(
     mock_api_client: AsyncMock,
     entity_id: str,
     device_id: str,
-    device_type: str,
     service: str,
     method: str,
 ) -> None:
     """Test turning on and off a device."""
-    get_device_by_id(mock_api_client, device_id)["type"] = device_type
-
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 

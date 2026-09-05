@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.climate.trigger import CONF_HVAC_MODE
+from homeassistant.components.climate.trigger import CONF_HVAC_MODE, TRIGGERS
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ENTITY_ID,
@@ -24,12 +24,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -45,28 +46,6 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "climate.hvac_mode_changed",
-        "climate.target_humidity_changed",
-        "climate.target_humidity_crossed_threshold",
-        "climate.target_temperature_changed",
-        "climate.target_temperature_crossed_threshold",
-        "climate.turned_off",
-        "climate.turned_on",
-        "climate.started_cooling",
-        "climate.started_drying",
-        "climate.started_heating",
-    ],
-)
-async def test_climate_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the climate triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _HUMIDITY_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_CROSSED_THRESHOLD = {
@@ -77,7 +56,20 @@ _TEMPERATURE_CROSSED_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "hvac_mode_changed": TargetSupport.STANDARD,
+    "started_cooling": TargetSupport.STANDARD,
+    "started_drying": TargetSupport.STANDARD,
+    "target_humidity_changed": TargetSupport.STANDARD,
+    "target_humidity_crossed_threshold": TargetSupport.STANDARD,
+    "target_temperature_changed": TargetSupport.STANDARD,
+    "target_temperature_crossed_threshold": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+    "started_heating": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -120,7 +112,11 @@ async def test_climate_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [
@@ -176,7 +172,6 @@ async def test_climate_trigger_validation(
         )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -234,7 +229,6 @@ async def test_climate_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -308,7 +302,6 @@ async def test_climate_state_attribute_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -366,7 +359,6 @@ async def test_climate_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -427,7 +419,6 @@ async def test_climate_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -485,7 +476,6 @@ async def test_climate_state_trigger_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),

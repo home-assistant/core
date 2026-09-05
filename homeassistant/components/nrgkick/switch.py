@@ -1,6 +1,6 @@
 """Switch platform for NRGkick."""
 
-from typing import Any
+from typing import Any, override
 
 from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE
 
@@ -42,16 +42,19 @@ class NRGkickChargingEnabledSwitch(NRGkickEntity, SwitchEntity):
         super().__init__(coordinator, CHARGING_ENABLED_KEY)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         data = self.coordinator.data
         assert data is not None
         return _is_charging_enabled(data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on (enable charging)."""
         await self._async_call_api(self.coordinator.api.set_charge_pause(False))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off (pause charging)."""
         await self._async_call_api(self.coordinator.api.set_charge_pause(True))

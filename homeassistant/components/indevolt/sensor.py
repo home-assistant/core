@@ -1,7 +1,7 @@
 """Sensor platform for Indevolt integration."""
 
 from dataclasses import dataclass, field
-from typing import Final, cast
+from typing import Final, cast, override
 
 from indevolt_api import (
     IndevoltBattery,
@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,6 +46,7 @@ class IndevoltSensorEntityDescription(SensorEntityDescription):
     state_mapping: dict[str | int, str] = field(default_factory=dict)
     generation: tuple[int, ...] = (1, 2)
     energy_mode: IndevoltEnergyMode | None = None
+    charge_discharge_state: int | None = None
 
 
 SENSORS: Final = (
@@ -86,7 +88,7 @@ SENSORS: Final = (
     ),
     # Real-time control state
     IndevoltSensorEntityDescription(
-        key=IndevoltConfig.READ_REALTIME_COMMAND,
+        key=IndevoltConfig.READ_REALTIME_STATE,
         translation_key="realtime_command",
         state_mapping={1000: "standby", 1001: "charging", 1002: "discharging"},
         device_class=SensorDeviceClass.ENUM,
@@ -241,6 +243,26 @@ SENSORS: Final = (
         translation_key="battery_charge_discharge_state",
         state_mapping={1000: "static", 1001: "charging", 1002: "discharging"},
         device_class=SensorDeviceClass.ENUM,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.REMAINING_CHARGING_TIME,
+        generation=(2,),
+        translation_key="remaining_charging_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        charge_discharge_state=1001,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.REMAINING_DISCHARGING_TIME,
+        generation=(2,),
+        translation_key="remaining_discharging_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        charge_discharge_state=1002,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.SOC,
@@ -938,16 +960,38 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
             self._attr_options = sorted(set(description.state_mapping.values()))
 
     @property
+    @override
     def available(self) -> bool:
-        """Return False when the device is not in the required energy mode."""
+        """Return False for sensors in a non-applicable state."""
+
+        # Check whether device is not in the required energy mode
         if self.entity_description.energy_mode is not None:
             energy_mode = self.coordinator.data.get(IndevoltConfig.READ_ENERGY_MODE)
             if energy_mode != self.entity_description.energy_mode:
                 return False
 
+        # Check whether the battery is not in the required charge/discharge state
+        if (
+            self.entity_description.charge_discharge_state is not None
+            and self.coordinator.data.get(IndevoltBattery.CHARGE_DISCHARGE_STATE)
+            != self.entity_description.charge_discharge_state
+        ):
+            return False
+
+        # Check whether inverter is reporting 0 degrees with heater not active (thus reporting to indicate "idle")
+        # Pending fix by Indevolt: https://discord.com/channels/1417471269942591571/1510277757689659522
+        if self.entity_description.key == IndevoltBattery.GEN_1_INVERTER_TEMPERATURE:
+            inverter_temp = self.coordinator.data.get(
+                IndevoltBattery.GEN_1_INVERTER_TEMPERATURE
+            )
+            heating_state = self.coordinator.data.get(IndevoltSystem.HEATING_STATE)
+            if inverter_temp == 0 and heating_state != 1000:
+                return False
+
         return super().available
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the current value of the sensor in its native unit."""
         raw_value = self.coordinator.data.get(self.entity_description.key)

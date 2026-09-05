@@ -44,78 +44,24 @@ offending class declaration is the recommended escape hatch.
 https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/has-entity-name
 """
 
-from collections.abc import Iterator
-
 import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.const import ENTITY_COMPONENTS, QualityScaleRule
+from pylint_home_assistant.helpers.ast_utils import extended_ancestors, safe_ancestors
+from pylint_home_assistant.helpers.entity_class import (
+    collect_same_module_ancestor_qnames,
+    inherits_from_entity,
+)
 from pylint_home_assistant.helpers.module_info import get_module_platform
 from pylint_home_assistant.helpers.quality_scale import quality_scale_rule_is_done
 
-_ENTITY_QNAME = "homeassistant.helpers.entity.Entity"
 _ENTITY_DESCRIPTION_QNAME = "homeassistant.helpers.entity.EntityDescription"
 _ATTR_NAME = "_attr_has_entity_name"
 _DESCRIPTION_ATTR = "entity_description"
 _DESCRIPTION_FIELD = "has_entity_name"
-
-
-def _safe_ancestors(class_node: nodes.ClassDef) -> list[nodes.ClassDef]:
-    """Return ``class_node.ancestors()`` swallowing inference errors."""
-    try:
-        return list(class_node.ancestors())
-    except astroid.exceptions.InferenceError:
-        return []
-
-
-def _subscript_base_classes(class_node: nodes.ClassDef) -> Iterator[nodes.ClassDef]:
-    """Yield ClassDefs from subscript bases (e.g. ``class B(Base[T])``).
-
-    astroid's ``ancestors()`` drops Subscript bases such as
-    ``VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier]`` (PEP-695 generic
-    syntax), so this method recovers them by inferring the subscript's
-    value.
-    """
-    for base in class_node.bases:
-        if not isinstance(base, nodes.Subscript):
-            continue
-        try:
-            inferred = list(base.value.infer())
-        except astroid.exceptions.InferenceError:
-            continue
-        for inferred_node in inferred:
-            if isinstance(inferred_node, nodes.ClassDef):
-                yield inferred_node
-
-
-def _extended_ancestors(class_node: nodes.ClassDef) -> Iterator[nodes.ClassDef]:
-    """Yield all ancestors including transitive subscript-based ones."""
-    seen: set[str] = set()
-    stack: list[nodes.ClassDef] = [class_node]
-
-    while stack:
-        current = stack.pop()
-        for ancestor in _safe_ancestors(current):
-            qname = ancestor.qname()
-            if qname in seen:
-                continue
-            seen.add(qname)
-            yield ancestor
-            stack.append(ancestor)
-        for subscript_base in _subscript_base_classes(current):
-            qname = subscript_base.qname()
-            if qname in seen:
-                continue
-            seen.add(qname)
-            yield subscript_base
-            stack.append(subscript_base)
-
-
-def _inherits_from_entity(class_node: nodes.ClassDef) -> bool:
-    """Return True if class inherits from homeassistant.helpers.entity.Entity."""
-    return any(a.qname() == _ENTITY_QNAME for a in _extended_ancestors(class_node))
 
 
 def _class_body_sets_attr_true(class_node: nodes.ClassDef, attr_name: str) -> bool:
@@ -201,7 +147,7 @@ def _is_entity_description(class_node: nodes.ClassDef) -> bool:
         return True
     return any(
         ancestor.qname() == _ENTITY_DESCRIPTION_QNAME
-        for ancestor in _safe_ancestors(class_node)
+        for ancestor in safe_ancestors(class_node)
     )
 
 
@@ -211,7 +157,7 @@ def _description_sets_has_entity_name(description_class: nodes.ClassDef) -> bool
         return True
     return any(
         _class_body_sets_attr_true(ancestor, _DESCRIPTION_FIELD)
-        for ancestor in _safe_ancestors(description_class)
+        for ancestor in safe_ancestors(description_class)
     )
 
 
@@ -268,31 +214,8 @@ def _has_entity_name_handled(class_node: nodes.ClassDef) -> bool:
     if _class_satisfies_rule(class_node):
         return True
     return any(
-        _class_satisfies_rule(ancestor) for ancestor in _extended_ancestors(class_node)
+        _class_satisfies_rule(ancestor) for ancestor in extended_ancestors(class_node)
     )
-
-
-def _collect_same_module_ancestor_qnames(module: nodes.Module) -> set[str]:
-    """Return qnames of every class used as an ancestor by any class in *module*.
-
-    Used to exempt mixin/abstract bases from the rule. Three limitations
-    fall out of the "same-module" scoping:
-
-    1. A class that is BOTH a same-module base AND directly instantiated
-       (e.g. both the base and a subclass passed to async_add_entities)
-       is exempted by this filter.
-    2. A base defined here but only subclassed from a *different* module
-       (e.g. base in sensor.py, subclasses in binary_sensor.py) is NOT
-       exempted and would be flagged as if it were a runtime entity.
-    3. An abstract-by-convention class with no same-module subclass at
-       all is flagged. This rule should be disable for those classes
-       after verifying the class is never instantiated.
-    """
-    qnames: set[str] = set()
-    for class_node in module.nodes_of_class(nodes.ClassDef):
-        for ancestor in _extended_ancestors(class_node):
-            qnames.add(ancestor.qname())
-    return qnames
 
 
 class HasEntityNameChecker(BaseChecker):
@@ -333,14 +256,14 @@ class HasEntityNameChecker(BaseChecker):
             and quality_scale_rule_is_done(node, QualityScaleRule.HAS_ENTITY_NAME)
         )
         self._subclassed_qnames = (
-            _collect_same_module_ancestor_qnames(node) if self._check_module else set()
+            collect_same_module_ancestor_qnames(node) if self._check_module else set()
         )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Flag entity classes missing _attr_has_entity_name."""
         if not self._check_module:
             return
-        if not _inherits_from_entity(node):
+        if not inherits_from_entity(node):
             return
         if _has_entity_name_handled(node):
             return

@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -172,10 +171,10 @@
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "communication_error": {
-      "message": "[%key:common::config_flow::error::cannot_connect%]"
+      "message": "Error communicating with the Homevolt battery: {error}"
     },
     "unknown_error": {
-      "message": "[%key:common::config_flow::error::unknown%]"
+      "message": "Unknown error from the Homevolt battery: {error}"
     }
   }
 }

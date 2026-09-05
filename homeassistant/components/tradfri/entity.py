@@ -3,13 +3,15 @@
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
+from pytradfri.const import ATTR_DEVICE_FIRMWARE_VERSION
 from pytradfri.device import Device
 from pytradfri.error import RequestError
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -60,8 +62,12 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
             manufacturer=info.manufacturer,
             model=info.model_number,
             name=self._device.name,
-            sw_version=info.firmware_version,
-            via_device=(DOMAIN, gateway_id),
+            sw_version=info.raw.get(ATTR_DEVICE_FIRMWARE_VERSION),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                device_coordinator.hass,
+                (DOMAIN, gateway_id),
+                config_entry_id=device_coordinator.config_entry.entry_id,
+            ),
         )
         self._attr_unique_id = f"{gateway_id}-{self._device_id}"
 
@@ -71,6 +77,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         """Refresh device data."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
@@ -80,6 +87,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return cast(bool, self._device.reachable) and super().available

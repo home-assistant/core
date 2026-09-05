@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'offline',
         'standby',
         'water_check',
@@ -17,6 +17,7 @@
         'defrosting',
         'self_test',
         'manual_control',
+        'updating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -52,9 +53,9 @@
 # name: test_all_entities[sensor.test_model-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Model',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'offline',
         'standby',
         'water_check',
@@ -65,6 +66,7 @@
         'defrosting',
         'self_test',
         'manual_control',
+        'updating',
       ]),
     }),
     'context': <ANY>,
@@ -75,6 +77,64 @@
     'state': 'heating',
   })
 # ---
+# name: test_all_entities[sensor.test_model_air_outlet_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_air_outlet_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air outlet temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Air outlet temperature',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_outlet_temperature',
+    'unique_id': '0000-1111-2222-3333_air_outlet_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_air_outlet_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Air outlet temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_air_outlet_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_central_heating_inlet_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -82,7 +142,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -120,10 +180,10 @@
 # name: test_all_entities[sensor.test_model_central_heating_inlet_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Central heating inlet temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Central heating inlet temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_central_heating_inlet_temperature',
@@ -140,7 +200,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -178,10 +238,10 @@
 # name: test_all_entities[sensor.test_model_central_heating_pump_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Test Model Central heating pump flow',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Central heating pump flow',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_central_heating_pump_flow',
@@ -198,7 +258,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -233,9 +293,9 @@
 # name: test_all_entities[sensor.test_model_compressor_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Compressor speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'rpm',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Compressor speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'rpm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_compressor_speed',
@@ -252,7 +312,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -287,9 +347,9 @@
 # name: test_all_entities[sensor.test_model_compressor_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Compressor usage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Compressor usage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_compressor_usage',
@@ -306,7 +366,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -344,8 +404,8 @@
 # name: test_all_entities[sensor.test_model_cop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model COP',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model COP',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_cop',
@@ -362,7 +422,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -400,10 +460,10 @@
 # name: test_all_entities[sensor.test_model_current_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Current room temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Current room temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_current_room_temperature',
@@ -420,7 +480,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -458,10 +518,10 @@
 # name: test_all_entities[sensor.test_model_dhw_bottom_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model DHW bottom temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model DHW bottom temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_dhw_bottom_temperature',
@@ -471,6 +531,72 @@
     'state': '88',
   })
 # ---
+# name: test_all_entities[sensor.test_model_dhw_control_method-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'fixed',
+        'schedule',
+        'weheat_intelligence',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_model_dhw_control_method',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW control method',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'DHW control method',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_control_method',
+    'unique_id': '0000-1111-2222-3333_dhw_control_method',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_dhw_control_method-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model DHW control method',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'fixed',
+        'schedule',
+        'weheat_intelligence',
+        'boost',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_dhw_control_method',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'fixed',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_dhw_pump_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -478,7 +604,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -516,10 +642,10 @@
 # name: test_all_entities[sensor.test_model_dhw_pump_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Test Model DHW pump flow',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model DHW pump flow',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_dhw_pump_flow',
@@ -529,6 +655,64 @@
     'state': '1.12',
   })
 # ---
+# name: test_all_entities[sensor.test_model_dhw_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_dhw_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW target temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'DHW target temperature',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_target_temperature',
+    'unique_id': '0000-1111-2222-3333_dhw_target_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_dhw_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model DHW target temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_dhw_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '55',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_dhw_top_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -536,7 +720,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -574,10 +758,10 @@
 # name: test_all_entities[sensor.test_model_dhw_top_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model DHW top temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model DHW top temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_dhw_top_temperature',
@@ -594,7 +778,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -632,10 +816,10 @@
 # name: test_all_entities[sensor.test_model_electricity_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Electricity used',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_electricity_used',
@@ -652,7 +836,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,10 +874,10 @@
 # name: test_all_entities[sensor.test_model_electricity_used_cooling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Electricity used cooling',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used cooling',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_electricity_used_cooling',
@@ -710,7 +894,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -748,10 +932,10 @@
 # name: test_all_entities[sensor.test_model_electricity_used_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Electricity used defrost',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used defrost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_electricity_used_defrost',
@@ -768,7 +952,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -806,10 +990,10 @@
 # name: test_all_entities[sensor.test_model_electricity_used_dhw-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Electricity used DHW',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used DHW',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_electricity_used_dhw',
@@ -826,7 +1010,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -864,10 +1048,10 @@
 # name: test_all_entities[sensor.test_model_electricity_used_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Electricity used heating',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used heating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_electricity_used_heating',
@@ -877,6 +1061,64 @@
     'state': '12345',
   })
 # ---
+# name: test_all_entities[sensor.test_model_electricity_used_indoor_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_electricity_used_indoor_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity used indoor unit',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity used indoor unit',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_used_indoor_unit',
+    'unique_id': '0000-1111-2222-3333_electricity_used_indoor_unit',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_electricity_used_indoor_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used indoor unit',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_electricity_used_indoor_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1042',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_electricity_used_standby-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -884,7 +1126,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -922,10 +1164,10 @@
 # name: test_all_entities[sensor.test_model_electricity_used_standby-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Electricity used standby',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Electricity used standby',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_electricity_used_standby',
@@ -942,7 +1184,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -980,10 +1222,10 @@
 # name: test_all_entities[sensor.test_model_energy_output_cooling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Energy output cooling',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Energy output cooling',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_energy_output_cooling',
@@ -1000,7 +1242,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1038,10 +1280,10 @@
 # name: test_all_entities[sensor.test_model_energy_output_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Energy output defrost',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Energy output defrost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_energy_output_defrost',
@@ -1058,7 +1300,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1096,10 +1338,10 @@
 # name: test_all_entities[sensor.test_model_energy_output_dhw-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Energy output DHW',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Energy output DHW',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_energy_output_dhw',
@@ -1116,7 +1358,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1154,10 +1396,10 @@
 # name: test_all_entities[sensor.test_model_energy_output_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Energy output heating',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Energy output heating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_energy_output_heating',
@@ -1174,7 +1416,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1212,10 +1454,10 @@
 # name: test_all_entities[sensor.test_model_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Model Input power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Input power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_input_power',
@@ -1232,7 +1474,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1270,10 +1512,10 @@
 # name: test_all_entities[sensor.test_model_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Model Output power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Output power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_output_power',
@@ -1290,7 +1532,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1328,10 +1570,10 @@
 # name: test_all_entities[sensor.test_model_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_outside_temperature',
@@ -1348,7 +1590,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1386,10 +1628,10 @@
 # name: test_all_entities[sensor.test_model_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Room temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Room temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_room_temperature_setpoint',
@@ -1406,7 +1648,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1444,10 +1686,10 @@
 # name: test_all_entities[sensor.test_model_total_energy_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Model Total energy output',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Total energy output',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_total_energy_output',
@@ -1464,7 +1706,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1502,10 +1744,10 @@
 # name: test_all_entities[sensor.test_model_water_inlet_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Water inlet temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Water inlet temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_water_inlet_temperature',
@@ -1522,7 +1764,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1560,10 +1802,10 @@
 # name: test_all_entities[sensor.test_model_water_outlet_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Water outlet temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Water outlet temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_water_outlet_temperature',
@@ -1580,7 +1822,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1618,10 +1860,10 @@
 # name: test_all_entities[sensor.test_model_water_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test Model Water target temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Water target temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_model_water_target_temperature',

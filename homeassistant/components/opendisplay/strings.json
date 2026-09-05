@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -75,13 +74,13 @@
       "message": "Authentication failed. Please update the encryption key."
     },
     "device_not_found": {
-      "message": "Could not find Bluetooth device with address `{address}`."
-    },
-    "invalid_device_id": {
-      "message": "Device `{device_id}` is not a valid OpenDisplay device."
+      "message": "Could not find Bluetooth device with address `{address}`. Reason: {reason}"
     },
     "media_download_error": {
       "message": "Failed to download media: {error}"
+    },
+    "setup_connection_error": {
+      "message": "Failed to connect to OpenDisplay device."
     },
     "upload_error": {
       "message": "Failed to upload image to the display."

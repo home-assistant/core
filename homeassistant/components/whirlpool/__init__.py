@@ -17,7 +17,15 @@ from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 

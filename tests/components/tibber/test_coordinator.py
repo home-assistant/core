@@ -1,7 +1,7 @@
 """Tests for the Tibber coordinators."""
 
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import create_tibber_home
+from .conftest import create_tibber_device, create_tibber_home
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -39,6 +39,28 @@ async def _async_setup_price_sensor(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, home.home_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
+    return entity_id
+
+
+async def _async_setup_data_api_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> str:
+    """Set up the Tibber config entry and return a Data API sensor entity id."""
+    device = create_tibber_device(state_of_charge=72.0)
+    data_api_client_mock.get_all_devices = AsyncMock(return_value={"device-id": device})
+    data_api_client_mock.update_devices = AsyncMock(return_value={"device-id": device})
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "external-id_storage.stateOfCharge"
+    )
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
     return entity_id
@@ -206,6 +228,59 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_message"),
+    [
+        pytest.param(
+            tibber.RetryableHttpExceptionError(500, "Internal Server Error"),
+            "Error communicating with API (Internal Server Error)",
+            id="retryable_http_error",
+        ),
+        pytest.param(
+            tibber.exceptions.HttpExceptionError(503, "Service unavailable"),
+            "Error communicating with API (Service unavailable)",
+            id="http_error",
+        ),
+        pytest.param(
+            tibber.exceptions.RateLimitExceededError(
+                429, "Too many requests", "RATE_LIMIT", 123
+            ),
+            "Rate limit exceeded, retry after 123 seconds",
+            id="rate_limit",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_data_api_refresh_handles_update_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    expected_message: str,
+) -> None:
+    """Test handled exceptions during Data API coordinator refresh."""
+    entity_id = await _async_setup_data_api_sensor(
+        hass, config_entry, data_api_client_mock, entity_registry
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    data_api_client_mock.update_devices.side_effect = exception
+
+    await _async_fire_coordinator_update(hass, freezer, timedelta(minutes=1))
+
+    assert f"Error fetching {DOMAIN} Data API data: {expected_message}" in caplog.text
+    assert "Unexpected error fetching" not in caplog.text
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_price_sensor_unavailable_when_cached_prices_run_out(

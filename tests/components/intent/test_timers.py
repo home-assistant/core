@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.intent import DOMAIN
 from homeassistant.components.intent.timers import (
     TIMER_DATA,
     MultipleTimersMatchedError,
@@ -37,7 +38,7 @@ async def init_components(hass: HomeAssistant) -> None:
     """Initialize required components for tests."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
@@ -212,6 +213,63 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
 
     result = await intent.async_handle(hass, "test", intent.INTENT_CANCEL_TIMER, {})
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
+
+
+async def test_start_timer_child_device_inherits_area(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test a timer on a child device inherits the parent device's area/floor."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    floor = floor_registry.async_create("first floor")
+    area = area_registry.async_create("kitchen")
+    area = area_registry.async_update(area.id, floor_id=floor.floor_id)
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "parent")},
+    )
+    device_registry.async_update_device(parent.id, area_id=area.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=parent.id,
+    )
+
+    started_event = asyncio.Event()
+    started_timer: TimerInfo | None = None
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        nonlocal started_timer
+        if event_type == TimerEventType.STARTED:
+            started_timer = timer
+            started_event.set()
+
+    async_register_timer_handler(hass, child.id, handle_timer)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"minutes": {"value": 5}},
+        device_id=child.id,
+    )
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await started_event.wait()
+
+    assert started_timer is not None
+    # The child device has no area of its own, so it inherits the parent's.
+    assert started_timer.area_id == area.id
+    assert started_timer.area_name == "kitchen"
+    assert started_timer.floor_id == floor.floor_id
 
 
 async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
@@ -1682,7 +1740,7 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
     assert not async_device_supports_timers(hass, device_id)
 
     # After intent initialization
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert not async_device_supports_timers(hass, device_id)
 
     @callback

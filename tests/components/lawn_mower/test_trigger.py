@@ -5,15 +5,17 @@ from typing import Any
 import pytest
 
 from homeassistant.components.lawn_mower import LawnMowerActivity
+from homeassistant.components.lawn_mower.trigger import TRIGGERS
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -27,28 +29,19 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "lawn_mower")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "lawn_mower.docked",
-        "lawn_mower.errored",
-        "lawn_mower.paused_mowing",
-        "lawn_mower.started_mowing",
-        "lawn_mower.started_returning",
-    ],
-)
-async def test_lawn_mower_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the lawn mower triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "returned_to_dock": TargetSupport.STANDARD,
+    "errored": TargetSupport.STANDARD,
+    "paused_mowing": TargetSupport.STANDARD,
+    "started_mowing": TargetSupport.STANDARD,
+    "started_returning": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("lawn_mower.docked", {}, True, True),
+        ("lawn_mower.returned_to_dock", {}, True, True),
         ("lawn_mower.errored", {}, True, True),
         ("lawn_mower.paused_mowing", {}, True, True),
         ("lawn_mower.started_mowing", {}, True, True),
@@ -72,7 +65,11 @@ async def test_lawn_mower_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),
@@ -81,7 +78,7 @@ async def test_lawn_mower_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="lawn_mower.docked",
+            trigger="lawn_mower.returned_to_dock",
             target_states=[LawnMowerActivity.DOCKED],
             other_states=other_states(LawnMowerActivity.DOCKED),
         ),
@@ -130,7 +127,6 @@ async def test_lawn_mower_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),
@@ -139,7 +135,7 @@ async def test_lawn_mower_state_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="lawn_mower.docked",
+            trigger="lawn_mower.returned_to_dock",
             target_states=[LawnMowerActivity.DOCKED],
             other_states=other_states(LawnMowerActivity.DOCKED),
         ),
@@ -188,7 +184,6 @@ async def test_lawn_mower_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),
@@ -197,7 +192,7 @@ async def test_lawn_mower_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="lawn_mower.docked",
+            trigger="lawn_mower.returned_to_dock",
             target_states=[LawnMowerActivity.DOCKED],
             other_states=other_states(LawnMowerActivity.DOCKED),
         ),

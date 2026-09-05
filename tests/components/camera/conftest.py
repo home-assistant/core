@@ -7,7 +7,7 @@ import pytest
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera.const import DOMAIN, StreamType
 from homeassistant.components.camera.webrtc import WebRTCAnswer, WebRTCSendMessage
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
@@ -47,7 +47,7 @@ def camera_only() -> Generator[None]:
 async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
-        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
+        hass, DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
 
@@ -260,7 +260,7 @@ async def register_test_provider(
     hass: HomeAssistant,
 ) -> AsyncGenerator[SomeTestProvider]:
     """Add WebRTC test provider."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     provider = SomeTestProvider()
     unsub = camera.async_register_webrtc_provider(hass, provider)

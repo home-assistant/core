@@ -1,5 +1,7 @@
 """Support for sensor entities."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -44,6 +46,7 @@ class HusqvarnaAutomowerBleSensor(HusqvarnaAutomowerBleDescriptorEntity, SensorE
     entity_description: SensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | int:
         """Return the previously fetched value."""
         return self.coordinator.data[self.entity_description.key]
