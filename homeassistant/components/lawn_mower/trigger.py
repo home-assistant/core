@@ -17,6 +17,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started_returning": make_entity_target_state_trigger(
         DOMAIN, LawnMowerActivity.RETURNING
     ),
+    "became_idle": make_entity_target_state_trigger(DOMAIN, LawnMowerActivity.IDLE),
 }
 
 
