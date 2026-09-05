@@ -299,3 +299,83 @@ async def test_migration_version_1_to_2(
     assert past_entry.unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert past_entry.title == MOCK_DATA[CONF_USERNAME]
     assert past_entry.version == 2
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("duplicate_volume", "expected_log_level", "expected_log_message"),
+    [
+        (100.0, "DEBUG", "Skipping duplicate date"),
+        (999.0, "WARNING", "different volume"),
+    ],
+)
+async def test_statistics_with_duplicate_dates(
+    hass: HomeAssistant,
+    suez_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    duplicate_volume: float,
+    expected_log_level: str,
+    expected_log_message: str,
+) -> None:
+    """Test that duplicate dates in data are handled correctly."""
+    start = datetime.fromisoformat("2024-12-04T02:00:00.0")
+    freezer.move_to(start)
+
+    origin = dt_util.start_of_local_day(start.date()) - timedelta(days=3)
+
+    result = [
+        TelemetryMeasure(
+            date=origin.date().strftime("%Y-%m-%d %H:%M:%S"),
+            volume=0.1,
+            index=0.1,
+        ),
+        TelemetryMeasure(
+            date=(origin + timedelta(days=1)).date().strftime("%Y-%m-%d %H:%M:%S"),
+            volume=0.15,
+            index=0.25,
+        ),
+        TelemetryMeasure(
+            date=(origin + timedelta(days=2)).date().strftime("%Y-%m-%d %H:%M:%S"),
+            volume=0.2,
+            index=0.45,
+        ),
+        TelemetryMeasure(
+            date=origin.date().strftime("%Y-%m-%d %H:%M:%S"),
+            volume=duplicate_volume / 1000,
+            index=0.1,
+        ),
+    ]
+    suez_client.fetch_all_daily_data.return_value = result
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    await hass.async_block_till_done(True)
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"{DOMAIN}:{mock_config_entry.data[CONF_COUNTER_ID]}_water_consumption_statistics"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        origin - timedelta(days=1),
+        None,
+        [statistic_id],
+        "hour",
+        None,
+        {"start", "state", "sum"},
+    )
+
+    assert statistic_id in stats
+    assert len(stats[statistic_id]) == 3
+
+    assert stats[statistic_id][0]["sum"] == 100.0
+    assert stats[statistic_id][1]["sum"] == 250.0
+    assert stats[statistic_id][2]["sum"] == 450.0
+
+    assert any(
+        expected_log_message in record.message
+        for record in caplog.records
+        if record.levelname == expected_log_level
+    )
