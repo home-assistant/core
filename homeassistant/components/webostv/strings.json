@@ -89,11 +89,11 @@
     "source_not_found": {
       "message": "Source {source} not found in the sources list for {name}."
     },
+    "trigger_without_target": {
+      "message": "The LG webOS TV turn on trigger requires a target."
+    },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type: {trigger_type}"
-    },
-    "unknown_trigger_platform": {
-      "message": "Unknown trigger platform: {platform}"
     }
   },
   "options": {
@@ -160,6 +160,12 @@
         }
       },
       "name": "Select sound output"
+    }
+  },
+  "triggers": {
+    "turn_on_requested": {
+      "description": "Triggers when one or more LG webOS TVs are requested to turn on.",
+      "name": "TV is requested to turn on"
     }
   }
 }
