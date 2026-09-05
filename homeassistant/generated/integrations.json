@@ -2940,6 +2940,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "helty_cloud": {
+      "name": "Helty Flow Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "here_travel_time": {
       "name": "HERE Travel Time",
       "integration_type": "service",
