@@ -9,7 +9,6 @@ from typing import Any, Concatenate, overload, override
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
@@ -180,34 +179,6 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
                 identifiers={(DOMAIN, f"{mower_id}_{work_area_id}")},
                 name=self.work_area_attributes.name,
                 parent_device_id=parent_device.id,
-            )
-
-    @override
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated coordinator data."""
-        self._update_work_area_device()
-        super()._handle_coordinator_update()
-
-    @callback
-    def _update_work_area_device(self) -> None:
-        """Update the work area device."""
-        if self.work_area_id == 0:
-            return
-
-        if (work_area := self.work_area_attributes) is None:
-            return
-
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_child_device_by_identifier(
-            (DOMAIN, f"{self.mower_id}_{self.work_area_id}"),
-            self.coordinator.config_entry.entry_id,
-        )
-
-        if device is not None and device.name != work_area.name:
-            device_registry.async_update_child_device(
-                device.id,
-                name=work_area.name,
             )
 
     @property
