@@ -1,10 +1,11 @@
 """Test the Tesla Fleet config flow."""
 
+from collections.abc import Sequence
 from unittest.mock import AsyncMock, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from tesla_fleet_api.const import SERVERS
+from tesla_fleet_api.const import SERVERS, Scope
 from tesla_fleet_api.exceptions import (
     InvalidResponse,
     LoginRequired,
@@ -20,11 +21,14 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.tesla_fleet.config_flow import OAuth2FlowHandler
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
+    CONF_AUTHORIZATION_PROFILE,
     DOMAIN,
+    ENERGY_SITE_READ_ONLY_SCOPES,
     SCOPES,
     TOKEN_URL,
+    AuthorizationProfile,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_DOMAIN, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -37,6 +41,130 @@ from tests.typing import ClientSessionGenerator
 
 REDIRECT = "https://example.com/auth/external/callback"
 UNIQUE_ID = "uid"
+
+
+async def start_user_flow(
+    hass: HomeAssistant,
+    authorization_profile: AuthorizationProfile = AuthorizationProfile.STANDARD,
+) -> ConfigFlowResult:
+    """Start a user flow and select an authorization profile."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_AUTHORIZATION_PROFILE: authorization_profile},
+    )
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_energy_site_read_only_authorize_url_has_exact_scopes(
+    hass: HomeAssistant,
+) -> None:
+    """Test Energy Site read-only requests exactly its three scopes."""
+    result = await start_user_flow(hass, AuthorizationProfile.ENERGY_SITE_READ_ONLY)
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"].startswith(AUTHORIZE_URL)
+    requested_scopes = parse_qs(urlparse(result["url"]).query)["scope"][0].split()
+    assert requested_scopes == [str(scope) for scope in ENERGY_SITE_READ_ONLY_SCOPES]
+    assert set(requested_scopes).isdisjoint(
+        {
+            "energy_cmds",
+            "vehicle_device_data",
+            "vehicle_location",
+            "vehicle_cmds",
+            "vehicle_charging_cmds",
+        }
+    )
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("scopes", "accepted"),
+    [
+        (["openid", "offline_access", "energy_device_data"], True),
+        (["openid", "offline_access"], False),
+        (["openid", "offline_access", "energy_device_data", "energy_cmds"], False),
+        (
+            ["openid", "offline_access", "energy_device_data", "vehicle_device_data"],
+            False,
+        ),
+        (
+            ["openid", "offline_access", "energy_device_data", "vehicle_location"],
+            False,
+        ),
+        (["openid", "offline_access", "energy_device_data", "vehicle_cmds"], False),
+        (
+            [
+                "openid",
+                "offline_access",
+                "energy_device_data",
+                "vehicle_charging_cmds",
+            ],
+            False,
+        ),
+        (None, False),
+        ("openid offline_access energy_device_data", False),
+        (["openid", "offline_access", "energy_device_data", "openid"], False),
+        (["openid", "offline_access", "energy_device_data", 1], False),
+        (["openid", "offline_access", "energy_device_data", "future_scope"], False),
+    ],
+    ids=[
+        "exact",
+        "missing-energy-device-data",
+        "energy-commands",
+        "vehicle-data",
+        "vehicle-location",
+        "vehicle-commands",
+        "vehicle-charging-commands",
+        "absent",
+        "malformed",
+        "duplicate",
+        "non-string",
+        "unknown",
+    ],
+)
+async def test_energy_site_read_only_effective_token_scopes(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    scopes: object,
+    accepted: bool,
+) -> None:
+    """Test Energy Site read-only token scopes fail closed."""
+    result = await start_user_flow(hass, AuthorizationProfile.ENERGY_SITE_READ_ONLY)
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {"flow_id": result["flow_id"], "redirect_uri": REDIRECT},
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    claims: dict[str, object] = {"sub": UNIQUE_ID, "aud": [], "ou_code": "NA"}
+    if scopes is not None:
+        claims["scp"] = scopes
+    token = config_entry_oauth2_flow._encode_jwt(hass, claims)
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    if accepted:
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "region"
+    else:
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "invalid_energy_site_read_only_scopes"
 
 
 @pytest.fixture
@@ -103,9 +231,7 @@ async def test_partner_login_auth_error(
     mock_private_key,
 ) -> None:
     """Test partner login auth errors abort the flow cleanly."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -159,9 +285,7 @@ async def test_region_partner_login_error(
     mock_private_key,
 ) -> None:
     """Test a partner login error keeps the user on the region step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -234,9 +358,7 @@ async def test_full_flow_with_domain_registration(
     mock_private_key,
 ) -> None:
     """Test full flow with domain registration."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -341,6 +463,30 @@ async def test_full_flow_with_domain_registration(
     assert mock_api_class.call_args.kwargs["server"] == SERVERS["na"]
 
 
+async def test_energy_site_read_only_skips_vehicle_key_pairing(
+    hass: HomeAssistant,
+) -> None:
+    """Test Energy Site read-only completes without vehicle key pairing."""
+    flow = OAuth2FlowHandler()
+    flow.hass = hass
+    flow.api = AsyncMock()
+    flow.api.private_key = Mock()
+    flow.api.public_uncompressed_point = "expected-public-key"
+    flow.api.partner.register.return_value = {
+        "response": {"public_key": "expected-public-key"}
+    }
+    flow.domain = "example.com"
+    flow.uid = UNIQUE_ID
+    flow.data = {CONF_AUTHORIZATION_PROFILE: AuthorizationProfile.ENERGY_SITE_READ_ONLY}
+    flow.authorization_profile = AuthorizationProfile.ENERGY_SITE_READ_ONLY
+
+    result = await flow.async_step_domain_registration()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == UNIQUE_ID
+    assert result["data"] == flow.data
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_domain_input_invalid_domain(
     hass: HomeAssistant,
@@ -350,9 +496,7 @@ async def test_domain_input_invalid_domain(
     mock_private_key,
 ) -> None:
     """Test domain input with invalid domain."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -449,9 +593,7 @@ async def test_domain_registration_errors(
     expected_error,
 ) -> None:
     """Test domain registration with errors that stay on domain_registration step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -515,9 +657,7 @@ async def test_domain_registration_precondition_failed(
     mock_private_key,
 ) -> None:
     """Test domain registration with PreconditionFailed redirects to domain_input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -582,9 +722,7 @@ async def test_domain_registration_public_key_not_found(
     mock_private_key,
 ) -> None:
     """Test domain registration with missing public key."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -648,9 +786,7 @@ async def test_domain_registration_public_key_mismatch(
     mock_private_key,
 ) -> None:
     """Test domain registration with public key mismatch."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -716,9 +852,7 @@ async def test_region_override(
     mock_private_key,
 ) -> None:
     """Test overriding the detected region registers using the selected region."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -806,9 +940,7 @@ async def test_region_default_fallback(
         },
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -889,18 +1021,32 @@ async def test_registration_complete_with_domain_no_user_input(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("entry_data", "authorization_profile", "scopes"),
+    [
+        ({}, AuthorizationProfile.STANDARD, SCOPES),
+        (
+            {CONF_AUTHORIZATION_PROFILE: AuthorizationProfile.ENERGY_SITE_READ_ONLY},
+            AuthorizationProfile.ENERGY_SITE_READ_ONLY,
+            ENERGY_SITE_READ_ONLY_SCOPES,
+        ),
+    ],
+    ids=["legacy-standard", "energy-site-read-only"],
+)
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token: str,
+    entry_data: dict[str, AuthorizationProfile],
+    authorization_profile: AuthorizationProfile,
+    scopes: Sequence[Scope],
 ) -> None:
     """Test Tesla Fleet reauthentication."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=UNIQUE_ID,
         version=1,
-        data={},
+        data=entry_data,
     )
     old_entry.add_to_hass(hass)
 
@@ -910,6 +1056,8 @@ async def test_reauthentication(
     assert len(flows) == 1
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    requested_scopes = parse_qs(urlparse(result["url"]).query)["scope"][0].split()
+    assert requested_scopes == [str(scope) for scope in scopes]
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -920,7 +1068,15 @@ async def test_reauthentication(
     )
     client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
+    access_token = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": UNIQUE_ID,
+            "aud": [],
+            "scp": [str(scope) for scope in scopes],
+            "ou_code": "NA",
+        },
+    )
     aioclient_mock.post(
         TOKEN_URL,
         json={
@@ -936,9 +1092,28 @@ async def test_reauthentication(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert old_entry.data[CONF_AUTHORIZATION_PROFILE] is authorization_profile
+
+
+@pytest.mark.parametrize("invalid_profile", [None, "invalid", []])
+async def test_reauthentication_rejects_invalid_authorization_profile(
+    hass: HomeAssistant, invalid_profile: object
+) -> None:
+    """Test reauthentication fails closed for an invalid stored profile."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=UNIQUE_ID,
+        version=1,
+        data={CONF_AUTHORIZATION_PROFILE: invalid_profile},
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await old_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_authorization_profile"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -1003,9 +1178,7 @@ async def test_duplicate_unique_id_abort(
     )
     existing_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await start_user_flow(hass)
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api import TeslaFleetApi
 from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InternalServerError,
@@ -21,7 +22,13 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
+from homeassistant.components.tesla_fleet.const import (
+    CONF_AUTHORIZATION_PROFILE,
+    DOMAIN,
+    ENERGY_SITE_READ_ONLY_SCOPES,
+    SCOPES,
+    AuthorizationProfile,
+)
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -37,10 +44,11 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -79,6 +87,145 @@ async def test_load_unload(
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hasattr(normal_config_entry, "runtime_data")
+
+
+async def test_energy_site_read_only_is_structurally_read_only(
+    hass: HomeAssistant,
+    energy_site_read_only_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_state: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    mock_wake_up: AsyncMock,
+    mock_energy_history: AsyncMock,
+) -> None:
+    """Test the Energy Site read-only profile constructs no command path."""
+    with patch(
+        "homeassistant.components.tesla_fleet.TeslaFleetVehicleDataCoordinator"
+    ) as vehicle_coordinator:
+        await setup_platform(hass, energy_site_read_only_config_entry)
+
+    assert energy_site_read_only_config_entry.state is ConfigEntryState.LOADED
+    assert not energy_site_read_only_config_entry.runtime_data.vehicles
+    assert energy_site_read_only_config_entry.runtime_data.energysites
+    energy_api = energy_site_read_only_config_entry.runtime_data.energysites[0].api
+    for command_method in (
+        "backup",
+        "grid_import_export",
+        "off_grid_vehicle_charging_reserve",
+        "operation",
+        "storm_mode",
+        "time_of_use_settings",
+    ):
+        assert not hasattr(energy_api, command_method)
+    assert energy_site_read_only_config_entry.runtime_data.energysites[
+        0
+    ].history_coordinator
+    vehicle_coordinator.assert_not_called()
+    mock_vehicle_state.assert_not_called()
+    mock_vehicle_data.assert_not_called()
+    mock_wake_up.assert_not_called()
+    mock_energy_history.assert_not_called()
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, energy_site_read_only_config_entry.entry_id
+    )
+    assert entries
+    assert {entry.domain for entry in entries} <= {"binary_sensor", "sensor"}
+    assert not (
+        {entry.domain for entry in entries}
+        & {
+            "button",
+            "climate",
+            "cover",
+            "device_tracker",
+            "lock",
+            "media_player",
+            "number",
+            "select",
+            "switch",
+            "update",
+        }
+    )
+    assert await hass.config_entries.async_unload(
+        energy_site_read_only_config_entry.entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        [Scope.OPENID, Scope.OFFLINE_ACCESS],
+        [*ENERGY_SITE_READ_ONLY_SCOPES, Scope.ENERGY_CMDS],
+        [*ENERGY_SITE_READ_ONLY_SCOPES, Scope.VEHICLE_DEVICE_DATA],
+    ],
+)
+async def test_energy_site_read_only_setup_rejects_changed_token_scopes(
+    hass: HomeAssistant,
+    expires_at: int,
+    scopes: list[Scope],
+) -> None:
+    """Test setup revalidates effective scopes before constructing clients."""
+    entry = create_config_entry(
+        expires_at,
+        scopes,
+        authorization_profile=AuthorizationProfile.ENERGY_SITE_READ_ONLY,
+    )
+
+    await setup_platform(hass, entry)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hasattr(entry, "runtime_data")
+
+
+async def test_energy_site_read_only_rejects_changed_scopes_on_access_token_get(
+    hass: HomeAssistant,
+    expires_at: int,
+    energy_site_read_only_config_entry: MockConfigEntry,
+) -> None:
+    """Test refreshed Energy Site read-only token scopes are revalidated."""
+    with patch(
+        "homeassistant.components.tesla_fleet.TeslaFleetApi", wraps=TeslaFleetApi
+    ) as api_class:
+        await setup_platform(hass, energy_site_read_only_config_entry)
+
+    get_access_token = api_class.call_args.kwargs["access_token"]
+    changed_token = create_config_entry(
+        expires_at,
+        [*ENERGY_SITE_READ_ONLY_SCOPES, Scope.ENERGY_CMDS],
+        authorization_profile=AuthorizationProfile.ENERGY_SITE_READ_ONLY,
+    ).data[CONF_TOKEN]
+    hass.config_entries.async_update_entry(
+        energy_site_read_only_config_entry,
+        data={
+            **energy_site_read_only_config_entry.data,
+            CONF_TOKEN: changed_token,
+        },
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await get_access_token()
+
+
+@pytest.mark.parametrize("invalid_profile", [None, "invalid", []])
+async def test_setup_rejects_invalid_authorization_profile(
+    hass: HomeAssistant,
+    expires_at: int,
+    invalid_profile: object,
+) -> None:
+    """Test setup fails closed for an invalid stored profile."""
+    valid_entry = create_config_entry(expires_at, SCOPES)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **valid_entry.data,
+            CONF_AUTHORIZATION_PROFILE: invalid_profile,
+        },
+    )
+
+    await setup_platform(hass, entry)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hasattr(entry, "runtime_data")
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)

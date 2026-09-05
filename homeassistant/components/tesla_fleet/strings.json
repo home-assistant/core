@@ -2,6 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "Configuration updated for profile.",
+      "invalid_authorization_profile": "The stored Tesla authorization profile is invalid.",
+      "invalid_energy_site_read_only_scopes": "Tesla did not grant exactly the scopes required by the Energy Site read-only profile. No integration entry was created.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
@@ -43,7 +45,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant, including any newly enabled scopes.",
+        "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant. The selected authorization profile is retained.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "region": {
@@ -64,6 +66,16 @@
         },
         "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}\n\nIf you later enable additional Tesla API permissions, reauthenticate the integration to refresh the granted scopes.",
         "title": "Command signing"
+      },
+      "user": {
+        "data": {
+          "authorization_profile": "Authorization profile"
+        },
+        "data_description": {
+          "authorization_profile": "Choose the Tesla products and operations Home Assistant will request access to."
+        },
+        "description": "The **Standard** profile supports vehicles and energy sites, including commands and settings. The **Energy Site read-only** profile requests Energy telemetry only. It cannot access vehicles or change Energy settings.",
+        "title": "Choose Tesla authorization profile"
       }
     }
   },
@@ -646,6 +658,12 @@
     }
   },
   "selector": {
+    "authorization_profile": {
+      "options": {
+        "energy_site_read_only": "Energy Site read-only",
+        "standard": "Standard"
+      }
+    },
     "region": {
       "options": {
         "eu": "Europe, Middle East & Africa",

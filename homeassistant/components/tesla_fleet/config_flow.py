@@ -30,8 +30,16 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import DOMAIN, LOGGER, REGION_SERVERS, REGIONS
-from .oauth import TeslaUserImplementation
+from .const import (
+    AUTHORIZATION_PROFILE_SCOPES,
+    CONF_AUTHORIZATION_PROFILE,
+    DOMAIN,
+    LOGGER,
+    REGION_SERVERS,
+    REGIONS,
+    AuthorizationProfile,
+)
+from .oauth import TeslaUserImplementation, has_exact_energy_site_read_only_scopes
 
 
 class OAuth2FlowHandler(
@@ -49,6 +57,16 @@ class OAuth2FlowHandler(
         self.uid: str | None = None
         self.region: str = REGIONS[0]
         self.api: TeslaFleetApi | None = None
+        self.authorization_profile: AuthorizationProfile | None = None
+
+    @property
+    @override
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Set the scopes selected for this authorization flow."""
+        assert self.authorization_profile is not None
+        return {
+            "scope": " ".join(AUTHORIZATION_PROFILE_SCOPES[self.authorization_profile])
+        }
 
     @property
     @override
@@ -66,14 +84,22 @@ class OAuth2FlowHandler(
             data["token"]["access_token"], options={"verify_signature": False}
         )
 
-        self.data = data
+        assert self.authorization_profile is not None
+        if self.authorization_profile is AuthorizationProfile.ENERGY_SITE_READ_ONLY:
+            if not has_exact_energy_site_read_only_scopes(token.get("scp")):
+                return self.async_abort(reason="invalid_energy_site_read_only_scopes")
+
+        self.data = {
+            **data,
+            CONF_AUTHORIZATION_PROFILE: self.authorization_profile,
+        }
         self.uid = token["sub"]
 
         await self.async_set_unique_id(self.uid)
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+                self._get_reauth_entry(), data=self.data
             )
         self._abort_if_unique_id_configured()
 
@@ -215,6 +241,9 @@ class OAuth2FlowHandler(
         ):
             errors["base"] = "public_key_mismatch"
         else:
+            if self.authorization_profile is AuthorizationProfile.ENERGY_SITE_READ_ONLY:
+                assert self.uid
+                return self.async_create_entry(title=self.uid, data=self.data)
             return await self.async_step_registration_complete()
 
         return self.async_show_form(
@@ -258,6 +287,14 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        try:
+            self.authorization_profile = AuthorizationProfile(
+                entry_data.get(
+                    CONF_AUTHORIZATION_PROFILE, AuthorizationProfile.STANDARD
+                )
+            )
+        except TypeError, ValueError:
+            return self.async_abort(reason="invalid_authorization_profile")
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -271,6 +308,35 @@ class OAuth2FlowHandler(
             )
         # For reauth, skip domain registration and go straight to OAuth
         return await super().async_step_user()
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select an authorization profile before starting OAuth."""
+        if user_input is not None:
+            self.authorization_profile = AuthorizationProfile(
+                user_input[CONF_AUTHORIZATION_PROFILE]
+            )
+            return await super().async_step_user()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_AUTHORIZATION_PROFILE,
+                        default=AuthorizationProfile.STANDARD,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(AuthorizationProfile),
+                            translation_key="authorization_profile",
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    )
+                }
+            ),
+        )
 
     def _is_valid_domain(self, domain: str) -> bool:
         """Validate domain format."""

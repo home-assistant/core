@@ -9,7 +9,29 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import AUTHORIZE_URL, SCOPES, TOKEN_URL
+from .const import (
+    AUTHORIZATION_PROFILE_SCOPES,
+    AUTHORIZE_URL,
+    SCOPES,
+    TOKEN_URL,
+    AuthorizationProfile,
+)
+
+
+def has_exact_energy_site_read_only_scopes(scopes: Any) -> bool:
+    """Return whether the effective token has exactly the read-only scopes."""
+    return (
+        isinstance(scopes, list)
+        and all(isinstance(scope, str) for scope in scopes)
+        and len(scopes) == len(set(scopes))
+        and set(scopes)
+        == {
+            str(scope)
+            for scope in AUTHORIZATION_PROFILE_SCOPES[
+                AuthorizationProfile.ENERGY_SITE_READ_ONLY
+            ]
+        }
+    )
 
 
 class TeslaUserImplementation(AuthImplementation):

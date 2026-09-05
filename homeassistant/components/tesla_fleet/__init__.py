@@ -1,6 +1,6 @@
 """Tesla Fleet integration."""
 
-from typing import Final
+from typing import Final, cast
 
 import jwt
 from tesla_fleet_api import TeslaFleetApi, is_valid_region
@@ -13,7 +13,7 @@ from tesla_fleet_api.exceptions import (
     OAuthExpired,
     TeslaFleetError,
 )
-from tesla_fleet_api.tesla import VehicleFleet
+from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -32,7 +32,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_AUTHORIZATION_PROFILE, DOMAIN, LOGGER, AuthorizationProfile
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
@@ -40,7 +40,13 @@ from .coordinator import (
     TeslaFleetVehicleDataCoordinator,
     _stale_site_info_error,
 )
-from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .models import (
+    TeslaFleetData,
+    TeslaFleetEnergyData,
+    TeslaFleetEnergySiteReadOnly,
+    TeslaFleetVehicleData,
+)
+from .oauth import has_exact_energy_site_read_only_scopes
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -55,6 +61,11 @@ PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
+]
+
+ENERGY_SITE_READ_ONLY_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
 ]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
@@ -121,14 +132,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     session = async_get_clientsession(hass)
 
     token = jwt.decode(access_token, options={"verify_signature": False})
+    try:
+        authorization_profile = AuthorizationProfile(
+            entry.data.get(CONF_AUTHORIZATION_PROFILE, AuthorizationProfile.STANDARD)
+        )
+    except (TypeError, ValueError) as err:
+        raise ConfigEntryAuthFailed(
+            "Invalid Tesla Fleet authorization profile"
+        ) from err
+    energy_site_read_only = (
+        authorization_profile is AuthorizationProfile.ENERGY_SITE_READ_ONLY
+    )
+    if energy_site_read_only and not has_exact_energy_site_read_only_scopes(
+        token.get("scp")
+    ):
+        raise ConfigEntryAuthFailed(
+            "Tesla Fleet Energy Site read-only token scope validation failed"
+        )
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
     region_code = token["ou_code"].lower()
     region = region_code if is_valid_region(region_code) else None
 
     async def _get_access_token() -> str:
         await oauth_session.async_ensure_token_valid()
-        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
-        return token
+        current_access_token: str = oauth_session.token[CONF_ACCESS_TOKEN]
+        if energy_site_read_only:
+            current_token = jwt.decode(
+                current_access_token, options={"verify_signature": False}
+            )
+            if not has_exact_energy_site_read_only_scopes(current_token.get("scp")):
+                raise ConfigEntryAuthFailed(
+                    "Tesla Fleet Energy Site read-only token scope validation failed"
+                )
+        return current_access_token
 
     # Create API connection
     tesla = TeslaFleetApi(
@@ -138,7 +174,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         charging_scope=False,
         partner_scope=False,
         energy_scope=Scope.ENERGY_DEVICE_DATA in scopes,
-        vehicle_scope=Scope.VEHICLE_DEVICE_DATA in scopes,
+        vehicle_scope=(
+            not energy_site_read_only and Scope.VEHICLE_DEVICE_DATA in scopes
+        ),
     )
     products = await _async_get_products(tesla)
 
@@ -148,7 +186,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     vehicles: list[TeslaFleetVehicleData] = []
     energysites: list[TeslaFleetEnergyData] = []
     for product in products:
-        if "vin" in product and Scope.VEHICLE_DEVICE_DATA in scopes:
+        if (
+            not energy_site_read_only
+            and "vin" in product
+            and Scope.VEHICLE_DEVICE_DATA in scopes
+        ):
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
@@ -196,7 +238,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 )
                 continue
 
-            api_energy = tesla.energySites.create(site_id)
+            api_energy_raw = tesla.energySites.create(site_id)
+            api_energy = (
+                cast(EnergySite, TeslaFleetEnergySiteReadOnly(api_energy_raw))
+                if energy_site_read_only
+                else api_energy_raw
+            )
             info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
                 hass, entry, api_energy, product
             )
@@ -262,10 +309,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     # Setup Platforms
     entry.runtime_data = TeslaFleetData(vehicles, energysites, scopes)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        ENERGY_SITE_READ_ONLY_PLATFORMS if energy_site_read_only else PLATFORMS,
+    )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Unload TeslaFleet Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    authorization_profile = AuthorizationProfile(
+        entry.data.get(CONF_AUTHORIZATION_PROFILE, AuthorizationProfile.STANDARD)
+    )
+    return await hass.config_entries.async_unload_platforms(
+        entry,
+        ENERGY_SITE_READ_ONLY_PLATFORMS
+        if authorization_profile is AuthorizationProfile.ENERGY_SITE_READ_ONLY
+        else PLATFORMS,
+    )
