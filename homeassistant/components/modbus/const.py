@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -12,6 +13,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     Platform,
 )
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .modbus import ModbusHub
 
 # configuration names
 CONF_BAUDRATE = "baudrate"
@@ -187,3 +192,5 @@ DEFAULT_SCALE = 1.0
 DEFAULT_OFFSET = 0
 
 LOGGER = logging.getLogger(__package__)
+
+DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)

@@ -12,10 +12,8 @@ from pymodbus.client import (
 from pymodbus.exceptions import ModbusException
 from pymodbus.framer import FramerType
 from pymodbus.pdu import ModbusPDU
-import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_STATE,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
@@ -25,19 +23,11 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_SLAVE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -51,23 +41,17 @@ from .const import (
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_STOPBITS,
-    DEFAULT_HUB,
+    DATA_MODBUS_HUBS,
     DEVICE_ID,
     DOMAIN,
     LOGGER,
     PLATFORMS,
     RTUOVERTCP,
     SERIAL,
-    SERVICE_STOP,
-    SERVICE_WRITE_COIL,
-    SERVICE_WRITE_REGISTER,
-    SIGNAL_STOP_ENTITY,
     TCP,
     UDP,
 )
 from .validators import check_config
-
-DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 PRIMARY_RECONNECT_DELAY = 60
 
@@ -130,6 +114,20 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
+    if await _async_modbus_setup(hass, config):
+        return True
+
+    # Hubs are stored as they are created, so a failure part way through leaves
+    # unusable hubs behind. Drop them so their presence means they are usable.
+    hass.data.pop(DATA_MODBUS_HUBS, None)
+    return False
+
+
+async def _async_modbus_setup(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> bool:
+    """Set up the Modbus hubs and their platforms."""
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])
@@ -167,77 +165,6 @@ async def async_modbus_setup(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
-    def _get_service_call_details(
-        service: ServiceCall,
-    ) -> tuple[ModbusHub, int, int]:
-        """Return the details required to process the service call."""
-        device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
-        address = service.data[ATTR_ADDRESS]
-        hub = hub_collect[service.data[ATTR_HUB]]
-        return (hub, device_address, address)
-
-    async def async_write_register(service: ServiceCall) -> None:
-        """Write Modbus registers."""
-        hub, device_address, address = _get_service_call_details(service)
-
-        value = service.data[ATTR_VALUE]
-        if isinstance(value, list):
-            await hub.async_pb_call(
-                device_address, address, value, CALL_TYPE_WRITE_REGISTERS
-            )
-        else:
-            await hub.async_pb_call(
-                device_address, address, value, CALL_TYPE_WRITE_REGISTER
-            )
-
-    async def async_write_coil(service: ServiceCall) -> None:
-        """Write Modbus coil."""
-        hub, device_address, address = _get_service_call_details(service)
-
-        state = service.data[ATTR_STATE]
-
-        if isinstance(state, list):
-            await hub.async_pb_call(
-                device_address, address, state, CALL_TYPE_WRITE_COILS
-            )
-        else:
-            await hub.async_pb_call(
-                device_address, address, state, CALL_TYPE_WRITE_COIL
-            )
-
-    for x_write in (
-        (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
-        (SERVICE_WRITE_COIL, async_write_coil, ATTR_STATE, cv.boolean),
-    ):
-        hass.services.async_register(
-            DOMAIN,
-            x_write[0],
-            x_write[1],
-            schema=vol.Schema(
-                {
-                    vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-                    vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
-                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
-                    vol.Required(ATTR_ADDRESS): cv.positive_int,
-                    vol.Required(x_write[2]): vol.Any(
-                        cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])
-                    ),
-                }
-            ),
-        )
-
-    async def async_stop_hub(service: ServiceCall) -> None:
-        """Stop Modbus hub."""
-        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
-        hub = hub_collect[service.data[ATTR_HUB]]
-        await hub.async_close()
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_STOP,
-        async_stop_hub,
-        schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
-    )
     return True
 
 
