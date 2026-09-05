@@ -1,5 +1,6 @@
 """The Anthem A/V Receivers integration."""
 
+import asyncio
 import logging
 
 import anthemav
@@ -20,7 +21,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ANTHEMAV_UPDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    CONNECT_TIMEOUT_SECONDS,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 type AnthemavConfigEntry = ConfigEntry[anthemav.Connection]
 
@@ -39,16 +46,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         async_dispatcher_send(hass, f"{ANTHEMAV_UPDATE_SIGNAL}_{entry.entry_id}")
 
     try:
-        avr = await anthemav.Connection.create(
-            host=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            update_callback=async_anthemav_update_callback,
-        )
+        # See CONNECT_TIMEOUT_SECONDS for why this needs a timeout.
+        async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
+            avr = await anthemav.Connection.create(
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+                update_callback=async_anthemav_update_callback,
+            )
 
         # Wait for the zones to be initialised based on the model
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
-    except (OSError, DeviceError) as err:
-        raise ConfigEntryNotReady from err
+    except (OSError, DeviceError, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Anthem AVR at {entry.data[CONF_HOST]}:"
+            f"{entry.data[CONF_PORT]}"
+        ) from err
 
     entry.runtime_data = avr
 

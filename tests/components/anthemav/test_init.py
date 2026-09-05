@@ -1,5 +1,6 @@
 """Test the Anthem A/V Receivers config flow."""
 
+import asyncio
 from collections.abc import Callable
 from unittest.mock import ANY, AsyncMock, patch
 
@@ -65,6 +66,30 @@ async def test_config_entry_not_ready_when_oserror(
     with patch(
         "anthemav.Connection.create",
         side_effect=error,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_not_ready_when_connect_hangs(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup fails fast (instead of hanging) when the AVR never connects."""
+
+    async def _hang(*args, **kwargs) -> None:
+        await asyncio.sleep(3600)
+
+    with (
+        patch(
+            "homeassistant.components.anthemav.CONNECT_TIMEOUT_SECONDS",
+            0.01,
+        ),
+        patch(
+            "anthemav.Connection.create",
+            side_effect=_hang,
+        ),
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
