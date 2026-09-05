@@ -45,7 +45,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
@@ -163,15 +162,7 @@ SENSOR_SETTINGS = vol.Schema(
                             sort=True,
                         )
                     ),
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[cls.value for cls in UnitOfTemperature],
-                            custom_value=True,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="unit_of_measurement",
-                            sort=True,
-                        )
-                    ),
+                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
                 }
             ),
             data_entry_flow.SectionConfig(collapsed=True),
