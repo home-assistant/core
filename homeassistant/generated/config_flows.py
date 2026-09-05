@@ -101,6 +101,7 @@ FLOWS = {
         "balboa",
         "bang_olufsen",
         "bayesian",
+        "beatbot",
         "besen",
         "blebox",
         "blink",
