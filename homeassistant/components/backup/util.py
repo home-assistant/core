@@ -557,4 +557,17 @@ async def receive_file(
         # task was cancelled.
         queue.put_nowait(None)
         if fut is not None:
-            await fut
+            # The executor thread can't be cancelled and is guaranteed to finish
+            # once it reads the sentinel queued above. Await it even if this task is
+            # cancelled: awaiting only through a shield keeps the executor future
+            # itself uncancelled, so the thread is fully done (file written and
+            # closed) before the caller cleans up. Re-raise any cancellation after.
+            cancelled: asyncio.CancelledError | None = None
+            while not fut.done():
+                try:
+                    await asyncio.shield(fut)
+                except asyncio.CancelledError as err:
+                    cancelled = err
+            if cancelled is not None:
+                raise cancelled
+            fut.result()
