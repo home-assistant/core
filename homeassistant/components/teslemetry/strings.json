@@ -293,6 +293,12 @@
       "boombox": {
         "name": "Play fart"
       },
+      "disable_keep_accessory_power_mode": {
+        "name": "Disable keep accessory power"
+      },
+      "enable_keep_accessory_power_mode": {
+        "name": "Enable keep accessory power"
+      },
       "enable_keyless_driving": {
         "name": "Keyless driving"
       },

@@ -1,6 +1,7 @@
 """Test the Teslemetry button platform."""
 
-from unittest.mock import patch
+from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_OK
+from .const import COMMAND_OK, METADATA
+
+VIN = "LRW3F7EK4NC700000"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -35,6 +38,8 @@ async def test_button(
         ("keyless_driving", "remote_start_drive"),
         ("play_fart", "remote_boombox"),
         ("homelink", "trigger_homelink"),
+        ("enable_keep_accessory_power", "set_keep_accessory_power_mode"),
+        ("disable_keep_accessory_power", "set_keep_accessory_power_mode"),
     ],
 )
 async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
@@ -52,3 +57,32 @@ async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
             blocking=True,
         )
         command.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("firmware", "expected"),
+    [
+        pytest.param("2025.32", False, id="below_threshold"),
+        pytest.param("2025.38", True, id="at_threshold"),
+    ],
+)
+async def test_keep_accessory_power_firmware_gate(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    firmware: str,
+    expected: bool,
+) -> None:
+    """Tests that keep accessory power buttons require firmware >= 2025.38."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["firmware"] = firmware
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.BUTTON])
+
+    assert (
+        hass.states.get("button.test_enable_keep_accessory_power") is not None
+    ) == expected
+    assert (
+        hass.states.get("button.test_disable_keep_accessory_power") is not None
+    ) == expected
