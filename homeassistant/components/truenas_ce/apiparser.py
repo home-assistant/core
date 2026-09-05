@@ -177,7 +177,10 @@ def parse_api(
     the underlying object (disk, pool, task, app, interface, ...) no longer
     exists, so keeping it would leave a stale entity behind indefinitely.
     See ``_empty_source_result`` for the None-source (query failed) and
-    empty-list-source (nothing left at all) cases.
+    empty-list-source (nothing left at all) cases. A non-empty source made
+    up entirely of malformed (non-dict) entries is treated the same as a
+    None source: it's a parsing failure, not evidence everything was
+    removed, so the previous snapshot is kept instead of pruned.
 
     ``prune=False`` opts out of that dropping for callers that intentionally
     pass a partial ``source`` covering only a subset of ``data`` (e.g. adding
@@ -196,11 +199,70 @@ def parse_api(
         return _empty_source_result(data, key, key_search, vals, source is None)
 
     keymap = generate_keymap(data, key_search)
+    data, seen_uids, any_valid_entry, malformed_count = _apply_source_entries(
+        data,
+        source,
+        key,
+        key_secondary,
+        key_search,
+        keymap,
+        vals,
+        ensure_vals,
+        val_proc,
+        only,
+        skip,
+    )
+    _finalize_prune(
+        data,
+        key,
+        key_search,
+        seen_uids,
+        prune,
+        any_valid_entry,
+        malformed_count,
+        len(source),
+    )
+    return data
+
+
+# ---------------------------
+#   _apply_source_entries
+# ---------------------------
+def _apply_source_entries(
+    data: dict[str, Any],
+    source: list[Any],
+    key: str | None,
+    key_secondary: str | None,
+    key_search: str | None,
+    keymap: dict[Hashable, str] | None,
+    vals: list[ApiValueSpec] | None,
+    ensure_vals: list[ApiValueSpec] | None,
+    val_proc: list[list[dict[str, Any]]] | None,
+    only: list[dict[str, Any]] | None,
+    skip: list[dict[str, Any]] | None,
+) -> tuple[dict[str, Any], set[str], bool, int]:
+    """Apply each source entry to data.
+
+    Returns ``(data, seen_uids, any_valid_entry, malformed_count)``. A
+    malformed (non-dict) entry can't be matched or parsed, so it's skipped
+    before it reaches the only/skip filters or key lookups -- both of which
+    assume a dict and would raise on anything else.
+    """
     seen_uids: set[str] = set()
+    any_valid_entry = False
+    malformed_count = 0
     for entry in source:
         if not isinstance(entry, dict):
-            # Skip non-dict entries so lookups below don't raise.
+            malformed_count += 1
+            _LOGGER.debug(
+                "Skipping malformed (non-dict) source entry for key=%r/"
+                "key_search=%r: %r",
+                key,
+                key_search,
+                entry,
+            )
             continue
+        any_valid_entry = True
         if _should_skip_entry(entry, only, skip):
             continue
 
@@ -214,10 +276,54 @@ def parse_api(
 
         data = _apply_entry(data, entry, uid, vals, ensure_vals, val_proc)
 
-    if prune:
-        _prune_stale_uids(data, key, key_search, seen_uids)
+    return data, seen_uids, any_valid_entry, malformed_count
 
-    return data
+
+# ---------------------------
+#   _finalize_prune
+# ---------------------------
+def _finalize_prune(
+    data: dict[str, Any],
+    key: str | None,
+    key_search: str | None,
+    seen_uids: set[str],
+    prune: bool,
+    any_valid_entry: bool,
+    malformed_count: int,
+    total_entries: int,
+) -> None:
+    """Prune stale uids, or log why pruning was skipped/risky.
+
+    A non-empty source containing zero valid entries is a parsing failure,
+    not confirmation everything was removed -- pruning is skipped so it
+    behaves like the None-source case instead of wiping the previous
+    snapshot. A source with *some* malformed entries still prunes (one valid
+    entry proves the source parsed), but that can't tell a row that merely
+    failed to parse this cycle apart from one that was genuinely removed, so
+    it's logged as a risk rather than silently trusted.
+    """
+    if not prune:
+        return
+    if not any_valid_entry:
+        _LOGGER.warning(
+            "All %d source entries were malformed for key=%r/key_search=%r; "
+            "keeping previous snapshot instead of pruning",
+            total_entries,
+            key,
+            key_search,
+        )
+        return
+    if malformed_count:
+        _LOGGER.warning(
+            "%d of %d source entries were malformed for key=%r/key_search=%r; "
+            "pruning proceeds but may incorrectly drop entries whose row "
+            "failed to parse this cycle",
+            malformed_count,
+            total_entries,
+            key,
+            key_search,
+        )
+    _prune_stale_uids(data, key, key_search, seen_uids)
 
 
 # ---------------------------
