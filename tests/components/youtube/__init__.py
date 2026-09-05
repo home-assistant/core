@@ -1,5 +1,6 @@
 """Tests for the YouTube integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 
 from youtubeaio.models import YouTubeChannel, YouTubePlaylistItem, YouTubeSubscription
@@ -23,6 +24,7 @@ class MockYouTube:
         playlist_items_fixture: str = "get_playlist_items.json",
         subscriptions_fixture: str = "get_subscriptions.json",
         short_video_ids: set[str] | None = None,
+        short_check_delay: float = 0.0,
     ) -> None:
         """Initialize mock service."""
         self.hass = hass
@@ -30,6 +32,7 @@ class MockYouTube:
         self._playlist_items_fixture = playlist_items_fixture
         self._subscriptions_fixture = subscriptions_fixture
         self._short_video_ids: set[str] = short_video_ids or set()
+        self._short_check_delay = short_check_delay
         self.playlist_item_requests = 0
         self.playlist_items_yielded = 0
 
@@ -96,4 +99,5 @@ class MockYouTube:
 
     async def is_short(self, video_id: str) -> bool:
         """Return whether the video is a Short."""
+        await asyncio.sleep(self._short_check_delay)
         return video_id in self._short_video_ids

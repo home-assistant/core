@@ -1,7 +1,8 @@
 """DataUpdateCoordinator for the YouTube integration."""
 
+import asyncio
 from datetime import timedelta
-from typing import Any, override
+from typing import Any, Final, override
 
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
@@ -31,6 +32,11 @@ from .const import (
 )
 
 type YouTubeConfigEntry = ConfigEntry[YouTubeDataUpdateCoordinator]
+
+# Twice youtubeaio's 10s per-call timeout: single slow calls are handled by
+# the library's own timeout (backend error / non-Short fallback); this budget
+# only aborts the serial accumulation of several slow checks per channel.
+_SHORTS_DETECTION_TIMEOUT: Final = 20
 
 
 def _build_video_dict(video: Any, is_short: bool) -> dict[str, Any]:
@@ -75,28 +81,39 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         channel_ids = self.config_entry.options[CONF_CHANNELS]
         try:
             async for channel in youtube.get_channels(channel_ids):
-                # Only examine the first page (10 items): paginating further
-                # burns API quota for no benefit.
                 checked = 0
                 latest_video: dict[str, Any] | None = None
                 latest_short: dict[str, Any] | None = None
                 latest_video_non_short: dict[str, Any] | None = None
-                async for video in youtube.get_playlist_items(
-                    channel.upload_playlist_id, 10
-                ):
-                    checked += 1
-                    is_short = await self._resolve_is_short(youtube, video)
-                    entry = _build_video_dict(video, is_short)
-                    if latest_video is None:
-                        latest_video = entry
-                    if is_short and latest_short is None:
-                        latest_short = entry
-                    if not is_short and latest_video_non_short is None:
-                        latest_video_non_short = entry
-                    if latest_short is not None and latest_video_non_short is not None:
-                        break
-                    if checked >= 10:
-                        break
+                try:
+                    async with asyncio.timeout(_SHORTS_DETECTION_TIMEOUT):
+                        # Only examine the first page (10 items): paginating
+                        # further burns API quota for no benefit.
+                        async for video in youtube.get_playlist_items(
+                            channel.upload_playlist_id, 10
+                        ):
+                            checked += 1
+                            is_short = await self._resolve_is_short(youtube, video)
+                            entry = _build_video_dict(video, is_short)
+                            if latest_video is None:
+                                latest_video = entry
+                            if is_short and latest_short is None:
+                                latest_short = entry
+                            if not is_short and latest_video_non_short is None:
+                                latest_video_non_short = entry
+                            if (
+                                latest_short is not None
+                                and latest_video_non_short is not None
+                            ):
+                                break
+                            if checked >= 10:
+                                break
+                except TimeoutError:
+                    LOGGER.warning(
+                        "Timed out processing recent uploads for channel %s; "
+                        "continuing with partial results",
+                        channel.channel_id,
+                    )
                 LOGGER.debug(
                     "Examined %d videos for channel %s", checked, channel.channel_id
                 )
