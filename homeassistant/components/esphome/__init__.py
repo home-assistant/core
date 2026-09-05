@@ -95,7 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
     cli = async_create_api_client(
-        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
+        hass,
+        entry,
+        zeroconf_instance,
+        noise_psk=entry.data.get(CONF_NOISE_PSK),
+        declare_outgoing_target=True,
     )
 
     domain_data = DomainData.get(hass)
@@ -158,8 +162,6 @@ async def _async_clear_dynamic_encryption_key(
         entry,
         zeroconf_instance,
         noise_psk=entry.data.get(CONF_NOISE_PSK),
-        # This connection wipes the key; it must not become a dial-back target
-        declare_outgoing_target=False,
     )
 
     try:

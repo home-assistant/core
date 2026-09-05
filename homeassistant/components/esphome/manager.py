@@ -124,9 +124,13 @@ def async_create_api_client(
     zeroconf_instance: zeroconf.HaZeroconf,
     *,
     noise_psk: str | None,
-    declare_outgoing_target: bool = True,
+    declare_outgoing_target: bool = False,
 ) -> APIClient:
-    """Create an APIClient for a config entry."""
+    """Create an APIClient for a config entry.
+
+    Only the entry's long-lived session declares itself a dial-back target;
+    key management sessions must never be remembered by the device.
+    """
     return APIClient(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
@@ -600,13 +604,13 @@ class ESPHomeManager:
         and the reauth flow reloads the entry with the stored key.
         """
         entry = self.entry
-        # Read the flag off the client so the route matches the hello
-        if not self.cli.outgoing_connection_target:
+        # Read the flag off the client so the route matches the hello; the
+        # flag implies a MAC unique id, which is the routing key
+        if (
+            not self.cli.outgoing_connection_target
+            or (mac := _mac_unique_id(entry)) is None
+        ):
             _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
-            return
-        # Same MAC gate the declared flag used
-        if (mac := _mac_unique_id(entry)) is None:
-            _LOGGER.debug("%s: Not routing dial-ins; no MAC unique id", entry.title)
             return
         try:
             unregister = async_register_outgoing_target(self.hass, mac, reconnect_logic)
@@ -898,8 +902,6 @@ class ESPHomeManager:
             self.entry,
             self.zeroconf_instance,
             noise_psk=ZERO_NOISE_PSK,
-            # A key exchange session must not become a dial-back target
-            declare_outgoing_target=False,
         )
         device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
         try:
