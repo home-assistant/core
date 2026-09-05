@@ -9,7 +9,6 @@ from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientConnectionError, ClientError
 from aiopowerwall import (
-    DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
     PowerwallConnectionError,
     PowerwallFaultError,
@@ -25,6 +24,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
+import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -838,6 +838,14 @@ def _credentials_host_default(result: SubentryFlowResult) -> str:
     raise AssertionError("CONF_HOST field not found in credentials schema")
 
 
+def _credentials_host_is_blank(result: SubentryFlowResult) -> bool:
+    """Return whether the CONF_HOST field carries no schema default (left blank)."""
+    for key in result["data_schema"].schema:
+        if key == CONF_HOST:
+            return key.default is vol.UNDEFINED
+    raise AssertionError("CONF_HOST field not found in credentials schema")
+
+
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_energy_subentry_pairing_requires_key_approval(
     hass: HomeAssistant,
@@ -1249,10 +1257,10 @@ async def test_add_flow_aborts_when_entry_not_loaded(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_gateway_discovery_failure_proceeds_without_host(
+async def test_gateway_discovery_failure_leaves_host_blank(
     hass: HomeAssistant,
 ) -> None:
-    """A failed gateway-address discovery leaves the host default unset."""
+    """A failed gateway-address discovery leaves the host field blank and proceeds."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -1271,7 +1279,33 @@ async def test_gateway_discovery_failure_proceeds_without_host(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
-    assert _credentials_host_default(result) == DEFAULT_GATEWAY_HOST
+    assert _credentials_host_is_blank(result)
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_gateway_discovery_empty_leaves_host_blank(
+    hass: HomeAssistant,
+) -> None:
+    """Discovery returning no address (without raising) leaves the host blank and proceeds."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert _credentials_host_is_blank(result)
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
