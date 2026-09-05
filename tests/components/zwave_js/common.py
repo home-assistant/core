@@ -3,12 +3,16 @@
 from copy import deepcopy
 from typing import Any
 
+from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node.data_model import NodeDataType
 
 from homeassistant.components.zwave_js.helpers import (
     ZwaveValueMatcher,
     value_matches_matcher,
 )
+
+# NIF markers listed in SDS13548 as "not an actual Command Class"
+COMMAND_CLASS_MARKERS = {CommandClass.MARK, CommandClass.SECURITY_SCHEME0_MARK}
 
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 BATTERY_SENSOR = "sensor.multisensor_6_battery_level"

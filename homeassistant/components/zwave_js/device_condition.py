@@ -1,10 +1,7 @@
 """Provide the device conditions for Z-Wave JS."""
 
-from typing import cast
-
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
@@ -21,11 +18,11 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
     DOMAIN,
+    NODE_STATUSES,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
-    NODE_STATUSES,
     async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
 )
@@ -34,7 +31,9 @@ from .helpers import (
     check_type_schema_map,
     get_value_state_schema,
     get_zwave_value_from_config,
+    node_status_matches,
     remove_keys_with_empty_values,
+    value_matches_state,
 )
 
 CONF_STATUS = "status"
@@ -168,7 +167,7 @@ def async_condition_from_config(
     def test_node_status(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if node status is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        return bool(node.status.name.lower() == config[CONF_STATUS])
+        return node_status_matches(node, config[CONF_STATUS])
 
     if condition_type == NODE_STATUS_TYPE:
         return test_node_status
@@ -177,8 +176,9 @@ def async_condition_from_config(
     def test_config_parameter(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if config parameter is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        config_value = cast(ConfigurationValue, node.values[config[CONF_VALUE_ID]])
-        return bool(config_value.value == config[ATTR_VALUE])
+        return value_matches_state(
+            node.values[config[CONF_VALUE_ID]], config[ATTR_VALUE]
+        )
 
     if condition_type == CONFIG_PARAMETER_TYPE:
         return test_config_parameter
@@ -187,8 +187,9 @@ def async_condition_from_config(
     def test_value(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if value is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        value = get_zwave_value_from_config(node, config)
-        return bool(value.value == config[ATTR_VALUE])
+        return value_matches_state(
+            get_zwave_value_from_config(node, config), config[ATTR_VALUE]
+        )
 
     if condition_type == VALUE_TYPE:
         return test_value
