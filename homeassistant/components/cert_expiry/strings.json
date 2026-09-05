@@ -8,7 +8,9 @@
       "connection_refused": "Connection refused when connecting to host",
       "connection_reset": "Connection reset when connecting to host",
       "connection_timeout": "Timeout when connecting to this host",
-      "resolve_failed": "This host cannot be resolved"
+      "invalid_pem": "Invalid PEM-encoded data",
+      "resolve_failed": "This host cannot be resolved",
+      "validation_failed": "Failed to validate certificate. You may need to ignore the hostname or provide CA data."
     },
     "step": {
       "reconfigure": {
@@ -24,12 +26,16 @@
       },
       "user": {
         "data": {
+          "ca_data": "Optional CA certificate data (PEM format)",
           "host": "[%key:common::config_flow::data::host%]",
+          "ignore_hostname": "Ignore hostname mismatch errors",
           "name": "The name of the certificate",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
+          "ca_data": "Optional CA certificate data in PEM format. This is useful for self-signed certificates or internal CAs.",
           "host": "The hostname or IP address of the server to monitor.",
+          "ignore_hostname": "This setting may need to be enabled for local host resolution that does not match the certificate hostname.",
           "port": "The port to connect to on the server."
         },
         "title": "Define the certificate to test"
