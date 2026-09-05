@@ -201,7 +201,6 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         """Update list of sources from current source and apps."""
         tv_state = self._client.tv_state
         source_list = self._source_list
-        current_source = self._current_source
         self._source_list = {}
         self._current_source = None
         conf_sources = self._sources
@@ -241,9 +240,6 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         # empty list, TV may be off, keep previous list
         if not self._source_list and source_list:
             self._source_list = source_list
-            # only a TV reporting nothing keeps its previous source
-            if not tv_state.apps and not tv_state.inputs:
-                self._current_source = current_source
         # special handling of live tv since this might
         # not appear in the app or input lists in some cases
         elif not found_live_tv:

@@ -594,23 +594,6 @@ async def test_live_tv_source_missing_from_lists(hass: HomeAssistant, client) ->
     assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
 
 
-async def test_source_kept_on_empty_update(hass: HomeAssistant, client) -> None:
-    """Test source is kept when the TV reports no apps and no inputs."""
-    await setup_webostv(hass)
-    client.tv_state.current_app_id = "app0"
-    await client.mock_state_update()
-
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Input01"
-
-    client.tv_state.apps = {}
-    client.tv_state.inputs = {}
-    await client.mock_state_update()
-
-    attributes = hass.states.get(ENTITY_ID).attributes
-    assert attributes[ATTR_INPUT_SOURCE] == "Input01"
-    assert attributes[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
-
-
 async def test_app_id(hass: HomeAssistant, client) -> None:
     """Test app_id follows the foreground app id reported by the TV."""
     await setup_webostv(hass)
