@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
-from .const import _LOGGER, CHANNEL_DISPLAY_NAME, DISPATCH_DEVICE_DISCOVERED, SENSOR_EM
+from .const import CHANNEL_DISPLAY_NAME, DISPATCH_DEVICE_DISCOVERED, LOGGER, SENSOR_EM
 from .entity import RefossEntity
 
 
@@ -135,7 +135,7 @@ async def async_setup_entry(
             for channel in device.channels
             for description in descriptions
         )
-        _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
+        LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
     for coordinator in config_entry.runtime_data.coordinators:
         init_device(coordinator)

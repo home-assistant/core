@@ -256,7 +256,9 @@ async def test_updates_from_players_changed_new_ids(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -272,7 +274,9 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 2
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "101"), config_entry.entry_id
+    )
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 2
     assert (

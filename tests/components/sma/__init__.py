@@ -40,6 +40,7 @@ MOCK_USER_RECONFIGURE = {
     CONF_SSL: True,
     CONF_VERIFY_SSL: False,
     CONF_GROUP: "user",
+    CONF_PASSWORD: "new_password",
 }
 
 

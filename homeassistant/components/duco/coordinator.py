@@ -11,7 +11,14 @@ from duco_connectivity.exceptions import (
     DucoError,
     DucoResponseError,
 )
-from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList, NodeName
+from duco_connectivity.models import (
+    BoardInfo,
+    BypassSupplyTemperatureTarget,
+    Node,
+    NodeListActionItemList,
+    NodeName,
+    VentilationTemperatureInfo,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,10 +30,11 @@ from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
+
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class DucoData:
     """Data returned by the Duco coordinator."""
 
@@ -34,6 +42,8 @@ class DucoData:
     node_actions: NodeListActionItemList
     rssi_wifi: int | None
     time_filter_remain: int | None
+    ventilation_temperatures: VentilationTemperatureInfo | None
+    bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget]
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -41,7 +51,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
-    _supports_time_filter_remain: bool
     _configured_node_names: dict[int, str]
 
     def __init__(
@@ -60,7 +69,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
-        self._supports_time_filter_remain = True
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -168,16 +176,43 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
-        # node entities unavailable.
+        # node entities unavailable. A None result leaves the sensor absent
+        # but keeps the helper pollable so data can appear on a later refresh.
         time_filter_remain = None
-        if self._supports_time_filter_remain:
-            with suppress(DucoError):
-                time_filter_remain = await self.client.async_get_time_filter_remaining()
-                self._supports_time_filter_remain = time_filter_remain is not None
+        with suppress(DucoError):
+            time_filter_remain = await self.client.async_get_time_filter_remaining()
+
+        ventilation_temperatures = (
+            self.data.ventilation_temperatures if self.data else None
+        )
+        try:
+            ventilation_temperatures = (
+                await self.client.async_get_ventilation_temperature_info()
+            )
+        except DucoError as err:
+            _LOGGER.debug("Could not fetch Duco ventilation temperatures", exc_info=err)
+
+        bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget] = {}
+        try:
+            bypass_supply_temperature_targets = (
+                await self.client.async_get_bypass_supply_temperature_targets()
+            )
+        except DucoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except DucoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
+            ventilation_temperatures=ventilation_temperatures,
+            bypass_supply_temperature_targets=bypass_supply_temperature_targets,
         )

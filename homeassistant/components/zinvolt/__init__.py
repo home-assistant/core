@@ -8,8 +8,10 @@ from zinvolt.exceptions import ZinvoltError
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -39,6 +41,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> b
     await asyncio.gather(*tasks)
 
     entry.runtime_data = coordinators
+
+    # Register the main battery devices before forwarding platforms so unit
+    # sub-devices can resolve their via_device_id parent.
+    device_registry = dr.async_get(hass)
+    for coordinator in coordinators.values():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, coordinator.data.battery.serial_number)},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

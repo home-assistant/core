@@ -28,6 +28,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -41,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
+INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=""): cv.string})
 
 DEFAULT_START_OFF = False
 
@@ -513,17 +514,23 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.pairing
         assert self.protocol
         if user_input is not None:
-            try:
-                self.pairing.pin(user_input[CONF_PIN])
-                await self.pairing.finish()
-                self.credentials[self.protocol.value] = self.pairing.service.credentials
-                return await self.async_pair_next_protocol()
-            except exceptions.PairingError:
-                _LOGGER.exception("Authentication problem")
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            pin = user_input[CONF_PIN]
+            if not pin.isascii() or not pin.isdigit():
+                errors["pin"] = "invalid_pin"
+            else:
+                try:
+                    self.pairing.pin(pin)
+                    await self.pairing.finish()
+                    self.credentials[self.protocol.value] = (
+                        self.pairing.service.credentials
+                    )
+                    return await self.async_pair_next_protocol()
+                except exceptions.PairingError:
+                    _LOGGER.exception("Authentication problem")
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="pair_with_pin",

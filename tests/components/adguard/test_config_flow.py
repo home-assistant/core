@@ -55,10 +55,16 @@ async def test_connection_error(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FIXTURE_USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
@@ -109,15 +115,21 @@ async def test_full_flow_implementation(
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
+        domain=DOMAIN, data={CONF_HOST: "mock-adguard", CONF_PORT: 3000}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={"host": "mock-adguard", "port": "3000"},
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**FIXTURE_USER_INPUT, CONF_HOST: "mock-adguard"},
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 

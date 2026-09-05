@@ -107,6 +107,18 @@
       "message": "Unsupported media type for Russound zone: {media_type}"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "zone_source_exclusion": "Zone source exclusion"
+        },
+        "data_description": {
+          "zone_source_exclusion": "When enabled, Home Assistant hides sources that are disabled for a zone from the source list for that zone."
+        }
+      }
+    }
+  },
   "selector": {
     "connection_type": {
       "options": {
