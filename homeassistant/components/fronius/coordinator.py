@@ -302,18 +302,34 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         """Keep an active power limit alive against the device's fallback.
 
         The device holds a power limit only for as long as it keeps hearing
-        it, so it is sent again well before the period is up. Sending it once
-        here also lets the option take effect on a limit that is already
-        running - clearing the period on the device when it is turned off.
+        it, so with the option on the limit is sent again well before the
+        period is up.
         """
-        await self._async_resend_power_limit()
         if not self.revert_seconds:
+            await self._async_clear_revert_period()
             return
+        await self._async_resend_power_limit()
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass, self._async_resend_power_limit, HEARTBEAT_INTERVAL
             )
         )
+
+    async def _async_clear_revert_period(self) -> None:
+        """Take back a period left on the device when the option is turned off.
+
+        A device that was never configured for one here is left alone: what
+        it holds then came from somewhere else, and dropping it would take
+        away another controller's safety net.
+        """
+        controls = self.modbus_inverter.controls
+        if (
+            CONF_AUTO_REVERT not in self.config_entry.options
+            or controls is None
+            or not controls.revert_seconds
+        ):
+            return
+        await self._async_resend_power_limit()
 
     async def _async_resend_power_limit(self, _now: datetime | None = None) -> None:
         """Send an active power limit again to restart the fallback period.
@@ -323,17 +339,22 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         five seconds - only writing the limit again restarts it.
 
         Nothing to do while no limit is in force: without one there is no
-        period running that could be restarted or cleared.
+        period running that could be restarted or cleared. That is decided on
+        a fresh read, so a limit released on the device since the last poll
+        is not taken back here.
         """
         controls = self.modbus_inverter.controls
-        if (
-            controls is None
-            or not controls.enabled
-            or (limit := controls.power_limit) is None
-        ):
+        if controls is None:
             return
         try:
-            await controls.set_power_limit(limit, revert_seconds=self.revert_seconds)
+            await controls.async_update()
+            if not controls.enabled or (limit := controls.power_limit) is None:
+                return
+            # the same registers `set_power_limit` writes - but that one would
+            # enable the limit, and this may only refresh a running one
+            await controls.write("revert_seconds", self.revert_seconds)
+            await controls.write("power_limit", limit)
+            await controls.write("enabled", True)
         except (ModbusError, SunSpecError) as err:
             self.logger.warning(
                 "Could not send the AC power limit to inverter %s again: %s",
