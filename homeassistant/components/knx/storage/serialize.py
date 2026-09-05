@@ -7,6 +7,7 @@ from probatio import UNSUPPORTED, to_field_list
 from homeassistant.const import Platform
 from homeassistant.helpers import selector
 
+from .entity_link_schema import LINK_SCHEMA_FOR_PLATFORM
 from .entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
 from .knx_selector import AllSerializeFirst, GroupSelectSchema, KNXSelectorBase
 
@@ -43,4 +44,13 @@ def get_serialized_schema(
     """Get the schema for a specific platform."""
     if knx_schema := KNX_SCHEMA_FOR_PLATFORM.get(platform):
         return to_field_list(knx_schema, custom_serializer=knx_serializer)
+    return None
+
+
+def get_serialized_entity_link_schema(
+    platform: Platform,
+) -> dict[str, Any] | list[dict[str, Any]] | None:
+    """Get the entity link schema for a specific platform."""
+    if link_schema := LINK_SCHEMA_FOR_PLATFORM.get(platform):
+        return to_field_list(link_schema, custom_serializer=knx_serializer)
     return None
