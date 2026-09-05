@@ -1,0 +1,278 @@
+{
+    "common": {
+        "condition_behavior_name": "Condition passes if",
+        "condition_for_name": "For at least",
+        "condition_threshold_name": "Threshold type",
+        "trigger_behavior_name": "Trigger when",
+        "trigger_for_name": "For at least"
+    },
+    "conditions": {
+        "is_drying": {
+            "description": "Tests if one or more humidifiers are drying.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier is drying"
+        },
+        "is_humidifying": {
+            "description": "Tests if one or more humidifiers are humidifying.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier is humidifying"
+        },
+        "is_mode": {
+            "description": "Tests if one or more humidifiers are set to a specific mode.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                },
+                "mode": {
+                    "description": "The operation modes to check for.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Humidifier is in mode"
+        },
+        "is_off": {
+            "description": "Tests if one or more humidifiers are off.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier is off"
+        },
+        "is_on": {
+            "description": "Tests if one or more humidifiers are on.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier is on"
+        },
+        "is_target_humidity": {
+            "description": "Tests the target humidity of one or more humidifiers.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                },
+                "threshold": {
+                    "name": "Threshold type"
+                }
+            },
+            "name": "Humidifier target humidity"
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "Set humidity for {entity_name}",
+            "set_mode": "Change mode on {entity_name}",
+            "toggle": "Toggle {entity_name}",
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} is set to a specific mode",
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
+        },
+        "extra_fields": {
+            "above": "Above",
+            "below": "Below",
+            "for": "Duration",
+            "humidity": "Humidity",
+            "mode": "Mode"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} turned on or off",
+            "target_humidity_changed": "{entity_name} target humidity changed",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Humidifier",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "action": {
+                    "name": "Action",
+                    "state": {
+                        "drying": "Drying",
+                        "humidifying": "Humidifying",
+                        "idle": "Idle",
+                        "off": "Off"
+                    }
+                },
+                "available_modes": {
+                    "name": "Available modes"
+                },
+                "current_humidity": {
+                    "name": "Current humidity"
+                },
+                "humidity": {
+                    "name": "Target humidity"
+                },
+                "max_humidity": {
+                    "name": "Max target humidity"
+                },
+                "min_humidity": {
+                    "name": "Min target humidity"
+                },
+                "mode": {
+                    "name": "Mode",
+                    "state": {
+                        "auto": "Auto",
+                        "away": "Away",
+                        "baby": "Baby",
+                        "boost": "Boost",
+                        "comfort": "Comfort",
+                        "eco": "Eco",
+                        "home": "Home",
+                        "normal": "Normal",
+                        "sleep": "Sleep"
+                    }
+                }
+            }
+        },
+        "dehumidifier": {
+            "name": "Dehumidifier"
+        },
+        "humidifier": {
+            "name": "Humidifier"
+        }
+    },
+    "exceptions": {
+        "humidity_out_of_range": {
+            "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+        }
+    },
+    "services": {
+        "set_humidity": {
+            "description": "Sets the target humidity of a humidifier.",
+            "fields": {
+                "humidity": {
+                    "description": "Target humidity.",
+                    "name": "Humidity"
+                }
+            },
+            "name": "Set humidifier target humidity"
+        },
+        "set_mode": {
+            "description": "Sets the mode of a humidifier.",
+            "fields": {
+                "mode": {
+                    "description": "Operation mode. For example, \"normal\", \"eco\", or \"away\". For a list of possible values, refer to the integration documentation.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Set humidifier mode"
+        },
+        "toggle": {
+            "description": "Toggles a humidifier on/off.",
+            "name": "Toggle humidifier"
+        },
+        "turn_off": {
+            "description": "Turns off a humidifier.",
+            "name": "Turn off humidifier"
+        },
+        "turn_on": {
+            "description": "Turns on a humidifier.",
+            "name": "Turn on humidifier"
+        }
+    },
+    "title": "Humidifier",
+    "triggers": {
+        "mode_changed": {
+            "description": "Triggers when the operation mode of one or more humidifiers changes.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                },
+                "mode": {
+                    "description": "The operation modes to trigger on.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Humidifier mode changed"
+        },
+        "started_drying": {
+            "description": "Triggers when one or more humidifiers start drying.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier started drying"
+        },
+        "started_humidifying": {
+            "description": "Triggers when one or more humidifiers start humidifying.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier started humidifying"
+        },
+        "turned_off": {
+            "description": "Triggers when one or more humidifiers turn off.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier turned off"
+        },
+        "turned_on": {
+            "description": "Triggers when one or more humidifiers turn on.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Humidifier turned on"
+        }
+    }
+}
