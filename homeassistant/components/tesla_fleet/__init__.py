@@ -2,6 +2,7 @@
 
 from typing import Final
 
+from aiohttp import ClientError
 import jwt
 from tesla_fleet_api import TeslaFleetApi, is_valid_region
 from tesla_fleet_api.const import Scope
@@ -75,7 +76,12 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
         OAuth2TokenRequestReauthError,
     ) as e:
         raise ConfigEntryAuthFailed from e
-    except (TeslaFleetError, OAuth2TokenRequestError) as e:
+    except (
+        TeslaFleetError,
+        OAuth2TokenRequestError,
+        ClientError,
+        TimeoutError,
+    ) as e:
         raise ConfigEntryNotReady from e
 
     try:
@@ -88,7 +94,12 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
         OAuth2TokenRequestReauthError,
     ) as e:
         raise ConfigEntryAuthFailed from e
-    except (TeslaFleetError, OAuth2TokenRequestError) as e:
+    except (
+        TeslaFleetError,
+        OAuth2TokenRequestError,
+        ClientError,
+        TimeoutError,
+    ) as e:
         raise ConfigEntryNotReady from e
 
     try:
@@ -100,7 +111,12 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
         OAuth2TokenRequestReauthError,
     ) as e:
         raise ConfigEntryAuthFailed from e
-    except (TeslaFleetError, OAuth2TokenRequestError) as e:
+    except (
+        TeslaFleetError,
+        OAuth2TokenRequestError,
+        ClientError,
+        TimeoutError,
+    ) as e:
         raise ConfigEntryNotReady from e
 
 

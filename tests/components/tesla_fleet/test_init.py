@@ -4,6 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -56,6 +57,8 @@ SETUP_ERRORS = [
     (OAuthExpired, ConfigEntryState.SETUP_ERROR),
     (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+    (ClientError, ConfigEntryState.SETUP_RETRY),
+    (TimeoutError, ConfigEntryState.SETUP_RETRY),
 ]
 
 RUNTIME_ERRORS = [InvalidToken, OAuthExpired, LoginRequired, TeslaFleetError]
@@ -86,7 +89,7 @@ async def test_init_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
-    side_effect: type[TeslaFleetError],
+    side_effect: type[Exception],
     state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
