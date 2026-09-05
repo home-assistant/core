@@ -64,7 +64,7 @@ dependencies = [
   # Do not bump orjson until the very aggressive buffer resizing introduced in
   # 3.12.0, which causes memory use to balloon, has been adjusted or a workaround
   # is available.
-  "orjson==3.11.9",
+  "orjson==3.12.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
