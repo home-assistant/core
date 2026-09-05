@@ -188,8 +188,11 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.warning(
             "Importing LaCrosse from YAML is deprecated and will be removed"
         )
+        resolved_device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, import_config[CONF_DEVICE]
+        )
         entry_input: dict[str, Any] = {
-            CONF_DEVICE: import_config[CONF_DEVICE],
+            CONF_DEVICE: resolved_device,
             CONF_BAUD: import_config[CONF_BAUD],
             CONF_DATARATE: import_config.get(CONF_DATARATE),
             CONF_FREQUENCY: import_config.get(CONF_FREQUENCY),
