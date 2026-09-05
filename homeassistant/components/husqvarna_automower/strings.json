@@ -530,9 +530,6 @@
       "enable_schedule": {
         "name": "Enable schedule"
       },
-      "my_lawn_work_area": {
-        "name": "My lawn"
-      },
       "stay_out_zones": {
         "name": "Avoid {stay_out_zone}"
       }
