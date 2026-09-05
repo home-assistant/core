@@ -22,9 +22,14 @@ from homeassistant.exceptions import HomeAssistantError
 from .conftest import MediaSourceMocks, MediaSourceState
 from .const import (
     DEFAULT_ENTITY_ID,
+    MOCK_MEDIA_DIR_URI_1,
+    MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
     MOCK_MEDIA_IMAGE_URI_1,
+    MOCK_MEDIA_IMAGE_URI_2,
+    MOCK_MEDIA_IMAGE_URI_3,
+    MOCK_MEDIA_IMAGE_URI_4,
     TEST_IMAGE,
 )
 from .helpers import config_entry_from_uri
@@ -68,6 +73,57 @@ async def test_image(
     assert state and state.state == TEST_TIME
 
     await _verify_path_image(hass, hass_client)
+
+
+@pytest.mark.usefixtures("mock_media_source")
+async def test_image_multi(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    media_source_state: MediaSourceState,
+) -> None:
+    """Test multiple media sources."""
+    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_4] = PlayMedia(
+        url="",
+        mime_type="image/png",
+        path=TEST_IMAGE,
+    )
+
+    with (
+        freeze_time(TEST_TIME),
+        patch(
+            "homeassistant.components.collection_image.image.random.choice",
+            return_value=media_source_state.browse_results[
+                MOCK_MEDIA_DIR_URI_2
+            ].children[2],
+        ) as mock_choice,
+    ):
+        config_entry = config_entry_from_uri(
+            [MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_2]
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
+        MOCK_MEDIA_IMAGE_URI_1,
+        MOCK_MEDIA_IMAGE_URI_2,
+        MOCK_MEDIA_IMAGE_URI_3,
+        MOCK_MEDIA_IMAGE_URI_4,
+    ]
+
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == TEST_TIME
+
+    client = await hass_client()
+
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    expected_data = await hass.async_add_executor_job(TEST_IMAGE.read_bytes)
+    body = await resp.read()
+    assert body == expected_data
 
 
 async def test_image_during_startup(

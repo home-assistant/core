@@ -37,11 +37,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Collection Image image entities."""
     media = entry.data[CONF_MEDIA]
+    if isinstance(media, dict):
+        content_ids = [media["media_content_id"]]
+    else:
+        content_ids = [item["media_content_id"] for item in media]
     async_add_entities(
         [
             CollectionImageImageEntity(
                 name=entry.title,
-                media_content_id=media["media_content_id"],
+                media_content_ids=content_ids,
                 unique_id=entry.entry_id,
                 hass=hass,
             )
@@ -57,7 +61,7 @@ class CollectionImageImageEntity(ImageEntity):
     def __init__(
         self,
         name: str,
-        media_content_id: str,
+        media_content_ids: list[str],
         unique_id: str,
         hass: HomeAssistant,
     ) -> None:
@@ -66,7 +70,7 @@ class CollectionImageImageEntity(ImageEntity):
         self.path = None
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self.media_content_id = media_content_id
+        self.media_content_ids = media_content_ids
 
     def set_unavailable(self) -> None:
         """Set the entity to unavailable state."""
@@ -78,23 +82,29 @@ class CollectionImageImageEntity(ImageEntity):
 
     async def get_valid_images(self) -> list[BrowseMedia]:
         """Given the configured media directory for the entity, get a list of all child images."""
-        try:
-            media = await async_browse_media(self.hass, self.media_content_id)
-        except BrowseError as err:
-            _LOGGER.warning("%s: %s", self.entity_id, str(err))
-            return []
 
-        images = [
-            item
-            for item in (media.children or [])
-            if item.media_class == MediaClass.IMAGE
-        ]
-        if not images:
-            _LOGGER.warning(
-                "%s: No valid images in %s",
-                self.entity_id,
-                self.media_content_id,
-            )
+        images: list[BrowseMedia] = []
+
+        for media_content_id in self.media_content_ids:
+            try:
+                media = await async_browse_media(self.hass, media_content_id)
+            except BrowseError as err:
+                _LOGGER.warning("%s: %s", self.entity_id, str(err))
+                return []
+
+            if media.children:
+                images.extend(
+                    item
+                    for item in media.children
+                    if item.media_class == MediaClass.IMAGE
+                )
+            if not images:
+                _LOGGER.warning(
+                    "%s: No valid images in %s",
+                    self.entity_id,
+                    media_content_id,
+                )
+
         return images
 
     async def get_random_image(self) -> None:
