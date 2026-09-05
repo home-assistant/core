@@ -9,7 +9,9 @@ import zoneinfo
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 from todoist_api_python.models import Due
 
@@ -20,9 +22,18 @@ from homeassistant.components.todoist.const import (
     DOMAIN,
     LABELS,
     PROJECT_NAME,
+    REMINDER_DATE,
+    REMINDER_LATITUDE,
+    REMINDER_LOCATION_DIRECTION,
+    REMINDER_LOCATION_DIRECTION_LEAVE,
+    REMINDER_LOCATION_NAME,
+    REMINDER_LONGITUDE,
+    REMINDER_RADIUS,
+    REMINDER_ZONE,
     SECTION_NAME,
     SERVICE_NEW_TASK,
 )
+from homeassistant.components.todoist.services import SYNC_URL
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -30,7 +41,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import PROJECT_ID, SECTION_ID, SUMMARY, make_api_due
+from .conftest import PROJECT_ID, SECTION_ID, SUMMARY, make_api_due, make_api_task
 
 # Set our timezone to CST/Regina so we can check calculations
 # This keeps UTC-6 all year round
@@ -401,6 +412,181 @@ async def test_create_task_service_call_with_none_section(
     )
 
     api.add_task.assert_called_with("task", project_id=PROJECT_ID)
+
+
+ZONE_ENTITY_ID = "zone.office"
+NEW_TASK_ID = "new-task-id"
+
+
+@pytest.fixture(name="created_task")
+def mock_created_task(api: AsyncMock) -> None:
+    """Return a real task from add_task so reminders get a usable item ID."""
+    api.add_task.return_value = make_api_task(id=NEW_TASK_ID)
+
+
+@pytest.fixture(name="zone")
+def mock_zone(hass: HomeAssistant) -> None:
+    """Create a zone to attach location reminders to."""
+    hass.states.async_set(
+        ZONE_ENTITY_ID,
+        "zoning",
+        {
+            "friendly_name": "Office",
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "radius": 250,
+        },
+    )
+
+
+def reminder_args(aioclient_mock: AiohttpClientMocker) -> list[dict[str, Any]]:
+    """Return the reminder_add arguments posted to the Sync API."""
+    assert len(aioclient_mock.mock_calls) == 1
+    commands = aioclient_mock.mock_calls[0][2]["commands"]
+    return [command["args"] for command in commands]
+
+
+async def test_create_task_service_call_with_zone_reminder(
+    hass: HomeAssistant,
+    api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    zone: None,
+    created_task: None,
+) -> None:
+    """Test a location reminder is created from a zone."""
+    aioclient_mock.post(SYNC_URL, json={})
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {CONTENT: "task", PROJECT_NAME: "Name", REMINDER_ZONE: ZONE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert reminder_args(aioclient_mock) == [
+        {
+            "item_id": NEW_TASK_ID,
+            "type": "location",
+            "name": "Office",
+            "loc_lat": "37.7749",
+            "loc_long": "-122.4194",
+            "loc_trigger": "on_enter",
+            "radius": 250,
+        }
+    ]
+
+
+async def test_create_task_service_call_with_coordinate_reminder(
+    hass: HomeAssistant,
+    api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    created_task: None,
+) -> None:
+    """Test a location reminder is created from explicit coordinates."""
+    aioclient_mock.post(SYNC_URL, json={})
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            REMINDER_LOCATION_NAME: "Grocery store",
+            REMINDER_LATITUDE: 37.3861,
+            REMINDER_LONGITUDE: -122.0839,
+            REMINDER_RADIUS: 100,
+            REMINDER_LOCATION_DIRECTION: REMINDER_LOCATION_DIRECTION_LEAVE,
+        },
+        blocking=True,
+    )
+
+    assert reminder_args(aioclient_mock) == [
+        {
+            "item_id": NEW_TASK_ID,
+            "type": "location",
+            "name": "Grocery store",
+            "loc_lat": "37.3861",
+            "loc_long": "-122.0839",
+            "loc_trigger": "on_leave",
+            "radius": 100,
+        }
+    ]
+
+
+async def test_create_task_service_call_with_date_and_location_reminder(
+    hass: HomeAssistant,
+    api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    zone: None,
+    created_task: None,
+) -> None:
+    """Test a date and a location reminder are sent in a single request."""
+    aioclient_mock.post(SYNC_URL, json={})
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            REMINDER_DATE: "2024-05-25T10:30:00",
+            REMINDER_ZONE: ZONE_ENTITY_ID,
+        },
+        blocking=True,
+    )
+
+    args = reminder_args(aioclient_mock)
+    assert [arg["type"] for arg in args] == ["absolute", "location"]
+    # The naive reminder date is interpreted in the local time zone (UTC-6).
+    assert args[0]["due"] == {"date": "2024-05-25T16:30:00.000000Z"}
+
+
+async def test_create_task_service_call_with_unknown_zone(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test an unknown zone raises an error."""
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NEW_TASK,
+            {CONTENT: "task", PROJECT_NAME: "Name", REMINDER_ZONE: "zone.missing"},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "zone_invalid"
+    api.add_task.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "reminder_fields",
+    [
+        # Coordinate fields must all be supplied together.
+        {REMINDER_LOCATION_NAME: "Store", REMINDER_LATITUDE: 37.3861},
+        {REMINDER_LATITUDE: 37.3861, REMINDER_LONGITUDE: -122.0839},
+        # A zone and coordinates are mutually exclusive.
+        {
+            REMINDER_ZONE: ZONE_ENTITY_ID,
+            REMINDER_LOCATION_NAME: "Store",
+            REMINDER_LATITUDE: 37.3861,
+            REMINDER_LONGITUDE: -122.0839,
+            REMINDER_RADIUS: 100,
+        },
+    ],
+    ids=("incomplete_coordinates", "no_location_name", "zone_and_coordinates"),
+)
+async def test_create_task_service_call_invalid_location(
+    hass: HomeAssistant, api: AsyncMock, reminder_fields: dict[str, Any]
+) -> None:
+    """Test invalid combinations of location reminder fields are rejected."""
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NEW_TASK,
+            {CONTENT: "task", PROJECT_NAME: "Name", **reminder_fields},
+            blocking=True,
+        )
+
+    api.add_task.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -8,6 +8,8 @@ import uuid
 
 import probatio
 
+from homeassistant.components.zone import ATTR_RADIUS, DOMAIN as ZONE_DOMAIN
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
@@ -24,11 +26,20 @@ from .const import (
     DUE_DATE_STRING,
     DUE_DATE_VALID_LANGS,
     LABELS,
+    MAX_REMINDER_RADIUS,
     PRIORITY,
     PROJECT_NAME,
     REMINDER_DATE,
     REMINDER_DATE_LANG,
     REMINDER_DATE_STRING,
+    REMINDER_LATITUDE,
+    REMINDER_LOCATION_DIRECTION,
+    REMINDER_LOCATION_DIRECTION_ENTER,
+    REMINDER_LOCATION_NAME,
+    REMINDER_LOCATION_VALID_DIRECTIONS,
+    REMINDER_LONGITUDE,
+    REMINDER_RADIUS,
+    REMINDER_ZONE,
     SECTION_NAME,
     SERVICE_NEW_TASK,
 )
@@ -36,33 +47,133 @@ from .coordinator import TodoistConfigEntry, TodoistCoordinator, flatten_async_p
 
 _LOGGER = logging.getLogger(__name__)
 
-NEW_TASK_SERVICE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONTENT): cv.string,
-        probatio.Optional(DESCRIPTION): cv.string,
-        probatio.Optional(PROJECT_NAME, default="inbox"): probatio.All(
-            cv.string, probatio.Lower
-        ),
-        probatio.Optional(SECTION_NAME): probatio.Any(
-            probatio.All(cv.string, probatio.Lower), None
-        ),
-        probatio.Optional(LABELS): cv.ensure_list_csv,
-        probatio.Optional(ASSIGNEE): cv.string,
-        probatio.Optional(PRIORITY): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=1, max=4)
-        ),
-        probatio.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
-        probatio.Optional(DUE_DATE_LANG): probatio.All(
-            cv.string, probatio.In(DUE_DATE_VALID_LANGS)
-        ),
-        probatio.Exclusive(DUE_DATE, "due_date"): cv.string,
-        probatio.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
-        probatio.Optional(REMINDER_DATE_LANG): probatio.All(
-            cv.string, probatio.In(DUE_DATE_VALID_LANGS)
-        ),
-        probatio.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
-    }
+SYNC_URL = "https://api.todoist.com/api/v1/sync"
+
+# All coordinate fields must be supplied together, and they are mutually
+# exclusive with a zone. Using the location name as the anchor of the inclusive
+# group means checking it against the zone covers the whole group.
+NEW_TASK_SERVICE_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required(CONTENT): cv.string,
+            probatio.Optional(DESCRIPTION): cv.string,
+            probatio.Optional(PROJECT_NAME, default="inbox"): probatio.All(
+                cv.string, probatio.Lower
+            ),
+            probatio.Optional(SECTION_NAME): probatio.Any(
+                probatio.All(cv.string, probatio.Lower), None
+            ),
+            probatio.Optional(LABELS): cv.ensure_list_csv,
+            probatio.Optional(ASSIGNEE): cv.string,
+            probatio.Optional(PRIORITY): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=4)
+            ),
+            probatio.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
+            probatio.Optional(DUE_DATE_LANG): probatio.All(
+                cv.string, probatio.In(DUE_DATE_VALID_LANGS)
+            ),
+            probatio.Exclusive(DUE_DATE, "due_date"): cv.string,
+            probatio.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
+            probatio.Optional(REMINDER_DATE_LANG): probatio.All(
+                cv.string, probatio.In(DUE_DATE_VALID_LANGS)
+            ),
+            probatio.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
+            probatio.Optional(REMINDER_ZONE): cv.entity_domain(ZONE_DOMAIN),
+            probatio.Inclusive(REMINDER_LOCATION_NAME, "reminder_location"): cv.string,
+            probatio.Inclusive(REMINDER_LATITUDE, "reminder_location"): cv.latitude,
+            probatio.Inclusive(REMINDER_LONGITUDE, "reminder_location"): cv.longitude,
+            probatio.Inclusive(REMINDER_RADIUS, "reminder_location"): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=MAX_REMINDER_RADIUS)
+            ),
+            probatio.Optional(
+                REMINDER_LOCATION_DIRECTION, default=REMINDER_LOCATION_DIRECTION_ENTER
+            ): probatio.In(REMINDER_LOCATION_VALID_DIRECTIONS),
+        }
+    ),
+    probatio.AtMostOne(REMINDER_ZONE, REMINDER_LOCATION_NAME),
 )
+
+
+def _get_reminder_due(call: ServiceCall) -> dict[str, Any]:
+    """Return the Sync API due arguments for a time based reminder, if any."""
+    reminder_due: dict[str, Any] = {}
+    if REMINDER_DATE_STRING in call.data:
+        reminder_due["string"] = call.data[REMINDER_DATE_STRING]
+
+    if REMINDER_DATE_LANG in call.data:
+        reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
+
+    if REMINDER_DATE in call.data:
+        reminder_date = dt_util.parse_datetime(call.data[REMINDER_DATE])
+        if reminder_date is None:
+            reminder = dt_util.parse_date(call.data[REMINDER_DATE])
+            if reminder is None:
+                raise ValueError(f"Invalid reminder_date: {call.data[REMINDER_DATE]}")
+            reminder_date = datetime(reminder.year, reminder.month, reminder.day)
+        # Format it in the manner Todoist expects (UTC with Z suffix)
+        reminder_date = dt_util.as_utc(reminder_date)
+        date_format = "%Y-%m-%dT%H:%M:%S.000000Z"
+        reminder_due["date"] = datetime.strftime(reminder_date, date_format)
+
+    return reminder_due
+
+
+def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
+    """Return the Sync API location arguments for the requested reminder, if any."""
+    if zone_entity_id := call.data.get(REMINDER_ZONE):
+        if (zone := call.hass.states.get(zone_entity_id)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="zone_invalid",
+                translation_placeholders={"zone": zone_entity_id},
+            )
+        name = zone.name
+        latitude = zone.attributes[ATTR_LATITUDE]
+        longitude = zone.attributes[ATTR_LONGITUDE]
+        radius = zone.attributes[ATTR_RADIUS]
+    elif REMINDER_LOCATION_NAME in call.data:
+        name = call.data[REMINDER_LOCATION_NAME]
+        latitude = call.data[REMINDER_LATITUDE]
+        longitude = call.data[REMINDER_LONGITUDE]
+        radius = call.data[REMINDER_RADIUS]
+    else:
+        return None
+
+    return {
+        "type": "location",
+        "name": name,
+        "loc_lat": str(latitude),
+        "loc_long": str(longitude),
+        "loc_trigger": call.data[REMINDER_LOCATION_DIRECTION],
+        "radius": int(radius),
+    }
+
+
+async def _async_add_reminders(
+    hass: HomeAssistant, token: str, reminders: list[dict[str, Any]]
+) -> None:
+    """Add reminders to a task.
+
+    The REST API doesn't support reminders, so we use the Sync API directly
+    to maintain functional parity with the component.
+    https://developer.todoist.com/api/v1/#tag/Sync/Reminders/Add-a-reminder
+    """
+    commands = [
+        {
+            "type": "reminder_add",
+            "temp_id": str(uuid.uuid1()),
+            "uuid": str(uuid.uuid1()),
+            "args": args,
+        }
+        for args in reminders
+    ]
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    await async_get_clientsession(hass).post(
+        SYNC_URL, headers=headers, json={"commands": commands}
+    )
 
 
 def _async_get_coordinator(hass: HomeAssistant) -> TodoistCoordinator:
@@ -162,53 +273,23 @@ async def handle_new_task(call: ServiceCall) -> None:
         # Pass the datetime object directly - the library handles formatting
         data["due_datetime"] = dt_util.as_utc(due_date)
 
+    # Resolve reminders first so an invalid one doesn't leave a task behind.
+    reminders: list[dict[str, Any]] = []
+
+    if reminder_due := _get_reminder_due(call):
+        reminders.append({"type": "absolute", "due": reminder_due})
+
+    if location := _get_reminder_location(call):
+        reminders.append(location)
+
     api_task = await coordinator.api.add_task(content, **data)
     await coordinator.async_refresh()
 
-    # The REST API doesn't support reminders, so we use the Sync API directly
-    # to maintain functional parity with the component.
-    # https://developer.todoist.com/api/v1/#tag/Sync/Reminders/Add-a-reminder
-    _reminder_due: dict = {}
-    if REMINDER_DATE_STRING in call.data:
-        _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
-
-    if REMINDER_DATE_LANG in call.data:
-        _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
-
-    if REMINDER_DATE in call.data:
-        reminder_date = dt_util.parse_datetime(call.data[REMINDER_DATE])
-        if reminder_date is None:
-            reminder = dt_util.parse_date(call.data[REMINDER_DATE])
-            if reminder is None:
-                raise ValueError(f"Invalid reminder_date: {call.data[REMINDER_DATE]}")
-            reminder_date = datetime(reminder.year, reminder.month, reminder.day)
-        # Format it in the manner Todoist expects (UTC with Z suffix)
-        reminder_date = dt_util.as_utc(reminder_date)
-        date_format = "%Y-%m-%dT%H:%M:%S.000000Z"
-        _reminder_due["date"] = datetime.strftime(reminder_date, date_format)
-
-    if _reminder_due:
-        sync_url = "https://api.todoist.com/api/v1/sync"
-        reminder_data = {
-            "commands": [
-                {
-                    "type": "reminder_add",
-                    "temp_id": str(uuid.uuid1()),
-                    "uuid": str(uuid.uuid1()),
-                    "args": {
-                        "item_id": api_task.id,
-                        "type": "absolute",
-                        "due": _reminder_due,
-                    },
-                }
-            ]
-        }
-        headers = {
-            "Authorization": f"Bearer {coordinator.token}",
-            "Content-Type": "application/json",
-        }
-        await async_get_clientsession(call.hass).post(
-            sync_url, headers=headers, json=reminder_data
+    if reminders:
+        await _async_add_reminders(
+            call.hass,
+            coordinator.token,
+            [{"item_id": api_task.id, **reminder} for reminder in reminders],
         )
 
     _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])

@@ -82,3 +82,44 @@ new_task:
       example: "2019-10-22T10:30:00"
       selector:
         text:
+    reminder_zone:
+      example: zone.home
+      selector:
+        entity:
+          filter:
+            - domain: zone
+    reminder_location_name:
+      example: Home
+      selector:
+        text:
+    reminder_latitude:
+      example: 37.7749
+      selector:
+        number:
+          min: -90
+          max: 90
+          step: any
+          mode: box
+    reminder_longitude:
+      example: -122.4194
+      selector:
+        number:
+          min: -180
+          max: 180
+          step: any
+          mode: box
+    reminder_radius:
+      example: 100
+      selector:
+        number:
+          min: 1
+          max: 5000
+          unit_of_measurement: m
+    reminder_location_direction:
+      default: on_enter
+      selector:
+        select:
+          options:
+            - on_enter
+            - on_leave
+          translation_key: reminder_location_direction

@@ -23,6 +23,17 @@
     },
     "section_invalid": {
       "message": "Project \"{project}\" has no section \"{section}\""
+    },
+    "zone_invalid": {
+      "message": "Unknown zone \"{zone}\""
+    }
+  },
+  "selector": {
+    "reminder_location_direction": {
+      "options": {
+        "on_enter": "Entering",
+        "on_leave": "Leaving"
+      }
     }
   },
   "services": {
@@ -76,6 +87,30 @@
         "reminder_date_string": {
           "description": "When the user should be reminded of this task, in natural language.",
           "name": "Reminder date string"
+        },
+        "reminder_latitude": {
+          "description": "The latitude of the location that should trigger the reminder. Note that this location is shared with Todoist.",
+          "name": "Reminder latitude"
+        },
+        "reminder_location_direction": {
+          "description": "Whether the reminder should be triggered when entering or leaving the location.",
+          "name": "Reminder location direction"
+        },
+        "reminder_location_name": {
+          "description": "An alias name for the location that should trigger the reminder.",
+          "name": "Reminder location name"
+        },
+        "reminder_longitude": {
+          "description": "The longitude of the location that should trigger the reminder. Note that this location is shared with Todoist.",
+          "name": "Reminder longitude"
+        },
+        "reminder_radius": {
+          "description": "The radius, in meters, around the location that should trigger the reminder.",
+          "name": "Reminder radius"
+        },
+        "reminder_zone": {
+          "description": "The zone that should trigger the reminder. Note that the zone's location is shared with Todoist.",
+          "name": "Reminder zone"
         },
         "section": {
           "description": "The name of a section within the project to add the task to.",
