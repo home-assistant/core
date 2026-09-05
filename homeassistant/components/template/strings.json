@@ -68,10 +68,14 @@
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_off": "Delay off",
+              "delay_on": "Delay on"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_off": "The amount of time the template state must not be met before this sensor switches to `off`.",
+              "delay_on": "The amount of time the template state must be met before this sensor switches to `on`."
             },
             "name": "[%key:component::template::common::additional_options%]"
           }
@@ -669,10 +673,14 @@
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::additional_options::data::delay_off%]",
+              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::additional_options::data::delay_on%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::additional_options::data_description::delay_off%]",
+              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::additional_options::data_description::delay_on%]"
             },
             "name": "[%key:component::template::common::additional_options%]"
           }

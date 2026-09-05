@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import setup
+from homeassistant import config_entries, setup
 from homeassistant.components import binary_sensor, template
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -21,10 +21,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     RESTORE_STATE_SAVED_ATTRIBUTES,
@@ -596,6 +598,143 @@ async def test_delay_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await hass.async_block_till_done()
 
     assert hass.states.get(TEST_BINARY_SENSOR.entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("advanced_input", "expected_advanced_options", "expected_state"),
+    [
+        (
+            {"delay_on": {"seconds": 5}},
+            {"delay_on": {"seconds": 5.0}},
+            STATE_UNKNOWN,
+        ),
+        (
+            {"delay_off": {"minutes": 1}},
+            {"delay_off": {"minutes": 1.0}},
+            STATE_ON,
+        ),
+        (
+            {"delay_on": {"seconds": 5}, "delay_off": {"minutes": 1}},
+            {"delay_on": {"seconds": 5.0}, "delay_off": {"minutes": 1.0}},
+            STATE_UNKNOWN,
+        ),
+    ],
+)
+async def test_config_flow_binary_sensor_delay_options(
+    hass: HomeAssistant,
+    advanced_input: dict[str, Any],
+    expected_advanced_options: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test delay options in the binary sensor config flow."""
+    result = await hass.config_entries.flow.async_init(
+        template.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry",
+        wraps=template.async_setup_entry,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "My template",
+                "state": "{{ true }}",
+                "additional_options": advanced_input,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My template"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "additional_options": expected_advanced_options,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(template.DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "additional_options": expected_advanced_options,
+    }
+    state = hass.states.get("binary_sensor.my_template")
+    assert state.state == expected_state
+
+
+async def test_config_flow_preview_binary_sensor_delay(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview with a delayed binary sensor."""
+    client = await hass_ws_client(hass)
+
+    hass.states.async_set("binary_sensor.available", "on")
+    hass.states.async_set("binary_sensor.one", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        template.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My template",
+                "state": "{{ is_state('binary_sensor.one', 'on') }}",
+                "additional_options": {
+                    "availability": "{{ True }}",
+                    "delay_on": {"seconds": 1},
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "off"
+
+    hass.states.async_set("binary_sensor.one", "on")
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "off"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "on"
 
 
 @pytest.mark.parametrize(
