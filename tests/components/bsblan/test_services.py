@@ -18,6 +18,10 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.bsblan.const import DOMAIN
+from homeassistant.components.bsblan.services import (
+    SERVICE_SET_HEATING_SCHEDULE_SCHEMA,
+    SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -27,6 +31,17 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test constants
 TEST_DEVICE_MAC = "00:80:41:19:69:90"
+
+
+@pytest.mark.parametrize(
+    "service_schema",
+    [SERVICE_SET_HEATING_SCHEDULE_SCHEMA, SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA],
+    ids=["heating", "hot_water"],
+)
+def test_set_schedule_requires_a_day(service_schema: vol.Schema) -> None:
+    """Test that setting a schedule requires at least one day."""
+    with pytest.raises(vol.Invalid):
+        service_schema({"device_id": "test-device"})
 
 
 @pytest.fixture
@@ -419,6 +434,7 @@ async def test_api_error(
     water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when BSB-LAN API call fails."""
+    mock_bsblan.hot_water_schedule.reset_mock()
     mock_bsblan.set_hot_water_schedule.side_effect = BSBLANError("API Error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -435,6 +451,7 @@ async def test_api_error(
         )
 
     assert exc_info.value.translation_key == "set_schedule_failed"
+    mock_bsblan.hot_water_schedule.assert_awaited_once_with()
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -591,6 +608,30 @@ async def test_non_standard_time_types(
                 "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": 600, "end_time": 800},
+                ],
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_too_many_slots_per_day(
+    hass: HomeAssistant,
+    water_heater_device_entry: dr.DeviceEntry,
+) -> None:
+    """Test that more than three slots for a day is rejected by the schema."""
+    # BSB-LAN supports a maximum of three time slots per day
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_hot_water_schedule",
+            {
+                "device_id": water_heater_device_entry.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                    {"start_time": time(9, 0), "end_time": time(11, 0)},
+                    {"start_time": time(12, 0), "end_time": time(14, 0)},
+                    {"start_time": time(15, 0), "end_time": time(17, 0)},
                 ],
             },
             blocking=True,
@@ -837,3 +878,324 @@ async def test_sync_time_service_entry_not_loaded(
             {"device_id": unloaded_device.id},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setting the heating schedule for a circuit sub-device."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_heating_schedule",
+        {
+            "device_id": circuit_device.id,
+            "monday_slots": [
+                {"start_time": time(6, 0), "end_time": time(8, 0)},
+                {"start_time": time(17, 0), "end_time": time(21, 0)},
+            ],
+            "tuesday_slots": [
+                {"start_time": time(6, 0), "end_time": time(8, 0)},
+            ],
+        },
+        blocking=True,
+    )
+
+    assert len(mock_bsblan.set_heating_schedule.mock_calls) == 1
+    call_args = mock_bsblan.set_heating_schedule.call_args
+
+    heating_schedule = call_args.args[0]
+    assert call_args.kwargs["circuit"] == 1
+    assert heating_schedule.monday == DaySchedule(
+        slots=[
+            TimeSlot(start=time(6, 0), end=time(8, 0)),
+            TimeSlot(start=time(17, 0), end=time(21, 0)),
+        ]
+    )
+    assert heating_schedule.tuesday == DaySchedule(
+        slots=[TimeSlot(start=time(6, 0), end=time(8, 0))]
+    )
+    # Unprovided days should be None
+    assert heating_schedule.wednesday is None
+    assert heating_schedule.sunday is None
+
+
+async def test_set_heating_schedule_circuit_2(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry_dual_circuit: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that the circuit number is derived from a circuit-2 sub-device."""
+    mock_config_entry_dual_circuit.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_dual_circuit.entry_id)
+    await hass.async_block_till_done()
+
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-2"),
+        mock_config_entry_dual_circuit.entry_id,
+    )
+    assert circuit_device is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_heating_schedule",
+        {
+            "device_id": circuit_device.id,
+            "monday_slots": [
+                {"start_time": time(6, 0), "end_time": time(8, 0)},
+            ],
+        },
+        blocking=True,
+    )
+
+    assert mock_bsblan.set_heating_schedule.call_args.kwargs["circuit"] == 2
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_overlapping_heating_schedule_writes_preserve_latest_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an in-flight heating refresh does not consume a newer write."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+
+    first_fetch_started = asyncio.Event()
+    release_first_fetch = asyncio.Event()
+    stale_schedule = MagicMock()
+    refreshed_schedule = MagicMock()
+    fetch_count = 0
+
+    async def _schedule(*, circuit: int) -> MagicMock:
+        nonlocal fetch_count
+        assert circuit == 1
+        fetch_count += 1
+        if fetch_count == 1:
+            first_fetch_started.set()
+            await release_first_fetch.wait()
+            return stale_schedule
+        return refreshed_schedule
+
+    mock_bsblan.heating_schedule.reset_mock()
+    mock_bsblan.heating_schedule.side_effect = _schedule
+    service_data = {
+        "device_id": circuit_device.id,
+        "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+    }
+
+    first_write = asyncio.create_task(
+        hass.services.async_call(
+            DOMAIN, "set_heating_schedule", service_data, blocking=True
+        )
+    )
+    await first_fetch_started.wait()
+    second_write = asyncio.create_task(
+        hass.services.async_call(
+            DOMAIN, "set_heating_schedule", service_data, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    release_first_fetch.set()
+    await asyncio.gather(first_write, second_write)
+
+    assert mock_bsblan.heating_schedule.await_count == 2
+    assert (
+        mock_config_entry.runtime_data.slow_coordinator.data.heating_schedule[1]
+        is refreshed_schedule
+    )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_retries_malformed_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a malformed post-write heating refresh is retried."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    old_schedule = slow_coordinator.data.heating_schedule[1]
+    refreshed_schedule = MagicMock()
+    mock_bsblan.heating_schedule.side_effect = [
+        BSBLANMalformedResponseError("Invalid response"),
+        refreshed_schedule,
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_heating_schedule",
+        {
+            "device_id": circuit_device.id,
+            "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+        },
+        blocking=True,
+    )
+
+    assert slow_coordinator.data.heating_schedule[1] is old_schedule
+
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.heating_schedule[1] is refreshed_schedule
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_rejects_main_device(
+    hass: HomeAssistant,
+    device_entry: dr.DeviceEntry,
+) -> None:
+    """Test that picking the main device for heating schedule is rejected."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": device_entry.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "not_a_heating_circuit_device"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_rejects_zero_circuit_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that circuit zero is rejected as an invalid circuit sub-device."""
+    circuit_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-0")},
+        name="Invalid heating circuit",
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": circuit_device.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "not_a_heating_circuit_device"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_rejects_unavailable_circuit_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an unavailable heating circuit sub-device is rejected before writing."""
+    circuit_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-2")},
+        name="Unavailable heating circuit",
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": circuit_device.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "not_a_heating_circuit_device"
+    mock_bsblan.set_heating_schedule.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_time_validation_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test validation error when a heating schedule slot ends before it starts."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": circuit_device.id,
+                "monday_slots": [
+                    {"start_time": time(13, 0), "end_time": time(11, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "end_time_before_start_time"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test error when the heating schedule API call fails."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+    mock_bsblan.heating_schedule.reset_mock()
+    mock_bsblan.set_heating_schedule.side_effect = BSBLANError("API Error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": circuit_device.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "set_heating_schedule_failed"
+    mock_bsblan.heating_schedule.assert_awaited_once_with(circuit=1)
