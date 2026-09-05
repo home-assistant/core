@@ -3,9 +3,20 @@
 from typing import Any
 
 from aiohttp import CookieJar
-from cookidoo_api import Cookidoo, CookidooConfig, get_localization_options
+from cookidoo_api import (
+    Cookidoo,
+    CookidooAuthData,
+    CookidooConfig,
+    get_localization_options,
+)
 
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -35,4 +46,7 @@ async def cookidoo_from_config_entry(
     hass: HomeAssistant, entry: CookidooConfigEntry
 ) -> Cookidoo:
     """Build cookidoo from config entry."""
-    return await cookidoo_from_config_data(hass, dict(entry.data))
+    cookidoo = await cookidoo_from_config_data(hass, dict(entry.data))
+    if token := entry.data.get(CONF_TOKEN):
+        cookidoo.apply_auth_data(CookidooAuthData(**token))
+    return cookidoo
