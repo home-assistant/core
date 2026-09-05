@@ -5,14 +5,21 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -21,10 +28,25 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_LINE_IDS, CONF_LINES, CONF_STOP_ID, DOMAIN
+from .const import (
+    ATTRIBUTION,
+    CONF_LINE_IDS,
+    CONF_LINES,
+    CONF_STOP_ID,
+    DOMAIN,
+    OLD_CONF_ROUTE_ID,
+    OLD_CONF_STOP_ID,
+)
 from .coordinator import ArrivalData, BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 PARALLEL_UPDATES = 0
+
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(OLD_CONF_STOP_ID): cv.string,
+        vol.Required(OLD_CONF_ROUTE_ID): cv.string,
+    }
+)
 
 
 @dataclass(kw_only=True, frozen=True)
