@@ -544,6 +544,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ezviz/ @RenierM26
 /homeassistant/components/faa_delays/ @ntilley905
 /tests/components/faa_delays/ @ntilley905
+/homeassistant/components/famn/ @danielkaldheim
+/tests/components/famn/ @danielkaldheim
 /homeassistant/components/fan/ @home-assistant/core
 /tests/components/fan/ @home-assistant/core
 /homeassistant/components/fastdotcom/ @rohankapoorcom @erwindouna

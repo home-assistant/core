@@ -1006,6 +1006,9 @@ evolutionhttp==0.0.19
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
 
+# homeassistant.components.famn
+famnsdk==1.0.7
+
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.6
 

@@ -1,0 +1,98 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'chore_lists': list([
+      dict({
+        'items': list([
+          dict({
+            'description': '**REDACTED**',
+            'id': '**REDACTED**',
+            'nextOccurrence': '2026-08-12T18:00:00+00:00',
+            'recurringRule': 'FREQ=WEEKLY;BYDAY=TU',
+            'sortOrder': 1,
+            'taskListId': '**REDACTED**',
+            'title': '**REDACTED**',
+          }),
+          dict({
+            'dueDate': '2026-08-13T16:00:00+00:00',
+            'id': '**REDACTED**',
+            'sortOrder': 2,
+            'taskListId': '**REDACTED**',
+            'title': '**REDACTED**',
+          }),
+        ]),
+        'task_list': dict({
+          'icon': 'broom',
+          'id': '**REDACTED**',
+          'name': '**REDACTED**',
+          'spaceId': '**REDACTED**',
+          'taskType': 'chores',
+          'updatedAt': '2026-08-11T18:30:00+00:00',
+        }),
+      }),
+      dict({
+        'items': list([
+          dict({
+            'id': '**REDACTED**',
+            'sortOrder': 1,
+            'taskListId': '**REDACTED**',
+            'title': '**REDACTED**',
+          }),
+        ]),
+        'task_list': dict({
+          'icon': 'flower',
+          'id': '**REDACTED**',
+          'name': '**REDACTED**',
+          'spaceId': '**REDACTED**',
+          'taskType': 'chores',
+          'updatedAt': '2026-08-10T12:00:00+00:00',
+        }),
+      }),
+      dict({
+        'items': list([
+          dict({
+            'id': '**REDACTED**',
+            'sortOrder': 1,
+            'taskListId': '**REDACTED**',
+            'title': '**REDACTED**',
+          }),
+        ]),
+        'task_list': dict({
+          'icon': 'check',
+          'id': '**REDACTED**',
+          'name': '**REDACTED**',
+          'spaceId': '**REDACTED**',
+          'taskType': 'todos',
+          'updatedAt': '2026-08-11T08:00:00+00:00',
+        }),
+      }),
+    ]),
+    'shopping_lists': list([
+      dict({
+        'items': list([
+          dict({
+            'id': '**REDACTED**',
+            'listId': '**REDACTED**',
+            'name': '**REDACTED**',
+            'quantity': 2.0,
+            'sortOrder': 1,
+          }),
+          dict({
+            'description': '**REDACTED**',
+            'id': '**REDACTED**',
+            'listId': '5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2001',
+            'name': '**REDACTED**',
+            'sortOrder': 2,
+          }),
+        ]),
+        'shopping_list': dict({
+          'icon': 'cart',
+          'id': '**REDACTED**',
+          'listType': 'grocery',
+          'name': '**REDACTED**',
+          'spaceId': '**REDACTED**',
+        }),
+      }),
+    ]),
+  })
+# ---
