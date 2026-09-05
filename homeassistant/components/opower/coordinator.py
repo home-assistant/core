@@ -621,7 +621,18 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             if len(records) != len(_RATE_PERIOD_KINDS) or (
                 len({record[0]["start"] for record in records.values()}) != 1
             ):
-                # Never stored, or partly deleted: start over from zero.
+                if records:
+                    # Partly deleted, or out of step: start the period over from
+                    # zero. Clear what is left first, so rows the full history no
+                    # longer produces, e.g. hourly reads that have since been
+                    # replaced by daily reads, do not survive with stale sums.
+                    _LOGGER.debug(
+                        "Rebuilding rate period statistics %s",
+                        sorted(rate_period.statistic_ids()),
+                    )
+                    get_instance(self.hass).async_clear_statistics(
+                        sorted(rate_period.statistic_ids())
+                    )
                 continue
             rate_period.last_stats_time = float(records["consumption"][0]["start"])
             for kind, record in records.items():

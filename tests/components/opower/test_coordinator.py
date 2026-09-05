@@ -955,24 +955,31 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
     no longer has.
     """
     hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
-    mock_opower_api.async_get_cost_reads.return_value = [
-        CostRead(
-            start_time=hour[i],
-            end_time=hour[i] + timedelta(hours=1),
-            consumption=float(i + 1),
-            provided_cost=(i + 1) / 4,
-            read_components=[_read_component("ON_PEAK", float(i + 1), (i + 1) / 4)],
+
+    def read(index: int) -> CostRead:
+        return CostRead(
+            start_time=hour[index],
+            end_time=hour[index] + timedelta(hours=1),
+            consumption=float(index + 1),
+            provided_cost=(index + 1) / 4,
+            read_components=[
+                _read_component("ON_PEAK", float(index + 1), (index + 1) / 4)
+            ],
         )
-        for i in range(3)
-    ]
+
+    mock_opower_api.async_get_cost_reads.return_value = [read(0), read(1), read(2)]
     coordinator = OpowerCoordinator(hass, mock_config_entry)
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
     cost_id = "opower:pge_elec_111111_on_peak_energy_cost"
+    consumption_id = "opower:pge_elec_111111_on_peak_energy_consumption"
     get_instance(hass).async_clear_statistics([cost_id])
     await async_wait_recording_done(hass)
 
+    # The history no longer contains the first read, as happens when hourly
+    # reads age into daily reads. The rebuilt series must not keep its row.
+    mock_opower_api.async_get_cost_reads.return_value = [read(1), read(2)]
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
@@ -981,15 +988,19 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
         hass,
         dt_util.utc_from_timestamp(0),
         None,
-        {cost_id, "opower:pge_elec_111111_on_peak_energy_consumption"},
+        {cost_id, consumption_id},
         "hour",
         None,
         {"sum"},
     )
-    assert [s["sum"] for s in stats[cost_id]] == [0.25, 0.75, 1.5]
-    assert [
-        s["sum"] for s in stats["opower:pge_elec_111111_on_peak_energy_consumption"]
-    ] == [1.0, 3.0, 6.0]
+    assert [(s["start"], s["sum"]) for s in stats[cost_id]] == [
+        (hour[1].timestamp(), 0.5),
+        (hour[2].timestamp(), 1.25),
+    ]
+    assert [(s["start"], s["sum"]) for s in stats[consumption_id]] == [
+        (hour[1].timestamp(), 2.0),
+        (hour[2].timestamp(), 5.0),
+    ]
 
 
 async def test_coordinator_rate_period_returns_after_absence(
