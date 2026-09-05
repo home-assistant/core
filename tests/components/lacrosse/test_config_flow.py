@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 import pytest
+from serial import SerialException
 
 from homeassistant import config_entries
 from homeassistant.components.lacrosse.const import DOMAIN
@@ -100,14 +101,19 @@ IMPORT_CONFIG = {
     },
 }
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_lacrosse", "mock_setup_entry")
 
 
 async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test configuring a receiver and its sensors."""
-    with patch(
-        "homeassistant.components.lacrosse.config_flow.uuid4",
-        side_effect=[UUID(int=1), UUID(int=2)],
+    with (
+        patch(
+            "homeassistant.components.lacrosse.config_flow.uuid4",
+            side_effect=[UUID(int=1), UUID(int=2)],
+        ),
+        patch(
+            "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse"
+        ) as receiver,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -142,6 +148,9 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             result["flow_id"], user_input={"next_step_id": "finish"}
         )
 
+    receiver.return_value.open.assert_called_once()
+    receiver.return_value.close.assert_called_once()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyUSB0"
     assert result["data"] == {
@@ -163,6 +172,42 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Test that an unavailable receiver prevents configuration."""
+    with patch(
+        "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse",
+        side_effect=SerialException("unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECEIVER_DATA
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test that an unexpected receiver error is reported to the user."""
+    with patch(
+        "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse",
+        side_effect=RuntimeError("unexpected"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECEIVER_DATA
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_duplicate_receiver(hass: HomeAssistant) -> None:

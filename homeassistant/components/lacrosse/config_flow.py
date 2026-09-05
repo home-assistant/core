@@ -4,6 +4,8 @@ import logging
 from typing import Any, Final, override
 from uuid import uuid4
 
+import pylacrosse
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -72,6 +74,13 @@ STEP_SENSOR_DATA_SCHEMA = vol.Schema(
 MIN_REQUIRED_SENSOR_TYPES = LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.HUMIDITY
 
 EMPTY_VALUES: Final = (None, "")
+
+
+def _test_connection(data: dict[str, Any]) -> None:
+    """Test that the receiver can be opened."""
+    receiver = pylacrosse.LaCrosse(data[CONF_DEVICE], data[CONF_BAUD])
+    receiver.open()
+    receiver.close()
 
 
 async def _async_free_usb_ports(hass: HomeAssistant) -> list[SelectOptionDict]:
@@ -205,17 +214,30 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial receiver configuration step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             user_input[CONF_DEVICE] = await self.hass.async_add_executor_job(
                 usb.get_serial_by_id, user_input[CONF_DEVICE]
             )
             self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
-            self._data = _receiver_data(user_input)
-            return await self.async_step_add_sensor()
+            try:
+                await self.hass.async_add_executor_job(
+                    _test_connection, _receiver_data(user_input)
+                )
+            except SerialException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error while testing the receiver")
+                errors["base"] = "unknown"
+            else:
+                self._data = _receiver_data(user_input)
+                return await self.async_step_add_sensor()
 
         ports = await _async_free_usb_ports(self.hass)
         return self.async_show_form(
-            step_id="user", data_schema=_step_receiver_data_schema(ports)
+            step_id="user",
+            data_schema=_step_receiver_data_schema(ports),
+            errors=errors or None,
         )
 
     async def async_step_reconfigure(
@@ -279,6 +301,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input = dict(user_input)
             selected = LaCrosseSensorType(0)
             for sensor_type in LaCrosseSensorType:
                 if user_input.pop(sensor_type.key):
