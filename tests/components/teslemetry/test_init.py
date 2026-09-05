@@ -1,10 +1,12 @@
 """Test the Teslemetry init."""
 
+import asyncio
 from copy import deepcopy
 from datetime import timedelta
 import logging
 import time
 from types import MappingProxyType
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
@@ -2095,6 +2097,58 @@ async def test_local_live_poll_survives_stream_push_storm(
     # second, and the owned key reflects the local reading, not the last push.
     assert mock_powerwall_live_status.await_count == 4
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_overlapping_local_live_poll_skips_second_tick(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """An overlapping local live tick is skipped while a poll is in flight.
+
+    ``live_status`` is several sequential reads and can outrun the 5s interval; a
+    tick that fires while the previous poll is still running must be skipped so a
+    slow poll cannot replace a newer snapshot with stale data.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    release = asyncio.Event()
+
+    async def blocking_live_status() -> dict[str, Any]:
+        await release.wait()
+        return deepcopy(_LOCAL_LIVE_STATUS)
+
+    mock_powerwall_live_status.side_effect = blocking_live_status
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # First tick: the poll starts and blocks mid-read.
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        assert mock_powerwall_live_status.call_count == 1
+
+        # Second tick fires while the first poll is still in flight.
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        # The overlapping tick was skipped rather than starting a second read.
+        assert mock_powerwall_live_status.call_count == 1
+
+        release.set()
+        await hass.async_block_till_done()
+
+    assert mock_powerwall_live_status.await_count == 1
 
 
 async def test_local_config_poll_does_not_clear_stream_error(
