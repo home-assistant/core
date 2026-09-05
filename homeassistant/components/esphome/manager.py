@@ -596,7 +596,8 @@ class ESPHomeManager:
         """Register this entry's MAC with the shared dial-in listener.
 
         Runs once at setup; a dynamically provisioned key takes effect on
-        the next reload or restart.
+        the reload that follows it: the device drops the keyless session
+        and the reauth flow reloads the entry with the stored key.
         """
         entry = self.entry
         # Read the flag off the client so the route matches the hello
