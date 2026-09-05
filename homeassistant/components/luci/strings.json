@@ -40,6 +40,10 @@
     }
   },
   "issues": {
+    "legacy_known_devices": {
+      "description": "OpenWrt (luci) now creates its own device tracker entities, but the following entries left over from the old YAML setup still exist in `{path}` for devices tracked by the router at `{host}`:\n\n{devices}\n\nBecause these legacy trackers claim the same entity IDs, the new entities are dropped at startup and stop updating.\n\nPlease remove these entries from `{path}` and restart Home Assistant.",
+      "title": "Remove leftover known devices for OpenWrt (luci)"
+    },
     "yaml_import_cannot_connect": {
       "description": "The YAML configuration for OpenWrt (luci) at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
       "title": "YAML configuration import failed: cannot connect"
