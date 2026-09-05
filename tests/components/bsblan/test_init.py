@@ -377,6 +377,34 @@ async def test_slow_interval_poll_retries_missing_schedule(
     assert slow_coordinator.data.dhw_schedule == schedule_value
 
 
+async def test_heating_only_slow_interval_retries_missing_heating_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test heating-only installations retry transient heating schedule failures."""
+    schedule_value = mock_bsblan.heating_schedule.return_value
+    mock_bsblan.hot_water_state.return_value = None
+    mock_bsblan.heating_schedule.side_effect = [
+        BSBLANConnectionError("Schedule failed"),
+        schedule_value,
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    assert slow_coordinator.data.heating_schedule == {}
+
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.heating_schedule[1] == schedule_value
+
+
 async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
