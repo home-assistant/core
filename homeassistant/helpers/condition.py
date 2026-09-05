@@ -95,6 +95,9 @@ from .automation import (
 from .integration_platform import async_process_integration_platforms
 from .recorder import get_instance
 from .selector import (
+    ChooseSelector,
+    ChooseSelectorChoiceConfig,
+    ChooseSelectorConfig,
     NumericThresholdMode,
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
@@ -1169,6 +1172,95 @@ def make_entity_numerical_condition_with_unit(
         _domain_specs = domain_specs
         _base_unit = base_unit
         _unit_converter = unit_converter
+
+    return CustomCondition
+
+
+DATETIME_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Optional("reference"): ChooseSelector(
+                ChooseSelectorConfig(
+                    translation_key="reference",
+                    choices={
+                        "now": ChooseSelectorChoiceConfig(
+                            selector={
+                                "constant": {
+                                    "value": "now",
+                                }
+                            }
+                        ),
+                        "entity": ChooseSelectorChoiceConfig(selector={"entity": {}}),
+                    },
+                )
+            ),
+            vol.Optional("reference_offset"): cv.time_period,
+        }
+    }
+)
+
+
+class EntityDatetimeConditionBase(EntityConditionBase):
+    """Condition for datetime state comparisons."""
+
+    _schema = DATETIME_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the datetime condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+
+        self._reference: str | None = config.options.get("reference")
+        self._reference_offset: timedelta | None = config.options.get(
+            "reference_offset"
+        )
+
+    def _get_datetime_from_state(self, state_obj: State) -> datetime | None:
+        return dt_util.parse_datetime(state_obj.state)
+
+    @override
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state is within the specified time range."""
+        target = self._get_datetime_from_state(entity_state)
+        if target is None:
+            return False
+
+        reference: datetime | None = None
+        if self._reference is None or self._reference == "now":
+            reference = dt_util.now()
+        else:
+            state_obj = self._hass.states.get(self._reference)
+            if state_obj:
+                reference = self._get_datetime_from_state(state_obj)
+
+        if reference is None:
+            return False
+
+        if self._reference_offset:
+            reference = reference + self._reference_offset
+
+        # Flip this for "is_after"
+        return target < reference
+
+
+def make_entity_datetime_condition(
+    domain_specs: Mapping[str, DomainSpec] | str,
+    *,
+    primary_entities_only: bool = True,
+) -> type[EntityDatetimeConditionBase]:
+    """Create a datetime condition for the given domain(s).
+
+    domain_specs can be a string (domain name) for a single domain, or a
+    Mapping[str, DomainSpec] for multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
+
+    class CustomCondition(EntityDatetimeConditionBase):
+        """Condition for entity datetime."""
+
+        _domain_specs = specs
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
