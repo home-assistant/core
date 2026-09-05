@@ -1,5 +1,6 @@
 """Test the Anthem A/V Receivers config flow."""
 
+import asyncio
 from collections.abc import Callable
 from unittest.mock import ANY, AsyncMock, patch
 
@@ -65,6 +66,34 @@ async def test_config_entry_not_ready_when_oserror(
     with patch(
         "anthemav.Connection.create",
         side_effect=error,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_not_ready_when_connect_hangs(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup fails fast (instead of hanging) when the AVR never connects.
+
+    anthemav.Connection.create() retries its initial connection internally
+    and only returns once it succeeds, so it never raises OSError on its
+    own when the receiver is unreachable — nothing bounds that wait except
+    our own timeout. Simulate that by having the mocked create() hang
+    indefinitely, and confirm setup still resolves to SETUP_RETRY rather
+    than blocking forever.
+    """
+    with (
+        patch(
+            "homeassistant.components.anthemav.CONNECT_TIMEOUT_SECONDS",
+            0.01,
+        ),
+        patch(
+            "anthemav.Connection.create",
+            side_effect=lambda *args, **kwargs: asyncio.sleep(3600),
+        ),
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
