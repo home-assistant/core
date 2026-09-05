@@ -105,6 +105,8 @@ async def _async_start_bridge(
         exclude_accessory_mode=False,
         entity_config=entity_config or {},
         homekit_mode=homekit_mode,
+        include_targets={},
+        exclude_targets={},
         advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
