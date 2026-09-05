@@ -8,9 +8,17 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: |
+      This integration does not provide custom conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: |
+      This integration does not provide custom triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -39,24 +47,25 @@ rules:
     comment: |
       This integration does not have a reauthentication flow.
   test-coverage: done
+
   # Gold
   devices: done
   diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
-      This integration is connecting to a cloud service.
+      This integration connects to a cloud service and does not support discovery.
   discovery:
     status: exempt
     comment: |
-      This integration is connecting to a cloud service.
+      This integration connects to a cloud service and does not support discovery.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: |
-      This integration is connecting to a cloud service.
+      This integration connects to a cloud service rather than physical devices.
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
@@ -73,11 +82,11 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: |
-      This integration does not have a reconfiguration flow.
+      This integration has no user-configurable settings to reconfigure.
   repair-issues:
     status: exempt
     comment: |
-      This integration doesn't have any cases where raising an issue is needed.
+      This integration has no known cases that require a repair issue.
   stale-devices:
     status: exempt
     comment: |
