@@ -233,6 +233,9 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             ):
                 self._source_list[source["label"]] = source
 
+        # decided before the live tv insert below can mask an empty update
+        keep_previous_list = not self._source_list and bool(source_list)
+
         # special handling of live tv since this might
         # not appear in the app or input lists in some cases
         if not found_live_tv:
@@ -249,7 +252,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
                 self._source_list["Live TV"] = app
 
         # empty list, TV may be off, keep previous list
-        if not self._source_list and source_list:
+        if keep_previous_list:
             self._source_list = source_list
 
     @property

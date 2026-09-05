@@ -571,6 +571,21 @@ async def test_source_cleared_with_filtered_out_sources(
     assert ATTR_INPUT_SOURCE not in hass.states.get(ENTITY_ID).attributes
 
 
+async def test_empty_update_keeps_source_list(hass: HomeAssistant, client) -> None:
+    """Test the previous list survives an update with no apps and no inputs."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    sources = ["Input01", "Input02", "Live TV"]
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST] == sources
+
+    client.tv_state.apps = {}
+    client.tv_state.inputs = {}
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST] == sources
+
+
 async def test_live_tv_source_missing_from_lists(hass: HomeAssistant, client) -> None:
     """Test live TV is the source when it is in neither list."""
     client.tv_state.apps = {
