@@ -36,6 +36,16 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "flow_in": {
+        "name": "Air Intake"
+      },
+      "flow_out": {
+        "name": "Air exhaust"
+      }
+    }
+  },
   "exceptions": {
     "auth_failed": {
       "message": "Authentication failed when communicating with Flow-it VMC"
