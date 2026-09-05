@@ -47,7 +47,6 @@ rules:
     comment: |
       This integration does not have a reauthentication flow.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done
