@@ -1,11 +1,11 @@
 """The tests for the tplink camera platform."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
-from kasa import Module
+from kasa import Module, StreamResolution
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,13 +21,20 @@ from homeassistant.components.camera import (
     get_camera_from_entity_id,
 )
 from homeassistant.components.tplink.camera import TPLinkCameraEntity
+from homeassistant.components.tplink.const import CONF_USE_STREAM_FOR_STILLS, DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import _mocked_device, setup_platform_for_device, snapshot_platform
-from .const import DEVICE_ID, IP_ADDRESS3, MAC_ADDRESS3, SMALLEST_VALID_JPEG_BYTES
+from .const import (
+    CREATE_ENTRY_DATA_AES_CAMERA,
+    DEVICE_ID,
+    IP_ADDRESS3,
+    MAC_ADDRESS3,
+    SMALLEST_VALID_JPEG_BYTES,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -390,6 +397,55 @@ async def test_camera_stream_source(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "url" in msg["result"]
+
+
+async def test_camera_stills_use_sd_by_default(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+) -> None:
+    """Test still image and mjpeg fallback request the SD stream by default."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    camera_module = mock_device.modules[Module.Camera]
+    camera_module.stream_rtsp_url.assert_any_call(
+        ANY, stream_resolution=StreamResolution.SD
+    )
+
+
+async def test_camera_stills_use_hd_when_enabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test still image and mjpeg fallback request the HD stream when enabled."""
+    config_entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=CREATE_ENTRY_DATA_AES_CAMERA,
+        options={CONF_USE_STREAM_FOR_STILLS: True},
+        unique_id=MAC_ADDRESS3,
+    )
+
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+
+    await setup_platform_for_device(hass, config_entry, Platform.CAMERA, mock_device)
+
+    camera_module = mock_device.modules[Module.Camera]
+    camera_module.stream_rtsp_url.assert_any_call(
+        ANY, stream_resolution=StreamResolution.HD
+    )
 
 
 async def test_camera_stream_attributes(

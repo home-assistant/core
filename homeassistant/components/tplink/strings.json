@@ -403,6 +403,21 @@
       "title": "Detected deprecated {platform} entity usage"
     }
   },
+  "options": {
+    "abort": {
+      "no_options": "This device has no configurable options."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "use_stream_for_stills": "Use HD stream for still images"
+        },
+        "data_description": {
+          "use_stream_for_stills": "When enabled, still images and the MJPEG fallback use the same HD stream as live view instead of the lower resolution SD stream."
+        }
+      }
+    }
+  },
   "services": {
     "random_effect": {
       "description": "Sets a random effect.",
