@@ -741,6 +741,18 @@ async def test_scanner_associated_with_other_zone(
             {ATTR_SOURCE: DEVICE_TRACKER},
             id="office",
         ),
+        # A device tracker reporting "home" without in_zones or coordinates gets placed in zone.home
+        pytest.param(
+            ("home", {ATTR_SOURCE_TYPE: SourceType.GPS}),
+            "home",
+            {
+                ATTR_IN_ZONES: ["zone.home"],
+                ATTR_LATITUDE: 32.87336,
+                ATTR_LONGITUDE: -117.22743,
+                ATTR_SOURCE: DEVICE_TRACKER,
+            },
+            id="home_without_in_zones",
+        ),
         # Legacy GPS trackers contribute their own coordinates but no zones.
         pytest.param(
             _LEGACY_GPS_NOT_HOME,
