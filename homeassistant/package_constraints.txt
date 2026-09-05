@@ -40,7 +40,7 @@ habluetooth==6.26.11
 hass-nabucasa==2.7.0
 hassil==3.12.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260826.4
+home-assistant-frontend==20260826.6
 home-assistant-intents==2026.8.28
 httpx==0.28.1
 ifaddr==0.2.0
@@ -48,7 +48,7 @@ Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
 openai==2.45.0
-orjson==3.12.0
+orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
@@ -65,7 +65,7 @@ PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
-serialx==1.9.0
+serialx==1.10.0
 SQLAlchemy==2.0.52
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0

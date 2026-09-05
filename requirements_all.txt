@@ -267,7 +267,7 @@ aioesphomeapi==46.2.0
 aiofiles==25.1.0
 
 # homeassistant.components.flo
-aioflo==2021.11.0
+aioflo==2026.9.3
 
 # homeassistant.components.yi
 aioftp==0.21.3
@@ -953,7 +953,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.19.0
+env-canada==0.19.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1303,7 +1303,7 @@ hole==0.9.2
 holidays==0.103
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260826.4
+home-assistant-frontend==20260826.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.8.28
@@ -1460,7 +1460,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.8.28.62336
+knx-frontend==2026.9.4.63549
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.11.2
@@ -2144,7 +2144,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.19.0
+pydaikin==2.19.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2382,7 +2382,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.6.4
+pylitterbot==2025.6.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0
@@ -2729,7 +2729,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==2.0.1
+python-hotspring==2.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2793,7 +2793,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.1.1
+python-roborock==7.2.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2956,7 +2956,7 @@ renault-api==0.5.13
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.14
+reolink-aio==0.21.15
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3004,7 +3004,7 @@ ruuvitag-ble==0.4.0
 rxv==0.7.0
 
 # homeassistant.components.samsung_exlink
-samsung-exlink==1.1.0
+samsung-exlink==1.1.1
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -3057,7 +3057,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.9.0
+serialx==1.10.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
@@ -3311,7 +3311,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==16.1.0
+uiprotect==16.6.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3376,7 +3376,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.5.0
+vizaio==0.6.1
 
 # homeassistant.components.caldav
 vobject==0.9.9
