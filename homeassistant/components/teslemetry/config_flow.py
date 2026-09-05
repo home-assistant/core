@@ -17,6 +17,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
 import voluptuous as vol
@@ -48,6 +49,7 @@ from .const import (
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
+from .models import TeslemetryEnergyData
 
 
 class PowerwallLookupError(Exception):
@@ -56,6 +58,21 @@ class PowerwallLookupError(Exception):
 
 class PowerwallKeyRejectedError(Exception):
     """Signal that the gateway refused a v1r-signed read with our RSA key."""
+
+
+def _cloud_energy_site(energy_data: TeslemetryEnergyData) -> TeslemetryEnergySite:
+    """Return the cloud energy-site API for pairing.
+
+    Pairing always registers the key through the Teslemetry cloud; a paired
+    site's api is an EnergySiteRouter, so unwrap its cloud secondary rather
+    than routing to the local Powerwall primary.
+    """
+    return cast(
+        TeslemetryEnergySite,
+        energy_data.api.secondary
+        if isinstance(energy_data.api, EnergySiteRouter)
+        else energy_data.api,
+    )
 
 
 class OAuth2FlowHandler(
@@ -233,9 +250,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            # Only unpaired sites are offered, so api is always the cloud EnergySite.
             if abort := await self._prepare_energy_site(
-                cast(TeslemetryEnergySite, energy_data.api)
+                _cloud_energy_site(energy_data)
             ):
                 return abort
             return await self._async_begin_pairing()
@@ -253,6 +269,29 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 }
             ),
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Re-pair an added site's local Powerwall to update its credentials."""
+        subentry = self._get_reconfigure_subentry()
+        entry = cast(TeslemetryConfigEntry, self._get_entry())
+        # runtime_data (the resolved energy sites) exists only while loaded.
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        energy_data = next(
+            (
+                energysite
+                for energysite in entry.runtime_data.energysites
+                if energysite.subentry_id == subentry.subentry_id
+            ),
+            None,
+        )
+        if energy_data is None:
+            return self.async_abort(reason="cannot_connect")
+        if abort := await self._prepare_energy_site(_cloud_energy_site(energy_data)):
+            return abort
+        return await self._async_begin_pairing()
 
     async def _prepare_energy_site(
         self, energy_site: TeslemetryEnergySite
@@ -392,6 +431,20 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             except PowerwallAuthenticationError as err:
                 raise PowerwallKeyRejectedError from err
 
+    def _default_gateway_host(self) -> str:
+        """Return the host to pre-fill on the credentials form, or "" for blank.
+
+        Discovery wins; on reconfigure a failed discovery falls back to the
+        subentry's known host rather than leaving the field blank, so a
+        password-only change is verified against the right gateway. A new
+        site whose discovery failed is left blank.
+        """
+        if self._discovered_host:
+            return self._discovered_host
+        if self.source == SOURCE_RECONFIGURE:
+            return cast(str, self._get_reconfigure_subentry().data[CONF_HOST])
+        return ""
+
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -422,7 +475,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Required(
                         CONF_HOST,
-                        default=self._discovered_host or vol.UNDEFINED,
+                        default=self._default_gateway_host() or vol.UNDEFINED,
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
@@ -432,7 +485,21 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def _async_save_credentials(self, host: str, password: str) -> SubentryFlowResult:
-        """Persist the verified gateway credentials to a new subentry."""
+        """Persist the verified gateway credentials to the subentry."""
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_entry()
+            subentry = self._get_reconfigure_subentry()
+            self._async_update(
+                entry,
+                subentry,
+                data_updates={CONF_HOST: host, CONF_PASSWORD: password},
+            )
+            # Always reload, even when the credentials are unchanged: an earlier
+            # cloud fallback (gateway unreachable at setup) leaves local control
+            # off, and re-verifying the same credentials must re-enable it.
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="reconfigure_successful")
+
         return self.async_create_entry(
             title=self._site_name,
             data={
