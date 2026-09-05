@@ -18,9 +18,9 @@ from pyfronius import Fronius, FroniusError
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -48,6 +48,7 @@ from .coordinator import (
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
+from .sensor import MODBUS_INVERTER_ENTITY_DESCRIPTIONS
 
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [
@@ -59,9 +60,38 @@ PLATFORMS: Final = [
 
 type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
+MODBUS_SENSOR_KEYS: Final = {
+    description.key for description in MODBUS_INVERTER_ENTITY_DESCRIPTIONS
+}
+
+
+@callback
+def _async_fix_modbus_sensor_unique_ids(
+    hass: HomeAssistant, entry: FroniusConfigEntry
+) -> None:
+    """Move sensors that were registered with the SolarAPI unique ID format.
+
+    A Modbus coordinator found by a re-scan reached the sensor platform
+    before it could be told from a SolarAPI one, so 2026.9 built its entities
+    as SolarAPI ones: `<inverter>-<key>` instead of `<inverter>-modbus-<key>`.
+    The keys of the two are distinct, so a Modbus key without the marker can
+    only come from that.
+    """
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        inverter_id, _, key = entity.unique_id.rpartition("-")
+        if key not in MODBUS_SENSOR_KEYS or inverter_id.endswith("-modbus"):
+            continue
+        unique_id = f"{inverter_id}-modbus-{key}"
+        if registry.async_get_entity_id(entity.domain, DOMAIN, unique_id):
+            continue
+        _LOGGER.debug("Migrating unique ID of %s to %s", entity.entity_id, unique_id)
+        registry.async_update_entity(entity.entity_id, new_unique_id=unique_id)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Set up fronius from a config entry."""
+    _async_fix_modbus_sensor_unique_ids(hass, entry)
     host = entry.data[CONF_HOST]
     fronius = Fronius(
         async_get_clientsession(

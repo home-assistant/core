@@ -11,18 +11,18 @@ from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusConnection
 import pytest
 
-from homeassistant.components.fronius.const import SOLAR_NET_RESCAN_TIMER
+from homeassistant.components.fronius.const import DOMAIN, SOLAR_NET_RESCAN_TIMER
 from homeassistant.components.fronius.coordinator import (
     FroniusModbusInverterUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import mock_responses, setup_fronius_integration
+from . import MOCK_HOST, mock_responses, setup_fronius_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 # module names as reported by real GEN24 hybrid inverters
@@ -536,3 +536,69 @@ async def test_readings_recover_when_only_the_controls_came_up(
     assert config_entry.runtime_data.modbus_inverter_coordinators
     # the settings coordinator that was already up is not added a second time
     assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
+
+
+async def test_wrongly_registered_sensors_are_moved_over(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test 2026.9 Modbus sensors keep their entity ID and history.
+
+    A re-scan registered them with the SolarAPI unique ID format, which the
+    fixed platform would otherwise leave behind as a stale entity.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="f1e2b9837e8adaed6fa682acaa216fd8",
+        unique_id="12345678",
+        data={CONF_HOST: MOCK_HOST, "is_logger": False, "modbus_port": 502},
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    stale = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "12345678-mppt_1_power_dc",
+        config_entry=config_entry,
+        suggested_object_id="gen24_storage_mppt_1_dc_power",
+    )
+    untouched = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "12345678-energy_total",
+        config_entry=config_entry,
+        suggested_object_id="gen24_storage_total_energy",
+    )
+    # a restart has already registered a second entity for this one
+    superseded = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "12345678-mppt_2_power_dc",
+        config_entry=config_entry,
+        suggested_object_id="gen24_storage_mppt_2_dc_power_old",
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "12345678-modbus-mppt_2_power_dc",
+        config_entry=config_entry,
+        suggested_object_id="gen24_storage_mppt_2_dc_power",
+    )
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES, storage_wcha_max=12800)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (entry := entity_registry.async_get(stale.entity_id))
+    assert entry.unique_id == "12345678-modbus-mppt_1_power_dc"
+    # a SolarAPI sensor keeps its own format
+    assert (entry := entity_registry.async_get(untouched.entity_id))
+    assert entry.unique_id == "12345678-energy_total"
+    # and one whose place is taken is left where it is
+    assert (entry := entity_registry.async_get(superseded.entity_id))
+    assert entry.unique_id == "12345678-mppt_2_power_dc"
