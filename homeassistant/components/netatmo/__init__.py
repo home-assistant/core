@@ -67,13 +67,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     except (OAuth2TokenRequestError, ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
-    required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
-    if not (set(session.token["scope"]) & set(required_scopes)):
+    required_scopes = set(api.get_api_scopes(entry.data["auth_implementation"]))
+    raw_token_scopes = session.token["scope"]
+    token_scopes = (
+        set(raw_token_scopes.split())
+        if isinstance(raw_token_scopes, str)
+        else set(raw_token_scopes)
+    )
+    if not (token_scopes & required_scopes):
         _LOGGER.warning(
-            "Session is missing scopes: %s",
-            set(required_scopes) - set(session.token["scope"]),
+            "Session is missing scopes: %s", sorted(required_scopes - token_scopes)
         )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
+
+    # Some, but not all, required scopes are granted: the token still works,
+    # so let setup succeed and only prompt for reauth to fill the gap.
+    # async_start_reauth is a no-op while a reauth/reconfigure flow is
+    # already in progress for this entry, so this does not spam duplicate
+    # flows across reloads within one run. It intentionally does not persist
+    # a "already prompted" marker either: a config flow does not survive a
+    # restart, and neither should our record of having started one, or a
+    # dismissed prompt would silently never come back.
+    if missing_scopes := required_scopes - token_scopes:
+        _LOGGER.warning(
+            "Session is missing scopes: %s; requesting reauthentication to grant them",
+            sorted(missing_scopes),
+        )
+        entry.async_start_reauth(hass)
 
     auth = api.AsyncConfigEntryNetatmoAuth(
         aiohttp_client.async_get_clientsession(hass), session
