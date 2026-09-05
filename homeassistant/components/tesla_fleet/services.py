@@ -104,10 +104,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         start_time = _minutes_after_midnight(call.data.get(ATTR_START_TIME))
         end_time = _minutes_after_midnight(call.data.get(ATTR_END_TIME))
-        # tesla-fleet-api treats a time of zero as absent, so midnight cannot
-        # be the only time given. Reject it here rather than let the library
-        # raise a bare ValueError.
-        if not start_time and not end_time:
+        if start_time is None and end_time is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="charge_schedule_requires_time",
@@ -122,7 +119,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
         # The vehicle does not allocate an ID for a new schedule, so follow
-        # Tesla's own client and derive one from the current Unix time.
+        # Tesla's own client and derive one from the current Unix time. Two
+        # calls would only collide by landing in the same second, which the
+        # round trip to Tesla's API makes practically impossible.
         schedule_id = call.data.get(ATTR_ID, int(dt_util.utcnow().timestamp()))
 
         await wake_up_vehicle(vehicle)

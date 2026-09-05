@@ -153,6 +153,25 @@ async def _async_get_device_id(
             },
             id="repeated_days_are_not_double_counted",
         ),
+        pytest.param(
+            {
+                ATTR_DAYS_OF_WEEK: ["monday"],
+                ATTR_ENABLE: True,
+                ATTR_START_TIME: time(0, 0),
+                ATTR_END_TIME: time(0, 0),
+            },
+            {
+                "days_of_week": 2,
+                "enabled": True,
+                "lat": 32.87336,
+                "lon": -117.22743,
+                "start_time": 0,
+                "end_time": 0,
+                "one_time": None,
+                "id": GENERATED_ID,
+            },
+            id="midnight_is_a_valid_time",
+        ),
     ],
 )
 async def test_add_charge_schedule(
@@ -197,28 +216,11 @@ async def test_remove_charge_schedule(
     call.assert_called_once_with(id=3)
 
 
-@pytest.mark.parametrize(
-    "service_data",
-    [
-        pytest.param({}, id="no_times"),
-        pytest.param({ATTR_START_TIME: time(0, 0)}, id="midnight_start_only"),
-        pytest.param({ATTR_END_TIME: time(0, 0)}, id="midnight_end_only"),
-        pytest.param(
-            {ATTR_START_TIME: time(0, 0), ATTR_END_TIME: time(0, 0)},
-            id="midnight_start_and_end",
-        ),
-    ],
-)
 async def test_add_charge_schedule_requires_a_time(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    service_data: dict[str, Any],
 ) -> None:
-    """Test add_charge_schedule rejects a schedule without a usable time.
-
-    The library treats a time of zero as absent, so midnight alone is rejected
-    here rather than reaching the library and raising a bare ValueError.
-    """
+    """Test add_charge_schedule rejects a schedule with neither time set."""
     device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
 
     with pytest.raises(ServiceValidationError, match="start time"):
@@ -229,8 +231,7 @@ async def test_add_charge_schedule_requires_a_time(
                 CONF_DEVICE_ID: device_id,
                 ATTR_DAYS_OF_WEEK: ["monday"],
                 ATTR_ENABLE: True,
-            }
-            | service_data,
+            },
             blocking=True,
         )
 

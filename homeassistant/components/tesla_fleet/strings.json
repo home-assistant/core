@@ -600,7 +600,7 @@
   },
   "exceptions": {
     "charge_schedule_requires_time": {
-      "message": "A start time or an end time is required, and midnight cannot be the only time given."
+      "message": "A start time or an end time is required."
     },
     "command_error": {
       "message": "Command returned an error: {error}"
