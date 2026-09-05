@@ -77,6 +77,17 @@ MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
 }
 
 
+def _kodi_bool(value: object) -> bool:
+    """Convert Kodi boolean responses to a Python bool."""
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, str):
+        return value.lower() == "true"
+
+    return False
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: KodiConfigEntry,
@@ -151,6 +162,7 @@ class KodiEntity(MediaPlayerEntity):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
+        self._slideshow_is_paused = False
         self._media_position_updated_at = None
         self._media_position = None
         self._connect_error = False
@@ -166,6 +178,7 @@ class KodiEntity(MediaPlayerEntity):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
+        self._slideshow_is_paused = False
         self._media_position_updated_at = None
         self._media_position = None
 
@@ -181,6 +194,14 @@ class KodiEntity(MediaPlayerEntity):
     def async_on_speed_event(self, sender, data):
         """Handle player changes between playing and paused."""
         self._properties["speed"] = data["player"]["speed"]
+
+        if self._players and self._players[0]["type"] == "picture":
+            if sender == "OnPause":
+                self._slideshow_is_paused = True
+            elif sender == "OnResume" or (
+                sender == "OnPlay" and data["player"]["speed"] > 0
+            ):
+                self._slideshow_is_paused = False
 
         if not hasattr(data["item"], "id"):
             # If no item id is given, perform a full update
@@ -241,6 +262,11 @@ class KodiEntity(MediaPlayerEntity):
 
         if self._no_active_players:
             return MediaPlayerState.IDLE
+
+        if self._players[0]["type"] == "picture":
+            if self._slideshow_is_paused:
+                return MediaPlayerState.PAUSED
+            return MediaPlayerState.PLAYING
 
         if self._properties["speed"] == 0:
             return MediaPlayerState.PAUSED
@@ -365,6 +391,14 @@ class KodiEntity(MediaPlayerEntity):
             self._properties = await self._kodi.get_player_properties(
                 self._players[0], ["time", "totaltime", "speed", "live"]
             )
+
+            if self._players[0]["type"] == "picture":
+                slideshow_info = await self._kodi.call_method(
+                    "XBMC.GetInfoBooleans", booleans=["Slideshow.IsPaused"]
+                )
+                self._slideshow_is_paused = _kodi_bool(
+                    slideshow_info.get("Slideshow.IsPaused")
+                )
 
             position = self._properties["time"]
             if self._media_position != position:
