@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -59,12 +59,12 @@ class WfRacEntity(CoordinatorEntity[Device]):
         options = self._device.options
         base_offset = options.get(CONF_TARGET_OFFSET, 0.0)
         if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
-            override = options.get(CONF_TARGET_OFFSET_COOL)
+            per_mode = options.get(CONF_TARGET_OFFSET_COOL)
         elif hvac_mode == HVACMode.HEAT:
-            override = options.get(CONF_TARGET_OFFSET_HEAT)
+            per_mode = options.get(CONF_TARGET_OFFSET_HEAT)
         else:
-            override = None
-        return float(base_offset if override is None else override)
+            per_mode = None
+        return float(base_offset if per_mode is None else per_mode)
 
     @override
     @property

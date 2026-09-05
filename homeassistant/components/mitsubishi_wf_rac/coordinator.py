@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import re
 from typing import Any, override
@@ -32,6 +32,7 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import AC_CERT_FILENAME, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
@@ -296,7 +297,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             return WRITE_LOCK_RETRY_DELAY.total_seconds()
         # The module compares whole seconds and refuses while `expires` still
         # equals the current one, so land on the far side of the lapse.
-        remaining = expires - datetime.now().timestamp() + 1
+        remaining = expires - dt_util.naive_now().timestamp() + 1
         return max(0.0, min(remaining, WRITE_LOCK_MAX_WAIT.total_seconds()))
 
     async def delete_account(self) -> dict[str, Any] | None:

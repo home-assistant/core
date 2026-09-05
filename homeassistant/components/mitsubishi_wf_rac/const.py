@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
