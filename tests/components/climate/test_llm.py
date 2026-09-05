@@ -1,9 +1,11 @@
 """Tests for the climate LLM tools platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import llm as llm_component
-from homeassistant.components.climate import llm as climate_llm
+from homeassistant.components.climate import ClimateEntityFeature, llm as climate_llm
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
@@ -19,7 +21,14 @@ async def setup_integrations(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(hass, "llm", {})
-    hass.states.async_set(ENTITY_ID, "on", {"friendly_name": "Test climate"})
+    hass.states.async_set(
+        ENTITY_ID,
+        "on",
+        {
+            "friendly_name": "Test climate",
+            "supported_features": ClimateEntityFeature.TARGET_TEMPERATURE,
+        },
+    )
     async_expose_entity(hass, "conversation", ENTITY_ID, True)
     await hass.async_block_till_done()
 
@@ -44,6 +53,24 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed climate entity."""
     assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
+
+
+async def test_set_temperature_omits_empty_optional_targets(
+    hass: HomeAssistant,
+) -> None:
+    """Test empty optional targets do not invalidate a climate LLM tool call."""
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+
+    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
+        response = await api.async_call_tool(
+            llm.ToolInput(
+                "HassClimateSetTemperature",
+                {"area": "", "floor": "", "name": "", "temperature": 25},
+            )
+        )
+
+    mock_service_call.assert_awaited_once()
+    assert response["response_type"] == "action_done"
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:

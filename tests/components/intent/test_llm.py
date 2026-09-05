@@ -6,9 +6,12 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import llm as intent_llm
 from homeassistant.components.intent.timers import async_register_timer_handler
+from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import llm
+from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_mock_service
 
 COVER_ENTITY_ID = "cover.test"
 
@@ -46,6 +49,47 @@ async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
     names = await _tool_names(hass)
     assert "intent__HassTurnOn" in names
     assert "intent__HassTurnOff" in names
+
+
+async def test_turn_on_omits_empty_unused_targets(hass: HomeAssistant) -> None:
+    """Test HassTurnOn accepts a valid target with empty unused targets."""
+    hass.states.async_set("light.test_light", "off", {"friendly_name": "Test Light"})
+    async_expose_entity(hass, "conversation", "light.test_light", True)
+    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+
+    await api.async_call_tool(
+        llm.ToolInput(
+            "HassTurnOn",
+            {
+                "area": "",
+                "domain": "light",
+                "floor": "",
+                "name": "Test Light",
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": ["light.test_light"]}
+
+
+@pytest.mark.parametrize(
+    "tool_args",
+    [
+        pytest.param({"area": "", "floor": "", "name": ""}, id="all-empty"),
+        pytest.param({"area": "", "floor": "", "name": " "}, id="whitespace-name"),
+    ],
+)
+async def test_turn_on_rejects_invalid_targets(
+    hass: HomeAssistant, tool_args: dict[str, str]
+) -> None:
+    """Test HassTurnOn still rejects missing and whitespace-only targets."""
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+
+    with pytest.raises(intent.IntentError):
+        await api.async_call_tool(llm.ToolInput("HassTurnOn", tool_args))
 
 
 async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
