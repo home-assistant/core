@@ -3,6 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
+        'auto_revert': False,
         'host': 'http://fronius',
         'is_logger': True,
         'modbus_port': 502,
@@ -12,7 +13,7 @@
       }),
       'domain': 'fronius',
       'entry_id': 'f1e2b9837e8adaed6fa682acaa216fd8',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -381,6 +382,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
+        'auto_revert': False,
         'host': 'http://fronius',
         'is_logger': False,
         'modbus_port': 502,
@@ -390,7 +392,7 @@
       }),
       'domain': 'fronius',
       'entry_id': 'f1e2b9837e8adaed6fa682acaa216fd8',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

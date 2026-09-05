@@ -16,10 +16,10 @@ from modbus_connection import ModbusError
 from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.const import Platform
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .binary_sensor import POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS
@@ -291,10 +291,12 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         Platform.SWITCH: MODBUS_SWITCH_ENTITY_DESCRIPTIONS,
     }
 
+    _heartbeat_unsub: CALLBACK_TYPE | None = None
+
     @property
     def revert_seconds(self) -> int:
         """Return the fallback period to give the device, 0 for none."""
-        if self.config_entry.options.get(CONF_AUTO_REVERT, False):
+        if self.config_entry.data[CONF_AUTO_REVERT]:
             return AUTO_REVERT_SECONDS
         return 0
 
@@ -302,36 +304,47 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         """Keep an active power limit alive against the device's fallback.
 
         The device holds a power limit only for as long as it keeps hearing
-        it, so with the option on the limit is sent again well before the
-        period is up.
+        it, so with the setting on the limit is sent again well before the
+        period is up - starting right away, because the device may have been
+        counting down while Home Assistant was not running.
         """
-        if not self.revert_seconds:
-            await self._async_clear_revert_period()
+        self.config_entry.async_on_unload(self._async_cancel_heartbeat)
+        if self.revert_seconds:
+            await self._async_send_heartbeat()
             return
-        await self._async_resend_power_limit()
-        self.config_entry.async_on_unload(
-            async_track_time_interval(
-                self.hass, self._async_resend_power_limit, HEARTBEAT_INTERVAL
-            )
-        )
-
-    async def _async_clear_revert_period(self) -> None:
-        """Take back a period left on the device when the option is turned off.
-
-        A device that was never configured for one here is left alone: what
-        it holds then came from somewhere else, and dropping it would take
-        away another controller's safety net.
-        """
+        # take back only a period this integration could have set - any other
+        # came from somewhere else, and dropping it would take away another
+        # controller's safety net
         controls = self.modbus_inverter.controls
-        if (
-            CONF_AUTO_REVERT not in self.config_entry.options
-            or controls is None
-            or not controls.revert_seconds
-        ):
-            return
-        await self._async_resend_power_limit()
+        if controls is not None and controls.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._async_resend_power_limit()
 
-    async def _async_resend_power_limit(self, _now: datetime | None = None) -> None:
+    async def _async_send_heartbeat(self, _now: datetime | None = None) -> None:
+        """Send the limit again and line up the next beat."""
+        self._heartbeat_unsub = None
+        await self._async_resend_power_limit()
+        self._async_update_heartbeat()
+
+    @callback
+    def _async_update_heartbeat(self) -> None:
+        """Beat only while there is a limit to keep alive."""
+        controls = self.modbus_inverter.controls
+        if not self.revert_seconds or controls is None or not controls.enabled:
+            self._async_cancel_heartbeat()
+            return
+        if self._heartbeat_unsub is None:
+            self._heartbeat_unsub = async_call_later(
+                self.hass, HEARTBEAT_INTERVAL, self._async_send_heartbeat
+            )
+
+    @callback
+    def _async_cancel_heartbeat(self) -> None:
+        """Drop a pending beat."""
+        if self._heartbeat_unsub is not None:
+            self._heartbeat_unsub()
+            self._heartbeat_unsub = None
+
+    async def _async_resend_power_limit(self) -> None:
         """Send an active power limit again to restart the fallback period.
 
         Fronius documents the period as restarted by every received Modbus
@@ -361,6 +374,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 self.inverter_info.solar_net_id,
                 err,
             )
+
+    @override
+    async def _async_update_data(self) -> dict[SolarNetId, Any]:
+        """Refresh the settings and keep the heartbeat in step with them."""
+        data = await super()._async_update_data()
+        self._async_update_heartbeat()
+        return data
 
     @override
     async def _refresh_components(self) -> None:
@@ -419,6 +439,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 translation_key="modbus_write_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        # the write restarted the device's period, so the beat starts over
+        self._async_cancel_heartbeat()
         # not debounced: the entity should settle on what the device reports
         # back, and writes are rare and user initiated
         await self.async_refresh()
