@@ -466,7 +466,7 @@
           "auto_revert": "Revert the AC power limit if Home Assistant stops"
         },
         "data_description": {
-          "auto_revert": "The inverter drops the AC power limit an hour after it last received it, and returns to its own settings. Home Assistant sends the limit again every 15 minutes, so this only takes effect once Home Assistant has really stopped. Battery setpoints are not affected - the inverter supports no timeout for them."
+          "auto_revert": "The inverter drops the AC power limit an hour after it last received it, and returns to its own settings. Home Assistant sends the limit again every 15 minutes, so this only takes effect once it stops sending - because Home Assistant is down, or because the integration was removed. Battery setpoints are not affected - the inverter supports no timeout for them."
         },
         "description": "These settings apply to controlling the inverter over Modbus."
       }
