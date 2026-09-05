@@ -185,6 +185,7 @@ class LaCrosseSensor(SensorEntity):
     """Implementation of a Lacrosse sensor."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
     entity_description: LaCrosseSensorDescription
     _temperature: float | None = None
     _humidity: int | None = None
@@ -209,6 +210,7 @@ class LaCrosseSensor(SensorEntity):
         self._config = config
         self.entity_description = description
         self._expire_after = expire_after
+        self._lacrosse = lacrosse
         self._sensor_data: pylacrosse.LaCrosseSensor | None = None
         self._expiration_trigger: CALLBACK_TYPE | None = None
         self._attr_unique_id = config.get(CONF_UNIQUE_ID, device_id)
@@ -219,7 +221,11 @@ class LaCrosseSensor(SensorEntity):
             name=sensor_device_name(config),
         )
 
-        lacrosse.register_callback(
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register the receiver callback when added to Home Assistant."""
+        await super().async_added_to_hass()
+        self._lacrosse.register_callback(
             int(self._config[CONF_ID]), self._callback_lacrosse, None
         )
 
@@ -260,11 +266,13 @@ class LaCrosseSensor(SensorEntity):
         self._low_battery = lacrosse_sensor.low_battery
         self._new_battery = lacrosse_sensor.new_battery
         self._sensor_data = lacrosse_sensor
+        self.hass.add_job(self.async_write_ha_state)
 
     @callback
     def value_is_expired(self, *_: datetime) -> None:
         """Triggered when value is expired."""
         self._expiration_trigger = None
+        self._sensor_data = None
         self.async_write_ha_state()
 
     @property

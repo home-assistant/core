@@ -79,8 +79,9 @@ def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> None:
         SENSOR_TYPES["humidity"],
     )
 
-    temperature._callback_lacrosse(sensor_data, None)
-    humidity._callback_lacrosse(sensor_data, None)
+    with patch.object(hass, "add_job") as mock_add_job:
+        temperature._callback_lacrosse(sensor_data, None)
+        humidity._callback_lacrosse(sensor_data, None)
 
     assert temperature.native_value == 21.5
     assert humidity.native_value == 54
@@ -88,6 +89,34 @@ def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> None:
         "low_battery": False,
         "new_battery": True,
     }
+    assert mock_add_job.call_count == 2
+    mock_add_job.assert_any_call(temperature.async_write_ha_state)
+    mock_add_job.assert_any_call(humidity.async_write_ha_state)
+
+
+async def test_sensor_registers_callback_when_added_to_hass(
+    hass: HomeAssistant,
+) -> None:
+    """Test receiver callbacks are registered when the entity is added."""
+    receiver = MagicMock()
+    sensor = LaCrosseSensor(
+        hass,
+        receiver,
+        "/dev/ttyUSB0",
+        "outdoor_temperature",
+        None,
+        {"id": 1},
+        SENSOR_TYPES["temperature"],
+    )
+
+    assert sensor.should_poll is False
+    receiver.register_callback.assert_not_called()
+
+    await sensor.async_added_to_hass()
+
+    receiver.register_callback.assert_called_once_with(
+        1, sensor._callback_lacrosse, None
+    )
 
 
 def test_battery_sensor_updates_and_expires(hass: HomeAssistant) -> None:
@@ -107,10 +136,13 @@ def test_battery_sensor_updates_and_expires(hass: HomeAssistant) -> None:
     assert sensor.native_value is None
     assert sensor.icon == "mdi:battery-unknown"
 
-    with patch(
-        "homeassistant.components.lacrosse.sensor.async_track_point_in_utc_time",
-        return_value=expiration_trigger,
-    ) as mock_track_expiration:
+    with (
+        patch(
+            "homeassistant.components.lacrosse.sensor.async_track_point_in_utc_time",
+            return_value=expiration_trigger,
+        ) as mock_track_expiration,
+        patch.object(hass, "add_job"),
+    ):
         sensor._callback_lacrosse(
             MagicMock(
                 temperature=21.5, humidity=54, low_battery=False, new_battery=True

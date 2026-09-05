@@ -34,13 +34,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> 
     except SerialException as exc:
         raise ConfigEntryNotReady(f"Unable to open serial port: {exc}") from exc
 
+    async def _async_close(*_: object) -> None:
+        await hass.async_add_executor_job(lacrosse.close)
+
     entry.runtime_data = lacrosse
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close()
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
     )
-    entry.async_on_unload(lacrosse.close)
+    entry.async_on_unload(_async_close)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
