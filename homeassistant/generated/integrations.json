@@ -3757,8 +3757,8 @@
     "lacrosse": {
       "name": "LaCrosse",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "lacrosse_view": {
       "name": "LaCrosse View",

@@ -1,0 +1,115 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the receiver.",
+      "sensor_already_configured": "This sensor is already configured.",
+      "unknown": "Unexpected error occurred.",
+      "value_type_required": "Select at least temperature or humidity."
+    },
+    "step": {
+      "add_sensor": {
+        "data": {
+          "battery": "Reports battery state",
+          "expire_after": "Mark unavailable after (seconds)",
+          "friendly_name": "Name",
+          "humidity": "Reports humidity",
+          "id": "Sensor ID",
+          "temperature": "Reports temperature"
+        },
+        "data_description": {
+          "battery": "Whether the sensor reports battery state.",
+          "expire_after": "Seconds without an update before the sensor is unavailable.",
+          "friendly_name": "The name used for the sensor.",
+          "humidity": "Whether the sensor reports humidity.",
+          "id": "The sensor identifier.",
+          "temperature": "Whether the sensor reports temperature."
+        }
+      },
+      "add_sensor_or_finish": {
+        "menu_options": {
+          "add_sensor": "Add another sensor",
+          "finish": "Finish setup"
+        }
+      },
+      "reconfigure": {
+        "menu_options": {
+          "add_sensor": "Add new sensor",
+          "remove_sensor": "Delete sensor",
+          "update_receiver": "Update receiver",
+          "update_sensor": "Update sensor"
+        }
+      },
+      "remove_sensor": {
+        "data": {
+          "id": "Sensor ID"
+        },
+        "data_description": {
+          "id": "The sensor to remove, along with its device."
+        }
+      },
+      "update_receiver": {
+        "data": {
+          "baud": "Baud rate",
+          "datarate": "Data rate",
+          "device": "Serial device",
+          "frequency": "Frequency",
+          "led": "Jeelink LED",
+          "toggle_interval": "Toggle interval",
+          "toggle_mask": "Toggle mask"
+        },
+        "data_description": {
+          "baud": "The receiver communication speed.",
+          "datarate": "The receiver data rate.",
+          "device": "The serial device connected to the receiver.",
+          "frequency": "The receiver frequency.",
+          "led": "Whether the receiver LED is enabled.",
+          "toggle_interval": "The receiver toggle interval.",
+          "toggle_mask": "The receiver toggle mask."
+        }
+      },
+      "update_sensor": {
+        "data": {
+          "friendly_name": "Name",
+          "id": "Sensor ID",
+          "new_id": "New sensor ID"
+        },
+        "data_description": {
+          "friendly_name": "The name used for the sensor.",
+          "id": "The sensor to update.",
+          "new_id": "The ID the sensor reports now, for example after a battery replacement."
+        }
+      },
+      "user": {
+        "data": {
+          "baud": "Baud rate",
+          "datarate": "Data rate",
+          "device": "Serial device",
+          "frequency": "Frequency",
+          "led": "Jeelink LED",
+          "toggle_interval": "Toggle interval",
+          "toggle_mask": "Toggle mask"
+        },
+        "data_description": {
+          "baud": "The receiver communication speed.",
+          "datarate": "The receiver data rate.",
+          "device": "The serial device connected to the receiver.",
+          "frequency": "The receiver frequency.",
+          "led": "Whether the receiver LED is enabled.",
+          "toggle_interval": "The receiver toggle interval.",
+          "toggle_mask": "The receiver toggle mask."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      }
+    }
+  }
+}

@@ -414,6 +414,7 @@ FLOWS = {
         "kostal_plenticore",
         "kraken",
         "kulersky",
+        "lacrosse",
         "lacrosse_view",
         "lamarzocco",
         "lametric",
