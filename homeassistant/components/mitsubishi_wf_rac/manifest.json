@@ -1,0 +1,21 @@
+{
+  "domain": "mitsubishi_wf_rac",
+  "name": "Mitsubishi WF-RAC",
+  "codeowners": [
+    "@blues-sechseck"
+  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mitsubishi_wf_rac",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": [
+    "pywfrac"
+  ],
+  "quality_scale": "platinum",
+  "requirements": [
+    "pywfrac==0.1.0"
+  ],
+  "zeroconf": [
+    "_beaver._tcp.local."
+  ]
+}

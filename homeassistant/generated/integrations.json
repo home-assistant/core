@@ -4527,6 +4527,12 @@
         }
       }
     },
+    "mitsubishi_wf_rac": {
+      "name": "Mitsubishi WF-RAC",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "mjpeg": {
       "name": "MJPEG IP Camera",
       "integration_type": "hub",

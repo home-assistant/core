@@ -1,0 +1,172 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "force_update": "Ignore duplicate IP address"
+        },
+        "description": "Please fill in the correct information to add the Airco Manually",
+        "title": "WF-RAC AC connection info",
+        "data_description": {
+          "name": "The name for this airco in Home Assistant. It names the device and prefixes the entities belonging to it.",
+          "host": "The local IP address of the airco's wireless module. Give the module a fixed address in your router - the integration does not follow a changed one on its own, you would have to reconfigure it here.",
+          "port": "The port the module's local API listens on. Leave this at 51443 unless your module announces a different one.",
+          "force_update": "Add this airco even though another entry already uses this IP address. Meant for re-adding a unit whose old entry went missing: the module accepts one connection at a time, so two entries polling it will produce errors in the log."
+        }
+      },
+      "discovery_confirm": {
+        "description": "The airco with id: {id}, IP: {host} and port: {port} was discovered. The port is normally 51443 — correct it below if it looks different. Please give it a name.",
+        "title": "Discovered WF-RAC airco",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "name": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::name%]",
+          "port": "The port the module announced. It is normally 51443 - correct it here if the value above looks different."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Update the connection details for this Airco.",
+        "title": "Reconfigure WF-RAC AC connection",
+        "data_description": {
+          "name": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::name%]",
+          "host": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::host%]",
+          "port": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::port%]"
+        }
+      }
+    },
+    "error": {
+      "unexpected_error": "An unexpected error occurred. Please check the log for details.",
+      "cannot_connect": "Could not connect with the Airco: {reason}",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "name_invalid": "Name is already taken or is shorter than 3 characters",
+      "host_already_configured": "Airco IP already configured as [{error_name}]",
+      "too_many_devices_registered": "There are too many devices registered for this airco. Please delete a device (in the app) or do a factory reset of the module."
+    },
+    "abort": {
+      "existing_instance_updated": "Updated existing configuration.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "issues": {
+    "too_many_devices": {
+      "title": "Too many accounts registered on {device_name}",
+      "description": "This unit has room for four registered accounts and all four are taken, so Home Assistant cannot register itself. The module never frees a slot by itself: registrations do not expire, and a new one is refused rather than replacing an older one. In the Smart M-Air app, remove this unit from a phone that no longer needs it - each account can only remove itself, and several phones sharing one Smart M-Air account take up a single slot between them. Then reload this integration. If nobody can free a slot - a phone that is long gone still holds one - the module has to be set up again from scratch."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Below are the options you can change for this airco.",
+        "data": {
+          "availability_retry_limit": "Retry limit"
+        },
+        "data_description": {
+          "availability_retry_limit": "Consecutive failed polls before the airco is marked unavailable. The minimum of three is about three minutes at the 60-second poll interval - enough to ride through the module's hourly WiFi reassociation. Raise it on a weak link."
+        },
+        "title": "WF-RAC options",
+        "sections": {
+          "setpoint_offsets": {
+            "name": "Setpoint offsets",
+            "description": "Change the setting sent to the unit while the card keeps showing yours.",
+            "data": {
+              "target_offset": "Target Temp. Offset",
+              "target_offset_cool": "Target Temp. Offset (Cooling)",
+              "target_offset_heat": "Target Temp. Offset (Heating)"
+            },
+            "data_description": {
+              "target_offset": "Positive lowers the setting sent to the unit, negative raises it - the card keeps showing yours either way. Most units round a half degree up to the next whole one, so 0.5 here often acts as 1.",
+              "target_offset_cool": "Leave empty to use the general target temperature offset.",
+              "target_offset_heat": "Leave empty to use the general target temperature offset."
+            }
+          },
+          "sensor_offsets": {
+            "name": "Sensor offsets",
+            "description": "Correct the readings shown in Home Assistant. Display only - neither changes what the unit does.",
+            "data": {
+              "indoor_offset": "Indoor Temp. Sensor Offset",
+              "outdoor_offset": "Outdoor Temp. Sensor Offset"
+            },
+            "data_description": {
+              "indoor_offset": "Added to the unit's own indoor reading before it is shown. Display only - it does not change what the unit does.",
+              "outdoor_offset": "The same, for the outdoor temperature the unit reports."
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not reach the Airco at {device}."
+    },
+    "update_failed": {
+      "message": "Polling the Airco at {device} failed: {error}"
+    },
+    "temperature_required": {
+      "message": "A target temperature is required."
+    },
+    "temperature_below_minimum": {
+      "message": "{temperature} °C is below the {min_temp} °C minimum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
+    },
+    "temperature_above_maximum": {
+      "message": "{temperature} °C is above the {max_temp} °C maximum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
+    },
+    "home_leave_mode_not_supported": {
+      "message": "This model does not report the Home Leave Mode capability."
+    },
+    "preset_away_needs_cool_or_heat": {
+      "message": "Home Leave mode is only available while cooling or heating, not in {hvac_mode}. Switch the unit to cool or heat first, or use the Home Leave Mode select to name the direction."
+    }
+  },
+  "entity": {
+    "climate": {
+      "mitsubishi_wf_rac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "Auto",
+              "quiet": "Quiet",
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "up_down_auto": "Up/Down Auto",
+              "highest": "Highest",
+              "middle": "Middle",
+              "normal": "Normal",
+              "lowest": "Lowest",
+              "3d_auto": "3D Auto"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "left_right_auto": "Left/Right Auto",
+              "left_left": "Left-Left",
+              "left_center": "Left-Center",
+              "center_center": "Center-Center",
+              "center_right": "Center-Right",
+              "right_right": "Right-Right",
+              "left_right": "Left-Right",
+              "right_left": "Right-Left",
+              "3d_auto": "3D Auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}
