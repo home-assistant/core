@@ -373,6 +373,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/default_config/ @home-assistant/core
 /tests/components/default_config/ @home-assistant/core
 /homeassistant/components/delijn/ @bollewolle @Emilv2
+/tests/components/delijn/ @bollewolle @Emilv2
 /homeassistant/components/deluge/ @tkdrob
 /tests/components/deluge/ @tkdrob
 /homeassistant/components/demo/ @home-assistant/core

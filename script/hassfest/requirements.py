@@ -135,7 +135,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pycmus > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "delijn": {"pydelijn": {"async-timeout"}},
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
