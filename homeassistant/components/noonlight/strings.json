@@ -1,0 +1,30 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "API token"
+        },
+        "data_description": {
+          "api_token": "Long-lived token from your Noonlight account portal."
+        },
+        "description": "Enter your Noonlight API token to connect Home Assistant to Noonlight.",
+        "title": "Connect to Noonlight"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "api_reachable": {
+        "name": "API reachable"
+      }
+    }
+  }
+}
