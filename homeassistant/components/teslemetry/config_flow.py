@@ -7,12 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import (
-    DEFAULT_GATEWAY_HOST,
-    PowerwallAuthenticationError,
-    PowerwallClient,
-    PowerwallError,
-)
+from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
 from bleak.exc import BleakError
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -444,14 +439,20 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             for subentry in entry.subentries.values()
             if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
         }
-        available = {
-            str(energy_data.id): energy_data
+        local_control_sites = [
+            energy_data
             for energy_data in entry.runtime_data.energysites
             if energy_data.can_local_control
-            and str(energy_data.id) not in added_site_ids
+        ]
+        available = {
+            str(energy_data.id): energy_data
+            for energy_data in local_control_sites
+            if str(energy_data.id) not in added_site_ids
         }
         if not available:
-            return self.async_abort(reason="no_energy_sites")
+            return self.async_abort(
+                reason="all_sites_added" if local_control_sites else "no_powerwall"
+            )
 
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
@@ -490,15 +491,22 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         try:
             self._discovered_host = await energy_site.find_gateway_address() or ""
         except (ClientError, TeslaFleetError) as err:
-            LOGGER.debug("Gateway address discovery failed: %s", err)
+            LOGGER.warning("Gateway address discovery failed: %s", err)
             self._discovered_host = ""
+        else:
+            if not self._discovered_host:
+                LOGGER.warning("Gateway address discovery returned no address")
 
         path = self.hass.config.path(POWERWALL_KEY_FILE)
         keyholder = Teslemetry(
             session=async_get_clientsession(self.hass), access_token=""
         )
         try:
-            await keyholder.get_rsa_private_key(path)
+            try:
+                await keyholder.get_rsa_private_key(path)
+            except TypeError as err:
+                # An encrypted PEM surfaces as TypeError from the cryptography loader.
+                raise ValueError("RSA private key file is encrypted") from err
             self._key_pem = await self.hass.async_add_executor_job(
                 Path(path).read_bytes
             )
@@ -639,7 +647,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Required(
                         CONF_HOST,
-                        default=self._discovered_host or DEFAULT_GATEWAY_HOST,
+                        default=self._discovered_host or vol.UNDEFINED,
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
