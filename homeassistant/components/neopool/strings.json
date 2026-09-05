@@ -45,6 +45,95 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "aux": {
+        "name": "Auxiliary relay {number}"
+      },
+      "chlorine_control_module": {
+        "name": "Chlorine regulation active"
+      },
+      "chlorine_flow_sensor_problem": {
+        "name": "Chlorine flow sensor"
+      },
+      "chlorine_measurement_active": {
+        "name": "Chlorine measurement"
+      },
+      "chlorine_pump_active": {
+        "name": "Chlorine pump active"
+      },
+      "conductivity_control_module": {
+        "name": "Conductivity regulation active"
+      },
+      "conductivity_measurement_active": {
+        "name": "Conductivity measurement"
+      },
+      "conductivity_pump_active": {
+        "name": "Conductivity pump active"
+      },
+      "filtration_pump": {
+        "name": "Filtration"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "hidro_activated_by_the_cl_module": {
+        "name": "Hydrolysis activated by chlorine module"
+      },
+      "hidro_activated_by_the_rx_module": {
+        "name": "Hydrolysis activated by Redox module"
+      },
+      "hidro_chlorine_shock_mode": {
+        "name": "Hydrolysis chlorine shock mode (boost)"
+      },
+      "hidro_low": {
+        "name": "Hydrolysis production problem"
+      },
+      "hidro_module_active": {
+        "name": "Hydrolysis enabled"
+      },
+      "hidro_module_regulated": {
+        "name": "Hydrolysis regulation active"
+      },
+      "ion_low": {
+        "name": "Ionizer production problem"
+      },
+      "ion_on_target": {
+        "name": "Ionizer on target"
+      },
+      "ion_program_time_exceeded": {
+        "name": "Ionizer program time exceeded"
+      },
+      "ph_acid_pump": {
+        "name": "pH acid pump"
+      },
+      "ph_control_module": {
+        "name": "pH regulation active"
+      },
+      "ph_measurement_active": {
+        "name": "pH measurement"
+      },
+      "ph_module_control_status": {
+        "name": "pH flow detection control"
+      },
+      "pool_cover": {
+        "name": "Pool cover"
+      },
+      "pool_light": {
+        "name": "Pool light"
+      },
+      "redox_control_module": {
+        "name": "Redox regulation active"
+      },
+      "redox_measurement_active": {
+        "name": "Redox measurement"
+      },
+      "redox_pump_active": {
+        "name": "Redox pump active"
+      },
+      "uv_lamp": {
+        "name": "UV lamp"
+      }
+    },
     "button": {
       "escape": {
         "name": "Clear error messages"
