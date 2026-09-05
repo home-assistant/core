@@ -2,10 +2,11 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast, override
 
 from fronius_modbus import (
+    Controls,
     FroniusModbusInverter,
     Mppt,
     SunSpecError,
@@ -18,11 +19,15 @@ from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .binary_sensor import POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS
 from .const import (
+    AUTO_REVERT_SECONDS,
+    CONF_AUTO_REVERT,
     DOMAIN,
+    HEARTBEAT_INTERVAL,
     SOLAR_NET_ID_POWER_FLOW,
     SOLAR_NET_ID_SYSTEM,
     FroniusDeviceInfo,
@@ -286,6 +291,56 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         Platform.SWITCH: MODBUS_SWITCH_ENTITY_DESCRIPTIONS,
     }
 
+    @property
+    def revert_seconds(self) -> int:
+        """Return the fallback period to give the device, 0 for none."""
+        if self.config_entry.options.get(CONF_AUTO_REVERT, False):
+            return AUTO_REVERT_SECONDS
+        return 0
+
+    async def async_start_heartbeat(self) -> None:
+        """Keep an active power limit alive against the device's fallback.
+
+        The device holds a power limit only for as long as it keeps hearing
+        it, so it is sent again well before the period is up. Sending it once
+        here also lets the option take effect on a limit that is already
+        running - clearing the period on the device when it is turned off.
+        """
+        await self._async_resend_power_limit()
+        if not self.revert_seconds:
+            return
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass, self._async_resend_power_limit, HEARTBEAT_INTERVAL
+            )
+        )
+
+    async def _async_resend_power_limit(self, _now: datetime | None = None) -> None:
+        """Send an active power limit again to restart the fallback period.
+
+        Fronius documents the period as restarted by every received Modbus
+        message, but a Gen24 dropped the limit on time while being read every
+        five seconds - only writing the limit again restarts it.
+
+        Nothing to do while no limit is in force: without one there is no
+        period running that could be restarted or cleared.
+        """
+        controls = self.modbus_inverter.controls
+        if (
+            controls is None
+            or not controls.enabled
+            or (limit := controls.power_limit) is None
+        ):
+            return
+        try:
+            await controls.set_power_limit(limit, revert_seconds=self.revert_seconds)
+        except (ModbusError, SunSpecError) as err:
+            self.logger.warning(
+                "Could not send the AC power limit to inverter %s again: %s",
+                self.inverter_info.solar_net_id,
+                err,
+            )
+
     @override
     async def _refresh_components(self) -> None:
         """Refresh the models carrying the writable settings."""
@@ -310,6 +365,10 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         register map before anything is written - the register addresses
         move when the data type setting is changed on the device.
 
+        A device holding a different fallback period than the configured one
+        is corrected first, so an output power limit the user sets reverts on
+        the schedule they chose.
+
         ``enable_field`` names the register that puts a setpoint into effect.
         It is written again after a change, because the device only picks up a
         change to an active mode when the mode is enabled again - but only
@@ -325,6 +384,11 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             )
         try:
             await component.async_update()
+            if (
+                isinstance(component, Controls)
+                and component.revert_seconds != self.revert_seconds
+            ):
+                await component.write("revert_seconds", self.revert_seconds)
             await component.write(field, value)
             if enable_field is not None and getattr(component, enable_field):
                 await component.write(enable_field, True)

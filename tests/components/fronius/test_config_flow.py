@@ -6,7 +6,7 @@ from pyfronius import FroniusError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.fronius.const import DOMAIN
+from homeassistant.components.fronius.const import CONF_AUTO_REVERT, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -467,3 +467,25 @@ async def test_reconfigure_to_different_device(hass: HomeAssistant) -> None:
     await assert_abort_flow_with_logger(
         hass, result["flow_id"], reason="unique_id_mismatch"
     )
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test turning on the fallback for setpoints."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",
+        data={CONF_HOST: "10.1.2.3", "is_logger": True},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_AUTO_REVERT: True}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {CONF_AUTO_REVERT: True}

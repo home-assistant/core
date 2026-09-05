@@ -22,6 +22,7 @@ async def setup_fronius_integration(
     is_logger: bool = True,
     unique_id: str = MOCK_UID,
     modbus_port: int | None = None,
+    options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Create the Fronius integration.
 
@@ -37,6 +38,7 @@ async def setup_fronius_integration(
             "is_logger": is_logger,
             **({"modbus_port": modbus_port} if modbus_port is not None else {}),
         },
+        options=options or {},
         minor_version=1 if modbus_port is None else 2,
     )
     entry.add_to_hass(hass)

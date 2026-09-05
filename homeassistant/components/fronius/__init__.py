@@ -441,9 +441,10 @@ class FroniusSolarNet:
                 modbus_inverter=modbus_inverter,
                 config_entry=self.config_entry,
             )
-            await self._start_modbus_coordinator(
+            if await self._start_modbus_coordinator(
                 settings, self.modbus_settings_coordinators
-            )
+            ):
+                await settings.async_start_heartbeat()
 
         _LOGGER.debug(
             "Modbus enabled for inverter %s (UID: %s, unit ID: %s)",
