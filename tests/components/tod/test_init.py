@@ -49,3 +49,32 @@ async def test_setup_and_remove_config_entry(
     # Check the state and entity registry entry are removed
     assert hass.states.get(tod_entity_id) is None
     assert entity_registry.async_get(tod_entity_id) is None
+
+
+@pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
+async def test_setup_config_entry_with_sun_events(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test setting up a config entry configured with sunrise/sunset."""
+    tod_entity_id = "binary_sensor.daytime"
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "after_time": "sunrise",
+            "before_time": "sunset",
+            "name": "Daytime",
+        },
+        title="Daytime",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(tod_entity_id) is not None
+
+    state = hass.states.get(tod_entity_id)
+    assert state is not None
+    assert "after" in state.attributes
+    assert "before" in state.attributes
