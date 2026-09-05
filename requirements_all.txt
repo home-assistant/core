@@ -299,6 +299,9 @@ aiohomekit==4.0.1
 # homeassistant.components.hortimax
 aiohortos==0.3.1
 
+# homeassistant.components.scaleway_object_storage
+aiohttp-s3-client==1.1.2
+
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
 
