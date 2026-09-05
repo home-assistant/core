@@ -158,6 +158,7 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 translation_key="failed_to_set_bypass_supply_temperature_target",
             ) from err
 
+        # Do not let a completed write mask a concurrent coordinator refresh failure.
         if self.coordinator.last_update_success:
             self.coordinator.async_set_updated_data(
                 replace(

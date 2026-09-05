@@ -1,5 +1,6 @@
 """Tests for the Duco number platform."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock, call
 
@@ -68,29 +69,54 @@ async def test_bypass_supply_temperature_target_numbers_support_all_exposed_zone
 
 async def test_successful_write_does_not_recover_failed_coordinator(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test a successful write does not recover a failed coordinator."""
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+    write_started = asyncio.Event()
+    release_write = asyncio.Event()
+    target = mock_bypass_supply_temperature_targets[1]
+
+    async def set_bypass_supply_temperature_target(
+        zone_id: int,
+        temperature: float,
+        *,
+        target: BypassSupplyTemperatureTarget,
+    ) -> BypassSupplyTemperatureTarget:
+        updated_target = replace(target, zone_id=zone_id, value=temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = updated_target
+        write_started.set()
+        await release_write.wait()
+        return updated_target
+
+    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = (
+        set_bypass_supply_temperature_target
+    )
+    write_task = asyncio.create_task(
+        hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+            blocking=True,
+        )
+    )
+    await write_started.wait()
 
     mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_config_entry.runtime_data.async_refresh()
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
-        blocking=True,
-    )
+    release_write.set()
+    await write_task
 
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
+        1, 20.5, target=target
+    )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
