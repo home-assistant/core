@@ -15,7 +15,11 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
+    SensorStateClass,
+)
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -45,7 +49,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
@@ -165,10 +168,17 @@ SENSOR_SETTINGS = vol.Schema(
                     ),
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                         SelectSelectorConfig(
-                            options=[cls.value for cls in UnitOfTemperature],
-                            custom_value=True,
+                            options=list(
+                                {
+                                    str(unit)
+                                    for units in DEVICE_CLASS_UNITS.values()
+                                    for unit in units
+                                    if unit is not None
+                                }
+                            ),
                             mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="unit_of_measurement",
+                            translation_key="sensor_unit_of_measurement",
+                            custom_value=True,
                             sort=True,
                         )
                     ),
