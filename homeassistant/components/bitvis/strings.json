@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_mac": "The device did not provide a valid MAC address. Update the Power Hub to the latest firmware and try again.",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_mac": "The device did not provide a valid MAC address. Update the Power Hub to the latest firmware and try again.",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Bitvis Power Hub device."
+        },
+        "description": "Enter the network details for your Bitvis Power Hub device",
+        "title": "Set up Bitvis Power Hub"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the discovered Bitvis Power Hub ({name}) at {host} to Home Assistant?",
+        "title": "Discovered Bitvis Power Hub"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_active_export": {
+        "name": "Active energy export"
+      },
+      "energy_active_import": {
+        "name": "Active energy import"
+      },
+      "energy_reactive_export": {
+        "name": "Reactive energy export"
+      },
+      "energy_reactive_import": {
+        "name": "Reactive energy import"
+      },
+      "han_msg_buffer_overflow": {
+        "name": "HAN buffer overflows"
+      },
+      "han_msg_successfully_parsed": {
+        "name": "HAN messages successfully parsed"
+      },
+      "phase_current": {
+        "name": "Current {phase}"
+      },
+      "phase_voltage": {
+        "name": "Voltage {phase}"
+      },
+      "power_active_export": {
+        "name": "Active power export"
+      },
+      "power_active_import": {
+        "name": "Active power import"
+      },
+      "power_active_phase_export": {
+        "name": "Active power export {phase}"
+      },
+      "power_active_phase_import": {
+        "name": "Active power import {phase}"
+      },
+      "power_reactive_export": {
+        "name": "Reactive power export"
+      },
+      "power_reactive_import": {
+        "name": "Reactive power import"
+      },
+      "power_reactive_phase_export": {
+        "name": "Reactive power export {phase}"
+      },
+      "power_reactive_phase_import": {
+        "name": "Reactive power import {phase}"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal strength"
+      }
+    }
+  }
+}

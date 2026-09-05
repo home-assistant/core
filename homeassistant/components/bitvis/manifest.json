@@ -1,0 +1,12 @@
+{
+  "domain": "bitvis",
+  "name": "Bitvis Power Hub",
+  "codeowners": ["@MandusBorjesson", "@real-tintin", "@simontegelid"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bitvis",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["bitvis-protobuf==2.0.1"],
+  "zeroconf": ["_powerhub._udp.local."]
+}
