@@ -1,64 +1,284 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_discovery_info": "Invalid discovery information received.",
-      "mqtt_unavailable": "The MQTT integration is not available. Set it up first."
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Unable to connect to the device",
+      "discover_timeout": "Unable to discover requested device",
+      "invalid_discovery_info": "Invalid discovery information",
+      "mqtt_unavailable": "MQTT is not available",
+      "reconfigure_successful": "Device reconfigured successfully",
+      "unknown": "Unknown error occurred"
     },
     "error": {
-      "invalid_base_topic": "This is not a valid MQTT topic. Enter the plain topic prefix from the Silla app, without wildcards.",
-      "no_device": "No Prism messages were received on this base topic. Check that the topic matches the one configured in the Silla app and that Prism is online."
+      "battery_sensor_required": "Enter a battery power sensor to enable solar battery balancing",
+      "invalid_base_topic": "Invalid base topic",
+      "linking": "Unknown linking error occurred.",
+      "mqtt_unavailable": "MQTT is not available",
+      "no_device": "No Silla Prism traffic was found on this topic",
+      "register_failed": "Failed to register, please try again",
+      "solar_sensor_required": "Enter a solar production sensor when using a home load sensor"
     },
-    "flow_title": "{serial}",
     "step": {
-      "discovery_confirm": {
-        "description": "Do you want to set up the discovered Prism {serial}?",
-        "title": "Set up Silla Prism"
-      },
       "user": {
         "data": {
-          "base_topic": "Base topic"
+          "battery_discharge_positive": "Battery discharge is a positive value",
+          "battery_max_charge_power": "Battery reserve power at low SOC (W)",
+          "battery_power_sensor": "Battery power sensor",
+          "battery_soc_sensor": "Home battery SOC sensor (%)",
+          "home_load_includes_ev": "Home load sensor includes the EV charger",
+          "home_load_power_sensor": "Home load power sensor",
+          "maxcurr": "Maximum settable current 6A-32A",
+          "ports": "Number of available ports",
+          "powerwall": "Enable Powerwall sensors",
+          "serial": "Unique device code. Use if you have multiple devices",
+          "solar_balance_deadband_power": "Import/export deadband (W)",
+          "solar_balance_decrease_step": "Maximum current decrease step (A)",
+          "solar_balance_dry_run": "Solar balance dry run",
+          "solar_balance_high_reserve_power": "Battery reserve power at high SOC (W)",
+          "solar_balance_increase_interval": "Minimum current increase interval (s)",
+          "solar_balance_increase_step": "Maximum current increase step (A)",
+          "solar_balance_mid_reserve_power": "Battery reserve power at medium SOC (W)",
+          "solar_balance_phases": "Number of charging phases",
+          "solar_balance_residual_export_delay": "Residual export time before recovery (s)",
+          "solar_balance_residual_export_power": "Residual export for current recovery (W)",
+          "solar_balance_soc_high": "High home battery SOC for EV priority (%)",
+          "solar_balance_soc_mid": "Medium home battery SOC for EV priority (%)",
+          "solar_balance_start_delay": "Minimum stable surplus time before charging (minutes)",
+          "solar_balance_target_export_power": "Target grid export (W)",
+          "solar_balance_use_battery_charge": "Also treat battery charging power as EV surplus",
+          "solar_battery_balance": "Enable solar battery balancing",
+          "solar_production_power_sensor": "Solar production power sensor",
+          "topic": "Topic",
+          "vsensors": "Enable virtual sensors"
         },
         "data_description": {
-          "base_topic": "The MQTT topic prefix Prism publishes to, without a trailing slash."
+          "battery_discharge_positive": "Enable when the battery sensor is positive while discharging and negative while charging. Disable it if your sensor uses the opposite sign.",
+          "battery_max_charge_power": "Power reserved for the home battery when SOC is low. For this setup the typical value is 2700 W.",
+          "battery_power_sensor": "Home Assistant sensor for home-battery power in W. Example: sensor.battery_power.",
+          "battery_soc_sensor": "Home Assistant sensor for home-battery percentage. Example: sensor.battery_soc.",
+          "home_load_includes_ev": "Enable when the home load sensor is a total-load sensor that also includes EV charging. The balancer subtracts EV power before calculating surplus.",
+          "home_load_power_sensor": "Optional Home Assistant sensor for house load in W. If it also includes the EV charger, enable the option below.",
+          "maxcurr": "Maximum current the balancer may set on Prism. Example: 16 to never exceed 16A.",
+          "ports": "Number of physical Prism outputs. Use 1 for a single Prism, 2 for Prism Duo.",
+          "powerwall": "Enables virtual sensors compatible with the original project's legacy Powerwall view.",
+          "serial": "Optional value used to distinguish multiple Prism devices in the same Home Assistant instance. Example: PRISMBOX.",
+          "solar_balance_deadband_power": "Range where current is left unchanged. Example: 150 W avoids constant oscillation near zero.",
+          "solar_balance_decrease_step": "Maximum amps removed at each correction. Example: 3A reacts faster to house loads.",
+          "solar_balance_dry_run": "Calculate the solar balancing decision and update diagnostics without sending current or mode MQTT commands to Prism.",
+          "solar_balance_high_reserve_power": "Approximate maximum battery charge power left for the home battery at high SOC. Example: 1000 W.",
+          "solar_balance_increase_interval": "Minimum seconds between current increases. Example: 15 ramps up gradually during the day.",
+          "solar_balance_increase_step": "Maximum amps added at each increase. Example: 1A is conservative.",
+          "solar_balance_mid_reserve_power": "Approximate maximum battery charge power left for the home battery at medium SOC. Example: 1500 W.",
+          "solar_balance_phases": "EV charging phases. Use 1 for single phase, 3 for three phase.",
+          "solar_balance_residual_export_delay": "Seconds residual export must stay stable before adding current. Example: 60.",
+          "solar_balance_residual_export_power": "Extra export that must remain unused before recovering current. Example: 400 W.",
+          "solar_balance_soc_high": "SOC threshold where priority moves more strongly to the EV. Example: 80%.",
+          "solar_balance_soc_mid": "SOC threshold where battery reserve drops to the medium value. Example: 40%.",
+          "solar_balance_start_delay": "Minutes of stable surplus before starting from pause. Example: 5 reduces useless starts during short clouds.",
+          "solar_balance_target_export_power": "Small intentional grid export to avoid accidental import. Example: 150 W.",
+          "solar_balance_use_battery_charge": "When enabled, EV current can rise gradually to keep home-battery charging around the configured reserve.",
+          "solar_battery_balance": "Creates the switch that automatically adjusts EV current from solar, grid and home-battery data.",
+          "solar_production_power_sensor": "Home Assistant sensor for real PV production in W. Use this when Prism energy_data/power_solar is not populated.",
+          "topic": "Base MQTT topic configured on Prism. Example: prism/ with the trailing slash.",
+          "vsensors": "Creates additional calculated sensors, such as total grid import energy."
         },
-        "description": "Enter the MQTT base topic configured on the Prism (in the Silla app, under the MQTT settings). The default is \"prism\".",
-        "title": "Connect your Silla Prism"
+        "description": "Please enter connection settings of your device",
+        "title": "Configure Silla Prism Integration"
       }
     }
   },
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "error": {
-        "name": "Error",
+        "name": "Error status"
+      },
+      "online": {
+        "name": "Connection status",
         "state": {
-          "none": "None"
+          "off": "Offline",
+          "on": "Online"
         }
       },
-      "grid_power": {
-        "name": "Grid power"
+      "touch_double": {
+        "name": "Double touch"
       },
-      "pilot": {
-        "name": "Pilot current"
+      "touch_long": {
+        "name": "Long touch"
       },
-      "session_energy": {
-        "name": "Session energy"
+      "touch_single": {
+        "name": "Single touch"
+      }
+    },
+    "button": {
+      "set_mode_traps_auth": {
+        "name": "Charge authorization"
       },
-      "session_start": {
-        "name": "Session start"
+      "set_mode_traps_noauth": {
+        "name": "Revoke charge authorization"
+      }
+    },
+    "number": {
+      "set_current_limit": {
+        "name": "Current limit"
       },
-      "status": {
-        "name": "Status",
+      "set_max_current": {
+        "name": "Current limited by user"
+      }
+    },
+    "select": {
+      "set_port_mode": {
+        "name": "Set port output mode",
         "state": {
-          "charging": "[%key:common::state::charging%]",
-          "idle": "[%key:common::state::idle%]",
-          "paused": "[%key:common::state::paused%]",
+          "hybrid": "Hybrid",
+          "normal": "Normal",
+          "paused": "Paused",
+          "solar": "Solar"
+        }
+      }
+    },
+    "sensor": {
+      "core_temperature": {
+        "name": "CPU temperature"
+      },
+      "current_port_mode": {
+        "name": "Current port output mode",
+        "state": {
+          "autolimit": "Auto limit",
+          "hybrid": "Hybrid",
+          "normal": "Normal",
+          "paused": "Paused",
+          "solar": "Solar",
+          "suspended": "Suspended",
+          "unknown": "Unknown"
+        }
+      },
+      "current_set_by_user": {
+        "name": "Current limited by user"
+      },
+      "current_state": {
+        "name": "Wallbox current state",
+        "state": {
+          "charging": "Charging",
+          "idle": "Idle",
+          "pause": "Paused",
           "waiting": "Waiting"
         }
       },
-      "total_energy": {
+      "input_grid_energy": {
+        "name": "Total energy from grid"
+      },
+      "input_grid_power": {
+        "name": "Power from utility"
+      },
+      "output_car_current": {
+        "name": "Car requested by car"
+      },
+      "output_current": {
+        "name": "Output current"
+      },
+      "output_power": {
+        "name": "Power provided to car"
+      },
+      "power_grid_voltage": {
+        "name": "Power grid voltage"
+      },
+      "powerwall_house": {
+        "name": "Power consumed by the house"
+      },
+      "powerwall_solar": {
+        "name": "Power produced by PV"
+      },
+      "session_output_energy": {
+        "name": "Energy provided in last session"
+      },
+      "session_time": {
+        "name": "Session time"
+      },
+      "solar_balance_available_power": {
+        "name": "Calculated total surplus"
+      },
+      "solar_balance_battery_power_used": {
+        "name": "Battery power used in calculation"
+      },
+      "solar_balance_battery_reserve_power": {
+        "name": "Battery reserve power"
+      },
+      "solar_balance_battery_reserve_shortfall_power": {
+        "name": "Battery reserve shortfall"
+      },
+      "solar_balance_decision_reason": {
+        "name": "Decision reason",
+        "state": {
+          "charging_surplus": "Charging from surplus",
+          "disabled": "Disabled",
+          "external_paused": "Paused by wallbox",
+          "low_surplus_keep_charging": "Low surplus, keeping charge at 6A",
+          "paused_low_surplus": "Paused for low surplus",
+          "waiting_battery_data": "Waiting for battery data",
+          "waiting_data": "Waiting for data",
+          "waiting_solar_mode": "Waiting for solar mode",
+          "waiting_stable_surplus": "Waiting for stable surplus"
+        }
+      },
+      "solar_balance_decision_summary": {
+        "name": "Decision summary"
+      },
+      "solar_balance_grid_power": {
+        "name": "Grid power used in calculation"
+      },
+      "solar_balance_home_load_power": {
+        "name": "Home load used in calculation"
+      },
+      "solar_balance_raw_target_current": {
+        "name": "Raw target current"
+      },
+      "solar_balance_residual_export_countdown": {
+        "name": "Residual export countdown"
+      },
+      "solar_balance_solar_power": {
+        "name": "Solar production used in calculation"
+      },
+      "solar_balance_start_countdown": {
+        "name": "Stable surplus countdown"
+      },
+      "solar_balance_status": {
+        "name": "Solar balance status",
+        "state": {
+          "charging_surplus": "Charging from surplus",
+          "disabled": "Disabled",
+          "external_paused": "Paused by wallbox",
+          "low_surplus_keep_charging": "Low surplus, keeping charge at 6A",
+          "paused_low_surplus": "Paused for low surplus",
+          "waiting_battery_data": "Waiting for battery data",
+          "waiting_data": "Waiting for data",
+          "waiting_solar_mode": "Waiting for solar mode",
+          "waiting_stable_surplus": "Waiting for stable surplus"
+        }
+      },
+      "solar_balance_surplus_current": {
+        "name": "Solar surplus current"
+      },
+      "solar_balance_target_current": {
+        "name": "Calculated target current"
+      },
+      "solar_balance_target_export_power": {
+        "name": "Target export power"
+      },
+      "solar_balance_theoretical_target_current": {
+        "name": "Theoretical target current"
+      },
+      "solar_balance_unused_export_power": {
+        "name": "Unused export power"
+      },
+      "total_output_energy": {
         "name": "Total energy"
       }
+    },
+    "switch": {
+      "solar_battery_balance": {
+        "name": "Solar battery balancing"
+      }
     }
-  }
+  },
+  "title": "Silla Prism Integration"
 }

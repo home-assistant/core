@@ -29,9 +29,12 @@ async def test_setup_and_unload(
     )
     assert device is not None
 
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    entry_id = mock_config_entry.entry_id
+    assert await hass.config_entries.async_unload(entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    entry = hass.config_entries.async_get_entry(entry_id)
+    assert entry is not None
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_mqtt_unavailable(

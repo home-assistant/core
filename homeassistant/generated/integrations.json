@@ -6601,7 +6601,6 @@
       "iot_class": "cloud_push"
     },
     "silla_prism": {
-      "name": "Silla Prism",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
@@ -8769,6 +8768,7 @@
     "schedule",
     "season",
     "shopping_list",
+    "silla_prism",
     "statistics",
     "sun",
     "switch_as_x",

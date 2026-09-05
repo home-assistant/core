@@ -15,6 +15,8 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
 async def fire_burst(hass: HomeAssistant) -> None:
     """Publish the retained status burst captured from a real Prism."""
+    await hass.async_block_till_done()
     for topic, payload in RETAINED_BURST:
         async_fire_mqtt_message(hass, topic, payload)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()

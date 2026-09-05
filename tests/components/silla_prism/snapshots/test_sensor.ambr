@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.silla_prism_current-entry]
+# name: test_sensors[sensor.prism_session_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.silla_prism_current',
+    'entity_id': 'sensor.prism_session_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,160 +23,41 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current',
-    'platform': 'silla_prism',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'prism_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[sensor.silla_prism_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Current',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8.0',
-  })
-# ---
-# name: test_sensors[sensor.silla_prism_error-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'none',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.silla_prism_error',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Error',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Error',
-    'platform': 'silla_prism',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'error',
-    'unique_id': 'prism_error',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.silla_prism_error-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Error',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'none',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_error',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'none',
-  })
-# ---
-# name: test_sensors[sensor.silla_prism_grid_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.silla_prism_grid_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Grid power',
+    'object_id_base': 'Session time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Grid power',
+    'original_name': 'Session time',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'grid_power',
-    'unique_id': 'prism_grid_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'translation_key': 'session_time',
+    'unique_id': 'prism_session_time_001',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_grid_power-state]
+# name: test_sensors[sensor.prism_session_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Grid power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Session time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_grid_power',
+    'entity_id': 'sensor.prism_session_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2800.0',
+    'state': '16030',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_pilot_current-entry]
+# name: test_sensors[sensor.prism_car_requested_by_car-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -191,8 +72,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.silla_prism_pilot_current',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_car_requested_by_car',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -200,41 +81,41 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Pilot current',
+    'object_id_base': 'Car requested by car',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Pilot current',
+    'original_name': 'Car requested by car',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pilot',
-    'unique_id': 'prism_pilot',
+    'translation_key': 'output_car_current',
+    'unique_id': 'prism_output_car_current_001',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_pilot_current-state]
+# name: test_sensors[sensor.prism_car_requested_by_car-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Pilot current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Car requested by car',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_pilot_current',
+    'entity_id': 'sensor.prism_car_requested_by_car',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_power-entry]
+# name: test_sensors[sensor.prism_cpu_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -250,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.silla_prism_power',
+    'entity_id': 'sensor.prism_cpu_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -258,41 +139,169 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'CPU temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'CPU temperature',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'prism_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'translation_key': 'core_temperature',
+    'unique_id': 'prism_core_temperature_001',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_power-state]
+# name: test_sensors[sensor.prism_cpu_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism CPU temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_power',
+    'entity_id': 'sensor.prism_cpu_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1760.0',
+    'state': '35',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_session_energy-entry]
+# name: test_sensors[sensor.prism_current_limited_by_user-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_current_limited_by_user',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current limited by user',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current limited by user',
+    'platform': 'silla_prism',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_set_by_user',
+    'unique_id': 'prism_current_set_by_user_001',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[sensor.prism_current_limited_by_user-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Current limited by user',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.prism_current_limited_by_user',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.prism_current_port_output_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'solar',
+        'normal',
+        'paused',
+        'hybrid',
+        'suspended',
+        'unknown',
+        'autolimit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_current_port_output_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current port output mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Current port output mode',
+    'platform': 'silla_prism',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_port_mode',
+    'unique_id': 'prism_current_port_mode_001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.prism_current_port_output_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Current port output mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'solar',
+        'normal',
+        'paused',
+        'hybrid',
+        'suspended',
+        'unknown',
+        'autolimit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.prism_current_port_output_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_sensors[sensor.prism_energy_provided_in_last_session-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -308,7 +317,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.silla_prism_session_energy',
+    'entity_id': 'sensor.prism_energy_provided_in_last_session',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -316,7 +325,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Session energy',
+    'object_id_base': 'Energy provided in last session',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -324,96 +333,40 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Session energy',
+    'original_name': 'Energy provided in last session',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'session_energy',
-    'unique_id': 'prism_session_energy',
+    'translation_key': 'session_output_energy',
+    'unique_id': 'prism_session_output_energy_001',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_session_energy-state]
+# name: test_sensors[sensor.prism_energy_provided_in_last_session-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Session energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Energy provided in last session',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_session_energy',
+    'entity_id': 'sensor.prism_energy_provided_in_last_session',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3900.0',
+    'state': '3900',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_session_start-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.silla_prism_session_start',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Session start',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Session start',
-    'platform': 'silla_prism',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'session_start',
-    'unique_id': 'prism_session_start',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.silla_prism_session_start-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Session start',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_session_start',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-12-31T19:32:50+00:00',
-  })
-# ---
-# name: test_sensors[sensor.silla_prism_status-entry]
+# name: test_sensors[sensor.prism_output_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'idle',
-        'waiting',
-        'charging',
-        'paused',
-      ]),
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,7 +375,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.silla_prism_status',
+    'entity_id': 'sensor.prism_output_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -430,42 +383,41 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Output current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Output current',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'prism_status',
-    'unit_of_measurement': None,
+    'translation_key': 'output_current',
+    'unique_id': 'prism_output_current_001',
+    'unit_of_measurement': <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_status-state]
+# name: test_sensors[sensor.prism_output_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Status',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'idle',
-        'waiting',
-        'charging',
-        'paused',
-      ]),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Output current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_status',
+    'entity_id': 'sensor.prism_output_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': '8000',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_temperature-entry]
+# name: test_sensors[sensor.prism_power_from_utility-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -480,8 +432,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.silla_prism_temperature',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_power_from_utility',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -489,41 +441,157 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': 'Power from utility',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 1,
+        'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Power from utility',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'prism_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'translation_key': 'input_grid_power',
+    'unique_id': 'prism_input_grid_power_001',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_temperature-state]
+# name: test_sensors[sensor.prism_power_from_utility-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Power from utility',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_temperature',
+    'entity_id': 'sensor.prism_power_from_utility',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '35.0',
+    'state': '2800',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_total_energy-entry]
+# name: test_sensors[sensor.prism_power_grid_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_power_grid_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power grid voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Power grid voltage',
+    'platform': 'silla_prism',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_grid_voltage',
+    'unique_id': 'prism_power_grid_voltage_001',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[sensor.prism_power_grid_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Power grid voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.prism_power_grid_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '236.0',
+  })
+# ---
+# name: test_sensors[sensor.prism_power_provided_to_car-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_power_provided_to_car',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power provided to car',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power provided to car',
+    'platform': 'silla_prism',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_power',
+    'unique_id': 'prism_output_power_001',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[sensor.prism_power_provided_to_car-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Power provided to car',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.prism_power_provided_to_car',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1760.0',
+  })
+# ---
+# name: test_sensors[sensor.prism_total_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -539,7 +607,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.silla_prism_total_energy',
+    'entity_id': 'sensor.prism_total_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -560,35 +628,40 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy',
-    'unique_id': 'prism_total_energy',
+    'translation_key': 'total_output_energy',
+    'unique_id': 'prism_total_output_energy_001',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_total_energy-state]
+# name: test_sensors[sensor.prism_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Total energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Total energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_total_energy',
+    'entity_id': 'sensor.prism_total_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '719800.0',
+    'state': '719800',
   })
 # ---
-# name: test_sensors[sensor.silla_prism_voltage-entry]
+# name: test_sensors[sensor.prism_wallbox_current_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'waiting',
+        'charging',
+        'pause',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -596,8 +669,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.silla_prism_voltage',
+    'entity_category': None,
+    'entity_id': 'sensor.prism_wallbox_current_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -605,37 +678,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage',
+    'object_id_base': 'Wallbox current state',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'Wallbox current state',
     'platform': 'silla_prism',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'prism_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'translation_key': 'current_state',
+    'unique_id': 'prism_current_state_001',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.silla_prism_voltage-state]
+# name: test_sensors[sensor.prism_wallbox_current_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Silla Prism Voltage',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prism Wallbox current state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'waiting',
+        'charging',
+        'pause',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.silla_prism_voltage',
+    'entity_id': 'sensor.prism_wallbox_current_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '236.0',
+    'state': 'idle',
   })
 # ---
