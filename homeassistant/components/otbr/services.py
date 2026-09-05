@@ -185,9 +185,7 @@ async def _pinned_channel_of_another_router(
     Configured entries count even when they are not loaded, for the same
     reason: a failed setup or an unload does not stop the radio.
     """
-    source_xpan = active.get(MeshcopTLVType.EXTPANID)
-    if source_xpan is None:
-        return None
+    source_xpan = active[MeshcopTLVType.EXTPANID]
 
     other: OTBRConfigEntry
     for other in hass.config_entries.async_entries(DOMAIN):
@@ -248,7 +246,7 @@ async def _write_pending_dataset(
     data: OTBRData,
     dataset: bytes,
     issued: IssuedTimestamps,
-    source_xpan: str | None,
+    source_xpan: str,
     stamp: tuple[int, int],
     delay: int,
 ) -> None:
@@ -262,40 +260,36 @@ async def _write_pending_dataset(
     down. The record is tightened to the real deadline once the write
     completes.
     """
-    previous = issued.record(source_xpan) if source_xpan is not None else None
-    if source_xpan is not None:
-        await issued.async_set(
-            source_xpan,
-            stamp,
-            until=dt_util.utcnow().timestamp() + delay + _WRITE_WINDOW_S,
-        )
+    previous = issued.record(source_xpan)
+    await issued.async_set(
+        source_xpan,
+        stamp,
+        until=dt_util.utcnow().timestamp() + delay + _WRITE_WINDOW_S,
+    )
     try:
         await data.set_pending_dataset_tlvs(dataset)
     except HomeAssistantError as err:
-        if source_xpan is not None:
-            # A definitive answer from the router, or the library's own
-            # refusal, means nothing was written. A dropped connection
-            # leaves that open, so ask the router: holding a pending
-            # dataset means something is propagating and the window stays,
-            # measured from the latest moment the write can have landed;
-            # holding none means it never arrived, and keeping the window
-            # would refuse every retry until it expired.
-            if isinstance(
-                err.__cause__, OTBRError
-            ) or not await _router_holds_a_pending_dataset(data):
-                await issued.async_restore(source_xpan, previous)
-            else:
-                await issued.async_set(
-                    source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
-                )
+        # A definitive answer from the router, or the library's own refusal,
+        # means nothing was written. A dropped connection leaves that open,
+        # so ask the router: holding a pending dataset means something is
+        # propagating and the window stays, measured from the latest moment
+        # the write can have landed; holding none means it never arrived,
+        # and keeping the window would refuse every retry until it expired.
+        if isinstance(
+            err.__cause__, OTBRError
+        ) or not await _router_holds_a_pending_dataset(data):
+            await issued.async_restore(source_xpan, previous)
+        else:
+            await issued.async_set(
+                source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
+            )
         raise
-    if source_xpan is not None:
-        # The router's delay timer started when it accepted the write, not
-        # when the request left: a slow request would otherwise end the
-        # recorded window while the mesh is still counting down.
-        await issued.async_set(
-            source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
-        )
+    # The router's delay timer started when it accepted the write, not when
+    # the request left: a slow request would otherwise end the recorded
+    # window while the mesh is still counting down.
+    await issued.async_set(
+        source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
+    )
 
 
 async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
@@ -344,6 +338,17 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="router_dataset_invalid"
             ) from err
+        # Everything that keeps a migration safe is keyed by the network being
+        # left: the stamps handed out for it, the window its pending dataset
+        # propagates in, the preferred pointer moving off it. A dataset that
+        # does not say which network that is cannot be migrated with those
+        # guarantees, and OpenThread does not count a router as commissioned
+        # without it, so it is not a dataset a router on a network returns.
+        if (source_xpan_item := active.get(MeshcopTLVType.EXTPANID)) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="router_dataset_invalid"
+            )
+        source_xpan = str(source_xpan_item).lower()
 
         # A pending dataset in flight means the mesh is mid-change: a
         # migration or a channel change is propagating, and every device
@@ -415,21 +420,18 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         # pending one, and would otherwise pick the same timestamp. Stamp
         # above what this integration has already handed out for this mesh.
         issued = await async_get_issued_timestamps(call.hass)
-        source_xpan_item = active.get(MeshcopTLVType.EXTPANID)
-        source_xpan = str(source_xpan_item).lower() if source_xpan_item else None
-        if source_xpan is not None:
-            # A newer stamp is not enough while the earlier dataset is still
-            # propagating: a router that has not learned it yet accepts this
-            # one in its place, and devices that only got the earlier dataset
-            # end up on a different network than the rest. Refuse until the
-            # earlier migration's delay has expired.
-            if remaining := issued.seconds_in_flight(source_xpan):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="migration_in_flight",
-                    translation_placeholders={"remaining": str(remaining)},
-                )
-            newest = max(newest, issued.get(source_xpan))
+        # A newer stamp is not enough while the earlier dataset is still
+        # propagating: a router that has not learned it yet accepts this
+        # one in its place, and devices that only got the earlier dataset
+        # end up on a different network than the rest. Refuse until the
+        # earlier migration's delay has expired.
+        if remaining := issued.seconds_in_flight(source_xpan):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="migration_in_flight",
+                translation_placeholders={"remaining": str(remaining)},
+            )
+        newest = max(newest, issued.get(source_xpan))
 
         # Always step the seconds, never the ticks: python_otbr_api's channel
         # change stamps seconds + 1 and ignores ticks, so a network left at the
@@ -496,10 +498,9 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         # The repair issues describe the credentials the network is adopting,
         # the same way the create and set-network paths report them.
         await update_issues(call.hass, data, migrated_tlvs)
-        if source_xpan is not None:
-            await _async_repoint_preferred_dataset(
-                call.hass, source_xpan, str(target[MeshcopTLVType.EXTPANID])
-            )
+        await _async_repoint_preferred_dataset(
+            call.hass, source_xpan, str(target[MeshcopTLVType.EXTPANID])
+        )
         # The store saves on a delay, and a normal restart flushes it; a crash
         # inside that delay would not. The mesh is migrating either way, so
         # write now: the dataset entry would be re-imported from the router
