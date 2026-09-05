@@ -1,5 +1,6 @@
 """Constants for the Fronius integration."""
 
+from datetime import timedelta
 from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
 
@@ -10,6 +11,12 @@ DOMAIN: Final = "fronius"
 
 CONF_MODBUS_PORT: Final = "modbus_port"
 DEFAULT_MODBUS_PORT: Final = 502
+
+CONF_AUTO_REVERT: Final = "auto_revert"
+# how long the device holds a setpoint after it last received it
+AUTO_REVERT_SECONDS: Final = 3600
+# the setpoint is sent again this often, so a restart has room to spare
+HEARTBEAT_INTERVAL: Final = timedelta(minutes=15)
 
 type SolarNetId = str
 SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
@@ -24,6 +31,7 @@ class FroniusConfigEntryData(TypedDict):
     host: str
     is_logger: bool
     modbus_port: int
+    auto_revert: bool
 
 
 class FroniusDeviceInfo(NamedTuple):

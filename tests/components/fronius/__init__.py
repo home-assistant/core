@@ -22,6 +22,7 @@ async def setup_fronius_integration(
     is_logger: bool = True,
     unique_id: str = MOCK_UID,
     modbus_port: int | None = None,
+    auto_revert: bool = False,
 ) -> ConfigEntry:
     """Create the Fronius integration.
 
@@ -36,6 +37,7 @@ async def setup_fronius_integration(
             CONF_HOST: MOCK_HOST,
             "is_logger": is_logger,
             **({"modbus_port": modbus_port} if modbus_port is not None else {}),
+            **({"auto_revert": True} if auto_revert else {}),
         },
         minor_version=1 if modbus_port is None else 2,
     )

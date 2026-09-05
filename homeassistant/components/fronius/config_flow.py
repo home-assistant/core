@@ -14,13 +14,25 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT, DOMAIN, FroniusConfigEntryData
+from .const import (
+    CONF_AUTO_REVERT,
+    CONF_MODBUS_PORT,
+    DEFAULT_MODBUS_PORT,
+    DOMAIN,
+    FroniusConfigEntryData,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 DHCP_REQUEST_DELAY: Final = 60
 
-MODBUS_PORT_SELECTOR: Final = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+# the settings that are not the host - shown when adding and reconfiguring
+SETTINGS_SCHEMA: Final = {
+    vol.Required(CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=65535)
+    ),
+    vol.Required(CONF_AUTO_REVERT, default=False): bool,
+}
 
 
 def create_title(info: FroniusConfigEntryData) -> str:
@@ -32,7 +44,10 @@ def create_title(info: FroniusConfigEntryData) -> str:
 
 
 async def validate_host(
-    hass: HomeAssistant, host: str, modbus_port: int = DEFAULT_MODBUS_PORT
+    hass: HomeAssistant,
+    host: str,
+    modbus_port: int = DEFAULT_MODBUS_PORT,
+    auto_revert: bool = False,
 ) -> tuple[str, FroniusConfigEntryData]:
     """Validate the user input allows us to connect."""
     fronius = Fronius(async_get_clientsession(hass, verify_ssl=False), host)
@@ -48,6 +63,7 @@ async def validate_host(
             host=host,
             is_logger=True,
             modbus_port=modbus_port,
+            auto_revert=auto_revert,
         )
     # Gen24 devices don't provide GetLoggerInfo
     try:
@@ -61,6 +77,7 @@ async def validate_host(
         host=host,
         is_logger=False,
         modbus_port=modbus_port,
+        auto_revert=auto_revert,
     )
 
 
@@ -68,7 +85,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fronius."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -87,6 +104,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     user_input[CONF_HOST],
                     modbus_port=user_input[CONF_MODBUS_PORT],
+                    auto_revert=user_input[CONF_AUTO_REVERT],
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -101,14 +119,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(
-                        CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT
-                    ): MODBUS_PORT_SELECTOR,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str, **SETTINGS_SCHEMA}),
             errors=errors,
         )
 
@@ -166,6 +177,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     user_input[CONF_HOST],
                     modbus_port=user_input[CONF_MODBUS_PORT],
+                    auto_revert=user_input[CONF_AUTO_REVERT],
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -178,17 +190,11 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_reload_and_abort(reconfigure_entry, data=info)
 
-        host = reconfigure_entry.data[CONF_HOST]
-        modbus_port = reconfigure_entry.data.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT)
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=host): str,
-                    vol.Required(
-                        CONF_MODBUS_PORT, default=modbus_port
-                    ): MODBUS_PORT_SELECTOR,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_HOST): str, **SETTINGS_SCHEMA}),
+                reconfigure_entry.data,
             ),
             description_placeholders={"device": reconfigure_entry.title},
             errors=errors,
