@@ -551,6 +551,7 @@ FLOWS = {
         "nuki",
         "nut",
         "nws",
+        "nx584",
         "nyt_games",
         "nzbget",
         "obihai",
