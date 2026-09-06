@@ -18,13 +18,9 @@ from pyheos import (
     HeosPlayer,
     MediaItem,
     MediaMusicSource,
+    MediaType as HeosMediaType,
     PlayState,
     RepeatType,
-)
-from pyheos import (
-    MediaType as HeosMediaType,
-)
-from pyheos import (
     const as heos_const,
 )
 from pyheos.util import mediauri as heos_source
@@ -71,6 +67,7 @@ BASE_SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.GROUPING
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+    | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
 )
 
 PLAY_STATE_TO_STATE = {
@@ -196,6 +193,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_completed: bool = False
         self._announce_completion_task: asyncio.Task[None] | None = None
         self._announce_lock = asyncio.Lock()
+        self._announce_media_signature: dict[str, Any] | None = None
+        self._announce_started: bool = False
+        self._announce_start_time: datetime | None = None
         super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event: str) -> None:
@@ -232,6 +232,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_completed = False
             self._announce_restore_state = self._snapshot_state()
             self._announce_restore_state["tts_url"] = media_id
+            self._announce_restore_state["queue_ids_before"] = None
             try:
                 queue_before = await self._player.get_queue()
             except HeosError as err:
@@ -252,22 +253,33 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 # Give the pause command time to take effect.
                 await asyncio.sleep(0.5)
 
-            self._announce_in_progress = True
-
             # Set volume if specified in extra. HEOS expects a percentage,
             # while Home Assistant volume values are normalized to 0..1.
             extra = kwargs.get("extra", {})
-            if "volume" in extra:
-                volume = float(extra["volume"])
-                if not math.isfinite(volume) or not 0 <= volume <= 100:
-                    raise ValueError("Announcement volume must be between 0 and 100")
-                volume_percent = round(volume * 100 if volume <= 1 else volume)
+            if (volume_percent := self._parse_announcement_volume(extra)) is not None:
                 await self._player.set_volume(volume_percent)
 
             await self._player.play_url(media_id)
+            self._announce_in_progress = True
+            self._announce_started = False
+            self._announce_media_signature = None
+            self._announce_start_time = utcnow()
+            self.hass.async_create_task(self._capture_announcement_signature())
         except asyncio.CancelledError:
-            self._clear_announcement_state()
-            self._announce_lock.release()
+            if self._announce_restore_state:
+                restore_task = self.hass.async_create_task(self._restore_state())
+                try:
+                    await asyncio.shield(restore_task)
+                except asyncio.CancelledError:
+                    pass
+                except Exception as err:
+                    _LOGGER.warning(
+                        "Could not restore state after announcement cancellation: %s",
+                        err,
+                    )
+            else:
+                self._clear_announcement_state()
+                self._announce_lock.release()
             raise
         except Exception:
             if self._announce_restore_state:
@@ -275,6 +287,64 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             else:
                 self._announce_lock.release()
             raise
+
+    async def _capture_announcement_signature(self) -> None:
+        """Capture the actual HEOS media signature for the announcement."""
+        for _ in range(8):
+            await asyncio.sleep(0.25)
+            if not self._announce_in_progress or not self._announce_restore_state:
+                return
+
+            current_media = self._player.now_playing_media
+            if not self._is_announcement_media(
+                current_media, self._announce_restore_state["tts_url"]
+            ):
+                continue
+
+            self._announce_media_signature = self._media_signature(current_media)
+            self._announce_started = True
+            _LOGGER.debug(
+                "Captured announcement media signature: %s",
+                self._announce_media_signature,
+            )
+            break
+
+        if not self._announce_in_progress or not self._announce_start_time:
+            return
+        elapsed = (utcnow() - self._announce_start_time).total_seconds()
+        if elapsed < 2.0:
+            await asyncio.sleep(2.0 - elapsed)
+        await self._check_announcement_completion()
+
+    @staticmethod
+    def _media_signature(media: Any) -> dict[str, Any]:
+        """Return the HEOS fields used to identify the current media."""
+        return {
+            "media_id": media.media_id,
+            "song": getattr(media, "song", None),
+            "album": getattr(media, "album", None),
+            "artist": getattr(media, "artist", None),
+        }
+
+    @staticmethod
+    def _is_announcement_media(media: Any, tts_url: str) -> bool:
+        """Return whether HEOS reports the requested URL announcement."""
+        return media.media_id == tts_url or (
+            media.song == "Url Stream"
+            and media.album == "Url Stream"
+            and media.artist == "Url Stream"
+        )
+
+    @staticmethod
+    def _parse_announcement_volume(extra: dict[str, Any]) -> int | None:
+        """Convert an announcement volume to the HEOS percentage scale."""
+        if "volume" not in extra:
+            return None
+
+        volume = float(extra["volume"])
+        if not math.isfinite(volume) or not 0 <= volume <= 100:
+            raise ValueError("Announcement volume must be between 0 and 100")
+        return round(volume * 100 if volume <= 1 else volume)
 
     def _snapshot_state(self) -> dict[str, Any]:
         """Snapshot the current player state for restoration after announcement."""
@@ -293,60 +363,75 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Restore the player state after announcement completion."""
         if not self._announce_restore_state:
             return
-        
+
         state = self._announce_restore_state
         _LOGGER.debug("Restoring state after announcement: %s", state)
-        
+
         try:
-            # Remove TTS from queue if it was added
+            # Remove TTS from queue if it was added.
             if state["tts_url"]:
-                # Small delay to ensure HEOS has processed the state change
                 await asyncio.sleep(0.2)
                 await self._remove_tts_from_queue(
                     state["tts_url"], state["queue_ids_before"]
                 )
-            
-            # Restore volume
-            await self._player.set_volume(state["volume"])
-            
-            # Restore mute state
-            if state["is_muted"] != self._player.is_muted:
-                await self._player.set_mute(state["is_muted"])
-            
-            # Restore play mode
-            await self._player.set_play_mode(state["repeat"], state["shuffle"])
-            
-            # Restore the playback state from before the announcement.
-            if state["play_state"] == PlayState.PLAY:
-                # Check if we're still on the TTS track - if so, skip it
-                current_media_id = self._player.now_playing_media.media_id
-                if current_media_id == state.get("tts_url"):
-                    try:
-                        _LOGGER.debug("Still on TTS track, skipping to next")
-                        await self._player.play_next()
-                    except HeosError as err:
-                        _LOGGER.debug("Could not skip TTS track: %s", err)
-                        # Fallback to just play
+
+            # Restore independent settings even when an earlier command fails.
+            try:
+                await self._player.set_volume(state["volume"])
+            except HeosError as err:
+                _LOGGER.warning(
+                    "Could not restore volume after announcement: %s", err
+                )
+
+            try:
+                if state["is_muted"] != self._player.is_muted:
+                    await self._player.set_mute(state["is_muted"])
+            except HeosError as err:
+                _LOGGER.warning(
+                    "Could not restore mute state after announcement: %s", err
+                )
+
+            try:
+                await self._player.set_play_mode(state["repeat"], state["shuffle"])
+            except HeosError as err:
+                _LOGGER.warning(
+                    "Could not restore play mode after announcement: %s", err
+                )
+
+            try:
+                # Restore the playback state from before the announcement.
+                if state["play_state"] == PlayState.PLAY:
+                    current_media_id = self._player.now_playing_media.media_id
+                    if current_media_id == state.get("tts_url"):
+                        try:
+                            _LOGGER.debug("Still on TTS track, skipping to next")
+                            await self._player.play_next()
+                        except HeosError as err:
+                            _LOGGER.debug("Could not skip TTS track: %s", err)
+                            await self._player.play()
+                    elif self._player.state != PlayState.PLAY:
+                        _LOGGER.debug("Not on TTS track, ensuring playback continues")
                         await self._player.play()
-                # Already moved to next track or different media; ensure playback.
-                elif self._player.state != PlayState.PLAY:
-                    _LOGGER.debug("Not on TTS track, ensuring playback continues")
-                    await self._player.play()
-            elif state["play_state"] == PlayState.PAUSE:
-                if self._player.state != PlayState.PAUSE:
-                    await self._player.pause()
-            elif state["play_state"] == PlayState.STOP:
-                if self._player.state != PlayState.STOP:
-                    await self._player.stop()
-            
+                elif state["play_state"] == PlayState.PAUSE:
+                    if self._player.state != PlayState.PAUSE:
+                        await self._player.pause()
+                elif state["play_state"] == PlayState.STOP:
+                    if self._player.state != PlayState.STOP:
+                        await self._player.stop()
+            except HeosError as err:
+                _LOGGER.warning(
+                    "Could not restore playback after announcement: %s", err
+                )
+
             _LOGGER.debug("State restoration completed")
-        except HeosError as err:
-            _LOGGER.error("Error restoring state after announcement: %s", err)
         finally:
             # Clear the announcement state
             self._announce_restore_state = None
             self._announce_in_progress = False
             self._announce_completed = False
+            self._announce_media_signature = None
+            self._announce_started = False
+            self._announce_start_time = None
             self._announce_lock.release()
 
     def _clear_announcement_state(self) -> None:
@@ -354,6 +439,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_restore_state = None
         self._announce_in_progress = False
         self._announce_completed = False
+        self._announce_media_signature = None
+        self._announce_started = False
+        self._announce_start_time = None
 
     async def _remove_tts_from_queue(
         self, tts_url: str, queue_ids_before: set[int] | None
@@ -373,10 +461,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             # Match only the URL created by this announcement.
             tts_queue_ids = []
             for item in queue_after:
-                if (
-                    item.media_id == tts_url
-                    and item.queue_id not in queue_ids_before
-                ):
+                if item.media_id == tts_url and item.queue_id not in queue_ids_before:
                     tts_queue_ids.append(item.queue_id)
                     _LOGGER.debug(
                         "Found TTS Url Stream item: queue_id=%s, song=%s, media_id=%s",
@@ -399,40 +484,73 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _check_announcement_completion(self) -> None:
         """Check if the announcement has completed and restore state."""
-        # Prevent multiple restoration attempts
         if self._announce_completed:
             return
-            
+
         if not self._announce_in_progress or not self._announce_restore_state:
             return
-        
-        # Wait a moment to ensure the state change is processed
+
+        restore_state = self._announce_restore_state
+        tts_url = restore_state["tts_url"]
+
+        # Ignore startup events for two seconds so the pre-announcement media
+        # cannot be mistaken for a completed announcement.
+        if self._announce_start_time:
+            elapsed = (utcnow() - self._announce_start_time).total_seconds()
+            if elapsed < 2.0 and not self._announce_started:
+                return
+
         await asyncio.sleep(0.5)
-        
-        # Check if announcement has completed
-        current_media_id = self._player.now_playing_media.media_id
-        tts_url = self._announce_restore_state.get("tts_url")
-        
-        # Completion is signaled either by moving to another media item or by
-        # leaving the playing state while the TTS item remains current.
-        if current_media_id != tts_url or self._player.state != PlayState.PLAY:
-            # Give it a moment to ensure this is a permanent state change
-            await asyncio.sleep(0.3)
-            
-            # Double-check the state is stable
-            if (
-                self._player.now_playing_media.media_id != tts_url
-                or self._player.state != PlayState.PLAY
-            ):
-                # Mark as completed to prevent multiple triggers
-                self._announce_completed = True
-                _LOGGER.debug(
-                    "Announcement completed - was playing TTS, now playing: %s, "
-                    "state: %s",
-                    current_media_id,
-                    self._player.state,
-                )
-                await self._restore_state()
+
+        if (
+            not self._announce_in_progress
+            or self._announce_restore_state is not restore_state
+        ):
+            return
+
+        current_media = self._player.now_playing_media
+        current_state = self._player.state
+        signature = self._announce_media_signature
+        media_changed = False
+
+        if signature:
+            current_signature = self._media_signature(current_media)
+            media_changed = current_signature != signature
+        else:
+            # Fallback after the grace period if HEOS never exposed a
+            # signature for the URL stream.
+            media_changed = not self._is_announcement_media(current_media, tts_url)
+
+        is_completed = media_changed or current_state in (
+            PlayState.STOP,
+            PlayState.PAUSE,
+        )
+        if not is_completed:
+            return
+
+        await asyncio.sleep(0.3)
+        if (
+            not self._announce_in_progress
+            or self._announce_restore_state is not restore_state
+        ):
+            return
+
+        current_media = self._player.now_playing_media
+        current_state = self._player.state
+        if signature:
+            is_stable = self._media_signature(current_media) != signature
+        else:
+            is_stable = not self._is_announcement_media(current_media, tts_url)
+        is_stable = is_stable or current_state in (PlayState.STOP, PlayState.PAUSE)
+
+        if is_stable:
+            self._announce_completed = True
+            _LOGGER.debug(
+                "Announcement completed - now playing: %s, state: %s",
+                current_media.media_id,
+                current_state,
+            )
+            await self._restore_state()
 
     @callback
     @override
