@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
+import math
 from typing import Any, cast, override
 
 from opower import (
@@ -88,13 +89,9 @@ def _rate_period_key(component: ReadComponent) -> str | None:
 
     Time-of-use utilities report the period in day_part, e.g. "ON_PEAK+RT02/TOD"
     where the period is the part before the "+". Tiered utilities report the
-    tier in tier_number. A rate that is both time-of-use and tiered reports
-    both, and each combination is billed at its own price, so the key keeps
-    both, e.g. "off_peak_tier_2". Merging the tiers inside a period would
-    store a blended price that matches no tariff and hide how much usage
-    went over the baseline allowance, which is the split those customers
-    manage, and statistics cannot be split again once written. Returns None
-    if the component has neither.
+    tier in tier_number. A rate that is both reports both, and each
+    combination is billed at its own price, so the key keeps both, e.g.
+    "off_peak_tier_2". Returns None if the component has neither.
     """
     parts = []
     if component.day_part:
@@ -102,6 +99,37 @@ def _rate_period_key(component: ReadComponent) -> str | None:
     if component.tier_number is not None:
         parts.append(f"tier_{component.tier_number}")
     return slugify("_".join(parts)) or None
+
+
+def _period_components(cost_read: CostRead) -> list[ReadComponent]:
+    """Return the read's components if they add up to the read, else none.
+
+    Some utilities return daily components that do not add up to the read
+    they belong to, while their hourly components do. Feeding those into the
+    period statistics would store a breakdown that contradicts the totals,
+    so such reads are left out of the periods. Components that contribute
+    nothing are dropped, so a period that never moves is not created.
+    """
+    components = [
+        component
+        for component in cost_read.read_components
+        if component.consumption or component.cost
+    ]
+    if not cost_read.read_components:
+        return components
+    if not math.isclose(
+        sum(component.consumption for component in cost_read.read_components),
+        cost_read.consumption,
+        rel_tol=1e-3,
+        abs_tol=1e-2,
+    ) or not math.isclose(
+        sum(component.cost for component in cost_read.read_components),
+        cost_read.provided_cost,
+        rel_tol=1e-3,
+        abs_tol=1e-2,
+    ):
+        return []
+    return components
 
 
 def _rate_periods(
@@ -121,7 +149,7 @@ def _rate_periods(
     """
     rate_periods: dict[str, _RatePeriodStatistics] = {}
     for cost_read in cost_reads:
-        for component in cost_read.read_components:
+        for component in _period_components(cost_read):
             if (key := _rate_period_key(component)) is None or key in rate_periods:
                 continue
             label = key.replace("_", " ")
@@ -468,15 +496,18 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 # stored statistics, so each skips the reads up to its own last
                 # stored point. A period that has none yet, e.g. right after
                 # upgrading, must not skip the reads the totals already have.
+                # A read whose components do not add up to it, or that has no
+                # components at all, contributes nothing to the periods.
+                components = _period_components(cost_read)
                 period_consumption = dict.fromkeys(rate_periods, 0.0)
                 period_cost = dict.fromkeys(rate_periods, 0.0)
-                for component in cost_read.read_components:
-                    if (key := _rate_period_key(component)) is None:
+                for component in components:
+                    if (key := _rate_period_key(component)) not in period_consumption:
                         continue
                     period_consumption[key] += component.consumption
                     period_cost[key] += component.cost
                 for key, rate_period in rate_periods.items():
-                    if (
+                    if not components or (
                         rate_period.last_stats_time is not None
                         and start.timestamp() <= rate_period.last_stats_time
                     ):

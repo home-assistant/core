@@ -801,6 +801,112 @@ async def test_coordinator_rate_periods_time_of_use_and_tiered(
     }
 
 
+async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test reads whose components do not add up to the read are left out.
+
+    Some utilities return daily components that do not sum to the read while
+    the hourly ones do. Such reads must not feed the period statistics, and a
+    period only seen in such reads must not be created.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
+    mock_opower_api.async_get_cost_reads.return_value = [
+        # Adds up: written
+        CostRead(
+            start_time=hour[0],
+            end_time=hour[1],
+            consumption=3.0,
+            provided_cost=0.75,
+            read_components=[
+                _read_component("OFF_PEAK", 2.0, 0.5),
+                _read_component("ON_PEAK", 1.0, 0.25),
+            ],
+        ),
+        # Does not add up: skipped, and its extra period is never created
+        CostRead(
+            start_time=hour[1],
+            end_time=hour[2],
+            consumption=-10.0,
+            provided_cost=-1.0,
+            read_components=[
+                _read_component("OFF_PEAK", 4.0, -3.0),
+                _read_component("PART_PEAK", -0.6, 2.0),
+            ],
+        ),
+        # Adds up again: written, sums continue from the first read
+        CostRead(
+            start_time=hour[2],
+            end_time=hour[2] + timedelta(hours=1),
+            consumption=1.0,
+            provided_cost=0.25,
+            read_components=[_read_component("OFF_PEAK", 1.0, 0.25)],
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    off_peak_id = "opower:pge_elec_111111_off_peak_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {off_peak_id, "opower:pge_elec_111111_part_peak_energy_consumption"},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert "opower:pge_elec_111111_part_peak_energy_consumption" not in stats
+    assert [(s["start"], s["state"], s["sum"]) for s in stats[off_peak_id]] == [
+        (hour[0].timestamp(), 2.0, 2.0),
+        (hour[2].timestamp(), 1.0, 3.0),
+    ]
+
+
+async def test_coordinator_rate_periods_skip_empty_periods(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a period whose components are all zero is not created."""
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            consumption=2.0,
+            provided_cost=0.5,
+            read_components=[
+                _read_component("OFF_PEAK", 2.0, 0.5, tier_number=1),
+                _read_component("OFF_PEAK", 0.0, 0.0, tier_number=2),
+            ],
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {
+            "opower:pge_elec_111111_off_peak_tier_1_energy_consumption",
+            "opower:pge_elec_111111_off_peak_tier_2_energy_consumption",
+        },
+        "hour",
+        None,
+        {"state"},
+    )
+    assert set(stats) == {"opower:pge_elec_111111_off_peak_tier_1_energy_consumption"}
+
+
 async def test_coordinator_rate_periods_net_metering(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -1044,11 +1150,12 @@ async def test_coordinator_rate_period_returns_after_absence(
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    # On peak was last written in the first run, with a zero state at hour 1
+    # On peak was last written in the first run, at hour 0. The read at hour 1
+    # has no components, so the periods have no point there.
     stats = await hass.async_add_executor_job(
         get_last_statistics, hass, 1, on_peak_id, True, {"start", "sum"}
     )
-    assert stats[on_peak_id][0]["start"] == hour[1].timestamp()
+    assert stats[on_peak_id][0]["start"] == hour[0].timestamp()
     assert stats[on_peak_id][0]["sum"] == 1.0
 
     # Third run: on peak is back and its sum continues from the first run
