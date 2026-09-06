@@ -44,7 +44,9 @@ async def test_async_setup_entry(
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.linksys_smart.JNAPClient") as mock_client_cls:
+    with patch(
+        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+    ) as mock_client_cls:
         mock_client_cls.return_value.get_devices = AsyncMock(
             return_value=GetDevicesResponse(devices=[])
         )
@@ -69,7 +71,9 @@ async def test_async_unload_entry(
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.linksys_smart.JNAPClient") as mock_client_cls:
+    with patch(
+        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+    ) as mock_client_cls:
         mock_client_cls.return_value.get_devices = AsyncMock(
             return_value=GetDevicesResponse(devices=[])
         )
