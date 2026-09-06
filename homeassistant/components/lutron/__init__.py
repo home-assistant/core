@@ -159,7 +159,10 @@ def _setup_output(
 ) -> None:
     """Set up a Lutron output."""
     _LOGGER.debug("Working on output %s", output.type)
-    if output.type == "SYSTEM_SHADE":
+    if output.type in ("SYSTEM_SHADE", "SIVOIA_QED", "MOTOR"):
+        # SYSTEM_SHADE + SIVOIA_QED accept "set level" (position); MOTOR outputs
+        # (drapery / screen motor modules) only raise/lower/stop - the cover
+        # platform picks the entity class per device.
         entry_data.covers.append((area_name, output))
         platform = Platform.COVER
     elif output.type == "CEILING_FAN_TYPE":
