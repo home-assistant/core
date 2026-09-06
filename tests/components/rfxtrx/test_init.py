@@ -282,7 +282,7 @@ async def test_migrate_entry(
         "automatic_add": True,
         "protocols": [],
     }
-    assert entry.version == 3
+    assert entry.version == 2
 
     subentries = {
         subentry.unique_id: subentry for subentry in entry.subentries.values()

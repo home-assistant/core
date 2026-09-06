@@ -387,33 +387,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migrating from version %s", version)
 
     if version == 1:
-        # Convert from old tuple based device identifiers to standard string
-
-        device_registry = dr.async_get(hass)
-        for device_entry in dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
-        ):
-            identifiers = set()
-            for identifier in device_entry.identifiers:
-                if identifier[0] == DOMAIN and len(cast(tuple, identifier)) == 4:
-                    legacy_identifier = cast(tuple[str, str, str, str], identifier)
-                    identifier = (
-                        DOMAIN,
-                        DeviceTuple(
-                            packettype=legacy_identifier[1],
-                            subtype=legacy_identifier[2],
-                            id_string=legacy_identifier[3],
-                        ).unique_id,
-                    )
-                identifiers.add(identifier)
-            device_registry.async_update_device(
-                device_entry.id, new_identifiers=identifiers
-            )
-        version = 2
-        hass.config_entries.async_update_entry(entry, version=version)
-
-    if version == 2:
-        # Convert per-device config stored on the config entry into subentries
+        # Convert per-device config stored on the config entry into subentries,
+        # and legacy tuple based device identifiers to the subentry id.
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
@@ -443,14 +418,24 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
-            for id_domain, id_value in device_entry.identifiers:
-                if id_domain != DOMAIN or id_value not in subentry_by_unique_id:
+            for identifier in device_entry.identifiers:
+                if identifier[0] != DOMAIN:
                     continue
-                subentry_id = subentry_by_unique_id[id_value]
+                if len(cast(tuple, identifier)) == 4:
+                    legacy_identifier = cast(tuple[str, str, str, str], identifier)
+                    unique_id = DeviceTuple(
+                        packettype=legacy_identifier[1],
+                        subtype=legacy_identifier[2],
+                        id_string=legacy_identifier[3],
+                    ).unique_id
+                else:
+                    unique_id = identifier[1]
+                if unique_id not in subentry_by_unique_id:
+                    continue
+
+                subentry_id = subentry_by_unique_id[unique_id]
                 new_identifiers = {
-                    identifier
-                    for identifier in device_entry.identifiers
-                    if identifier[0] != DOMAIN
+                    other for other in device_entry.identifiers if other[0] != DOMAIN
                 } | {(DOMAIN, subentry_id)}
 
                 # Entities must be moved to the new subentry before the device
@@ -465,7 +450,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         config_entry_id=entry.entry_id,
                         config_subentry_id=subentry_id,
                         new_unique_id=entity_entry.unique_id.replace(
-                            id_value, subentry_id, 1
+                            unique_id, subentry_id, 1
                         ),
                     )
 
@@ -480,7 +465,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_data = {
             key: value for key, value in entry.data.items() if key != CONF_DEVICES
         }
-        version = 3
+        version = 2
         hass.config_entries.async_update_entry(entry, data=new_data, version=version)
 
     _LOGGER.debug("Migration to version %s successful", version)
