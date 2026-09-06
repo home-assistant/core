@@ -19,7 +19,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -40,10 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Migration to OAuth required")
 
     session = async_create_august_clientsession(hass)
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady("OAuth implementation not available") from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:

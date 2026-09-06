@@ -28,9 +28,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
-)
 from homeassistant.helpers.entity import generate_entity_id
 
 from .api import ApiAuthImpl, get_feature_access
@@ -95,17 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
         _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
         return False
 
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.

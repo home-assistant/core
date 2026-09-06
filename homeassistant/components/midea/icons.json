@@ -71,6 +71,50 @@
       "target_indoor_fan_speed": {
         "default": "mdi:fan-clock"
       }
+    },
+    "switch": {
+      "anion": {
+        "default": "mdi:air-purifier"
+      },
+      "aux_heating": {
+        "default": "mdi:radiator"
+      },
+      "child_lock": {
+        "default": "mdi:lock"
+      },
+      "disinfect": {
+        "default": "mdi:bacteria"
+      },
+      "night_light": {
+        "default": "mdi:weather-night"
+      },
+      "out_silent": {
+        "default": "mdi:volume-mute"
+      },
+      "prompt_tone": {
+        "default": "mdi:bullhorn"
+      },
+      "screen_display": {
+        "default": "mdi:monitor"
+      },
+      "self_clean": {
+        "default": "mdi:broom"
+      },
+      "smart_eye": {
+        "default": "mdi:eye"
+      },
+      "sound": {
+        "default": "mdi:volume-high"
+      },
+      "tbh": {
+        "default": "mdi:heating-coil"
+      },
+      "zone1_curve": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "zone2_curve": {
+        "default": "mdi:chart-bell-curve"
+      }
     }
   }
 }

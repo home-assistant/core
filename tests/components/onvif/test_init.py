@@ -28,12 +28,12 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
+async def test_migrate_camera_entities_unique_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that camera entities unique ids get migrated properly."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id=MAC)
     config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     entity_with_only_mac = entity_registry.async_get_or_create(
         domain="camera",

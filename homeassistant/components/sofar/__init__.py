@@ -7,19 +7,50 @@ from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.components.modbus import async_get_unit
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorExtraStoredData,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    restore_state,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .sensor import SENSOR_DESCRIPTIONS
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _IDENTITY_ATTEMPTS = 3
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
+    """Drop the removed waiting-time entity so it doesn't linger unavailable."""
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{serial}_waiting_time"
+    )
+    if entity_id is not None:
+        registry.async_remove(entity_id)
 
 
 async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
@@ -34,10 +65,41 @@ async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -
             return
 
 
+def _async_seed_high_water_marks(
+    hass: HomeAssistant, serial: str, device: SofarInverter
+) -> None:
+    """Prime high-water marks before the first poll has nothing to compare."""
+    registry = er.async_get(hass)
+    last_states = restore_state.async_get(hass).last_states
+    for description in SENSOR_DESCRIPTIONS:
+        if description.state_class is not SensorStateClass.TOTAL_INCREASING:
+            continue
+        entity_id = registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
+        )
+        if entity_id is None or (stored := last_states.get(entity_id)) is None:
+            continue
+        if stored.extra_data is None:
+            continue
+        extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
+        if extra is None or not isinstance(extra.native_value, (int, float)):
+            continue
+        getattr(device, description.component).seed_high_water(
+            description.key, float(extra.native_value)
+        )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sofar integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
     """Set up Sofar Inverter Modbus from a config entry."""
     serial = entry.unique_id
     assert serial is not None
+    _async_remove_stale_waiting_time(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(
@@ -59,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         model=model,
         inverter_type=inverter_type,
     )
+    _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
         hass,

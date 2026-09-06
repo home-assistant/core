@@ -1875,61 +1875,6 @@
     'state': 'ok',
   })
 # ---
-# name: test_sensors[sensor.roborock_s7_2_dock_maintenance_brush_time_left-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_s7_2_dock_maintenance_brush_time_left',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Maintenance brush time left',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Maintenance brush time left',
-    'platform': 'roborock',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cleaning_brush_time_left',
-    'unique_id': 'cleaning_brush_time_left_device_2',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensors[sensor.roborock_s7_2_dock_maintenance_brush_time_left-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Maintenance brush time left',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.roborock_s7_2_dock_maintenance_brush_time_left',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '235',
-  })
-# ---
 # name: test_sensors[sensor.roborock_s7_2_dock_mop_drying_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3189,61 +3134,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ok',
-  })
-# ---
-# name: test_sensors[sensor.roborock_s7_maxv_dock_maintenance_brush_time_left-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_s7_maxv_dock_maintenance_brush_time_left',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Maintenance brush time left',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Maintenance brush time left',
-    'platform': 'roborock',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cleaning_brush_time_left',
-    'unique_id': 'cleaning_brush_time_left_abc123',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensors[sensor.roborock_s7_maxv_dock_maintenance_brush_time_left-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Maintenance brush time left',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.roborock_s7_maxv_dock_maintenance_brush_time_left',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '235',
   })
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_dock_mop_drying_remaining_time-entry]

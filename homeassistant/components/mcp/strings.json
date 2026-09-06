@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_discovery_info": "Invalid discovery information received",
       "missing_capabilities": "The MCP server does not support a required capability (Tools)",
       "reauth_account_mismatch": "The authenticated user does not match the MCP Server user that needed re-authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -29,6 +30,10 @@
         },
         "title": "Choose how to authenticate with the MCP server"
       },
+      "hassio_confirm": {
+        "description": "Do you want to configure Home Assistant to connect to the Model Context Protocol server provided by the app: {addon}?",
+        "title": "Model Context Protocol server via Home Assistant app"
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
@@ -46,11 +51,6 @@
           "url": "The remote MCP server URL for the SSE endpoint, for example {example_url}"
         }
       }
-    }
-  },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }

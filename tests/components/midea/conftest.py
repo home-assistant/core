@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, patch
 from midealocal.const import DeviceType
 import pytest
 
-from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from homeassistant.components.midea.const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN
 from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_TYPE
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -168,16 +168,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def config_entry(
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> MockConfigEntry:
+    """Return a mock config entry fixture."""
+    return mock_config_entry(default_ac_device())
+
+
+@pytest.fixture
 def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
     """Return a function that creates a mock config entry for a given device."""
 
     def _create(device: DummyDevice) -> MockConfigEntry:
         return MockConfigEntry(
             domain=DOMAIN,
+            minor_version=2,
             data={
                 **BASE_DATA,
                 CONF_TYPE: device.device_type,
                 CONF_NAME: MIDEA_DEVICE_NAMES[device.device_type],
+                CONF_MAC: TEST_MAC_ADDRESS,
+                CONF_SN: TEST_SERIAL_NUMBER,
                 CONF_TOKEN: TEST_TOKEN,
                 CONF_KEY: TEST_KEY,
                 CONF_SUBTYPE: TEST_SUBTYPE,

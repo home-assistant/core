@@ -59,6 +59,16 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
+      "priority_status": {
+        "name": "Priority status",
+        "state": {
+          "hold_until": "Hold until",
+          "no_hold": "No hold",
+          "permanent_hold": "Permanent hold",
+          "temporary_hold": "Temporary hold",
+          "vacation_hold": "Vacation hold"
+        }
+      },
       "room_average_temperature": {
         "name": "Room average temperature"
       },
@@ -94,9 +104,6 @@
     },
     "invalid_fan_mode": {
       "message": "The fan mode {fan_mode} is not supported by this device"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "services": {
