@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
+from midealocal.exceptions import CloudLoginError, MideaCloudError, NoDeviceRegistered
 import pytest
 
 from homeassistant.components.midea.config_flow import (
@@ -169,6 +170,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
         "connect_return",
         "cloud_login_return",
         "cloud_keys_return",
+        "cloud_keys_side_effect",
         "default_keys_return",
         "pre_input",
         "expected_error",
@@ -180,6 +182,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "invalid_token",
@@ -191,6 +194,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "invalid_device_ip",
@@ -202,6 +206,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "invalid_device_id_for_ip",
@@ -219,6 +224,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "ip_address_mismatch",
@@ -236,6 +242,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "protocol_mismatch",
@@ -252,6 +259,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "type_mismatch",
@@ -263,6 +271,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             False,
             True,
             {},
+            None,
             {},
             None,
             "device_auth_failed",
@@ -274,6 +283,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             False,
             {},
+            None,
             {},
             None,
             "preset_login_failed",
@@ -285,10 +295,23 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             None,
             True,
             {},
+            None,
             {},
             None,
             "token_unavailable",
             id="no_token_from_cloud",
+        ),
+        pytest.param(
+            {**EXTENDED_DATA, CONF_TOKEN: "", CONF_KEY: ""},
+            {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
+            None,
+            True,
+            {},
+            NoDeviceRegistered(3201, "no permission"),
+            {},
+            None,
+            "device_not_registered",
+            id="cloud_rejects_token_request",
         ),
     ],
 )
@@ -299,6 +322,7 @@ async def test_manual_step_errors(
     connect_return: bool | None,
     cloud_login_return: bool,
     cloud_keys_return: dict[str, dict[str, str]],
+    cloud_keys_side_effect: Exception | None,
     default_keys_return: dict[str, dict[str, str]],
     pre_input: dict[str, object] | None,
     expected_error: str,
@@ -323,7 +347,9 @@ async def test_manual_step_errors(
 
     cloud = MagicMock()
     cloud.login = AsyncMock(return_value=cloud_login_return)
-    cloud.get_cloud_keys = AsyncMock(return_value=cloud_keys_return)
+    cloud.get_cloud_keys = AsyncMock(
+        return_value=cloud_keys_return, side_effect=cloud_keys_side_effect
+    )
 
     with (
         patch(
@@ -1251,6 +1277,191 @@ async def test_login_credentials_step_login_failed_sets_error(
     data_schema = result["data_schema"].schema
     assert get_schema_suggested_value(data_schema, CONF_ACCOUNT) == "user"
     assert get_schema_suggested_value(data_schema, CONF_SERVER) == DEFAULT_CLOUD
+
+
+@pytest.mark.parametrize(
+    ("login_error", "expected_error", "expected_code"),
+    [
+        (CloudLoginError(7610, "locked"), "account_locked", "7610"),
+        (MideaCloudError(9999, "system error"), "cloud_error", "9999"),
+    ],
+    ids=["specific_login_error", "generic_cloud_error"],
+)
+async def test_login_credentials_step_maps_cloud_error(
+    hass: HomeAssistant,
+    login_error: MideaCloudError,
+    expected_error: str,
+    expected_code: str,
+) -> None:
+    """Test a cloud error raised by login() surfaces its translation_key and code.
+
+    The exhaustive code-to-slug matrix is covered in the midea-local library
+    tests; here we only check the config flow forwards ``err.translation_key``
+    and the numeric code.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value=DISCOVERY_RESULT,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={CONF_DEVICE: TEST_DEVICE_ID},
+    )
+    assert result["step_id"] == "auth_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"login_mode": LOGIN_MODE_ACCOUNT},
+    )
+    assert result["step_id"] == "login_credentials"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(side_effect=login_error)
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_cloud_servers",
+            AsyncMock(return_value={1: DEFAULT_CLOUD}),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={
+                CONF_SERVER: DEFAULT_CLOUD,
+                CONF_ACCOUNT: "user",
+                CONF_PASSWORD: "pass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "login_credentials"
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == {"error_code": expected_code}
+
+
+@pytest.mark.parametrize(
+    (
+        "login_side_effect",
+        "cloud_keys_side_effect",
+        "expected_step",
+        "expected_error",
+        "expected_code",
+    ),
+    [
+        pytest.param(
+            CloudLoginError(7610, "locked"),
+            None,
+            "auth_method",
+            "account_locked",
+            "7610",
+            id="preset_login_rejected",
+        ),
+        pytest.param(
+            None,
+            [NoDeviceRegistered(3201, "no permission"), {}],
+            "auto",
+            "device_not_registered",
+            "3201",
+            id="device_bound_to_other_account",
+        ),
+    ],
+)
+async def test_auto_flow_preset_auth_maps_cloud_error(
+    hass: HomeAssistant,
+    login_side_effect: MideaCloudError | None,
+    cloud_keys_side_effect: list[object] | None,
+    expected_step: str,
+    expected_error: str,
+    expected_code: str,
+) -> None:
+    """Test cloud API errors on the preset auth path surface a specific message.
+
+    Either the preset login itself is rejected (stays on auth_method), or the
+    login succeeds but the cloud refuses to issue a token/key for the device
+    (falls back to the auto step).
+    """
+    mock_devices = {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value=mock_devices,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={CONF_DEVICE: TEST_DEVICE_ID},
+    )
+    assert result["step_id"] == "auth_method"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(return_value=True, side_effect=login_side_effect)
+    cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(
+        return_value={}, side_effect=cloud_keys_side_effect
+    )
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={"login_mode": LOGIN_MODE_PRESET},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == expected_step
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == {"error_code": expected_code}
 
 
 async def test_login_credentials_step_recovers_after_failed_login(
