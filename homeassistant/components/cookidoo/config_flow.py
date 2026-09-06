@@ -61,7 +61,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
     VERSION = 1
-    MINOR_VERSION = 4
+    MINOR_VERSION = 3
 
     COUNTRY_DATA_SCHEMA: dict
     LANGUAGE_DATA_SCHEMA: dict
