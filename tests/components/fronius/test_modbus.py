@@ -469,21 +469,34 @@ async def test_control_refused_creates_no_control_entities(
     ]
 
 
+@pytest.mark.parametrize(
+    ("modules", "include_mppt_model"),
+    [
+        pytest.param(GEN24_HYBRID_MODULES, True, id="mppt_model"),
+        pytest.param([], False, id="no_mppt_model"),
+    ],
+)
 async def test_controls_enabled_later_get_their_entities(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    modules: list[MpptModuleSpec],
+    include_mppt_model: bool,
 ) -> None:
     """Test entities appear for controls a re-scan finds after setup.
 
     The platforms are set up once, so a coordinator that only comes up on a
     later re-scan has to be handed to them through the dispatcher - which
-    every platform listens to, including those it has nothing for.
+    every platform listens to, including those it has nothing for. Whether
+    the device also has an MPPT model decides whether a readings coordinator
+    is already there when the controls arrive.
     """
     mock_fronius_modbus.for_unit(1).holding.update(
-        build_sunspec_map([], include_mppt_model=False)
+        build_sunspec_map(
+            modules, include_mppt_model=include_mppt_model, storage_wcha_max=12800
+        )
     )
     mock_responses(aioclient_mock, fixture_set="gen24_storage")
     with patch(
