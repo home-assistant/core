@@ -70,10 +70,10 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         await self.cookidoo.login()
         # Persist before fetching the user info, so a failure there does not
         # discard the tokens and replay the whole login on the next attempt
-        self._async_save_auth_data()
+        self.save_auth_data()
         return await self.cookidoo.get_user_info()
 
-    def _async_save_auth_data(self) -> None:
+    def save_auth_data(self) -> None:
         """Persist the OAuth2 tokens so a restart does not need a new login."""
         if (auth_data := self.cookidoo.auth_data) is None:
             return
@@ -109,7 +109,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 translation_key="setup_request_exception",
             ) from e
 
-        self._async_save_auth_data()
+        self.save_auth_data()
 
     @override
     async def _async_update_data(self) -> CookidooData:
@@ -136,7 +136,6 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     translation_domain=DOMAIN,
                     translation_key="setup_request_exception",
                 ) from exc
-            self._async_save_auth_data()
             _LOGGER.debug(
                 "Authentication failed but re-authentication"
                 " was successful, trying again later"
@@ -147,9 +146,10 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 translation_domain=DOMAIN,
                 translation_key="update_exception",
             ) from e
-
-        # The library refreshes the access token transparently on expiry
-        self._async_save_auth_data()
+        finally:
+            # The library rotates the tokens transparently on expiry, so save
+            # them on every path: a later call failing must not discard them
+            self.save_auth_data()
 
         return CookidooData(
             ingredient_items=ingredient_items,
