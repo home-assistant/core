@@ -549,6 +549,32 @@ async def test_expired_tokens_fall_back_to_login(
     assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
 
 
+async def test_rotated_tokens_persisted_when_update_fails(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test tokens rotated during an update survive a later call failing."""
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    # The library rotates the tokens on the first call, a later one then fails
+    def _rotate() -> list:
+        mock_cookidoo_client.auth_data = AUTH_DATA
+        return []
+
+    mock_cookidoo_client.get_ingredient_items.side_effect = _rotate
+    mock_cookidoo_client.get_active_subscription.side_effect = (
+        CookidooRequestException()
+    )
+
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
 async def test_refreshed_tokens_are_persisted(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,

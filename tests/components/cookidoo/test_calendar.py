@@ -1,6 +1,7 @@
 """Test for calendar platform of the Cookidoo integration."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
@@ -13,12 +14,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import AUTH_DATA
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -141,3 +143,43 @@ async def test_get_events_login_failure(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_get_events_relogin_persists_tokens(
+    hass: HomeAssistant,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+    mock_cookidoo_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test tokens of a calendar re-login are persisted on the config entry."""
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, cookidoo_config_entry_with_token.entry_id
+    )
+    entity_id = entities[0].entity_id
+
+    week_plan = mock_cookidoo_client.get_recipes_in_calendar_week.return_value
+    mock_cookidoo_client.get_recipes_in_calendar_week.side_effect = [
+        CookidooAuthException(),
+        week_plan,
+        week_plan,
+    ]
+    mock_cookidoo_client.login.side_effect = lambda: setattr(
+        mock_cookidoo_client, "auth_data", AUTH_DATA
+    )
+
+    await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "start_date_time": datetime(2025, 3, 4, tzinfo=UTC),
+            "end_date_time": datetime(2025, 3, 6, tzinfo=UTC),
+        },
+        target={"entity_id": entity_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
