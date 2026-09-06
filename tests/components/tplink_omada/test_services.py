@@ -11,7 +11,7 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.services import async_setup_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -168,44 +168,30 @@ async def test_service_reconnect_failed_raises_homeassistanterror(
 def _add_client_device(
     hass: HomeAssistant, config_entry: MockConfigEntry, mac: str
 ) -> str:
-    """Register a device with a network MAC connection and tracker entity."""
+    """Register a device with a network MAC connection."""
     device = dr.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
-    er.async_get(hass).async_get_or_create(
-        "device_tracker",
-        DOMAIN,
-        f"scanner_{config_entry.entry_id}_{mac}",
-        config_entry=config_entry,
-        device_id=device.id,
+    return device.id
+
+
+def _add_foreign_device(hass: HomeAssistant, mac: str) -> str:
+    """Register a device owned by another integration with a network MAC."""
+    foreign_entry = MockConfigEntry(domain="sonos", unique_id="foreign")
+    foreign_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=foreign_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     return device.id
 
 
 def _add_device_without_mac(hass: HomeAssistant, config_entry: MockConfigEntry) -> str:
-    """Register a device with a tracker entity but no network MAC connection."""
+    """Register a device without a network MAC connection."""
     device = dr.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "no-mac-device")},
-    )
-    er.async_get(hass).async_get_or_create(
-        "device_tracker",
-        DOMAIN,
-        "scanner_no_mac",
-        config_entry=config_entry,
-        device_id=device.id,
-    )
-    return device.id
-
-
-def _add_non_client_device(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mac: str
-) -> str:
-    """Register a device with a network MAC connection but no tracker entity."""
-    device = dr.async_get(hass).async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     return device.id
 
@@ -457,8 +443,9 @@ async def test_service_set_client_name_non_client_device(
     await hass.async_block_till_done()
 
     mac = "aa:bb:cc:dd:ee:ff"
-    device_id = _add_non_client_device(hass, mock_config_entry, mac)
+    device_id = _add_client_device(hass, mock_config_entry, mac)
 
+    mock_omada_site_client.get_client.side_effect = OmadaClientException
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
@@ -472,13 +459,13 @@ async def test_service_set_client_name_non_client_device(
     mock_omada_site_client.update_client.assert_not_awaited()
 
 
-async def test_service_set_client_name_controller_mismatch(
+async def test_service_set_client_name_controller_ambiguous(
     hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test set client name with a device from another controller raises an error."""
+    """Test set client name without a controller raises an error with multiple entries."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -492,21 +479,45 @@ async def test_service_set_client_name_controller_mismatch(
     await hass.config_entries.async_setup(other_entry.entry_id)
     await hass.async_block_till_done()
 
-    mac = "aa:bb:cc:dd:ee:ff"
-    device_id = _add_client_device(hass, other_entry, mac)
-
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {
-                "config_entry_id": mock_config_entry.entry_id,
-                "device_id": device_id,
-                "name": "Ting sensor",
-            },
+            {"device_id": "device1", "name": "Ting sensor"},
             blocking=True,
         )
-    assert err.value.translation_key == "controller_mismatch"
+    assert err.value.translation_key == "controller_ambiguous"
     assert err.value.translation_domain == DOMAIN
 
     mock_omada_site_client.update_client.assert_not_awaited()
+
+
+async def test_service_set_client_name_foreign_device(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set client name with a device owned by another integration."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mac = "aa:bb:cc:dd:ee:ff"
+    device_id = _add_foreign_device(hass, mac)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_client_name",
+        {
+            "config_entry_id": mock_config_entry.entry_id,
+            "device_id": device_id,
+            "name": "Ting sensor",
+        },
+        blocking=True,
+    )
+
+    mock_omada_site_client.get_client.assert_awaited_once_with(mac)
+    mock_omada_site_client.update_client.assert_awaited_once_with(
+        mac, OmadaClientSettings(name="Ting sensor")
+    )

@@ -6,7 +6,6 @@ from tplink_omada_client import OmadaClientSettings
 from tplink_omada_client.exceptions import OmadaClientException
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -14,7 +13,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    entity_registry as er,
     selector,
 )
 from homeassistant.helpers.service import async_register_admin_service
@@ -94,48 +92,25 @@ SCHEMA_SET_CLIENT_NAME = vol.Schema(
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
-            {
-                "integration": DOMAIN,
-                "entity": [
-                    {
-                        "domain": DEVICE_TRACKER_DOMAIN,
-                        "integration": DOMAIN,
-                    }
-                ],
-            }
-        ),
+        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(),
         vol.Required(ATTR_NAME): vol.All(cv.string, vol.Length(min=1)),
     }
 )
 
 
-def _omada_tracker_entry_ids(hass: HomeAssistant, device: dr.DeviceEntry) -> set[str]:
-    """Return the Omada config entries with a device tracker on the device."""
-    omada_entry_ids = {
-        entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-    return {
-        entity.config_entry_id
-        for entity in er.async_entries_for_device(er.async_get(hass), device.id)
-        if entity.domain == DEVICE_TRACKER_DOMAIN
-        and entity.config_entry_id in omada_entry_ids
-    }
-
-
-def _resolve_client_controller(
+async def _resolve_client_controller(
     call: ServiceCall,
 ) -> tuple[OmadaSiteController, str]:
     """Resolve the controller and MAC of the client referenced by the call."""
     hass = call.hass
 
-    if not hass.config_entries.async_entries(DOMAIN):
+    omada_entries = hass.config_entries.async_entries(DOMAIN)
+    if not omada_entries:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_controllers",
         )
 
-    requested_entry: ConfigEntry[OmadaSiteController] | None = None
     if entry_id := call.data.get(ATTR_CONFIG_ENTRY_ID):
         entry = hass.config_entries.async_get_entry(entry_id)
         if not entry:
@@ -148,7 +123,20 @@ def _resolve_client_controller(
                 translation_domain=DOMAIN,
                 translation_key="controller_unavailable",
             )
-        requested_entry = cast(ConfigEntry[OmadaSiteController], entry)
+        controller = cast(ConfigEntry[OmadaSiteController], entry).runtime_data
+    else:
+        if len(omada_entries) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="controller_ambiguous",
+            )
+        entry = omada_entries[0]
+        if entry.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="controller_unavailable",
+            )
+        controller = cast(ConfigEntry[OmadaSiteController], entry).runtime_data
 
     device = dr.async_get(hass).async_get(call.data[ATTR_DEVICE_ID])
     if device is None or not isinstance(device, dr.DeviceEntry):
@@ -158,45 +146,34 @@ def _resolve_client_controller(
             translation_key="client_device_not_found",
         )
 
-    tracker_entry_ids = _omada_tracker_entry_ids(hass, device)
-    if not tracker_entry_ids:
+    mac = next(
+        (
+            connection_id
+            for connection_type, connection_id in device.connections
+            if connection_type == dr.CONNECTION_NETWORK_MAC
+        ),
+        None,
+    )
+    if mac is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="client_device_no_mac",
+        )
+
+    try:
+        await controller.omada_client.get_client(mac)
+    except OmadaClientException as ex:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="client_device_not_tracked",
-        )
+        ) from ex
 
-    if requested_entry is None:
-        entry = next(
-            entry
-            for entry_id in tracker_entry_ids
-            if (entry := hass.config_entries.async_get_entry(entry_id)) is not None
-        )
-        if entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="controller_unavailable",
-            )
-        controller = cast(ConfigEntry[OmadaSiteController], entry).runtime_data
-    elif requested_entry.entry_id not in tracker_entry_ids:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="controller_mismatch",
-        )
-    else:
-        controller = requested_entry.runtime_data
-
-    for connection_type, connection_id in device.connections:
-        if connection_type == dr.CONNECTION_NETWORK_MAC:
-            return controller, connection_id
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="client_device_no_mac",
-    )
+    return controller, mac
 
 
 async def _handle_set_client_name(call: ServiceCall) -> None:
     """Handle the service action to set the name of a network client."""
-    controller, mac = _resolve_client_controller(call)
+    controller, mac = await _resolve_client_controller(call)
     name: str = call.data[ATTR_NAME]
 
     try:

@@ -19,10 +19,6 @@ set_client_name:
       required: true
       selector:
         device:
-          integration: tplink_omada
-          entity:
-            - domain: device_tracker
-              integration: tplink_omada
     name:
       required: true
       selector:
