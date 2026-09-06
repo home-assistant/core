@@ -1,10 +1,15 @@
 """The Cookidoo integration."""
 
+from dataclasses import asdict
 import logging
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooException,
+    CookidooRequestException,
+)
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -123,6 +128,26 @@ async def async_migrate_entry(
             _migrate_identifiers(hass, config_entry, old_unique_id, user_info.id)
         hass.config_entries.async_update_entry(
             config_entry, unique_id=user_info.id, minor_version=3
+        )
+
+    if config_entry.version == 1 and config_entry.minor_version == 3:
+        # Seed the OAuth2 tokens the library gained in 0.18.0
+        cookidoo = await cookidoo_from_config_entry(hass, config_entry)
+
+        try:
+            await cookidoo.login()
+        except CookidooException as e:
+            _LOGGER.error("Could not migrate config entry: %s", e)
+            return False
+
+        auth_data = cookidoo.auth_data
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                CONF_TOKEN: asdict(auth_data) if auth_data else {},
+            },
+            minor_version=4,
         )
 
     _LOGGER.debug(
