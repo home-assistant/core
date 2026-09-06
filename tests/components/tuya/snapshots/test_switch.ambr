@@ -10206,7 +10206,7 @@
     'object_id_base': 'Switch 1',
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 1',
     'platform': 'tuya',
@@ -10221,7 +10221,6 @@
 # name: test_platform_setup_and_discovery[switch.smart_circuit_breaker_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Circuit Breaker Switch 1',
     }),
     'context': <ANY>,
