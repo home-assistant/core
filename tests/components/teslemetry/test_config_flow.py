@@ -235,10 +235,7 @@ async def test_reauth_loaded_schedules_reload(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A data-only reauth schedules the reload itself to apply the token.
-
-    The subentry set is unchanged, so the update listener never reloads.
-    """
+    """A data-only reauth schedules the reload itself to apply the token."""
     mock_entry = await setup_platform(hass, [])
     assert mock_entry.state is ConfigEntryState.LOADED
 
@@ -750,11 +747,7 @@ def _mock_ble_parent(vehicle: AsyncMock) -> MagicMock:
 
 
 async def _setup_account_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up an account entry with no vehicle subentry.
-
-    Local control is opt-in: no Bluetooth subentry exists until the user pairs a
-    vehicle through the add flow, so a fresh account entry starts with none.
-    """
+    """Set up an account entry with no vehicle subentry."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     with patch("homeassistant.components.teslemetry.PLATFORMS", []):
@@ -836,13 +829,7 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
 
 
 async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> None:
-    """A second flow racing on the same VIN aborts with already_configured.
-
-    The user step only filters VINs already paired when the flow starts, and
-    pairing stays open for minutes, so two flows can both pass that filter for
-    the same VIN. The second to finish must abort cleanly with a translated
-    reason rather than surface an untranslated already_configured.
-    """
+    """A second flow racing on the same VIN aborts with already_configured."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle(on_whitelist=True)
 
@@ -1188,8 +1175,7 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     [
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
-        # get_private_key wraps an existing corrupt/encrypted key file into
-        # PrivateKeyError, which the scan step must also abort on cleanly.
+        # PrivateKeyError is the wrapped existing-key-file shape the scan step must abort on too.
         pytest.param(
             PrivateKeyError("malformed", "Not a valid PEM private key"),
             id="private_key_error",
@@ -2170,8 +2156,7 @@ async def test_pair_step_second_lookup_errors(
             TypeError,
             id="key_fetch_typeerror",
         ),
-        # get_rsa_private_key wraps an existing corrupt/encrypted key file into
-        # PrivateKeyError, which is not a TypeError/OSError/ValueError.
+        # PrivateKeyError is the wrapped existing-key-file shape, distinct from the raw errors.
         pytest.param(
             "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
             PrivateKeyError("encrypted", "Private key file is encrypted"),

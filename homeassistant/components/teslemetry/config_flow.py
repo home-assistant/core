@@ -479,10 +479,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     async def _prepare_energy_site(
         self, energy_site: TeslemetryEnergySite
     ) -> SubentryFlowResult | None:
-        """Discover the gateway address and load the integration's RSA key.
-
-        Returns an abort result if the RSA key cannot be loaded, else None.
-        """
+        """Discover the gateway address and load the integration's RSA key."""
         self._energy_site = energy_site
 
         try:

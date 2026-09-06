@@ -902,11 +902,7 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
     keep_one_enabled: bool,
     expected_polled: bool,
 ) -> None:
-    """Test the vehicle coordinator stops polling once every entity is disabled.
-
-    With no listeners left, core unschedules the coordinator so the charged
-    vehicle_data poll stops entirely; a single enabled entity keeps it running.
-    """
+    """Test the vehicle coordinator stops polling once every entity is disabled."""
     vin = "LRW3F7EK4NC700000"
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -1150,13 +1146,7 @@ def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session
 async def test_get_access_token_dead_token_during_setup_triggers_auth_failed(
     hass: HomeAssistant,
 ) -> None:
-    """A dead/revoked refresh token during setup must raise ConfigEntryAuthFailed.
-
-    OAuth servers commonly report a dead refresh token with a non-401 status
-    (e.g. 400 invalid_grant). Only recognizing status 401 let this fall
-    through to ConfigEntryNotReady, which retries setup indefinitely without
-    ever prompting the user to reauthenticate.
-    """
+    """A dead/revoked refresh token during setup must raise ConfigEntryAuthFailed."""
     mock_entry = mock_config_entry()
     mock_entry.add_to_hass(hass)
     mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
@@ -1200,10 +1190,7 @@ async def test_get_access_token_rate_limited_during_setup_is_not_fatal(
 async def test_get_access_token_dead_token_after_setup_starts_reauth(
     hass: HomeAssistant,
 ) -> None:
-    """Test a token dying after setup (re)starts reauth without tearing down.
-
-    The coordinator handles the rest once the exception is re-raised.
-    """
+    """Test a token dying after setup (re)starts reauth without tearing down."""
     mock_entry = mock_config_entry()
     mock_entry.add_to_hass(hass)
     mock_entry.mock_state(hass, ConfigEntryState.LOADED)
@@ -1357,12 +1344,7 @@ async def test_energy_site_cloud_without_powerwall(hass: HomeAssistant) -> None:
 async def test_energy_site_subentry_without_credentials_uses_cloud(
     hass: HomeAssistant,
 ) -> None:
-    """A subentry that exists but is not yet paired resolves to the cloud API.
-
-    A site whose subentry was created but has no gateway host/password stored
-    keeps that subentry_id (so it stays opted in) while falling back to the
-    plain cloud API rather than building an EnergySiteRouter.
-    """
+    """A subentry that exists but is not yet paired resolves to the cloud API."""
     entry = mock_config_entry()
     paired = MockConfigEntry(
         domain=entry.domain,
@@ -1420,12 +1402,7 @@ async def test_local_control_failure_falls_back_to_cloud(
     local_error: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A failure resolving a paired site's local gateway falls back to cloud.
-
-    Local control is opt-in per site, so one site's bad local config must leave
-    the entry loaded with cloud functionality intact rather than tearing the
-    whole integration down.
-    """
+    """A failure resolving a paired site's local gateway falls back to cloud."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
@@ -1459,8 +1436,7 @@ async def test_local_control_failure_falls_back_to_cloud(
             TypeError("Password was not given but private key is encrypted"),
             id="encrypted_typeerror",
         ),
-        # get_rsa_private_key wraps an existing corrupt/encrypted key file into
-        # PrivateKeyError, which is not a TypeError/OSError/ValueError.
+        # PrivateKeyError is the wrapped existing-key-file shape, distinct from the raw errors.
         pytest.param(
             PrivateKeyError("encrypted", "Private key file is encrypted"),
             id="private_key_error",
@@ -1498,13 +1474,7 @@ async def test_local_control_key_load_failure_falls_back_to_cloud(
 async def test_local_control_unexpected_typeerror_is_not_swallowed(
     hass: HomeAssistant,
 ) -> None:
-    """A TypeError outside the key load is a real bug and must not degrade silently.
-
-    ``_LOCAL_CONTROL_ERRORS`` deliberately excludes TypeError: only the key
-    loader's encrypted-PEM TypeError is converted to ValueError. A TypeError
-    from anywhere else in the resolve path (here, client construction) must
-    fail setup rather than silently falling back to cloud control.
-    """
+    """A TypeError outside the key load is a real bug and must not degrade silently."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
@@ -1710,11 +1680,7 @@ async def test_stale_cleanup_preserves_pairing_without_energy_scope(
 
 
 async def test_update_listener_ignores_token_refresh(hass: HomeAssistant) -> None:
-    """An entry update that only changes token data must not reload the entry.
-
-    OAuth token refreshes call async_update_entry with new token data on every
-    expiry; reloading on those would needlessly drop the stream and re-fetch.
-    """
+    """An entry update that only changes token data must not reload the entry."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     with patch("homeassistant.components.teslemetry.PLATFORMS", []):
@@ -1950,8 +1916,7 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
             TypeError("Password was not given but private key is encrypted"),
             id="encrypted_key",
         ),
-        # get_private_key wraps every existing-key-file failure into
-        # PrivateKeyError; each reason shape must still degrade to cloud control.
+        # PrivateKeyError is the wrapped existing-key-file shape; it must degrade too.
         pytest.param(
             PrivateKeyError("unreadable", "Could not read private key file"),
             id="private_key_unreadable",
@@ -1975,12 +1940,7 @@ async def test_vehicle_bluetooth_key_load_falls_back_to_cloud(
     key_error: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A vehicle whose Bluetooth key fails to load degrades to cloud control.
-
-    Local Bluetooth control is opt-in per vehicle, so one vehicle's bad key file
-    must leave the entry loaded with that vehicle on its cloud API and the rest
-    of the account (e.g. energy sites) set up normally.
-    """
+    """A vehicle whose Bluetooth key fails to load degrades to cloud control."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
 
