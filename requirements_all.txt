@@ -501,7 +501,7 @@ airgradient==0.10.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.9
+airos==0.6.12
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -1324,7 +1324,7 @@ homelink-integration-api==0.1.0
 homematicip==2.16.0
 
 # homeassistant.components.homevolt
-homevolt==0.5.0
+homevolt==0.7.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -3382,7 +3382,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.8.4
+victron-mqtt==2026.9.2
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12
