@@ -54,11 +54,11 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             raw_host = user_input[CONF_HOST].strip()
-            raw_port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
             raw_ssl = bool(user_input.get(CONF_SSL, False))
 
             session = async_get_clientsession(self.hass)
             try:
+                raw_port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
                 client = BirdNetGoClient(
                     host=raw_host,
                     port=raw_port,
