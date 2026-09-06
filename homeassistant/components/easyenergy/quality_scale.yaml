@@ -45,7 +45,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: |
-      This integration does not have a reauthentication flow.
+      The easyEnergy API does not require authentication.
   test-coverage: done
   # Gold
   devices: done
@@ -71,7 +71,8 @@ rules:
   dynamic-devices:
     status: exempt
     comment: |
-      This integration does not create or remove devices dynamically.
+      This integration exposes a fixed set of service devices and does not discover,
+      add, or remove devices dynamically.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -85,11 +86,13 @@ rules:
   repair-issues:
     status: exempt
     comment: |
-      This integration has no known cases that require a repair issue.
+      The integration has no user-actionable failure states that require a repair
+      issue.
   stale-devices:
     status: exempt
     comment: |
-      This integration does not create or remove devices dynamically.
+      This integration exposes a fixed set of service devices, so devices cannot
+      become stale after disappearing from the upstream service.
 
   # Platinum
   async-dependency: done
