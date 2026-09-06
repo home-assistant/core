@@ -179,6 +179,20 @@ async def test_get_actions_missing_identifier(
     assert await device_action.async_get_actions(hass, device_entry.id) == []
 
 
+async def test_get_actions_missing_subentry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test we get no actions for a device pointing at a removed subentry."""
+    mock_entry = await setup_entry(hass, {})
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={(DOMAIN, "not_a_real_subentry_id")},
+    )
+
+    assert await device_action.async_get_actions(hass, device_entry.id) == []
+
+
 async def test_get_actions_invalid_event_code(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

@@ -57,8 +57,8 @@
       "step": {
         "device_options": {
           "data": {
-            "command_off": "Data bits value for command off",
-            "command_on": "Data bits value for command on",
+            "command_off": "Command value for off",
+            "command_on": "Command value for on",
             "data_bits": "Number of data bits",
             "off_delay": "Off delay",
             "venetian_blind_mode": "Venetian blind mode"

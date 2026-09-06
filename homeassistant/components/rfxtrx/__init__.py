@@ -578,7 +578,13 @@ def get_subentry_id_from_identifiers(
 ) -> str | None:
     """Get the config subentry id from a set of device registry identifiers."""
     return next(
-        (identifier[1] for identifier in identifiers if identifier[0] == DOMAIN),
+        (
+            identifier[1]
+            for identifier in identifiers
+            # Legacy 4-tuple identifiers also start with DOMAIN, so only
+            # 2-tuples can be trusted to hold a subentry id.
+            if identifier[0] == DOMAIN and len(cast(tuple, identifier)) == 2
+        ),
         None,
     )
 

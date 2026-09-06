@@ -177,6 +177,21 @@ async def test_get_triggers_missing_identifier(
         await device_trigger.async_get_triggers(hass, device_entry.id)
 
 
+async def test_get_triggers_missing_subentry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting triggers for a device pointing at a removed subentry fails."""
+    mock_entry = await setup_entry(hass, {})
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={(DOMAIN, "not_a_real_subentry_id")},
+    )
+
+    with pytest.raises(ValueError, match="no subentry"):
+        await device_trigger.async_get_triggers(hass, device_entry.id)
+
+
 async def test_get_triggers_invalid_event_code(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
