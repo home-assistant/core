@@ -12,7 +12,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
+from .coordinator import (
+    CookidooConfigEntry,
+    CookidooDataUpdateCoordinator,
+    persist_auth_data,
+)
 from .entity import CookidooBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -61,6 +65,7 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @override
+    @persist_auth_data
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -70,6 +75,4 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
                 translation_domain=DOMAIN,
                 translation_key="button_clear_todo_failed",
             ) from e
-        finally:
-            self.coordinator.save_auth_data()
         await self.coordinator.async_refresh()

@@ -384,6 +384,20 @@ async def test_migration_from_partial_duplicate_unique_ids(
             "old_ciam_sub_uuid",
             CookidooAuthException,
         ),
+        (
+            1,
+            1,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            None,
+            CookidooParseException,
+        ),
+        (
+            1,
+            2,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            "old_ciam_sub_uuid",
+            CookidooParseException,
+        ),
     ],
 )
 async def test_migration_from_with_error(
@@ -396,6 +410,7 @@ async def test_migration_from_with_error(
     unique_id,
     login_exception: Exception,
     mock_cookidoo_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test different expected migration paths but with connection issues."""
     # Migration can fail due to connection issues as we have to fetch the uuid
@@ -446,6 +461,8 @@ async def test_migration_from_with_error(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    # A handled failure, rather than the exception escaping async_migrate_entry
+    assert "Could not migrate config entry" in caplog.text
 
     assert entity_registry.async_is_registered(
         entity_registry.entities.get_entity_id(

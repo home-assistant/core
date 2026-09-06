@@ -19,7 +19,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
+from .coordinator import (
+    CookidooConfigEntry,
+    CookidooDataUpdateCoordinator,
+    persist_auth_data,
+)
 from .entity import CookidooBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -72,6 +76,7 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
         ]
 
     @override
+    @persist_auth_data
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an ingredient to the To-do list.
 
@@ -99,8 +104,6 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_update_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
-        finally:
-            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
 
@@ -140,6 +143,7 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
         ]
 
     @override
+    @persist_auth_data
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
 
@@ -153,12 +157,11 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_save_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
-        finally:
-            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
 
     @override
+    @persist_auth_data
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
 
@@ -179,12 +182,11 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_update_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
-        finally:
-            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
 
     @override
+    @persist_auth_data
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
 
@@ -196,7 +198,5 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_delete_item_failed",
                 translation_placeholders={"count": str(len(uids))},
             ) from e
-        finally:
-            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
