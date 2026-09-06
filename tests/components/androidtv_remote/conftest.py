@@ -39,7 +39,6 @@ def mock_api() -> Generator[MagicMock]:
     ) as mock_api_cl:
         mock_api = mock_api_cl.return_value
         mock_api.async_connect = AsyncMock(return_value=None)
-        mock_api.nic_mac = None
         mock_api.device_info = {
             "manufacturer": "My Android TV manufacturer",
             "model": "My Android TV model",
@@ -118,4 +117,3 @@ def mock_get_mac_address() -> Generator[MagicMock]:
         return_value="aa:bb:cc:11:22:33",
     ) as mock_get_mac:
         yield mock_get_mac
-

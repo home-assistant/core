@@ -179,4 +179,3 @@ async def test_existing_device_registry_connections_updated(
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f") in device.connections
     assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
-

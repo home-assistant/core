@@ -5,7 +5,13 @@ import logging
 
 from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
-from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -63,17 +69,29 @@ async def async_setup_entry(
     api.keep_reconnecting(reauth_needed)
 
     # Resolve physical NIC MAC address (Wi-Fi or Ethernet) to link with router device trackers
+    assert entry.unique_id is not None
+    connections = {(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])}
     if nic_mac := await async_get_nic_mac_address(hass, entry.data[CONF_HOST]):
-        api.nic_mac = nic_mac
-        dev_reg = dr.async_get(hass)
-        if device := dev_reg.async_get_device_by_identifier(
-            (DOMAIN, entry.unique_id), entry.entry_id
-        ):
-            dev_reg.async_update_device(
-                device.id,
-                new_connections=device.connections
-                | {(dr.CONNECTION_NETWORK_MAC, nic_mac)},
-            )
+        connections.add((dr.CONNECTION_NETWORK_MAC, nic_mac))
+
+    dev_reg = dr.async_get(hass)
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id), entry.entry_id
+    ):
+        dev_reg.async_update_device(
+            device.id,
+            new_connections=device.connections | connections,
+        )
+    elif api.device_info is not None:
+        device_info = api.device_info
+        dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, entry.unique_id)},
+            connections=connections,
+            manufacturer=device_info["manufacturer"],
+            model=device_info["model"],
+            name=entry.data[CONF_NAME],
+        )
 
     entry.runtime_data = api
 

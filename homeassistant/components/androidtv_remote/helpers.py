@@ -53,4 +53,3 @@ async def async_get_nic_mac_address(hass: HomeAssistant, host: str) -> str | Non
     if mac:
         return format_mac(mac)
     return None
-
