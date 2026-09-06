@@ -1,0 +1,410 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "terminal_id": "xxxxxxxxxxxxxxx",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "id": "xxxxxxxxxxxxxxx",
+  "name": "Smart Circuit Breaker",
+  "category": "znjdq",
+  "product_id": "au6dqazvkxqnpaak",
+  "product_name": "63A Smart Circuit Breaker",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2026-09-05T15:54:33+00:00",
+  "create_time": "2026-09-05T15:54:33+00:00",
+  "update_time": "2026-09-05T15:54:33+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}"
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": "{\"range\":[\"off\",\"on\",\"memory\"]}"
+    },
+    "light_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"relay\",\"pos\",\"none\",\"on\"]}"
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": "{}"
+    }
+  },
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "switch_1",
+      "config_item": {
+        "statusFormat": "{\"switch_1\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "countdown_1",
+      "config_item": {
+        "statusFormat": "{\"countdown_1\":\"$\"}",
+        "valueDesc": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "17": {
+      "value_convert": "default",
+      "status_code": "add_ele",
+      "config_item": {
+        "statusFormat": "{\"add_ele\":\"$\"}",
+        "valueDesc": "{\"unit\":\"\",\"min\":0,\"max\":9999999,\"scale\":3,\"step\":100}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "18": {
+      "value_convert": "default",
+      "status_code": "cur_current",
+      "config_item": {
+        "statusFormat": "{\"cur_current\":\"$\"}",
+        "valueDesc": "{\"unit\":\"mA\",\"min\":0,\"max\":99999,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "19": {
+      "value_convert": "default",
+      "status_code": "cur_power",
+      "config_item": {
+        "statusFormat": "{\"cur_power\":\"$\"}",
+        "valueDesc": "{\"unit\":\"W\",\"min\":0,\"max\":260000,\"scale\":1,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "20": {
+      "value_convert": "default",
+      "status_code": "cur_voltage",
+      "config_item": {
+        "statusFormat": "{\"cur_voltage\":\"$\"}",
+        "valueDesc": "{\"unit\":\"V\",\"min\":0,\"max\":9999,\"scale\":1,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "22": {
+      "value_convert": "default",
+      "status_code": "voltage_coe",
+      "config_item": {
+        "statusFormat": "{\"voltage_coe\":\"$\"}",
+        "valueDesc": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "23": {
+      "value_convert": "default",
+      "status_code": "electric_coe",
+      "config_item": {
+        "statusFormat": "{\"electric_coe\":\"$\"}",
+        "valueDesc": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "24": {
+      "value_convert": "default",
+      "status_code": "power_coe",
+      "config_item": {
+        "statusFormat": "{\"power_coe\":\"$\"}",
+        "valueDesc": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "25": {
+      "value_convert": "default",
+      "status_code": "electricity_coe",
+      "config_item": {
+        "statusFormat": "{\"electricity_coe\":\"$\"}",
+        "valueDesc": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "38": {
+      "value_convert": "default",
+      "status_code": "relay_status",
+      "config_item": {
+        "statusFormat": "{\"relay_status\":\"$\"}",
+        "valueDesc": "{\"range\":[\"off\",\"on\",\"memory\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "40": {
+      "value_convert": "default",
+      "status_code": "light_mode",
+      "config_item": {
+        "statusFormat": "{\"light_mode\":\"$\"}",
+        "valueDesc": "{\"range\":[\"relay\",\"pos\",\"none\",\"on\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    },
+    "41": {
+      "value_convert": "default",
+      "status_code": "child_lock",
+      "config_item": {
+        "statusFormat": "{\"child_lock\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "au6dqazvkxqnpaak"
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": "{\"unit\":\"\",\"min\":0,\"max\":9999999,\"scale\":3,\"step\":100}",
+      "report_type": "sum"
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": "{\"unit\":\"mA\",\"min\":0,\"max\":99999,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "cur_power": {
+      "type": "Integer",
+      "value": "{\"unit\":\"W\",\"min\":0,\"max\":260000,\"scale\":1,\"step\":1}",
+      "report_type": null
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": "{\"unit\":\"V\",\"min\":0,\"max\":9999,\"scale\":1,\"step\":1}",
+      "report_type": null
+    },
+    "voltage_coe": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "electric_coe": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "power_coe": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "electricity_coe": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": "{\"range\":[\"off\",\"on\",\"memory\"]}",
+      "report_type": null
+    },
+    "light_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"relay\",\"pos\",\"none\",\"on\"]}",
+      "report_type": null
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "switch_1": true,
+    "countdown_1": 0,
+    "add_ele": 7,
+    "cur_current": 257,
+    "cur_power": 142,
+    "cur_voltage": 2289,
+    "voltage_coe": 15950,
+    "electric_coe": 12638,
+    "power_coe": 3126,
+    "electricity_coe": 2683,
+    "relay_status": "memory",
+    "light_mode": "relay",
+    "child_lock": false
+  },
+  "set_up": true,
+  "support_local": true,
+  "quirk": null,
+  "warnings": null,
+  "home_assistant": {
+    "name": "Smart Circuit Breaker",
+    "name_by_user": null,
+    "disabled": false,
+    "disabled_by": null,
+    "entities": [
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": "mdi:timer-sand",
+        "unit_of_measurement": "s",
+        "state": {
+          "entity_id": "number.smart_circuit_breaker_countdown",
+          "state": "0.0",
+          "attributes": {
+            "min": 0.0,
+            "max": 86400.0,
+            "step": 1.0,
+            "mode": "auto",
+            "unit_of_measurement": "s",
+            "icon": "mdi:timer-sand",
+            "friendly_name": "Smart Circuit Breaker Countdown"
+          },
+          "last_changed": "2026-09-06T14:43:41.266933+00:00",
+          "last_reported": "2026-09-06T14:43:41.266933+00:00",
+          "last_updated": "2026-09-06T14:43:41.266933+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "select.smart_circuit_breaker_power_on_behavior",
+          "state": "memory",
+          "attributes": {
+            "options": ["off", "on", "memory"],
+            "friendly_name": "Smart Circuit Breaker Power On Behavior"
+          },
+          "last_changed": "2026-09-06T14:43:41.274936+00:00",
+          "last_reported": "2026-09-06T14:43:41.274936+00:00",
+          "last_updated": "2026-09-06T14:43:41.274936+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "select.smart_circuit_breaker_indicator_light_mode",
+          "state": "relay",
+          "attributes": {
+            "options": ["relay", "pos", "none", "on"],
+            "friendly_name": "Smart Circuit Breaker Indicator Light Mode"
+          },
+          "last_changed": "2026-09-06T14:43:41.275496+00:00",
+          "last_reported": "2026-09-06T14:43:41.275496+00:00",
+          "last_updated": "2026-09-06T14:43:41.275496+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "switch.smart_circuit_breaker",
+          "state": "on",
+          "attributes": {
+            "friendly_name": "Smart Circuit Breaker"
+          },
+          "last_changed": "2026-09-06T14:43:41.298960+00:00",
+          "last_reported": "2026-09-06T14:43:41.298960+00:00",
+          "last_updated": "2026-09-06T14:43:41.298960+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "switch.smart_circuit_breaker_child_lock",
+          "state": "off",
+          "attributes": {
+            "friendly_name": "Smart Circuit Breaker Child lock"
+          },
+          "last_changed": "2026-09-06T14:43:41.299079+00:00",
+          "last_reported": "2026-09-06T14:43:41.299079+00:00",
+          "last_updated": "2026-09-06T14:43:41.299079+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": "energy",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": "kWh",
+        "state": {
+          "entity_id": "sensor.smart_circuit_breaker_total_energy",
+          "state": "0",
+          "attributes": {
+            "state_class": "total_increasing",
+            "unit_of_measurement": "kWh",
+            "device_class": "energy",
+            "friendly_name": "Smart Circuit Breaker Total Energy"
+          },
+          "last_changed": "2026-09-06T14:43:41.289278+00:00",
+          "last_reported": "2026-09-06T14:43:50.272446+00:00",
+          "last_updated": "2026-09-06T14:43:41.289278+00:00"
+        }
+      }
+    ]
+  }
+}
