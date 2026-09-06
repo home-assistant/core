@@ -2,7 +2,7 @@
 
 from unittest.mock import ANY, AsyncMock, patch
 
-from jnap import GetDevicesResponse
+from jnap import GetDevicesResponse, JNAPError, JNAPUnauthorizedError
 import pytest
 
 from homeassistant.components.linksys_smart.const import DOMAIN
@@ -81,3 +81,39 @@ async def test_async_unload_entry(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_async_setup_entry_retries_on_error(hass: HomeAssistant) -> None:
+    """Test that a JNAPError during setup results in a retry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "password"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+    ) as mock_client_cls:
+        mock_client_cls.return_value.get_devices = AsyncMock(side_effect=JNAPError)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_fails_on_unauthorized(hass: HomeAssistant) -> None:
+    """Test that a JNAPUnauthorizedError during setup surfaces as a setup error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "password"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+    ) as mock_client_cls:
+        mock_client_cls.return_value.get_devices = AsyncMock(
+            side_effect=JNAPUnauthorizedError
+        )
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state == ConfigEntryState.SETUP_ERROR
