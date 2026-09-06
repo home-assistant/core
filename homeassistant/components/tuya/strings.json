@@ -1090,6 +1090,9 @@
       "indexed_switch": {
         "name": "Switch {index}"
       },
+      "indexed_switch_duration": {
+        "name": "Switch duration {index}"
+      },
       "indexed_usb": {
         "name": "USB {index}"
       },
