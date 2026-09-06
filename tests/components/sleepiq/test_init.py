@@ -402,15 +402,22 @@ def test_deduplicate_sleepers_keeps_distinct() -> None:
     sleeper_d = create_autospec(SleepIQSleeper)
     sleeper_d.sleeper_id = None
 
-    bed.sleepers = [sleeper_a, sleeper_b, sleeper_c, sleeper_d]
+    sleeper_e = create_autospec(SleepIQSleeper)
+    sleeper_e.sleeper_id = ""
+
+    sleeper_f = create_autospec(SleepIQSleeper)
+    sleeper_f.sleeper_id = ""
+
+    bed.sleepers = [sleeper_a, sleeper_b, sleeper_c, sleeper_d, sleeper_e, sleeper_f]
     gateway.beds = {"bed_1": bed}
 
     _deduplicate_sleepers(gateway)
 
-    assert len(bed.sleepers) == 3
+    assert len(bed.sleepers) == 4
     assert bed.sleepers[0] is sleeper_a
     assert bed.sleepers[1] is sleeper_b
     assert bed.sleepers[2] is sleeper_c
+    assert bed.sleepers[3] is sleeper_e
 
 
 def test_deduplicate_sleepers_empty() -> None:

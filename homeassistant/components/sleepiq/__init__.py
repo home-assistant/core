@@ -182,9 +182,9 @@ def _deduplicate_sleepers(gateway: AsyncSleepIQ) -> None:
 
     The API can return the same sleeper_id more than once per bed, which
     causes entity platforms to create entities with colliding unique IDs.
-    Keep only the first occurrence of each effective identity. The key is
-    str(sleeper_id) so that falsy values (None, "") also deduplicate
-    correctly; they produce the same unique-ID prefix downstream.
+    Keep only the first occurrence of each effective identity, keyed by
+    str(sleeper_id) so that falsy values (None, "") are also deduplicated
+    rather than skipped.
     """
     for bed in gateway.beds.values():
         seen: set[str] = set()
