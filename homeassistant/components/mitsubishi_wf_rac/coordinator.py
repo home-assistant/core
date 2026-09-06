@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
+import time
 from typing import Any, override
 
 from pywfrac import (
@@ -32,7 +33,6 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import AC_CERT_FILENAME, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
@@ -297,7 +297,9 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             return WRITE_LOCK_RETRY_DELAY.total_seconds()
         # The module compares whole seconds and refuses while `expires` still
         # equals the current one, so land on the far side of the lapse.
-        remaining = expires - dt_util.naive_now().timestamp() + 1
+        # Against the epoch clock: a naive local datetime read back through
+        # timestamp() is an hour out for the repeated hour when DST ends.
+        remaining = expires - time.time() + 1
         return max(0.0, min(remaining, WRITE_LOCK_MAX_WAIT.total_seconds()))
 
     async def delete_account(self) -> dict[str, Any] | None:

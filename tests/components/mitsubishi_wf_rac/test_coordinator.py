@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -25,6 +25,7 @@ from homeassistant.components.mitsubishi_wf_rac.coordinator import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -142,6 +143,41 @@ async def test_a_refused_write_is_retried_once_the_lock_lapses(
     await hass.async_block_till_done()
 
     assert mock_repository.send_airco_command.await_count == 2
+
+
+async def test_the_retry_waits_out_what_is_left_of_the_lock(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    aircon_stat: dict,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The wait comes from the unit's own `expires`, not from a fixed interval.
+
+    Getting the arithmetic wrong is invisible in the retry count: the command
+    is sent either way, just back into a lock that has not lapsed yet.
+    """
+    freezer.move_to("2026-09-06T12:00:00+00:00")
+    aircon_stat["expires"] = int(dt_util.utcnow().timestamp()) + 20
+    mock_repository.send_airco_command.side_effect = [
+        WfRacWriteRefusedError("locked"),
+        aircon_stat["airconStat"],
+    ]
+
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator.asyncio.sleep"
+    ) as sleep:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # 20 seconds left on the lock, plus the second that puts the retry on the
+    # far side of the lapse.
+    assert 21 in [call.args[0] for call in sleep.await_args_list]
 
 
 async def test_an_evicted_account_re_registers_before_retrying(

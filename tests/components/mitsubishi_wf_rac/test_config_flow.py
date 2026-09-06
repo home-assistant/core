@@ -126,6 +126,27 @@ async def test_user_flow_account_table_full(
     assert result["errors"]["base"] == "too_many_devices_registered"
 
 
+async def test_user_flow_registration_answer_without_a_result_code(
+    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """A module that answers registration without a result code is unreachable.
+
+    Reading the code straight out of the answer would end the flow as an
+    unexpected error instead of one the form can explain.
+    """
+    mock_repository.update_account_info.return_value = {"unexpected": "shape"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+
+
 async def test_user_flow_registration_refused(
     hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:

@@ -91,6 +91,8 @@ class WfRacEntity(CoordinatorEntity[Device]):
         try:
             self._update_state()
         except IndexError, KeyError, AttributeError, ValueError:
-            _LOGGER.warning("Could not update %s", self.entity_id)
+            # With the traceback: which field of the device state was missing
+            # is the whole diagnosis.
+            _LOGGER.warning("Could not update %s", self.entity_id, exc_info=True)
             self._device.set_available(False)
         self.async_write_ha_state()

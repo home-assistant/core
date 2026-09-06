@@ -9,7 +9,7 @@
       "cannot_connect": "Could not connect with the Airco: {reason}",
       "host_already_configured": "Airco IP already configured as [{error_name}]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "name_invalid": "Name is already taken or is shorter than 3 characters",
+      "name_invalid": "Name must be at least 3 characters long",
       "too_many_devices_registered": "There are too many devices registered for this airco. Please delete a device (in the app) or do a factory reset of the module.",
       "unexpected_error": "An unexpected error occurred. Please check the log for details."
     },

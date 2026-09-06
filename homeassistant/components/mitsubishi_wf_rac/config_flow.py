@@ -153,7 +153,12 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         result = await repository.update_account_info(airco_id, hass.config.time_zone)
         if not result:
             raise CannotConnect(reason="no answer to the registration request")
-        if int(result["result"]) == 2:
+        # The answer comes from the module, so a missing key is a connection
+        # problem to report, not an unexpected error to crash the flow on.
+        code = result.get("result")
+        if code is None:
+            raise CannotConnect(reason="registration answered without a result code")
+        if int(code) == 2:
             raise TooManyDevicesRegistered
 
         return data
@@ -543,7 +548,7 @@ class KnownError(Exception):
     error_name rather than a translation key.
 
     [error_name] is the value passed to [errors] in async_show_form, which should match a key
-    under "errors" in strings.json
+    under "error" in strings.json
 
     [applies_to_field] is the name of the field name that contains the error (for
     async_show_form); if the field doesn't exist in the form CONF_BASE will be used instead.
@@ -591,7 +596,7 @@ class HostAlreadyConfigured(KnownError):
 
 
 class InvalidName(KnownError):
-    """Error to indicate there is an invalid hostname."""
+    """Error to indicate the name is too short."""
 
     error_name = "name_invalid"
     applies_to_field = CONF_NAME
