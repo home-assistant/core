@@ -51,10 +51,6 @@ class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Homevolt]):
         except HomevoltAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except (HomevoltConnectionError, HomevoltError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            raise UpdateFailed(f"Error communicating with device: {err}") from err
 
         return self.client

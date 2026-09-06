@@ -2,10 +2,9 @@
 
 from unittest.mock import MagicMock
 
-from homevolt import HomevoltAuthenticationError, HomevoltConnectionError, HomevoltError
+from homevolt import HomevoltAuthenticationError, HomevoltConnectionError
 import pytest
 
-from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -57,30 +56,3 @@ async def test_config_entry_setup_failure(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is expected_state
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(HomevoltConnectionError("Connection failed"), id="connection"),
-        pytest.param(HomevoltError("Connection failed"), id="homevolt"),
-    ],
-)
-async def test_setup_retry_error_is_translated(
-    hass: HomeAssistant,
-    mock_homevolt_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    exception: HomevoltError,
-) -> None:
-    """Test communication errors expose translated setup retry reasons."""
-    mock_homevolt_client.update_info.side_effect = exception
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_domain == DOMAIN
-    assert mock_config_entry.error_reason_translation_key == "communication_error"
-    assert mock_config_entry.error_reason_translation_placeholders == {
-        "error": "Connection failed"
-    }
