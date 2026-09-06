@@ -176,10 +176,15 @@ async def test_sensors_streaming(
     )
     await hass.async_block_till_done()
 
-    # Balance-only credit events should not clear quota usage.
+    # A credit event without quota data should not clear quota usage.
     mock_add_listener.send(
         {
-            "credits": {"balance": 1980},
+            "credits": {
+                "type": "wake_up",
+                "cost": 0,
+                "name": "wake_up",
+                "balance": 1980,
+            },
             "createdAt": "2024-10-04T10:45:18.537Z",
         }
     )
