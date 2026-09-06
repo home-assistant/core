@@ -228,7 +228,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if self._player.state == PlayState.PLAY:
             self._announce_restore_state = self._snapshot_state()
             self._announce_restore_state["tts_url"] = media_id
-            LOGGER.debug(
+            _LOGGER.debug(
                 "Saving state for announcement: %s", self._announce_restore_state
             )
             
