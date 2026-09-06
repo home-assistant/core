@@ -44,6 +44,35 @@ def test_invalid_base_schema(schema) -> None:
         selector.validate_selector(schema)
 
 
+def test_allowed_context_keys_not_mutable() -> None:
+    """Test the allowed_context_keys attribute is not mutable."""
+
+    class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
+        """Test selector config class."""
+
+    @selector.SELECTORS.register("test")
+    class TestSelector(selector.Selector):
+        """Test selector to test allowed_context_keys attribute is not mutable."""
+
+        CONFIG_SCHEMA = selector.make_selector_config_schema({})
+
+        selector_type = "test"
+
+        def __init__(self, config: TestSelectorConfig | None = None) -> None:
+            """Test mutation fails."""
+            super().__init__(config)
+
+        def __call__(self, data: Any) -> Any:
+            """Validate the passed selection."""
+            return data
+
+    test_selector = TestSelector(TestSelectorConfig())
+    other_selector = TestSelector(TestSelectorConfig())
+    test_selector.allowed_context_keys["some_key"] = set()
+    assert test_selector.allowed_context_keys
+    assert not other_selector.allowed_context_keys
+
+
 def _test_selector(
     selector_type: str,
     schema: dict | None,
