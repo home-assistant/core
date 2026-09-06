@@ -4,7 +4,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, fields, replace
 from typing import Any, Self, override
 
-from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan, DeviceType
+from deebot_client.capabilities import (
+    Capabilities,
+    CapabilityEvent,
+    CapabilityLifeSpan,
+    DeviceType,
+)
 from deebot_client.device import Device
 from deebot_client.events import (
     BatteryEvent,
@@ -49,6 +54,18 @@ from .entity import (
 from .util import get_name_key, get_options, get_supported_entities
 
 
+def _supports_mowing_job_progress(caps: Capabilities) -> bool:
+    """Return whether mowing job progress statistics are supported."""
+    return caps.stats.mowing_job_progress
+
+
+def _mowing_progress(event: StatsEvent) -> float | None:
+    """Return mowing progress as a percentage."""
+    if not event.area or event.mowed_area is None:
+        return None
+    return event.mowed_area / event.area * 100
+
+
 @dataclass(kw_only=True, frozen=True)
 class EcovacsSensorDeviceTypeOverride:
     """Description values, which differ for a specific device type."""
@@ -88,7 +105,9 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     # Stats
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_area",
-        capability_fn=lambda caps: caps.stats.clean,
+        capability_fn=lambda caps: (
+            None if _supports_mowing_job_progress(caps) else caps.stats.clean
+        ),
         value_fn=lambda e: e.area,
         translation_key="stats_area",
         device_class=SensorDeviceClass.AREA,
@@ -102,8 +121,21 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         },
     ),
     EcovacsSensorEntityDescription[StatsEvent](
+        key="stats_area",
+        capability_fn=lambda caps: (
+            caps.stats.clean if _supports_mowing_job_progress(caps) else None
+        ),
+        value_fn=lambda e: e.mowed_area,
+        translation_key="stats_area_mower",
+        device_class=SensorDeviceClass.AREA,
+        native_unit_of_measurement=UnitOfArea.SQUARE_CENTIMETERS,
+        suggested_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+    ),
+    EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
-        capability_fn=lambda caps: caps.stats.clean,
+        capability_fn=lambda caps: (
+            None if _supports_mowing_job_progress(caps) else caps.stats.clean
+        ),
         value_fn=lambda e: e.time,
         translation_key="stats_time",
         device_class=SensorDeviceClass.DURATION,
@@ -114,6 +146,27 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
                 translation_key="stats_time_mower",
             )
         },
+    ),
+    EcovacsSensorEntityDescription[StatsEvent](
+        key="stats_time",
+        capability_fn=lambda caps: (
+            caps.stats.clean if _supports_mowing_job_progress(caps) else None
+        ),
+        value_fn=lambda e: e.time,
+        translation_key="stats_time_mower_estimated",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+    EcovacsSensorEntityDescription[StatsEvent](
+        key="stats_progress",
+        capability_fn=lambda caps: (
+            caps.stats.clean if _supports_mowing_job_progress(caps) else None
+        ),
+        value_fn=_mowing_progress,
+        translation_key="stats_progress",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
     ),
     # TotalStats
     EcovacsSensorEntityDescription[TotalStatsEvent](

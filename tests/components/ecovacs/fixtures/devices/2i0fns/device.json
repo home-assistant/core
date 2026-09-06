@@ -1,0 +1,21 @@
+{
+  "did": "8516fbb1-17f1-4194-0000001",
+  "name": "E1234567890000000004",
+  "class": "2i0fns",
+  "resource": "test",
+  "company": "eco-ng",
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-as.ww.ecouser.net"
+  },
+  "deviceName": "GOAT O1200 LiDAR",
+  "UILogicId": "goat_o1200_lidar",
+  "materialNo": "000-0000-0000",
+  "pid": "0000000",
+  "product_category": "GOATBOT",
+  "model": "GOAT_O1200_LIDAR",
+  "nick": "GOAT O1200 LiDAR",
+  "homeSort": 9999,
+  "status": 1,
+  "ota": true
+}

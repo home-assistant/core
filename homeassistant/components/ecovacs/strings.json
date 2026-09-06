@@ -271,11 +271,17 @@
       "stats_area_mower": {
         "name": "Area mowed"
       },
+      "stats_progress": {
+        "name": "Mowing progress"
+      },
       "stats_time": {
         "name": "Cleaning duration"
       },
       "stats_time_mower": {
         "name": "Mowing duration"
+      },
+      "stats_time_mower_estimated": {
+        "name": "Estimated mowing duration"
       },
       "total_stats_area": {
         "name": "Total area cleaned"

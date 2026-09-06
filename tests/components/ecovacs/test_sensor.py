@@ -18,7 +18,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.components.ecovacs.sensor import _mowing_progress
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfArea,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -50,6 +57,29 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
     event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
     await block_till_done(hass, event_bus)
+
+
+def mowing_stats_event() -> StatsEvent:
+    """Create stats from a mower supporting mowing job progress."""
+    return StatsEvent(492475, 2304, "auto", mowed_area=28699)
+
+
+@pytest.mark.parametrize(
+    ("area", "mowed_area", "expected"),
+    [
+        (492475, 28699, 28699 / 492475 * 100),
+        (None, 28699, None),
+        (0, 28699, None),
+        (492475, None, None),
+    ],
+)
+def test_mowing_progress_value(
+    area: int | None, mowed_area: int | None, expected: float | None
+) -> None:
+    """Test calculation of mowing progress."""
+    event = StatsEvent(area, 2304, "auto", mowed_area=mowed_area)
+
+    assert _mowing_progress(event) == expected
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -202,6 +232,52 @@ async def test_disabled_by_default_sensors(
         )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["2i0fns"])
+async def test_mowing_job_progress_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    controller: EcovacsController,
+) -> None:
+    """Test mowing job progress statistics."""
+    area_entity_id = "sensor.goat_o1200_lidar_area_mowed"
+    progress_entity_id = "sensor.goat_o1200_lidar_mowing_progress"
+    time_entity_id = "sensor.goat_o1200_lidar_estimated_mowing_duration"
+
+    device = controller.devices[0]
+    event = mowing_stats_event()
+    device.events.notify(event)
+    await block_till_done(hass, device.events)
+
+    assert (area_state := hass.states.get(area_entity_id))
+    assert float(area_state.state) == pytest.approx(2.8699)
+    assert area_state.attributes["unit_of_measurement"] == UnitOfArea.SQUARE_METERS
+    assert area_state.attributes["friendly_name"] == "GOAT O1200 LiDAR Area mowed"
+
+    assert (progress_state := hass.states.get(progress_entity_id))
+    assert float(progress_state.state) == pytest.approx(28699 / 492475 * 100)
+    assert progress_state.attributes["unit_of_measurement"] == PERCENTAGE
+    assert progress_state.attributes["friendly_name"] == (
+        "GOAT O1200 LiDAR Mowing progress"
+    )
+
+    assert (time_state := hass.states.get(time_entity_id))
+    assert float(time_state.state) == pytest.approx(38.4)
+    assert time_state.attributes["unit_of_measurement"] == UnitOfTime.MINUTES
+    assert time_state.attributes["friendly_name"] == (
+        "GOAT O1200 LiDAR Estimated mowing duration"
+    )
+
+    assert (area_entry := entity_registry.async_get(area_entity_id))
+    assert area_entry.unique_id == f"{device.device_info['did']}_stats_area"
+    assert (time_entry := entity_registry.async_get(time_entity_id))
+    assert time_entry.unique_id == f"{device.device_info['did']}_stats_time"
+    assert time_entry.translation_key == "stats_time_mower_estimated"
+    assert (progress_entry := entity_registry.async_get(progress_entity_id))
+    assert progress_entry.unique_id == f"{device.device_info['did']}_stats_progress"
+    assert progress_entry.options["sensor"]["suggested_display_precision"] == 0
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_vacbot")
