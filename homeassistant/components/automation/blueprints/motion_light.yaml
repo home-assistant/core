@@ -14,10 +14,14 @@ blueprint:
               domain: binary_sensor
             - device_class: motion
               domain: binary_sensor
-    light_target:
+    light_switch_entity:
       name: Light or Switch Entity
+      description: The tracking entity used to watch state triggers.
       selector:
-        entity: {}
+        entity:
+          domain:
+            - light
+            - switch
     no_motion_wait:
       name: Wait time
       description: Time to leave the light on after last motion is detected.
@@ -27,10 +31,8 @@ blueprint:
           min: 0
           max: 3600
           unit_of_measurement: seconds
-
 mode: restart
 max_exceeded: silent
-
 triggers:
   - trigger: state
     entity_id: !input motion_entity
@@ -38,11 +40,10 @@ triggers:
     to: "on"
     id: motion_triggered
   - trigger: state
-    entity_id: !input light_target
+    entity_id: !input light_switch_entity
     from: "off"
     to: "on"
     id: switch_triggered
-
 actions:
   - if:
       - condition: trigger
@@ -50,25 +51,21 @@ actions:
     then:
       - action: homeassistant.turn_on
         target:
-          entity_id: !input light_target
-
-  # Conditional Wait block: Only wait for a state change if there is ACTIVE motion right now
-  - if:
-      - condition: state
-        entity_id: !input motion_entity
-        state: "on"
-    then:
-      - alias: "Wait until motion clears"
-        wait_for_trigger:
-          - trigger: state
+          entity_id: !input light_switch_entity
+      - if:
+          - condition: state
             entity_id: !input motion_entity
-            from: "on"
-            to: "off"
-
-  - alias: "Wait the number of seconds that has been set"
-    delay: !input no_motion_wait
-
-  - alias: "Turn off the light or switch"
-    action: homeassistant.turn_off
-    target:
-      entity_id: !input light_target
+            state: "on"
+        then:
+          - alias: "Wait until motion clears"
+            wait_for_trigger:
+              - trigger: state
+                entity_id: !input motion_entity
+                from: "on"
+                to: "off"
+          - alias: "Wait the number of seconds that has been set"
+            delay: !input no_motion_wait
+          - alias: "Turn off the light or switch"
+            action: homeassistant.turn_off
+            target:
+              entity_id: !input light_switch_entity
