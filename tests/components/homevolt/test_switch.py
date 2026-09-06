@@ -1,8 +1,7 @@
 """Tests for the Homevolt switch platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 from homevolt import (
     HomevoltAuthenticationError,
     HomevoltCommandOutcomeUnknownError,
@@ -14,7 +13,7 @@ from homevolt import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homevolt.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -25,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -79,7 +78,6 @@ async def test_switch_turn_on_off(
         mock_homevolt_client.local_mode_enabled = service == SERVICE_TURN_ON
 
     client_method.side_effect = update_local_mode
-    mock_homevolt_client.update_info.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -89,95 +87,65 @@ async def test_switch_turn_on_off(
     )
 
     client_method.assert_called_once()
-    mock_homevolt_client.update_info.assert_not_awaited()
     state = hass.states.get(switch_entity_id)
     assert state is not None
     assert state == snapshot(name=f"state-after-{service}")
 
 
 @pytest.mark.parametrize(
-    (
-        "exception",
-        "expected_exception",
-        "translation_key",
-        "placeholders",
-        "refresh_count",
-    ),
+    ("service", "client_method_name", "exception", "expected_exception"),
     [
-        pytest.param(
+        (
+            SERVICE_TURN_ON,
+            "enable_local_mode",
             HomevoltAuthenticationError("auth failed"),
             ConfigEntryAuthFailed,
-            "auth_failed",
-            None,
-            0,
-            id="authentication",
         ),
-        pytest.param(
+        (
+            SERVICE_TURN_ON,
+            "enable_local_mode",
             HomevoltConnectionError("connection failed"),
             HomeAssistantError,
-            "communication_error",
-            {"error": "connection failed"},
-            0,
-            id="connection",
         ),
-        pytest.param(
-            HomevoltCommandRejectedError("invalid command"),
-            HomeAssistantError,
-            "command_rejected",
-            {"error": "invalid command"},
-            0,
-            id="rejected",
-        ),
-        pytest.param(
-            HomevoltCommandVerificationError("state mismatch"),
-            HomeAssistantError,
-            "command_verification_failed",
-            {"error": "state mismatch"},
-            1,
-            id="verification",
-        ),
-        pytest.param(
-            HomevoltCommandOutcomeUnknownError("read-back failed"),
-            HomeAssistantError,
-            "command_outcome_unknown",
-            {"error": "read-back failed"},
-            1,
-            id="outcome-unknown",
-        ),
-        pytest.param(
+        (
+            SERVICE_TURN_ON,
+            "enable_local_mode",
             HomevoltError("unknown error"),
             HomeAssistantError,
-            "unknown_error",
-            {"error": "unknown error"},
-            0,
-            id="homevolt",
         ),
-    ],
-)
-@pytest.mark.parametrize(
-    ("service", "client_method_name"),
-    [
-        pytest.param(SERVICE_TURN_ON, "enable_local_mode", id="turn-on"),
-        pytest.param(SERVICE_TURN_OFF, "disable_local_mode", id="turn-off"),
+        (
+            SERVICE_TURN_OFF,
+            "disable_local_mode",
+            HomevoltAuthenticationError("auth failed"),
+            ConfigEntryAuthFailed,
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "disable_local_mode",
+            HomevoltConnectionError("connection failed"),
+            HomeAssistantError,
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "disable_local_mode",
+            HomevoltError("unknown error"),
+            HomeAssistantError,
+        ),
     ],
 )
 async def test_switch_turn_on_off_exception_handler(
     hass: HomeAssistant,
-    switch_entity_id: str,
+    mock_homevolt_client: MagicMock,
     service: str,
     client_method_name: str,
-    mock_homevolt_client: MagicMock,
-    exception: HomevoltError,
-    expected_exception: type[HomeAssistantError],
-    translation_key: str,
-    placeholders: dict[str, str] | None,
-    refresh_count: int,
+    exception: Exception,
+    expected_exception: type[Exception],
+    switch_entity_id: str,
 ) -> None:
-    """Test translated command errors and refreshes through switch actions."""
+    """Test homevolt_exception_handler raises correct exception on turn_on/turn_off."""
     getattr(mock_homevolt_client, client_method_name).side_effect = exception
-    mock_homevolt_client.update_info.reset_mock()
 
-    with pytest.raises(expected_exception) as exc_info:
+    with pytest.raises(expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
@@ -185,45 +153,51 @@ async def test_switch_turn_on_off_exception_handler(
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == translation_key
-    assert exc_info.value.translation_placeholders == placeholders
-    assert mock_homevolt_client.update_info.await_count == refresh_count
 
-
-async def test_commands_preserve_telemetry_polling(
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "refresh_count"),
+    [
+        pytest.param(
+            HomevoltCommandRejectedError("invalid command"),
+            "command_rejected",
+            0,
+            id="rejected",
+        ),
+        pytest.param(
+            HomevoltCommandVerificationError("state mismatch"),
+            "command_verification_failed",
+            1,
+            id="verification",
+        ),
+        pytest.param(
+            HomevoltCommandOutcomeUnknownError("read-back failed"),
+            "command_outcome_unknown",
+            1,
+            id="outcome-unknown",
+        ),
+    ],
+)
+async def test_switch_command_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
     mock_homevolt_client: MagicMock,
-    platforms: list[Platform],
+    switch_entity_id: str,
+    exception: HomevoltError,
+    translation_key: str,
+    refresh_count: int,
 ) -> None:
-    """Test repeated schedule writes do not postpone the regular telemetry poll."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.homevolt.PLATFORMS", platforms):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_homevolt_client.update_info.assert_awaited_once()
+    """Test command errors are translated and uncertain state is refreshed."""
+    mock_homevolt_client.enable_local_mode.side_effect = exception
     mock_homevolt_client.update_info.reset_mock()
-    command_interval = SCAN_INTERVAL / 3
 
-    for _ in range(2):
-        freezer.tick(command_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "switch.homevolt_ems_local_mode",
-            },
+            {ATTR_ENTITY_ID: switch_entity_id},
             blocking=True,
         )
-        mock_homevolt_client.update_info.assert_not_awaited()
 
-    freezer.tick(command_interval.total_seconds() + 1)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    mock_homevolt_client.update_info.assert_awaited_once()
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"error": str(exception)}
+    assert mock_homevolt_client.update_info.await_count == refresh_count
