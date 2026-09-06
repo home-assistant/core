@@ -497,6 +497,17 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_1,
+            name="Countdown",
+            icon="mdi:timer-sand",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            native_min_value=0,
+            native_max_value=86400,
+            native_step=1,
+        ),
+    ),
     DeviceCategory.ZNRB: (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,

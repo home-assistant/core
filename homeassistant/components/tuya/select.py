@@ -352,6 +352,20 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power On Behavior",
+            options=["off", "on", "memory"],
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            options=["relay", "pos", "none", "on"],
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

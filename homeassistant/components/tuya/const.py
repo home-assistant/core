@@ -576,6 +576,8 @@ class DeviceCategory(StrEnum):
     """VESKA-micro inverter (undocumented)"""
     ZWJCY = "zwjcy"
     """Soil sensor - plant monitor (undocumented)"""
+    ZNJDQ = "znjdq"
+    """Circuit breaker (undocumented)"""
     ZNJXS = "znjxs"
     """Hejhome whitelabel Fingerbot (undocumented)"""
     ZNRB = "znrb"
