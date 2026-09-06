@@ -2,18 +2,17 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import override
 
-from jnap import JNAPClient, JNAPDevice, JNAPError, JNAPUnauthorizedError
+from jnap import JNAPDevice, JNAPError, JNAPUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .util import build_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,15 +33,7 @@ class LinksysDataUpdateCoordinator(DataUpdateCoordinator[dict[str, JNAPDevice]])
             config_entry=entry,
             update_interval=timedelta(seconds=30),
         )
-        kwargs: dict[str, Any] = {}
-        if username := entry.data.get(CONF_USERNAME):
-            kwargs["username"] = username
-        self.client = JNAPClient(
-            entry.data[CONF_HOST],
-            async_get_clientsession(hass),
-            entry.data[CONF_PASSWORD],
-            **kwargs,
-        )
+        self.client = build_client(hass, entry.data)
 
     @override
     async def _async_update_data(self) -> dict[str, JNAPDevice]:

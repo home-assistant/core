@@ -45,7 +45,7 @@ async def test_async_setup_entry(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+        "homeassistant.components.linksys_smart.util.JNAPClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.get_devices = AsyncMock(
             return_value=GetDevicesResponse(devices=[])
@@ -72,7 +72,7 @@ async def test_async_unload_entry(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+        "homeassistant.components.linksys_smart.util.JNAPClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.get_devices = AsyncMock(
             return_value=GetDevicesResponse(devices=[])
@@ -92,7 +92,7 @@ async def test_async_setup_entry_retries_on_error(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+        "homeassistant.components.linksys_smart.util.JNAPClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.get_devices = AsyncMock(side_effect=JNAPError)
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -109,7 +109,7 @@ async def test_async_setup_entry_fails_on_unauthorized(hass: HomeAssistant) -> N
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.linksys_smart.coordinator.JNAPClient"
+        "homeassistant.components.linksys_smart.util.JNAPClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.get_devices = AsyncMock(
             side_effect=JNAPUnauthorizedError

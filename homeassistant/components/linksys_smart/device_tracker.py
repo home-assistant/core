@@ -10,8 +10,10 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -21,9 +23,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LinksysConfigEntry
 from .const import DOMAIN
-from .coordinator import LinksysDataUpdateCoordinator
+from .coordinator import LinksysConfigEntry, LinksysDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string}
@@ -38,8 +39,12 @@ async def async_setup_scanner(
     async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
-    """Inform users that the YAML configuration is no longer supported."""
-    if hass.config_entries.async_entries(DOMAIN):
+    """Migrate the YAML configuration to a config entry."""
+    host = config[CONF_HOST]
+    if any(
+        entry.data[CONF_HOST] == host
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    ):
         ir.async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
@@ -54,24 +59,17 @@ async def async_setup_scanner(
                 "integration_title": "Linksys Smart Wi-Fi",
             },
         )
-    else:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_import_issue_credentials_required",
-            breaks_in_ha_version="2027.1.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue_credentials_required",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Linksys Smart Wi-Fi",
-                "host": config[CONF_HOST],
-            },
-        )
-    return False
+        return True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: host},
+    )
+    return (
+        result["type"] is not FlowResultType.ABORT
+        or result["reason"] == "already_configured"
+    )
 
 
 async def async_setup_entry(

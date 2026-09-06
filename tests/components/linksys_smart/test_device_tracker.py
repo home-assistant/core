@@ -3,15 +3,26 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from jnap import GetDevicesResponse, JNAPClient, JNAPDevice
+from jnap import (
+    GetDeviceInfoResponse,
+    GetDevicesResponse,
+    JNAPClient,
+    JNAPDevice,
+    JNAPError,
+    JNAPUnauthorizedError,
+)
 import pytest
 
+from homeassistant.components.device_tracker import legacy
 from homeassistant.components.linksys_smart.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+
+from .conftest import SERIAL
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -43,7 +54,7 @@ async def _setup_entry(
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.linksys_smart.coordinator.JNAPClient",
+        "homeassistant.components.linksys_smart.util.JNAPClient",
         return_value=mock_client,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -179,7 +190,7 @@ async def test_entity_restored_when_offline_at_startup(
     mock_client = AsyncMock(spec=JNAPClient)
     mock_client.get_devices.return_value = GetDevicesResponse(devices=[])
     with patch(
-        "homeassistant.components.linksys_smart.coordinator.JNAPClient",
+        "homeassistant.components.linksys_smart.util.JNAPClient",
         return_value=mock_client,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -194,22 +205,62 @@ async def test_entity_restored_when_offline_at_startup(
     assert state.state == "not_home"
 
 
+async def test_yaml_config_no_entry_imports_without_credentials(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test that YAML config is imported as a credential-less entry when possible."""
+    with patch.object(legacy.LOGGER, "error") as mock_error:
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": {
+                    "platform": "linksys_smart",
+                    "host": "192.168.1.1",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    mock_error.assert_not_called()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {CONF_HOST: "192.168.1.1"}
+    assert entries[0].state == ConfigEntryState.LOADED
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_credentials_required"
+        )
+        is None
+    )
+
+
 async def test_yaml_config_no_entry_creates_credentials_required_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
 ) -> None:
-    """Test that YAML config without a config entry creates a credentials-required issue."""
-    assert await async_setup_component(
-        hass,
-        "device_tracker",
-        {
-            "device_tracker": {
-                "platform": "linksys_smart",
-                "host": "192.168.1.1",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    """Test that a router requiring credentials creates a credentials-required issue."""
+    mock_jnap_client.get_devices.side_effect = JNAPUnauthorizedError
+
+    with patch.object(legacy.LOGGER, "error") as mock_error:
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": {
+                    "platform": "linksys_smart",
+                    "host": "192.168.1.1",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    mock_error.assert_called_once()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
 
     issue = issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_credentials_required"
@@ -221,6 +272,54 @@ async def test_yaml_config_no_entry_creates_credentials_required_issue(
         "integration_title": "Linksys Smart Wi-Fi",
         "host": "192.168.1.1",
     }
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
+        is None
+    )
+
+
+async def test_yaml_config_no_entry_creates_cannot_connect_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test that an unreachable router creates a distinct cannot-connect issue."""
+    mock_jnap_client.get_device_info.side_effect = JNAPError
+
+    with patch.object(legacy.LOGGER, "error") as mock_error:
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": {
+                    "platform": "linksys_smart",
+                    "host": "192.168.1.1",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    mock_error.assert_called_once()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "Linksys Smart Wi-Fi",
+        "host": "192.168.1.1",
+    }
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_credentials_required"
+        )
+        is None
+    )
 
 
 async def test_yaml_config_with_entry_creates_remove_yaml_issue(
@@ -233,17 +332,19 @@ async def test_yaml_config_with_entry_creates_remove_yaml_issue(
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(
-        hass,
-        "device_tracker",
-        {
-            "device_tracker": {
-                "platform": "linksys_smart",
-                "host": "192.168.1.1",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    with patch.object(legacy.LOGGER, "error") as mock_error:
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": {
+                    "platform": "linksys_smart",
+                    "host": "192.168.1.1",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    mock_error.assert_not_called()
 
     issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
@@ -253,4 +354,38 @@ async def test_yaml_config_with_entry_creates_remove_yaml_issue(
     assert issue.translation_placeholders == {
         "domain": DOMAIN,
         "integration_title": "Linksys Smart Wi-Fi",
+    }
+
+
+async def test_yaml_config_second_router_with_different_host_is_imported(
+    hass: HomeAssistant,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test that a second, differently-hosted YAML entry is still imported."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="existing-serial",
+        data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"},
+    ).add_to_hass(hass)
+
+    mock_jnap_client.get_device_info.return_value = GetDeviceInfoResponse(
+        description="Velop MX4200", serial_number=SERIAL
+    )
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": {
+                "platform": "linksys_smart",
+                "host": "192.168.1.2",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert {entry.data[CONF_HOST] for entry in entries} == {
+        "192.168.1.1",
+        "192.168.1.2",
     }

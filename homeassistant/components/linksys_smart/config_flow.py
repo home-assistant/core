@@ -3,15 +3,16 @@
 import logging
 from typing import Any, override
 
-from jnap import JNAPClient, JNAPError, JNAPUnauthorizedError
+from jnap import JNAPError, JNAPUnauthorizedError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
+from .util import build_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +29,7 @@ async def _async_validate_input(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> tuple[dict[str, Any] | None, dict[str, str]]:
     """Validate user input allows us to connect and map exceptions to form errors."""
-    kwargs: dict[str, Any] = {}
-    if username := data.get(CONF_USERNAME):
-        kwargs["username"] = username
-    client = JNAPClient(
-        data[CONF_HOST], async_get_clientsession(hass), data[CONF_PASSWORD], **kwargs
-    )
+    client = build_client(hass, data)
     errors: dict[str, str] = {}
     info: dict[str, Any] | None = None
     try:
@@ -76,3 +72,33 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import a router discovered via YAML, without requiring credentials."""
+        info, errors = await _async_validate_input(self.hass, import_data)
+        if info is None:
+            if errors["base"] == "cannot_connect":
+                translation_key = "deprecated_yaml_import_issue_cannot_connect"
+            else:
+                translation_key = "deprecated_yaml_import_issue_credentials_required"
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                translation_key,
+                breaks_in_ha_version="2027.1.0",
+                is_fixable=False,
+                is_persistent=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Linksys Smart Wi-Fi",
+                    "host": import_data[CONF_HOST],
+                },
+            )
+            return self.async_abort(reason=errors["base"])
+
+        await self.async_set_unique_id(info["serial_number"])
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=info["title"], data=import_data)

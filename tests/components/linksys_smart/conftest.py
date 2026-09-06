@@ -20,9 +20,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_jnap_client() -> Generator[AsyncMock]:
-    """Mock the JNAPClient used by the config flow."""
+    """Mock the JNAPClient used by the config flow and coordinator."""
     with patch(
-        "homeassistant.components.linksys_smart.config_flow.JNAPClient",
+        "homeassistant.components.linksys_smart.util.JNAPClient",
         autospec=True,
     ) as mock_client_cls:
         client = mock_client_cls.return_value
