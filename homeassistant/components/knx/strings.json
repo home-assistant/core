@@ -1215,11 +1215,11 @@
     },
     "extra_fields_descriptions": {
       "destination": "The trigger will listen to telegrams sent or received on these group addresses. If no address is selected, the trigger will fire for every group address.",
-      "group_value_read": "Listen on GroupValueRead telegrams.",
-      "group_value_response": "Listen on GroupValueResponse telegrams.",
-      "group_value_write": "Listen on GroupValueWrite telegrams.",
-      "incoming": "Listen on incoming telegrams.",
-      "outgoing": "Listen on outgoing telegrams."
+      "group_value_read": "Listen on GroupValueRead telegrams. These request the current value of a group address.",
+      "group_value_response": "Listen on GroupValueResponse telegrams. These answer a GroupValueRead request.",
+      "group_value_write": "Listen on GroupValueWrite telegrams. These write a new value to a group address.",
+      "incoming": "Listen on telegrams received from the KNX bus.",
+      "outgoing": "Listen on telegrams sent to the KNX bus by Home Assistant."
     },
     "trigger_type": {
       "telegram": "Telegram"
@@ -1480,6 +1480,42 @@
         }
       },
       "name": "Send to KNX bus"
+    }
+  },
+  "triggers": {
+    "telegram": {
+      "description": "Triggers when a KNX telegram is received from or sent to the bus.",
+      "fields": {
+        "destination": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::destination%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::destination%]"
+        },
+        "group_value_read": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_read%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_read%]"
+        },
+        "group_value_response": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_response%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_response%]"
+        },
+        "group_value_write": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_write%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_write%]"
+        },
+        "incoming": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::incoming%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::incoming%]"
+        },
+        "outgoing": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::outgoing%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::outgoing%]"
+        },
+        "type": {
+          "description": "KNX datapoint type used to decode the telegram payload, for example \"9.001\" or \"temperature\". If omitted, the datapoint type from the ETS project is used, when available.",
+          "name": "Datapoint type"
+        }
+      },
+      "name": "KNX telegram received or sent"
     }
   }
 }
