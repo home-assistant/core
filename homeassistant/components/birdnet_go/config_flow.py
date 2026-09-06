@@ -72,6 +72,9 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST].strip()
             port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
             use_ssl = bool(user_input.get(CONF_SSL, False))
+            user_input[CONF_HOST] = host
+            user_input[CONF_PORT] = port
+            user_input[CONF_SSL] = use_ssl
             api_key = user_input.get(CONF_API_KEY)
             username = user_input.get(CONF_USERNAME)
             password = user_input.get(CONF_PASSWORD)
@@ -88,7 +91,7 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                await client.get_health()
+                await client.get_kpis()
             except BirdNetGoAuthenticationError:
                 errors["base"] = "invalid_auth"
             except BirdNetGoConnectionError, BirdNetGoTimeoutError:

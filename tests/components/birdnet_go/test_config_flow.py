@@ -45,14 +45,38 @@ async def test_flow_user_success(
         CONF_PORT: DEFAULT_PORT,
         CONF_SSL: False,
     }
+    assert isinstance(result["data"][CONF_PORT], int)
     assert result["result"].unique_id == "192.168.1.100:8080"
+
+
+async def test_flow_user_port_normalization(
+    hass: HomeAssistant, mock_birdnet_client: AsyncMock
+) -> None:
+    """Test user step normalizes float port from NumberSelector and host whitespace."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "  192.168.1.100  ",
+            CONF_PORT: 8080.0,
+            CONF_SSL: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "192.168.1.100"
+    assert result["data"][CONF_PORT] == 8080
+    assert isinstance(result["data"][CONF_PORT], int)
 
 
 async def test_flow_user_cannot_connect(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
     """Test user step with connection error."""
-    mock_birdnet_client.get_health.side_effect = BirdNetGoConnectionError(
+    mock_birdnet_client.get_kpis.side_effect = BirdNetGoConnectionError(
         "Host unreachable"
     )
 
@@ -72,7 +96,7 @@ async def test_flow_user_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Recover from error
-    mock_birdnet_client.get_health.side_effect = None
+    mock_birdnet_client.get_kpis.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -89,7 +113,7 @@ async def test_flow_user_invalid_auth(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
     """Test user step with authentication error."""
-    mock_birdnet_client.get_health.side_effect = BirdNetGoAuthenticationError(
+    mock_birdnet_client.get_kpis.side_effect = BirdNetGoAuthenticationError(
         "Bad credentials"
     )
 
@@ -113,7 +137,7 @@ async def test_flow_user_general_error(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
     """Test user step with general BirdNET-Go error."""
-    mock_birdnet_client.get_health.side_effect = BirdNetGoError("General failure")
+    mock_birdnet_client.get_kpis.side_effect = BirdNetGoError("General failure")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -135,7 +159,7 @@ async def test_flow_user_unknown_exception(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
     """Test user step with unexpected exception."""
-    mock_birdnet_client.get_health.side_effect = RuntimeError("Fatal memory error")
+    mock_birdnet_client.get_kpis.side_effect = RuntimeError("Fatal memory error")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
