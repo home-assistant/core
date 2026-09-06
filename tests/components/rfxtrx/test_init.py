@@ -218,7 +218,9 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
     rfxtrx.connect.call_count = 2
 
 
-async def test_migrate_entry(hass: HomeAssistant) -> None:
+async def test_migrate_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful migration of entry data."""
     legacy_config = {
         "device": "abcd",
@@ -240,15 +242,14 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    registry = dr.async_get(hass)
-    device_1 = registry.async_get_or_create(
+    device_1 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
             (DOMAIN, "11", "0", "213c7f2:16"),
             ("dummy", "id"),
         },
     )
-    device_2 = registry.async_get_or_create(
+    device_2 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
             (DOMAIN, "16", "0", "00:90"),
@@ -273,13 +274,13 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
     }
     assert entry.version == 2
 
-    device_1 = registry.async_get(device_1.id)
+    device_1 = device_registry.async_get(device_1.id)
     assert device_1.identifiers == {
         (DOMAIN, "11_0_213c7f2:16"),
         ("dummy", "id"),
     }
 
-    device_2 = registry.async_get(device_2.id)
+    device_2 = device_registry.async_get(device_2.id)
     assert device_2.identifiers == {
         (DOMAIN, "16_0_00:90"),
     }

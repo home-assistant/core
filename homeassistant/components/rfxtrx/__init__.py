@@ -483,18 +483,29 @@ def get_device_tuple_from_device(
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-def get_device_tuple_from_identifiers(
+def get_device_tuples_from_identifiers(
     identifiers: set[tuple[str, str]],
-) -> DeviceTuple | None:
-    """Calculate the device tuple from a device entry."""
+) -> list[DeviceTuple]:
+    """Calculate the device tuples from a device entry."""
+    device_tuples = []
     for identifier in identifiers:
         if identifier[0] != DOMAIN:
             continue
         try:
-            return DeviceTuple.from_unique_id(identifier[1])
+            device_tuples.append(DeviceTuple.from_unique_id(identifier[1]))
         except ValueError as err:
             _LOGGER.debug("%s", err)
-    return None
+    return device_tuples
+
+
+def get_device_tuple_from_identifiers(
+    identifiers: set[tuple[str, str]],
+) -> DeviceTuple | None:
+    """Calculate the first device tuple from a device entry."""
+    device_tuples = get_device_tuples_from_identifiers(identifiers)
+    if not device_tuples:
+        return None
+    return device_tuples[0]
 
 
 async def async_remove_config_entry_device(

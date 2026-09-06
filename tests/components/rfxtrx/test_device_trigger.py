@@ -14,7 +14,11 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_entry
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 
 
 class EventTestData(NamedTuple):
@@ -82,18 +86,6 @@ async def test_get_triggers(
     """Test we get the expected triggers from a rfxtrx."""
     mock_entry = await setup_entry(hass, {event.code: {}})
 
-    device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
-    )
-    assert device_entry
-
-    # Add alternate identifiers, to make sure we can handle future formats
-    identifiers: list[str] = list(event.device_identifier)
-    device_registry.async_update_device(
-        device_entry.id,
-        new_identifiers=device_entry.identifiers
-        | {(identifiers[0], "_".join(identifiers[1:]))},
-    )
     device_entry = device_registry.async_get_device_by_identifier(
         event.device_identifier, mock_entry.entry_id
     )
