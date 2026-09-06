@@ -27,13 +27,16 @@ from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): TextSelector(),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): NumberSelector(
-            NumberSelectorConfig(
-                min=1,
-                max=65535,
-                step=1,
-                mode=NumberSelectorMode.BOX,
-            )
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1,
+                    max=65535,
+                    step=1,
+                    mode=NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Coerce(int),
         ),
         vol.Optional(CONF_SSL, default=False): BooleanSelector(),
     }
