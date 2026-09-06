@@ -250,7 +250,8 @@ async def test_service_set_client_name(
     )
 
     mock_omada_site_client.update_client.assert_awaited_once_with(
-        mac, OmadaClientSettings(name="Ting sensor")
+        mac.upper().replace(":", "-"),
+        OmadaClientSettings(name="Ting sensor"),
     )
 
 
@@ -276,7 +277,8 @@ async def test_service_set_client_name_without_config_entry_id(
     )
 
     mock_omada_site_client.update_client.assert_awaited_once_with(
-        mac, OmadaClientSettings(name="Ting sensor")
+        mac.upper().replace(":", "-"),
+        OmadaClientSettings(name="Ting sensor"),
     )
 
 
@@ -410,10 +412,11 @@ async def test_service_set_client_name_failed_raises_homeassistanterror(
         )
     assert err.value.translation_key == "set_client_name_failed"
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_placeholders == {"mac": mac}
+    assert err.value.translation_placeholders == {"mac": mac.upper().replace(":", "-")}
 
     mock_omada_site_client.update_client.assert_awaited_once_with(
-        mac, OmadaClientSettings(name="Ting sensor")
+        mac.upper().replace(":", "-"),
+        OmadaClientSettings(name="Ting sensor"),
     )
 
 
@@ -528,9 +531,12 @@ async def test_service_set_client_name_foreign_device(
         blocking=True,
     )
 
-    mock_omada_site_client.get_client.assert_awaited_once_with(mac)
+    mock_omada_site_client.get_client.assert_awaited_once_with(
+        mac.upper().replace(":", "-")
+    )
     mock_omada_site_client.update_client.assert_awaited_once_with(
-        mac, OmadaClientSettings(name="Ting sensor")
+        mac.upper().replace(":", "-"),
+        OmadaClientSettings(name="Ting sensor"),
     )
 
 
@@ -581,7 +587,7 @@ async def test_service_set_client_name_single_known_mac(
     device_id = _add_multi_mac_device(hass, mock_config_entry, [client_mac, other_mac])
 
     async def get_client(mac: str) -> MagicMock:
-        if mac == other_mac:
+        if mac == other_mac.upper().replace(":", "-"):
             raise RequestFailed(-41011, "not found")
         return MagicMock()
 
@@ -595,7 +601,8 @@ async def test_service_set_client_name_single_known_mac(
     )
 
     mock_omada_site_client.update_client.assert_awaited_once_with(
-        client_mac, OmadaClientSettings(name="Ting sensor")
+        client_mac.upper().replace(":", "-"),
+        OmadaClientSettings(name="Ting sensor"),
     )
 
 
@@ -651,6 +658,6 @@ async def test_service_set_client_name_query_failed_raises_homeassistanterror(
         )
     assert err.value.translation_key == "client_query_failed"
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_placeholders == {"mac": mac}
+    assert err.value.translation_placeholders == {"mac": mac.upper().replace(":", "-")}
 
     mock_omada_site_client.update_client.assert_not_awaited()

@@ -98,6 +98,11 @@ SCHEMA_SET_CLIENT_NAME = vol.Schema(
 )
 
 
+def _controller_mac(mac: str) -> str:
+    """Normalize a registry MAC to the controller's canonical format."""
+    return mac.upper().replace(":", "-")
+
+
 async def _resolve_client_controller(
     call: ServiceCall,
 ) -> tuple[OmadaSiteController, str]:
@@ -159,8 +164,9 @@ async def _resolve_client_controller(
 
     known_macs: list[str] = []
     for mac in macs:
+        controller_mac = _controller_mac(mac)
         try:
-            await controller.omada_client.get_client(mac)
+            await controller.omada_client.get_client(controller_mac)
         except RequestFailed as ex:
             # The controller reports unknown clients with error code -41011.
             if getattr(ex, "_error_code", None) == -41011:
@@ -168,15 +174,15 @@ async def _resolve_client_controller(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="client_query_failed",
-                translation_placeholders={"mac": mac},
+                translation_placeholders={"mac": controller_mac},
             ) from ex
         except OmadaClientException as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="client_query_failed",
-                translation_placeholders={"mac": mac},
+                translation_placeholders={"mac": controller_mac},
             ) from ex
-        known_macs.append(mac)
+        known_macs.append(controller_mac)
 
     if len(known_macs) == 1:
         return controller, known_macs[0]
