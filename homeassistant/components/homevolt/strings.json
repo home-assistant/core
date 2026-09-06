@@ -53,6 +53,17 @@
     }
   },
   "entity": {
+    "number": {
+      "grid_export_limit": {
+        "name": "Grid export limit"
+      },
+      "grid_import_limit": {
+        "name": "Grid import limit"
+      },
+      "setpoint": {
+        "name": "Power setpoint"
+      }
+    },
     "select": {
       "battery_mode": {
         "name": "Battery mode",
