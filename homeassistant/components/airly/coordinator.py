@@ -103,18 +103,18 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
             measurements = self.airly.create_measurements_session_point(
                 self.latitude, self.longitude
             )
-        async with timeout(20):
-            try:
+        try:
+            async with timeout(20):
                 await measurements.update()
-            except (AirlyError, ClientConnectorError) as error:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_error",
-                    translation_placeholders={
-                        "entry": self.config_entry.title,
-                        "error": repr(error),
-                    },
-                ) from error
+        except (AirlyError, ClientConnectorError, TimeoutError) as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": repr(error),
+                },
+            ) from error
 
         _LOGGER.debug(
             "Requests remaining: %s/%s",
