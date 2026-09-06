@@ -28,12 +28,17 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _async_setup_valves(
-    hass: HomeAssistant, config: dict[str, Any], client: AsyncMock
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    client: AsyncMock,
+    *,
+    load_switch: bool = False,
 ) -> None:
     """Set up only the RainMachine valve platform."""
+    platforms = [Platform.SWITCH, Platform.VALVE] if load_switch else [Platform.VALVE]
     with (
         patch("homeassistant.components.rainmachine.Client", return_value=client),
-        patch("homeassistant.components.rainmachine.PLATFORMS", [Platform.VALVE]),
+        patch("homeassistant.components.rainmachine.PLATFORMS", platforms),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
@@ -61,7 +66,7 @@ async def test_valve_services(
     controller: AsyncMock,
 ) -> None:
     """Test opening and closing a zone valve."""
-    await _async_setup_valves(hass, config, client)
+    await _async_setup_valves(hass, config, client, load_switch=True)
 
     await hass.services.async_call(
         VALVE_DOMAIN,

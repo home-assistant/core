@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import override
 
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -16,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RainMachineConfigEntry, RainMachineData
@@ -26,7 +24,6 @@ from .const import (
     CONF_USE_APP_RUN_TIMES,
     DATA_PROVISION_SETTINGS,
     DATA_ZONES,
-    DEFAULT_ZONE_RUN,
 )
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .services import async_update_programs_and_zones
@@ -111,18 +108,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine irrigation zones as water valves."""
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        "start_zone",
-        {
-            vol.Optional(
-                CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
-            ): cv.positive_int
-        },
-        "async_start_zone",
-    )
-    platform.async_register_entity_service("stop_zone", None, "async_stop_zone")
-
     data = entry.runtime_data
     coordinator = data.coordinators[DATA_ZONES]
     async_add_entities(

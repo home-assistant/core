@@ -9,8 +9,6 @@ from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError, UnknownAPICallError
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -237,48 +235,6 @@ async def async_migrate_entry(
             return {"new_unique_id": "_".join(unique_id_pieces)}
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
-
-    # 2 -> 3: Zones are valves. Recreate their registry entries in the valve domain.
-    if version == 2:
-        entity_registry = er.async_get(hass)
-        entries = list(
-            entity_registry.entities.get_entries_for_config_entry_id(entry.entry_id)
-        )
-        for entity_entry in entries:
-            if (
-                entity_entry.domain != SWITCH_DOMAIN
-                or entity_entry.platform != DOMAIN
-                or "_zone_" not in entity_entry.unique_id
-                or entity_entry.unique_id.endswith("_enabled")
-            ):
-                continue
-
-            object_id = entity_entry.entity_id.split(".", 1)[1]
-            new_entry = entity_registry.async_get_or_create(
-                VALVE_DOMAIN,
-                DOMAIN,
-                entity_entry.unique_id,
-                suggested_object_id=object_id,
-                disabled_by=entity_entry.disabled_by,
-                hidden_by=entity_entry.hidden_by,
-                config_entry=entry,
-                device_id=entity_entry.device_id,
-            )
-            entity_registry.async_update_entity(
-                new_entry.entity_id,
-                aliases=list(entity_entry.aliases),
-                area_id=entity_entry.area_id,
-                categories=dict(entity_entry.categories),
-                disabled_by=entity_entry.disabled_by,
-                hidden_by=entity_entry.hidden_by,
-                icon=entity_entry.icon,
-                labels=set(entity_entry.labels),
-                name=entity_entry.name,
-            )
-            entity_registry.async_remove(entity_entry.entity_id)
-
-        version = 3
-        hass.config_entries.async_update_entry(entry, version=version)
 
     LOGGER.debug("Migration to version %s successful", version)
 

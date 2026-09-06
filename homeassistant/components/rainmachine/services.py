@@ -12,9 +12,18 @@ from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEA
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.util.dt import as_timestamp, utcnow
 
-from .const import CONF_DURATION, DATA_PROGRAMS, DATA_ZONES, DOMAIN
+from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_DURATION,
+    DATA_PROGRAMS,
+    DATA_ZONES,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 if TYPE_CHECKING:
     from . import RainMachineConfigEntry
@@ -59,7 +68,9 @@ SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_PUSH_FLOW_METER_DATA = "push_flow_meter_data"
 SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
 SERVICE_NAME_RESTRICT_WATERING = "restrict_watering"
+SERVICE_NAME_START_ZONE = "start_zone"
 SERVICE_NAME_STOP_ALL = "stop_all"
+SERVICE_NAME_STOP_ZONE = "stop_zone"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
 SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
 
@@ -109,6 +120,27 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     }
 )
 
+SERVICE_START_ZONE_SCHEMA = {
+    vol.Optional(CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int
+}
+
+
+@callback
+def async_get_zone_entities(hass: HomeAssistant) -> dict[str, Entity]:
+    """Get RainMachine zone switch and valve entities."""
+    return {
+        entity_id: entity
+        for platform in async_get_platforms(hass, DOMAIN)
+        for entity_id, entity in platform.entities.items()
+        if entity_id.startswith("valve.")
+        or (
+            entity_id.startswith("switch.")
+            and entity.unique_id is not None
+            and "_zone_" in entity.unique_id
+            and not entity.unique_id.endswith("_enabled")
+        )
+    }
+
 
 async def async_update_programs_and_zones(
     hass: HomeAssistant, entry: RainMachineConfigEntry
@@ -140,6 +172,40 @@ def async_get_entry_for_service_call(
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
+
+    async def async_start_zone(call: ServiceCall) -> None:
+        """Start a zone using either the valve or deprecated switch entity."""
+        await service.entity_service_call(
+            hass,
+            lambda: async_get_zone_entities(hass),
+            "async_start_zone",
+            call,
+        )
+
+    async def async_stop_zone(call: ServiceCall) -> None:
+        """Stop a zone using either the valve or deprecated switch entity."""
+        await service.entity_service_call(
+            hass,
+            lambda: async_get_zone_entities(hass),
+            "async_stop_zone",
+            call,
+        )
+
+    for service_name, schema, method in (
+        (
+            SERVICE_NAME_START_ZONE,
+            cv.make_entity_service_schema(SERVICE_START_ZONE_SCHEMA),
+            async_start_zone,
+        ),
+        (
+            SERVICE_NAME_STOP_ZONE,
+            cv.make_entity_service_schema({}),
+            async_stop_zone,
+        ),
+    ):
+        if hass.services.has_service(DOMAIN, service_name):
+            continue
+        hass.services.async_register(DOMAIN, service_name, method, schema=schema)
 
     def call_with_controller(
         update_programs_and_zones: bool = True,

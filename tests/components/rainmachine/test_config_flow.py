@@ -8,14 +8,12 @@ import pytest
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.rainmachine import async_migrate_entry
 from homeassistant.components.rainmachine.const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_USE_APP_RUN_TIMES,
     DOMAIN,
 )
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -44,15 +42,7 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
 
 
 @pytest.mark.parametrize(
-    (
-        "platform",
-        "entity_name",
-        "entity_id",
-        "old_unique_id",
-        "new_unique_id",
-        "final_platform",
-        "final_entity_id",
-    ),
+    ("platform", "entity_name", "entity_id", "old_unique_id", "new_unique_id"),
     [
         (
             "binary_sensor",
@@ -60,8 +50,6 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
             "binary_sensor.home_flow_sensor",
             "60e32719b6cf_flow_sensor",
             "60:e3:27:19:b6:cf_flow_sensor",
-            "binary_sensor",
-            "binary_sensor.home_flow_sensor",
         ),
         (
             "switch",
@@ -69,12 +57,10 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
             "switch.home_landscaping",
             "60e32719b6cf_RainMachineZone_1",
             "60:e3:27:19:b6:cf_zone_1",
-            VALVE_DOMAIN,
-            "valve.home_landscaping",
         ),
     ],
 )
-async def test_migrate_1_current(
+async def test_migrate_1_2(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     client: AsyncMock,
@@ -82,13 +68,11 @@ async def test_migrate_1_current(
     config_entry: MockConfigEntry,
     entity_id: str,
     entity_name: str,
-    final_entity_id: str,
-    final_platform: str,
     old_unique_id: str,
     new_unique_id: str,
     platform: str,
 ) -> None:
-    """Test migration from version 1 through the current version."""
+    """Test migration from version 1 to 2 (consistent unique IDs)."""
     # Create entity RegistryEntry using old unique ID format:
     entity_entry = entity_registry.async_get_or_create(
         platform,
@@ -113,73 +97,13 @@ async def test_migrate_1_current(
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    assert config_entry.version == 3
+    assert config_entry.version == 2
 
-    # Check that the final RegistryEntry is using the new unique ID format.
-    entity_entry = entity_registry.async_get(final_entity_id)
+    # Check that the RegistryEntry is using the new unique ID format.
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.unique_id == new_unique_id
     assert entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
-    assert (
-        entity_registry.async_get_entity_id(final_platform, DOMAIN, new_unique_id)
-        == final_entity_id
-    )
-
-
-async def test_migrate_2_3_zone_switch_to_valve(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    config_entry: MockConfigEntry,
-    controller_mac: str,
-) -> None:
-    """Test migrating zone switches to valves preserves user metadata."""
-    hass.config_entries.async_update_entry(config_entry, version=2)
-    zone_entry = entity_registry.async_get_or_create(
-        "switch",
-        DOMAIN,
-        f"{controller_mac}_zone_2",
-        suggested_object_id="12345_flower_box",
-        config_entry=config_entry,
-        disabled_by=er.RegistryEntryDisabler.USER,
-        hidden_by=er.RegistryEntryHider.USER,
-    )
-    entity_registry.async_update_entity(
-        zone_entry.entity_id,
-        aliases=["Garden valve"],
-        area_id="backyard",
-        categories={"scope": "irrigation"},
-        icon="mdi:sprinkler-variant",
-        labels={"outdoors"},
-        name="Flowers",
-    )
-    enabled_entry = entity_registry.async_get_or_create(
-        "switch",
-        DOMAIN,
-        f"{controller_mac}_zone_2_enabled",
-        suggested_object_id="12345_flower_box_enabled",
-        config_entry=config_entry,
-    )
-
-    assert await async_migrate_entry(hass, config_entry)
-
-    assert config_entry.version == 3
-    assert entity_registry.async_get(zone_entry.entity_id) is None
-    assert entity_registry.async_get(enabled_entry.entity_id) is not None
-
-    migrated_entity_id = entity_registry.async_get_entity_id(
-        VALVE_DOMAIN, DOMAIN, f"{controller_mac}_zone_2"
-    )
-    assert migrated_entity_id == "valve.12345_flower_box"
-    migrated_entry = entity_registry.async_get(migrated_entity_id)
-    assert migrated_entry is not None
-    assert migrated_entry.aliases == ["Garden valve"]
-    assert migrated_entry.area_id == "backyard"
-    assert migrated_entry.categories == {"scope": "irrigation"}
-    assert migrated_entry.disabled_by is er.RegistryEntryDisabler.USER
-    assert migrated_entry.hidden_by is er.RegistryEntryHider.USER
-    assert migrated_entry.icon == "mdi:sprinkler-variant"
-    assert migrated_entry.labels == {"outdoors"}
-    assert migrated_entry.name == "Flowers"
 
 
 async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
