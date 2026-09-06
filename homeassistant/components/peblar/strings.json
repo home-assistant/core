@@ -308,6 +308,24 @@
       },
       "name": "Delete autocharge vehicle"
     },
+    "get_meter_history": {
+      "description": "Returns the charging sessions the charger's certified meter has recorded, including the token each session was authorized with.",
+      "fields": {
+        "after": {
+          "description": "Only return sessions that started at or after this moment.",
+          "name": "After"
+        },
+        "before": {
+          "description": "Only return sessions that started at or before this moment.",
+          "name": "Before"
+        },
+        "config_entry_id": {
+          "description": "The Peblar EV charger to read the meter history from.",
+          "name": "Peblar EV charger"
+        }
+      },
+      "name": "Get meter history"
+    },
     "list_rfid_tokens": {
       "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
       "fields": {

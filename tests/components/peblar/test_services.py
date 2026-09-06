@@ -1,5 +1,6 @@
 """Tests for the Peblar integration services."""
 
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -20,6 +21,7 @@ from homeassistant.components.peblar.services import (
     SERVICE_AUTHORIZE_CHARGE_SESSION,
     SERVICE_DELETE_RFID_TOKEN,
     SERVICE_DELETE_VEHICLE_TOKEN,
+    SERVICE_GET_METER_HISTORY,
     SERVICE_LIST_RFID_TOKENS,
     SERVICE_LIST_VEHICLE_TOKENS,
 )
@@ -170,8 +172,19 @@ SERVICE_CALLS: list[tuple[str, str, dict[str, Any]]] = [
     (SERVICE_DELETE_RFID_TOKEN, "delete_rfid_token", {"uid": "AA:BB:CC:DD"}),
 ]
 
+# The services that answer over the same error handling, whether or not
+# they touch the RFID list.
+FAILING_SERVICE_CALLS: list[tuple[str, str, dict[str, Any]]] = [
+    *SERVICE_CALLS,
+    (SERVICE_GET_METER_HISTORY, "meter_history", {}),
+]
 
-@pytest.mark.parametrize(("service", "method_name", "service_data"), SERVICE_CALLS)
+RESPONDING_SERVICES = {SERVICE_LIST_RFID_TOKENS, SERVICE_GET_METER_HISTORY}
+
+
+@pytest.mark.parametrize(
+    ("service", "method_name", "service_data"), FAILING_SERVICE_CALLS
+)
 @pytest.mark.parametrize(
     ("error", "translation_key"),
     [
@@ -198,7 +211,7 @@ async def test_service_communication_error(
             service,
             {"config_entry_id": init_integration.entry_id, **service_data},
             blocking=True,
-            return_response=service == "list_rfid_tokens",
+            return_response=service in RESPONDING_SERVICES,
         )
 
     assert excinfo.value.translation_domain == DOMAIN
@@ -206,7 +219,9 @@ async def test_service_communication_error(
     assert excinfo.value.translation_placeholders == {"error": str(error)}
 
 
-@pytest.mark.parametrize(("service", "method_name", "service_data"), SERVICE_CALLS)
+@pytest.mark.parametrize(
+    ("service", "method_name", "service_data"), FAILING_SERVICE_CALLS
+)
 async def test_service_authentication_error(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
@@ -227,7 +242,7 @@ async def test_service_authentication_error(
             service,
             {"config_entry_id": init_integration.entry_id, **service_data},
             blocking=True,
-            return_response=service == "list_rfid_tokens",
+            return_response=service in RESPONDING_SERVICES,
         )
 
     assert excinfo.value.translation_domain == DOMAIN
@@ -502,3 +517,134 @@ async def test_authorize_charge_session_is_refused(
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == translation_key
     mock_peblar.rest_api.return_value.authorize_charge_session.assert_not_called()
+
+
+async def test_get_meter_history(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the meter history comes back as sessions.
+
+    The second session in the fixture is the one still running: it has no
+    end, and so no energy total to report for it either.
+    """
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_METER_HISTORY,
+        {"config_entry_id": init_integration.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "corrupted": False,
+        "sessions": [
+            {
+                "session_number": 1,
+                "uid": "AA:BB:CC:DD",
+                "start_time": "2026-01-22T12:00:00+00:00",
+                "end_time": "2026-01-22T19:00:00+00:00",
+                "start_energy_kwh": 1.0,
+                "end_energy_kwh": 8.5,
+                "energy_kwh": 7.5,
+                "checksum": 42,
+                "corrupted": True,
+            },
+            {
+                "session_number": 2,
+                "uid": None,
+                "start_time": "2026-01-23T12:00:00+00:00",
+                "end_time": None,
+                "start_energy_kwh": 8.5,
+                "end_energy_kwh": None,
+                "energy_kwh": None,
+                "checksum": 43,
+                "corrupted": False,
+            },
+        ],
+    }
+    mock_peblar.meter_history.assert_called_once_with(start=None, stop=None)
+
+
+async def test_get_meter_history_without_every_checksum_outcome(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a session the charger returned no checksum outcome for.
+
+    The outcomes come back as a list of their own, so a charger that
+    returns fewer of them than it returns sessions leaves the last ones
+    unanswered.
+    """
+    mock_peblar.meter_history.return_value.corrupted_session = [False]
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_METER_HISTORY,
+        {"config_entry_id": init_integration.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert [session["corrupted"] for session in result["sessions"]] == [False, None]
+
+
+@pytest.mark.parametrize("mock_peblar", [{"HwHasRfid": False}], indirect=True)
+async def test_get_meter_history_needs_no_rfid_reader(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the meter records every session, tokens or no tokens."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_METER_HISTORY,
+        {"config_entry_id": init_integration.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    mock_peblar.meter_history.assert_called_once_with(start=None, stop=None)
+
+
+@pytest.mark.parametrize(
+    ("after", "before"),
+    [
+        ("2026-01-22T13:00:00+01:00", "2026-01-23T13:00:00+01:00"),
+        ("2026-01-22 13:00:00", "2026-01-23 13:00:00"),
+    ],
+    ids=["with offset", "naive"],
+)
+async def test_get_meter_history_time_range(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+    after: str,
+    before: str,
+) -> None:
+    """Test both ends of the range reach the charger, as UTC.
+
+    A moment without an offset is the one the user typed into the
+    frontend, so it is read in Home Assistant's own timezone rather than
+    handed to the charger for it to interpret.
+    """
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_METER_HISTORY,
+        {
+            "config_entry_id": init_integration.entry_id,
+            "after": after,
+            "before": before,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    mock_peblar.meter_history.assert_called_once_with(
+        start=datetime(2026, 1, 22, 12, tzinfo=UTC),
+        stop=datetime(2026, 1, 23, 12, tzinfo=UTC),
+    )
