@@ -167,7 +167,8 @@ async def test_infrared_receiver_signal(
     received_signals: list[InfraredReceivedSignal] = []
     async_subscribe_receiver(hass, ENTITY_ID_RECEIVER, received_signals.append)
 
-    assert hass.states.get(ENTITY_ID_RECEIVER).state == STATE_UNKNOWN
+    assert (state := hass.states.get(ENTITY_ID_RECEIVER))
+    assert state.state == STATE_UNKNOWN
 
     timings = [1270, -410, 1280, -410, 450, -1230, 450, -1230, 450, -410]
     inject_rpc_device_event(
@@ -180,6 +181,60 @@ async def test_infrared_receiver_signal(
     assert len(received_signals) == 1
     assert received_signals[0] == InfraredReceivedSignal(timings=timings)
 
-    state = hass.states.get(ENTITY_ID_RECEIVER)
-    assert state is not None
+    assert (state := hass.states.get(ENTITY_ID_RECEIVER))
     assert state.state != STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        {"events": [{"component": "ir", "event": "other_event", "timings": [100]}]},
+        {"events": [{"component": "switch", "event": "raw_receive", "timings": [100]}]},
+    ],
+)
+async def test_infrared_receiver_ignores_irrelevant_events(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    event: dict,
+) -> None:
+    """Test that irrelevant events do not change the receiver state."""
+    await init_integration(hass, 4)
+
+    received_signals: list[InfraredReceivedSignal] = []
+    async_subscribe_receiver(hass, ENTITY_ID_RECEIVER, received_signals.append)
+
+    inject_rpc_device_event(monkeypatch, mock_rpc_device, event)
+    await hass.async_block_till_done()
+
+    assert received_signals == []
+    assert (state := hass.states.get(ENTITY_ID_RECEIVER))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        {"events": [{"component": "ir", "event": "raw_receive", "timings": []}]},
+        {"events": [{"component": "ir", "event": "raw_receive", "timings": None}]},
+        {"events": [{"component": "ir", "event": "raw_receive"}]},
+    ],
+)
+async def test_infrared_receiver_ignores_empty_timings(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    event: dict,
+) -> None:
+    """Test that events with empty or missing timings do not change state."""
+    await init_integration(hass, 4)
+
+    received_signals: list[InfraredReceivedSignal] = []
+    async_subscribe_receiver(hass, ENTITY_ID_RECEIVER, received_signals.append)
+
+    inject_rpc_device_event(monkeypatch, mock_rpc_device, event)
+    await hass.async_block_till_done()
+
+    assert received_signals == []
+    assert (state := hass.states.get(ENTITY_ID_RECEIVER))
+    assert state.state == STATE_UNKNOWN
