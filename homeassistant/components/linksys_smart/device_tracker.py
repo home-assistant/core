@@ -2,17 +2,21 @@
 
 from typing import override
 
-from jnap import JNAPDevice
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -85,11 +89,25 @@ async def async_setup_entry(
         for mac, device in coordinator.data.items():
             if mac not in tracked:
                 tracked.add(mac)
-                new_entities.append(LinksysScannerEntity(coordinator, device))
+                new_entities.append(LinksysScannerEntity(coordinator, mac, device.name))
         async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_async_update_router))
     _async_update_router()
+
+    registry = er.async_get(hass)
+    restored_entities = []
+    for reg_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if reg_entry.domain != DEVICE_TRACKER_DOMAIN:
+            continue
+        mac = reg_entry.unique_id.removeprefix(f"{entry.entry_id}_")
+        if mac in tracked:
+            continue
+        tracked.add(mac)
+        restored_entities.append(
+            LinksysScannerEntity(coordinator, mac, reg_entry.original_name or mac)
+        )
+    async_add_entities(restored_entities)
 
 
 class LinksysScannerEntity(
@@ -100,13 +118,13 @@ class LinksysScannerEntity(
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: LinksysDataUpdateCoordinator, device: JNAPDevice
+        self, coordinator: LinksysDataUpdateCoordinator, mac: str, name: str
     ) -> None:
         """Initialise the entity."""
         super().__init__(coordinator)
-        self._mac = device.mac
-        self._attr_mac_address = device.mac
-        self._attr_name = device.name
+        self._mac = mac
+        self._attr_mac_address = mac
+        self._attr_name = name
 
     @property
     @override

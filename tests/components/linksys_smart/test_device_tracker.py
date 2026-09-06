@@ -165,6 +165,35 @@ async def test_new_device_added_on_coordinator_update(
     }
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_restored_when_offline_at_startup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that a device known to the registry is restored even if offline at startup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
+    )
+    await _setup_entry(hass, entry, [LAPTOP])
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    mock_client = AsyncMock(spec=JNAPClient)
+    mock_client.get_devices.return_value = GetDevicesResponse(devices=[])
+    with patch(
+        "homeassistant.components.linksys_smart.coordinator.JNAPClient",
+        return_value=mock_client,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"{entry.entry_id}_aa:bb:cc:dd:ee:ff"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "not_home"
+
+
 async def test_yaml_config_no_entry_creates_credentials_required_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
