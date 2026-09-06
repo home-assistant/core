@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -25,47 +24,33 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
+async def _async_validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> tuple[dict[str, Any] | None, dict[str, str]]:
+    """Validate user input allows us to connect and map exceptions to form errors."""
     kwargs: dict[str, Any] = {}
     if username := data.get(CONF_USERNAME):
         kwargs["username"] = username
     client = JNAPClient(
         data[CONF_HOST], async_get_clientsession(hass), data[CONF_PASSWORD], **kwargs
     )
+    errors: dict[str, str] = {}
+    info: dict[str, Any] | None = None
     try:
         device_info = await client.get_device_info()
-    except JNAPError as err:
-        raise CannotConnect from err
-    try:
         await client.get_devices()
-    except JNAPUnauthorizedError as err:
-        raise InvalidAuth from err
-    except JNAPError as err:
-        raise CannotConnect from err
-    return {
-        "title": device_info.description,
-        "serial_number": device_info.serial_number,
-    }
-
-
-async def _async_validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[dict[str, Any] | None, dict[str, str]]:
-    """Validate user input and map exceptions to form errors."""
-    errors: dict[str, str] = {}
-    try:
-        info = await validate_input(hass, data)
-    except CannotConnect:
-        errors["base"] = "cannot_connect"
-        info = None
-    except InvalidAuth:
+    except JNAPUnauthorizedError:
         errors["base"] = "invalid_auth"
-        info = None
+    except JNAPError:
+        errors["base"] = "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
-        info = None
+    else:
+        info = {
+            "title": device_info.description,
+            "serial_number": device_info.serial_number,
+        }
     return info, errors
 
 
@@ -91,11 +76,3 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
