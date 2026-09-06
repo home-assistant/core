@@ -1148,7 +1148,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': '**REDACTED**',
-      'version': 3,
+      'version': 2,
     }),
   })
 # ---
@@ -2281,7 +2281,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': '**REDACTED**',
-      'version': 3,
+      'version': 2,
     }),
   })
 # ---
