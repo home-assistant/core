@@ -14,6 +14,7 @@ from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
     LoginRequired,
+    PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -293,7 +294,16 @@ def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
     return None
 
 
-_BLE_KEY_ERRORS: Final = (OSError, ValueError, AssertionError, TypeError)
+# get_private_key wraps every existing-key-file failure into PrivateKeyError; the
+# O_EXCL create-race path still raises a bare AssertionError plus raw OSError/
+# ValueError/TypeError, so both must be caught to fall back to cloud control.
+_BLE_KEY_ERRORS: Final = (
+    OSError,
+    ValueError,
+    AssertionError,
+    TypeError,
+    PrivateKeyError,
+)
 
 
 async def _async_resolve_vehicle_api(
@@ -413,8 +423,10 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     return pem
 
 
-# aiopowerwall raises PowerwallError; key I/O and parsing raise OSError/ValueError.
-_LOCAL_CONTROL_ERRORS: Final = (OSError, ValueError, PowerwallError)
+# aiopowerwall raises PowerwallError; get_rsa_private_key wraps existing-key-file
+# failures into PrivateKeyError, while its create-race path still raises raw
+# OSError/ValueError.
+_LOCAL_CONTROL_ERRORS: Final = (OSError, ValueError, PowerwallError, PrivateKeyError)
 
 
 async def _async_resolve_local_control(

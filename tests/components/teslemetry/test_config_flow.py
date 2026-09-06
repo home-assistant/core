@@ -25,6 +25,7 @@ from tesla_fleet_api.exceptions import (
     InvalidResponse,
     InvalidToken,
     NotOnWhitelistFault,
+    PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
@@ -51,6 +52,7 @@ from homeassistant.components.teslemetry.const import (
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
+    ConfigSubentry,
     ConfigSubentryData,
     SubentryFlowResult,
 )
@@ -833,6 +835,50 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
     vehicle.disconnect.assert_awaited_once()
 
 
+async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> None:
+    """A second flow racing on the same VIN aborts with already_configured.
+
+    The user step only filters VINs already paired when the flow starts, and
+    pairing stays open for minutes, so two flows can both pass that filter for
+    the same VIN. The second to finish must abort cleanly with a translated
+    reason rather than surface an untranslated already_configured.
+    """
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=True)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        # Simulate a concurrent flow that paired the same VIN first.
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                title="Test",
+                unique_id=VIN,
+            ),
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The pre-existing subentry from the winning flow is left untouched.
+    assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)) == 1
+
+
 async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> None:
     """Pairing walks through instructions and key install when not whitelisted."""
     entry = await _setup_account_entry(hass)
@@ -1142,6 +1188,12 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     [
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
+        # get_private_key wraps an existing corrupt/encrypted key file into
+        # PrivateKeyError, which the scan step must also abort on cleanly.
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            id="private_key_error",
+        ),
     ],
 )
 async def test_subentry_scan_key_load_fails(
@@ -2118,12 +2170,19 @@ async def test_pair_step_second_lookup_errors(
             TypeError,
             id="key_fetch_typeerror",
         ),
+        # get_rsa_private_key wraps an existing corrupt/encrypted key file into
+        # PrivateKeyError, which is not a TypeError/OSError/ValueError.
+        pytest.param(
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
+            PrivateKeyError("encrypted", "Private key file is encrypted"),
+            id="key_fetch_private_key_error",
+        ),
     ],
 )
 async def test_rsa_key_load_failure_aborts(
     hass: HomeAssistant,
     patch_target: str,
-    error: type[Exception],
+    error: type[Exception] | Exception,
 ) -> None:
     """A failure loading the integration's RSA key aborts site preparation."""
     entry = await _setup_account_no_subentry(hass)

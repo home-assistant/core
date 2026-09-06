@@ -26,6 +26,7 @@ from tesla_fleet_api.exceptions import (
     InvalidResponse,
     InvalidToken,
     LoginRequired,
+    PrivateKeyError,
     RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
@@ -1408,6 +1409,10 @@ async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
         pytest.param(PowerwallError("client boom"), id="powerwall_error"),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            id="private_key_error",
+        ),
     ],
 )
 async def test_local_control_failure_falls_back_to_cloud(
@@ -1447,20 +1452,34 @@ async def test_local_control_failure_falls_back_to_cloud(
     )
 
 
-async def test_local_control_encrypted_key_falls_back_to_cloud(
+@pytest.mark.parametrize(
+    "rsa_key_error",
+    [
+        pytest.param(
+            TypeError("Password was not given but private key is encrypted"),
+            id="encrypted_typeerror",
+        ),
+        # get_rsa_private_key wraps an existing corrupt/encrypted key file into
+        # PrivateKeyError, which is not a TypeError/OSError/ValueError.
+        pytest.param(
+            PrivateKeyError("encrypted", "Private key file is encrypted"),
+            id="private_key_error",
+        ),
+    ],
+)
+async def test_local_control_key_load_failure_falls_back_to_cloud(
     hass: HomeAssistant,
+    rsa_key_error: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Fall back to cloud control when RSA key loading reports an encrypted PEM."""
+    """Fall back to cloud control when RSA key loading fails on an existing file."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
 
     with (
         patch(
             "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
-            side_effect=TypeError(
-                "Password was not given but private key is encrypted"
-            ),
+            side_effect=rsa_key_error,
         ),
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
         caplog.at_level(logging.WARNING),
@@ -1930,6 +1949,24 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
         pytest.param(
             TypeError("Password was not given but private key is encrypted"),
             id="encrypted_key",
+        ),
+        # get_private_key wraps every existing-key-file failure into
+        # PrivateKeyError; each reason shape must still degrade to cloud control.
+        pytest.param(
+            PrivateKeyError("unreadable", "Could not read private key file"),
+            id="private_key_unreadable",
+        ),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            id="private_key_malformed",
+        ),
+        pytest.param(
+            PrivateKeyError("encrypted", "Private key file is encrypted"),
+            id="private_key_encrypted",
+        ),
+        pytest.param(
+            PrivateKeyError("wrong_type", "Not an EllipticCurvePrivateKey"),
+            id="private_key_wrong_type",
         ),
     ],
 )
