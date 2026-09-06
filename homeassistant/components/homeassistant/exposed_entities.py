@@ -178,7 +178,7 @@ class ExposedEntities:
         @callback
         def _on_homeassistant_started(_event: Event) -> None:
             """Run one sweep shortly after startup."""
-            self._hass.async_create_task(
+            self._hass.async_create_background_task(
                 self._async_purge_stale_legacy_entities(dt_util.utcnow()),
                 "exposed_entities_startup_sweep",
             )
