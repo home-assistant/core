@@ -172,7 +172,7 @@ async def test_update_disabled(hass: HomeAssistant, ev_entry) -> None:
 
 
 async def test_fetch_failed(hass: HomeAssistant, subaru_config_entry) -> None:
-    """Tests when fetch fails."""
+    """Test setup retries when the first fetch fails."""
     await setup_subaru_config_entry(
         hass,
         subaru_config_entry,
@@ -182,8 +182,7 @@ async def test_fetch_failed(hass: HomeAssistant, subaru_config_entry) -> None:
         fetch_effect=SubaruException("403 Error"),
     )
 
-    test_entity = hass.states.get(TEST_ENTITY_ID)
-    assert test_entity.state == "unavailable"
+    assert subaru_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant, ev_entry) -> None:

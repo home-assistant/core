@@ -347,6 +347,7 @@ async def test_append_sheet_created_column_uses_configured_time_zone(
 
         rows_data = mock_worksheet.append_rows.call_args[0][0]
         assert rows_data[0] == ["bar", "2024-01-15 23:30:45.123456+11:00"]
+        mock_worksheet.get_values.assert_called_once_with("1:1")
 
 
 async def test_get_sheet(
