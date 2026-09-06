@@ -728,6 +728,150 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
     assert result["data"][CONF_KEY] == TEST_KEY
 
 
+async def test_auto_flow_v3_default_key_success_after_cloud_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cloud rejection still lets a device connect with a built-in key.
+
+    ``get_cloud_keys`` now raises for known failure codes; that must not skip
+    the established well-known default-key fallback.
+    """
+    mock_devices = {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value=mock_devices,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={CONF_DEVICE: TEST_DEVICE_ID},
+    )
+    assert result["step_id"] == "auth_method"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(return_value=True)
+    cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(
+        side_effect=NoDeviceRegistered(3201, "no permission")
+    )
+
+    dm = MagicMock()
+    dm.connect.return_value = True
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={"builtin": {"token": TEST_TOKEN, "key": TEST_KEY}}),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+            return_value=dm,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={"login_mode": LOGIN_MODE_PRESET},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_TOKEN] == TEST_TOKEN
+    assert result["data"][CONF_KEY] == TEST_KEY
+
+
+async def test_auto_flow_phase2_login_false_keeps_phase1_cloud_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a specific phase-1 cloud error survives a plain phase-2 login failure.
+
+    Phase 1 raises ``NoDeviceRegistered`` (3201); phase 2's preset login only
+    returns ``False`` (no exception), which resets the pending error - the flow
+    must still report the actionable 3201 error, not ``preset_login_failed``.
+    """
+    mock_devices = {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value=mock_devices,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={CONF_DEVICE: TEST_DEVICE_ID},
+    )
+    assert result["step_id"] == "auth_method"
+
+    cloud = MagicMock()
+    # phase 1 login succeeds, phase 2 (force_login) login just returns False
+    cloud.login = AsyncMock(side_effect=[True, False])
+    cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(
+        side_effect=NoDeviceRegistered(3201, "no permission")
+    )
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={"login_mode": LOGIN_MODE_PRESET},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auto"
+    assert result["errors"] == {"base": "device_not_registered"}
+    assert result["description_placeholders"] == {"error_code": "3201"}
+
+
 async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> None:
     """Test both phase 1 and phase 2 key retrieval failing surfaces token_unavailable."""
     mock_devices = {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}}

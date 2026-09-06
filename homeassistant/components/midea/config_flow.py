@@ -447,6 +447,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             keys = await self.cloud.get_cloud_keys(appliance_id)
         except MideaCloudError as err:
+            # A cloud rejection (e.g. code 3201) is not fatal: a V3 device may
+            # still authenticate with a built-in default key. Remember the error
+            # for display and keep going with the default keys only.
             LOGGER.debug(
                 "Cloud rejected the token request for device %s: %s",
                 appliance_id,
@@ -454,7 +457,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._cloud_error = err.translation_key
             self._cloud_error_code = err.code
-            return {"cloud_error": err.translation_key}
+            keys = {}
         if default_key:
             keys = {**keys, **(await MideaCloud.get_default_keys())}
         error = "connect_error"
@@ -491,7 +494,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug(
             "Unable to connect device with all the token/key",
         )
-        return {"error": error}
+        result: dict[str, Any] = {"error": error}
+        if self._cloud_error is not None:
+            result["cloud_error"] = self._cloud_error
+        return result
 
     async def async_step_auto(
         self,
@@ -545,6 +551,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # get key phase 2: reinit cloud with preset account
                     if not await self._check_cloud_login(force_login=True):
+                        # _check_cloud_login clears the pending error; if it only
+                        # returned False (no raise), fall back to phase 1's error.
+                        if not self._cloud_error and phase1_error:
+                            self._cloud_error = phase1_error
+                            self._cloud_error_code = phase1_error_code
                         error = self._cloud_error or "preset_login_failed"
                         self._clear_login_state()
                         return await self.async_step_auto(error=error)
