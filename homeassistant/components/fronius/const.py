@@ -12,7 +12,7 @@ DOMAIN: Final = "fronius"
 CONF_MODBUS_PORT: Final = "modbus_port"
 DEFAULT_MODBUS_PORT: Final = 502
 
-CONF_AUTO_REVERT: Final = "auto_revert"
+CONF_AUTO_REVERT_POWER_LIMIT: Final = "auto_revert_power_limit"
 # how long the device holds a setpoint after it last received it
 AUTO_REVERT_SECONDS: Final = 3600
 # the setpoint is sent again this often, so a restart has room to spare
@@ -31,7 +31,7 @@ class FroniusConfigEntryData(TypedDict):
     host: str
     is_logger: bool
     modbus_port: int
-    auto_revert: bool
+    auto_revert_power_limit: bool
 
 
 class FroniusDeviceInfo(NamedTuple):

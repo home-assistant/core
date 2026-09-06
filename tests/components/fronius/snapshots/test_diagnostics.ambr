@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'auto_revert': False,
+        'auto_revert_power_limit': False,
         'host': 'http://fronius',
         'is_logger': True,
         'modbus_port': 502,
@@ -382,7 +382,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'auto_revert': False,
+        'auto_revert_power_limit': False,
         'host': 'http://fronius',
         'is_logger': False,
         'modbus_port': 502,

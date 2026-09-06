@@ -26,7 +26,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .binary_sensor import POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS
 from .const import (
     AUTO_REVERT_SECONDS,
-    CONF_AUTO_REVERT,
+    CONF_AUTO_REVERT_POWER_LIMIT,
     DOMAIN,
     HEARTBEAT_INTERVAL,
     SOLAR_NET_ID_POWER_FLOW,
@@ -304,7 +304,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     @property
     def revert_seconds(self) -> int:
         """Return the fallback period to give the device, 0 for none."""
-        if self.config_entry.data[CONF_AUTO_REVERT]:
+        if self.config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT]:
             return AUTO_REVERT_SECONDS
         return 0
 

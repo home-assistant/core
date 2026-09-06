@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
-    CONF_AUTO_REVERT,
+    CONF_AUTO_REVERT_POWER_LIMIT,
     CONF_MODBUS_PORT,
     DEFAULT_MODBUS_PORT,
     DOMAIN,
@@ -31,7 +31,7 @@ SETTINGS_SCHEMA: Final = {
     vol.Required(CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=65535)
     ),
-    vol.Required(CONF_AUTO_REVERT, default=False): bool,
+    vol.Required(CONF_AUTO_REVERT_POWER_LIMIT, default=False): bool,
 }
 
 
@@ -47,7 +47,7 @@ async def validate_host(
     hass: HomeAssistant,
     host: str,
     modbus_port: int = DEFAULT_MODBUS_PORT,
-    auto_revert: bool = False,
+    auto_revert_power_limit: bool = False,
 ) -> tuple[str, FroniusConfigEntryData]:
     """Validate the user input allows us to connect."""
     fronius = Fronius(async_get_clientsession(hass, verify_ssl=False), host)
@@ -63,7 +63,7 @@ async def validate_host(
             host=host,
             is_logger=True,
             modbus_port=modbus_port,
-            auto_revert=auto_revert,
+            auto_revert_power_limit=auto_revert_power_limit,
         )
     # Gen24 devices don't provide GetLoggerInfo
     try:
@@ -77,7 +77,7 @@ async def validate_host(
         host=host,
         is_logger=False,
         modbus_port=modbus_port,
-        auto_revert=auto_revert,
+        auto_revert_power_limit=auto_revert_power_limit,
     )
 
 
@@ -104,7 +104,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     user_input[CONF_HOST],
                     modbus_port=user_input[CONF_MODBUS_PORT],
-                    auto_revert=user_input[CONF_AUTO_REVERT],
+                    auto_revert_power_limit=user_input[CONF_AUTO_REVERT_POWER_LIMIT],
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -177,7 +177,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     user_input[CONF_HOST],
                     modbus_port=user_input[CONF_MODBUS_PORT],
-                    auto_revert=user_input[CONF_AUTO_REVERT],
+                    auto_revert_power_limit=user_input[CONF_AUTO_REVERT_POWER_LIMIT],
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
