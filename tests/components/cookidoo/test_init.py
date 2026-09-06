@@ -4,7 +4,11 @@ from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooParseException,
+    CookidooRequestException,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -57,6 +61,7 @@ async def test_load_unload(
     [
         (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
         (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
+        (CookidooParseException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_init_failure(
@@ -224,8 +229,9 @@ async def test_migration_from(
 
     # Check change in config entry and verify most recent version
     assert config_entry.version == 1
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4
     assert config_entry.unique_id == TEST_UUID
+    assert config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
 
     assert entity_registry.async_is_registered(
         entity_registry.entities.get_entity_id(
@@ -450,6 +456,59 @@ async def test_migration_from_with_error(
             )
         )
     )
+
+
+async def test_migration_seeds_tokens(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+) -> None:
+    """Test migrating a 1.3 entry stores the OAuth2 tokens on the entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_ENTRY_MIGRATION,
+        version=1,
+        minor_version=3,
+        unique_id=TEST_UUID,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 4
+    assert config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
+    # The tokens are seeded by the migration, so setup does not log in again
+    mock_cookidoo_client.login.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "login_exception",
+    [CookidooRequestException, CookidooAuthException, CookidooParseException],
+)
+async def test_migration_seeds_tokens_with_error(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    login_exception: Exception,
+) -> None:
+    """Test a failing login during the token migration aborts the migration."""
+    mock_cookidoo_client.login.side_effect = login_exception
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_ENTRY_MIGRATION,
+        version=1,
+        minor_version=3,
+        unique_id=TEST_UUID,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.minor_version == 3
+    assert CONF_TOKEN not in config_entry.data
 
 
 async def test_login_persists_tokens(
