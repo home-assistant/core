@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+import time
 from typing import Any, override
 
 import pylacrosse
@@ -88,6 +89,7 @@ def setup_platform(
     try:
         lacrosse = pylacrosse.LaCrosse(usb_device, baud)
         lacrosse.open()
+        time.sleep(3)
     except SerialException as exc:
         _LOGGER.warning("Unable to open serial port: %s", exc)
         return
