@@ -321,13 +321,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         self._async_cancel_heartbeat()
         if self._revert_seconds:
             await self._async_send_heartbeat()
-            return
-        # take back only a period this integration could have set - any other
-        # came from somewhere else, and dropping it would take away another
-        # controller's safety net
-        controls = self.modbus_inverter.controls
-        if controls is not None and controls.revert_seconds == AUTO_REVERT_SECONDS:
-            await self._async_resend_power_limit()
 
     async def _async_send_heartbeat(self, _now: datetime | None = None) -> None:
         """Send the limit again and line up the next beat."""
@@ -402,7 +395,22 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         """Refresh the settings and keep the heartbeat in step with them."""
         data = await super()._async_update_data()
         self._async_update_heartbeat()
+        if not self._revert_seconds:
+            await self._async_clear_revert_period()
         return data
+
+    async def _async_clear_revert_period(self) -> None:
+        """Take back a period this integration left on the device.
+
+        Only one it could have set is taken back - any other came from
+        somewhere else, and dropping it would take away another controller's
+        safety net. Done from the refresh so that a write that fails is
+        tried again while the device holds a period it should not.
+        """
+        controls = self.modbus_inverter.controls
+        if controls is None or controls.revert_seconds != AUTO_REVERT_SECONDS:
+            return
+        await self._async_resend_power_limit()
 
     @override
     async def _refresh_components(self) -> None:
