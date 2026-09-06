@@ -12,13 +12,14 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
 )
-from homeassistant.const import EntityStateAttribute
+from homeassistant.const import EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -79,18 +80,26 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
-            if vehicle.poll_for(description.streaming_firmware):
+            poll = vehicle.poll_or_stream(description.streaming_firmware)
+            if poll is True:
                 if description.polling_prefix:
                     entities.append(
                         TeslemetryVehiclePollingDeviceTrackerEntity(
                             vehicle, description
                         )
                     )
-            else:
+            elif poll is False:
                 entities.append(
                     TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
                 )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.DEVICE_TRACKER,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 

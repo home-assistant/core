@@ -57,15 +57,24 @@ class TeslemetryVehicleData:
         """
         return self.poll or self.discounted
 
-    def poll_for(self, streaming_firmware: str) -> bool:
-        """Return whether a streamable feature uses its polling entity.
+    def poll_or_stream(self, streaming_firmware: str) -> bool | None:
+        """Return how a streamable feature should be sourced for this vehicle.
 
-        Streaming is preferred; polling is a fallback only for a non-streaming
-        vehicle, or a discounted one on firmware predating streaming support.
+        ``True`` creates the polling entity, ``False`` the streaming entity and
+        ``None`` neither. Streaming is preferred; polling is a fallback only for
+        a non-streaming vehicle, or a discounted one on firmware predating
+        streaming support. A non-discounted streaming vehicle on such firmware
+        can neither stream the feature nor be polled for it without incurring
+        charges, so no entity is created rather than a permanently unavailable
+        one.
         """
-        return self.poll or (
+        if self.poll or (
             self.discounted and not firmware_at_least(self.firmware, streaming_firmware)
-        )
+        ):
+            return True
+        if firmware_at_least(self.firmware, streaming_firmware):
+            return False
+        return None
 
 
 @dataclass

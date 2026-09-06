@@ -10,6 +10,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -20,7 +21,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_vehicle_command
+from .helpers import async_remove_stale_vehicle_entities, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 AVAILABLE = "available"
@@ -39,12 +40,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry update platform from a config entry."""
 
-    async_add_entities(
+    entities = [
         TeslemetryVehiclePollingUpdateEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll_for("2024.44.25")
+        if poll
         else TeslemetryStreamingUpdateEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
+        if (poll := vehicle.poll_or_stream("2024.44.25")) is not None
+    ]
+
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.UPDATE,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
     )
+    async_add_entities(entities)
 
 
 class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):

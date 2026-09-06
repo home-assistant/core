@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityStateAttribute,
     MediaPlayerState,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -22,7 +23,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_vehicle_command
+from .helpers import async_remove_stale_vehicle_entities, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 STATES = {
@@ -52,12 +53,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Media platform from a config entry."""
 
-    async_add_entities(
+    entities = [
         TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll_for("2025.2.6")
+        if poll
         else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
+        if (poll := vehicle.poll_or_stream("2025.2.6")) is not None
+    ]
+
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.MEDIA_PLAYER,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
     )
+    async_add_entities(entities)
 
 
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):

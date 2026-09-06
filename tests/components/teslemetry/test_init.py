@@ -977,6 +977,85 @@ async def test_polling_only_entities_require_metadata(
     assert entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    ("polling", "discounted", "firmware", "has_dual"),
+    [
+        (False, False, "2026.0.0", True),
+        (True, False, "2020.0.0", True),
+        (False, True, "2020.0.0", True),
+        (False, False, "2020.0.0", False),
+    ],
+    ids=[
+        "streaming_current_firmware",
+        "polling_old_firmware",
+        "discounted_old_firmware",
+        "plain_streaming_old_firmware",
+    ],
+)
+async def test_streamable_entity_requires_stream_or_polling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    polling: bool,
+    discounted: bool,
+    firmware: str,
+    has_dual: bool,
+) -> None:
+    """Omit a dual entity a vehicle can neither stream nor be polled for.
+
+    A non-discounted streaming vehicle on firmware predating streaming support
+    can neither stream the feature nor be polled for it without incurring
+    charges, so no permanently unavailable streaming entity is created.
+    """
+    vin = "LRW3F7EK4NC700000"
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][vin]["polling"] = polling
+    metadata["vehicles"][vin]["discounted"] = discounted
+    metadata["vehicles"][vin]["firmware"] = firmware
+    mock_metadata.return_value = metadata
+
+    entry = await setup_platform(hass, [Platform.COVER])
+
+    # The window cover is a dual entity gated on streaming firmware "2024.26".
+    assert (
+        entity_registry.async_get_entity_id(Platform.COVER, DOMAIN, f"{vin}-windows")
+        is not None
+    ) is has_dual
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_stale_streamable_entity_removed_on_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+) -> None:
+    """Prune a dual entity when its vehicle can no longer stream or poll it."""
+    vin = "LRW3F7EK4NC700000"
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][vin]["firmware"] = "2020.0.0"
+    mock_metadata.return_value = metadata
+
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Left over from before the vehicle dropped below streaming firmware.
+    stale = entity_registry.async_get_or_create(
+        Platform.COVER,
+        DOMAIN,
+        f"{vin}-windows",
+        config_entry=entry,
+    )
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.COVER]):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.COVER, DOMAIN, stale.unique_id)
+        is None
+    )
+
+
 async def test_streaming_vehicle_coordinator_never_polls(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
@@ -1002,8 +1081,8 @@ async def test_stale_polling_only_entity_removed_on_setup(
 ) -> None:
     """Prune a polling-only entity when its vehicle no longer qualifies.
 
-    On upgrade a plain streaming vehicle drops its polling-only entities; any a
-    user had enabled are removed so its coordinator stops being charged.
+    On upgrade a plain streaming vehicle drops its polling-only entities; any
+    that a user had enabled are removed so its coordinator stops being charged.
     """
     vin = "LRW3F7EK4NC700000"
     entry = mock_config_entry()

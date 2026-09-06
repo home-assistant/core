@@ -13,6 +13,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -25,7 +26,11 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import (
+    async_remove_stale_vehicle_entities,
+    handle_command,
+    handle_vehicle_command,
+)
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -162,14 +167,15 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
-            if vehicle.poll_for(description.streaming_firmware):
+            poll = vehicle.poll_or_stream(description.streaming_firmware)
+            if poll is True:
                 if description.polling:
                     entities.append(
                         TeslemetryVehiclePollingVehicleSwitchEntity(
                             vehicle, description, entry.runtime_data.scopes
                         )
                     )
-            else:
+            elif poll is False:
                 entities.append(
                     TeslemetryStreamingVehicleSwitchEntity(
                         vehicle, description, entry.runtime_data.scopes
@@ -191,6 +197,13 @@ async def async_setup_entry(
         if energysite.info_coordinator.data.get("components_storm_mode_capable")
     )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.SWITCH,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 
