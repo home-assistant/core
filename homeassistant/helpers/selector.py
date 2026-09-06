@@ -68,8 +68,8 @@ class Selector[_T: Mapping[str, Any]]:
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
-        self.allowed_context_keys = {}
         self.config = self.CONFIG_SCHEMA(config)
+        self.allowed_context_keys = {}
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -439,11 +439,11 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
+        super().__init__(config)
         self.allowed_context_keys = {
             # Filters the available attributes based on the selected entity
             "filter_entity": {"entity"}
         }
-        super().__init__(config)
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
@@ -1375,11 +1375,11 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     def __init__(self, config: MediaSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
+        super().__init__(config)
         self.allowed_context_keys = {
             # Filters the available media based on the selected entity
             "filter_entity": {EntitySelector.selector_type}
         }
-        super().__init__(config)
 
     def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
@@ -2045,6 +2045,7 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""
+        super().__init__(config)
         self.allowed_context_keys = {
             # Filters the available states based on the selected entity
             "filter_entity": {EntitySelector.selector_type},
@@ -2053,7 +2054,6 @@ class StateSelector(Selector[StateSelectorConfig]):
             # Only show the attribute values of a specific attribute
             "filter_attribute": {AttributeSelector.selector_type},
         }
-        super().__init__(config)
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
