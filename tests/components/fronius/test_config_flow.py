@@ -64,7 +64,7 @@ async def assert_finish_flow_with_logger(hass: HomeAssistant, flow_id: str) -> N
         "host": "10.9.8.1",
         "is_logger": True,
         "modbus_port": 502,
-        "auto_revert": False,
+        "auto_revert_power_limit": False,
     }
     assert result["result"].unique_id == "123.4567"
 
@@ -123,7 +123,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
             {
                 "host": "10.9.1.1",
                 "modbus_port": 1502,
-                "auto_revert": True,
+                "auto_revert_power_limit": True,
             },
         )
         await hass.async_block_till_done()
@@ -134,7 +134,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         "host": "10.9.1.1",
         "is_logger": False,
         "modbus_port": 1502,
-        "auto_revert": True,
+        "auto_revert_power_limit": True,
     }
     assert result2["result"].unique_id == "1234567"
 
@@ -259,7 +259,7 @@ async def test_config_flow_already_configured(
         "host": old_host,  # not updated from config flow - only from reconfigure flow
         "is_logger": True,
         "modbus_port": 502,  # added by migration
-        "auto_revert": False,  # added by migration
+        "auto_revert_power_limit": False,  # added by migration
     }
 
 
@@ -287,7 +287,7 @@ async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
         "host": MOCK_DHCP_DATA.ip,
         "is_logger": True,
         "modbus_port": 502,
-        "auto_revert": False,
+        "auto_revert_power_limit": False,
     }
     assert result["result"].unique_id == "123.4567"
 
@@ -378,7 +378,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         "host": new_host,
         "is_logger": False,
         "modbus_port": 1502,
-        "auto_revert": False,
+        "auto_revert_power_limit": False,
     }
 
 
