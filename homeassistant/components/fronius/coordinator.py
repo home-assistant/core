@@ -300,13 +300,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         super().__init__(*args, **kwargs)
         # the heartbeat and a user's write must not interleave on the device
         self._device_lock = asyncio.Lock()
-
-    @property
-    def revert_seconds(self) -> int:
-        """Return the fallback period to give the device, 0 for none."""
-        if self.config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT]:
-            return AUTO_REVERT_SECONDS
-        return 0
+        # the fallback period to give the device, 0 for none - changing the
+        # setting reloads the entry, so it is fixed for this coordinator
+        self._revert_seconds = (
+            AUTO_REVERT_SECONDS
+            if self.config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT]
+            else 0
+        )
 
     async def async_start_heartbeat(self) -> None:
         """Keep an active power limit alive against the device's fallback.
@@ -319,7 +319,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         self.config_entry.async_on_unload(self._async_stop_heartbeat)
         # the first refresh may have scheduled a beat already
         self._async_cancel_heartbeat()
-        if self.revert_seconds:
+        if self._revert_seconds:
             await self._async_send_heartbeat()
             return
         # take back only a period this integration could have set - any other
@@ -341,7 +341,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         controls = self.modbus_inverter.controls
         if (
             self._heartbeat_stopped
-            or not self.revert_seconds
+            or not self._revert_seconds
             or controls is None
             or not controls.enabled
         ):
@@ -387,7 +387,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                     return
                 # the same registers `set_power_limit` writes - but that one
                 # would enable the limit, and this may only refresh a running one
-                await controls.write("revert_seconds", self.revert_seconds)
+                await controls.write("revert_seconds", self._revert_seconds)
                 await controls.write("power_limit", limit)
                 await controls.write("enabled", True)
         except (ModbusError, SunSpecError) as err:
@@ -450,9 +450,9 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 await component.async_update()
                 if (
                     isinstance(component, Controls)
-                    and component.revert_seconds != self.revert_seconds
+                    and component.revert_seconds != self._revert_seconds
                 ):
-                    await component.write("revert_seconds", self.revert_seconds)
+                    await component.write("revert_seconds", self._revert_seconds)
                 await component.write(field, value)
                 if enable_field is not None and getattr(component, enable_field):
                     await component.write(enable_field, True)
