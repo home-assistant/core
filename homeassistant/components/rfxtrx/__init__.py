@@ -283,10 +283,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         device = event.data["device"]
         if device["config_entry_id"] != entry.entry_id:
             return
-        subentry_id = next(
-            (value for domain, value in device["identifiers"] if domain == DOMAIN),
-            None,
-        )
+        subentry_id = get_subentry_id_from_identifiers(device["identifiers"])
         if subentry_id and subentry_id in entry.subentries:
             _remove_device(subentry_id)
 
@@ -446,13 +443,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for entity_entry in er.async_entries_for_device(
                     entity_registry, device_entry.id, include_disabled_entities=True
                 ):
+                    suffix = entity_entry.unique_id.removeprefix(unique_id)
+                    new_unique_id = f"{subentry_id}{suffix}"
+                    if (
+                        entity_entry.domain == Platform.EVENT
+                        and entity_entry.translation_key
+                    ):
+                        # Event entities lacked unique id suffixes.
+                        new_unique_id = (
+                            f"{new_unique_id}_{entity_entry.translation_key}"
+                        )
                     entity_registry.async_update_entity(
                         entity_entry.entity_id,
                         config_entry_id=entry.entry_id,
                         config_subentry_id=subentry_id,
-                        new_unique_id=entity_entry.unique_id.replace(
-                            unique_id, subentry_id, 1
-                        ),
+                        new_unique_id=new_unique_id,
                     )
 
                 device_registry.async_update_device(
@@ -566,6 +571,16 @@ def get_device_tuple_from_device(
         id_string = masked_id.decode("ASCII")
 
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
+
+
+def get_subentry_id_from_identifiers(
+    identifiers: set[tuple[str, str]],
+) -> str | None:
+    """Get the config subentry id from a set of device registry identifiers."""
+    return next(
+        (identifier[1] for identifier in identifiers if identifier[0] == DOMAIN),
+        None,
+    )
 
 
 async def async_remove_config_entry_device(

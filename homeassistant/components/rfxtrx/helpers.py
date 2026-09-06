@@ -5,7 +5,11 @@ from RFXtrx import RFXtrxDevice, get_device
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from . import DOMAIN, get_device_tuple_from_device, get_rfx_object
+from . import (
+    get_device_tuple_from_device,
+    get_rfx_object,
+    get_subentry_id_from_identifiers,
+)
 from .const import CONF_DATA_BITS, CONF_EVENT_CODE
 
 
@@ -17,12 +21,8 @@ def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice
     if registry_device is None:
         raise ValueError(f"Device {device_id} not found")
 
-    subentry_id = next(
-        (value for domain, value in registry_device.identifiers if domain == DOMAIN),
-        None,
-    )
-    if subentry_id is None:
-        raise ValueError(f"Device {device_id} has no {DOMAIN} identifier")
+    subentry_id = get_subentry_id_from_identifiers(registry_device.identifiers)
+    assert subentry_id is not None
     entry = hass.config_entries.async_get_entry(registry_device.primary_config_entry)
     assert entry
     subentry = entry.subentries[subentry_id]

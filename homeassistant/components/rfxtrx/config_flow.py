@@ -315,7 +315,8 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             if subentry.subentry_id in exclude_subentry_ids:
                 continue
             rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
-            assert rfx_obj
+            if rfx_obj is None:
+                continue
 
             device_id = get_device_tuple_from_device(
                 rfx_obj.device, subentry.data.get(CONF_DATA_BITS)

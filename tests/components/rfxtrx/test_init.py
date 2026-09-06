@@ -1,16 +1,24 @@
 """The tests for the Rfxtrx component."""
 
-from unittest.mock import ANY, call
+from unittest.mock import ANY, Mock, call, patch
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.rfxtrx import DOMAIN, DeviceTuple
+from homeassistant.components.rfxtrx import (
+    DOMAIN,
+    DeviceTuple,
+    get_pt2262_cmd,
+    get_pt2262_deviceid,
+    get_rfx_object,
+)
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from . import ENTRY_VERSION
 from .conftest import get_device_identifier, setup_rfx_test_cfg
 
 from tests.common import MockConfigEntry
@@ -89,6 +97,26 @@ async def test_send(hass: HomeAssistant, rfxtrx) -> None:
     assert rfxtrx.transport.send.mock_calls == [
         call(bytearray(b"\x0a\x52\x08\x02\x06\x01\x01\xff\x0f\x02\x69"))
     ]
+
+
+def test_get_rfx_object_invalid_hex() -> None:
+    """Test that an invalid hex packet id returns None."""
+    assert get_rfx_object("not_hex") is None
+
+
+def test_get_pt2262_deviceid_no_data_bits() -> None:
+    """Test that no data bits returns None."""
+    assert get_pt2262_deviceid("aabbcc", None) is None
+
+
+def test_get_pt2262_deviceid_invalid_hex() -> None:
+    """Test that an invalid hex device id returns None."""
+    assert get_pt2262_deviceid("not_hex", 4) is None
+
+
+def test_get_pt2262_cmd_invalid_hex() -> None:
+    """Test that an invalid hex device id returns None."""
+    assert get_pt2262_cmd("not_hex", 4) is None
 
 
 async def test_ws_device_remove(
@@ -217,6 +245,109 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
     rfxtrx.connect.call_count = 2
 
 
+async def test_shutdown_closes_connection(rfxtrx, hass: HomeAssistant) -> None:
+    """Test the connection is closed when Home Assistant stops."""
+    await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    rfxtrx.close_connection.assert_called_once()
+
+
+async def test_unload_entry_platforms_fail(rfxtrx, hass: HomeAssistant) -> None:
+    """Test unload fails if a platform fails to unload."""
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
+
+    assert result is False
+
+
+async def test_receive_event_without_device(rfxtrx, hass: HomeAssistant) -> None:
+    """Test an event without a device is ignored."""
+    await setup_rfx_test_cfg(hass, devices={})
+
+    mock_event = Mock(spec=rfxtrxmod.RFXtrxEvent)
+    mock_event.device = None
+    await hass.async_add_executor_job(rfxtrx.event_callback, mock_event)
+    await hass.async_block_till_done()
+
+
+async def test_ignores_non_device_subentries(hass: HomeAssistant) -> None:
+    """Test that a subentry of a different type is ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "device": "abcd",
+            "host": None,
+            "port": None,
+            "automatic_add": False,
+            "protocols": None,
+        },
+        subentries_data=(
+            {
+                "data": {},
+                "subentry_type": "other",
+                "title": "Not a device",
+                "unique_id": None,
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_updated_device_other_entry_ignored(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test removing a device from another config entry is ignored."""
+    entry = await setup_rfx_test_cfg(hass, devices={"0b1100cd0213c7f230010f71": {}})
+    subentry = next(iter(entry.subentries.values()))
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "id")},
+    )
+
+    device_registry.async_remove_device(other_device.id)
+    await hass.async_block_till_done()
+
+    # Our own subentry is unaffected.
+    assert entry.subentries == {subentry.subentry_id: subentry}
+
+
+async def test_updated_device_no_identifier_ignored(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test removing a device without a rfxtrx identifier is ignored."""
+    entry = await setup_rfx_test_cfg(hass, devices={"0b1100cd0213c7f230010f71": {}})
+    subentry = next(iter(entry.subentries.values()))
+
+    stray_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("other", "id")},
+    )
+
+    device_registry.async_remove_device(stray_device.id)
+    await hass.async_block_till_done()
+
+    # Our own subentry is unaffected.
+    assert entry.subentries == {subentry.subentry_id: subentry}
+
+
 async def test_migrate_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -235,6 +366,7 @@ async def test_migrate_entry(
                 "device_id": ["11", "0", "213c7f2:16"],
             },
             "0716000100900970": {},
+            "not_hex": {},
         },
     }
 
@@ -250,11 +382,21 @@ async def test_migrate_entry(
             ("dummy", "id"),
         },
     )
+    # Already in the new string format, e.g. from a previously interrupted
+    # migration attempt.
     device_2 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={
-            (DOMAIN, "16", "0", "00:90"),
-        },
+        identifiers={(DOMAIN, "16_0_00:90")},
+    )
+    # A device with no rfxtrx identifier at all - untouched by migration.
+    device_3 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("dummy_only", "id")},
+    )
+    # A device with a string format identifier that matches no subentry.
+    device_5 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "99_9_ffffff")},
     )
 
     entity_1 = entity_registry.async_get_or_create(
@@ -270,6 +412,14 @@ async def test_migrate_entry(
         "16_0_00:90",
         config_entry=entry,
         device_id=device_2.id,
+    )
+    entity_3 = entity_registry.async_get_or_create(
+        "event",
+        DOMAIN,
+        "11_0_213c7f2:16",
+        config_entry=entry,
+        device_id=device_1.id,
+        translation_key="command",
     )
 
     await entry.async_migrate(hass)
@@ -314,6 +464,18 @@ async def test_migrate_entry(
     }
     assert device_2.config_subentry_id == subentry_2.subentry_id
 
+    # Device with no rfxtrx identifier is left untouched.
+    device_3 = device_registry.async_get(device_3.id)
+    assert device_3
+    assert device_3.identifiers == {("dummy_only", "id")}
+    assert device_3.config_subentry_id is None
+
+    # Device whose identifier matches no subentry is left untouched.
+    device_5 = device_registry.async_get(device_5.id)
+    assert device_5
+    assert device_5.identifiers == {(DOMAIN, "99_9_ffffff")}
+    assert device_5.config_subentry_id is None
+
     entity_1 = entity_registry.async_get(entity_1.entity_id)
     assert entity_1
     assert entity_1.unique_id == f"{subentry_1.subentry_id}_signal_strength"
@@ -323,3 +485,8 @@ async def test_migrate_entry(
     assert entity_2
     assert entity_2.unique_id == subentry_2.subentry_id
     assert entity_2.config_subentry_id == subentry_2.subentry_id
+
+    entity_3 = entity_registry.async_get(entity_3.entity_id)
+    assert entity_3
+    assert entity_3.unique_id == f"{subentry_1.subentry_id}_command"
+    assert entity_3.config_subentry_id == subentry_1.subentry_id
