@@ -67,7 +67,8 @@
         },
         "reconfigure": {
           "data": {
-            "event_code": "Event code"
+            "event_code": "Event code",
+            "replace_device": "Or take over an already-configured device"
           },
           "data_description": {
             "event_code": "Change this only if the physical device was replaced with new hardware."

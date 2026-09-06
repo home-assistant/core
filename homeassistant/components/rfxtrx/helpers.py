@@ -18,8 +18,11 @@ def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice
         raise ValueError(f"Device {device_id} not found")
 
     subentry_id = next(
-        value for domain, value in registry_device.identifiers if domain == DOMAIN
+        (value for domain, value in registry_device.identifiers if domain == DOMAIN),
+        None,
     )
+    if subentry_id is None:
+        raise ValueError(f"Device {device_id} has no {DOMAIN} identifier")
     entry = hass.config_entries.async_get_entry(registry_device.primary_config_entry)
     assert entry
     subentry = entry.subentries[subentry_id]

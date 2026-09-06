@@ -87,6 +87,7 @@ class RfxtrxEventEntity(RfxtrxEntity, EventEntity):
         super().__init__(device, device_id, subentry_id)
         commands: dict[int, str] = getattr(device, device_attribute)
         self._attr_name = None
+        self._attr_unique_id = f"{subentry_id}_{translation_key}"
         self._attr_event_types = [slugify(command) for command in commands.values()]
         self._attr_translation_key = translation_key
         self._value_attribute = value_attribute

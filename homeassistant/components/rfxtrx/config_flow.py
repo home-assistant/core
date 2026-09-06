@@ -39,6 +39,7 @@ from .const import (
     CONF_EVENT_CODE,
     CONF_OFF_DELAY,
     CONF_PROTOCOLS,
+    CONF_REPLACE_DEVICE,
     CONF_VENETIAN_BLIND_MODE,
     CONST_VENETIAN_BLIND_MODE_DEFAULT,
     CONST_VENETIAN_BLIND_MODE_EU,
@@ -96,6 +97,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         """Initialize rfxtrx device subentry flow."""
         self._event_code: str | None = None
         self._device_object: rfxtrxmod.RFXtrxEvent | None = None
+        self._replace_subentry_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -124,32 +126,57 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         """Reconfigure an existing device.
 
         Also allows pointing the device at different hardware (e.g. after a
-        broken unit was physically replaced) by entering a new event code -
-        the device, its entities, and their history are kept as-is since
-        their identity is the subentry, not the radio address.
+        broken unit was physically replaced), either by entering a new event
+        code directly, or by picking another already-configured device of
+        the same protocol to take over (which is then removed) - the
+        device, its entities, and their history are kept as-is since their
+        identity is the subentry, not the radio address.
         """
         subentry = self._get_reconfigure_subentry()
         errors: dict[str, str] = {}
 
+        current_device_object = get_rfx_object(subentry.data[CONF_EVENT_CODE])
+        assert current_device_object
+        replace_devices = self._get_replace_devices(
+            current_device_object, subentry.subentry_id
+        )
+
         if user_input is not None:
-            event_code = user_input[CONF_EVENT_CODE]
+            replace_subentry_id = user_input.get(CONF_REPLACE_DEVICE)
+            if replace_subentry_id:
+                event_code = (
+                    self._get_entry()
+                    .subentries[replace_subentry_id]
+                    .data[CONF_EVENT_CODE]
+                )
+            else:
+                event_code = user_input[CONF_EVENT_CODE]
+
             device_object = get_rfx_object(event_code)
+            exclude_subentry_ids = {subentry.subentry_id}
+            if replace_subentry_id:
+                exclude_subentry_ids.add(replace_subentry_id)
+
             if device_object is None:
                 errors[CONF_EVENT_CODE] = "invalid_event_code"
             elif not self._can_add_device(
-                device_object, exclude_subentry_id=subentry.subentry_id
+                device_object, exclude_subentry_ids=exclude_subentry_ids
             ):
                 errors[CONF_EVENT_CODE] = "already_configured_device"
             else:
                 self._event_code = event_code
                 self._device_object = device_object
+                self._replace_subentry_id = replace_subentry_id
                 return await self.async_step_device_options()
 
-        schema = vol.Schema(
-            {vol.Required(CONF_EVENT_CODE, default=subentry.data[CONF_EVENT_CODE]): str}
-        )
+        schema: VolDictType = {
+            vol.Required(CONF_EVENT_CODE, default=subentry.data[CONF_EVENT_CODE]): str,
+        }
+        if replace_devices:
+            schema[vol.Optional(CONF_REPLACE_DEVICE)] = vol.In(replace_devices)
+
         return self.async_show_form(
-            step_id="reconfigure", data_schema=schema, errors=errors
+            step_id="reconfigure", data_schema=vol.Schema(schema), errors=errors
         )
 
     async def async_step_device_options(
@@ -199,6 +226,10 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                 )
 
                 if self.source == SOURCE_RECONFIGURE:
+                    if self._replace_subentry_id:
+                        self.hass.config_entries.async_remove_subentry(
+                            self._get_entry(), self._replace_subentry_id
+                        )
                     return self.async_update_and_abort(
                         self._get_entry(),
                         self._get_reconfigure_subentry(),
@@ -273,14 +304,15 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
     def _can_add_device(
         self,
         new_rfx_obj: rfxtrxmod.RFXtrxEvent,
-        exclude_subentry_id: str | None = None,
+        exclude_subentry_ids: set[str] | None = None,
     ) -> bool:
         """Check if device does not already exist."""
+        exclude_subentry_ids = exclude_subentry_ids or set()
         new_device_id = get_device_tuple_from_device(new_rfx_obj.device)
         for subentry in self._get_entry().subentries.values():
             if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
                 continue
-            if subentry.subentry_id == exclude_subentry_id:
+            if subentry.subentry_id in exclude_subentry_ids:
                 continue
             rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
             assert rfx_obj
@@ -292,6 +324,27 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                 return False
 
         return True
+
+    def _get_replace_devices(
+        self, current_device_object: rfxtrxmod.RFXtrxEvent, exclude_subentry_id: str
+    ) -> dict[str, str]:
+        """Get other configured devices of the same protocol, to replace with."""
+        replace_devices: dict[str, str] = {}
+        for subentry in self._get_entry().subentries.values():
+            if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
+                continue
+            if subentry.subentry_id == exclude_subentry_id:
+                continue
+            rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
+            if rfx_obj is None:
+                continue
+            if (
+                rfx_obj.device.packettype == current_device_object.device.packettype
+                and rfx_obj.device.subtype == current_device_object.device.subtype
+            ):
+                replace_devices[subentry.subentry_id] = subentry.title
+
+        return replace_devices
 
 
 class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):

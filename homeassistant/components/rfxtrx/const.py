@@ -7,6 +7,7 @@ CONF_VENETIAN_BLIND_MODE = "venetian_blind_mode"
 CONF_PROTOCOLS = "protocols"
 
 CONF_EVENT_CODE = "event_code"
+CONF_REPLACE_DEVICE = "replace_device"
 
 SUBENTRY_TYPE_DEVICE = "device"
 

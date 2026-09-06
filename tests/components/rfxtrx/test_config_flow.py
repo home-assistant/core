@@ -507,6 +507,101 @@ async def test_options_replace_device(
     assert state.state == "on"
 
 
+async def test_options_replace_device_with_existing(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test picking another configured device to take over an address from.
+
+    Device A keeps its identity (device, entities, customization); device
+    B's event code is moved onto it and B's now-redundant subentry is
+    removed.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+
+    # Add device A
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    subentry_a = next(iter(entry.subentries.values()))
+    device_a = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+    entity_id_a = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, subentry_a.subentry_id
+    )
+    assert entity_id_a
+    device_registry.async_update_device(device_a.id, name_by_user="My custom name")
+
+    # Add device B (same protocol/type as A)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    subentry_b_id = next(
+        s.subentry_id for s in entry.subentries.values() if s != subentry_a
+    )
+
+    # Reconfigure A, picking B as the device to take over
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_a.subentry_id)
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"replace_device": subentry_b_id},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    # A kept its identity and customization, but now has B's event code
+    assert entry.subentries.keys() == {subentry_a.subentry_id}
+    subentry_a = entry.subentries[subentry_a.subentry_id]
+    assert subentry_a.data["event_code"] == "0b1100100118cdea02010f70"
+
+    device_a = device_registry.async_get(device_a.id)
+    assert device_a
+    assert device_a.name_by_user == "My custom name"
+    assert device_a.name == "AC 118cdea:2"
+
+    entity_a = entity_registry.async_get(entity_id_a)
+    assert entity_a
+    assert entity_a.unique_id == subentry_a.subentry_id
+
+
 async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     """Test we can not add a duplicate device."""
 
