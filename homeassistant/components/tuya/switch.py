@@ -899,7 +899,6 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
-            device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
