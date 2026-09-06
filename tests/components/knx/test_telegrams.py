@@ -10,6 +10,9 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from knx_telegram_store import KnxTelegramStoreException, StoredTelegram, TelegramQuery
 import pytest
+from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram.address import GroupAddress, IndividualAddress
+from xknx.telegram.apci import GroupValueRead
 
 from homeassistant.components.knx.const import (
     CONF_KNX_TELEGRAM_DB_BACKEND,
@@ -146,6 +149,7 @@ async def test_store_telegram_history_sqlite(
 async def test_store_telegram_history_error_handling(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
     side_effect: Exception,
 ) -> None:
     """Test storage initialization handling for the different failure modes."""
@@ -159,7 +163,6 @@ async def test_store_telegram_history_error_handling(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -167,6 +170,7 @@ async def test_store_telegram_history_error_handling(
 async def test_store_telegram_history_needs_migration_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test store init aborts when needs_migration times out and retries are off."""
 
@@ -188,7 +192,6 @@ async def test_store_telegram_history_needs_migration_timeout(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -451,6 +454,43 @@ async def test_model_to_dict_resolution(
     assert result["unit"] == "°C"
 
 
+@pytest.mark.usefixtures("load_knxproj")
+async def test_telegram_to_dict_dpt_from_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test undecodable telegrams get their DPT from the project."""
+    await knx.setup_integration()
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.project.loaded
+
+    def read_telegram(destination: str) -> TelegramDict:
+        return telegrams_module.telegram_to_dict(
+            Telegram(
+                destination_address=GroupAddress(destination),
+                direction=TelegramDirection.INCOMING,
+                payload=GroupValueRead(),
+                source_address=IndividualAddress("1.2.3"),
+            )
+        )
+
+    # GroupValueRead has no payload to decode - the DPT of the group address
+    # is still reported from the project, without a value.
+    result = read_telegram("0/0/1")
+    assert result["telegramtype"] == "GroupValueRead"
+    assert result["dpt_main"] == 1
+    assert result["dpt_sub"] == 1
+    assert result["dpt_name"] == "switch"
+    assert result["payload"] is None
+    assert result["value"] is None
+
+    # Group addresses unknown to the project stay without DPT.
+    result = read_telegram("7/7/7")
+    assert result["dpt_main"] is None
+    assert result["dpt_sub"] is None
+    assert result["dpt_name"] is None
+
+
 async def test_load_history_needs_migration(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -655,6 +695,7 @@ async def test_nightly_eviction_error_handling(
 async def test_postgres_backend_init_error(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test PostgreSQL backend DSN handling and init failure path."""
     dsn = "postgresql://user:secret@db.local:5432/knx"
@@ -681,7 +722,6 @@ async def test_postgres_backend_init_error(
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is None
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None

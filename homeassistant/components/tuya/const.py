@@ -491,6 +491,8 @@ class DeviceCategory(StrEnum):
     """
     FSKG = "fskg"
     """Fan wall switch (undocumented)"""
+    HCDD = "hcdd"
+    """Chasing tape light (undocumented)"""
     HJJCY = "hjjcy"
     """Air Quality Monitor
 
@@ -596,6 +598,7 @@ class DPCode(StrEnum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALL_ENERGY = "all_energy"  # Combined energy of all channels
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -683,9 +686,15 @@ class DPCode(StrEnum):
     CUMULATIVE_ENERGY_OUTPUT_INV = "cumulative_energy_output_inv"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
+    CUR_CURRENT1 = "cur_current1"  # Actual current, channel 1
+    CUR_CURRENT2 = "cur_current2"  # Actual current, channel 2
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
+    CUR_POWER1 = "cur_power1"  # Actual power, channel 1
+    CUR_POWER2 = "cur_power2"  # Actual power, channel 2
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    CUR_VOLTAGE1 = "cur_voltage1"  # Actual voltage, channel 1
+    CUR_VOLTAGE2 = "cur_voltage2"  # Actual voltage, channel 2
     CURRENT_SOC = "current_soc"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
@@ -694,6 +703,8 @@ class DPCode(StrEnum):
     DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
     DEVICE_RESTART = "device_restart"
+    DEVICE_STATE1 = "device_state1"  # Channel 1 monitoring state
+    DEVICE_STATE2 = "device_state2"  # Channel 2 monitoring state
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
@@ -945,9 +956,13 @@ class DPCode(StrEnum):
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
+    TODAY_ACC_ENERGY1 = "today_acc_energy1"  # Energy today, channel 1
+    TODAY_ACC_ENERGY2 = "today_acc_energy2"  # Energy today, channel 2
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
+    TOTAL_ENERGY1 = "total_energy1"  # Total energy, channel 1
+    TOTAL_ENERGY2 = "total_energy2"  # Total energy, channel 2
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
@@ -971,6 +986,8 @@ class DPCode(StrEnum):
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
+    WARN_POWER1 = "warn_power1"  # Power warning threshold, channel 1
+    WARN_POWER2 = "warn_power2"  # Power warning threshold, channel 2
     WATER = "water"
     WATER_LEVEL = "water_level"
     WATER_RESET = "water_reset"  # Resetting of water usage days

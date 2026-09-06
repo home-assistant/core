@@ -14,6 +14,7 @@ from aioautomower.model import (
     MowerModes,
     RestrictedReasons,
     WorkArea,
+    WorkAreaType,
 )
 
 from homeassistant.components.sensor import (
@@ -343,7 +344,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="progress",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.progress is not None,
+        exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=attrgetter("progress"),
@@ -351,7 +352,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.last_time_completed is not None,
+        exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=attrgetter("last_time_completed"),
     ),

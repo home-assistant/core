@@ -339,31 +339,96 @@ async def test_removing_chime(
     assert sorted(device_models) == sorted(expected_models)
 
 
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    reolink_host.channels = [0]
+    assert await async_setup_component(hass, "config", {})
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
+@pytest.mark.parametrize(
+    (
+        "support_uid",
+        "id_prefix",
+        "cam_id",
+    ),
+    [
+        (
+            True,
+            TEST_UID,
+            TEST_UID_CAM,
+        ),
+        (
+            False,
+            TEST_MAC,
+            "ch0",
+        ),
+    ],
+)
 async def test_via_device_id_chain(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
     reolink_chime: MagicMock,
     device_registry: dr.DeviceRegistry,
+    support_uid: bool,
+    id_prefix: str,
+    cam_id: str,
 ) -> None:
     """Test the host -> camera -> chime devices are linked via via_device_id."""
+
+    def mock_supported(ch, capability):
+        if capability == "UID":
+            return support_uid
+        return True
+
+    reolink_host.supported = mock_supported
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     host_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, TEST_UID), config_entry.entry_id
+        (DOMAIN, id_prefix), config_entry.entry_id
     )
     assert host_device is not None
 
     camera_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{TEST_UID}_{TEST_UID_CAM}"), config_entry.entry_id
+        (DOMAIN, f"{id_prefix}_{cam_id}"), config_entry.entry_id
     )
     assert camera_device is not None
     assert camera_device.via_device_id == host_device.id
 
     chime_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{TEST_UID}_chime{reolink_chime.dev_id}"), config_entry.entry_id
+        (DOMAIN, f"{id_prefix}_chime{reolink_chime.dev_id}"), config_entry.entry_id
     )
     assert chime_device is not None
     assert chime_device.via_device_id == camera_device.id

@@ -11,7 +11,7 @@ from aiokarakeep import (
 import pytest
 
 from homeassistant.components.karakeep.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -40,7 +40,6 @@ async def test_setup_entry(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        KarakeepAuthError("Invalid token", 401),
         KarakeepConnectionError("Cannot connect"),
         KarakeepApiError("API error", 500),
         KarakeepInvalidResponseError("Invalid response"),
@@ -58,6 +57,23 @@ async def test_setup_entry_update_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_auth_failure_starts_reauth(
+    hass: HomeAssistant,
+    mock_karakeep_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid token puts the entry in error and starts a reauth flow."""
+    mock_karakeep_client.async_get_stats.side_effect = KarakeepAuthError(
+        "Invalid token", 401
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_setup_entry_version_failure(

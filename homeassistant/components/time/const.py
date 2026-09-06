@@ -1,5 +1,7 @@
 """Provides the constants needed for the component."""
 
-DOMAIN = "time"
+from typing import Final
+
+DOMAIN: Final = "time"
 
 SERVICE_SET_VALUE = "set_value"

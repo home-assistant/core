@@ -1,7 +1,6 @@
 """Tests for the telegram_bot component."""
 
 import base64
-from datetime import datetime
 from http import HTTPStatus
 import io
 import os
@@ -28,6 +27,7 @@ from telegram.error import (
 )
 
 from homeassistant.components.telegram_bot import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
@@ -102,7 +102,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.issue_registry import IssueRegistry
-from homeassistant.util import json as json_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
 
 from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
@@ -287,7 +287,7 @@ async def test_send_message_with_inline_keyboard(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -809,6 +809,39 @@ async def test_webhook_endpoint_generates_telegram_attachment_event(
 
     assert events[0].data["file_id"] == expected_file_id
     assert isinstance(events[0].context, Context)
+
+
+async def test_polling_platform_allowed_updates(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test polling asks for the updates the integration handles.
+
+    Telegram keeps the setting per bot and reuses the last one it was given
+    when it is omitted, so it has to be sent on every start.
+    """
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.updater.start_polling = AsyncMock()
+        application.updater.stop = AsyncMock()
+        application.initialize = AsyncMock()
+        application.start = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        application.updater.start_polling.call_args.kwargs["allowed_updates"]
+        == ALLOWED_UPDATES
+    )
 
 
 async def test_polling_platform_message_text_update(

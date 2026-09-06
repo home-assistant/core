@@ -1,7 +1,6 @@
 """Define fixtures for Notion tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, Mock, patch
 
 from aionotion.bridge.models import Bridge
@@ -18,7 +17,7 @@ from homeassistant.components.notion.const import (
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_USERNAME = "user@host.com"
 TEST_PASSWORD = "password123"
@@ -94,25 +93,25 @@ def config_fixture():
 @pytest.fixture(name="data_bridge", scope="package")
 def data_bridge_fixture():
     """Define bridge data."""
-    return json.loads(load_fixture("bridge_data.json", "notion"))
+    return load_json_object_fixture("bridge_data.json", "notion")
 
 
 @pytest.fixture(name="data_listener", scope="package")
 def data_listener_fixture():
     """Define listener data."""
-    return json.loads(load_fixture("listener_data.json", "notion"))
+    return load_json_object_fixture("listener_data.json", "notion")
 
 
 @pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
-    return json.loads(load_fixture("sensor_data.json", "notion"))
+    return load_json_object_fixture("sensor_data.json", "notion")
 
 
 @pytest.fixture(name="data_user_preferences", scope="package")
 def data_user_preferences_fixture():
     """Define user preferences data."""
-    return json.loads(load_fixture("user_preferences_data.json", "notion"))
+    return load_json_object_fixture("user_preferences_data.json", "notion")
 
 
 @pytest.fixture(name="get_client")

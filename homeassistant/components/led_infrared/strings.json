@@ -71,6 +71,18 @@
       "timer": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer%]"
       },
+      "timer_2h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_2h%]"
+      },
+      "timer_4h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_4h%]"
+      },
+      "timer_6h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_6h%]"
+      },
+      "timer_8h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_8h%]"
+      },
       "white_brightness_100": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_100%]"
       },
@@ -109,6 +121,7 @@
               "blue_up": "Blue up",
               "brightness_down": "Brightness down",
               "brightness_up": "Brightness up",
+              "candle": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::candle%]",
               "cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::cyan%]",
               "dark_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::dark_cyan%]",
               "deep_blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::deep_blue%]",
@@ -130,6 +143,7 @@
               "jump3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::jump3%]",
               "jump7": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::jump7%]",
               "lavender_blush": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::lavender_blush%]",
+              "light": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light%]",
               "light_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_cyan%]",
               "light_green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_green%]",
               "magenta": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::magenta%]",
@@ -158,6 +172,10 @@
               "smooth": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::smooth%]",
               "strobe": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::strobe%]",
               "timer": "Timer",
+              "timer_2h": "Timer 2h",
+              "timer_4h": "Timer 4h",
+              "timer_6h": "Timer 6h",
+              "timer_8h": "Timer 8h",
               "tomato": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::tomato%]",
               "turquoise": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::turquoise%]",
               "white": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::white%]",
@@ -184,6 +202,7 @@
               "aqua": "Color: Aqua",
               "auto": "[%key:common::state::auto%]",
               "blue": "Color: Blue",
+              "candle": "Candle",
               "cyan": "Color: Cyan",
               "dark_cyan": "Color: Dark cyan",
               "deep_blue": "Color: Deep Blue",
@@ -203,6 +222,7 @@
               "jump3": "Jump 3",
               "jump7": "Jump 7",
               "lavender_blush": "Color: Lavender Blush",
+              "light": "Steady light",
               "light_cyan": "Color: Light Cyan",
               "light_green": "Color: Light green",
               "magenta": "Color: Magenta",
@@ -238,6 +258,7 @@
   "selector": {
     "device_type": {
       "options": {
+        "generic_10_key": "10-key remote control",
         "generic_13_key": "13-key remote control",
         "generic_24_key": "24-key remote control",
         "generic_40_key": "40-key remote control",

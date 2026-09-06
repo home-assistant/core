@@ -390,6 +390,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         else:
             # Traditional API
+            assert self.user_id is not None
             try:
                 plant_info = await self.hass.async_add_executor_job(
                     self.api.plant_list, self.user_id

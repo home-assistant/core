@@ -1823,7 +1823,7 @@
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_consumed',
     'unique_id': '1234567890-energy_reactive_ac_consumed',
-    'unit_of_measurement': 'varh',
+    'unit_of_measurement': <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
   })
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_energy_consumed-state]
@@ -1831,7 +1831,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_consumed',
@@ -1877,7 +1877,7 @@
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_produced',
     'unique_id': '1234567890-energy_reactive_ac_produced',
-    'unit_of_measurement': 'varh',
+    'unit_of_measurement': <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
   })
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_energy_produced-state]
@@ -1885,7 +1885,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy produced',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_produced',
@@ -6008,7 +6008,7 @@
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_consumed',
     'unique_id': '1234567890-energy_reactive_ac_consumed',
-    'unit_of_measurement': 'varh',
+    'unit_of_measurement': <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
   })
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_energy_consumed-state]
@@ -6016,7 +6016,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_consumed',
@@ -6062,7 +6062,7 @@
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_produced',
     'unique_id': '1234567890-energy_reactive_ac_produced',
-    'unit_of_measurement': 'varh',
+    'unit_of_measurement': <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
   })
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_energy_produced-state]
@@ -6070,7 +6070,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy produced',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 'varh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_produced',

@@ -226,21 +226,21 @@ class DateTimeExtension(BaseTemplateExtension):
 
     def now(self) -> datetime:
         """Record fetching now."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         return dt_util.now()
 
     def utcnow(self) -> datetime:
         """Record fetching utcnow."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         return dt_util.utcnow()
 
     def today_at(self, time_str: str = "") -> datetime:
         """Record fetching now where the time has been replaced with value."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         today = dt_util.start_of_local_day()
@@ -263,7 +263,7 @@ class DateTimeExtension(BaseTemplateExtension):
         wrong direction are returned as-is, except naive datetimes are first
         converted to local time.
         """
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         if not isinstance(value, datetime):

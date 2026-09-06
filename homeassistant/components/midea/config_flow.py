@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
@@ -30,9 +31,19 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN, LOGGER
+from .const import (
+    CONF_ACCOUNT,
+    CONF_KEY,
+    CONF_SERVER,
+    CONF_SN,
+    CONF_SUBTYPE,
+    DOMAIN,
+    LOGGER,
+)
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 DEFAULT_CLOUD: str = get_default_cloud()
@@ -91,7 +102,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     """
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """MideaConfigFlow class."""
@@ -456,6 +467,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS),
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
+                CONF_MAC: device.get(CONF_MAC),
+                CONF_SN: device.get(CONF_SN),
             }
 
             # MUST get a auth passed token/key for v3 device, disable add before pass
@@ -541,6 +554,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SUBTYPE: self.found_device.get(CONF_SUBTYPE) or 0,
             CONF_TOKEN: self.found_device.get(CONF_TOKEN) or "",
             CONF_KEY: self.found_device.get(CONF_KEY) or "",
+            CONF_MAC: self.found_device.get(CONF_MAC),
+            CONF_SN: self.found_device.get(CONF_SN),
         }
 
     async def _async_create_midea_entry(
@@ -589,6 +604,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_TOKEN: user_input[CONF_TOKEN],
                 CONF_KEY: user_input[CONF_KEY],
             }
+            if mac := user_input.get(CONF_MAC):
+                data[CONF_MAC] = mac
+            if serial_number := user_input.get(CONF_SN):
+                data[CONF_SN] = serial_number
 
             return self.async_create_entry(
                 title=name,
@@ -679,6 +698,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_KEY] = keys["key"]
                 user_input[CONF_TOKEN] = keys["token"]
 
+            user_input[CONF_MAC] = device.get(CONF_MAC)
+            user_input[CONF_SN] = device.get(CONF_SN)
+
             self.found_device = {
                 CONF_DEVICE_ID: user_input[CONF_DEVICE_ID],
                 CONF_NAME: self.found_device.get(CONF_NAME),
@@ -689,10 +711,48 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: user_input[CONF_MODEL],
                 CONF_TOKEN: user_input[CONF_TOKEN],
                 CONF_KEY: user_input[CONF_KEY],
+                CONF_MAC: user_input[CONF_MAC],
+                CONF_SN: user_input[CONF_SN],
             }
 
             return await self._async_create_midea_entry(user_input)
         return self._show_manually_form(user_input, error)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow reconfiguration of a Midea config entry."""
+        entry = self._get_reconfigure_entry()
+        error = None
+        if user_input is not None:
+            devices = await self.hass.async_add_executor_job(
+                lambda: discover(
+                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
+                ),
+            )
+            entry_device_id = entry.data[CONF_DEVICE_ID]
+            device = devices.get(entry_device_id)
+            if len(devices) == 0:
+                error = "invalid_device_ip"
+            elif device is None:
+                error = "invalid_device_id_for_ip"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_IP_ADDRESS,
+                        default=(user_input or entry.data)[CONF_IP_ADDRESS],
+                    ): str
+                }
+            ),
+            errors={"base": error} if error else None,
+        )
 
     def _show_manually_form(
         self,
@@ -750,3 +810,29 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             errors={"base": error} if error else None,
         )
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of a known Midea device.
+
+        Only devices already configured (matched via ``registered_devices``)
+        reach this step. It is used to keep the stored host in sync with the
+        current IP address of the device.
+        """
+        mac = format_mac(discovery_info.macaddress)
+        for entry in self._async_current_entries():
+            if (entry_mac := entry.data.get(CONF_MAC)) is None or format_mac(
+                entry_mac
+            ) != mac:
+                continue
+            if entry.data[CONF_IP_ADDRESS] != discovery_info.ip:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data | {CONF_IP_ADDRESS: discovery_info.ip},
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        return self.async_abort(reason="no_devices_found")

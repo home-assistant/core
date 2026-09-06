@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import validators as tcv
 from .const import CONF_PRESS, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
@@ -36,6 +37,8 @@ DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_PRESS,)
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
 BUTTON_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
@@ -43,7 +46,7 @@ BUTTON_YAML_SCHEMA = vol.Schema(
     }
 ).extend(
     make_template_entity_common_schema(
-        BUTTON_DOMAIN, DEFAULT_NAME, block_device_class=True
+        BUTTON_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -95,6 +98,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
 
     _attr_should_poll = False
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     def __init__(
         self,

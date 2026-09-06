@@ -7,7 +7,7 @@ import shutil
 from tempfile import mkdtemp
 from typing import override
 
-from aiohttp import BasicAuth, ClientSession, UnixConnector
+from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -153,14 +153,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             password = token_hex()
             _LOGGER.debug("Generated random credentials for go2rtc server")
 
-        auth = BasicAuth(username, password)
         # HA will manage the binary
         temp_dir = mkdtemp(prefix="go2rtc-")
         # Manually created session (not using the helper) needs to be closed manually
         # See on_stop listener below
         session = ClientSession(
             connector=UnixConnector(path=get_go2rtc_unix_socket_path(temp_dir)),
-            auth=auth,
+            headers={"Authorization": encode_basic_auth(username, password)},
         )
         server = Server(
             hass,
@@ -186,9 +185,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         url = HA_MANAGED_URL
     elif username and password:
-        # Create session with BasicAuth if credentials are provided
-        auth = BasicAuth(username, password)
-        session = async_create_clientsession(hass, auth=auth)
+        session = async_create_clientsession(
+            hass, headers={"Authorization": encode_basic_auth(username, password)}
+        )
     else:
         session = async_get_clientsession(hass)
 
@@ -261,6 +260,14 @@ async def _get_binary(hass: HomeAssistant) -> str | None:
     return await hass.async_add_executor_job(shutil.which, "go2rtc")
 
 
+@dataclass(frozen=True)
+class _SessionInfo:
+    """Session info."""
+
+    ws_client: Go2RtcWsClient
+    camera: Camera
+
+
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
@@ -276,7 +283,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._url = url
         self._session = session
         self._rest_client = rest_client
-        self._sessions: dict[str, Go2RtcWsClient] = {}
+        self._sessions: dict[str, _SessionInfo] = {}
         self._supported_schemes: set[str] = set()
 
     @property
@@ -310,8 +317,12 @@ class WebRTCProvider(CameraWebRTCProvider):
             send_message(WebRTCError("go2rtc_webrtc_offer_failed", str(err)))
             return
 
-        self._sessions[session_id] = ws_client = Go2RtcWsClient(
+        ws_client = Go2RtcWsClient(
             self._session, self._url, source=get_camera_identifier(camera)
+        )
+        self._sessions[session_id] = _SessionInfo(
+            ws_client=ws_client,
+            camera=camera,
         )
 
         @callback
@@ -338,8 +349,8 @@ class WebRTCProvider(CameraWebRTCProvider):
     ) -> None:
         """Handle the WebRTC candidate."""
 
-        if ws_client := self._sessions.get(session_id):
-            await ws_client.send(WebRTCCandidate(candidate.candidate))
+        if session_info := self._sessions.get(session_id):
+            await session_info.ws_client.send(WebRTCCandidate(candidate.candidate))
         else:
             _LOGGER.debug("Unknown session %s. Ignoring candidate", session_id)
 
@@ -347,8 +358,8 @@ class WebRTCProvider(CameraWebRTCProvider):
     @override
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
-        ws_client = self._sessions.pop(session_id)
-        self._hass.async_create_task(ws_client.close())
+        if session_info := self._sessions.pop(session_id, None):
+            self._hass.async_create_task(session_info.ws_client.close())
 
     @override
     async def async_get_image(
@@ -366,7 +377,7 @@ class WebRTCProvider(CameraWebRTCProvider):
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
         if not (stream_source := await camera.stream_source()):
-            await self.teardown()
+            await self._close_camera_sessions(camera)
             raise HomeAssistantError("Camera has no stream source")
 
         if camera.platform.platform_name == "generic":
@@ -376,7 +387,7 @@ class WebRTCProvider(CameraWebRTCProvider):
             stream_source = "ffmpeg:" + stream_source
 
         if not self.async_is_supported(stream_source):
-            await self.teardown()
+            await self._close_camera_sessions(camera)
             raise HomeAssistantError("Stream source is not supported by go2rtc")
 
         camera_prefs = await get_dynamic_camera_stream_settings(
@@ -440,11 +451,20 @@ class WebRTCProvider(CameraWebRTCProvider):
         else:
             await self._rest_client.preload.disable(identifier)
 
+    async def _close_camera_sessions(self, camera: Camera) -> None:
+        for session_id in list(self._sessions):
+            session_info = self._sessions.get(session_id)
+            if session_info is None or session_info.camera != camera:
+                continue
+            # Unregister before closing, as closing yields to the event loop
+            del self._sessions[session_id]
+            await session_info.ws_client.close()
+
     async def teardown(self) -> None:
         """Tear down the provider."""
-        for ws_client in self._sessions.values():
-            await ws_client.close()
-        self._sessions.clear()
+        while self._sessions:
+            _, session_info = self._sessions.popitem()
+            await session_info.ws_client.close()
 
     @override
     async def async_register_camera(
@@ -460,6 +480,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera: Camera,
     ) -> None:
         """Will be called when the provider is unregistered for a camera."""
+        await self._close_camera_sessions(camera)
         identifier = get_camera_identifier(camera)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)

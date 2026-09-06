@@ -12,11 +12,16 @@ from wyoming.error import Error
 from wyoming.tts import SynthesizeStopped
 
 from homeassistant.components import tts, wyoming
+from homeassistant.components.wyoming.coordinator import UPDATE_INTERVAL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import DATA_INSTANCES
+from homeassistant.util import dt as dt_util
 
-from . import MockAsyncTcpClient
+from . import TTS_INFO_LANGUAGE_REPLACED, TTS_INFO_NEW_VOICE, MockAsyncTcpClient
+
+from tests.common import async_fire_time_changed
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
@@ -38,6 +43,72 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     assert voices[0].name == "Test Voice"
     assert voices[0].voice_id == "Test Voice"
     assert not entity.async_get_supported_voices("de-DE")
+
+
+async def test_voices_refreshed(
+    hass: HomeAssistant, init_wyoming_tts: ConfigEntry
+) -> None:
+    """Test that a voice added on the service becomes available."""
+    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_tts")
+    assert entity is not None
+    assert entity.async_get_supported_voices("de-DE") is None
+
+    with patch(
+        "homeassistant.components.wyoming.coordinator.load_wyoming_info",
+        return_value=TTS_INFO_NEW_VOICE,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert set(entity.supported_languages) == {"en-US", "de-DE"}
+    voices = entity.async_get_supported_voices("de-DE")
+    assert voices is not None
+    assert [voice.voice_id for voice in voices] == ["New Voice"]
+
+    # Adding a language must not move the default away from a supported one.
+    assert entity.default_language == "en-US"
+
+    # Refreshed info is shared with the rest of the integration.
+    assert init_wyoming_tts.runtime_data.service.info == TTS_INFO_NEW_VOICE
+
+
+@pytest.mark.usefixtures("init_wyoming_tts")
+async def test_default_language_follows_removed_language(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the default language moves when the current one is removed."""
+    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_tts")
+    assert entity is not None
+    assert entity.default_language == "en-US"
+
+    with patch(
+        "homeassistant.components.wyoming.coordinator.load_wyoming_info",
+        return_value=TTS_INFO_LANGUAGE_REPLACED,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert entity.supported_languages == ["de-DE"]
+    assert entity.default_language == "de-DE"
+
+
+@pytest.mark.usefixtures("init_wyoming_tts")
+async def test_voices_kept_when_refresh_fails(hass: HomeAssistant) -> None:
+    """Test that the last known voices are kept when a refresh fails."""
+    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_tts")
+    assert entity is not None
+
+    with patch(
+        "homeassistant.components.wyoming.coordinator.load_wyoming_info",
+        return_value=None,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert entity.supported_languages == ["en-US"]
+    voices = entity.async_get_supported_voices("en-US")
+    assert voices is not None
+    assert [voice.voice_id for voice in voices] == ["Test Voice"]
 
 
 async def test_get_tts_audio(
