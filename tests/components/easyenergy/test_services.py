@@ -3,7 +3,6 @@
 from datetime import date
 from unittest.mock import MagicMock
 
-from aiohttp import ClientPayloadError
 from easyenergy import (
     EasyEnergyConnectionError,
     EasyEnergyError,
@@ -517,8 +516,6 @@ async def test_service_validation_invalid_date(
             EasyEnergyConnectionError("Connection failed"), id="connection_error"
         ),
         pytest.param(EasyEnergyNoDataError("No prices found"), id="no_data"),
-        pytest.param(ClientPayloadError("Incomplete response"), id="response_error"),
-        pytest.param(TimeoutError("Response timed out"), id="timeout"),
     ],
 )
 async def test_service_api_error(
@@ -528,7 +525,7 @@ async def test_service_api_error(
     service: str,
     method: str,
     service_data: dict[str, bool],
-    exception: Exception,
+    exception: EasyEnergyError,
 ) -> None:
     """Test API failures raise translated execution errors for every action."""
     mock_method = getattr(mock_easyenergy, method)

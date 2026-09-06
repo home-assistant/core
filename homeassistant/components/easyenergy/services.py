@@ -5,7 +5,6 @@ from enum import StrEnum
 from functools import partial
 from typing import Final
 
-from aiohttp import ClientError
 from easyenergy import (
     EasyEnergyError,
     Electricity,
@@ -200,7 +199,7 @@ async def __get_prices(
                 end_date=end_date,
                 vat=vat,
             )
-        except (EasyEnergyError, ClientError, TimeoutError) as err:
+        except EasyEnergyError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="fetch_prices_error",
@@ -216,7 +215,7 @@ async def __get_prices(
                 granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
                 vat=vat,
             )
-        except (EasyEnergyError, ClientError, TimeoutError) as err:
+        except EasyEnergyError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="fetch_prices_error",
