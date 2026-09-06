@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
@@ -177,7 +178,8 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Allow removing a battery pack the inverter no longer reports."""
     serial = config_entry.unique_id
-    assert serial is not None
+    if TYPE_CHECKING:
+        assert serial is not None
     runtime_data = (
         config_entry.runtime_data
         if config_entry.state is ConfigEntryState.LOADED
