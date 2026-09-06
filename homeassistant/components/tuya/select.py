@@ -355,8 +355,7 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
     DeviceCategory.ZNJDQ: (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power On Behavior",
-            options=["off", "on", "memory"],
+            translation_key="relay_status",
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(

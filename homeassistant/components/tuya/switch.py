@@ -897,11 +897,15 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
     DeviceCategory.ZNJDQ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+            device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.ZNJXS: (
