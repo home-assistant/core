@@ -170,6 +170,15 @@
     "auth_failed": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
+    "command_outcome_unknown": {
+      "message": "The Homevolt command was sent, but its result could not be verified."
+    },
+    "command_rejected": {
+      "message": "The Homevolt battery rejected the command."
+    },
+    "command_verification_failed": {
+      "message": "The Homevolt battery did not apply the requested command."
+    },
     "communication_error": {
       "message": "Error communicating with the Homevolt battery: {error}"
     },
