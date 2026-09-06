@@ -6,11 +6,12 @@ from aiobirdnetgo import (
     BirdNetGoAuthenticationError,
     BirdNetGoConnectionError,
     BirdNetGoError,
+    BirdNetGoResponseError,
 )
 
 from homeassistant.components.birdnet_go.const import DEFAULT_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -47,6 +48,34 @@ async def test_flow_user_success(
     }
     assert isinstance(result["data"][CONF_PORT], int)
     assert result["result"].unique_id == "192.168.1.100:8080"
+
+
+async def test_flow_user_with_api_key(
+    hass: HomeAssistant, mock_birdnet_client: AsyncMock
+) -> None:
+    """Test user step with optional API key configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+            CONF_API_KEY: "secret_token_123",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_SSL: False,
+        CONF_API_KEY: "secret_token_123",
+    }
+    assert result["data"][CONF_API_KEY] == "secret_token_123"
 
 
 async def test_flow_user_port_normalization(
@@ -131,6 +160,30 @@ async def test_flow_user_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_flow_user_malformed_kpis(
+    hass: HomeAssistant, mock_birdnet_client: AsyncMock
+) -> None:
+    """Test user step rejects malformed KPI response from non-BirdNET endpoint."""
+    mock_birdnet_client.get_kpis.side_effect = BirdNetGoResponseError(
+        200, "Malformed KPI response: missing required headline metrics"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_user_general_error(

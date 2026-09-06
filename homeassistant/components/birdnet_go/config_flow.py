@@ -85,7 +85,6 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if not errors:
-                    # Canonicalize endpoint parameters from client
                     host = client.host
                     port = client.port
                     use_ssl = client.use_ssl
