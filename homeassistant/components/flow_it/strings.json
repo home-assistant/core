@@ -39,7 +39,7 @@
   "entity": {
     "switch": {
       "flow_in": {
-        "name": "Air Intake"
+        "name": "Air intake"
       },
       "flow_out": {
         "name": "Air exhaust"
