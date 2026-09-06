@@ -51,7 +51,7 @@ async def async_get_controller(
 class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     discovered_ip_address: str | None = None
 
