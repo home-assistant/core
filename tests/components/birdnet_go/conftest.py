@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiobirdnetgo import DashboardKPIs, HealthResponse, PingResponse
+from aiobirdnetgo import BirdNetGoClient, DashboardKPIs
 import pytest
 
 from homeassistant.components.birdnet_go.const import DEFAULT_PORT, DOMAIN
@@ -19,36 +19,37 @@ def mock_kpis() -> DashboardKPIs:
 
 
 @pytest.fixture
-def mock_health() -> HealthResponse:
-    """Return mock HealthResponse from JSON fixture."""
-    return HealthResponse.from_dict(load_json_object_fixture("health.json", DOMAIN))
-
-
-@pytest.fixture
 def mock_birdnet_client(
-    mock_kpis: DashboardKPIs, mock_health: HealthResponse
+    mock_kpis: DashboardKPIs,
 ) -> Generator[AsyncMock]:
     """Mock BirdNetGoClient."""
+    mock_instance = AsyncMock(spec=BirdNetGoClient)
+    mock_instance.host = "192.168.1.100"
+    mock_instance.port = 8080
+    mock_instance.use_ssl = False
+    mock_instance.base_url = "http://192.168.1.100:8080"
+    mock_instance.get_kpis = AsyncMock(return_value=mock_kpis)
+
+    def _create_client(*args: object, **kwargs: object) -> AsyncMock:
+        real_client = BirdNetGoClient(*args, **kwargs)  # type: ignore[arg-type]
+        mock_instance.host = real_client.host
+        mock_instance.port = real_client.port
+        mock_instance.use_ssl = real_client.use_ssl
+        mock_instance.base_url = real_client.base_url
+        return mock_instance
+
     with (
         patch(
             "homeassistant.components.birdnet_go.config_flow.BirdNetGoClient",
-            autospec=True,
+            side_effect=_create_client,
         ) as mock_client_cls,
         patch(
             "homeassistant.components.birdnet_go.BirdNetGoClient",
             new=mock_client_cls,
         ),
     ):
-        client = mock_client_cls.return_value
-        client.host = "192.168.1.100"
-        client.port = 8080
-        client.use_ssl = False
-        client.base_url = "http://192.168.1.100:8080"
-        client.ping = AsyncMock(return_value=True)
-        client.get_ping = AsyncMock(return_value=PingResponse(status="ok"))
-        client.get_health = AsyncMock(return_value=mock_health)
-        client.get_kpis = AsyncMock(return_value=mock_kpis)
-        yield client
+        mock_client_cls.return_value = mock_instance
+        yield mock_instance
 
 
 @pytest.fixture

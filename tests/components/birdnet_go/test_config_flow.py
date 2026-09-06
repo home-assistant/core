@@ -54,8 +54,6 @@ async def test_flow_user_ipv6(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
     """Test user step with IPv6 address."""
-    mock_birdnet_client.host = "2001:db8::1"
-    mock_birdnet_client.port = 8080
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -296,6 +294,39 @@ async def test_flow_user_url_canonicalization_already_configured(
         user_input={
             CONF_HOST: "http://192.168.1.100:8080/api/",
             CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_user_ipv6_canonicalization_already_configured(
+    hass: HomeAssistant,
+    mock_birdnet_client: AsyncMock,
+) -> None:
+    """Test aborting when an expanded IPv6 address matches an existing compressed IPv6 entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BirdNET-Go (2001:db8::1:8080)",
+        unique_id="2001:db8::1:8080",
+        data={
+            CONF_HOST: "2001:db8::1",
+            CONF_PORT: 8080,
+            CONF_SSL: False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "[2001:0db8:0000:0000:0000:0000:0000:0001]",
+            CONF_PORT: 8080,
             CONF_SSL: False,
         },
     )

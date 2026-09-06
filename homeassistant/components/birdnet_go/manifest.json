@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiobirdnetgo==0.1.4"]
+  "requirements": ["aiobirdnetgo==0.1.5"]
 }
