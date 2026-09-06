@@ -111,7 +111,7 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        minor_version=4,
+        minor_version=3,
         data={
             CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,
@@ -129,7 +129,7 @@ def mock_cookidoo_config_entry_with_token() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        minor_version=4,
+        minor_version=3,
         data={
             CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,
