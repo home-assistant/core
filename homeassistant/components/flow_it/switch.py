@@ -6,6 +6,7 @@ from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItCommandError, FlowItError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,10 +19,12 @@ SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="flow_in",
         translation_key="flow_in",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="flow_out",
         translation_key="flow_out",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -76,10 +79,11 @@ class FlowItVmcFlowSwitch(FlowItVmcEntity, SwitchEntity):
         """Set the flow state."""
         mode = self.coordinator.data.state.data.mode
         speed = mode.speed
-        if self.entity_description.key == "flow_in":
-            flow_in = state
-        else:
-            flow_in = mode.flowIn  # codespell:ignore flowin
+        flow_in = (
+            state
+            if self.entity_description.key == "flow_in"
+            else mode.flowIn  # codespell:ignore flowin
+        )
         flow_out = state if self.entity_description.key == "flow_out" else mode.flowOut
 
         try:

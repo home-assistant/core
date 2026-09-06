@@ -1,21 +1,22 @@
 """Test Flow-it switch platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from flow_it_api.exceptions import FlowItAuthError, FlowItCommandError, FlowItError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 AIR_INTAKE_ENTITY_ID = "switch.001122334455_air_intake"
 AIR_EXHAUST_ENTITY_ID = "switch.001122334455_air_exhaust"
@@ -26,28 +27,14 @@ async def test_switch_setup(
     mock_flow_it: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch platform setup and entity registry."""
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state_in = hass.states.get(AIR_INTAKE_ENTITY_ID)
-    assert state_in
-    assert state_in.state == STATE_ON
-
-    entry_in = entity_registry.async_get(AIR_INTAKE_ENTITY_ID)
-    assert entry_in
-    assert entry_in.unique_id == "001122334455_flow_in"
-    assert entry_in.translation_key == "flow_in"
-
-    state_out = hass.states.get(AIR_EXHAUST_ENTITY_ID)
-    assert state_out
-    assert state_out.state == STATE_ON
-
-    entry_out = entity_registry.async_get(AIR_EXHAUST_ENTITY_ID)
-    assert entry_out
-    assert entry_out.unique_id == "001122334455_flow_out"
-    assert entry_out.translation_key == "flow_out"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
