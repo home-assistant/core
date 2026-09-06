@@ -32,7 +32,7 @@
   },
   "triggers": {
     "_": {
-      "description": "Triggers when one of the captured infrared commands is received.",
+      "description": "Triggers when one of the captured infrared commands is received. Holding the button down triggers once.",
       "fields": {
         "commands": {
           "description": "The infrared commands to trigger on. Capture a command by pressing the button on your remote, then give it a name to use it in conditions and actions.",

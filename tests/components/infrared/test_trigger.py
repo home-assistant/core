@@ -1,11 +1,14 @@
 """Tests for the Infrared integration triggers."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.infrared import DATA_COMPONENT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
@@ -22,7 +25,11 @@ VOLUME_UP = NECCommand(address=0x04FB, command=0xF6)
 OTHER_REMOTE = NECCommand(address=0x0102, command=0xF7)
 
 
-async def _setup_automation(hass: HomeAssistant, *commands: NECCommand) -> None:
+async def _setup_automation(
+    hass: HomeAssistant,
+    *commands: NECCommand,
+    target: str | list[str] = RECEIVER_ENTITY_ID,
+) -> None:
     """Set up an automation triggering on the given commands."""
     assert await async_setup_component(
         hass,
@@ -31,7 +38,7 @@ async def _setup_automation(hass: HomeAssistant, *commands: NECCommand) -> None:
             automation.DOMAIN: {
                 "triggers": {
                     "trigger": "infrared",
-                    "target": {"entity_id": RECEIVER_ENTITY_ID},
+                    "target": {"entity_id": target},
                     "options": {
                         "commands": [
                             {"name": f"Command {index}", "code": _code(command)}
@@ -133,14 +140,91 @@ async def test_trigger_ignores_other_commands(
     assert len(service_calls) == 0
 
 
+async def test_held_button_runs_the_action_once(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a receiver reporting a frame per repeat only triggers once."""
+    await _setup_automation(hass, POWER)
+
+    # A remote repeats its frame about every 100 ms while the button is held.
+    for _ in range(5):
+        mock_infrared_receiver_entity._handle_received_signal(_signal(POWER))
+        freezer.tick(timedelta(milliseconds=100))
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_button_pressed_again_after_the_repeat_window(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test releasing and pressing the button again triggers again."""
+    await _setup_automation(hass, POWER)
+
+    mock_infrared_receiver_entity._handle_received_signal(_signal(POWER))
+    freezer.tick(timedelta(seconds=1))
+    mock_infrared_receiver_entity._handle_received_signal(_signal(POWER))
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 2
+
+
+async def test_repeats_of_one_command_do_not_hold_back_another(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test each command has its own repeat window."""
+    await _setup_automation(hass, POWER, VOLUME_UP)
+
+    mock_infrared_receiver_entity._handle_received_signal(_signal(POWER))
+    freezer.tick(timedelta(milliseconds=50))
+    mock_infrared_receiver_entity._handle_received_signal(_signal(VOLUME_UP))
+    await hass.async_block_till_done()
+
+    assert [call.data["command"] for call in service_calls] == [
+        "Command 0",
+        "Command 1",
+    ]
+
+
+async def test_repeats_are_filtered_per_receiver(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a second receiver picking up the same press still triggers."""
+    other_receiver = MockInfraredReceiverEntity("other_ir_receiver", "Other receiver")
+    await hass.data[DATA_COMPONENT].async_add_entities([other_receiver])
+    await _setup_automation(
+        hass, POWER, target=[RECEIVER_ENTITY_ID, "infrared.other_receiver"]
+    )
+
+    mock_infrared_receiver_entity._handle_received_signal(_signal(POWER))
+    freezer.tick(timedelta(milliseconds=50))
+    other_receiver._handle_received_signal(_signal(POWER))
+    await hass.async_block_till_done()
+
+    assert [call.data["entity_id"] for call in service_calls] == [
+        RECEIVER_ENTITY_ID,
+        "infrared.other_receiver",
+    ]
+
+
 async def test_trigger_ignores_other_receiver(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
     """Test a command received by an untargeted receiver does not trigger."""
-    from homeassistant.components.infrared import DATA_COMPONENT  # noqa: PLC0415
-
     other_receiver = MockInfraredReceiverEntity("other_ir_receiver", "Other receiver")
     await hass.data[DATA_COMPONENT].async_add_entities([other_receiver])
     await _setup_automation(hass, POWER)

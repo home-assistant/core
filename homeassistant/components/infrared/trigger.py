@@ -1,5 +1,6 @@
 """Provide infrared automation triggers."""
 
+import time
 from typing import TYPE_CHECKING, Any, Final, cast, override
 
 import voluptuous as vol
@@ -30,6 +31,13 @@ from .const import DOMAIN
 from .entity import SIGNAL_INFRARED_RECEIVED, InfraredReceivedSignal
 
 CONF_COMMANDS: Final = "commands"
+
+# A remote repeats its frame for as long as the button is held, and some
+# protocols send a command several times even for a short press. A command that
+# comes back within this many seconds is the same press, not a new one. It is
+# comfortably longer than the frame period of the common protocols, the slowest
+# of which repeats about every 130 ms.
+_REPEAT_WINDOW = 0.3
 
 
 def _code(value: Any) -> str:
@@ -116,6 +124,8 @@ class CommandReceivedTrigger(Trigger):
         if not target_selection.has_any_target:
             raise HomeAssistantError(f"No target defined in {self._target}")
         tracker = _ReceiverTracker(self._hass, target_selection)
+        # When each command was last received, by receiver and command name.
+        last_received: dict[tuple[str, str], float] = {}
 
         @callback
         def async_signal_received(
@@ -126,12 +136,19 @@ class CommandReceivedTrigger(Trigger):
                 return
             frame = signal_to_frame(signal)
             for name, expected_frame in self._commands:
-                if frames_match(frame, expected_frame):
+                if not frames_match(frame, expected_frame):
+                    continue
+                now = time.monotonic()
+                previous = last_received.get((entity_id, name))
+                # Every repeat pushes the window out, so holding the button
+                # down runs the action once, when it is first pressed.
+                last_received[entity_id, name] = now
+                if previous is None or now - previous >= _REPEAT_WINDOW:
                     run_action(
                         {ATTR_ENTITY_ID: entity_id, CONF_COMMAND: name},
                         f"infrared command {name} received by {entity_id}",
                     )
-                    return
+                return
 
         remove_tracker = await tracker.async_setup()
         remove_dispatcher = async_dispatcher_connect(
