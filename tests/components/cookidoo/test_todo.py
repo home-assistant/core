@@ -1,6 +1,7 @@
 """Test for todo platform of the Cookidoo integration."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 import re
 from unittest.mock import AsyncMock, patch
 
@@ -21,12 +22,13 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import AUTH_DATA
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -291,3 +293,30 @@ async def test_delete_additional_items_exception(
             target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
+
+
+async def test_failed_action_persists_rotated_tokens(
+    hass: HomeAssistant,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+    mock_cookidoo_client: AsyncMock,
+) -> None:
+    """Test tokens rotated during a failing todo action are still persisted."""
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    # The library rotates the tokens while serving the request, which then fails
+    def _rotate_then_fail(uids: list[str]) -> None:
+        mock_cookidoo_client.auth_data = AUTH_DATA
+        raise CookidooRequestException
+
+    mock_cookidoo_client.remove_additional_items.side_effect = _rotate_then_fail
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.REMOVE_ITEM,
+            service_data={ATTR_ITEM: "unique_id_tomaten"},
+            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+            blocking=True,
+        )
+
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)

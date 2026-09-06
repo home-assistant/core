@@ -99,6 +99,8 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_update_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
+        finally:
+            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
 
@@ -151,6 +153,8 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_save_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
+        finally:
+            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
 
@@ -175,6 +179,8 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_update_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
+        finally:
+            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
 
@@ -190,5 +196,7 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 translation_key="todo_delete_item_failed",
                 translation_placeholders={"count": str(len(uids))},
             ) from e
+        finally:
+            self.coordinator.save_auth_data()
 
         await self.coordinator.async_refresh()
