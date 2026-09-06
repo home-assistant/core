@@ -3233,7 +3233,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.12.1
+tesla-fleet-api==1.12.4
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3534,7 +3534,7 @@ zamg==0.4.1
 zcc-helper==3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.151.1
+zeroconf==0.151.3
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
