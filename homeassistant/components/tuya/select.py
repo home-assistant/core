@@ -360,8 +360,7 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator Light Mode",
-            options=["relay", "pos", "none", "on"],
+            translation_key="light_mode",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
