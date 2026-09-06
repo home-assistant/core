@@ -48,7 +48,6 @@ class HomevoltModeSelect(HomevoltEntity, SelectEntity):
         super().__init__(coordinator, f"ems_{coordinator.data.unique_id}")
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.unique_id}_{description.key}"
-        self._attr_options = list(description.options) if description.options else []
 
     @property
     @override
