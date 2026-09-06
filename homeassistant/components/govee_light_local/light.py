@@ -47,7 +47,7 @@ async def async_setup_entry(
         GoveeLight(coordinator, device) for device in coordinator.devices
     )
 
-    await coordinator.set_discovery_callback(discovery_callback)
+    coordinator.set_discovery_callback(discovery_callback)
 
 
 class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):

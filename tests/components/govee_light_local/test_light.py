@@ -1,6 +1,7 @@
 """Test Govee light local."""
 
 from errno import EADDRINUSE, ENETDOWN
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -36,7 +37,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES, setup_light
+from .conftest import (
+    DEFAULT_CAPABILITIES,
+    EXPECTED_LISTENING_ADDRESSES,
+    SCENE_CAPABILITIES,
+    setup_light,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -702,3 +708,29 @@ async def test_one_silent_device_does_not_affect_others(
     assert chatty_state is not None
     assert silent_state.state == STATE_UNAVAILABLE
     assert chatty_state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_single_controller_for_all_adapters(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a single controller listens on every enabled adapter address."""
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.govee_light_local")
+
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.GoveeController",
+        return_value=mock_govee_api,
+    ) as mock_controller:
+        await setup_light(hass, mock_govee_api)
+
+    assert mock_controller.call_count == 1
+    assert (
+        mock_controller.call_args.kwargs["listening_addresses"]
+        == EXPECTED_LISTENING_ADDRESSES
+    )
+
+    assert "Adapter eth0 (enabled): ['192.168.1.2/24', '192.168.1.2/24']" in caplog.text
+    assert "Adapter eth2 (disabled): ['172.16.0.5/16']" in caplog.text
+    assert "Listening on port 4002: 10.0.0.7 (10.0.0.0/8)" in caplog.text
+    assert "192.168.1.2 (192.168.1.0/24)" in caplog.text

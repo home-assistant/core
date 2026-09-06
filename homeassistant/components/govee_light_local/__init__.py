@@ -3,7 +3,6 @@
 import asyncio
 from contextlib import suppress
 from errno import EADDRINUSE
-from ipaddress import IPv4Address
 import logging
 
 from govee_local_api.controller import LISTENING_PORT
@@ -24,22 +23,22 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
     """Set up Govee light local from a config entry."""
 
-    source_ips = await async_get_source_ips(hass)
-    _LOGGER.debug("Enabled source IPs: %s", source_ips)
+    listening_addresses = await async_get_listening_addresses(hass)
+    _LOGGER.debug("Enabled listening addresses: %s", listening_addresses)
+
+    if not listening_addresses:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="no_devices_found"
+        )
 
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
-        hass=hass, config_entry=entry, source_ips=source_ips
+        hass=hass, config_entry=entry, listening_addresses=listening_addresses
     )
 
-    async def await_cleanup():
-        cleanup_complete_events: [asyncio.Event] = coordinator.cleanup()
+    async def await_cleanup() -> None:
+        cleanup_complete_event = coordinator.cleanup()
         with suppress(TimeoutError):
-            await asyncio.gather(
-                *[
-                    asyncio.wait_for(cleanup_complete_event.wait(), 1)
-                    for cleanup_complete_event in cleanup_complete_events
-                ]
-            )
+            await asyncio.wait_for(cleanup_complete_event.wait(), 1)
 
     entry.async_on_unload(await_cleanup)
 
@@ -77,11 +76,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_get_source_ips(
-    hass: HomeAssistant,
-) -> set[str]:
-    """Get the source ips for Govee local."""
-    source_ips = await network.async_get_enabled_source_ips(hass)
-    return {
-        str(source_ip) for source_ip in source_ips if isinstance(source_ip, IPv4Address)
-    }
+async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:
+    """Get the enabled IPv4 source addresses, with network mask, for Govee local."""
+    adapters = await network.async_get_adapters(hass)
+    for adapter in adapters:
+        _LOGGER.debug(
+            "Adapter %s (%s): %s",
+            adapter["name"],
+            "enabled" if adapter["enabled"] else "disabled",
+            [f"{ipv4['address']}/{ipv4['network_prefix']}" for ipv4 in adapter["ipv4"]],
+        )
+    return sorted(
+        {
+            f"{ipv4['address']}/{ipv4['network_prefix']}"
+            for adapter in adapters
+            if adapter["enabled"]
+            for ipv4 in adapter["ipv4"]
+        }
+    )

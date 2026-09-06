@@ -8,7 +8,7 @@ from typing import override
 from govee_local_api import GoveeController, GoveeDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -24,6 +24,21 @@ _LOGGER = logging.getLogger(__name__)
 type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
+def log_bound_addresses(controller: GoveeController) -> None:
+    """Log the addresses and networks the controller is bound to."""
+
+    _LOGGER.debug(
+        "Listening on port %d: %s",
+        CONF_LISTENING_PORT_DEFAULT,
+        ", ".join(
+            f"{address} ({network})" if network else f"{address} (no network mask)"
+            for address, network in zip(
+                controller.listening_addresses, controller.networks, strict=True
+            )
+        ),
+    )
+
+
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
 
@@ -31,7 +46,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         self,
         hass: HomeAssistant,
         config_entry: GoveeLocalConfigEntry,
-        source_ips: set[str],
+        listening_addresses: list[str],
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -42,40 +57,37 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self._controllers: list[GoveeController] = [
-            GoveeController(
-                loop=hass.loop,
-                logger=_LOGGER,
-                listening_addresses=source_ip,
-                broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
-                broadcast_port=CONF_TARGET_PORT_DEFAULT,
-                listening_port=CONF_LISTENING_PORT_DEFAULT,
-                discovery_enabled=True,
-                discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
-                update_enabled=False,
-            )
-            for source_ip in source_ips
-        ]
+        self._controller = GoveeController(
+            loop=hass.loop,
+            logger=_LOGGER,
+            listening_addresses=listening_addresses,
+            broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
+            broadcast_port=CONF_TARGET_PORT_DEFAULT,
+            listening_port=CONF_LISTENING_PORT_DEFAULT,
+            discovery_enabled=True,
+            discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
+            update_enabled=False,
+        )
 
     async def start(self) -> None:
         """Start the Govee coordinator."""
 
-        for controller in self._controllers:
-            await controller.start()
-            controller.send_update_message()
+        await self._controller.start()
+        self._controller.send_update_message()
+        log_bound_addresses(self._controller)
 
-    async def set_discovery_callback(
-        self, callback: Callable[[GoveeDevice, bool], bool]
+    @callback
+    def set_discovery_callback(
+        self, discovery_callback: Callable[[GoveeDevice, bool], bool]
     ) -> None:
         """Set discovery callback for automatic Govee light discovery."""
 
-        for controller in self._controllers:
-            controller.set_device_discovered_callback(callback)
+        self._controller.set_device_discovered_callback(discovery_callback)
 
-    def cleanup(self) -> list[asyncio.Event]:
+    def cleanup(self) -> asyncio.Event:
         """Stop and cleanup the coordinator."""
 
-        return [controller.cleanup() for controller in self._controllers]
+        return self._controller.cleanup()
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""
@@ -107,13 +119,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def devices(self) -> list[GoveeDevice]:
         """Return a list of discovered Govee devices."""
 
-        devices: list[GoveeDevice] = []
-        for controller in self._controllers:
-            devices = devices + controller.devices
-        return devices
+        return self._controller.devices
 
     @override
     async def _async_update_data(self) -> list[GoveeDevice]:
-        for controller in self._controllers:
-            controller.send_update_message()
+        self._controller.send_update_message()
         return self.devices

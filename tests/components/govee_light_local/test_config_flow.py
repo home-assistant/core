@@ -1,17 +1,17 @@
 """Test Govee light local config flow."""
 
 from errno import EADDRINUSE
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, patch
 
 from govee_local_api import GoveeDevice
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DEFAULT_CAPABILITIES
+from .conftest import DEFAULT_CAPABILITIES, EXPECTED_LISTENING_ADDRESSES
 
 
 def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
@@ -53,20 +53,20 @@ async def test_creating_entry_has_no_devices(
         mock_setup_entry.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_network_adapters")
 async def test_creating_entry_has_with_devices(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_govee_api: AsyncMock,
 ) -> None:
-    """Test setting up Govee with devices."""
+    """Test a single controller listens on every enabled adapter address."""
 
     mock_govee_api.devices = _get_devices(mock_govee_api)
 
-    # Mock duplicated IPs to ensure that only one GoveeController is started
     with patch(
-        "homeassistant.components.network.async_get_enabled_source_ips",
-        return_value=[IPv4Address("192.168.1.2"), IPv4Address("192.168.1.2")],
-    ):
+        "homeassistant.components.govee_light_local.config_flow.GoveeController",
+        return_value=mock_govee_api,
+    ) as mock_controller:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -79,6 +79,11 @@ async def test_creating_entry_has_with_devices(
 
         await hass.async_block_till_done()
 
+    assert mock_controller.call_count == 1
+    assert (
+        mock_controller.call_args.kwargs["listening_addresses"]
+        == EXPECTED_LISTENING_ADDRESSES
+    )
     mock_govee_api.start.assert_awaited_once()
     mock_setup_entry.assert_awaited_once()
 
