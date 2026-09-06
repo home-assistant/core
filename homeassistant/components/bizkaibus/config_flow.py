@@ -187,7 +187,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(stop_id)
                     self._abort_if_unique_id_configured()
 
-                api = reconfigure_entry.runtime_data.api
+                api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
@@ -254,10 +254,10 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
         """Manage the selected bus lines."""
         errors: dict[str, str] = {}
 
+        api = BizkaibusAPI(BizkaibusLanguages.ES, self.config_entry.data[CONF_STOP_ID])
+
         if user_input is None:
-            self._line_ids, self._lines = await _async_get_lines(
-                self.config_entry.runtime_data.api
-            )
+            self._line_ids, self._lines = await _async_get_lines(api)
             if self._line_ids == []:
                 errors["base"] = "cannot_connect"
 
@@ -271,7 +271,7 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
             )
 
         title = await _get_title_name(
-            self.config_entry.runtime_data.api,
+            api,
             self.config_entry.data[CONF_STOP_ID],
         )
 
