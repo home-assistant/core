@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from pylutron import Motor, Output
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -125,8 +126,13 @@ async def test_cover_update(
 
 
 def _mock_output(name: str, output_id: int, output_type: str) -> MagicMock:
-    """Build a pylutron Output mock the way conftest does."""
-    output = MagicMock()
+    """Build a pylutron output mock the way conftest does.
+
+    The mock is specced against the class pylutron instantiates for the
+    output type, so calling a method the library does not provide fails the
+    test instead of being silently accepted.
+    """
+    output = MagicMock(spec=Motor if output_type == "MOTOR" else Output)
     output.name = name
     output.id = output_id
     output.uuid = f"{name.lower().replace(' ', '_')}_uuid"
