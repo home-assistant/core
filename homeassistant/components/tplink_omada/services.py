@@ -3,7 +3,7 @@
 from typing import cast
 
 from tplink_omada_client import OmadaClientSettings
-from tplink_omada_client.exceptions import OmadaClientException
+from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -113,7 +113,7 @@ async def _resolve_client_controller(
 
     if entry_id := call.data.get(ATTR_CONFIG_ENTRY_ID):
         entry = hass.config_entries.async_get_entry(entry_id)
-        if not entry:
+        if not entry or entry.domain != DOMAIN:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="controller_not_found",
@@ -146,29 +146,49 @@ async def _resolve_client_controller(
             translation_key="client_device_not_found",
         )
 
-    mac = next(
-        (
-            connection_id
-            for connection_type, connection_id in device.connections
-            if connection_type == dr.CONNECTION_NETWORK_MAC
-        ),
-        None,
-    )
-    if mac is None:
+    macs = [
+        connection_id
+        for connection_type, connection_id in device.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    ]
+    if not macs:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="client_device_no_mac",
         )
 
-    try:
-        await controller.omada_client.get_client(mac)
-    except OmadaClientException as ex:
+    known_macs: list[str] = []
+    for mac in macs:
+        try:
+            await controller.omada_client.get_client(mac)
+        except RequestFailed as ex:
+            # The controller reports unknown clients with error code -41011.
+            if getattr(ex, "_error_code", None) == -41011:
+                continue
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="client_query_failed",
+                translation_placeholders={"mac": mac},
+            ) from ex
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="client_query_failed",
+                translation_placeholders={"mac": mac},
+            ) from ex
+        known_macs.append(mac)
+
+    if len(known_macs) == 1:
+        return controller, known_macs[0]
+    if not known_macs:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="client_device_not_tracked",
-        ) from ex
-
-    return controller, mac
+        )
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="client_mac_ambiguous",
+    )
 
 
 async def _handle_set_client_name(call: ServiceCall) -> None:

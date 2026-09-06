@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from tplink_omada_client import OmadaClientSettings
-from tplink_omada_client.exceptions import OmadaClientException
+from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 import voluptuous as vol
 
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -183,6 +183,17 @@ def _add_foreign_device(hass: HomeAssistant, mac: str) -> str:
     device = dr.async_get(hass).async_get_or_create(
         config_entry_id=foreign_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+    )
+    return device.id
+
+
+def _add_multi_mac_device(
+    hass: HomeAssistant, config_entry: MockConfigEntry, macs: list[str]
+) -> str:
+    """Register a device with multiple network MAC connections."""
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac) for mac in macs},
     )
     return device.id
 
@@ -445,7 +456,7 @@ async def test_service_set_client_name_non_client_device(
     mac = "aa:bb:cc:dd:ee:ff"
     device_id = _add_client_device(hass, mock_config_entry, mac)
 
-    mock_omada_site_client.get_client.side_effect = OmadaClientException
+    mock_omada_site_client.get_client.side_effect = RequestFailed(-41011, "not found")
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
@@ -521,3 +532,125 @@ async def test_service_set_client_name_foreign_device(
     mock_omada_site_client.update_client.assert_awaited_once_with(
         mac, OmadaClientSettings(name="Ting sensor")
     )
+
+
+async def test_service_set_client_name_foreign_controller_entry(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set client name with a non-Omada config entry raises an error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    foreign_entry = MockConfigEntry(domain="sonos", unique_id="foreign_entry")
+    foreign_entry.add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_client_name",
+            {
+                "config_entry_id": foreign_entry.entry_id,
+                "device_id": "device1",
+                "name": "Ting sensor",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "controller_not_found"
+    assert err.value.translation_domain == DOMAIN
+
+    mock_omada_site_client.update_client.assert_not_awaited()
+
+
+async def test_service_set_client_name_single_known_mac(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set client name resolves a device with multiple MACs to the tracked one."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client_mac = "aa:bb:cc:dd:ee:ff"
+    other_mac = "11:22:33:44:55:66"
+    device_id = _add_multi_mac_device(hass, mock_config_entry, [client_mac, other_mac])
+
+    async def get_client(mac: str) -> MagicMock:
+        if mac == other_mac:
+            raise RequestFailed(-41011, "not found")
+        return MagicMock()
+
+    mock_omada_site_client.get_client.side_effect = get_client
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_client_name",
+        {"device_id": device_id, "name": "Ting sensor"},
+        blocking=True,
+    )
+
+    mock_omada_site_client.update_client.assert_awaited_once_with(
+        client_mac, OmadaClientSettings(name="Ting sensor")
+    )
+
+
+async def test_service_set_client_name_multiple_known_macs(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set client name with multiple tracked MACs raises an ambiguity error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_id = _add_multi_mac_device(
+        hass, mock_config_entry, ["aa:bb:cc:dd:ee:ff", "11:22:33:44:55:66"]
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_client_name",
+            {"device_id": device_id, "name": "Ting sensor"},
+            blocking=True,
+        )
+    assert err.value.translation_key == "client_mac_ambiguous"
+    assert err.value.translation_domain == DOMAIN
+
+    mock_omada_site_client.update_client.assert_not_awaited()
+
+
+async def test_service_set_client_name_query_failed_raises_homeassistanterror(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set client name surfaces a controller failure querying the client."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mac = "aa:bb:cc:dd:ee:ff"
+    device_id = _add_client_device(hass, mock_config_entry, mac)
+
+    mock_omada_site_client.get_client.side_effect = RequestFailed(-30109, "boom")
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_client_name",
+            {"device_id": device_id, "name": "Ting sensor"},
+            blocking=True,
+        )
+    assert err.value.translation_key == "client_query_failed"
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_placeholders == {"mac": mac}
+
+    mock_omada_site_client.update_client.assert_not_awaited()

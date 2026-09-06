@@ -121,6 +121,12 @@
     "client_device_not_tracked": {
       "message": "The selected device is not a network client of the Omada controller."
     },
+    "client_mac_ambiguous": {
+      "message": "The selected device has multiple network addresses on the Omada controller. Select a different device."
+    },
+    "client_query_failed": {
+      "message": "Failed to query client with MAC {mac} from the Omada controller."
+    },
     "controller_ambiguous": {
       "message": "Multiple Omada controllers found. Specify the controller to use."
     },
