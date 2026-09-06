@@ -1,12 +1,13 @@
 """Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
-from typing import Any, override
+from typing import override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricType,
+    MetricValue,
 )
 
 from homeassistant.const import EntityCategory
@@ -111,11 +112,11 @@ class VictronBaseEntity(Entity):
 
     @callback
     @abstractmethod
-    def _on_update_cb(self, value: Any) -> None:
+    def _on_update_cb(self, value: MetricValue) -> None:
         """Handle the metric update. Must be implemented by subclasses."""
 
     @callback
-    def _on_update(self, _: VictronVenusMetric, value: Any) -> None:
+    def _on_update(self, _: VictronVenusMetric, value: MetricValue) -> None:
         self._on_update_cb(value)
 
     @override
