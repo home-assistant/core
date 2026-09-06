@@ -34,6 +34,22 @@ class StorageQuotaData:
     usage_in_trash: int
 
 
+def _invalid_metadata_reason(metadata: Any) -> str | None:
+    """Return why decoded metadata cannot be used, or None if it can.
+
+    AgentBackup.from_dict does not enforce its annotations, so the types the
+    backup manager relies on are checked here, before it is built: the manager
+    uses backup_id as a dict key and calls extra_metadata.get() on every backup.
+    """
+    if not isinstance(metadata, dict):
+        return "description is not a JSON object"
+    if not isinstance(metadata.get("backup_id"), str):
+        return "backup_id is not a string"
+    if not isinstance(metadata.get("extra_metadata"), dict):
+        return "extra_metadata is not a dictionary"
+    return None
+
+
 def _parse_backup_metadata(file: dict[str, Any]) -> AgentBackup | None:
     """Return the backup a Drive file describes, or None if it cannot be read.
 
@@ -42,20 +58,11 @@ def _parse_backup_metadata(file: dict[str, Any]) -> AgentBackup | None:
     """
     reason: object
     try:
-        backup = AgentBackup.from_dict(json.loads(file["description"]))
+        metadata = json.loads(file["description"])
+        if (reason := _invalid_metadata_reason(metadata)) is None:
+            return AgentBackup.from_dict(metadata)
     except (KeyError, TypeError, ValueError) as err:
         reason = err
-    else:
-        # from_dict does not enforce its annotations, so metadata that decodes
-        # but holds the wrong types still has to be rejected here. The backup
-        # manager uses backup_id as a dict key and calls extra_metadata.get()
-        # on every backup it lists.
-        if not isinstance(backup.backup_id, str):
-            reason = "backup_id is not a string"
-        elif not isinstance(backup.extra_metadata, dict):
-            reason = "extra_metadata is not a dictionary"
-        else:
-            return backup
     _LOGGER.warning(
         "Ignoring backup file %s: its description is not valid backup metadata: %s",
         file.get("id", "?"),
