@@ -118,6 +118,12 @@
     "client_device_not_found": {
       "message": "The selected device was not found."
     },
+    "client_device_not_tracked": {
+      "message": "The selected device is not a network client tracked by the Omada integration."
+    },
+    "controller_mismatch": {
+      "message": "The selected device is not a client of the specified Omada controller."
+    },
     "controller_not_found": {
       "message": "Specified TP-Link Omada controller not found"
     },
