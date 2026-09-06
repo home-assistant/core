@@ -12,6 +12,9 @@
       }
     },
     "switch": {
+      "child_lock": {
+        "default": "mdi:lock"
+      },
       "routing": {
         "default": "mdi:wifi"
       }

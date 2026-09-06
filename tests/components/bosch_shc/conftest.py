@@ -5,7 +5,13 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
-from boschshcpy import BatteryLevelService, SHCBatteryDevice
+from boschshcpy import (
+    BatteryLevelService,
+    SHCBatteryDevice,
+    SHCMicromoduleRelay,
+    SHCThermostat,
+    ThermostatService,
+)
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -43,9 +49,21 @@ def mock_config_entry() -> MockConfigEntry:
 _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
     bucket: []
     for bucket in (
+        "camera_360",
+        "camera_eyes",
+        "light_switches_bsm",
+        "micromodule_blinds",
+        "micromodule_dimmers",
+        "micromodule_impulse_relays",
+        "micromodule_light_attached",
+        "micromodule_relays",
+        "micromodule_shutter_controls",
         "motion_detectors",
+        "roomthermostats",
         "shutter_contacts",
         "shutter_contacts2",
+        "smart_plugs",
+        "smart_plugs_compact",
         "smoke_detectors",
         "thermostats",
         "twinguards",
@@ -111,4 +129,44 @@ def battery_only_device(
     device.device_model = "MD"
     device.status = "AVAILABLE"
     device.deleted = False
+    return device
+
+
+def thermostat_device(
+    device_id: str = "hdm:ZigBee:thermostat1",
+    name: str = "Thermostat",
+    child_lock: ThermostatService.State = ThermostatService.State.OFF,
+) -> SHCThermostat:
+    """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
+    device = create_autospec(SHCThermostat, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TRV"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.child_lock = child_lock
+    return device
+
+
+def micromodule_relay_device(
+    device_id: str = "hdm:ZigBee:relay1",
+    name: str = "Relay",
+    child_lock: bool = False,
+) -> SHCMicromoduleRelay:
+    """Build a minimal device double for the micromodule_relays bucket."""
+    device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_RELAY"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.child_lock = child_lock
     return device

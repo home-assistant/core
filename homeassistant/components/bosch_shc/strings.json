@@ -68,6 +68,9 @@
       }
     },
     "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
       "routing": {
         "name": "Routing"
       }
