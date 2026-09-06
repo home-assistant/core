@@ -947,11 +947,7 @@ async def test_polling_only_entities_require_metadata(
     discounted: bool,
     has_polling_only: bool,
 ) -> None:
-    """Create a polling-only entity only for a polling or discounted vehicle.
-
-    A plain streaming vehicle gets none, so nothing can be enabled that keeps
-    its coordinator running the charged vehicle_data poll.
-    """
+    """Create a polling-only entity only for a polling or discounted vehicle."""
     vin = "LRW3F7EK4NC700000"
     metadata = deepcopy(METADATA)
     metadata["vehicles"][vin]["polling"] = polling
@@ -1001,12 +997,7 @@ async def test_streamable_entity_requires_stream_or_polling(
     firmware: str,
     has_dual: bool,
 ) -> None:
-    """Omit a dual entity a vehicle can neither stream nor be polled for.
-
-    A non-discounted streaming vehicle on firmware predating streaming support
-    can neither stream the feature nor be polled for it without incurring
-    charges, so no permanently unavailable streaming entity is created.
-    """
+    """Omit a dual entity a vehicle can neither stream nor be polled for."""
     vin = "LRW3F7EK4NC700000"
     metadata = deepcopy(METADATA)
     metadata["vehicles"][vin]["polling"] = polling
@@ -1061,11 +1052,7 @@ async def test_streaming_vehicle_coordinator_never_polls(
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A plain streaming vehicle is never polled.
-
-    Default metadata is a plain streaming vehicle; with no polling-only entity
-    listening to its coordinator, core never runs the charged vehicle_data poll.
-    """
+    """A plain streaming vehicle is never polled."""
     await setup_platform(hass, [Platform.BINARY_SENSOR])
 
     freezer.tick(VEHICLE_INTERVAL)
@@ -1079,11 +1066,7 @@ async def test_stale_polling_only_entity_removed_on_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Prune a polling-only entity when its vehicle no longer qualifies.
-
-    On upgrade a plain streaming vehicle drops its polling-only entities; any
-    that a user had enabled are removed so its coordinator stops being charged.
-    """
+    """Prune a polling-only entity when its vehicle no longer qualifies."""
     vin = "LRW3F7EK4NC700000"
     entry = mock_config_entry()
     entry.add_to_hass(hass)

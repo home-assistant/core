@@ -87,12 +87,7 @@ def async_remove_stale_vehicle_entities(
     vins: set[str],
     valid_unique_ids: set[str],
 ) -> None:
-    """Remove registry entries for vehicle entities that are no longer created.
-
-    When a vehicle stops qualifying for polling its polling-only entities are
-    not created; their disabled registry entries would otherwise linger and,
-    if re-enabled, silently resume charged polling.
-    """
+    """Remove registry entries for vehicle entities that are no longer created."""
     entity_registry = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(entity_registry, config_entry_id):
         if (
