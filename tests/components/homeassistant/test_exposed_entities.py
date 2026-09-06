@@ -764,7 +764,7 @@ async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) 
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
 
