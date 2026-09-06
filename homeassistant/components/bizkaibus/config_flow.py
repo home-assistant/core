@@ -76,10 +76,10 @@ async def _async_get_lines(
     )
 
 
-async def _get_title_name(api: BizkaibusAPI, stop_id: str) -> str:
+async def _get_title_name(api: BizkaibusAPI, stop_id: str) -> str | None:
 
     if not await api.TestConnection():
-        return ""
+        return None
 
     timetable = await api.GetTimetable()
 
@@ -127,11 +127,14 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 api = BizkaibusAPI(BizkaibusLanguages.ES, self._stop_id)
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
-                    return self.async_abort(reason="cannot_connect")
-
-                self._title = await _get_title_name(api, self._stop_id)
-
-                return await self.async_step_lines(user_input=user_input)
+                    errors["base"] = "cannot_connect"
+                else:
+                    title = await _get_title_name(api, self._stop_id)
+                    if title is None:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        self._title = title
+                        return await self.async_step_lines(user_input=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -190,11 +193,15 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
-                    return self.async_abort(reason="cannot_connect")
-
-                self._stop_id = stop_id
-                self._title = await _get_title_name(api, self._stop_id)
-                return await self.async_step_lines()
+                    errors["base"] = "cannot_connect"
+                else:
+                    self._stop_id = stop_id
+                    title = await _get_title_name(api, self._stop_id)
+                    if title is None:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        self._title = title
+                        return await self.async_step_lines()
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -235,6 +242,8 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
         title = await _get_title_name(api, stop_id)
+        if title is None:
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=title,
@@ -250,38 +259,40 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
         """Initialize the options flow."""
         self._line_ids: list[str] = []
         self._lines: dict[str, Any] = {}
+        self._title: str = ""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the selected bus lines."""
-        errors: dict[str, str] = {}
-
         api = BizkaibusAPI(BizkaibusLanguages.ES, self.config_entry.data[CONF_STOP_ID])
 
-        if user_input is None:
-            self._line_ids, self._lines = await _async_get_lines(api)
-            if self._line_ids == []:
-                return self.async_abort(reason="cannot_connect")
-
-            selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
-            return self.async_show_form(
-                step_id="init",
-                data_schema=_lines_schema(
-                    self._line_ids, self._lines, selected_line_ids
-                ),
-                errors=errors,
+        if user_input:
+            return self.async_create_entry(
+                title=self._title,
+                data={
+                    CONF_LINE_IDS: user_input[CONF_LINE_IDS],
+                    CONF_LINES: self._lines,
+                },
             )
+
+        self._line_ids, self._lines = await _async_get_lines(api)
+        if self._line_ids == []:
+            return self.async_abort(reason="cannot_connect")
+
+        selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
 
         title = await _get_title_name(
             api,
             self.config_entry.data[CONF_STOP_ID],
         )
 
-        return self.async_create_entry(
-            title=title,
-            data={
-                CONF_LINE_IDS: user_input[CONF_LINE_IDS],
-                CONF_LINES: self._lines,
-            },
+        if title is None:
+            return self.async_abort(reason="cannot_connect")
+
+        self._title = title
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_lines_schema(self._line_ids, self._lines, selected_line_ids),
         )

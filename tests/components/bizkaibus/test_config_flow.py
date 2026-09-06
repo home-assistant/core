@@ -61,14 +61,18 @@ async def test_user_flow_with_valid_stop_id(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
-    """Test the user flow when the stop is offline."""
+    """Test the user flow recovers when the stop comes back online."""
     stop_id = "9999"
 
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
         mock_api = mock_api_class.return_value
-        mock_api.TestConnection = AsyncMock(return_value=False)
+        mock_api.TestConnection = AsyncMock(side_effect=[False, True, True])
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+        mock_api.GetTimetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -78,8 +82,15 @@ async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_STOP_ID: stop_id}
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: stop_id}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "lines"
 
 
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
@@ -414,7 +425,7 @@ async def test_reconfigure_step_with_invalid_stop_id(hass: HomeAssistant) -> Non
 
 
 async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
-    """Test reconfiguring a stop that is offline."""
+    """Test reconfiguration recovers when the stop comes back online."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_STOP_ID: "0252"},
@@ -427,7 +438,11 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
     ) as mock_api_class:
         mock_api = mock_api_class.return_value
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.TestConnection = AsyncMock(return_value=False)
+        mock_api.TestConnection = AsyncMock(side_effect=[False, True, True])
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+        mock_api.GetTimetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -440,8 +455,15 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_STOP_ID: "9999"}
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "9999"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "lines"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -487,7 +509,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
-    """Test the options flow reports a connection error."""
+    """Test the options flow aborts on a connection error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_STOP_ID: "1234"},
@@ -499,17 +521,19 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
         ) as mock_api_class,
-        patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_setup_api,
     ):
         mock_api = mock_api_class.return_value
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.TestConnection = AsyncMock(return_value=False)
-        mock_setup_api.return_value.GetTimetable = AsyncMock(return_value=None)
+        mock_api.TestConnection = AsyncMock(return_value=True)
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"
+        mock_api.TestConnection.assert_awaited_once()
 
 
 async def test_import_flow(hass: HomeAssistant) -> None:
@@ -599,7 +623,7 @@ async def test_import_flow_with_unknown_route(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow_connection_error_on_save(hass: HomeAssistant) -> None:
-    """Test the options flow handles a connection error when saving."""
+    """Test the options flow is not left active after a connection error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_STOP_ID: "1234"},
@@ -612,15 +636,12 @@ async def test_options_flow_connection_error_on_save(hass: HomeAssistant) -> Non
     ) as mock_api_class:
         mock_api = mock_api_class.return_value
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.TestConnection = AsyncMock(side_effect=[True, False])
+        mock_api.TestConnection = AsyncMock(return_value=True)
         mock_api.GetLinesOnStop = AsyncMock(
             return_value=[SimpleNamespace(id="A", route="Route A")]
         )
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_LINE_IDS: ["A"]}
-        )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

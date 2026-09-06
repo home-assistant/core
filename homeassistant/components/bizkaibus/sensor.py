@@ -140,7 +140,6 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
     line_id: str
     entity_description: BizkaibusSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_should_poll = True
     _attr_attribution = ATTRIBUTION
 
     def __init__(
