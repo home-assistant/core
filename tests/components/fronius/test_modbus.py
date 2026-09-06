@@ -883,3 +883,51 @@ async def test_heartbeat_does_not_undo_a_write_it_overlaps(
     # what the device holds, not what the last refresh happened to leave behind
     await controls.async_update()
     assert controls.enabled is False
+
+
+async def test_clearing_the_period_is_tried_again(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write that fails while taking a period back is repeated.
+
+    Losing that one write would leave the inverter counting down to drop a
+    limit the user asked to keep.
+    """
+    config_entry = await _setup_with_controls(
+        hass, aioclient_mock, mock_fronius_modbus, auto_revert_power_limit=True
+    )
+    await _turn_on_power_limit(hass, 60)
+    original_write = Controls.write
+    failed = False
+
+    async def write_once_refused(self: Controls, field: str, value: float | bool):
+        """Refuse the first attempt at the period, then behave."""
+        nonlocal failed
+        if field == "revert_seconds" and not failed:
+            failed = True
+            raise ModbusConnectionError("no answer")
+        await original_write(self, field, value)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with patch.object(Controls, "write", write_once_refused):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: MOCK_HOST, CONF_AUTO_REVERT_POWER_LIMIT: False},
+        )
+        await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    controls = coordinator.modbus_inverter.controls
+    assert failed
+    await controls.async_update()
+    assert controls.revert_seconds == AUTO_REVERT_SECONDS
+
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await controls.async_update()
+    assert controls.revert_seconds == 0
