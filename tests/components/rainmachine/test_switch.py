@@ -73,6 +73,7 @@ async def test_inactive_program_cannot_run_when_inactive_zones_are_allowed(
 async def test_existing_zone_switch_is_deprecated(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     config: dict[str, Any],
     config_entry: MockConfigEntry,
     client: AsyncMock,
@@ -97,7 +98,7 @@ async def test_existing_zone_switch_is_deprecated(
         await hass.async_block_till_done()
 
     assert hass.states.get(LEGACY_ZONE_ENTITY_ID) is not None
-    issue = ir.async_get(hass).async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"deprecated_zone_switch_{config_entry.entry_id}_1"
     )
     assert issue is not None
@@ -113,6 +114,7 @@ async def test_existing_zone_switch_is_deprecated(
 async def test_disabled_unused_zone_switch_is_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     config: dict[str, Any],
     config_entry: MockConfigEntry,
     client: AsyncMock,
@@ -139,7 +141,7 @@ async def test_disabled_unused_zone_switch_is_removed(
 
     assert entity_registry.async_get(LEGACY_ZONE_ENTITY_ID) is None
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"deprecated_zone_switch_{config_entry.entry_id}_1"
         )
         is None
@@ -149,6 +151,7 @@ async def test_disabled_unused_zone_switch_is_removed(
 async def test_referenced_disabled_zone_switch_is_retained(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     config: dict[str, Any],
     config_entry: MockConfigEntry,
     client: AsyncMock,
@@ -178,7 +181,7 @@ async def test_referenced_disabled_zone_switch_is_retained(
         await hass.async_block_till_done()
 
     assert entity_registry.async_get(LEGACY_ZONE_ENTITY_ID) is not None
-    issue = ir.async_get(hass).async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"deprecated_zone_switch_{config_entry.entry_id}_1"
     )
     assert issue is not None
