@@ -60,7 +60,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
-    """Test for successfully setting a config entry."""
+    """Test for unsuccessfully setting a config entry, erroring on authenticate."""
     with (
         patch(
             "energyflip.EnergyFlip.authenticate", side_effect=EnergyFlipException
@@ -103,7 +103,7 @@ async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
-    """Test for successfully setting a config entry."""
+    """Test for unsuccessfully setting a config entry, erroring on customer_overview."""
     with (
         patch(
             "energyflip.EnergyFlip.authenticate", return_value=None
