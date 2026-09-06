@@ -27,6 +27,7 @@ from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_calculate_should_expose,
     async_get_assistant_settings,
 )
 from homeassistant.components.intent import (
@@ -341,7 +342,7 @@ async def test_expose_flag_automatically_set(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test DefaultAgent sets the expose flag on all entities automatically."""
+    """Test DefaultAgent sets the expose flag on registry entities automatically."""
     assert await async_setup_component(hass, "homeassistant", {})
 
     light = entity_registry.async_get_or_create("light", "demo", "1234")
@@ -354,21 +355,36 @@ async def test_expose_flag_automatically_set(
     with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
         await hass.async_start()
 
-    # After setting up conversation, the expose flag should now be set on all entities
+    # After setting up conversation, the expose flag should now be set on all
+    # entities in the entity registry
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
-        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         test.entity_id: {"should_expose": False},
     }
 
-    # New entities will automatically have the expose flag set
-    new_light = "light.demo_2345"
-    hass.states.async_set(new_light, "test")
+    # New entities in the entity registry will automatically have the flag set
+    new_light = entity_registry.async_get_or_create("light", "demo", "2345")
+    hass.states.async_set(new_light.entity_id, "test")
     await hass.async_block_till_done()
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
-        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
-        new_light: {"should_expose": True},
+        new_light.entity_id: {"should_expose": True},
+        test.entity_id: {"should_expose": False},
+    }
+
+    # Entities without a registry entry are stored by entity_id in a store that is
+    # never pruned, so their exposure is computed on demand and never persisted
+    hass.states.async_set("light.legacy", "test")
+    hass.states.async_set("geo_location.transient", "test")
+    await hass.async_block_till_done()
+
+    assert async_calculate_should_expose(hass, conversation.DOMAIN, "light.legacy")
+    assert not async_calculate_should_expose(
+        hass, conversation.DOMAIN, "geo_location.transient"
+    )
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        light.entity_id: {"should_expose": True},
+        new_light.entity_id: {"should_expose": True},
         test.entity_id: {"should_expose": False},
     }
 
