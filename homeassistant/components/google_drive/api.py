@@ -40,15 +40,28 @@ def _parse_backup_metadata(file: dict[str, Any]) -> AgentBackup | None:
     The metadata lives in the file description, which the user can edit or clear
     from the Google Drive UI. One unreadable file should not hide the others.
     """
+    reason: object
     try:
-        return AgentBackup.from_dict(json.loads(file["description"]))
+        backup = AgentBackup.from_dict(json.loads(file["description"]))
     except (KeyError, TypeError, ValueError) as err:
-        _LOGGER.warning(
-            "Ignoring backup file %s: its description is not valid backup metadata: %s",
-            file.get("id", "?"),
-            err,
-        )
-        return None
+        reason = err
+    else:
+        # from_dict does not enforce its annotations, so metadata that decodes
+        # but holds the wrong types still has to be rejected here. The backup
+        # manager uses backup_id as a dict key and calls extra_metadata.get()
+        # on every backup it lists.
+        if not isinstance(backup.backup_id, str):
+            reason = "backup_id is not a string"
+        elif not isinstance(backup.extra_metadata, dict):
+            reason = "extra_metadata is not a dictionary"
+        else:
+            return backup
+    _LOGGER.warning(
+        "Ignoring backup file %s: its description is not valid backup metadata: %s",
+        file.get("id", "?"),
+        reason,
+    )
+    return None
 
 
 class AsyncConfigEntryAuth(AbstractAuth):

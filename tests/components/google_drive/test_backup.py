@@ -194,6 +194,50 @@ async def test_agents_list_backups_ignores_unreadable_metadata(
     assert "Ignoring backup file not backup metadata" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        # The backup manager calls extra_metadata.get() on every backup.
+        ("extra_metadata", []),
+        # The backup manager uses backup_id as a dict key.
+        ("backup_id", ["not a string"]),
+    ],
+)
+async def test_agents_list_backups_ignores_wrong_typed_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    field: str,
+    value: Any,
+) -> None:
+    """Test that metadata which decodes but has the wrong types is skipped.
+
+    AgentBackup.from_dict does not enforce its annotations, so such a backup is
+    only rejected once the backup manager uses it.
+    """
+    wrong_types = TEST_AGENT_BACKUP.as_dict()
+    wrong_types[field] = value
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "wrong types", "description": json.dumps(wrong_types)},
+                {"description": json.dumps(TEST_AGENT_BACKUP.as_dict())},
+            ]
+        }
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
+    assert "Ignoring backup file wrong types" in caplog.text
+    assert f"{field} is not a" in caplog.text
+
+
 async def test_agents_list_backups_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
