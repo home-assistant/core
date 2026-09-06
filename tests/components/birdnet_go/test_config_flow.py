@@ -199,3 +199,27 @@ async def test_flow_user_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_user_url_canonicalization_already_configured(
+    hass: HomeAssistant,
+    mock_birdnet_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test aborting when a full URL resolves to an already configured unique ID."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "http://192.168.1.100:8080/api/",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

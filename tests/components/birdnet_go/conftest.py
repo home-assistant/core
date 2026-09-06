@@ -40,6 +40,9 @@ def mock_birdnet_client(
         ),
     ):
         client = mock_client_cls.return_value
+        client.host = "192.168.1.100"
+        client.port = 8080
+        client.use_ssl = False
         client.base_url = "http://192.168.1.100:8080"
         client.ping = AsyncMock(return_value=True)
         client.get_ping = AsyncMock(return_value=PingResponse(status="ok"))

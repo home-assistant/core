@@ -12,14 +12,7 @@ from aiobirdnetgo import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -48,10 +41,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_USERNAME): TextSelector(),
-        vol.Optional(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
     }
 )
 
@@ -69,24 +58,17 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST].strip()
-            port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
-            use_ssl = bool(user_input.get(CONF_SSL, False))
-            user_input[CONF_HOST] = host
-            user_input[CONF_PORT] = port
-            user_input[CONF_SSL] = use_ssl
+            raw_host = user_input[CONF_HOST].strip()
+            raw_port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
+            raw_ssl = bool(user_input.get(CONF_SSL, False))
             api_key = user_input.get(CONF_API_KEY)
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
 
             session = async_get_clientsession(self.hass)
             client = BirdNetGoClient(
-                host=host,
-                port=port,
-                use_ssl=use_ssl,
+                host=raw_host,
+                port=raw_port,
+                use_ssl=raw_ssl,
                 api_key=api_key,
-                username=username,
-                password=password,
                 session=session,
             )
 
@@ -103,6 +85,14 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if not errors:
+                    # Canonicalize endpoint parameters from client
+                    host = client.host
+                    port = client.port
+                    use_ssl = client.use_ssl
+                    user_input[CONF_HOST] = host
+                    user_input[CONF_PORT] = port
+                    user_input[CONF_SSL] = use_ssl
+
                     unique_id = f"{host}:{port}"
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()

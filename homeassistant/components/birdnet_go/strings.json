@@ -13,18 +13,14 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
           "api_key": "Optional API key or Bearer token if authentication is enabled.",
           "host": "The hostname or IP address of your BirdNET-Go station.",
-          "password": "Optional password for HTTP Basic Authentication.",
           "port": "The port number of your BirdNET-Go station.",
-          "ssl": "Whether to use HTTPS to connect to your BirdNET-Go station.",
-          "username": "Optional username for HTTP Basic Authentication."
+          "ssl": "Whether to use HTTPS to connect to your BirdNET-Go station."
         },
         "description": "Set up your BirdNET-Go station connection.",
         "title": "Connect to BirdNET-Go"
