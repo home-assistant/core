@@ -8,8 +8,15 @@ from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
+from .const import DOMAIN
+from .helpers import (
+    AndroidTVRemoteConfigEntry,
+    async_get_nic_mac_address,
+    create_api,
+    get_enable_ime,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +61,19 @@ async def async_setup_entry(
     # network unreachable. If device gets a new IP address the zeroconf flow will
     # update the config entry data and reload the config entry.
     api.keep_reconnecting(reauth_needed)
+
+    # Resolve physical NIC MAC address (Wi-Fi or Ethernet) to link with router device trackers
+    if nic_mac := await async_get_nic_mac_address(hass, entry.data[CONF_HOST]):
+        api.nic_mac = nic_mac
+        dev_reg = dr.async_get(hass)
+        if device := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, entry.unique_id), entry.entry_id
+        ):
+            dev_reg.async_update_device(
+                device.id,
+                new_connections=device.connections
+                | {(dr.CONNECTION_NETWORK_MAC, nic_mac)},
+            )
 
     entry.runtime_data = api
 

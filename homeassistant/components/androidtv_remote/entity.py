@@ -32,8 +32,12 @@ class AndroidTVRemoteBaseEntity(Entity):
         device_info = api.device_info
         assert config_entry.unique_id
         assert device_info
+        connections = {(CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])}
+        if (nic_mac := getattr(api, "nic_mac", None)) and isinstance(nic_mac, str):
+            connections.add((CONNECTION_NETWORK_MAC, nic_mac))
+
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])},
+            connections=connections,
             identifiers={(DOMAIN, config_entry.unique_id)},
             name=config_entry.data[CONF_NAME],
             manufacturer=device_info["manufacturer"],

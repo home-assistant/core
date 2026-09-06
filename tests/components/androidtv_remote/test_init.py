@@ -5,9 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 from androidtvremote2 import CannotConnect, InvalidAuth
 
+from homeassistant.components.androidtv_remote.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -108,3 +110,73 @@ async def test_disconnect_on_stop(
     await hass.async_block_till_done()
 
     assert mock_api.disconnect.call_count == 1
+
+
+async def test_device_registry_connections(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that the device registry entry contains both Bluetooth and NIC MAC addresses."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f") in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
+
+
+async def test_device_registry_nic_mac_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_get_mac_address: MagicMock,
+) -> None:
+    """Test setup when physical NIC MAC cannot be resolved via ARP."""
+    mock_get_mac_address.return_value = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f") in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") not in device.connections
+
+
+async def test_existing_device_registry_connections_updated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that an existing device registry entry without NIC MAC is updated."""
+    mock_config_entry.add_to_hass(hass)
+    # Pre-create device with only Bluetooth MAC as existed prior to this change
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f")},
+    )
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f")}
+
+    # Now setup entry
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f") in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
+
