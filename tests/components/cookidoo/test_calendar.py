@@ -4,7 +4,11 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooParseException,
+    CookidooRequestException,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -88,8 +92,10 @@ async def test_get_events(
 @pytest.mark.parametrize(
     "login_exception",
     [
-        CookidooAuthException(),
-        CookidooRequestException(),
+        pytest.param(CookidooAuthException(), id="auth"),
+        pytest.param(CookidooRequestException(), id="request"),
+        pytest.param(CookidooParseException(), id="parse"),
+        pytest.param(None, id="retry_fails_after_successful_login"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -98,9 +104,13 @@ async def test_get_events_login_failure(
     cookidoo_config_entry: MockConfigEntry,
     mock_cookidoo_client: AsyncMock,
     entity_registry: er.EntityRegistry,
-    login_exception: Exception,
+    login_exception: Exception | None,
 ) -> None:
-    """Test calendar handles login failures gracefully during event fetch."""
+    """Test calendar handles login failures gracefully during event fetch.
+
+    With no login exception the login succeeds and the retried fetch fails
+    instead, which must be reported the same way.
+    """
 
     with patch("homeassistant.components.cookidoo.PLATFORMS", [Platform.CALENDAR]):
         await setup_integration(hass, cookidoo_config_entry)

@@ -104,11 +104,27 @@ async def test_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    ("login_exception", "status"),
+    ("login_exception", "status", "reason"),
     [
-        (None, ConfigEntryState.LOADED),
-        (CookidooRequestException(), ConfigEntryState.SETUP_RETRY),
-        (CookidooAuthException(), ConfigEntryState.SETUP_ERROR),
+        pytest.param(None, ConfigEntryState.LOADED, None, id="relogin_succeeds"),
+        pytest.param(
+            CookidooRequestException(),
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
+            id="request",
+        ),
+        pytest.param(
+            CookidooAuthException(),
+            ConfigEntryState.SETUP_ERROR,
+            "Authentication failed for test-email, check your email and password",
+            id="auth",
+        ),
+        pytest.param(
+            CookidooParseException(),
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
+            id="parse",
+        ),
     ],
 )
 async def test_config_entry_not_ready_auth_error(
@@ -117,6 +133,7 @@ async def test_config_entry_not_ready_auth_error(
     mock_cookidoo_client: AsyncMock,
     login_exception: Exception | None,
     status: ConfigEntryState,
+    reason: str | None,
 ) -> None:
     """Test config entry recovery when data fetch hits an auth error.
 
@@ -142,6 +159,8 @@ async def test_config_entry_not_ready_auth_error(
     await hass.async_block_till_done()
 
     assert cookidoo_config_entry.state is status
+    # A translated reason proves the exception was handled rather than escaping
+    assert cookidoo_config_entry.reason == reason
 
 
 MOCK_CONFIG_ENTRY_MIGRATION = {
@@ -472,6 +491,25 @@ async def test_login_persists_tokens(
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
     mock_cookidoo_client.login.assert_awaited_once()
+    assert cookidoo_config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
+async def test_tokens_persisted_when_user_info_fails(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test tokens of a successful login survive a failing user info fetch."""
+    mock_cookidoo_client.auth_data = None
+    mock_cookidoo_client.login.side_effect = lambda: setattr(
+        mock_cookidoo_client, "auth_data", AUTH_DATA
+    )
+    mock_cookidoo_client.get_user_info.side_effect = CookidooRequestException()
+
+    await setup_integration(hass, cookidoo_config_entry)
+
+    assert cookidoo_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # Without this the next attempt would replay the whole login
     assert cookidoo_config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
 
 
