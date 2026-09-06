@@ -19,43 +19,57 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
 
     command: type[Command]
     snake_case_states: bool = False
+    name: str | None = None
 
 
 SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
-    JvcProjectorSelectDescription(key="input", command=cmd.Input),
+    JvcProjectorSelectDescription(key="input", name="Input", command=cmd.Input),
     JvcProjectorSelectDescription(
         key="installation_mode",
+        name="Installation Mode",
         command=cmd.InstallationMode,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="light_power",
+        name="Light Power",
         command=cmd.LightPower,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="dynamic_control",
+        name="Dynamic Control",
         command=cmd.DynamicControl,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="clear_motion_drive",
+        name="Clear Motion Drive",
         command=cmd.ClearMotionDrive,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
+        key="motion_enhance",
+        name="Motion Enhance",
+        command=cmd.MotionEnhance,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
         key="anamorphic",
+        name="Anamorphic",
         command=cmd.Anamorphic,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="hdr_processing",
+        name="HDR Processing",
         command=cmd.HdrProcessing,
         entity_registry_enabled_default=False,
         snake_case_states=True,
     ),
     JvcProjectorSelectDescription(
         key="picture_mode",
+        name="Picture Mode",
         command=cmd.PictureMode,
         entity_registry_enabled_default=False,
         snake_case_states=True,
@@ -93,6 +107,8 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+        if description.name:
+            self._attr_name = description.name
 
         self._options_map: dict[str, str] = coordinator.get_options_map(
             self.command.name,

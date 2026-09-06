@@ -13,12 +13,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
-from .util import deprecate_entity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,23 +24,34 @@ class JvcProjectorSensorDescription(SensorEntityDescription):
     """Describes JVC Projector sensor entities."""
 
     command: type[Command]
+    name: str | None = None
 
 
 SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     JvcProjectorSensorDescription(
         key="power",
+        name="Power",
         command=cmd.Power,
         device_class=SensorDeviceClass.ENUM,
     ),
     JvcProjectorSensorDescription(
         key="light_time",
+        name="Light Time",
         command=cmd.LightTime,
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.HOURS,
     ),
     JvcProjectorSensorDescription(
+        key="software_version",
+        name="Software Version",
+        command=cmd.Version,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
         key="color_depth",
+        name="Color Depth",
         command=cmd.ColorDepth,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -50,6 +59,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="color_space",
+        name="Color Space",
         command=cmd.ColorSpace,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -57,21 +67,32 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="hdr",
+        name="HDR",
         command=cmd.Hdr,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSensorDescription(
-        key="hdr_processing",
-        command=cmd.HdrProcessing,
+        key="resolution",
+        name="Resolution",
+        command=cmd.Source,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSensorDescription(
-        key="picture_mode",
-        command=cmd.PictureMode,
+        key="colorimetry",
+        name="Colorimetry",
+        command=cmd.Colorimetry,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="link_rate",
+        name="Link Rate",
+        command=cmd.LinkRate,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -86,25 +107,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
     coordinator = entry.runtime_data
-    entity_registry = er.async_get(hass)
 
     entities: list[JvcProjectorSensorEntity] = []
     for description in SENSORS:
         if not coordinator.supports(description.command):
-            continue
-        if description.key in (
-            "hdr_processing",
-            "picture_mode",
-        ) and not deprecate_entity(
-            hass,
-            entity_registry,
-            SENSOR_DOMAIN,
-            f"{coordinator.unique_id}_{description.key}",
-            f"deprecated_sensor_{entry.entry_id}_{description.key}",
-            "deprecated_sensor",
-            f"{coordinator.unique_id}_{description.key}",
-            f"select.jvc_projector_{description.key}",
-        ):
             continue
         entities.append(JvcProjectorSensorEntity(coordinator, description))
 
@@ -126,6 +132,8 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+        if description.name:
+            self._attr_name = description.name
 
         self._options_map: dict[str, str] = {}
         if self.device_class == SensorDeviceClass.ENUM:
@@ -147,6 +155,21 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
 
         if value is None:
             return None
+
+        # Format software version from 0301 to 3.01
+        if self.entity_description.key == "software_version" and value:
+            try:
+                # Remove "PJ" suffix if present
+                value = value.removesuffix("PJ")
+                # Pad to 4 digits
+                value = value.zfill(4)
+                # Format as major.minor.patch
+                major = str(int(value[0:2]))
+                minor = str(int(value[2]))
+                patch = str(int(value[3]))
+                return f"{major}.{minor}.{patch}"
+            except (ValueError, IndexError):
+                return value
 
         if self.device_class == SensorDeviceClass.ENUM:
             return self._options_map.get(value)

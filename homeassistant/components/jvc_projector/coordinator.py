@@ -89,12 +89,13 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         else:
             raise UpdateFailed(str(last_timeout)) from last_timeout
 
-        # Clear state on signal loss
+        # Clear state on signal loss, but keep LightTime and Version
         if (
             new_state.get(cmd.Signal) == cmd.Signal.NONE
             and self.state.get(cmd.Signal) != cmd.Signal.NONE
         ):
-            self.state = {k: v for k, v in self.state.items() if k in CORE_COMMANDS}
+            keep_commands = CORE_COMMANDS + (cmd.LightTime, cmd.Version)
+            self.state = {k: v for k, v in self.state.items() if k in keep_commands}
 
         # Update state with new values
         for k, v in new_state.items():
@@ -142,6 +143,10 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
             new_state[cmd.Signal] = cmd.Signal.NONE
+
+        # Always try to get software version when on (for caching)
+        if power == cmd.Power.ON and cmd.Version not in new_state:
+            await self._update_command_state(cmd.Version, new_state)
 
         return new_state
 

@@ -19,16 +19,19 @@ class JvcProjectorSwitchDescription(SwitchEntityDescription):
     """Describes JVC Projector switch entities."""
 
     command: type[Command]
+    name: str | None = None
 
 
 SWITCHES: Final[tuple[JvcProjectorSwitchDescription, ...]] = (
     JvcProjectorSwitchDescription(
         key="low_latency_mode",
+        name="Low Latency Mode",
         command=cmd.LowLatencyMode,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSwitchDescription(
         key="eshift",
+        name="E-Shift",
         command=cmd.EShift,
         entity_registry_enabled_default=False,
     ),
@@ -65,6 +68,8 @@ class JvcProjectorSwitchEntity(JvcProjectorEntity, SwitchEntity):
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+        if description.name:
+            self._attr_name = description.name
 
     @property
     @override
