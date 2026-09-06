@@ -34,7 +34,7 @@ SENSOR_DESCRIPTIONS: tuple[BirdNetGoSensorEntityDescription, ...] = (
     BirdNetGoSensorEntityDescription(
         key="today_detections",
         translation_key="today_detections",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda kpis: kpis.today_detections,
     ),
     BirdNetGoSensorEntityDescription(

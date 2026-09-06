@@ -2,7 +2,7 @@
 
 from aiobirdnetgo import BirdNetGoClient
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -18,7 +18,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BirdNetGoConfigEntry) ->
         host=entry.data[CONF_HOST],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
         use_ssl=entry.data.get(CONF_SSL, False),
-        api_key=entry.data.get(CONF_API_KEY),
         session=async_get_clientsession(hass),
     )
 

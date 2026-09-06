@@ -11,13 +11,11 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "api_key": "Optional API key or Bearer token if authentication is enabled.",
           "host": "The hostname or IP address of your BirdNET-Go station.",
           "port": "The port number of your BirdNET-Go station.",
           "ssl": "Whether to use HTTPS to connect to your BirdNET-Go station."

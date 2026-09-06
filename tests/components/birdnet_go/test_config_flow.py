@@ -11,7 +11,7 @@ from aiobirdnetgo import (
 
 from homeassistant.components.birdnet_go.const import DEFAULT_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -50,32 +50,34 @@ async def test_flow_user_success(
     assert result["result"].unique_id == "192.168.1.100:8080"
 
 
-async def test_flow_user_with_api_key(
+async def test_flow_user_ipv6(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
-    """Test user step with optional API key configured."""
+    """Test user step with IPv6 address."""
+    mock_birdnet_client.host = "2001:db8::1"
+    mock_birdnet_client.port = 8080
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: DEFAULT_PORT,
+            CONF_HOST: "[2001:db8::1]",
+            CONF_PORT: 8080,
             CONF_SSL: False,
-            CONF_API_KEY: "secret_token_123",
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "BirdNET-Go (2001:db8::1:8080)"
     assert result["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_PORT: DEFAULT_PORT,
+        CONF_HOST: "2001:db8::1",
+        CONF_PORT: 8080,
         CONF_SSL: False,
-        CONF_API_KEY: "secret_token_123",
     }
-    assert result["data"][CONF_API_KEY] == "secret_token_123"
+    assert result["result"].unique_id == "2001:db8::1:8080"
 
 
 async def test_flow_user_port_normalization(

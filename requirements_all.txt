@@ -224,7 +224,7 @@ aioazuredevops==2.2.2
 aiobafi6==0.9.0
 
 # homeassistant.components.birdnet_go
-aiobirdnetgo==0.1.3
+aiobirdnetgo==0.1.4
 
 # homeassistant.components.aws
 # homeassistant.components.aws_s3

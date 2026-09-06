@@ -12,7 +12,7 @@ from aiobirdnetgo import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -20,8 +20,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
     TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
 )
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
@@ -38,9 +36,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             )
         ),
         vol.Optional(CONF_SSL, default=False): BooleanSelector(),
-        vol.Optional(CONF_API_KEY): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
     }
 )
 
@@ -61,14 +56,12 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
             raw_host = user_input[CONF_HOST].strip()
             raw_port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
             raw_ssl = bool(user_input.get(CONF_SSL, False))
-            api_key = user_input.get(CONF_API_KEY)
 
             session = async_get_clientsession(self.hass)
             client = BirdNetGoClient(
                 host=raw_host,
                 port=raw_port,
                 use_ssl=raw_ssl,
-                api_key=api_key,
                 session=session,
             )
 

@@ -24,6 +24,7 @@ async def test_sensors(
     state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_today_detections")
     assert state is not None
     assert state.state == "138"
+    assert state.attributes.get("state_class") == "total_increasing"
 
     state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_lifetime_species")
     assert state is not None

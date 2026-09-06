@@ -34,31 +34,6 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_with_api_key(
-    hass: HomeAssistant,
-    mock_birdnet_client: AsyncMock,
-) -> None:
-    """Test setup with optional API key."""
-    entry = MockConfigEntry(
-        domain="birdnet_go",
-        title="BirdNET-Go (192.168.1.100:8080)",
-        unique_id="192.168.1.100:8080",
-        data={
-            "host": "192.168.1.100",
-            "port": 8080,
-            "ssl": False,
-            "api_key": "my_secret_token",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state == ConfigEntryState.LOADED
-    assert entry.runtime_data is not None
-
-
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
