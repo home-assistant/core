@@ -196,6 +196,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_media_signature: dict[str, Any] | None = None
         self._announce_started: bool = False
         self._announce_start_time: datetime | None = None
+        self._announce_watchdog_task: asyncio.Task[None] | None = None
+        self._announce_check_lock = asyncio.Lock()
         super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event: str) -> None:
@@ -245,7 +247,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                     item.queue_id for item in queue_before
                 }
             _LOGGER.debug(
-                "Saving state for announcement: %s", self._announce_restore_state
+                "Saving state for announcement: play_state=%s, volume=%s",
+                self._announce_restore_state["play_state"],
+                self._announce_restore_state["volume"],
             )
 
             if self._player.state == PlayState.PLAY:
@@ -264,7 +268,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_started = False
             self._announce_media_signature = None
             self._announce_start_time = utcnow()
-            self.hass.async_create_task(self._capture_announcement_signature())
+            self._announce_completion_task = self.hass.async_create_task(
+                self._capture_announcement_signature()
+            )
+            self._announce_watchdog_task = self.hass.async_create_task(
+                self._announcement_watchdog()
+            )
         except asyncio.CancelledError:
             if self._announce_restore_state:
                 restore_task = self.hass.async_create_task(self._restore_state())
@@ -281,11 +290,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._clear_announcement_state()
                 self._announce_lock.release()
             raise
-        except (HeosError, ValueError, TypeError):
+        except (HeosError, ValueError, TypeError) as err:
             if self._announce_restore_state:
                 await self._restore_state()
             else:
                 self._announce_lock.release()
+            if isinstance(err, TypeError):
+                raise ValueError("Invalid announcement value") from err
             raise
 
     async def _capture_announcement_signature(self) -> None:
@@ -303,10 +314,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
             self._announce_media_signature = self._media_signature(current_media)
             self._announce_started = True
-            _LOGGER.debug(
-                "Captured announcement media signature: %s",
-                self._announce_media_signature,
-            )
+            _LOGGER.debug("Captured announcement media signature")
             break
 
         if not self._announce_in_progress or not self._announce_start_time:
@@ -315,6 +323,15 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if elapsed < 2.0:
             await asyncio.sleep(2.0 - elapsed)
         await self._check_announcement_completion()
+
+    async def _announcement_watchdog(self) -> None:
+        """Restore state if HEOS never sends an announcement completion event."""
+        await asyncio.sleep(30)
+        if self._announce_in_progress and not self._announce_completed:
+            _LOGGER.warning(
+                "Announcement completion event was not received; restoring state"
+            )
+            await self._check_announcement_completion(force=True)
 
     @staticmethod
     def _media_signature(media: Any) -> dict[str, Any]:
@@ -368,7 +385,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             return
 
         state = self._announce_restore_state
-        _LOGGER.debug("Restoring state after announcement: %s", state)
+        _LOGGER.debug(
+            "Restoring state after announcement: play_state=%s, volume=%s",
+            state["play_state"],
+            state["volume"],
+        )
 
         try:
             # Remove TTS from queue if it was added.
@@ -402,8 +423,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             try:
                 # Restore the playback state from before the announcement.
                 if state["play_state"] == PlayState.PLAY:
-                    current_media_id = self._player.now_playing_media.media_id
-                    if current_media_id == state.get("tts_url"):
+                    current_media = self._player.now_playing_media
+                    is_announcement_media = (
+                        self._announce_media_signature is not None
+                        and self._media_signature(current_media)
+                        == self._announce_media_signature
+                    ) or current_media.media_id == state.get("tts_url")
+                    if is_announcement_media:
                         try:
                             _LOGGER.debug("Still on TTS track, skipping to next")
                             await self._player.play_next()
@@ -433,6 +459,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_media_signature = None
             self._announce_started = False
             self._announce_start_time = None
+            watchdog_task = self._announce_watchdog_task
+            self._announce_watchdog_task = None
+            if watchdog_task and watchdog_task is not asyncio.current_task():
+                watchdog_task.cancel()
             self._announce_lock.release()
 
     def _clear_announcement_state(self) -> None:
@@ -465,10 +495,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 if item.media_id == tts_url and item.queue_id not in queue_ids_before:
                     tts_queue_ids.append(item.queue_id)
                     _LOGGER.debug(
-                        "Found TTS Url Stream item: queue_id=%s, song=%s, media_id=%s",
+                        "Found TTS Url Stream item: queue_id=%s, song=%s",
                         item.queue_id,
                         item.song,
-                        getattr(item, "media_id", "N/A"),
                     )
             
             # Remove TTS items from queue
@@ -483,7 +512,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         except HeosError as err:
             _LOGGER.warning("Could not remove TTS from queue: %s", err)
 
-    async def _check_announcement_completion(self) -> None:
+    async def _check_announcement_completion(self, force: bool = False) -> None:
+        """Check announcement completion without allowing concurrent checks."""
+        async with self._announce_check_lock:
+            await self._check_announcement_completion_locked(force)
+
+    async def _check_announcement_completion_locked(self, force: bool) -> None:
         """Check if the announcement has completed and restore state."""
         if self._announce_completed:
             return
@@ -511,6 +545,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         current_media = self._player.now_playing_media
         current_state = self._player.state
+        if force:
+            self._announce_completed = True
+            await self._restore_state()
+            return
+
         signature = self._announce_media_signature
         media_changed = False
 
@@ -547,8 +586,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if is_stable:
             self._announce_completed = True
             _LOGGER.debug(
-                "Announcement completed - now playing: %s, state: %s",
-                current_media.media_id,
+                "Announcement completed; player state is %s",
                 current_state,
             )
             await self._restore_state()
