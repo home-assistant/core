@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import setup_rfx_test_cfg
+from .conftest import get_device_identifier, setup_rfx_test_cfg
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -47,12 +47,12 @@ async def test_fire_event(
     await rfxtrx.signal("0716000100900970")
 
     device_id_1 = device_registry.async_get_device_by_identifier(
-        ("rfxtrx", "11_0_213c7f2:16"), mock_entry.entry_id
+        get_device_identifier(mock_entry, "11_0_213c7f2:16"), mock_entry.entry_id
     )
     assert device_id_1
 
     device_id_2 = device_registry.async_get_device_by_identifier(
-        ("rfxtrx", "16_0_00:90"), mock_entry.entry_id
+        get_device_identifier(mock_entry, "16_0_00:90"), mock_entry.entry_id
     )
     assert device_id_2
 
@@ -107,8 +107,9 @@ async def test_ws_device_remove(
         },
     )
 
+    identifier = get_device_identifier(mock_entry, device_tuple.unique_id)
     device_entry = device_registry.async_get_device_by_identifier(
-        ("rfxtrx", device_tuple.unique_id), mock_entry.entry_id
+        identifier, mock_entry.entry_id
     )
     assert device_entry
 
@@ -119,9 +120,7 @@ async def test_ws_device_remove(
 
     # Verify device entry is removed
     assert (
-        device_registry.async_get_device_by_identifier(
-            ("rfxtrx", device_tuple.unique_id), mock_entry.entry_id
-        )
+        device_registry.async_get_device_by_identifier(identifier, mock_entry.entry_id)
         is None
     )
 

@@ -18,6 +18,7 @@ from homeassistant.components.rfxtrx.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.util import ulid as ulid_util
 from homeassistant.util.dt import utcnow
 
 from . import ENTRY_VERSION
@@ -67,13 +68,27 @@ def create_rfx_test_subentries(
         subentries.append(
             ConfigSubentryDataWithId(
                 data=data,
-                subentry_id=unique_id or event_code,
+                # Deliberately unrelated to the RF address/unique_id, like a
+                # real subentry_id, so tests can't accidentally rely on them
+                # matching.
+                subentry_id=ulid_util.ulid_now(),
                 subentry_type=SUBENTRY_TYPE_DEVICE,
                 title=title,
                 unique_id=unique_id,
             )
         )
     return tuple(subentries)
+
+
+def get_device_identifier(entry: MockConfigEntry, unique_id: str) -> tuple[str, str]:
+    """Get the device registry identifier for a configured device.
+
+    Device identifiers are keyed by subentry id (unrelated to the device's
+    RF address), so tests must resolve it via the subentry rather than
+    hardcoding a `unique_id`-based identifier.
+    """
+    subentry = next(s for s in entry.subentries.values() if s.unique_id == unique_id)
+    return (DOMAIN, subentry.subentry_id)
 
 
 def create_rfx_test_entry(

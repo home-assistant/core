@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_entry
+from .conftest import create_rfx_test_entry, get_device_identifier
 
 from tests.common import (
     MockConfigEntry,
@@ -87,7 +87,8 @@ async def test_get_triggers(
     mock_entry = await setup_entry(hass, {event.code: {}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, event.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -125,7 +126,8 @@ async def test_firing_event(
     mock_entry = await setup_entry(hass, {event.code: {"fire_event": True}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, event.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -171,7 +173,8 @@ async def test_invalid_trigger(
     mock_entry = await setup_entry(hass, {event.code: {"fire_event": True}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, event.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 

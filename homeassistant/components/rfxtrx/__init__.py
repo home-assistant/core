@@ -227,8 +227,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
             find_possible_pt2262_device(pt2262_devices, event.device.id_string)
             pt2262_devices.add(event.device.id_string)
 
+        subentry = devices[device_id]
         device_entry = device_registry.async_get_device_by_identifier(
-            (DOMAIN, device_id.unique_id),
+            (DOMAIN, subentry.subentry_id),
             entry.entry_id,
         )
         if device_entry:
