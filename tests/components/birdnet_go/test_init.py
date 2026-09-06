@@ -39,7 +39,7 @@ async def test_setup_entry_auth_failed(
     mock_config_entry: MockConfigEntry,
     mock_birdnet_client: AsyncMock,
 ) -> None:
-    """Test config entry setup with authentication failure."""
+    """Test config entry setup with authentication failure retries setup."""
     mock_birdnet_client.get_kpis.side_effect = BirdNetGoAuthenticationError(
         "Invalid token"
     )
@@ -48,7 +48,7 @@ async def test_setup_entry_auth_failed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_not_ready(
