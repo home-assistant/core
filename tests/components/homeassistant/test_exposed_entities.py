@@ -1,6 +1,6 @@
 """Test Home Assistant exposed entities helper."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -785,12 +785,7 @@ async def test_state_added_listener_clears_tracking_immediately(
 
 
 async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) -> None:
-    """A sweep also runs once on Home Assistant startup.
-
-    Without this, an install that restarts more often than
-    LEGACY_ENTITY_SWEEP_INTERVAL would never sweep at all, since
-    async_track_time_interval only fires after a full interval elapses.
-    """
+    """A sweep also runs once on Home Assistant startup."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     async_expose_entity(hass, "test1", "sensor.long_gone", True)
@@ -837,6 +832,29 @@ async def test_purge_stale_legacy_entities_spans_multiple_chunks(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not exposed_entities.entities
+
+
+async def test_purge_sweep_checkpoints_each_chunk(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Each changed chunk schedules a save, so a cancelled sweep keeps progress.
+
+    The sweep is a background task and is cancelled at shutdown; if only a
+    completed pass scheduled the save, an interrupted pass would discard
+    everything it had already processed.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    for i in range(LEGACY_ENTITY_SWEEP_CHUNK_SIZE + 1):
+        async_expose_entity(hass, "test1", f"sensor.long_gone_{i}", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    with patch.object(exposed_entities, "_async_schedule_save") as mock_save:
+        freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_save.call_count == 2
 
 
 async def test_update_exposed_entity_preserves_orphaned_since(
