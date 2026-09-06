@@ -270,14 +270,12 @@ async def test_coordinator_multi_plane_initialization(
     )
 
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.forecast_solar.coordinator.ForecastSolar",
-        return_value=mock_forecast_solar,
-    ) as forecast_solar_mock:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
+    forecast_solar_mock = mock_forecast_solar._mock_class
     forecast_solar_mock.assert_called_once()
     _, kwargs = forecast_solar_mock.call_args
 
@@ -285,15 +283,22 @@ async def test_coordinator_multi_plane_initialization(
     assert kwargs["longitude"] == 4.42
     assert kwargs["api_key"] == "abcdef1234567890"
 
-    # Main plane (plane_1)
-    assert kwargs["declination"] == 30
-    assert kwargs["azimuth"] == 10  # 190 - 180
+    # Main plane (plane_1) - uses 0.0 placeholders, resolved by _refresh_plane_angles
+    assert kwargs["declination"] == 0.0
+    assert kwargs["azimuth"] == 0.0
     assert kwargs["kwp"] == 5.1  # 5100 / 1000
 
-    # Additional planes (plane_2)
+    # Additional planes (plane_2) - Plane objects are created with 0.0 placeholders
+    # but immediately modified by _refresh_plane_angles, so they show final values
     planes = kwargs["planes"]
     assert len(planes) == 1
     assert isinstance(planes[0], Plane)
-    assert planes[0].declination == 45
-    assert planes[0].azimuth == 90  # 270 - 180
+    assert planes[0].declination == 45.0
+    assert planes[0].azimuth == 90.0  # 270 - 180
     assert planes[0].kwp == 3.0  # 3000 / 1000
+
+    # Main plane's resolved values (declination 30, azimuth 190 - 180 = 10)
+    # live on the coordinator's ForecastSolar instance, not the constructor kwargs.
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.forecast.declination == 30
+    assert coordinator.forecast.azimuth == 10
