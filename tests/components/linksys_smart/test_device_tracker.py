@@ -63,12 +63,12 @@ async def test_entity_state_when_connected(
     await _setup_entry(hass, entry, [LAPTOP])
 
     entity_id = entity_registry.async_get_entity_id(
-        "device_tracker", DOMAIN, "aa:bb:cc:dd:ee:ff"
+        "device_tracker", DOMAIN, f"{entry.entry_id}_aa:bb:cc:dd:ee:ff"
     )
     assert entity_id is not None
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry is not None
-    assert reg_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert reg_entry.unique_id == f"{entry.entry_id}_aa:bb:cc:dd:ee:ff"
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -95,7 +95,7 @@ async def test_entity_state_when_disconnected(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "device_tracker", DOMAIN, "aa:bb:cc:dd:ee:ff"
+        "device_tracker", DOMAIN, f"{entry.entry_id}_aa:bb:cc:dd:ee:ff"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -117,8 +117,8 @@ async def test_setup_entry_creates_entity_per_device(
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries) == 2
     assert {entity.unique_id for entity in entries} == {
-        "aa:bb:cc:dd:ee:ff",
-        "11:22:33:44:55:66",
+        f"{entry.entry_id}_aa:bb:cc:dd:ee:ff",
+        f"{entry.entry_id}_11:22:33:44:55:66",
     }
 
 
@@ -160,8 +160,8 @@ async def test_new_device_added_on_coordinator_update(
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries) == 2
     assert {entity.unique_id for entity in entries} == {
-        "aa:bb:cc:dd:ee:ff",
-        "11:22:33:44:55:66",
+        f"{entry.entry_id}_aa:bb:cc:dd:ee:ff",
+        f"{entry.entry_id}_11:22:33:44:55:66",
     }
 
 

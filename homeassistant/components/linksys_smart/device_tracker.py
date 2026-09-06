@@ -106,8 +106,13 @@ class LinksysScannerEntity(
         super().__init__(coordinator)
         self._mac = device.mac
         self._attr_mac_address = device.mac
-        self._attr_unique_id = device.mac
         self._attr_name = device.name
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Return a unique ID scoped to this router's config entry."""
+        return f"{self.coordinator.config_entry.entry_id}_{self._mac}"
 
     @property
     @override
