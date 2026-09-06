@@ -1,5 +1,7 @@
 """Test Home Assistant exposed entities helper."""
 
+from unittest.mock import Mock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -639,6 +641,45 @@ async def test_purge_stale_legacy_entities_periodic_sweep(
 
     assert set(exposed_entities.entities) == {"sensor.still_around"}
     assert exposed_entities.entities["sensor.still_around"].orphaned_since is None
+
+
+async def test_purge_notifies_assistant_listeners(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Purging a record notifies the affected assistant's listeners.
+
+    Consumers such as cloud Alexa cache assistant settings and only sync
+    remote removals when notified, so a silent purge would leave a deleted
+    entity exposed remotely indefinitely.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass.states.async_set("sensor.still_around", "on", {})
+    async_expose_entity(hass, "test1", "sensor.still_around", True)
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    listener_test1 = Mock()
+    exposed_entities.async_listen_entity_updates("test1", listener_test1)
+    listener_test2 = Mock()
+    exposed_entities.async_listen_entity_updates("test2", listener_test2)
+
+    # A sweep that only starts orphan tracking changes no settings, so
+    # nobody is notified.
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    listener_test1.assert_not_called()
+
+    # The purging sweep notifies the assistant with settings on the record,
+    # and only that assistant.
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "sensor.long_gone" not in exposed_entities.entities
+    listener_test1.assert_called_once()
+    listener_test2.assert_not_called()
 
 
 async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
