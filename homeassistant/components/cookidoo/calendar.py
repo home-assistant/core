@@ -78,7 +78,6 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         except CookidooAuthException:
             try:
                 await self.coordinator.cookidoo.login()
-                self.coordinator.save_auth_data()
                 return await self.coordinator.cookidoo.get_recipes_in_calendar_week(
                     week_day
                 )
@@ -92,6 +91,9 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 translation_domain=DOMAIN,
                 translation_key="calendar_fetch_failed",
             ) from e
+        finally:
+            # Any request can rotate the tokens, not just the re-login
+            self.coordinator.save_auth_data()
 
     @override
     async def async_get_events(
