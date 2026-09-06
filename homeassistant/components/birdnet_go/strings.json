@@ -4,8 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "auth_not_supported": "Authentication is not supported. Please disable authentication or connect directly to BirdNET-Go.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -37,7 +37,7 @@
         "name": "Lifetime species"
       },
       "today_detections": {
-        "name": "Today detections"
+        "name": "Today's detections"
       }
     }
   }

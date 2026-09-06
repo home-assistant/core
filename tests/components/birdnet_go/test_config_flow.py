@@ -1,6 +1,6 @@
 """Test the BirdNET-Go config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiobirdnetgo import (
     BirdNetGoAuthenticationError,
@@ -140,12 +140,12 @@ async def test_flow_user_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_flow_user_invalid_auth(
+async def test_flow_user_auth_not_supported(
     hass: HomeAssistant, mock_birdnet_client: AsyncMock
 ) -> None:
-    """Test user step with authentication error."""
+    """Test user step with authentication error returns auth_not_supported."""
     mock_birdnet_client.get_kpis.side_effect = BirdNetGoAuthenticationError(
-        "Bad credentials"
+        "Authentication required"
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -161,7 +161,31 @@ async def test_flow_user_invalid_auth(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": "auth_not_supported"}
+
+
+async def test_flow_user_invalid_url_value_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test user step when client construction raises ValueError."""
+    with patch(
+        "homeassistant.components.birdnet_go.config_flow.BirdNetGoClient",
+        side_effect=ValueError("Invalid URL or port"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "http://bird.local:notaport",
+                CONF_PORT: DEFAULT_PORT,
+                CONF_SSL: False,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_user_malformed_kpis(

@@ -21,7 +21,7 @@ async def test_sensors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_today_detections")
+    state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_today_s_detections")
     assert state is not None
     assert state.state == "138"
     assert state.attributes.get("state_class") == "total_increasing"
@@ -39,14 +39,12 @@ async def test_sensors(
     assert state is not None
     assert state.state == "420"
 
-    # Entity registry check
     entry = entity_registry.async_get(
-        "sensor.birdnet_go_192_168_1_100_8080_today_detections"
+        "sensor.birdnet_go_192_168_1_100_8080_today_s_detections"
     )
     assert entry is not None
     assert entry.unique_id == f"{mock_config_entry.entry_id}_today_detections"
 
-    # Device registry check
     device = device_registry.async_get_device_by_identifier(
         ("birdnet_go", mock_config_entry.entry_id), mock_config_entry.entry_id
     )

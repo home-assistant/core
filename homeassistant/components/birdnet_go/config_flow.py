@@ -58,17 +58,18 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
             raw_ssl = bool(user_input.get(CONF_SSL, False))
 
             session = async_get_clientsession(self.hass)
-            client = BirdNetGoClient(
-                host=raw_host,
-                port=raw_port,
-                use_ssl=raw_ssl,
-                session=session,
-            )
-
             try:
+                client = BirdNetGoClient(
+                    host=raw_host,
+                    port=raw_port,
+                    use_ssl=raw_ssl,
+                    session=session,
+                )
                 await client.get_kpis()
+            except ValueError:
+                errors["base"] = "cannot_connect"
             except BirdNetGoAuthenticationError:
-                errors["base"] = "invalid_auth"
+                errors["base"] = "auth_not_supported"
             except BirdNetGoConnectionError, BirdNetGoTimeoutError:
                 errors["base"] = "cannot_connect"
             except BirdNetGoError:
