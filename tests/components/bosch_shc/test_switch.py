@@ -14,8 +14,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import micromodule_relay_device, setup_integration, thermostat_device
+from .conftest import (
+    light_switch_bsm_device,
+    micromodule_relay_device,
+    setup_integration,
+    thermostat_device,
+)
 
 from tests.common import MockConfigEntry
 
@@ -89,3 +95,24 @@ async def test_micromodule_relay_child_lock(
         blocking=True,
     )
     assert device.child_lock is True
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"light_switches_bsm": [light_switch_bsm_device(child_lock=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_light_switch_bsm_child_lock_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A BSM light switch's primary switch and child-lock switch use distinct unique_ids."""
+    await setup_integration(hass, mock_config_entry)
+
+    lightswitch_entry = entity_registry.async_get("switch.light_switch")
+    child_lock_entry = entity_registry.async_get("switch.light_switch_child_lock")
+    assert lightswitch_entry is not None
+    assert child_lock_entry is not None
+    assert lightswitch_entry.unique_id != child_lock_entry.unique_id

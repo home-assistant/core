@@ -7,7 +7,9 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import (
     BatteryLevelService,
+    PowerSwitchService,
     SHCBatteryDevice,
+    SHCLightSwitchBSM,
     SHCMicromoduleRelay,
     SHCThermostat,
     ThermostatService,
@@ -168,5 +170,30 @@ def micromodule_relay_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.child_lock = child_lock
+    return device
+
+
+def light_switch_bsm_device(
+    device_id: str = "hdm:ZigBee:lightswitch1",
+    name: str = "Light switch",
+    child_lock: bool = False,
+) -> SHCLightSwitchBSM:
+    """Build a minimal device double for the light_switches_bsm bucket.
+
+    Backs both the primary "lightswitch" switch and the new child-lock
+    switch, so a unique_id collision between the two would surface here.
+    """
+    device = create_autospec(SHCLightSwitchBSM, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "LIGHT_SWITCH_BSM"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.switchstate = PowerSwitchService.State.OFF
     device.child_lock = child_lock
     return device
