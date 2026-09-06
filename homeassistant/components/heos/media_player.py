@@ -272,7 +272,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                     await asyncio.shield(restore_task)
                 except asyncio.CancelledError:
                     pass
-                except Exception as err:
+                except (HeosError, ValueError, TypeError) as err:
                     _LOGGER.warning(
                         "Could not restore state after announcement cancellation: %s",
                         err,
@@ -281,7 +281,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._clear_announcement_state()
                 self._announce_lock.release()
             raise
-        except Exception:
+        except (HeosError, ValueError, TypeError):
             if self._announce_restore_state:
                 await self._restore_state()
             else:
@@ -329,10 +329,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     @staticmethod
     def _is_announcement_media(media: Any, tts_url: str) -> bool:
         """Return whether HEOS reports the requested URL announcement."""
-        return media.media_id == tts_url or (
-            media.song == "Url Stream"
-            and media.album == "Url Stream"
-            and media.artist == "Url Stream"
+        return bool(
+            media.media_id == tts_url
+            or (
+                media.song == "Url Stream"
+                and media.album == "Url Stream"
+                and media.artist == "Url Stream"
+            )
         )
 
     @staticmethod
@@ -379,9 +382,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             try:
                 await self._player.set_volume(state["volume"])
             except HeosError as err:
-                _LOGGER.warning(
-                    "Could not restore volume after announcement: %s", err
-                )
+                _LOGGER.warning("Could not restore volume after announcement: %s", err)
 
             try:
                 if state["is_muted"] != self._player.is_muted:
