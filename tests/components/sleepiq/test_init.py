@@ -434,7 +434,6 @@ async def test_duplicate_sleepers_no_unique_id_errors(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that duplicate sleepers do not produce unique ID errors."""
-    # Add a duplicate of the left sleeper
     dup_sleeper = create_autospec(SleepIQSleeper)
     dup_sleeper.side = Side.RIGHT
     dup_sleeper.name = "Duplicate"
