@@ -21,23 +21,19 @@ async def test_sensors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # 1. Today Detections
     state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_today_detections")
     assert state is not None
     assert state.state == "138"
 
-    # 2. Lifetime Species
     state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_lifetime_species")
     assert state is not None
     assert state.state == "42"
 
-    # 3. Detection Streak
     state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_detection_streak")
     assert state is not None
     assert state.state == "17"
     assert state.attributes.get("unit_of_measurement") == "d"
 
-    # 4. Best Day Count
     state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_best_day_detections")
     assert state is not None
     assert state.state == "420"
