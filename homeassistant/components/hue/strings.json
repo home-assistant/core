@@ -76,6 +76,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "entertainment_area": {
+        "name": "Entertainment area {area_name}"
+      }
+    },
     "event": {
       "button": {
         "name": "Button {button_id}",
@@ -140,6 +145,9 @@
     "switch": {
       "light_sensor_enabled": {
         "name": "Light sensor enabled"
+      },
+      "motion_aware": {
+        "name": "MotionAware"
       },
       "motion_sensor_enabled": {
         "name": "Motion sensor enabled"

@@ -11,8 +11,11 @@ from typing import Any, TypedDict
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -457,12 +460,15 @@ class ExposedEntities:
             # The entity no longer exists
             return False
         if (
-            domain == "binary_sensor"
+            domain == BINARY_SENSOR_DOMAIN
             and device_class in DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES
         ):
             return True
 
-        if domain == "sensor" and device_class in DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES:
+        if (
+            domain == SENSOR_DOMAIN
+            and device_class in DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES
+        ):
             return True
 
         return False

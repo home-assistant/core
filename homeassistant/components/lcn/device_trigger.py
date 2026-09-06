@@ -54,7 +54,9 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         return []
 
     identifier = next(iter(device.identifiers))

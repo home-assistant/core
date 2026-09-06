@@ -20,6 +20,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -64,4 +65,9 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
+    return unload_ok

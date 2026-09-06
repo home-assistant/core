@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "rtc_sync": {
+        "default": "mdi:home-clock"
+      }
+    },
+    "sensor": {
+      "bat_config_capacity": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_depth_of_discharge": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_end_of_discharge": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_eps_buffer": {
+        "default": "mdi:battery-check-outline"
+      },
+      "bat_config_tempco": {
+        "default": "mdi:battery-check-outline"
+      },
+      "battery_state_of_health_total": {
+        "default": "mdi:battery-heart"
+      },
+      "state_of_health": {
+        "default": "mdi:battery-heart"
+      }
+    }
+  }
+}

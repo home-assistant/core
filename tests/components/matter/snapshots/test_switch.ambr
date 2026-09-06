@@ -503,7 +503,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-entry]
+# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor_display-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -516,8 +516,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.alpstuga_air_quality_monitor',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.alpstuga_air_quality_monitor_display',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -525,29 +525,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Display',
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Display',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch',
+    'translation_key': 'display',
     'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-state]
+# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ALPSTUGA air quality monitor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ALPSTUGA air quality monitor Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.alpstuga_air_quality_monitor',
+    'entity_id': 'switch.alpstuga_air_quality_monitor_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1512,6 +1511,57 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[wago_home_relay_16a][switch.home_relay_16a_thread-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.home_relay_16a_thread',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-1-MatterPlug-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[wago_home_relay_16a][switch.home_relay_16a_thread-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.home_relay_16a_thread',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

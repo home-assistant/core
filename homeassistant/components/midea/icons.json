@@ -1,0 +1,117 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "header_exist": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "full": "mdi:fan-chevron-up",
+              "silent": "mdi:fan-chevron-down"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "mdi:baby-face-outline",
+              "circulation": "mdi:autorenew",
+              "comfort": "mdi:sofa",
+              "customize": "mdi:tune",
+              "eco": "mdi:leaf",
+              "induction": "mdi:weather-windy",
+              "natural": "mdi:tailwind",
+              "silent": "mdi:volume-off",
+              "sleep": "mdi:power-sleep",
+              "smart": "mdi:brain",
+              "soft": "mdi:feather",
+              "strong": "mdi:fan-speed-3",
+              "warm": "mdi:heat-wave"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "filter_life": {
+        "default": "mdi:air-filter"
+      },
+      "filter_life_level": {
+        "default": "mdi:air-filter"
+      },
+      "hcho": {
+        "default": "mdi:molecule"
+      },
+      "in_tds": {
+        "default": "mdi:water"
+      },
+      "indoor_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "mode": {
+        "default": "mdi:auto-mode"
+      },
+      "out_tds": {
+        "default": "mdi:water-plus"
+      },
+      "pmv": {
+        "default": "mdi:thermometer-lines"
+      },
+      "tank_level": {
+        "default": "mdi:cup-water"
+      },
+      "target_indoor_fan_speed": {
+        "default": "mdi:fan-clock"
+      }
+    },
+    "switch": {
+      "anion": {
+        "default": "mdi:air-purifier"
+      },
+      "aux_heating": {
+        "default": "mdi:radiator"
+      },
+      "disinfect": {
+        "default": "mdi:bacteria"
+      },
+      "night_light": {
+        "default": "mdi:weather-night"
+      },
+      "out_silent": {
+        "default": "mdi:volume-mute"
+      },
+      "prompt_tone": {
+        "default": "mdi:bullhorn"
+      },
+      "screen_display": {
+        "default": "mdi:monitor"
+      },
+      "self_clean": {
+        "default": "mdi:broom"
+      },
+      "smart_eye": {
+        "default": "mdi:eye"
+      },
+      "sound": {
+        "default": "mdi:volume-high"
+      },
+      "tbh": {
+        "default": "mdi:heating-coil"
+      },
+      "zone1_curve": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "zone2_curve": {
+        "default": "mdi:chart-bell-curve"
+      }
+    }
+  }
+}

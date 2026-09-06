@@ -56,8 +56,8 @@ from openai.types.responses.tool_param import (
     ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -145,7 +145,7 @@ def _format_structured_output(
     schema: vol.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = convert(
+    result: dict[str, Any] = to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
@@ -162,7 +162,7 @@ def _format_tool(
 ) -> FunctionToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
-    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     if unsupported_keys.intersection(schema):
         schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 

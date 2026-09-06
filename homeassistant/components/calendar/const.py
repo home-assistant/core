@@ -1,7 +1,7 @@
 """Constants for calendar components."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from . import CalendarEntity
 
-DOMAIN = "calendar"
+DOMAIN: Final = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
 

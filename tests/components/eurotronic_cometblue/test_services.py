@@ -133,7 +133,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="expected a list for dictionary value"):
+    with pytest.raises(vol.Invalid, match="expected a list at 'monday'"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
@@ -144,7 +144,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="expected a list for dictionary value"):
+    with pytest.raises(vol.Invalid, match="expected a list at 'monday'"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",

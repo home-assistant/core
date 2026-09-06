@@ -1,7 +1,5 @@
 """Test the Insteon properties APIs."""
 
-import asyncio
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -27,20 +25,20 @@ from homeassistant.core import HomeAssistant
 
 from .mock_devices import MockDevices
 
-from tests.common import load_fixture
+from tests.common import load_json_object_fixture
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="kpl_properties_data", scope="module")
 def kpl_properties_data_fixture():
     """Load the controller state fixture data."""
-    return json.loads(load_fixture("insteon/kpl_properties.json"))
+    return load_json_object_fixture("insteon/kpl_properties.json")
 
 
 @pytest.fixture(name="iolinc_properties_data", scope="module")
 def iolinc_properties_data_fixture():
     """Load the controller state fixture data."""
-    return json.loads(load_fixture("insteon/iolinc_properties.json"))
+    return load_json_object_fixture("insteon/iolinc_properties.json")
 
 
 async def _setup(
@@ -157,7 +155,6 @@ async def test_get_read_only_properties(
         msg = await ws_client.receive_json()
         assert msg["success"]
         assert len(msg["result"]["properties"]) == 15
-    await asyncio.sleep(1)
 
 
 async def test_get_unknown_properties(

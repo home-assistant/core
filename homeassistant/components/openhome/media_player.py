@@ -116,6 +116,8 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._attr_media_title = track_information.get("title")
             if artists := track_information.get("artist"):
                 self._attr_media_artist = artists[0]
+            self._attr_media_content_id = track_information.get("uri")
+            self._attr_media_content_type = MediaType.MUSIC
 
             if self._device.volume_enabled:
                 self._attr_supported_features |= (

@@ -2800,10 +2800,14 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
 _MODERN_SUN_CONDITIONS = (
     "sun.elevation",
     "sun.is_ascending",
+    "sun.is_blue_hour",
     "sun.is_descending",
     "sun.is_evening_twilight",
+    "sun.is_golden_hour",
+    "sun.is_midnight_sun",
     "sun.is_morning_twilight",
     "sun.is_night",
+    "sun.is_polar_night",
     "sun.is_set",
     "sun.is_up",
 )
@@ -3130,7 +3134,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()

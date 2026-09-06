@@ -1,0 +1,18 @@
+{
+  "domain": "hotspring",
+  "name": "Hot Spring",
+  "codeowners": ["@Moustachauve"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hotspring",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["hotspring"],
+  "quality_scale": "platinum",
+  "requirements": ["python-hotspring==2.0.1"],
+  "zeroconf": [
+    {
+      "name": "watkins_spa*",
+      "type": "_ws._tcp.local."
+    }
+  ]
+}

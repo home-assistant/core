@@ -891,7 +891,7 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            "unexpected character: line 1 column 1 (char 0)"
+            "unexpected character, expected a JSON value: line 1 column 1 (char 0)"
             in issue_entry.translation_placeholders["error"]
         )
 

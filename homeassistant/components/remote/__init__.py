@@ -5,7 +5,7 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, final, override
+from typing import Any, Final, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -29,7 +29,7 @@ from .const import RemoteEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "remote"
+DOMAIN: Final = "remote"
 DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA

@@ -71,7 +71,7 @@
             'netout': 524288,
             'status': 'running',
             'uptime': 43200,
-            'vmid': 200,
+            'vmid': '200',
           }),
           '201': dict({
             'cpu': 0.05,
@@ -85,7 +85,7 @@
             'netout': 524288,
             'status': 'stopped',
             'uptime': 43200,
-            'vmid': 201,
+            'vmid': '201',
           }),
         }),
         'node': dict({
@@ -128,6 +128,11 @@
             'used': 1391442395136,
             'used_fraction': 0.73,
           }),
+        }),
+        'version': dict({
+          'release': '9.1',
+          'repoid': 'abcdefghijklmnop',
+          'version': '9.1.6',
         }),
         'vms': dict({
           '100': dict({

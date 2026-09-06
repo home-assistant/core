@@ -227,6 +227,18 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SWITCH,
         entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="display",
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        vendor_id=(4476,),  # IKEA of Sweden
+        product_id=(12289,),  # ALPSTUGA air quality monitor
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterSwitchEntityDescription(
+            key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
         ),

@@ -15,11 +15,7 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -48,11 +44,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -153,17 +152,8 @@ SENSOR_SETTINGS = vol.Schema(
                     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
                     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
                     vol.Optional(CONF_AVAILABILITY): TemplateSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="device_class",
-                            sort=True,
-                        )
+                    vol.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                        DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     vol.Optional(CONF_STATE_CLASS): SelectSelector(
                         SelectSelectorConfig(

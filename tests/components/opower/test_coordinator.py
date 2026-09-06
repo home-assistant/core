@@ -182,6 +182,7 @@ async def test_coordinator_subsequent_run_no_energy_data(
 async def test_coordinator_migration(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
     snapshot: SnapshotAssertion,
@@ -238,7 +239,6 @@ async def test_coordinator_migration(
     assert stats == snapshot
 
     # Check that an issue was created
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -370,6 +370,7 @@ async def test_coordinator_updates_with_finer_grained_data(
 async def test_coordinator_migration_empty_source_stats(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
@@ -412,7 +413,6 @@ async def test_coordinator_migration_empty_source_stats(
     # no individual stats were found
     assert migrated is False
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
     assert issue is None
 

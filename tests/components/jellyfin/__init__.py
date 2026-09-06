@@ -1,16 +1,15 @@
 """Tests for the jellyfin integration."""
 
-import json
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from tests.common import load_fixture
+from tests.common import load_json_value_fixture
 
 
 def load_json_fixture(filename: str) -> Any:
     """Load JSON fixture on-demand."""
-    return json.loads(load_fixture(f"jellyfin/{filename}"))
+    return load_json_value_fixture(f"jellyfin/{filename}")
 
 
 async def async_load_json_fixture(hass: HomeAssistant, filename: str) -> Any:

@@ -389,6 +389,10 @@ SSDP = {
             "X_MqttOnLan": "1",
             "manufacturer": "Victron Energy",
         },
+        {
+            "X_MqttTokenPairing": "1",
+            "manufacturer": "Victron Energy",
+        },
     ],
     "webostv": [
         {

@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -168,7 +168,18 @@ async def async_setup_entry(
         entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
-    _async_get_thermostats(hass).extend(entities)
+
+    # The ecobee actions act on whatever is in this list, so the entities have
+    # to be taken back out again when the entry goes away.
+    thermostats = _async_get_thermostats(hass)
+    thermostats.extend(entities)
+
+    @callback
+    def _remove_thermostats() -> None:
+        for entity in entities:
+            thermostats.remove(entity)
+
+    config_entry.async_on_unload(_remove_thermostats)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -494,7 +505,7 @@ class Thermostat(ClimateEntity):
                 "id": device.id,
                 "name_by_user": device.name_by_user or device.name,
             }
-            for device in device_registry.devices.values()
+            for device in device_registry.devices
             for sensor_info in sensors_info
             if device.name == sensor_info["name"]
             and any(identifier[0] == DOMAIN for identifier in device.identifiers)
@@ -830,7 +841,7 @@ class Thermostat(ClimateEntity):
         return sorted(
             [
                 device.name_by_user or device.name
-                for device in device_registry.devices.values()
+                for device in device_registry.devices
                 for sensor_name in sensor_names
                 if device.name == sensor_name
                 and any(identifier[0] == DOMAIN for identifier in device.identifiers)

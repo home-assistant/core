@@ -213,8 +213,9 @@ class HomematicipGenericEntity(Entity):
         if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = dr.async_get(self.hass)
-            if device_id in device_registry.devices:
-                # This will also remove associated entities from entity registry.
+            # This will also remove associated entities from entity registry,
+            # ignore an already removed device.
+            with contextlib.suppress(KeyError):
                 device_registry.async_remove_device(device_id)
         else:  # noqa: PLR5501
             # Remove from entity registry.

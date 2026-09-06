@@ -61,6 +61,12 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
 
     @property
     @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self._feature.is_error
+
+    @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return list of supported HVAC modes."""
         if self._feature.mode is None:

@@ -54,6 +54,17 @@ def test_json_encoder(hass: HomeAssistant, encoder: type[json.JSONEncoder]) -> N
     assert json_round_trip(default) == json_round_trip(state.as_dict())
 
 
+def test_default_json_encoder(hass: HomeAssistant) -> None:
+    """Test the default JSON encoder for date and time."""
+    ha_json_enc = DefaultHASSJSONEncoder()
+
+    today = datetime.date(2026, 8, 23)
+    assert ha_json_enc.default(today) == today.isoformat()
+
+    current_time = datetime.time(12, 0)
+    assert ha_json_enc.default(current_time) == current_time.isoformat()
+
+
 def test_json_encoder_raises(hass: HomeAssistant) -> None:
     """Test the JSON encoder raises on unsupported types."""
     ha_json_enc = DefaultHASSJSONEncoder()
@@ -145,6 +156,27 @@ def test_json_dumps_rgb_color_subclass() -> None:
     rgb = RGBColor(4, 2, 1)
 
     assert json_dumps(rgb) == "[4,2,1]"
+
+
+def test_json_dumps_date_time_subclasses() -> None:
+    """Test the json dumps with date and time subclasses."""
+
+    class CustomDate(datetime.date):
+        """Custom date subclass."""
+
+    class CustomTime(datetime.time):
+        """Custom time subclass."""
+
+    class CustomDatetime(datetime.datetime):
+        """Custom datetime subclass."""
+
+    d = CustomDate(2026, 8, 23)
+    t = CustomTime(12, 30, 45)
+    dt = CustomDatetime(2026, 8, 23, 12, 30, 45)
+
+    assert json_dumps({"date": d, "time": t, "datetime": dt}) == (
+        '{"date":"2026-08-23","time":"12:30:45","datetime":"2026-08-23T12:30:45"}'
+    )
 
 
 def test_json_fragments() -> None:

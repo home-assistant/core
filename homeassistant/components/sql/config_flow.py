@@ -10,11 +10,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -26,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import section
@@ -55,17 +52,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
                 {
                     vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                            translation_key="device_class",
-                            sort=True,
-                        )
+                    vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                        selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
                         selector.SelectSelectorConfig(

@@ -148,8 +148,8 @@ async def test_remove_party_and_reload(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry.unique_id}_{group_id}"), config_entry.entry_id
         )
         is not None
     )
@@ -168,8 +168,8 @@ async def test_remove_party_and_reload(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry.unique_id}_{group_id}"), config_entry.entry_id
         )
         is None
     )

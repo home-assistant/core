@@ -16,7 +16,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ingress_url": "Ingress URLs are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie app.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry.",
+      "mealie_version": "Minimum required version is v3.2.0. Please upgrade Mealie and then retry.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -138,6 +138,9 @@
     "item_not_found_error": {
       "message": "Item {shopping_list_item} not found."
     },
+    "mealplan_not_found": {
+      "message": "Mealplan with ID `{mealplan_id}` not found."
+    },
     "no_recipes_found": {
       "message": "No recipes found matching your search."
     },
@@ -180,6 +183,20 @@
     }
   },
   "services": {
+    "delete_mealplan": {
+      "description": "Deletes a mealplan",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
+        },
+        "mealplan_id": {
+          "description": "The mealplan ID to delete.",
+          "name": "Mealplan ID"
+        }
+      },
+      "name": "Delete a mealplan"
+    },
     "get_mealplan": {
       "description": "Gets a mealplan from Mealie",
       "fields": {
@@ -299,6 +316,40 @@
         }
       },
       "name": "Set random mealplan"
+    },
+    "update_mealplan": {
+      "description": "Updates a mealplan",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
+        },
+        "date": {
+          "description": "[%key:component::mealie::services::set_random_mealplan::fields::date::description%]",
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::date::name%]"
+        },
+        "entry_type": {
+          "description": "The type of dish to update the recipe to.",
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::entry_type::name%]"
+        },
+        "mealplan_id": {
+          "description": "The mealplan ID to update.",
+          "name": "Mealplan ID"
+        },
+        "note_text": {
+          "description": "Meal note text for when planning without recipe.",
+          "name": "Note text"
+        },
+        "note_title": {
+          "description": "Meal note title for when planning without recipe.",
+          "name": "Meal note title"
+        },
+        "recipe_id": {
+          "description": "The recipe ID or the slug of the recipe to set.",
+          "name": "Recipe ID"
+        }
+      },
+      "name": "Update a mealplan"
     }
   }
 }

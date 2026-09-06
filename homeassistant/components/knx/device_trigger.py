@@ -115,8 +115,11 @@ async def async_attach_trigger(
     try:
         trigger_config = TRIGGER_TRIGGER_SCHEMA(trigger_config)
     except vol.Invalid as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise InvalidDeviceAutomationConfig(f"{err}") from err
+        raise InvalidDeviceAutomationConfig(
+            translation_domain=DOMAIN,
+            translation_key="device_trigger_invalid_config",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     return await trigger.async_attach_trigger(
         hass, config=trigger_config, action=action, trigger_info=trigger_info

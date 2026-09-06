@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import patch
 
 import pytest
+from python_picnic_api2.models import Cart, DeliverySummary, User
 import requests
 
 from homeassistant import config_entries
@@ -150,14 +151,14 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     ):
         """Set up the Picnic sensor platform."""
         if use_default_responses:
-            self.picnic_mock().get_user.return_value = copy.deepcopy(
-                DEFAULT_USER_RESPONSE
+            self.picnic_mock().get_user.return_value = User.from_api(
+                copy.deepcopy(DEFAULT_USER_RESPONSE)
             )
-            self.picnic_mock().get_cart.return_value = copy.deepcopy(
-                DEFAULT_CART_RESPONSE
+            self.picnic_mock().get_cart.return_value = Cart.from_api(
+                copy.deepcopy(DEFAULT_CART_RESPONSE)
             )
             self.picnic_mock().get_deliveries.return_value = [
-                copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
+                DeliverySummary.from_api(copy.deepcopy(DEFAULT_DELIVERY_RESPONSE))
             ]
             self.picnic_mock().get_delivery_position.return_value = {}
 
@@ -315,10 +316,12 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         cart_response["selected_slot"]["state"] = "IMPLICIT"
 
         # Set mock responses
-        self.picnic_mock().get_user.return_value = copy.deepcopy(DEFAULT_USER_RESPONSE)
-        self.picnic_mock().get_cart.return_value = cart_response
+        self.picnic_mock().get_user.return_value = User.from_api(
+            copy.deepcopy(DEFAULT_USER_RESPONSE)
+        )
+        self.picnic_mock().get_cart.return_value = Cart.from_api(cart_response)
         self.picnic_mock().get_deliveries.return_value = [
-            copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
+            DeliverySummary.from_api(copy.deepcopy(DEFAULT_DELIVERY_RESPONSE))
         ]
         self.picnic_mock().get_delivery_position.return_value = {}
         await self._setup_platform()
@@ -343,9 +346,15 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         delivery_response["status"] = "CURRENT"
 
         # Set mock responses
-        self.picnic_mock().get_user.return_value = copy.deepcopy(DEFAULT_USER_RESPONSE)
-        self.picnic_mock().get_cart.return_value = copy.deepcopy(DEFAULT_CART_RESPONSE)
-        self.picnic_mock().get_deliveries.return_value = [delivery_response]
+        self.picnic_mock().get_user.return_value = User.from_api(
+            copy.deepcopy(DEFAULT_USER_RESPONSE)
+        )
+        self.picnic_mock().get_cart.return_value = Cart.from_api(
+            copy.deepcopy(DEFAULT_CART_RESPONSE)
+        )
+        self.picnic_mock().get_deliveries.return_value = [
+            DeliverySummary.from_api(delivery_response)
+        ]
         self.picnic_mock().get_delivery_position.return_value = {}
         await self._setup_platform()
 
@@ -381,7 +390,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         delivery_response = copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
         delivery_response["eta2"] = eta_dates
         delivery_response["status"] = "CURRENT"
-        self.picnic_mock().get_deliveries.return_value = [delivery_response]
+        self.picnic_mock().get_deliveries.return_value = [
+            DeliverySummary.from_api(delivery_response)
+        ]
         await self._coordinator.async_refresh()
 
         # Assert eta times are not available due to malformed date strings
@@ -404,7 +415,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         delivery_response = copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
         del delivery_response["delivery_time"]
         delivery_response["status"] = "CURRENT"
-        self.picnic_mock().get_deliveries.return_value = [delivery_response]
+        self.picnic_mock().get_deliveries.return_value = [
+            DeliverySummary.from_api(delivery_response)
+        ]
         self.picnic_mock().get_delivery_position.return_value = {
             "eta_window": {
                 "start": "2021-03-05T10:19:20.452+00:00",
@@ -543,14 +556,18 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         undelivered_order_2["eta2"]["end"] = "2022-03-08T13:45:00.000+01:00"
 
         deliveries_response = [
-            undelivered_order_2,
-            undelivered_order,
-            copy.deepcopy(DEFAULT_DELIVERY_RESPONSE),
+            DeliverySummary.from_api(undelivered_order_2),
+            DeliverySummary.from_api(undelivered_order),
+            DeliverySummary.from_api(copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)),
         ]
 
         # Set mock responses
-        self.picnic_mock().get_user.return_value = copy.deepcopy(DEFAULT_USER_RESPONSE)
-        self.picnic_mock().get_cart.return_value = copy.deepcopy(DEFAULT_CART_RESPONSE)
+        self.picnic_mock().get_user.return_value = User.from_api(
+            copy.deepcopy(DEFAULT_USER_RESPONSE)
+        )
+        self.picnic_mock().get_cart.return_value = Cart.from_api(
+            copy.deepcopy(DEFAULT_CART_RESPONSE)
+        )
         self.picnic_mock().get_deliveries.return_value = deliveries_response
         self.picnic_mock().get_delivery_position.return_value = {}
         await self._setup_platform()
@@ -586,8 +603,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform(use_default_responses=True)
 
         device_registry = dr.async_get(self.hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-        picnic_service = device_registry.async_get_device(
-            identifiers={(const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"])}
+        picnic_service = device_registry.async_get_device_by_identifier(
+            (const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"]),
+            self.config_entry.entry_id,
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Mock Title"

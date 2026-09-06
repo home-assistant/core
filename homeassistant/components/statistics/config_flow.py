@@ -118,7 +118,7 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
             )
         ),
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): NumberSelector(
-            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(min=1, step=1, mode=NumberSelectorMode.BOX)
         ),
         vol.Optional(CONF_MAX_AGE): DurationSelector(
             DurationSelectorConfig(enable_day=False, allow_negative=False)
@@ -159,7 +159,7 @@ OPTIONS_FLOW = {
 class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Statistics."""
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

@@ -576,7 +576,7 @@ async def test_coordinator_refresh_updates_upcoming_event_state(
     # Advance clock to trigger the next update interval
     route.return_value = Response(status_code=200, text=updated_calendar)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(TEST_ENTITY)
     assert state

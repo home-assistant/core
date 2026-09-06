@@ -21,7 +21,12 @@ from homeassistant.components.synology_dsm.const import (
     CONF_SNAPSHOT_QUALITY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_SSDP,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -705,6 +710,32 @@ async def test_options_flow(
     assert config_entry.options[CONF_SNAPSHOT_QUALITY] == 0
     assert config_entry.options[CONF_BACKUP_PATH] == "my_nackup_path"
     assert config_entry.options[CONF_BACKUP_SHARE] == "/ha_backup"
+
+
+async def test_options_flow_entry_not_loaded(
+    hass: HomeAssistant, service_with_filestation: MagicMock
+) -> None:
+    """Test the options flow aborts when the integration is not loaded."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_SSL: USE_SSL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS[0],
+        },
+        unique_id=SERIAL,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

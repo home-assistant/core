@@ -173,8 +173,15 @@ async def test_parse_npsso_token_failures(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
+    )
+
     assert result["errors"] == {"base": "invalid_account"}
 
     mock_psnawp_npsso.side_effect = lambda token: token

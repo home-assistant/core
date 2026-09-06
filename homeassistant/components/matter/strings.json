@@ -274,6 +274,9 @@
       "sensitivity_level": {
         "name": "Sensitivity"
       },
+      "slat_rotation_time": {
+        "name": "Slat rotation time"
+      },
       "speaker_setpoint": {
         "name": "Volume"
       },
@@ -282,6 +285,12 @@
       },
       "temperature_setpoint": {
         "name": "Temperature setpoint"
+      },
+      "travel_time_down": {
+        "name": "Travel time down"
+      },
+      "travel_time_up": {
+        "name": "Travel time up"
       },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"
@@ -364,6 +373,20 @@
           "on": "[%key:common::state::on%]",
           "previous": "Previous state",
           "toggle": "[%key:common::action::toggle%]"
+        }
+      },
+      "switch_connection_mode": {
+        "name": "Connection mode",
+        "state": {
+          "directly_connected": "Directly connected",
+          "matter_only": "Matter only"
+        }
+      },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "button": "Button",
+          "switch": "Switch"
         }
       },
       "temperature_display_mode": {
@@ -670,6 +693,9 @@
     "switch": {
       "child_lock": {
         "name": "Child lock"
+      },
+      "display": {
+        "name": "Display"
       },
       "evse_charging_switch": {
         "name": "Enable charging"

@@ -12,13 +12,7 @@ from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
-from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_VIA_DEVICE,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -134,21 +128,14 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Return a device description for device registry."""
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
-        zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
-        device_info = DeviceInfo(
+        return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
         )
-        if ieee != str(zha_gateway.state.node_info.ieee):
-            device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                str(zha_gateway.state.node_info.ieee),
-            )
-        return device_info
 
     def _update_capability_attrs(self) -> None:
         """Re-derive capability `_attr_*` attributes from the cached state."""
