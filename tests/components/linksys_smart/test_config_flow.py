@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
-from jnap import GetDeviceInfoResponse, JNAPError, JNAPUnauthorizedError
+from jnap import JNAPError, JNAPUnauthorizedError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.linksys_smart import config_flow as linksys_config_flow
@@ -11,21 +12,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import SERIAL
+
 from tests.common import MockConfigEntry
 
-SERIAL = "38U10M37B21541"
 
-_GOOD_CLIENT = {
-    "get_device_info": AsyncMock(
-        return_value=GetDeviceInfoResponse(
-            description="Velop AX4200 WiFi 6 System", serial_number=SERIAL
-        )
-    ),
-    "get_devices": AsyncMock(),
-}
-
-
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_jnap_client: AsyncMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -33,16 +27,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch.multiple("jnap.JNAPClient", **_GOOD_CLIENT):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Velop AX4200 WiFi 6 System"
@@ -54,86 +46,52 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("faulty_attr", "side_effect", "expected_error"),
+    [
+        pytest.param(
+            "get_devices", JNAPUnauthorizedError, "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(
+            "get_device_info", JNAPError, "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+async def test_form_recovers_from_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_jnap_client: AsyncMock,
+    faulty_attr: str,
+    side_effect: type[Exception],
+    expected_error: str,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test the form shows an error, then succeeds once the router recovers."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.multiple(
-        "jnap.JNAPClient",
-        get_device_info=AsyncMock(),
-        get_devices=AsyncMock(side_effect=JNAPUnauthorizedError),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    with patch.multiple("jnap.JNAPClient", **_GOOD_CLIENT):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Velop AX4200 WiFi 6 System"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    getattr(mock_jnap_client, faulty_attr).side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
     )
 
-    with patch.multiple(
-        "jnap.JNAPClient",
-        get_device_info=AsyncMock(side_effect=JNAPError),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
-    with patch.multiple("jnap.JNAPClient", **_GOOD_CLIENT):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    getattr(mock_jnap_client, faulty_attr).side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Velop AX4200 WiFi 6 System"
@@ -145,52 +103,38 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect_on_get_devices_error(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect_on_get_devices_error(
+    hass: HomeAssistant, mock_jnap_client: AsyncMock
+) -> None:
     """Test we handle JNAPError from get_devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.multiple(
-        "jnap.JNAPClient",
-        get_device_info=AsyncMock(
-            return_value=GetDeviceInfoResponse(
-                description="Velop AX4200 WiFi 6 System", serial_number=SERIAL
-            )
-        ),
-        get_devices=AsyncMock(side_effect=JNAPError),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    mock_jnap_client.get_devices.side_effect = JNAPError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error_on_get_devices_error(hass: HomeAssistant) -> None:
+async def test_form_unknown_error_on_get_devices_error(
+    hass: HomeAssistant, mock_jnap_client: AsyncMock
+) -> None:
     """Test we surface unexpected errors from get_devices as unknown."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch.object(linksys_config_flow._LOGGER, "exception") as mock_exception,
-        patch.multiple(
-            "jnap.JNAPClient",
-            get_device_info=AsyncMock(
-                return_value=GetDeviceInfoResponse(
-                    description="Velop AX4200 WiFi 6 System", serial_number=SERIAL
-                )
-            ),
-            get_devices=AsyncMock(side_effect=Exception),
-        ),
-    ):
+    mock_jnap_client.get_devices.side_effect = Exception
+    with patch.object(linksys_config_flow._LOGGER, "exception") as mock_exception:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -205,7 +149,9 @@ async def test_form_unknown_error_on_get_devices_error(hass: HomeAssistant) -> N
     mock_exception.assert_called_once_with("Unexpected exception")
 
 
-async def test_user_flow_aborts_already_configured(hass: HomeAssistant) -> None:
+async def test_user_flow_aborts_already_configured(
+    hass: HomeAssistant, mock_jnap_client: AsyncMock
+) -> None:
     """Test that the user flow aborts when the serial number matches an existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -216,15 +162,14 @@ async def test_user_flow_aborts_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch.multiple("jnap.JNAPClient", **_GOOD_CLIENT):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
