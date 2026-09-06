@@ -68,9 +68,6 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             except CookidooAuthException:
                 _LOGGER.debug("Stored tokens are no longer valid, logging in again")
         await self.cookidoo.login()
-        # Persist before fetching the user info, so a failure there does not
-        # discard the tokens and replay the whole login on the next attempt
-        self.save_auth_data()
         return await self.cookidoo.get_user_info()
 
     def save_auth_data(self) -> None:
@@ -108,8 +105,9 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 translation_domain=DOMAIN,
                 translation_key="setup_request_exception",
             ) from e
-
-        self.save_auth_data()
+        finally:
+            # A restored token can be rotated before the failing request
+            self.save_auth_data()
 
     @override
     async def _async_update_data(self) -> CookidooData:

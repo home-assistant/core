@@ -70,4 +70,6 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
                 translation_domain=DOMAIN,
                 translation_key="button_clear_todo_failed",
             ) from e
+        finally:
+            self.coordinator.save_auth_data()
         await self.coordinator.async_refresh()
