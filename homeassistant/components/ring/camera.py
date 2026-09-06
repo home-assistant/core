@@ -94,6 +94,8 @@ async def async_setup_entry(
 class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
+    entity_description: RingCameraEntityDescription
+
     def __init__(
         self,
         device: RingDoorBell,

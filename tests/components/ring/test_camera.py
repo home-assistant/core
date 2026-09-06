@@ -329,10 +329,10 @@ async def test_camera_image(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_last_recording_timestamp(
     hass: HomeAssistant,
-    mock_ring_client,
+    mock_ring_client: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the last recording timestamp is updated with the video ID."""
+    """Test the last recording timestamp is updated and cleared with the video ID."""
     await setup_platform(hass, Platform.CAMERA)
 
     state = hass.states.get("camera.front_last_recording")
@@ -350,6 +350,20 @@ async def test_last_recording_timestamp(
     assert state.attributes["last_recording_at"] == datetime(
         2018, 3, 5, 15, 3, 40, tzinfo=UTC
     )
+
+    front_camera_mock = mock_ring_client.devices().get_device(FRONT_DEVICE_ID)
+    front_camera_mock.last_history = []
+    front_camera_mock.async_history.side_effect = None
+    front_camera_mock.async_history.return_value = []
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("camera.front_last_recording")
+    assert state is not None
+    assert state.attributes["last_video_id"] is None
+    assert state.attributes["last_recording_at"] is None
 
 
 async def test_camera_live_view_no_subscription(
