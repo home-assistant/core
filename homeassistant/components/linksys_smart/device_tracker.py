@@ -9,7 +9,6 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
@@ -77,7 +76,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Linksys device tracker from a config entry."""
-    coordinator: LinksysDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     tracked: set[str] = set()
 
     @callback
@@ -99,7 +98,6 @@ class LinksysScannerEntity(
     """Represent a device tracked by the Linksys router."""
 
     _attr_has_entity_name = True
-    _attr_source_type = SourceType.ROUTER
 
     def __init__(
         self, coordinator: LinksysDataUpdateCoordinator, device: JNAPDevice
