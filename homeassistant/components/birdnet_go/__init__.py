@@ -6,7 +6,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT
 from .coordinator import BirdNetGoConfigEntry, BirdNetGoDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -16,8 +15,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BirdNetGoConfigEntry) ->
     """Set up BirdNET-Go from a config entry."""
     client = BirdNetGoClient(
         host=entry.data[CONF_HOST],
-        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
-        use_ssl=entry.data.get(CONF_SSL, False),
+        port=entry.data[CONF_PORT],
+        use_ssl=entry.data[CONF_SSL],
         session=async_get_clientsession(hass),
     )
 
