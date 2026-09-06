@@ -50,6 +50,10 @@ async def async_setup_entry(
 class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     """Implementation of a Victron GX device tracker."""
 
+    # A missing GPS fix is a valid state (cleared location), not stale data,
+    # so the tracker must not be marked unavailable when the value is None.
+    _follow_metric_availability = False
+
     _altitude: float | None = None
     _course: float | None = None
     _speed: float | None = None

@@ -1,17 +1,30 @@
 """Tests for Victron GX MQTT sensors."""
 
+import logging
+import math
+from unittest.mock import PropertyMock, patch
+
 import pytest
-from victron_mqtt import Hub as VictronVenusHub
+from victron_mqtt import FormulaMetric, Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.components.victron_gx.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 
 from .const import MOCK_INSTALLATION_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
+
+ENERGY_ENTITY_ID = "sensor.victron_venus_pv_energy"
 
 
 async def test_victron_battery_sensor(
@@ -217,3 +230,164 @@ async def test_native_unit_of_measurement_special_unit(
     state = hass.states.get("sensor.battery_charge")
     assert state is not None
     assert state.attributes["unit_of_measurement"] == "%"
+
+
+async def _inject_pv_power(victron_hub: VictronVenusHub, value: int) -> None:
+    """Inject a PV power metric, which drives the pv_energy FormulaMetric."""
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/Dc/Pv/Power",
+        f'{{"value": {value}}}',
+    )
+
+
+def _restore_energy(native_value: object) -> tuple[State, dict[str, object]]:
+    """Build a restore-cache entry with a persisted native sensor value."""
+    return (
+        State(ENERGY_ENTITY_ID, str(native_value)),
+        {"native_value": native_value, "native_unit_of_measurement": "kWh"},
+    )
+
+
+async def test_formula_sensor_restores_baseline(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test cumulative FormulaMetric sensor restores previous value as baseline."""
+    victron_hub, _mock_config_entry = init_integration
+
+    mock_restore_cache_with_extra_data(hass, (_restore_energy(5.0),))
+
+    await _inject_pv_power(victron_hub, 100)
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["state_class"] == SensorStateClass.TOTAL
+    # Fresh formula value is 0.0, restored baseline of 5.0 is added on top.
+    assert state.state == "5.0"
+
+    # A new reading of 10.0 is accumulated on top of the restored baseline.
+    with patch.object(
+        FormulaMetric, "value", new_callable=PropertyMock, return_value=10.0
+    ):
+        await _inject_pv_power(victron_hub, 200)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "15.0"
+
+
+async def test_formula_sensor_none_update_after_restore(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test a None update marks the sensor unavailable but keeps its value."""
+    victron_hub, _mock_config_entry = init_integration
+
+    mock_restore_cache_with_extra_data(hass, (_restore_energy(5.0),))
+
+    await _inject_pv_power(victron_hub, 100)
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5.0"
+
+    # A None update (stale/unavailable dependency) marks the entity unavailable
+    # while keeping the last known value, so the restored total is not persisted
+    # as None and lost on the next restart.
+    with patch.object(
+        FormulaMetric, "value", new_callable=PropertyMock, return_value=None
+    ):
+        await _inject_pv_power(victron_hub, 200)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # The last known value is retained on the entity, so RestoreSensor persists
+    # the accumulated total instead of None.
+    component: EntityComponent[SensorEntity] = hass.data[DATA_INSTANCES][SENSOR_DOMAIN]
+    entity = component.get_entity(ENERGY_ENTITY_ID)
+    assert entity is not None
+    assert entity.native_value == 5.0
+
+
+@pytest.mark.parametrize(
+    ("restore_cache", "expected_log"),
+    [
+        pytest.param((), "Baseline is missing", id="first_load"),
+        pytest.param(
+            (_restore_energy(None),),
+            "Baseline is missing",
+            id="missing_native_value",
+        ),
+        pytest.param(
+            (_restore_energy("not_a_number"),),
+            "Could not restore state",
+            id="invalid_native_value",
+        ),
+        pytest.param(
+            (_restore_energy(math.nan),),
+            "Could not restore state",
+            id="nan_native_value",
+        ),
+        pytest.param(
+            (_restore_energy(math.inf),),
+            "Could not restore state",
+            id="inf_native_value",
+        ),
+    ],
+)
+async def test_formula_sensor_no_baseline(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+    restore_cache: tuple[tuple[State, dict[str, object]], ...],
+    expected_log: str,
+) -> None:
+    """Test FormulaMetric sensor keeps fresh value when no valid baseline exists."""
+    victron_hub, _mock_config_entry = init_integration
+
+    mock_restore_cache_with_extra_data(hass, restore_cache)
+
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.victron_gx"):
+        await _inject_pv_power(victron_hub, 100)
+        await finalize_injection(victron_hub)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "0.0"
+    assert expected_log in caplog.text
+
+
+async def test_formula_sensor_non_numeric_value(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test FormulaMetric sensor with non-numeric value does not restore baseline."""
+    victron_hub, _mock_config_entry = init_integration
+
+    mock_restore_cache_with_extra_data(hass, (_restore_energy(5.0),))
+
+    with (
+        patch.object(
+            FormulaMetric, "value", new_callable=PropertyMock, return_value=None
+        ),
+        caplog.at_level(logging.WARNING, logger="homeassistant.components.victron_gx"),
+    ):
+        await _inject_pv_power(victron_hub, 100)
+        await finalize_injection(victron_hub)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "Cannot restore baseline" in caplog.text

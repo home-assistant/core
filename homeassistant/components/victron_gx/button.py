@@ -51,6 +51,9 @@ async def async_setup_entry(
 class VictronButton(VictronBaseEntity, ButtonEntity):
     """Implementation of a Victron GX button entity."""
 
+    # Buttons are stateless commands with no metric value to reflect.
+    _follow_metric_availability = False
+
     @callback
     @override
     def _on_update_cb(self, _value: Any) -> None:
