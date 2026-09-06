@@ -1,7 +1,7 @@
 {
   "domain": "huisbaasje",
   "name": "EnergyFlip",
-  "codeowners": ["@DieEneSchrodinger"],
+  "codeowners": ["@dennisschroer", "@DieEneSchrodinger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huisbaasje",
   "integration_type": "device",
