@@ -229,6 +229,9 @@
       "indexed_minimum_brightness": {
         "name": "Minimum brightness {index}"
       },
+      "indexed_power_warning_threshold": {
+        "name": "Power warning threshold {index}"
+      },
       "indexed_temperature": {
         "name": "Temperature {index}"
       },
@@ -502,6 +505,7 @@
         "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "pos": "Indicate inverted switch state",
           "relay": "Indicate switch on/off state"
         }
@@ -764,11 +768,36 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
+      "indexed_current": {
+        "name": "Current channel {index}"
+      },
+      "indexed_energy_today": {
+        "name": "Energy today channel {index}"
+      },
       "indexed_humidity_outdoor": {
         "name": "Outdoor humidity channel {index}"
       },
+      "indexed_meter_status": {
+        "name": "Status channel {index}",
+        "state": {
+          "close": "[%key:common::state::closed%]",
+          "idle": "[%key:common::state::idle%]",
+          "monitor": "Monitoring",
+          "warning": "Warning",
+          "working": "Working"
+        }
+      },
+      "indexed_power": {
+        "name": "Power channel {index}"
+      },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
+      },
+      "indexed_total_energy": {
+        "name": "Total energy channel {index}"
+      },
+      "indexed_voltage": {
+        "name": "Voltage channel {index}"
       },
       "inverter_output_power": {
         "name": "Inverter output power"

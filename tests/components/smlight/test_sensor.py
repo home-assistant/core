@@ -14,11 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = [
     pytest.mark.usefixtures(
@@ -95,16 +91,12 @@ async def test_zigbee2_temp_sensor(
     assert state.state == "20.45"
 
 
+@pytest.mark.usefixtures("mock_ultima_client")
 async def test_zigbee_type_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
 ) -> None:
-    """Test for zigbee type sensor with second radio."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info.from_dict(
-        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
-    )
+    """Test for zigbee type sensor with multiple radios."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.mock_title_zigbee_type")
@@ -114,6 +106,9 @@ async def test_zigbee_type_sensors(
     state = hass.states.get("sensor.mock_title_zigbee_type_2")
     assert state
     assert state.state == "router"
+
+    # Radio 3 is Z-Wave, so no Zigbee-type sensor should be created
+    assert hass.states.get("sensor.mock_title_zigbee_type_3") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

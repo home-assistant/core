@@ -62,6 +62,14 @@
       },
       "active_warning_codes": {
         "name": "Active warnings"
+      },
+      "lock_state": {
+        "name": "Socket lock"
+      }
+    },
+    "button": {
+      "socket_unlock": {
+        "name": "Unlock socket"
       }
     },
     "number": {
@@ -70,6 +78,26 @@
       }
     },
     "select": {
+      "buzzer_volume": {
+        "name": "Buzzer volume",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "low_medium": "Low medium",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "led_brightness": {
+        "name": "LED brightness",
+        "state": {
+          "automatic": "[%key:common::state::auto%]",
+          "bright": "Bright",
+          "dim": "Dim",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "smart_charging": {
         "name": "Smart charging",
         "state": {
@@ -94,6 +122,7 @@
           "high_temperature": "High temperature",
           "household_power_limit": "Household power limit",
           "installation_limit": "Installation limit",
+          "internal_power_limit": "Internal power limit",
           "local_modbus_api": "Modbus API",
           "local_rest_api": "REST API",
           "local_scheduled_charging": "Scheduled charging",
@@ -101,6 +130,7 @@
           "overcurrent_protection": "Overcurrent protection",
           "phase_imbalance": "Phase imbalance",
           "power_factor": "Power factor",
+          "reserved": "Reserved",
           "solar_charging": "Solar charging"
         }
       },
@@ -158,6 +188,9 @@
       },
       "force_single_phase": {
         "name": "Force single phase"
+      },
+      "socket_lock": {
+        "name": "Keep socket locked"
       }
     },
     "update": {
@@ -170,11 +203,130 @@
     "authentication_error": {
       "message": "An authentication failure occurred while communicating with the Peblar EV charger."
     },
+    "authorization_not_required": {
+      "message": "{charger} is set to charge without authorization, so there is nothing to authorize."
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the Peblar EV charger: {error}"
     },
+    "customization_update_first": {
+      "message": "Install the customization update before the firmware update, the way the charger's own web interface does."
+    },
+    "managed_by_backoffice": {
+      "message": "{charger} is managed over OCPP, so its sessions are authorized by the backoffice."
+    },
+    "no_autocharge_hardware": {
+      "message": "{charger} has no power line communication hardware, so it cannot use autocharge."
+    },
+    "no_rfid_hardware": {
+      "message": "{charger} has no RFID reader, so it has no standalone authorization list."
+    },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Peblar EV charger: {error}"
+    }
+  },
+  "services": {
+    "add_rfid_token": {
+      "description": "Adds an RFID token to the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to add the RFID token to.",
+          "name": "Peblar EV charger"
+        },
+        "description": {
+          "description": "A human-readable label for this RFID token.",
+          "name": "Description"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token.",
+          "name": "UID"
+        }
+      },
+      "name": "Add RFID token"
+    },
+    "add_vehicle_token": {
+      "description": "Adds a vehicle to the charger's autocharge list, so it is authorized to charge as soon as it is plugged in.",
+      "fields": {
+        "alias": {
+          "description": "A human-readable label for this vehicle.",
+          "name": "Alias"
+        },
+        "config_entry_id": {
+          "description": "The Peblar EV charger to add the vehicle to.",
+          "name": "Peblar EV charger"
+        },
+        "evcc_id": {
+          "description": "The identifier the vehicle presents to the charger.",
+          "name": "EVCC ID"
+        }
+      },
+      "name": "Add autocharge vehicle"
+    },
+    "authorize_charge_session": {
+      "description": "Presents a token to the charger, as if it were held against the reader. This authorizes a session that is waiting for it, and stops one that is already running.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to present the token to.",
+          "name": "Peblar EV charger"
+        },
+        "description": {
+          "description": "The label of the RFID token to present, instead of its UID.",
+          "name": "Description"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token to present.",
+          "name": "UID"
+        }
+      },
+      "name": "Authorize charge session"
+    },
+    "delete_rfid_token": {
+      "description": "Deletes an RFID token from the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to delete the RFID token from.",
+          "name": "Peblar EV charger"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token to delete.",
+          "name": "UID"
+        }
+      },
+      "name": "Delete RFID token"
+    },
+    "delete_vehicle_token": {
+      "description": "Deletes a vehicle from the charger's autocharge list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to delete the vehicle from.",
+          "name": "Peblar EV charger"
+        },
+        "evcc_id": {
+          "description": "The identifier of the vehicle to delete.",
+          "name": "EVCC ID"
+        }
+      },
+      "name": "Delete autocharge vehicle"
+    },
+    "list_rfid_tokens": {
+      "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to list RFID tokens for.",
+          "name": "Peblar EV charger"
+        }
+      },
+      "name": "List RFID tokens"
+    },
+    "list_vehicle_tokens": {
+      "description": "Returns the vehicles configured in the charger's autocharge list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to list autocharge vehicles for.",
+          "name": "Peblar EV charger"
+        }
+      },
+      "name": "List autocharge vehicles"
     }
   }
 }

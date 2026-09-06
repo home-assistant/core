@@ -1084,10 +1084,18 @@ async def test_get_trigger_platform_registers_triggers(
 # Trigger keys the sun integration registers besides the legacy ``sun`` trigger.
 # These tests mock sun/triggers.yaml, so the modern triggers have no description.
 _MODERN_SUN_TRIGGERS = (
+    "sun.blue_hour_ended",
+    "sun.blue_hour_started",
     "sun.dawn",
     "sun.dusk",
     "sun.elevation_changed",
     "sun.elevation_crossed_threshold",
+    "sun.golden_hour_ended",
+    "sun.golden_hour_started",
+    "sun.midnight_sun_ended",
+    "sun.midnight_sun_started",
+    "sun.polar_night_ended",
+    "sun.polar_night_started",
     "sun.solar_midnight",
     "sun.solar_noon",
     "sun.sunrise",
@@ -1347,7 +1355,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()

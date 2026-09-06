@@ -4,8 +4,9 @@ from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.const import ModelName
+from pylamarzocco.const import DeviceType, ModelName
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import Thing
 import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
@@ -35,7 +36,7 @@ from . import (
     get_bluetooth_service_info,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -195,6 +196,30 @@ async def test_form_no_machines(
 
     result = await __do_successful_user_step(hass, result, mock_cloud_client)
     await __do_sucessful_machine_selection_step(hass, result)
+
+
+async def test_grinders_not_configurable(
+    hass: HomeAssistant,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test that grinders are filtered out so only machines can be configured."""
+    grinder = await async_load_json_object_fixture(hass, "thing.json", DOMAIN)
+    grinder["type"] = DeviceType.GRINDER
+    grinder["serialNumber"] = "GR012345"
+    grinder["name"] = "GR012345"
+
+    mock_cloud_client.list_things.return_value = [
+        *mock_cloud_client.list_things.return_value,
+        Thing.from_dict(grinder),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await __do_successful_user_step(hass, result, mock_cloud_client)
+
+    options = result["data_schema"].schema[CONF_MACHINE].config["options"]
+    assert [option["value"] for option in options] == ["GS012345"]
 
 
 async def test_reauth_flow(

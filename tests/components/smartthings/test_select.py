@@ -224,7 +224,70 @@ async def test_select_option_as_integer(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
-async def test_select_option_with_wrong_dishwasher_machine_state(
+async def test_select_dishwasher_washing_course_with_wrong_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.DISHWASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "run",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Can only be updated when dishwasher machine state is stop",
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.dishwasher_1_cycle", ATTR_OPTION: "eco"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_dishwasher_washing_course(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    await setup_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.dishwasher_1_cycle", ATTR_OPTION: "eco"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7ff318f3-3772-524d-3c9f-72fcd26413ed",
+        Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+        Command.SET_WASHING_COURSE,
+        MAIN,
+        argument="eco",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_dishwasher_washing_option_with_wrong_machine_state(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,

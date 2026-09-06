@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any, cast, override
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aioesphomeapi import (
@@ -103,9 +103,9 @@ class EsphomeMediaPlayer(
         for espflag in esp_flags:
             flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[self.unique_id] = cast(
-            MediaPlayerInfo, static_info
-        ).supported_formats
+        self._entry_data.media_player_formats[self] = (
+            self._static_info.supported_formats
+        )
 
     @property
     @esphome_state_property
@@ -143,9 +143,7 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
-        supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self.unique_id)
-        )
+        supported_formats = self._entry_data.media_player_formats.get(self)
 
         if (
             not bypass_proxy
@@ -171,7 +169,7 @@ class EsphomeMediaPlayer(
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self.unique_id, None)
+        self._entry_data.media_player_formats.pop(self, None)
 
     def _get_proxy_url(
         self,

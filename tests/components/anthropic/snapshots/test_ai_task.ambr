@@ -93,6 +93,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({
@@ -165,6 +166,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({
@@ -241,6 +243,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({
@@ -302,6 +305,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({

@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from bleak_retry_connector import bleak_manager
 from dbus_fast.aio import message_bus
 from habluetooth import BaseHaRemoteScanner
 import habluetooth.util as habluetooth_utils
@@ -19,12 +18,6 @@ from . import (
     FakeScanner,
     patch_bleak_backend_type,
 )
-
-
-@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
-def disable_bluez_manager_socket():
-    """Mock the bluez manager socket."""
-    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
 
 
 @pytest.fixture(name="disable_dbus_socket", autouse=True, scope="package")

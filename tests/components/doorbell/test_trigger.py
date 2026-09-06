@@ -4,14 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.doorbell.trigger import TRIGGERS
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     BasicTriggerStateDescription,
+    TargetSupport,
     arm_trigger,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -22,6 +25,11 @@ from tests.components.common import (
 async def target_events(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple event entities associated with different targets."""
     return await target_entities(hass, "event")
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "rang": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -45,6 +53,11 @@ async def test_doorbell_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

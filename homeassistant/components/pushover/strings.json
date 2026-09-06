@@ -24,5 +24,29 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "attachment_not_allowed": {
+      "message": "Attachment path {attachment} is not allowed."
+    },
+    "attachment_open_failed": {
+      "message": "Failed to open attachment {attachment}."
+    }
+  },
+  "services": {
+    "cancel": {
+      "description": "Cancels one or more Pushover emergency notifications (priority 2) that were previously sent through the targeted Pushover account.",
+      "fields": {
+        "entry_id": {
+          "description": "The Pushover account to cancel notifications for.",
+          "name": "Pushover account"
+        },
+        "tag": {
+          "description": "Tag assigned to the message via the 'data.tags' field when sending. Omit to cancel all tracked emergency notifications for this account.",
+          "name": "Tag"
+        }
+      },
+      "name": "Cancel emergency notification"
+    }
   }
 }

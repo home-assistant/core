@@ -26,6 +26,7 @@ from .const import (
     DOMAIN,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+    RTSP_DISABLED_ISSUE_ID,
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
@@ -33,6 +34,8 @@ from .utils import (
     get_coiot_address,
     get_coiot_port,
     get_device_entry_gen,
+    get_rpc_key_id,
+    get_rpc_key_instances,
     get_rpc_ws_url,
 )
 
@@ -190,6 +193,53 @@ def async_manage_open_wifi_ap_issue(
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="open_wifi_ap",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_manage_rtsp_disabled_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the RTSP disabled issue."""
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
+
+    camera_keys = get_rpc_key_instances(device.status, "camera")
+    if not camera_keys:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+
+    disabled = [
+        key
+        for key in camera_keys
+        if key in device.config and not device.config[key]["rtsp"]["enable"]
+    ]
+
+    if disabled:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="rtsp_disabled",
             translation_placeholders={
                 "device_name": device.name,
                 "ip_address": device.ip_address,
@@ -375,6 +425,52 @@ class DisableOpenWiFiApFlow(RepairsFlow):
         return self.async_abort(reason="issue_ignored")
 
 
+class EnableRtspFlow(RepairsFlow):
+    """Handler for Enable RTSP flow."""
+
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+        """Initialize."""
+        self._device = device
+        self.issue_id = issue_id
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step of a fix flow."""
+        try:
+            for key in get_rpc_key_instances(self._device.status, "camera"):
+                if (
+                    key in self._device.config
+                    and not self._device.config[key]["rtsp"]["enable"]
+                ):
+                    await self._device.set_camera_rtsp(get_rpc_key_id(key), True)
+        except DeviceConnectionError, RpcCallError:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
@@ -407,5 +503,8 @@ async def async_create_fix_flow(
 
     if "open_wifi_ap" in issue_id:
         return DisableOpenWiFiApFlow(device, issue_id)
+
+    if "rtsp_disabled" in issue_id:
+        return EnableRtspFlow(device, issue_id)
 
     return ConfirmRepairFlow()

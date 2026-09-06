@@ -63,10 +63,9 @@ THERMOSTAT_TO_HA_MODE = {
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "heat": HVACMode.HEAT,
+    "floor_heating": HVACMode.HEAT,
     "ventilation": HVACMode.FAN_ONLY,
 }
-
-HA_TO_THERMOSTAT_MODE = {value: key for key, value in THERMOSTAT_TO_HA_MODE.items()}
 
 PRESET_FROST_PROTECTION = "frost_protection"
 
@@ -138,6 +137,9 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.OFF] + [
                 THERMOSTAT_TO_HA_MODE[mode] for mode in modes
             ]
+            self._ha_to_thermostat_mode = {
+                THERMOSTAT_TO_HA_MODE[mode]: mode for mode in modes
+            }
 
     @property
     def _status(self) -> dict[str, Any]:
@@ -253,7 +255,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
 
         await self.coordinator.device.enum_set(
             get_rpc_key_id(self._working_mode_key),
-            HA_TO_THERMOSTAT_MODE[hvac_mode],
+            self._ha_to_thermostat_mode[hvac_mode],
         )
 
     @override
@@ -727,6 +729,9 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         self._thermostat_type = coordinator.device.config[self.key].get(
             "type", "heating"
         )
+        self._invert_output = coordinator.device.config[self.key].get(
+            "invert_output", False
+        )
         if self._thermostat_type == "cooling":
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
@@ -770,7 +775,8 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction:
         """HVAC current action."""
-        if not self.status["output"]:
+        # When inverted, relay on means idle; otherwise relay on means active.
+        if self.status["output"] == self._invert_output:
             return HVACAction.IDLE
 
         return (
@@ -815,7 +821,12 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._attr_unique_id = f"{ble_addr}-{self.key}"
         fw_ver = coordinator.device.status[self.key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            self._config, ble_addr, self.coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            self._config,
+            ble_addr,
+            self.coordinator.mac,
+            fw_ver,
         )
 
     @property

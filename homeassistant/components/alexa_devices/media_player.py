@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
 
@@ -239,7 +239,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
 
     async def async_set_device_volume(self, volume: int) -> None:
         """Set the device volume."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Setting volume for %s to %s%%",
             self.device.serial_number,
             volume,
@@ -278,7 +278,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         self._prev_volume = None
 
     async def _send_media_command(self, command: AmazonMediaControls) -> None:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Sending media command '%s' to %s", command, self.device.serial_number
         )
         async with alexa_api_call(self.coordinator):

@@ -1,7 +1,6 @@
 """The tests for the Recorder component."""
 
 from datetime import datetime, timedelta
-from unittest.mock import PropertyMock
 
 import pytest
 
@@ -301,42 +300,31 @@ async def test_lazy_state_handles_include_json(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the LazyState class handles invalid json."""
-    row = PropertyMock(
-        entity_id="sensor.invalid",
-        shared_attrs="{INVALID_JSON}",
-    )
-    assert LazyState(row, {}, None, row.entity_id, "", 1, False).attributes == {}
+    lstate = LazyState({}, None, "sensor.invalid", "", 1, "{INVALID_JSON}")
+    assert lstate.attributes == {}
     assert "Error converting row to state attributes" in caplog.text
 
 
-async def test_lazy_state_can_decode_attributes(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_lazy_state_can_decode_attributes() -> None:
     """Test that the LazyState prefers can decode attributes."""
-    row = PropertyMock(
-        entity_id="sensor.invalid",
-        attributes='{"shared":true}',
-    )
-    assert LazyState(row, {}, None, row.entity_id, "", 1, False).attributes == {
-        "shared": True
-    }
+    lstate = LazyState({}, None, "sensor.invalid", "", 1, '{"shared":true}')
+    assert lstate.attributes == {"shared": True}
 
 
-async def test_lazy_state_handles_different_last_updated_and_last_changed(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_lazy_state_handles_different_last_updated_and_last_changed() -> None:
     """Test that the LazyState handles different last_updated and last_changed."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    row = PropertyMock(
-        entity_id="sensor.valid",
-        state="off",
-        attributes='{"shared":true}',
-        last_updated_ts=now.timestamp(),
-        last_reported_ts=now.timestamp(),
-        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
-    )
+    last_updated_ts = now.timestamp()
+    last_changed_ts = (now - timedelta(seconds=60)).timestamp()
     lstate = LazyState(
-        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+        {},
+        None,
+        "sensor.valid",
+        "off",
+        last_updated_ts,
+        '{"shared":true}',
+        last_changed_ts,
+        last_updated_ts,
     )
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
@@ -345,9 +333,9 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_updated.timestamp() == row.last_updated_ts
-    assert lstate.last_changed.timestamp() == row.last_changed_ts
-    assert lstate.last_reported.timestamp() == row.last_updated_ts
+    assert lstate.last_updated.timestamp() == last_updated_ts
+    assert lstate.last_changed.timestamp() == last_changed_ts
+    assert lstate.last_reported.timestamp() == last_updated_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -355,26 +343,24 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_changed_timestamp == row.last_changed_ts
-    assert lstate.last_updated_timestamp == row.last_updated_ts
-    assert lstate.last_reported_timestamp == row.last_updated_ts
+    assert lstate.last_changed_timestamp == last_changed_ts
+    assert lstate.last_updated_timestamp == last_updated_ts
+    assert lstate.last_reported_timestamp == last_updated_ts
 
 
-async def test_lazy_state_handles_same_last_updated_and_last_changed(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_lazy_state_handles_same_last_updated_and_last_changed() -> None:
     """Test that the LazyState handles same last_updated and last_changed."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    row = PropertyMock(
-        entity_id="sensor.valid",
-        state="off",
-        attributes='{"shared":true}',
-        last_updated_ts=now.timestamp(),
-        last_changed_ts=now.timestamp(),
-        last_reported_ts=None,
-    )
+    last_updated_ts = now.timestamp()
     lstate = LazyState(
-        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+        {},
+        None,
+        "sensor.valid",
+        "off",
+        last_updated_ts,
+        '{"shared":true}',
+        last_updated_ts,
+        None,
     )
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
@@ -383,9 +369,9 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_updated.timestamp() == row.last_updated_ts
-    assert lstate.last_changed.timestamp() == row.last_changed_ts
-    assert lstate.last_reported.timestamp() == row.last_updated_ts
+    assert lstate.last_updated.timestamp() == last_updated_ts
+    assert lstate.last_changed.timestamp() == last_updated_ts
+    assert lstate.last_reported.timestamp() == last_updated_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -393,26 +379,25 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_changed_timestamp == row.last_changed_ts
-    assert lstate.last_updated_timestamp == row.last_updated_ts
-    assert lstate.last_reported_timestamp == row.last_updated_ts
+    assert lstate.last_changed_timestamp == last_updated_ts
+    assert lstate.last_updated_timestamp == last_updated_ts
+    assert lstate.last_reported_timestamp == last_updated_ts
 
 
-async def test_lazy_state_handles_different_last_reported(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_lazy_state_handles_different_last_reported() -> None:
     """Test that the LazyState handles last_reported different from last_updated."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    row = PropertyMock(
-        entity_id="sensor.valid",
-        state="off",
-        attributes='{"shared":true}',
-        last_updated_ts=(now - timedelta(seconds=60)).timestamp(),
-        last_reported_ts=now.timestamp(),
-        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
-    )
+    last_reported_ts = now.timestamp()
+    last_updated_ts = (now - timedelta(seconds=60)).timestamp()
     lstate = LazyState(
-        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+        {},
+        None,
+        "sensor.valid",
+        "off",
+        last_updated_ts,
+        '{"shared":true}',
+        last_updated_ts,
+        last_reported_ts,
     )
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
@@ -421,9 +406,9 @@ async def test_lazy_state_handles_different_last_reported(
         "last_updated": "2021-06-12T03:03:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_updated.timestamp() == row.last_updated_ts
-    assert lstate.last_changed.timestamp() == row.last_changed_ts
-    assert lstate.last_reported.timestamp() == row.last_reported_ts
-    assert lstate.last_changed_timestamp == row.last_changed_ts
-    assert lstate.last_updated_timestamp == row.last_updated_ts
-    assert lstate.last_reported_timestamp == row.last_reported_ts
+    assert lstate.last_updated.timestamp() == last_updated_ts
+    assert lstate.last_changed.timestamp() == last_updated_ts
+    assert lstate.last_reported.timestamp() == last_reported_ts
+    assert lstate.last_changed_timestamp == last_updated_ts
+    assert lstate.last_updated_timestamp == last_updated_ts
+    assert lstate.last_reported_timestamp == last_reported_ts

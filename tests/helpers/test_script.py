@@ -936,7 +936,7 @@ async def test_delay_template_complex_invalid(
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error": "expected float for dictionary value @ data['seconds']",
+                    "error": "expected float at 'seconds'",
                     "template_errors": ["'invalid_delay' is undefined"],
                 }
             ],
@@ -4145,7 +4145,7 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     expected_trace = {
         "0": [
             {
-                "error": "expected str for dictionary value @ data['text']",
+                "error": "expected str at 'text'",
                 "result": {
                     "params": {
                         "domain": "test",

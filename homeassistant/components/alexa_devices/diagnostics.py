@@ -1,14 +1,14 @@
 """Diagnostics support for Alexa Devices integration."""
 
 from dataclasses import asdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .coordinator import AmazonConfigEntry
 
@@ -48,13 +48,16 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: AmazonConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, entry: AmazonConfigEntry, device_entry: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
 
     coordinator = entry.runtime_data
 
-    assert device_entry.serial_number
+    if TYPE_CHECKING:
+        # alexa_devices does not create child devices, and devices have a serial number
+        assert isinstance(device_entry, DeviceEntry)
+        assert device_entry.serial_number
 
     return build_device_data(coordinator.data[device_entry.serial_number])
 

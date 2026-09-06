@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.moon.sensor import (
+from homeassistant.components.moon.helpers import (
     STATE_FIRST_QUARTER,
     STATE_FULL_MOON,
     STATE_LAST_QUARTER,
@@ -47,7 +47,7 @@ async def test_moon_day(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.moon.sensor.moon.phase", return_value=moon_value
+        "homeassistant.components.moon.helpers.moon.phase", return_value=moon_value
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

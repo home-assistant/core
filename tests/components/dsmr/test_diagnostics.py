@@ -33,6 +33,7 @@ async def test_diagnostics(
         "dsmr_version": "2.2",
         "serial_id": "1234",
         "serial_id_gas": "5678",
+        "encryption_key": "aabbccddeeff00112233445566778899",
     }
     entry_options = {
         "time_between_update": 0,

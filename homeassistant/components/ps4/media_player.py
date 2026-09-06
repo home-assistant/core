@@ -186,7 +186,7 @@ class PS4Device(MediaPlayerEntity):
                         self._attr_source = self._attr_media_title
                         self._attr_media_content_type = None
                         # Get data from PS Store.
-                        self.hass.async_create_background_task(
+                        self.hass.create_task(
                             self.async_get_title_data(title_id, name),
                             "ps4.media_player-get_title_data",
                         )
@@ -350,9 +350,7 @@ class PS4Device(MediaPlayerEntity):
                 self._attr_unique_id = entry.unique_id
                 self.entity_id = entry.entity_id
                 break
-            for device in d_registry.devices.get_devices_for_config_entry_id(
-                self._entry_id
-            ):
+            for device in dr.async_entries_for_config_entry(d_registry, self._entry_id):
                 # Rebuilt from the existing device entry, which already carries
                 # the network MAC connection added by the live-status branch.
                 self._attr_device_info = DeviceInfo(

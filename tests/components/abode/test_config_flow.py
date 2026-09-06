@@ -154,6 +154,33 @@ async def test_step_mfa(hass: HomeAssistant) -> None:
     }
 
 
+async def test_step_reauth_with_a_different_account(hass: HomeAssistant) -> None:
+    """Test reauthenticating with an account other than the configured one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="user@email.com",
+        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch("homeassistant.components.abode.config_flow.Abode"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "other@email.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    assert entry.data[CONF_USERNAME] == "user@email.com"
+
+
 async def test_step_reauth(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
     entry = MockConfigEntry(

@@ -30,7 +30,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
@@ -368,7 +368,7 @@ def get_display_unit(
 
     state_unit: str | None = statistic_unit
     if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     if state_unit == statistic_unit or state_unit not in converter.VALID_UNITS:
         # Guard against invalid state unit in the DB
@@ -382,8 +382,7 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-    allow_none: bool = True,
-) -> Callable[[float | None], float | None] | Callable[[float], float] | None:
+) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from the statistics unit to display unit."""
     if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return None
@@ -402,11 +401,9 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    if allow_none:
-        return converter.converter_factory_allow_none(
-            from_unit=statistic_unit, to_unit=display_unit
-        )
-    return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
+    return converter.converter_factory_allow_none(
+        from_unit=statistic_unit, to_unit=display_unit
+    )
 
 
 def _get_display_to_statistic_unit_converter_func(
@@ -979,8 +976,8 @@ def async_update_statistics_metadata(
     statistic_id: str,
     *,
     new_statistic_id: str | UndefinedType = UNDEFINED,
-    new_unit_class: str | None | UndefinedType = UNDEFINED,
-    new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+    new_unit_class: str | UndefinedType | None = UNDEFINED,
+    new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     on_done: Callable[[], None] | None = None,
     _called_from_ws_api: bool = False,
 ) -> None:
@@ -1028,9 +1025,9 @@ def async_update_statistics_metadata(
 def update_statistics_metadata(
     instance: Recorder,
     statistic_id: str,
-    new_statistic_id: str | None | UndefinedType,
-    new_unit_class: str | None | UndefinedType,
-    new_unit_of_measurement: str | None | UndefinedType,
+    new_statistic_id: str | UndefinedType | None,
+    new_unit_class: str | UndefinedType | None,
+    new_unit_of_measurement: str | UndefinedType | None,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     statistics_meta_manager = instance.statistics_meta_manager
@@ -1973,7 +1970,7 @@ def statistic_during_period(
     unit_class = metadata[1]["unit_class"]
     state_unit = unit = metadata[1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
     convert = _get_statistic_to_display_unit_converter(
         unit_class, unit, state_unit, units
     )
@@ -2062,7 +2059,9 @@ def _augment_result_with_change(
             unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state_unit = state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
             convert = _get_statistic_to_display_unit_converter(
                 unit_class, unit, state_unit, units
             )
@@ -2564,7 +2563,7 @@ def _build_sum_converted_stats(
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
-    convert: Callable[[float | None], float | None] | Callable[[float], float],
+    convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
     return [
@@ -2616,7 +2615,7 @@ def _build_converted_stats(
     table_duration_seconds: float,
     start_ts_idx: int,
     row_mapping: tuple[tuple[str, int], ...],
-    convert: Callable[[float | None], float | None] | Callable[[float], float],
+    convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
     return [
@@ -2688,9 +2687,11 @@ def _sorted_statistics_to_dict(
             unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state_unit = state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
             convert = _get_statistic_to_display_unit_converter(
-                unit_class, unit, state_unit, units, allow_none=False
+                unit_class, unit, state_unit, units
             )
         else:
             convert = None

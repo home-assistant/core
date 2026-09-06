@@ -19,7 +19,6 @@ from aioairzone.const import (
 from aioairzone.exceptions import AirzoneError
 import pytest
 
-from homeassistant.components.airzone.const import API_TEMPERATURE_STEP
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -87,7 +86,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 1.0
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.4
 
     state = hass.states.get("climate.dorm_1")
@@ -106,7 +105,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 0.5
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.3
 
     state = hass.states.get("climate.dorm_2")
@@ -125,7 +124,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 0.5
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
 
     state = hass.states.get("climate.dorm_ppal")
@@ -148,7 +147,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 0.5
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.2
 
     state = hass.states.get("climate.salon")
@@ -172,7 +171,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 1.0
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.1
 
     state = hass.states.get("climate.airzone_2_1")
@@ -194,7 +193,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 0.5
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.0
 
     state = hass.states.get("climate.dkn_plus")
@@ -221,7 +220,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 32.2
     assert state.attributes.get(ATTR_MIN_TEMP) == 17.8
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 1.0
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 22.8
 
@@ -239,7 +238,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 30
     assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == 0.5
     assert state.attributes.get(ATTR_TEMPERATURE) == 20.0
 
     HVAC_MOCK_CHANGED = copy.deepcopy(HVAC_MOCK)

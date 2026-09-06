@@ -65,7 +65,7 @@ async def async_setup_entry(
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveSwitch(client, item, description)
+        TractiveSwitch(hass, entry, client, item, description)
         for description in SWITCH_TYPES
         for item in trackables
     ]
@@ -80,12 +80,16 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: TractiveConfigEntry,
         client: TractiveClient,
         item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
         super().__init__(
+            hass,
+            entry,
             client,
             item.trackable,
             item.tracker_details,

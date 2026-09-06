@@ -4,6 +4,7 @@ from typing import override
 
 from iaqualink.device import AqualinkDevice
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,7 +35,11 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
         self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(DOMAIN, dev.system.serial),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, dev.system.serial),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             manufacturer=dev.manufacturer,
             model=dev.model,
             name=dev.label,

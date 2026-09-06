@@ -1,6 +1,6 @@
 """Tests for light platform."""
 
-from pywizlight import PilotBuilder
+from pywizlight import PilotBuilder, PilotParser
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -27,6 +28,7 @@ from . import (
     FAKE_RGBW_BULB,
     FAKE_RGBWW_BULB,
     FAKE_TURNABLE_BULB,
+    _mocked_wizlight,
     async_push_update,
     async_setup_integration,
 )
@@ -234,3 +236,17 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
     assert pilot.pilot_params == {"dimming": 100}
+
+
+async def test_light_without_any_color_state(hass: HomeAssistant) -> None:
+    """Test a light reporting no color values still reports a color mode."""
+    bulb = _mocked_wizlight(None, None, FAKE_RGBWW_BULB)
+    # A bulb can report being on without any of the values the color mode is
+    # otherwise picked from, and there is no color mode to fall back on for a
+    # bulb that supports more than one.
+    bulb.state = PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})
+    await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_RGBWW_BULB)
+
+    state = hass.states.get("light.mock_title")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN

@@ -1,0 +1,36 @@
+{
+  "pmStandard": "ugm3",
+  "temperatureUnit": "c",
+  "measurementInterval": 10,
+  "gpsMode": "tracking",
+  "frontLedBrightness": 1,
+  "backLedBrightness": 2,
+  "touchLedIntensity": 2,
+  "buzzerEnabled": true,
+  "cloudConnection": true,
+  "configurationControl": "local",
+  "co2AbcDays": 7,
+  "tvocLearningOffset": 12,
+  "noxLearningOffset": 12,
+  "corrections": {
+    "pm25": {
+      "correctionAlgorithm": "custom_via_pm25_raw",
+      "slr": {
+        "intercept": 1.5,
+        "scalingFactor": 0.75,
+        "useEpa2021": true
+      }
+    },
+    "temperature": {
+      "correctionAlgorithm": "custom",
+      "slr": {
+        "intercept": -1.0,
+        "scalingFactor": 1.1
+      }
+    },
+    "humidity": {
+      "correctionAlgorithm": "none",
+      "slr": null
+    }
+  }
+}

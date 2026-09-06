@@ -113,6 +113,12 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         """Domain that is providing the implementation."""
         return DOMAIN
 
+    @property
+    @override
+    def service_domain(self) -> str:
+        """Domain of the service the tokens are for."""
+        return self.service
+
     @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""

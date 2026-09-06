@@ -88,4 +88,4 @@ async def test_invalid_vol(hass: HomeAssistant, websocket_client) -> None:
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
-    assert "expected str for dictionary value" in msg["error"]["message"]
+    assert "expected str at" in msg["error"]["message"]

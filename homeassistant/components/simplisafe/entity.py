@@ -17,6 +17,7 @@ from simplipy.websocket import (
 )
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -87,6 +88,8 @@ class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
         else:
             device_type = DeviceTypes.UNKNOWN
 
+        # Deprecated: last_event_* attributes are maintained for backwards
+        # compatibility. Use the event entity's event attributes instead.
         self._attr_extra_state_attributes = {
             ATTR_LAST_EVENT_INFO: event.get("info"),
             ATTR_LAST_EVENT_SENSOR_NAME: event.get("sensorName"),
@@ -101,7 +104,12 @@ class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
             manufacturer="SimpliSafe",
             model=model,
             name=device_name,
-            via_device=(DOMAIN, str(system.system_id)),
+            serial_number=serial,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, str(system.system_id)),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )
 
         self._attr_unique_id = serial
@@ -176,6 +184,8 @@ class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
         else:
             sensor_type = None
 
+        # Deprecated: last_event_* attributes are maintained for backwards
+        # compatibility. Use the event entity's event attributes instead.
         self._attr_extra_state_attributes.update(
             {
                 ATTR_LAST_EVENT_INFO: event.info,

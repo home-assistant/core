@@ -129,8 +129,8 @@ async def test_diagnostics_for_device(
         security.IasZone.AttributeDefs.current_zone_sensitivity_level
     )
 
-    device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device_proxy.device.ieee))}
+    device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device_proxy.device.ieee)), config_entry.entry_id
     )
     assert device
     diagnostics_data = await get_diagnostics_for_device(

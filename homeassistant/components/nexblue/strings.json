@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This NexBlue account is already configured."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to NexBlue.",
+      "invalid_auth": "NexBlue authentication failed.",
+      "unknown": "NexBlue could not complete sign-in. Please try again later."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your NexBlue account.",
+          "username": "The email address or username used to sign in to NexBlue."
+        },
+        "description": "Sign in with your NexBlue end-user account."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "access_level": {
+        "name": "Access level",
+        "state": {
+          "authorized_users_only": "Authorized users only",
+          "no_restrictions": "No restrictions"
+        }
+      },
+      "brightness": { "name": "LED brightness" },
+      "cable_current_limit": { "name": "Cable rating" },
+      "cable_lock_mode": {
+        "name": "Cable lock mode",
+        "state": {
+          "always_locked": "Always locked",
+          "locked_while_charging": "Locked while charging"
+        }
+      },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charging": "Charging",
+          "connected": "Ready to charge",
+          "delay_waiting": "Schedule waiting",
+          "error": "Charging unavailable",
+          "ev_waiting": "Waiting for car response",
+          "finished": "Charging complete",
+          "idle": "Connect cable to charge",
+          "lb_waiting": "Waiting for available power"
+        }
+      },
+      "circuit_fuse": { "name": "Circuit fuse" },
+      "current": { "name": "Current {phase}" },
+      "current_limit": { "name": "Current limit" },
+      "lifetime_energy": { "name": "Lifetime energy" },
+      "network_status": {
+        "name": "Network status",
+        "state": {
+          "ethernet": "Ethernet",
+          "modem": "4G",
+          "none": "None",
+          "wifi": "Wi-Fi"
+        }
+      },
+      "phase_charging": {
+        "name": "Phase charging",
+        "state": {
+          "single_phase": "Single-phase",
+          "three_phase": "Three-phase"
+        }
+      },
+      "voltage": { "name": "Voltage {phase}" }
+    }
+  }
+}

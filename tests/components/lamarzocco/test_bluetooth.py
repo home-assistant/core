@@ -290,8 +290,9 @@ async def test_setup_through_bluetooth_only(
         assert state == snapshot(name=entity)
 
     # snapshot device
-    device = device_registry.async_get_device(
-        {(DOMAIN, mock_lamarzocco_bluetooth.serial_number)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_lamarzocco_bluetooth.serial_number),
+        mock_config_entry_bluetooth.entry_id,
     )
     assert device
     assert device == snapshot(

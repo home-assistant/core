@@ -19,7 +19,7 @@ class MockHAClientWebSocket(ClientWebSocketResponse):
 
     client: TestClient
     send_json_auto_id: Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
-    remove_device: Callable[[str, str], Coroutine[Any, Any, Any]]
+    remove_device: Callable[[str], Coroutine[Any, Any, Any]]
 
 
 type ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]

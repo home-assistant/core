@@ -34,6 +34,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "dst": {
+        "name": "Daylight Saving Time"
+      }
+    }
+  },
   "exceptions": {
     "api_error": {
       "message": "Failed to execute {command}: {message}"

@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import outlet_numbers_from_status
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
@@ -28,29 +29,28 @@ async def async_setup_entry(
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
     status = coordinator.data
-
-    # Dynamically add outlet switch types
-    if (num_outlets := status.get("outlet.count")) is None:
-        return
-
     data = pynut_data.data
     unique_id = pynut_data.unique_id
     user_available_commands = pynut_data.user_available_commands
+
     switch_descriptions = [
         SwitchEntityDescription(
-            key=f"outlet.{outlet_num!s}.load.poweronoff",
+            key=f"outlet.{outlet_num}.load.poweronoff",
             translation_key="outlet_number_load_poweronoff",
             translation_placeholders={
-                "outlet_name": status.get(f"outlet.{outlet_num!s}.name")
-                or str(outlet_num)
+                "outlet_name": (
+                    status.get(f"outlet.{outlet_num}.name")
+                    or status.get(f"outlet.{outlet_num}.desc")
+                    or str(outlet_num)
+                )
             },
             device_class=SwitchDeviceClass.OUTLET,
         )
-        for outlet_num in range(1, int(num_outlets) + 1)
+        for outlet_num in sorted(outlet_numbers_from_status(status))
         if (
-            status.get(f"outlet.{outlet_num!s}.switchable") == "yes"
-            and f"outlet.{outlet_num!s}.load.on" in user_available_commands
-            and f"outlet.{outlet_num!s}.load.off" in user_available_commands
+            status.get(f"outlet.{outlet_num}.switchable") == "yes"
+            and f"outlet.{outlet_num}.load.on" in user_available_commands
+            and f"outlet.{outlet_num}.load.off" in user_available_commands
         )
     ]
 
@@ -76,7 +76,6 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-
         outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
         command_name = f"{outlet}.{outlet_num_str}.load.on"
         await self.pynut_data.async_run_command(command_name)
@@ -84,7 +83,6 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-
         outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
         command_name = f"{outlet}.{outlet_num_str}.load.off"
         await self.pynut_data.async_run_command(command_name)

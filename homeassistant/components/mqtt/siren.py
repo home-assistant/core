@@ -8,12 +8,12 @@ import voluptuous as vol
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
-    ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     TURN_ON_SCHEMA,
     SirenEntity,
+    SirenEntityCapabilityAttribute,
     SirenEntityFeature,
     SirenTurnOnServiceParameters,
     process_turn_on_params,
@@ -89,10 +89,10 @@ DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EX
 
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        ATTR_AVAILABLE_TONES,
         ATTR_DURATION,
         ATTR_TONE,
         ATTR_VOLUME_LEVEL,
+        SirenEntityCapabilityAttribute.AVAILABLE_TONES,
     }
 )
 

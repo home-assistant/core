@@ -97,9 +97,14 @@ async def test_flow_invalid_key(hass: HomeAssistant) -> None:
         side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_CONFIG,
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -114,9 +119,14 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
         side_effect=PushbulletError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_CONFIG,
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

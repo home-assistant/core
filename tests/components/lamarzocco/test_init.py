@@ -220,6 +220,7 @@ async def test_websocket_closed_on_unload(
 )
 async def test_gateway_version_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     version: str,
@@ -232,7 +233,6 @@ async def test_gateway_version_issue(
 
     await async_init_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
     assert (issue is not None) == issue_exists
 

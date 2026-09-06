@@ -41,7 +41,5 @@ def ec_data():
             weather["metadata"] = MetaData(**t)
         return weather
 
-    return json.loads(
-        load_fixture("environment_canada/current_conditions_data.json"),
-        object_hook=data_hook,
-    )
+    fixture = load_fixture("environment_canada/current_conditions_data.json")
+    return json.loads(fixture, object_hook=data_hook)

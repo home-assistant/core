@@ -110,6 +110,30 @@ async def test_registry_delayed(
     )
 
 
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a coupler branch device links to its parent via via_device_id."""
+    # The 1F coupler exposes a 1D device on its "main" branch.
+    setup_owproxy_mock_devices(owproxy, ["1F.111111111111"])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1F.111111111111"), config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1D.111111111111"), config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == parent_device.id
+
+
 @patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
 async def test_registry_cleanup(
     hass: HomeAssistant,
@@ -137,16 +161,22 @@ async def test_registry_cleanup(
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
 
     # Try to remove "10.111111111111" - fails as it is live
-    device = device_registry.async_get_device(identifiers={(DOMAIN, live_id)})
+    device = device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
-    assert device_registry.async_get_device(identifiers={(DOMAIN, live_id)}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
+        is not None
+    )
 
     # Try to remove "28.111111111111" - succeeds as it is dead
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_id)})
-    response = await client.remove_device(device.id, entry_id)
+    device = device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
-    assert device_registry.async_get_device(identifiers={(DOMAIN, dead_id)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+        is None
+    )

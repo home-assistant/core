@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Mapping
 import logging
-from time import time
+from time import time as time_now
 from typing import Any, Literal
 
 import aiohttp
@@ -499,7 +499,7 @@ class ReolinkHost:
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
         wake: dict[int, bool] = {}
-        now = time()
+        now = time_now()
         for channel in self._api.stream_channels:
             # wake the battery cameras for a complete update
             if not self._api.supported(channel, "battery"):

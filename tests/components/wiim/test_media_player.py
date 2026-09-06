@@ -1,9 +1,14 @@
 """Tests for the WiiM media player via services and the state machine."""
 
+from collections.abc import Callable
+from functools import partial
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 from wiim.consts import PlayingStatus
+from wiim.exceptions import WiimRequestException
 from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
@@ -18,6 +23,7 @@ from wiim.models import (
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
+    ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
@@ -33,9 +39,12 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_BROWSE_MEDIA,
     SERVICE_JOIN,
+    SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
     SERVICE_REPEAT_SET,
     SERVICE_SELECT_SOURCE,
@@ -43,6 +52,7 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
@@ -52,12 +62,21 @@ from homeassistant.components.media_player import (
 )
 import homeassistant.components.wiim as wiim_component
 from homeassistant.components.wiim.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    CONF_HOST,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
 
@@ -187,6 +206,39 @@ async def test_state_machine_updates_from_device_callbacks(
     )
 
 
+async def test_general_update_handles_offline_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test an offline update marks the media player unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.available = False
+
+    await fire_general_update(hass, mock_wiim_device)
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    mock_wiim_controller.async_update_all_multiroom_status.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_general_update_renews_http_subscriptions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+) -> None:
+    """Test an HTTP-capable device renews subscriptions on a general update."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.supports_http_api = True
+
+    await fire_general_update(hass, mock_wiim_device)
+
+    mock_wiim_device.ensure_subscriptions.assert_awaited_once_with()
+
+
 async def test_state_machine_updates_from_transport_events(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -215,6 +267,52 @@ async def test_state_machine_updates_from_transport_events(
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.IDLE
     assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+
+    mock_wiim_device.event_data = {"TransportState": "unknown"}
+    mock_wiim_device.av_transport_event_callback(MagicMock(), [])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.IDLE
+
+
+@pytest.mark.parametrize(
+    ("service", "device_method"),
+    [
+        pytest.param(SERVICE_MEDIA_STOP, "async_stop", id="stop"),
+        pytest.param(SERVICE_MEDIA_NEXT_TRACK, "async_next", id="next"),
+        pytest.param(SERVICE_MEDIA_PREVIOUS_TRACK, "async_previous", id="previous"),
+    ],
+)
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_transport_services_call_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    *,
+    service: str,
+    device_method: str,
+) -> None:
+    """Test transport services call the matching device command."""
+    mock_wiim_device.async_get_transport_capabilities.return_value = (
+        WiimTransportCapabilities(
+            can_next=True,
+            can_previous=True,
+            can_repeat=False,
+            can_shuffle=False,
+        )
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    getattr(mock_wiim_device, device_method).assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
@@ -262,6 +360,7 @@ async def test_control_services_update_state_machine(
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: MagicMock,
     mock_wiim_controller: MagicMock,
+    *,
     service: str,
     service_data: dict[str, object],
     device_method: str,
@@ -287,6 +386,37 @@ async def test_control_services_update_state_machine(
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[state_attr] == state_value
+
+
+@pytest.mark.parametrize(
+    "device_error",
+    [WiimRequestException("request failed"), RuntimeError("command failed")],
+)
+async def test_command_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    device_error: Exception,
+) -> None:
+    """Test command errors raise a translated Home Assistant error."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_play.side_effect = device_error
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_placeholders == {
+        "command": "async_media_play",
+        "entity_id": MEDIA_PLAYER_ENTITY_ID,
+    }
 
 
 async def test_repeat_and_shuffle_services_update_state_machine(
@@ -663,6 +793,19 @@ async def test_play_media_services_call_device_commands(
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Preset 1"
 
+    mock_wiim_device.play_preset.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: "wiim_library",
+            ATTR_MEDIA_CONTENT_ID: "2",
+        },
+        blocking=True,
+    )
+    mock_wiim_device.play_preset.assert_awaited_once_with(2)
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -674,6 +817,66 @@ async def test_play_media_services_call_device_commands(
         blocking=True,
     )
     mock_wiim_device.async_play_queue_with_index.assert_awaited_once_with(2)
+
+
+@pytest.mark.parametrize(
+    ("media_type", "media_id", "translation_key", "translation_placeholders"),
+    [
+        (
+            "wiim_library",
+            "not-a-preset",
+            "invalid_preset_id",
+            {"media_id": "not-a-preset"},
+        ),
+        (
+            MediaType.TRACK,
+            "not-a-track",
+            "invalid_track_id",
+            {"media_id": "not-a-track"},
+        ),
+        (
+            "unsupported",
+            "1",
+            "unsupported_media_type",
+            {"media_type": "unsupported"},
+        ),
+        (
+            MediaType.URL,
+            "http://example.com/song.mp3",
+            "direct_url_playback_unsupported",
+            None,
+        ),
+    ],
+)
+async def test_play_media_validation_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    *,
+    media_type: MediaType | str,
+    media_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test play media validation errors are translated."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: media_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
 
 
 @pytest.mark.parametrize("media_type", [MediaType.MUSIC, MediaType.URL])
@@ -804,6 +1007,33 @@ async def test_browse_media_service_returns_wiim_library(
     assert [child.title for child in queue_browse.children] == ["Song A", "Song B"]
 
 
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_browse_media_does_not_refresh_entity_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+) -> None:
+    """Test browsing media does not refresh entity state after success."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    original_volume = state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
+    mock_wiim_device.volume = 75
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == original_volume
+
+
 async def test_browse_media_service_includes_media_sources_when_supported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -851,6 +1081,113 @@ async def test_browse_media_service_includes_media_sources_when_supported(
         "Queue",
         "song.mp3",
     ]
+
+
+@pytest.mark.parametrize(
+    (
+        "media_content_type",
+        "media_content_id",
+        "translation_key",
+        "translation_placeholders",
+    ),
+    [
+        pytest.param(
+            MediaType.MUSIC,
+            "media-source://media_source/local/song.mp3",
+            "media_sources_unsupported",
+            None,
+            id="media-source-unsupported",
+        ),
+        pytest.param(
+            MediaType.PLAYLIST,
+            "wiim_library/invalid",
+            "invalid_browse_path",
+            {"media_content_id": "wiim_library/invalid"},
+            id="invalid-path",
+        ),
+    ],
+)
+async def test_browse_media_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    *,
+    media_content_type: MediaType,
+    media_content_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test browse media errors are translated."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_BROWSE_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+
+
+@pytest.mark.parametrize(
+    ("sdk_method", "media_content_id"),
+    [
+        pytest.param(
+            "async_get_presets",
+            "wiim_library/library_root/favorites",
+            id="presets",
+        ),
+        pytest.param(
+            "async_get_queue_snapshot",
+            "wiim_library/library_root/playlists",
+            id="queue",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_browse_media_sdk_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    *,
+    sdk_method: str,
+    media_content_id: str,
+) -> None:
+    """Test browse media SDK errors raise a translated Home Assistant error."""
+    await setup_integration(hass, mock_config_entry)
+    getattr(mock_wiim_device, sdk_method).side_effect = WiimRequestException(
+        "request failed"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_BROWSE_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_placeholders == {
+        "command": "async_browse_media",
+        "entity_id": MEDIA_PLAYER_ENTITY_ID,
+    }
 
 
 async def test_join_and_unjoin_services_use_resolved_member_udns(
@@ -904,7 +1241,6 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
             ATTR_GROUP_MEMBERS: [
                 MEDIA_PLAYER_ENTITY_ID,
                 follower_entity_id,
-                "media_player.unknown_wiim_device",
             ],
         },
         blocking=True,
@@ -955,21 +1291,6 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
-        {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: [
-                MEDIA_PLAYER_ENTITY_ID,
-                "media_player.unknown_wiim_device",
-            ],
-        },
-        blocking=True,
-    )
-
-    mock_wiim_controller.async_join_group.assert_not_awaited()
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
         SERVICE_UNJOIN,
         {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
@@ -978,3 +1299,221 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     mock_wiim_controller.async_ungroup_device.assert_awaited_once_with(
         mock_wiim_device.udn
     )
+
+
+async def test_join_service_invalid_member_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test joining an invalid member raises a translated validation error."""
+    await setup_integration(hass, mock_config_entry)
+    invalid_entity_id = "media_player.unknown_wiim_device"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [invalid_entity_id],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_grouping_entity"
+    assert exc_info.value.translation_placeholders == {"entity_id": invalid_entity_id}
+    mock_wiim_controller.async_join_group.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("device_ip", "image_url", "expected_disabled_request_options", "content_type"),
+    [
+        (
+            "192.168.1.100",
+            "https://192.168.1.100/local-artwork.jpg",
+            {"allow_redirects", "ssl"},
+            "image/jpeg ; charset=binary",
+        ),
+        (
+            "192.168.1.100",
+            "http://192.168.1.100/local-artwork.jpg",
+            set(),
+            "image/jpeg",
+        ),
+        (
+            "192.168.1.100",
+            "https://wiim-artwork.example/remote-artwork.jpg",
+            set(),
+            "image/jpeg",
+        ),
+        ("8.8.8.8", "https://8.8.8.8/public-artwork.jpg", set(), "image/jpeg"),
+        (
+            "169.254.10.20",
+            "https://169.254.10.20/link-local-artwork.jpg",
+            {"allow_redirects", "ssl"},
+            "image/jpeg",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_media_image_ssl_verification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+    *,
+    device_ip: str,
+    image_url: str,
+    expected_disabled_request_options: set[str],
+    content_type: str,
+) -> None:
+    """Test SSL verification is disabled only for local WiiM HTTPS artwork."""
+    mock_wiim_device.ip_address = device_ip
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Test artwork",
+        uri="http://example.com/test-artwork.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+
+    aioclient_mock.get(
+        image_url,
+        content=b"image-bytes",
+        headers={"Content-Type": content_type},
+    )
+    websession = async_get_clientsession(hass)
+    with patch.object(websession, "get", wraps=websession.get) as mock_get:
+        response = await (await hass_client()).get(
+            state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+        )
+
+    assert response.status == 200
+    assert await response.read() == b"image-bytes"
+    assert response.headers["Content-Type"] == "image/jpeg"
+    image_get_calls = [
+        call
+        for call in mock_get.call_args_list
+        if call.args and str(call.args[0]).partition("#")[0] == image_url
+    ]
+    assert len(image_get_calls) == 1
+    image_get_call = image_get_calls[0]
+    request_options = image_get_call.kwargs
+    disabled_request_options = {
+        option
+        for option in ("allow_redirects", "ssl")
+        if request_options.get(option) is False
+    }
+    assert disabled_request_options == expected_disabled_request_options
+
+
+@pytest.mark.parametrize(
+    ("status", "exception_factory"),
+    [
+        (HTTPStatus.NOT_FOUND, lambda: None),
+        (HTTPStatus.OK, partial(aiohttp.ClientError)),
+    ],
+)
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_local_https_media_image_fetch_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+    *,
+    status: HTTPStatus,
+    exception_factory: Callable[[], aiohttp.ClientError | None],
+) -> None:
+    """Test a local HTTPS artwork request error returns no proxy image."""
+    await setup_integration(hass, mock_config_entry)
+    image_url = "https://192.168.1.100/unavailable-artwork.jpg"
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Unavailable artwork",
+        uri="http://example.com/unavailable-artwork.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+
+    aioclient_mock.get(
+        image_url,
+        status=status,
+        exc=exception_factory(),
+    )
+    response = await (await hass_client()).get(
+        state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+    )
+    assert response.status == 404
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_media_image_hash_changes_for_same_local_artwork_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the media proxy returns new artwork when its URL is reused."""
+    await setup_integration(hass, mock_config_entry)
+    image_url = "https://192.168.1.100/changing-album-art.jpg"
+
+    client = await hass_client()
+
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="First Song",
+        artist="Artist",
+        album="Album",
+        uri="http://example.com/first.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_ENTITY_PICTURE] == image_url
+    first_local_image = state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+
+    aioclient_mock.get(
+        image_url,
+        content=b"first-image",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    media_response = await client.get(first_local_image)
+    assert media_response.status == 200
+    first_image = await media_response.read()
+    assert first_image == b"first-image"
+
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Second Song",
+        artist="Artist",
+        album="Album",
+        uri="http://example.com/second.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+
+    assert state.attributes[ATTR_ENTITY_PICTURE] == image_url
+    second_local_image = state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+    assert second_local_image != first_local_image
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        image_url,
+        content=b"second-image",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    media_response = await client.get(second_local_image)
+    assert media_response.status == 200
+    second_image = await media_response.read()
+    assert second_image == b"second-image"
+    assert second_image != first_image

@@ -18,9 +18,15 @@ async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     assert len(hass.states.async_all("sensor")) == 8
     assert (
         hass.states.get("sensor.anova_precision_cooker_cook_time_remaining").state
-        == "0"
+        == "0.0"
     )
-    assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0"
+    assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0.0"
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_cook_time").attributes[
+            "unit_of_measurement"
+        ]
+        == "h"
+    )
     assert (
         hass.states.get("sensor.anova_precision_cooker_heater_temperature").state
         == "22.37"

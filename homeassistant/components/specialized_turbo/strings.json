@@ -1,0 +1,149 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_encrypted": "This bike has no stored encryption key to reconfigure.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_wrapped_key": "The wrapped key is invalid.",
+      "key_unavailable": "The Specialized encryption key could not be retrieved."
+    },
+    "step": {
+      "account": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address for your Specialized account.",
+          "password": "The password is sent to Specialized only to retrieve the bike key."
+        },
+        "description": "Your password is used only to retrieve this bike's encryption key. Home Assistant stores the per-bike wrapped key, not your password or account tokens.",
+        "title": "Sign in to Specialized"
+      },
+      "bluetooth_confirm": {
+        "description": "A Specialized Turbo bike was found at {address} ({name}). Pairing prompts are handled by the active Bluetooth backend.",
+        "title": "Discovered Specialized Turbo bike"
+      },
+      "key_source": {
+        "description": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually.",
+        "menu_options": {
+          "account": "[%key:component::specialized_turbo::config::step::account::title%]",
+          "manual_key": "[%key:component::specialized_turbo::config::step::manual_key::title%]"
+        },
+        "title": "Choose encryption key source"
+      },
+      "manual_key": {
+        "data": {
+          "wrapped_key": "Wrapped key"
+        },
+        "data_description": {
+          "wrapped_key": "The 64-character wrapped key for this bike."
+        },
+        "description": "Enter the 64-character wrapped key returned by the Specialized keystore service.",
+        "title": "Enter wrapped bike key"
+      },
+      "reconfigure": {
+        "description": "Replace the encryption key for your Specialized Turbo bike.",
+        "title": "Reconfigure Specialized Turbo"
+      },
+      "user": {
+        "data": {
+          "address": "Bike"
+        },
+        "data_description": {
+          "address": "Select the Specialized Turbo bike you want to add."
+        },
+        "description": "Select your Specialized Turbo bike from the discovered devices.",
+        "title": "Add Specialized Turbo bike"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "altitude": {
+        "name": "Altitude"
+      },
+      "altitude_gain": {
+        "name": "Altitude gain"
+      },
+      "assist_eco_pct": {
+        "name": "ECO assist"
+      },
+      "assist_level": {
+        "name": "Assist level",
+        "state": {
+          "eco": "Eco",
+          "off": "[%key:common::state::off%]",
+          "trail": "Trail",
+          "turbo": "Turbo"
+        }
+      },
+      "assist_trail_pct": {
+        "name": "Trail assist"
+      },
+      "assist_turbo_pct": {
+        "name": "Turbo assist"
+      },
+      "battery_capacity_wh": {
+        "name": "Battery capacity"
+      },
+      "battery_charge_cycles": {
+        "name": "Charge cycles"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_health": {
+        "name": "Battery health"
+      },
+      "battery_remaining_wh": {
+        "name": "Battery remaining"
+      },
+      "battery_temp": {
+        "name": "Battery temperature"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "cadence": {
+        "name": "Cadence"
+      },
+      "consumption": {
+        "name": "Consumption"
+      },
+      "gradient": {
+        "name": "Gradient"
+      },
+      "kcal": {
+        "name": "Calories"
+      },
+      "motor_power": {
+        "name": "Motor power"
+      },
+      "motor_temp": {
+        "name": "Motor temperature"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "range_long": {
+        "name": "Range (long)"
+      },
+      "range_short": {
+        "name": "Range (short)"
+      },
+      "rider_power": {
+        "name": "Rider power"
+      },
+      "system_temp": {
+        "name": "System temperature"
+      }
+    }
+  }
+}

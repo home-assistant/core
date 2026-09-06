@@ -600,6 +600,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.ATM: 1 / 101325,
     }
     VALID_UNITS = {
         UnitOfPressure.MILLIPASCAL,
@@ -613,6 +614,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
+        UnitOfPressure.ATM,
     }
 
 

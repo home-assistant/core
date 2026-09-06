@@ -17,7 +17,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -59,15 +58,6 @@ SENSORS = [
         suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.watts,
-    ),
-    OhmeSensorDescription(
-        key="energy",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=1,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda client: client.energy,
     ),
     OhmeSensorDescription(
         key="voltage",

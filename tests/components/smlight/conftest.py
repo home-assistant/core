@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pysmlight import Radio
 from pysmlight.exceptions import SmlightAuthError
 from pysmlight.models import BleFeatures
 from pysmlight.sse import sseClient
@@ -152,7 +153,14 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 MOCK_ULTIMA = Info(
     MAC="AA:BB:CC:DD:EE:FF",
     model="SLZB-Ultima3",
+    addons={"zwave": True},
     ble=BleFeatures(ble_enabled=True, proxy_enabled=True),
+    u_device=True,
+    radios=[
+        Radio(zb_type=0, chip_index=0),
+        Radio(zb_type=1, chip_index=1),
+        Radio(zb_type=5, chip_index=2),
+    ],
 )
 
 

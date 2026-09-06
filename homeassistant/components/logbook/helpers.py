@@ -3,17 +3,19 @@
 from collections.abc import Callable, Collection, Mapping
 from typing import Any
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, NON_NUMERIC_DEVICE_CLASSES
+from homeassistant.components.sensor import (
+    NON_NUMERIC_DEVICE_CLASSES,
+    SensorEntityCapabilityAttribute,
+)
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_SERVICE_DATA,
-    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -254,7 +256,7 @@ def is_sensor_continuous(
     will filter out any sensors with a unit_of_measurement.
 
     If the state still exists in the state machine, this function still
-    checks for ATTR_UNIT_OF_MEASUREMENT since the live mode is not filtered
+    checks for EntityStateAttribute.UNIT_OF_MEASUREMENT since the live mode is not filtered
     by the SQL query.
     """
     # If it is in the state machine we can quick check if it
@@ -262,9 +264,11 @@ def is_sensor_continuous(
     # it does
     if (state := hass.states.get(entity_id)) and (attributes := state.attributes):
         return (
-            ATTR_UNIT_OF_MEASUREMENT in attributes
-            or ATTR_STATE_CLASS in attributes
-            or _device_class_is_numeric(attributes.get(ATTR_DEVICE_CLASS))
+            EntityStateAttribute.UNIT_OF_MEASUREMENT in attributes
+            or SensorEntityCapabilityAttribute.STATE_CLASS in attributes
+            or _device_class_is_numeric(
+                attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            )
         )
     # If its not in the state machine, we need to check
     # the entity registry to see if its a sensor
@@ -276,7 +280,10 @@ def is_sensor_continuous(
     return bool(
         (entry := ent_reg.async_get(entity_id))
         and (
-            (entry.capabilities and entry.capabilities.get(ATTR_STATE_CLASS))
+            (
+                entry.capabilities
+                and entry.capabilities.get(SensorEntityCapabilityAttribute.STATE_CLASS)
+            )
             or _device_class_is_numeric(entry.device_class)
         )
     )
@@ -295,9 +302,11 @@ def _is_state_filtered(new_state: State, old_state: State) -> bool:
         or (
             new_state.domain == SENSOR_DOMAIN
             and (
-                ATTR_UNIT_OF_MEASUREMENT in new_state.attributes
-                or ATTR_STATE_CLASS in new_state.attributes
-                or _device_class_is_numeric(new_state.attributes.get(ATTR_DEVICE_CLASS))
+                EntityStateAttribute.UNIT_OF_MEASUREMENT in new_state.attributes
+                or SensorEntityCapabilityAttribute.STATE_CLASS in new_state.attributes
+                or _device_class_is_numeric(
+                    new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+                )
             )
         )
     )

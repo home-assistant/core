@@ -271,7 +271,7 @@ async def test_bad_config_validation_critical(
             "bad_script",
             {},
             "could not be validated",
-            "required key not provided @ data['sequence']. Got None",
+            "required key not provided at 'sequence'. Got None",
             "validation_failed_schema",
         ),
         (
@@ -650,18 +650,35 @@ async def test_shared_context(hass: HomeAssistant) -> None:
 
     event_mock = Mock()
     run_mock = Mock()
+    started_flag = asyncio.Event()
 
-    hass.bus.async_listen(event, event_mock)
+    @callback
+    def event_started(event):
+        event_mock(event)
+        started_flag.set()
+
+    hass.bus.async_listen(event, event_started)
     hass.bus.async_listen(EVENT_SCRIPT_STARTED, run_mock)
 
     assert await async_setup_component(
-        hass, DOMAIN, {"script": {"test": {"sequence": [{"event": event}]}}}
+        hass,
+        DOMAIN,
+        {
+            "script": {
+                "test": {
+                    "sequence": [
+                        {"event": event},
+                        {"wait_template": "{{ is_state('test.script', 'on') }}"},
+                    ]
+                }
+            }
+        },
     )
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, context=context
     )
-    await hass.async_block_till_done()
+    await asyncio.wait_for(started_flag.wait(), 1)
 
     assert event_mock.call_count == 1
     assert run_mock.call_count == 1
@@ -680,6 +697,20 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     state = hass.states.get("script.test")
     assert state is not None
     assert state.context == context
+
+    # Stopping the script is attributed to whoever asked for the stop
+    stop_context = Context()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        context=stop_context,
+    )
+    await hass.async_block_till_done()
+
+    assert not script.is_on(hass, ENTITY_ID)
+    assert hass.states.get(ENTITY_ID).context is stop_context
 
 
 async def test_logging_script_error(
@@ -1689,8 +1720,7 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "a_number": 5,
             },
             "Blueprint 'Call service' generated invalid script",
-            "value should be a string for dictionary value"
-            " @ data['sequence'][0]['action']",
+            "value should be a string at 'sequence[0].action'",
         ),
     ],
 )

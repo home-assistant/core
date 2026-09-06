@@ -132,7 +132,10 @@ async def test_upload_image_invalid_device_id(
     hass: HomeAssistant,
 ) -> None:
     """Test that an invalid device_id raises ServiceValidationError."""
-    with pytest.raises(ServiceValidationError, match="not a valid OpenDisplay device"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Device with ID not-a-real-device-id was not found",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "upload_image",

@@ -25,7 +25,6 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     CONF_DEVICES,
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -33,6 +32,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
@@ -323,7 +323,9 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
 
         state = self.hass.states.get(entity_id)
         assert state is not None
-        name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
+        name = (
+            state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) or state.entity_id
+        )
 
         entry_data = {
             CONF_PORT: port,

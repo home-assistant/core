@@ -169,6 +169,14 @@ async def test_significant_state_change() -> None:
             False,
         ),
         (
+            {ATTR_WEATHER_PRESSURE: 100},
+            {
+                ATTR_WEATHER_PRESSURE: 100.09,
+                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.KPA,
+            },
+            False,
+        ),
+        (
             {ATTR_WEATHER_PRESSURE: 29.5},
             {
                 ATTR_WEATHER_PRESSURE: 29.54,
@@ -277,6 +285,14 @@ async def test_significant_state_change() -> None:
             {
                 ATTR_WEATHER_PRESSURE: 749,
                 ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.MMHG,
+            },
+            True,
+        ),
+        (
+            {ATTR_WEATHER_PRESSURE: 100},
+            {
+                ATTR_WEATHER_PRESSURE: 100.11,
+                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.KPA,
             },
             True,
         ),

@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a IntelliClima Sensors."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.devices_coordinator
 
     entities: list[IntelliClimaSensor] = [
         IntelliClimaSensor(

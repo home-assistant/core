@@ -145,6 +145,7 @@ async def test_setup_device_registry_fields(
     )
     assert len(devices) == 1
     device = devices[0]
+    assert device.sw_version == "1.2.3"
     assert (device.hw_version is not None) == expect_hw_version
     assert (device.configuration_url is not None) == expect_config_url
 

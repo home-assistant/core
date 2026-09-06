@@ -386,6 +386,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         ("pressure", UnitOfPressure.INH2O): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.ATM): UnitOfPressure.PSI,
         # Convert non-USCS radon concentration
         (
             "radon",

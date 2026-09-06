@@ -10,12 +10,20 @@ from yalesmartalarmclient.exceptions import AuthenticationError
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
     from . import YaleConfigEntry
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, YALE_BASE_ERRORS
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    MANUFACTURER,
+    MODEL,
+    YALE_BASE_ERRORS,
+)
 
 
 class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -35,6 +43,19 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
         self.locks: list[YaleLock] = []
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for the alarm panel."""
+        panel_info = self.data["panel_info"]
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.data[CONF_USERNAME])},
+            connections={(CONNECTION_NETWORK_MAC, panel_info["mac"])},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.config_entry.title,
+            sw_version=panel_info["version"],
+        )
 
     def _yale_setup(self) -> tuple[YaleSmartAlarmClient, list[YaleLock]]:
         """Set up connection to Yale."""

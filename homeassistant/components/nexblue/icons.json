@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "access_level": {
+        "default": "mdi:account-lock"
+      },
+      "brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cable_current_limit": {
+        "default": "mdi:current-ac"
+      },
+      "cable_lock_mode": {
+        "default": "mdi:lock-clock"
+      },
+      "charging_state": {
+        "default": "mdi:ev-station"
+      },
+      "circuit_fuse": {
+        "default": "mdi:fuse"
+      },
+      "current": {
+        "default": "mdi:current-ac"
+      },
+      "current_limit": {
+        "default": "mdi:current-ac"
+      },
+      "lifetime_energy": {
+        "default": "mdi:counter"
+      },
+      "network_status": {
+        "default": "mdi:network-outline"
+      },
+      "phase_charging": {
+        "default": "mdi:sine-wave"
+      },
+      "voltage": {
+        "default": "mdi:sine-wave"
+      }
+    }
+  }
+}

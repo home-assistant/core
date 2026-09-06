@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -86,3 +87,25 @@ async def test_fan_mode_service_calls(
     coordinator.api.async_set_fan_mode.assert_awaited_once_with(
         "climate_air_conditioner", expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.usefixtures("devices")
+async def test_service_call_connection_error_raises_home_assistant_error(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a network error during a service call raises HomeAssistantError."""
+    with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_thinq_api.async_post_device_control.side_effect = TimeoutError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: "climate.test_air_conditioner", "fan_mode": "low"},
+            blocking=True,
+        )

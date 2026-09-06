@@ -1,11 +1,13 @@
 """Test the aidot device."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aidot.const import CONF_DEVICE_LIST
 from aidot.device_client import DeviceStatusData
 from aidot.exceptions import AidotAuthFailed
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
@@ -134,6 +136,48 @@ async def test_turn_on_with_rgbw(
         blocking=True,
     )
     mocked_device_client.async_set_rgbw.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("color_data", "applied_call", "ignored_call"),
+    [
+        pytest.param(
+            {ATTR_RGBW_COLOR: (0, 0, 255, 0)},
+            "async_set_rgbw",
+            "async_set_cct",
+            id="rgbw",
+        ),
+        pytest.param(
+            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            "async_set_cct",
+            "async_set_rgbw",
+            id="color_temp",
+        ),
+    ],
+)
+async def test_turn_on_with_brightness_and_color(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+    color_data: dict[str, Any],
+    applied_call: str,
+    ignored_call: str,
+) -> None:
+    """Test brightness and color are both applied when sent together."""
+    await async_init_integration(hass, mock_config_entry)
+
+    # Scenes send brightness and color in a single call.
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100, **color_data},
+        blocking=True,
+    )
+
+    mocked_device_client.async_set_brightness.assert_called_once_with(100)
+    getattr(mocked_device_client, applied_call).assert_called_once()
+    getattr(mocked_device_client, ignored_call).assert_not_called()
+    mocked_device_client.async_turn_on.assert_not_called()
 
 
 async def test_light_unavailable(

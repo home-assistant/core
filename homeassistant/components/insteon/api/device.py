@@ -74,11 +74,19 @@ async def websocket_get_device(
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
     ha_name = compute_device_name(ha_device)
+    groups = getattr(device, "groups", None) or {}
     device_info = {
         "name": ha_name,
         "address": str(device.address),
         "is_battery": device.is_battery,
         "aldb_status": str(device.aldb.status),
+        "cat": int(device.cat) if device.cat is not None else None,
+        "subcat": int(device.subcat) if device.subcat is not None else None,
+        "model": device.model,
+        "description": device.description,
+        "engine_version": str(device.engine_version),
+        "firmware": device.firmware,
+        "buttons": {group: state.name for group, state in groups.items()},
     }
     connection.send_result(msg[ID], device_info)
 

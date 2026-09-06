@@ -19,7 +19,7 @@ Follow these systematic steps to successfully bump a python package requirement 
 - [ ] **2. Discover Codebase References**: Search the codebase to find all `manifest.json` and requirements files referencing the package.
 - [ ] **3. Resolve Version/Tag Details**: Run the integrated validation helper script to resolve version details, GitHub repo, release tag format, and formatted PR links:
   ```bash
-  uv run python3 ./.claude/skills/bump-dependency/scripts/resolve_dependency.py <package> <old_version> [--new-version <new_version>]
+  uv run --no-sync python3 ./.claude/skills/bump-dependency/scripts/resolve_dependency.py <package> <old_version> [--new-version <new_version>]
   ```
 - [ ] **4. Plan-Validate-Execute (Draft Plan)**: Before modifying any files, write a brief, structured plan outlining the integrations to change, old version, new version, and the resolved comparison link. Show this draft plan to the user.
 
@@ -33,7 +33,7 @@ Follow these systematic steps to successfully bump a python package requirement 
 - [ ] **7. Apply Bump to manifests**: Update the version constraint string in all identified `manifest.json` files (e.g., change `"package==1.0.0"` to `"package==1.1.0"`).
 - [ ] **8. Regenerate Core Requirements**: Run the requirements generator to update all derivative requirements and constraint files:
   ```bash
-  uv run python3 -m script.gen_requirements_all
+  uv run --no-sync python3 -m script.gen_requirements_all
   ```
 - [ ] **9. Validate Requirements**: Check `git diff` to ensure that only the targeted `manifest.json` files and `requirements_all.txt` (and potentially standard constraints) were modified. No unrelated files must be affected.
 - [ ] **10. Local Venv Verification**: Install the exact targeted package version directly inside the virtual environment:
@@ -44,14 +44,14 @@ Follow these systematic steps to successfully bump a python package requirement 
 ### Phase C: Validation Loop (Tests & Lint)
 - [ ] **11. Run Integration Tests**: Execute the pytest suite for all integrations that consume the bumped package:
   ```bash
-  uv run pytest tests/components/<integration_name>
+  uv run --no-sync pytest tests/components/<integration_name>
   ```
   - *Validation Loop*: If tests fail, analyze the error, apply appropriate fixes, and re-run pytest until all tests pass cleanly.
 - [ ] **12. Run prek Lint Checks**: Run the local prek hooks on modified files:
   ```bash
-  uv run prek run
+  uv run --no-sync prek run
   ```
-  - *Validation Loop*: If prek checks report any formatting or linting violations, fix them and repeat `uv run prek run` until it passes completely without errors.
+  - *Validation Loop*: If prek checks report any formatting or linting violations, fix them and repeat `uv run --no-sync prek run` until it passes completely without errors.
 
 ### Phase D: User Confirmation & PR Creation
 - [ ] **13. Commit Changes**: Commit the clean changes:

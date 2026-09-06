@@ -7,7 +7,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components import lock, template
-from homeassistant.components.lock import LockEntityFeature, LockState
+from homeassistant.components.lock import (
+    LockEntityFeature,
+    LockEntityStateAttribute,
+    LockState,
+)
+from homeassistant.components.template.lock import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -24,6 +29,11 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -31,6 +41,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry
@@ -998,3 +1010,302 @@ async def test_flow_preview(
     )
 
     assert state["state"] == LockState.LOCKED
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.LOCKED,
+            {
+                "code_format": ".+",
+                "is_locked": True,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": False,
+            },
+            LockState.LOCKED,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.LOCKING,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": True,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": False,
+            },
+            LockState.LOCKING,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: LockState | str,
+    saved_extra_data: dict | None,
+    initial_state: LockState | str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring state."""
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_LOCK,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_LOCK,
+        style,
+        {
+            "code_format": "{{ state_attr('sensor.test_state', 'code_format') }}",
+            "state": "{{ state_attr('sensor.test_state', 'lock_state') }}",
+            "lock": [],
+            "open": [],
+            "unlock": [],
+        },
+        "is_state_attr('sensor.test_state', 'lock_state', 'unlocked')",
+    )
+
+    assert_state_and_attributes(hass, TEST_LOCK, initial_state, initial_attributes)
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {"lock_state": LockState.UNLOCKED, "code_format": "\\\\d+"},
+    )
+
+    # The first trigger should replace the restored code_format attribute
+    assert_state_and_attributes(
+        hass, TEST_LOCK, LockState.UNLOCKED, {"code_format": "\\\\d+"}
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("lock", UNLOCK_ACTION),
+        ("unlock", LOCK_ACTION),
+        ("open", {**LOCK_ACTION, **UNLOCK_ACTION}),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_LOCK, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("lock", UNLOCK_ACTION),
+        ("unlock", LOCK_ACTION),
+        ("open", {**LOCK_ACTION, **UNLOCK_ACTION}),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_LOCK, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_LOCK,
+        style,
+        {"state": "{{ 'locked' }}", **LOCK_ACTION, **UNLOCK_ACTION},
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(LockEntityStateAttribute),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_LOCK,
+        style,
+        0,
+        {
+            "state": "{{ 'locked' }}",
+            **LOCK_ACTION,
+            **UNLOCK_ACTION,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_LOCK,
+        style,
+        {
+            "state": "{{ 'locked' }}",
+            **LOCK_ACTION,
+            **UNLOCK_ACTION,
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(LockEntityStateAttribute),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: LockEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_LOCK,
+        style,
+        1,
+        {
+            "state": "{{ 'locked' }}",
+            **LOCK_ACTION,
+            **UNLOCK_ACTION,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_LOCK.entity_id}: {attribute}"
+    assert error in caplog.text

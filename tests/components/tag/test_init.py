@@ -22,7 +22,11 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
+def storage_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+):
     """Storage setup."""
 
     async def _storage(items=None):
@@ -44,7 +48,6 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
             }
         else:
             hass_storage[DOMAIN] = items
-        entity_registry = er.async_get(hass)
         _create_entry(entity_registry, TEST_TAG_ID, TEST_TAG_NAME)
         _create_entry(entity_registry, TEST_TAG_ID_2, TEST_TAG_NAME_2)
         config = {DOMAIN: {}}

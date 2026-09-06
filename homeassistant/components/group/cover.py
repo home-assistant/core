@@ -5,20 +5,18 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -32,6 +30,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -148,7 +147,7 @@ class CoverGroup(GroupEntity, CoverEntity):
                 values.discard(entity_id)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             self._covers[KEY_OPEN_CLOSE].add(entity_id)
@@ -313,14 +312,14 @@ class CoverGroup(GroupEntity, CoverEntity):
         all_position_states = [self.hass.states.get(x) for x in position_covers]
         position_states: list[State] = list(filter(None, all_position_states))
         self._attr_current_cover_position = reduce_attribute(
-            position_states, ATTR_CURRENT_POSITION
+            position_states, CoverEntityStateAttribute.CURRENT_POSITION
         )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
         self._attr_current_cover_tilt_position = reduce_attribute(
-            tilt_states, ATTR_CURRENT_TILT_POSITION
+            tilt_states, CoverEntityStateAttribute.CURRENT_TILT_POSITION
         )
 
         supported_features = CoverEntityFeature(0)

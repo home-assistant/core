@@ -1,5 +1,7 @@
 """The tests for the  Template light platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -18,8 +20,11 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
+from homeassistant.components.template.light import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -31,12 +36,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -44,12 +55,15 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "light.test_state"
+TEST_SENSOR_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_LIGHT = TemplatePlatformSetup(
@@ -57,6 +71,7 @@ TEST_LIGHT = TemplatePlatformSetup(
     "test_light",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
+        TEST_SENSOR_STATE_ENTITY_ID,
         TEST_AVAILABILITY_ENTITY,
     ),
 )
@@ -1893,3 +1908,499 @@ async def test_flow_preview(
     )
 
     assert state["state"] == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_temp",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["color_temp"],
+                "xy_color": None,
+            },
+            STATE_OFF,
+            {
+                "brightness": None,
+                "color_mode": None,
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": [ColorMode.COLOR_TEMP],
+                "xy_color": None,
+            },
+        ),
+        (
+            # Missing key
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_temp",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad color mode
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_tem",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["color_temp"],
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad supported color modes
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_temp",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["color_tep"],
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": None,
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["onoff"],
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {
+                "brightness": None,
+                "color_mode": None,
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": [
+                    ColorMode.COLOR_TEMP,
+                    ColorMode.HS,
+                    ColorMode.RGB,
+                    ColorMode.RGBW,
+                    ColorMode.RGBWW,
+                    ColorMode.XY,
+                ],
+                "xy_color": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": None,
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["onoff"],
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {
+                "brightness": None,
+                "color_mode": None,
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": [
+                    ColorMode.COLOR_TEMP,
+                    ColorMode.HS,
+                    ColorMode.RGB,
+                    ColorMode.RGBW,
+                    ColorMode.RGBWW,
+                    ColorMode.XY,
+                ],
+                "xy_color": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template light."""
+
+    restored_attributes = {  # These should be ignored
+        "current_position": 5,
+        "current_tilt_position": 5,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_LIGHT,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        {
+            "state": "{{ state_attr('sensor.test_state', 'is_on') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "level": "{{ state_attr('sensor.test_state', 'brightness') }}",
+            "set_level": [],
+            "temperature": "{{ state_attr('sensor.test_state', 'color_temp_kelvin') }}",
+            "set_temperature": [],
+            "effect_list": "{{ state_attr('sensor.test_state', 'effect_list') }}",
+            "effect": "{{ state_attr('sensor.test_state', 'effect') }}",
+            "set_effect": [],
+            "hs": "{{ state_attr('sensor.test_state', 'hs_color') }}",
+            "set_hs": [],
+            "min_mireds": "{{ state_attr('sensor.test_state', 'max_color_temp_kelvin') }}",
+            "max_mireds": "{{ state_attr('sensor.test_state', 'min_color_temp_kelvin') }}",
+            "rgb": "{{ state_attr('sensor.test_state', 'rgb_color') }}",
+            "set_rgb": [],
+            "rgbw": "{{ state_attr('sensor.test_state', 'rgbw_color') }}",
+            "set_rgbw": [],
+            "rgbww": "{{ state_attr('sensor.test_state', 'rgbww_color') }}",
+            "set_rgbww": [],
+            "xy": "{{ state_attr('sensor.test_state', 'xy_color') }}",
+            "set_xy": [],
+        },
+        "state_attr('sensor.test_state', 'is_on') is true",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_LIGHT,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {"is_on": True},
+    )
+
+    assert_state_and_attributes(hass, TEST_LIGHT, STATE_ON)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_saving_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test restore saved state."""
+
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        config={
+            "state": "{{ state_attr('light.test_state', 'is_on') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "level": "{{ state_attr('light.test_state', 'brightness') }}",
+            "set_level": [],
+        },
+    )
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "anything",
+        {"is_on": True, "brightness": 255},
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_LIGHT,
+        STATE_ON,
+        {
+            "brightness": 255,
+            "color_mode": ColorMode.BRIGHTNESS,
+            "supported_color_modes": [ColorMode.BRIGHTNESS],
+        },
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == TEST_LIGHT.entity_id
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == {
+        "is_on": True,
+        "brightness": 255,
+        "color_mode": "brightness",
+        "color_temp_kelvin": None,
+        "effect_list": None,
+        "effect": None,
+        "hs_color": None,
+        "max_color_temp_kelvin": 6535,
+        "min_color_temp_kelvin": 2000,
+        "rgb_color": None,
+        "rgbw_color": None,
+        "rgbww_color": None,
+        "supported_color_modes": ["brightness"],
+        "xy_color": None,
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        (
+            "set_effect",
+            {
+                "effect_list": "{{ ['Disco', 'Police'] }}",
+                "effect": "{{ None }}",
+                **ON_OFF_ACTIONS,
+            },
+        ),
+        ("set_hs", ON_OFF_ACTIONS),
+        ("set_level", ON_OFF_ACTIONS),
+        ("set_rgb", ON_OFF_ACTIONS),
+        ("set_rgbw", ON_OFF_ACTIONS),
+        ("set_rgbww", ON_OFF_ACTIONS),
+        ("set_temperature", ON_OFF_ACTIONS),
+        ("set_xy", ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_LIGHT, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        (
+            "set_effect",
+            {
+                "effect_list": "{{ ['Disco', 'Police'] }}",
+                "effect": "{{ None }}",
+                **ON_OFF_ACTIONS,
+            },
+        ),
+        ("set_hs", ON_OFF_ACTIONS),
+        ("set_level", ON_OFF_ACTIONS),
+        ("set_rgb", ON_OFF_ACTIONS),
+        ("set_rgbw", ON_OFF_ACTIONS),
+        ("set_rgbww", ON_OFF_ACTIONS),
+        ("set_temperature", ON_OFF_ACTIONS),
+        ("set_xy", ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_LIGHT, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_LIGHT, style, {"state": "{{ 'on' }}", **ON_OFF_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(LightEntityCapabilityAttribute, LightEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        0,
+        {
+            "state": "{{ 'on' }}",
+            **ON_OFF_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_LIGHT,
+        style,
+        {"state": "{{ 'on' }}", **ON_OFF_ACTIONS},
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(LightEntityCapabilityAttribute, LightEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        {
+            "state": "{{ 'on' }}",
+            **ON_OFF_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_LIGHT.entity_id}: {attribute}"
+    assert error in caplog.text

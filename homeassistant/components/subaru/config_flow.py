@@ -1,7 +1,7 @@
 """Config flow for Subaru integration."""
 
-from datetime import datetime
 import logging
+import time
 from typing import TYPE_CHECKING, Any, override
 
 from subarulink import (
@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_UPDATE_ENABLED, DOMAIN
 from .coordinator import SubaruConfigEntry
@@ -110,10 +111,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         data: contains values provided by the user.
         """
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         if not data.get(CONF_DEVICE_ID):
-            data[CONF_DEVICE_ID] = int(now.timestamp())
-        date = now.strftime("%Y-%m-%d")
+            data[CONF_DEVICE_ID] = int(time.time())
+        date = dt_util.now().strftime("%Y-%m-%d")
         device_name = "Home Assistant: Added " + date
 
         self.controller = SubaruAPI(

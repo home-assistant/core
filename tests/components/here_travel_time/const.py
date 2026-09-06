@@ -7,7 +7,7 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LONGITUDE,
     TRAVEL_MODE_CAR,
 )
-from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_MODE
 
 API_KEY = "test"
 
@@ -23,5 +23,4 @@ DEFAULT_CONFIG = {
     CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
     CONF_API_KEY: API_KEY,
     CONF_MODE: TRAVEL_MODE_CAR,
-    CONF_NAME: "test",
 }

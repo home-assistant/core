@@ -139,13 +139,14 @@ NUMBER_DESCRIPTIONS = {
 
 
 async def add_number_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee number entities."""
     async_add_entities(
-        HomeeNumber(attribute, config_entry, NUMBER_DESCRIPTIONS[attribute.type])
+        HomeeNumber(hass, attribute, config_entry, NUMBER_DESCRIPTIONS[attribute.type])
         for node in nodes
         for attribute in node.attributes
         if attribute.type in NUMBER_DESCRIPTIONS and attribute.data != "fixed_value"
@@ -159,7 +160,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the number component."""
 
-    await setup_homee_platform(add_number_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_number_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeNumber(HomeeEntity, NumberEntity):
@@ -169,12 +172,13 @@ class HomeeNumber(HomeeEntity, NumberEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: HomeeNumberEntityDescription,
     ) -> None:
         """Initialize a Homee number entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_native_unit_of_measurement = (

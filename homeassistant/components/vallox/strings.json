@@ -117,6 +117,7 @@
   "selector": {
     "profile": {
       "options": {
+        "auto": "[%key:common::state::auto%]",
         "away": "[%key:common::state::not_home%]",
         "boost": "Boost",
         "extra": "Extra",

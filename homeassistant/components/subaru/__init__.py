@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bo
         hass, entry, controller=controller, vehicle_info=vehicle_info
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = SubaruRuntimeData(
         controller=controller,

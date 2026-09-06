@@ -338,7 +338,9 @@ async def test_dynamic_remove_device(
     )
     assert len(all_entries) == 1
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, main_device.id)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, main_device.id), mock_config_entry.entry_id
+        )
         in all_entries
     )
 

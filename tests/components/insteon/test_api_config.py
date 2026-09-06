@@ -1,7 +1,6 @@
 """Test the Insteon APIs for configuring the integration."""
 
 import asyncio
-import json
 from unittest.mock import patch
 
 from homeassistant.components import insteon
@@ -25,7 +24,7 @@ from .mock_connection import mock_failed_connection, mock_successful_connection
 from .mock_devices import MockDevices
 from .mock_setup import async_mock_setup
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -405,7 +404,7 @@ async def test_get_broken_links(
     ws_client, _, _, _ = await async_mock_setup(hass, hass_ws_client)
     devices = MockDevices()
     await devices.async_load()
-    aldb_data = json.loads(await async_load_fixture(hass, "aldb_data.json", DOMAIN))
+    aldb_data = await async_load_json_object_fixture(hass, "aldb_data.json", DOMAIN)
     devices.fill_aldb("33.33.33", aldb_data)
     await asyncio.sleep(1)
     with patch.object(insteon.api.config, "devices", devices):

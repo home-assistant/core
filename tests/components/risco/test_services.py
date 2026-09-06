@@ -1,6 +1,5 @@
 """Tests for the Risco services."""
 
-from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_TIME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_CLOUD_CONFIG
 
@@ -23,7 +23,7 @@ async def test_set_time_service(
     """Test the set_time service."""
     with patch("homeassistant.components.risco.RiscoLocal.set_time") as mock:
         time_str = "2025-02-21T12:00:00"
-        time = datetime.fromisoformat(time_str)
+        time = dt_util.parse_datetime(time_str)
         data = {
             ATTR_CONFIG_ENTRY_ID: local_config_entry.entry_id,
             ATTR_TIME: time_str,
@@ -50,7 +50,7 @@ async def test_set_time_service_with_no_time(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
 
-        mock_set_time.assert_called_once_with(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
+        mock_set_time.assert_called_once_with(dt_util.now())
 
 
 async def test_set_time_service_with_invalid_entry(

@@ -41,7 +41,7 @@ async def test_broadcast_no_targets(
     )
 
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync"
     ) as mock_text_assistant:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -53,7 +53,7 @@ async def test_broadcast_no_targets(
         ExpectedCredentials(), language_code, audio_out=False
     )
     # pylint:disable-next=unnecessary-dunder-call
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
+    mock_text_assistant.assert_has_calls([call().__aenter__().assist(expected_command)])
 
 
 async def test_broadcast_grpc_error(
@@ -65,7 +65,7 @@ async def test_broadcast_grpc_error(
 
     with (
         patch(
-            "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+            "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
             side_effect=RpcError(),
         ) as mock_assist_call,
         pytest.raises(HomeAssistantError),
@@ -122,7 +122,7 @@ async def test_broadcast_one_target(
     )
 
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
@@ -146,7 +146,7 @@ async def test_broadcast_two_targets(
     expected_command1 = "broadcast to basement time for dinner"
     expected_command2 = "broadcast to master bedroom time for dinner"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
@@ -167,7 +167,7 @@ async def test_broadcast_empty_message(
     await setup_integration()
 
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(

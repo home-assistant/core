@@ -2,7 +2,7 @@
 
 from typing import override
 
-from homeassistant.helpers import entity
+from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from ..const import CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE, DOMAIN
@@ -61,5 +61,9 @@ class GenericHueDevice(entity.Entity):  # pylint: disable=home-assistant-enforce
             model=(self.primary_sensor.productname or self.primary_sensor.modelid),
             name=self.primary_sensor.name,
             sw_version=self.primary_sensor.swversion,
-            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.bridge.hass,
+                (DOMAIN, self.bridge.api.config.bridgeid),
+                config_entry_id=self.bridge.config_entry.entry_id,
+            ),
         )

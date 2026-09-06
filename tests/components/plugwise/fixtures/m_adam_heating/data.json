@@ -6,20 +6,24 @@
       "flame_state": false,
       "heating_state": true
     },
-    "dev_class": "heater_central",
-    "location": "bc93488efab249e5bc54fd7e175a6f91",
-    "max_dhw_temperature": {
-      "lower_bound": 40.0,
-      "resolution": 0.01,
-      "setpoint": 60.0,
-      "upper_bound": 60.0
-    },
-    "maximum_boiler_temperature": {
+    "boiler_temperature": {
+      "current": 37.0,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 50.0,
       "upper_bound": 95.0
     },
+    "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": ["comfort", "eco"],
+    "dhw_temperature": {
+      "current": 37.0,
+      "lower_bound": 40.0,
+      "resolution": 0.01,
+      "setpoint": 60.0,
+      "upper_bound": 60.0
+    },
+    "location": "bc93488efab249e5bc54fd7e175a6f91",
     "model": "Generic heater",
     "name": "OpenTherm",
     "sensors": {
@@ -36,6 +40,7 @@
       "low_battery": false
     },
     "dev_class": "zone_thermostat",
+    "firmware": "2025-11-10T01:00:00+01:00",
     "hardware": "1",
     "location": "f2bf9048bef64cc5b6d5110154e33c81",
     "model": "Emma Pro",
@@ -201,11 +206,11 @@
   "f2bf9048bef64cc5b6d5110154e33c81": {
     "active_preset": "home",
     "available_schedules": [
+      "off",
       "Badkamer",
       "Vakantie",
       "Weekschema",
-      "Test",
-      "off"
+      "Test"
     ],
     "climate_mode": "heat",
     "control_state": "preheating",
@@ -240,11 +245,11 @@
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
     "available_schedules": [
+      "off",
       "Badkamer",
       "Vakantie",
       "Weekschema",
-      "Test",
-      "off"
+      "Test"
     ],
     "climate_mode": "auto",
     "control_state": "idle",

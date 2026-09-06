@@ -26,6 +26,15 @@ DEVICE = Device(1234, 5678, "test-device")
 SECOND_DEVICE = Device(5678, 9999, "second-device")
 
 
+async def _start_user_flow(hass: HomeAssistant) -> dict:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    return result
+
+
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -37,6 +46,8 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test entry creation only stores credentials, not the device list."""
+    result = await _start_user_flow(hass)
+
     with (
         patch(
             "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
@@ -44,8 +55,8 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         ),
         patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=INPUT_CONFIG
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -66,12 +77,14 @@ async def test_user_flow_errors(
     hass: HomeAssistant, side_effect: Exception, expected_error: str
 ) -> None:
     """Test error handling in the user step keeps the form open with errors."""
+    result = await _start_user_flow(hass)
+
     with patch(
         "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=INPUT_CONFIG
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -80,12 +93,14 @@ async def test_user_flow_errors(
 
 async def test_no_devices_abort(hass: HomeAssistant) -> None:
     """Test we abort if the account has no devices."""
+    result = await _start_user_flow(hass)
+
     with patch(
         "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=INPUT_CONFIG
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -98,8 +113,10 @@ async def test_already_configured_aborts(
     """Test entries with the same username can't be configured twice."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
+    result = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=INPUT_CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT

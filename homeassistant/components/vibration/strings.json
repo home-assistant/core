@@ -1,0 +1,61 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more vibration sensors are detecting vibration.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::vibration::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vibration::common::condition_for_name%]"
+        }
+      },
+      "name": "Vibration is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more vibration sensors are not detecting vibration.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::vibration::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vibration::common::condition_for_name%]"
+        }
+      },
+      "name": "Vibration is not detected"
+    }
+  },
+  "title": "Vibration",
+  "triggers": {
+    "cleared": {
+      "description": "Triggers when one or more vibration sensors stop detecting vibration.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::vibration::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vibration::common::trigger_for_name%]"
+        }
+      },
+      "name": "Vibration cleared"
+    },
+    "detected": {
+      "description": "Triggers when one or more vibration sensors start detecting vibration.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::vibration::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vibration::common::trigger_for_name%]"
+        }
+      },
+      "name": "Vibration detected"
+    }
+  }
+}

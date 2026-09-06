@@ -42,6 +42,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.setup import async_setup_component
 
+from .conftest import TEST_LLM_API_ID, MockLLMAPI
+
 from tests.common import MockConfigEntry, setup_test_component_platform
 from tests.components.light.common import MockLight
 from tests.typing import ClientSessionGenerator
@@ -50,7 +52,6 @@ _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
-TEST_LLM_API_ID = "test-api"
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
     "id": "request-id-1",
@@ -71,21 +72,6 @@ EXPECTED_PROMPT_ENTITY_DEFINITION = """
   domain: light
   areas: Kitchen
 """
-
-
-class MockLLMAPI(llm.API):
-    """Test LLM API that does not expose any tools."""
-
-    async def async_get_api_instance(
-        self, llm_context: llm.LLMContext
-    ) -> llm.APIInstance:
-        """Return a test API instance."""
-        return llm.APIInstance(
-            api=self,
-            api_prompt="Test prompt",
-            llm_context=llm_context,
-            tools=[],
-        )
 
 
 @pytest.fixture
@@ -289,6 +275,40 @@ async def test_http_messages_no_config_entry(
     assert "Could not find session ID" in response_data
 
 
+async def test_options_flow_closes_sessions(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test an open SSE session is closed when the selected APIs change."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+    client = await hass_client()
+
+    # Start an SSE session
+    response = await client.get(SSE_API)
+    assert response.status == HTTPStatus.OK
+    reader = sse_response_reader(response)
+    event, endpoint_url = await anext(reader)
+    assert event == "endpoint"
+
+    # Change the exposed LLM APIs
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_LLM_HASS_API: [TEST_LLM_API_ID]},
+    )
+    await hass.async_block_till_done()
+
+    # The session serving the previous APIs is gone
+    response = await client.post(endpoint_url, json=INITIALIZE_MESSAGE)
+    assert response.status == HTTPStatus.NOT_FOUND
+    response_data = await response.text()
+    assert "Could not find session ID" in response_data
+
+
 async def test_http_requires_authentication(
     hass: HomeAssistant,
     setup_integration: None,
@@ -385,8 +405,10 @@ async def test_mcp_tools_list(
 
     # Pick a single arbitrary tool and test that description and parameters
     # are converted correctly.
-    tool = next(iter(tool for tool in result.tools if tool.name == "HassTurnOn"))
-    assert tool.name == "HassTurnOn"
+    tool = next(
+        iter(tool for tool in result.tools if tool.name == "intent__HassTurnOn")
+    )
+    assert tool.name == "intent__HassTurnOn"
     assert tool.description is not None
     assert tool.inputSchema
     assert tool.inputSchema.get("type") == "object"
@@ -410,7 +432,7 @@ async def test_mcp_tool_call(
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
-            name="HassTurnOn",
+            name="intent__HassTurnOn",
             arguments={"name": "kitchen light"},
         )
 
@@ -439,7 +461,7 @@ async def test_mcp_tool_call_failed(
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
-            name="HassTurnOn",
+            name="intent__HassTurnOn",
             arguments={"name": "backyard"},
         )
 
@@ -713,3 +735,62 @@ async def test_streamable_api_id_unknown(
     )
     assert response.status == HTTPStatus.NOT_FOUND
     assert "Unknown LLM API" in await response.text()
+
+
+@pytest.mark.parametrize(
+    ("require_admin", "expected_status"),
+    [
+        pytest.param(False, HTTPStatus.OK, id="not_required"),
+        pytest.param(True, HTTPStatus.UNAUTHORIZED, id="required"),
+    ],
+)
+async def test_require_admin_option(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    expected_status: HTTPStatus,
+) -> None:
+    """Test the require admin option applied to a non-admin user."""
+    client = await hass_client(hass_read_only_access_token)
+
+    response = await client.post(
+        STREAMABLE_API,
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == expected_status
+
+
+@pytest.mark.parametrize("require_admin", [True])
+async def test_require_admin_blocks_sse_endpoints(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the require admin option applied to the SSE endpoints."""
+    client = await hass_client(hass_read_only_access_token)
+
+    response = await client.get(SSE_API)
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+    response = await client.post(MESSAGES_API.format(session_id="session-id"))
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize("require_admin", [True])
+async def test_require_admin_allows_admin(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test an admin user may use the endpoint that requires an admin."""
+    client = await hass_client()
+
+    response = await client.post(
+        STREAMABLE_API,
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.OK

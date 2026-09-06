@@ -570,7 +570,7 @@ async def test_stop_covers(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(COVER_GROUP)
-    assert state.state == CoverState.OPENING
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 50  # (20 + 80) / 2
 
     assert hass.states.get(DEMO_COVER).state == CoverState.OPEN

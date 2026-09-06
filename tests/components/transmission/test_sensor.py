@@ -73,6 +73,11 @@ async def test_stats_sensors(
     assert state is not None
     assert float(state.state) == pytest.approx(0.8, rel=1e-3)
 
+    # Free disk space: 40 GiB = 40.0 GiB
+    state = hass.states.get("sensor.transmission_available_disk_space")
+    assert state is not None
+    assert float(state.state) == pytest.approx(40.0, rel=1e-3)
+
 
 def test_get_state_combinations() -> None:
     """Test get_state with all upload/download combinations."""

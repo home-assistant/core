@@ -6,6 +6,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 
@@ -174,3 +175,73 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("mock_kwargs", "expected_reauth_flows"),
+    [
+        ({"exc": aiohttp.ClientError("Network error")}, 0),
+        ({"status": http.HTTPStatus.BAD_REQUEST}, 1),
+    ],
+    ids=["transient_error", "auth_error"],
+)
+async def test_runtime_token_refresh_failures(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    mock_kwargs: dict[str, Any],
+    expected_reauth_flows: int,
+) -> None:
+    """Test transient and auth errors during runtime token refresh."""
+    # We purposefully do not use `mock_api` here. We mock the raw HTTP endpoints
+    # so the integration exercises its own auth layer during runtime polling.
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/files",
+        json={"files": []},
+    )
+    aioclient_mock.post(
+        "https://www.googleapis.com/drive/v3/files",
+        json={"id": "folder_id", "name": "folder_name"},
+    )
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/about",
+        json={
+            "user": {"emailAddress": "test@domain.com"},
+            "storageQuota": {
+                "limit": 100,
+                "usage": 50,
+                "usageInDrive": 20,
+                "usageInTrash": 10,
+            },
+        },
+    )
+
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Force token expiration
+    new_data = {**config_entry.data}
+    new_data["token"] = {**new_data["token"], "expires_at": time.time() - 3600}
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+    # Mock the token refresh endpoint to fail according to the parameter
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        **mock_kwargs,
+    )
+
+    # The expired token forces a refresh during the update, hitting our mock.
+    coordinator = config_entry.runtime_data
+    await coordinator.async_refresh()
+
+    reauth_flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        if flow["step_id"] == "reauth_confirm"
+    ]
+
+    # In both cases, the coordinator update should safely fail
+    assert not coordinator.last_update_success
+    assert len(reauth_flows) == expected_reauth_flows

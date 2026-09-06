@@ -3,8 +3,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -25,7 +25,6 @@
       'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -88,8 +87,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -110,7 +109,6 @@
       'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -221,8 +219,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -243,7 +241,6 @@
       'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -354,8 +351,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -376,7 +373,6 @@
       'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -487,8 +483,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -509,7 +505,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Cooking',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -524,8 +519,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -546,7 +541,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Standby',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -561,8 +555,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -583,7 +577,6 @@
       'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -598,8 +591,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -620,7 +613,6 @@
       'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -635,8 +627,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -657,7 +649,6 @@
       'model_id': None,
       'name': 'Humidifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -768,8 +759,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -790,7 +781,6 @@
       'model_id': None,
       'name': 'Humidifier 6000s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -997,8 +987,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1019,7 +1009,6 @@
       'model_id': None,
       'name': 'Humidifier 600S',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1130,8 +1119,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1152,7 +1141,6 @@
       'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1216,8 +1204,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1238,7 +1226,6 @@
       'model_id': None,
       'name': 'SmartTowerFan',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1301,8 +1288,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1323,7 +1310,6 @@
       'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1338,8 +1324,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1360,7 +1346,6 @@
       'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1424,8 +1409,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1446,7 +1431,6 @@
       'model_id': None,
       'name': 'CoreBreeze 432S',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,

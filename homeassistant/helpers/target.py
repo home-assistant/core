@@ -155,6 +155,44 @@ class SelectedEntities:
         )
 
 
+@callback
+def _resolve_referenced_devices(
+    dev_reg: dr.DeviceRegistry, device_ids: set[str], selected: SelectedEntities
+) -> None:
+    """Resolve targeted device ids into referenced device ids."""
+    for device_id in device_ids:
+        device = dev_reg.async_get(device_id)
+        if device is None:
+            selected.missing_devices.add(device_id)
+            selected.referenced_devices.add(device_id)
+        elif isinstance(device, dr.ChildDeviceEntry):
+            selected.referenced_devices.add(device_id)
+        elif split_devices := dev_reg.async_get_devices_for_composite_device_id(
+            device_id
+        ):
+            # A multi config entry composite device id is no longer a device itself;
+            # it resolves to the devices it was split into so actions targeting it
+            # still trickle down. Only the splits are referenced, not the composite id,
+            # so a device-id consumer does not act on the same underlying device twice.
+            # Each split's children are included too, matching the direct-device branch.
+            for split_device in split_devices:
+                selected.referenced_devices.add(split_device.id)
+                selected.referenced_devices.update(
+                    child_device.id
+                    for child_device in dr.async_entries_for_parent_device(
+                        dev_reg, split_device.id
+                    )
+                )
+        else:
+            selected.referenced_devices.add(device_id)
+            selected.referenced_devices.update(
+                child_device.id
+                for child_device in dr.async_entries_for_parent_device(
+                    dev_reg, device_id
+                )
+            )
+
+
 def async_extract_referenced_entity_ids(
     hass: HomeAssistant,
     target_selection: TargetSelection,
@@ -205,9 +243,7 @@ def async_extract_referenced_entity_ids(
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
-    for device_id in target_selection.device_ids:
-        if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)
+    _resolve_referenced_devices(dev_reg, target_selection.device_ids, selected)
 
     if target_selection.label_ids:
         label_reg = lr.async_get(hass)
@@ -219,7 +255,11 @@ def async_extract_referenced_entity_ids(
                 if entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
-            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
+            # Labels are never inherited by child devices (see
+            # dr.async_entries_for_label): a labeled parent is not expanded into its
+            # children. Only devices that carry the label themselves are targeted,
+            # which is consistent with template label_devices() and search.
+            for device_entry in dr.async_entries_for_label(dev_reg, label_id):
                 selected.referenced_devices.add(device_entry.id)
 
             for area_entry in area_reg.areas.get_areas_for_label(label_id):
@@ -234,7 +274,6 @@ def async_extract_referenced_entity_ids(
         )
 
     selected.referenced_areas.update(target_selection.area_ids)
-    selected.referenced_devices.update(target_selection.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
@@ -259,7 +298,7 @@ def async_extract_referenced_entity_ids(
         for area_id in selected.referenced_areas:
             referenced_devices_by_area.update(
                 device_entry.id
-                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+                for device_entry in dr.async_entries_for_area(dev_reg, area_id)
             )
     selected.referenced_devices.update(referenced_devices_by_area)
 
@@ -336,7 +375,8 @@ class TargetEntityChangeTracker(abc.ABC):
         # Subscribe to registry updates that can change the entities to track:
         # - Entity registry: entity added/removed;
         #   entity labels changed; entity area changed.
-        # - Device registry: device labels changed; device area changed.
+        # - Device registry: device labels changed; device area changed;
+        #   child device added/removed under a targeted parent.
         # - Area registry: area floor changed.
         #
         # We don't track other registries (like floor or label registries) because their

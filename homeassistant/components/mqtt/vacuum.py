@@ -12,6 +12,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -136,7 +137,7 @@ _FEATURE_PAYLOADS = {
 
 MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
     {
-        vacuum.ATTR_FAN_SPEED,
+        VacuumEntityStateAttribute.FAN_SPEED,
     }
 )
 

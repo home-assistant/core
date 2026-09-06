@@ -1,7 +1,6 @@
 """Fixtures for the IRM KMI integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import MagicMock, patch
 
 from irm_kmi_api import IrmKmiApiError
@@ -15,7 +14,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -77,7 +76,7 @@ def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked IrmKmi api client."""
     fixture: str = "forecast.json"
 
-    forecast = json.loads(load_fixture(fixture, "irm_kmi"))
+    forecast = load_json_object_fixture(fixture, "irm_kmi")
     with patch(
         "homeassistant.components.irm_kmi.IrmKmiApiClientHa", autospec=True
     ) as irm_kmi_api_mock:
@@ -90,7 +89,7 @@ def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 def mock_irm_kmi_api_nl():
     """Mock get_forecasts_coord() to return a Netherlands forecast."""
     fixture: str = "forecast_nl.json"
-    forecast = json.loads(load_fixture(fixture, "irm_kmi"))
+    forecast = load_json_object_fixture(fixture, "irm_kmi")
     with patch(
         "homeassistant.components.irm_kmi.coordinator.IrmKmiApiClientHa.get_forecasts_coord",
         return_value=forecast,
@@ -102,7 +101,7 @@ def mock_irm_kmi_api_nl():
 def mock_irm_kmi_api_high_low_temp():
     """Mock get_forecasts_coord() to return high_low_temp forecast."""
     fixture: str = "high_low_temp.json"
-    forecast = json.loads(load_fixture(fixture, "irm_kmi"))
+    forecast = load_json_object_fixture(fixture, "irm_kmi")
     with patch(
         "homeassistant.components.irm_kmi.coordinator.IrmKmiApiClientHa.get_forecasts_coord",
         return_value=forecast,

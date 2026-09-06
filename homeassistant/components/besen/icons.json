@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "charging": {
+        "default": "mdi:ev-plug-type2"
+      }
+    }
+  }
+}

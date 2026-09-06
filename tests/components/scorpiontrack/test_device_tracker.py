@@ -1,14 +1,14 @@
 """Test the ScorpionTrack device tracker platform."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyscorpiontrack import ScorpionTrackConnectionError, ScorpionTrackShare
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scorpiontrack.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,7 +24,10 @@ async def test_device_tracker_state(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the ScorpionTrack device tracker state and attributes."""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.scorpiontrack.PLATFORMS", (Platform.DEVICE_TRACKER,)
+    ):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

@@ -1,5 +1,7 @@
 """The tests for the Template fan platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -14,9 +16,12 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
     NotValidPresetModeError,
 )
+from homeassistant.components.template.fan import DEFAULT_NAME
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
@@ -26,6 +31,10 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1436,6 +1445,21 @@ async def test_flow_preview(
             },
         ),
         (
+            # Missing Key
+            STATE_ON,
+            {
+                "is_on": True,
+                "percentage": 0,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "is_on": True,
@@ -1596,3 +1620,145 @@ async def test_restore_state(
     assert state.attributes["preset_mode"] == "low"
     assert state.attributes["oscillating"] is True
     assert state.attributes["direction"] == DIRECTION_REVERSE
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        ("set_direction", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_oscillating", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_percentage", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_preset_mode", OPTIMISTIC_ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_FAN, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        ("set_direction", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_oscillating", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_percentage", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_preset_mode", OPTIMISTIC_ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_FAN, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_FAN, style, {"state": "{{ 'on' }}", **OPTIMISTIC_ON_OFF_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(FanEntityCapabilityAttribute, FanEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_FAN,
+        style,
+        0,
+        {
+            "state": "{{ 'on' }}",
+            **OPTIMISTIC_ON_OFF_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_FAN,
+        style,
+        {"state": "{{ 'on' }}", **OPTIMISTIC_ON_OFF_ACTIONS},
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(FanEntityCapabilityAttribute, FanEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_FAN,
+        style,
+        1,
+        {
+            "state": "{{ 'on' }}",
+            **OPTIMISTIC_ON_OFF_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_FAN.entity_id}: {attribute}"
+    assert error in caplog.text

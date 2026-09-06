@@ -68,9 +68,7 @@ async def test_user_flow_no_new_device(
     valid_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=None,
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     await hass.async_block_till_done()

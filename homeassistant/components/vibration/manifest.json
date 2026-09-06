@@ -1,0 +1,8 @@
+{
+  "domain": "vibration",
+  "name": "Vibration",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/vibration",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

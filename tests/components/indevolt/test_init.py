@@ -46,8 +46,8 @@ async def test_device_info(
     await setup_integration(hass, mock_config_entry)
 
     device_info = DEVICE_MAPPING[generation]
-    device_entry = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, device_info["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, device_info["mac"]), mock_config_entry.entry_id
     )
 
     assert device_entry is not None

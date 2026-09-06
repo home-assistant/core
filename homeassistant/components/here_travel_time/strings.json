@@ -50,8 +50,7 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "mode": "Travel mode",
-          "name": "[%key:common::config_flow::data::name%]"
+          "mode": "Travel mode"
         }
       }
     }

@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     MediaPlayerEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
@@ -38,7 +38,8 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Jellyfin component."""
 
     service.async_register_platform_entity_service(

@@ -34,6 +34,7 @@ async def test_reauth_setup_entry(hass: HomeAssistant, client) -> None:
 
 async def test_key_update_setup_entry(hass: HomeAssistant, client) -> None:
     """Test key update from setup entry."""
+    client.is_connected.return_value = False
     client.client_key = "new_key"
     entry = await setup_webostv(hass)
 

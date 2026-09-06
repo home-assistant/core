@@ -27,7 +27,7 @@ async def async_setup_entry(
     if data.channels:
         # NVR with video channels from get_video_channels()
         async_add_entities(
-            HikvisionCamera(entry, channel)
+            HikvisionCamera(hass, entry, channel)
             for channel in data.channels.values()
             if channel.enabled
         )
@@ -36,6 +36,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 HikvisionCamera(
+                    hass,
                     entry,
                     VideoChannel(id=1, name=data.device_name, enabled=True),
                 )
@@ -51,11 +52,12 @@ class HikvisionCamera(HikvisionEntity, Camera):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         channel: VideoChannel,
     ) -> None:
         """Initialize the camera."""
-        super().__init__(entry, channel.id)
+        super().__init__(hass, entry, channel.id)
         self._video_channel = channel
 
         # Build unique ID (unique per platform per integration)

@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Any
 
+from aiohttp import ClientError
 from thinqconnect import (
     DeviceType,
     ThinQApi,
@@ -58,7 +59,8 @@ class ThinQMQTT:
         if self.client is not None:
             try:
                 await self.client.async_disconnect()
-            except ThinQAPIException, TypeError, ValueError:
+            except ThinQAPIException, TypeError, ValueError, ClientError, TimeoutError:
+                # Saying goodbye is a courtesy, never a reason to fail the unload
                 _LOGGER.exception("Failed to disconnect")
 
     def _get_failed_device_count(

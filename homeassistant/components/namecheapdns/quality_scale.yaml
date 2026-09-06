@@ -103,7 +103,9 @@ rules:
     status: exempt
     comment: integration has no entities or actions
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: integration has no repairs
   stale-devices:
     status: exempt
     comment: integration has no devices

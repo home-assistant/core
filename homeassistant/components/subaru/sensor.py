@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -23,15 +22,12 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import get_device_info
 from .const import (
     API_GEN_2,
     API_GEN_3,
@@ -42,9 +38,9 @@ from .const import (
     VEHICLE_HAS_EV,
     VEHICLE_HEALTH,
     VEHICLE_STATUS,
-    VEHICLE_VIN,
 )
 from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
+from .entity import SubaruCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -228,7 +224,6 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data.coordinator
     vehicle_info = config_entry.runtime_data.vehicles
     entities = []
-    await _async_migrate_entries(hass, config_entry)
     for info in vehicle_info.values():
         entities.extend(create_vehicle_sensors(info, coordinator))
     async_add_entities(entities)
@@ -260,10 +255,9 @@ def create_vehicle_sensors(
     ]
 
 
-class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity):
+class SubaruSensor(SubaruCoordinatorEntity, SensorEntity):
     """Class for Subaru sensors."""
 
-    _attr_has_entity_name = True
     entity_description: SubaruSensorEntityDescription
 
     def __init__(
@@ -273,11 +267,8 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         description: SubaruSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.vin = vehicle_info[VEHICLE_VIN]
+        super().__init__(vehicle_info, coordinator, description.key)
         self.entity_description = description
-        self._attr_device_info = get_device_info(vehicle_info)
-        self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
     @override
@@ -311,63 +302,3 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         ):
             return FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS
         return self.entity_description.native_unit_of_measurement
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        last_update_success = super().available
-        if last_update_success and self.vin not in self.coordinator.data:
-            return False
-        return last_update_success
-
-
-async def _async_migrate_entries(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Migrate sensor entries from HA<=2022.10 to use preferred unique_id."""
-    entity_registry = er.async_get(hass)
-
-    replacements = {
-        "ODOMETER": sc.ODOMETER,
-        "AVG FUEL CONSUMPTION": sc.AVG_FUEL_CONSUMPTION,
-        "RANGE": sc.DIST_TO_EMPTY,
-        "TIRE PRESSURE FL": sc.TIRE_PRESSURE_FL,
-        "TIRE PRESSURE FR": sc.TIRE_PRESSURE_FR,
-        "TIRE PRESSURE RL": sc.TIRE_PRESSURE_RL,
-        "TIRE PRESSURE RR": sc.TIRE_PRESSURE_RR,
-        "FUEL LEVEL": sc.REMAINING_FUEL_PERCENT,
-        "EV RANGE": sc.EV_DISTANCE_TO_EMPTY,
-        "EV BATTERY LEVEL": sc.EV_STATE_OF_CHARGE_PERCENT,
-        "EV TIME TO FULL CHARGE": sc.EV_TIME_TO_FULLY_CHARGED_UTC,
-    }
-
-    @callback
-    def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:
-        id_split = entry.unique_id.split("_")
-        key = id_split[1].upper() if len(id_split) == 2 else None
-
-        if key not in replacements or id_split[1] == replacements[key]:
-            return None
-
-        new_unique_id = entry.unique_id.replace(id_split[1], replacements[key])
-        _LOGGER.debug(
-            "Migrating entity '%s' unique_id from '%s' to '%s'",
-            entry.entity_id,
-            entry.unique_id,
-            new_unique_id,
-        )
-        if existing_entity_id := entity_registry.async_get_entity_id(
-            entry.domain, entry.platform, new_unique_id
-        ):
-            _LOGGER.debug(
-                "Cannot migrate to unique_id '%s', already exists for '%s'",
-                new_unique_id,
-                existing_entity_id,
-            )
-            return None
-        return {
-            "new_unique_id": new_unique_id,
-        }
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)

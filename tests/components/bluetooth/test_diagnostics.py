@@ -565,6 +565,14 @@ async def test_diagnostics_remote_adapter(
                         "slots": 5,
                         "source": "00:00:00:00:00:01",
                     },
+                    # Registering a connectable scanner seeds a zeroed
+                    # entry (slots=0 means no slot info reported yet).
+                    "esp32": {
+                        "allocated": [],
+                        "free": 0,
+                        "slots": 0,
+                        "source": "esp32",
+                    },
                 },
                 "adapters": {
                     "hci0": {

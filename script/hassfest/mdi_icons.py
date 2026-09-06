@@ -8,6 +8,7 @@ from .model import Config, Integration
 from .serializer import format_python_namespace
 
 _TARGET = "pylint/plugins/pylint_home_assistant/generated/mdi_icons.py"
+_REQUIREMENT_PREFIX = "home-assistant-frontend=="
 
 
 def _get_frontend_version() -> str | None:
@@ -16,6 +17,14 @@ def _get_frontend_version() -> str | None:
         return version("home-assistant-frontend")
     except PackageNotFoundError:
         return None
+
+
+def _get_pinned_frontend_version(integrations: dict[str, Integration]) -> str | None:
+    """Get the home-assistant-frontend version pinned in the frontend manifest."""
+    for requirement in integrations["frontend"].requirements:
+        if requirement.startswith(_REQUIREMENT_PREFIX):
+            return requirement.removeprefix(_REQUIREMENT_PREFIX)
+    return None
 
 
 def _load_mdi_icons() -> set[str]:
@@ -33,6 +42,10 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate the generated MDI icons file is up to date."""
     frontend_version = _get_frontend_version()
     if frontend_version is None:
+        return
+
+    pinned_version = _get_pinned_frontend_version(integrations)
+    if pinned_version is not None and pinned_version != frontend_version:
         return
 
     icons = _load_mdi_icons()

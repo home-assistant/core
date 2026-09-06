@@ -552,13 +552,12 @@ def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_check_package_fragment(caplog: pytest.LogCaptureFixture) -> None:
     """Test for an installed package with a fragment."""
+    url = "git+https://github.com/home-assistant/core"
+
     assert not package.is_installed(TEST_ZIP_REQ)
-    assert package.is_installed("git+https://github.com/pypa/pip#pip>=1")
-    assert not package.is_installed("git+https://github.com/pypa/pip#-1 invalid")
-    assert (
-        "Invalid requirement 'git+https://github.com/pypa/pip#-1 invalid'"
-        in caplog.text
-    )
+    assert package.is_installed(f"{url}#homeassistant>=1")
+    assert not package.is_installed(f"{url}#-1 invalid")
+    assert f"Invalid requirement '{url}#-1 invalid'" in caplog.text
 
 
 def test_get_is_installed() -> None:

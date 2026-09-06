@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -109,13 +110,30 @@ def registries_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    device_in_area = dr.DeviceEntry(id="device-test-area", area_id="test-area")
-    device_no_area = dr.DeviceEntry(id="device-no-area-id")
-    device_diff_area = dr.DeviceEntry(id="device-diff-area", area_id="diff-area")
-    device_area_a = dr.DeviceEntry(id="device-area-a-id", area_id="area-a")
-    device_has_label1 = dr.DeviceEntry(id="device-has-label1-id", labels={"label1"})
-    device_has_label2 = dr.DeviceEntry(id="device-has-label2-id", labels={"label2"})
+    device_in_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-test-area", area_id="test-area"
+    )
+    device_no_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-no-area-id"
+    )
+    device_diff_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-diff-area", area_id="diff-area"
+    )
+    device_area_a = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-area-a-id", area_id="area-a"
+    )
+    device_has_label1 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry",
+        id="device-has-label1-id",
+        labels={"label1"},
+    )
+    device_has_label2 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry",
+        id="device-has-label2-id",
+        labels={"label2"},
+    )
     device_has_labels = dr.DeviceEntry(
+        config_entry_id="mock-config-entry",
         id="device-has-labels-id",
         labels={"label1", "label2"},
         area_id=area_with_labels.id,
@@ -495,6 +513,7 @@ async def test_extract_referenced_entity_ids(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     target_selection = selection_class(selector_config)
@@ -988,3 +1007,280 @@ async def test_async_track_target_selector_no_on_entities_update(
     assert len(events) == 1
 
     unsub()
+
+
+COMPOSITE_ID = "composite0000000000000000000000"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_target_trickle_down_to_splits(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Targeting the legacy id reaches the split devices' entities."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 10,
+        "data": {
+            "devices": [
+                {
+                    "area_id": "area_1",
+                    "config_entries": [entry_a.entry_id, entry_b.entry_id],
+                    "config_entries_subentries": {
+                        entry_a.entry_id: [None],
+                        entry_b.entry_id: [None],
+                    },
+                    "configuration_url": None,
+                    "connections": [["mac", "12:34:56:ab:cd:ef"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": COMPOSITE_ID,
+                    "identifiers": [["domain_a", "1"], ["domain_b", "1"]],
+                    "labels": ["lab"],
+                    "manufacturer": "man",
+                    "model": "mod",
+                    "name": "composite",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": "custom name",
+                    "primary_config_entry": entry_a.entry_id,
+                    "serial_number": "SERIAL",
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "entity_id": "sensor.a",
+                    "platform": "domain_a",
+                    "unique_id": "a",
+                    "config_entry_id": entry_a.entry_id,
+                    "device_id": COMPOSITE_ID,
+                },
+                {
+                    "entity_id": "sensor.b",
+                    "platform": "domain_b",
+                    "unique_id": "b",
+                    "config_entry_id": entry_b.entry_id,
+                    "device_id": COMPOSITE_ID,
+                },
+            ]
+        },
+    }
+
+    dr.async_setup(hass)
+    await ar.async_load(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"device_id": COMPOSITE_ID})
+    )
+    assert COMPOSITE_ID not in selected.missing_devices
+    splits = {
+        d.id
+        for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
+    }
+    # The composite id resolves to its splits only; it is not itself referenced (it is not
+    # a real device), so a device-id consumer does not act on the same device twice.
+    assert selected.referenced_devices == splits
+    assert COMPOSITE_ID not in selected.referenced_devices
+    assert selected.indirectly_referenced == {"sensor.a", "sensor.b"}
+
+    # A child of a split device is reached too, matching a direct device target
+    split_a = next(
+        d
+        for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
+        if entry_a.entry_id in d.config_entries
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry_a.entry_id,
+        identifiers={("domain_a", "child")},
+        parent_device_id=split_a.id,
+        name="Child",
+    )
+    entity_registry = er.async_get(hass)
+    child_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "domain_a",
+        "child",
+        config_entry=entry_a,
+        device_id=child.id,
+    ).entity_id
+
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"device_id": COMPOSITE_ID})
+    )
+    assert selected.referenced_devices == splits | {child.id}
+    assert selected.indirectly_referenced == {"sensor.a", "sensor.b", child_entity}
+
+
+@pytest.fixture
+def child_device_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> dict[str, str]:
+    """Create a parent device with child devices and entities.
+
+    The parent is in the garage with the label strip-label. Outlet 1 inherits the
+    parent's area, outlet 2 has its own area (garden) and label (outlet-label).
+    """
+    config_entry = MockConfigEntry(title=None)
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(
+        parent.id, area_id="garage", labels={"strip-label"}
+    )
+    outlet_1 = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    outlet_2 = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_2")},
+        parent_device_id=parent.id,
+        name="Outlet 2",
+    )
+    device_registry.async_update_child_device(
+        outlet_2.id, area_id="garden", labels={"outlet-label"}
+    )
+
+    entity_ids: dict[str, str] = {}
+    for key, object_id, device_id in (
+        ("strip_switch", "strip", parent.id),
+        ("outlet_1_switch", "outlet_1", outlet_1.id),
+        ("outlet_2_switch", "outlet_2", outlet_2.id),
+    ):
+        entity_ids[key] = entity_registry.async_get_or_create(
+            "switch",
+            "test",
+            object_id,
+            config_entry=config_entry,
+            device_id=device_id,
+            suggested_object_id=object_id,
+        ).entity_id
+    # An entity on outlet 1 with an explicitly set area
+    own_area_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "outlet_1_energy",
+        config_entry=config_entry,
+        device_id=outlet_1.id,
+        suggested_object_id="outlet_1_energy",
+    )
+    entity_registry.async_update_entity(own_area_entry.entity_id, area_id="attic")
+    entity_ids["outlet_1_energy"] = own_area_entry.entity_id
+
+    return {
+        "parent": parent.id,
+        "outlet_1": outlet_1.id,
+        "outlet_2": outlet_2.id,
+        **entity_ids,
+    }
+
+
+async def test_extract_parent_device_includes_child_devices(
+    hass: HomeAssistant,
+    child_device_setup: dict[str, str],
+) -> None:
+    """Test targeting a parent device expands to its child devices' entities."""
+    ids = child_device_setup
+
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"device_id": ids["parent"]})
+    )
+    assert selected.referenced_devices == {
+        ids["parent"],
+        ids["outlet_1"],
+        ids["outlet_2"],
+    }
+    assert selected.indirectly_referenced == {
+        ids["strip_switch"],
+        ids["outlet_1_switch"],
+        ids["outlet_2_switch"],
+        ids["outlet_1_energy"],
+    }
+
+    # Targeting a child device directly targets only the child device
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"device_id": ids["outlet_1"]})
+    )
+    assert selected.referenced_devices == {ids["outlet_1"]}
+    assert selected.indirectly_referenced == {
+        ids["outlet_1_switch"],
+        ids["outlet_1_energy"],
+    }
+
+
+async def test_extract_area_with_child_devices(
+    hass: HomeAssistant,
+    child_device_setup: dict[str, str],
+) -> None:
+    """Test area targeting includes child devices by effective area."""
+    ids = child_device_setup
+
+    # The garage contains the parent and the inheriting child device; the entity
+    # with its own area and the child device with its own area are not included
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"area_id": "garage"})
+    )
+    assert selected.referenced_devices == {ids["parent"], ids["outlet_1"]}
+    assert selected.indirectly_referenced == {
+        ids["strip_switch"],
+        ids["outlet_1_switch"],
+    }
+
+    # The garden contains only the child device with that area set explicitly
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"area_id": "garden"})
+    )
+    assert selected.referenced_devices == {ids["outlet_2"]}
+    assert selected.indirectly_referenced == {ids["outlet_2_switch"]}
+
+
+async def test_extract_label_with_child_devices(
+    hass: HomeAssistant,
+    child_device_setup: dict[str, str],
+) -> None:
+    """Test labels are not inherited by child devices when targeting.
+
+    A labeled parent targets only the parent and its own entities; a labeled child
+    targets only that child. This mirrors dr.async_entries_for_label, which
+    documents that labels are never inherited from the parent.
+    """
+    ids = child_device_setup
+
+    # The label is on the parent; it does not expand to the child devices, and only
+    # the parent's own entities are indirectly referenced.
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"label_id": "strip-label"})
+    )
+    assert selected.referenced_devices == {ids["parent"]}
+    assert selected.indirectly_referenced == {ids["strip_switch"]}
+
+    # A label on a child device targets only the child device
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"label_id": "outlet-label"})
+    )
+    assert selected.referenced_devices == {ids["outlet_2"]}
+    assert selected.indirectly_referenced == {ids["outlet_2_switch"]}

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyportainer import PortainerEventListener
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
@@ -136,6 +137,29 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         client.container_recreate = AsyncMock(return_value=None)
 
         yield client
+
+
+@pytest.fixture(autouse=True)
+def mock_portainer_event_listeners() -> Generator[dict[int, MagicMock]]:
+    """Mock PortainerEventListener; one MagicMock instance per endpoint_id.
+
+    Autouse because the real listener reconnects in a tight loop when its
+    event stream ends immediately, as the mocked client's does.
+    """
+    instances: dict[int, MagicMock] = {}
+
+    def _factory(
+        portainer: MagicMock, endpoint_id: int | None = None, **kwargs
+    ) -> MagicMock:
+        instance = MagicMock(spec=PortainerEventListener)
+        instances[endpoint_id] = instance
+        return instance
+
+    with patch(
+        "homeassistant.components.portainer.coordinator.PortainerEventListener",
+        side_effect=_factory,
+    ):
+        yield instances
 
 
 @pytest.fixture

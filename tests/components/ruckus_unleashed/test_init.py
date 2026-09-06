@@ -60,13 +60,12 @@ async def test_router_device_setup(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test a router device is created."""
-    await init_integration(hass)
+    entry = await init_integration(hass)
 
     device_info = DEFAULT_AP_INFO[0]
 
-    device = device_registry.async_get_device(
-        identifiers={(CONNECTION_NETWORK_MAC, device_info[API_AP_MAC])},
-        connections={(CONNECTION_NETWORK_MAC, device_info[API_AP_MAC])},
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, device_info[API_AP_MAC]), entry.entry_id
     )
 
     assert device

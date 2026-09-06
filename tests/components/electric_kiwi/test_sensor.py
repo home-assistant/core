@@ -4,10 +4,11 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 import zoneinfo
 
+from electrickiwi_api.model import AccountSummary
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.electric_kiwi.const import ATTRIBUTION
+from homeassistant.components.electric_kiwi.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.electric_kiwi.sensor import _check_and_move_time
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -22,7 +23,7 @@ from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TZ_NAME = "Pacific/Auckland"
@@ -128,6 +129,29 @@ async def test_account_sensors(
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
     assert state.attributes.get(ATTR_STATE_CLASS) == state_class
+
+
+async def test_hop_percentage_without_power_connections(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    electrickiwi_api: AsyncMock,
+    ek_auth: AsyncMock,
+) -> None:
+    """Test the hour of power savings sensor when the account has no connections.
+
+    An account that migrated to another provider keeps returning account data,
+    but without any power connections, so the sensor falls back to 0.
+    """
+    electrickiwi_api.get_account_summary.return_value = AccountSummary.from_dict(
+        load_json_value_fixture("account_summary_no_connections.json", DOMAIN)
+    )
+
+    await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.hour_of_power_savings")
+    assert state
+    assert state.state == "0.0"
 
 
 async def test_check_and_move_time(electrickiwi_api: AsyncMock) -> None:

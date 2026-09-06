@@ -1,7 +1,9 @@
 """Support for Tibber."""
 
+import asyncio
 from dataclasses import dataclass, field
 import logging
+from typing import Final
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -18,7 +20,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -35,6 +36,8 @@ from .coordinator import (
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
+
+DISCONNECT_TIMEOUT: Final = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -76,6 +79,18 @@ class TibberRuntimeData:
             await self._client.set_access_token(access_token)
         return self._client
 
+    async def async_disconnect(self) -> None:
+        """Disconnect the cached realtime connection without raising."""
+        if self._client is None:
+            return
+        try:
+            async with asyncio.timeout(DISCONNECT_TIMEOUT):
+                await self._client.rt_disconnect()
+        except Exception:
+            _LOGGER.warning(
+                "Error disconnecting the Tibber realtime connection", exc_info=True
+            )
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
@@ -98,13 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
             translation_key="data_api_reauth_required",
         )
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
     try:
@@ -123,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     async def _close(event: Event) -> None:
-        await tibber_connection.rt_disconnect()
+        await entry.runtime_data.async_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
@@ -168,6 +177,5 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        tibber_connection = await config_entry.runtime_data.async_get_client(hass)
-        await tibber_connection.rt_disconnect()
+        await config_entry.runtime_data.async_disconnect()
     return unload_ok

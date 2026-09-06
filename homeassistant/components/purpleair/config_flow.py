@@ -110,8 +110,8 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
-            config_entry.entry_id
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
         )
     ]
 
@@ -438,9 +438,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
             [entity_entry.entity_id for entity_entry in entity_entries],
             async_device_entity_state_changed,
         )
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=self.config_entry.entry_id
-        )
+        device_registry.async_remove_device(device_id)
         await device_entities_removed_event.wait()
 
         # Once we're done, we can cancel the state change tracker callback:

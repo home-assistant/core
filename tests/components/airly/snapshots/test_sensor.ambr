@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-co',
+    'unique_id': '12.3-45.6-co',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -96,7 +96,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'caqi',
-    'unique_id': '123-456-caqi',
+    'unique_id': '12.3-45.6-caqi',
     'unit_of_measurement': 'CAQI',
   })
 # ---
@@ -156,7 +156,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-humidity',
+    'unique_id': '12.3-45.6-humidity',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -215,7 +215,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-no2',
+    'unique_id': '12.3-45.6-no2',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -276,7 +276,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-o3',
+    'unique_id': '12.3-45.6-o3',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -337,7 +337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-pm1',
+    'unique_id': '12.3-45.6-pm1',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -396,7 +396,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-pm10',
+    'unique_id': '12.3-45.6-pm10',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -457,7 +457,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-pm25',
+    'unique_id': '12.3-45.6-pm25',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -518,7 +518,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-pressure',
+    'unique_id': '12.3-45.6-pressure',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -577,7 +577,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-so2',
+    'unique_id': '12.3-45.6-so2',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
@@ -638,7 +638,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123-456-temperature',
+    'unique_id': '12.3-45.6-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

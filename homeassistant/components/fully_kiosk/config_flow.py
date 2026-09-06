@@ -48,7 +48,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Any:
     ) as error:
         LOGGER.debug(error.args, exc_info=True)
         raise CannotConnect from error
-    except Exception as error:  # pylint: disable=broad-except
+    except Exception as error:
         LOGGER.exception("Unexpected exception")
         raise UnknownError from error
 

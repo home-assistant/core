@@ -832,11 +832,11 @@ GOVEE_B5178_PRIMARY_SERVICE_INFO = BluetoothServiceInfo(
 
 GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     devices={
-        "remote": {
-            "name": "B5178D6FB Remote",
-            "manufacturer": "Govee",
-            "model": "H5178-REMOTE",
-        },
+        "remote": DeviceInfo(
+            name="B5178D6FB Remote",
+            manufacturer="Govee",
+            model="H5178-REMOTE",
+        ),
     },
     entity_descriptions={
         PassiveBluetoothEntityKey(
@@ -922,16 +922,16 @@ GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
     PassiveBluetoothDataUpdate(
         devices={
-            "remote": {
-                "name": "B5178D6FB Remote",
-                "manufacturer": "Govee",
-                "model": "H5178-REMOTE",
-            },
-            "primary": {
-                "name": "B5178D6FB Primary",
-                "manufacturer": "Govee",
-                "model": "H5178",
-            },
+            "remote": DeviceInfo(
+                name="B5178D6FB Remote",
+                manufacturer="Govee",
+                model="H5178-REMOTE",
+            ),
+            "primary": DeviceInfo(
+                name="B5178D6FB Primary",
+                manufacturer="Govee",
+                model="H5178",
+            ),
         },
         entity_descriptions={
             PassiveBluetoothEntityKey(

@@ -47,11 +47,40 @@
       }
     },
     "cover": {
+      "cover": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "fast": "Fast",
+              "silent": "Silent"
+            }
+          }
+        }
+      },
       "dual_roller_shutter_lower": {
-        "name": "Lower shutter"
+        "name": "Lower shutter",
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
+              "fast": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]"
+            }
+          }
+        }
       },
       "dual_roller_shutter_upper": {
-        "name": "Upper shutter"
+        "name": "Upper shutter",
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
+              "fast": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]"
+            }
+          }
+        }
       }
     },
     "number": {

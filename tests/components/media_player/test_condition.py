@@ -8,14 +8,17 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
 )
+from homeassistant.components.media_player.condition import CONDITIONS
 from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -95,6 +98,18 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "media_player")
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_muted": TargetSupport.STANDARD,
+    "is_not_playing": TargetSupport.STANDARD,
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+    "is_paused": TargetSupport.STANDARD,
+    "is_playing": TargetSupport.STANDARD,
+    "is_unmuted": TargetSupport.STANDARD,
+    "is_volume": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -123,6 +138,11 @@ async def test_media_player_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

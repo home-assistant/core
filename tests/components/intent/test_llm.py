@@ -44,13 +44,13 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
     """Test the always-on generic intents are exposed."""
     names = await _tool_names(hass)
-    assert "HassTurnOn" in names
-    assert "HassTurnOff" in names
+    assert "intent__HassTurnOn" in names
+    assert "intent__HassTurnOff" in names
 
 
 async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
     """Test timer intents are not exposed without a timer-capable device."""
-    assert "HassStartTimer" not in await _tool_names(hass)
+    assert "intent__HassStartTimer" not in await _tool_names(hass)
 
 
 async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> None:
@@ -66,16 +66,16 @@ async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> No
         hass, _llm_context(device_id="test_device"), "assist"
     )
     names = {tool.name for tool in result.tools}
-    assert "HassStartTimer" in names
-    assert "HassTimerStatus" in names
+    assert "intent__HassStartTimer" in names
+    assert "intent__HassTimerStatus" in names
 
 
 async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:
-    """Test HassSetPosition is only exposed when a cover/valve is exposed."""
-    assert "HassSetPosition" in await _tool_names(hass)
+    """Test intent__HassSetPosition is only exposed when a cover/valve is exposed."""
+    assert "intent__HassSetPosition" in await _tool_names(hass)
 
     async_expose_entity(hass, "conversation", COVER_ENTITY_ID, False)
-    assert "HassSetPosition" not in await _tool_names(hass)
+    assert "intent__HassSetPosition" not in await _tool_names(hass)
 
 
 async def test_prompt_includes_device_control(hass: HomeAssistant) -> None:

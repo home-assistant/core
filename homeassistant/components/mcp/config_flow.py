@@ -14,17 +14,18 @@ from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
     async_get_implementations,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
-from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_TOKEN_URL, DOMAIN
+from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,6 +154,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.oauth_config: OAuthConfig | None = None
         self.auth_header: AuthenticateHeader | None = None
+        self.addon_name: str = ""
 
     @override
     async def async_step_user(
@@ -188,6 +190,59 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             errors=errors,
             description_placeholders={"example_url": EXAMPLE_URL},
         )
+
+    @override
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery of an MCP server provided by an app."""
+        url = discovery_info.config.get(CONF_URL)
+        try:
+            # An unparsable URL, such as an unmatched IPv6 bracket, raises ValueError
+            url = cv.url(url)
+        except vol.Invalid, ValueError:
+            _LOGGER.debug(
+                "Ignoring discovery from app %s with invalid URL: %s",
+                discovery_info.slug,
+                url,
+            )
+            return self.async_abort(reason="invalid_discovery_info")
+
+        await self.async_set_unique_id(discovery_info.uuid)
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._async_abort_entries_match({CONF_URL: url})
+        self.data[CONF_URL] = url
+        self.data[CONF_SLUG] = discovery_info.slug
+        self.addon_name = discovery_info.name
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the MCP server provided by an app."""
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                description_placeholders={"addon": self.addon_name},
+            )
+
+        try:
+            info = await validate_input(self.hass, self.data)
+        except TimeoutConnectError:
+            return self.async_abort(reason="timeout_connect")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth as err:
+            self.auth_header = err.metadata
+            return await self.async_step_auth_discovery()
+        except MissingCapabilities:
+            return self.async_abort(reason="missing_capabilities")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        return self.async_create_entry(title=info["title"], data=self.data)
 
     async def async_step_auth_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -260,7 +315,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        data = {}
+        data = {
+            # Add params to ensure we get back a refresh token
+            "access_type": "offline",
+            "prompt": "consent",
+        }
         if self.data and (scopes := self.data[CONF_SCOPE]) is not None:
             data[CONF_SCOPE] = " ".join(scopes)
         data.update(super().extra_authorize_data)
@@ -326,12 +385,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        # Unique id based on the application credentials OAuth Client ID
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        await self.async_set_unique_id(config_entry_data["auth_implementation"])
+        if self.unique_id is None:
+            # Unique id based on the application credentials OAuth Client ID. A
+            # discovered server keeps the Supervisor uuid instead, so that the
+            # entry is removed together with the app.
+            await self.async_set_unique_id(config_entry_data["auth_implementation"])
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
@@ -360,9 +422,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             # doesn't restrict the connection handshake itself) and proceed directly to OAuth discovery.
             return await self.async_step_auth_discovery()
 
-        self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
-            self.hass, config_entry
-        )
+        try:
+            self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
+                self.hass, config_entry
+            )
+        except UnknownImplementationError:
+            # The credentials were removed, let the user pick or create new ones
+            return await self.async_step_auth_discovery()
         return await self.async_step_auth()
 
 

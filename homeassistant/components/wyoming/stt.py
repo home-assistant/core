@@ -7,6 +7,7 @@ from typing import override
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 
 from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .data import WyomingService
-from .error import WyomingError
+from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,6 +127,10 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                     event = await client.read_event()
                     if event is None:
                         _LOGGER.debug("Connection lost")
+                        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+                    if Error.is_type(event.type):
+                        _LOGGER.error(error_event_message(Error.from_event(event)))
                         return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
                     if Transcript.is_type(event.type):

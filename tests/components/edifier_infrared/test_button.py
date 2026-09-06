@@ -1,6 +1,6 @@
 """Tests for the Edifier Infrared button platform."""
 
-from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
+from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,7 +14,7 @@ from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
-BLUETOOTH_BUTTON_ENTITY_ID = "button.edifier_r1700bt_bluetooth"
+BLUETOOTH_BUTTON_ENTITY_ID = "button.edifier_r1700bts_bluetooth"
 
 
 @pytest.fixture
@@ -37,11 +37,11 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        ("button.edifier_r1700bt_bluetooth", EdifierR1700BTCode.BLUETOOTH),
-        ("button.edifier_r1700bt_line_1", EdifierR1700BTCode.LINE_1),
-        ("button.edifier_r1700bt_line_2", EdifierR1700BTCode.LINE_2),
-        ("button.edifier_r1700bt_fx_on", EdifierR1700BTCode.FX_ON),
-        ("button.edifier_r1700bt_fx_off", EdifierR1700BTCode.FX_OFF),
+        ("button.edifier_r1700bts_bluetooth", EdifierR1700BTsCode.BLUETOOTH),
+        ("button.edifier_r1700bts_line_1", EdifierR1700BTsCode.LINE_1),
+        ("button.edifier_r1700bts_line_2", EdifierR1700BTsCode.LINE_2),
+        ("button.edifier_r1700bts_fx_on", EdifierR1700BTsCode.FX_ON),
+        ("button.edifier_r1700bts_fx_off", EdifierR1700BTsCode.FX_OFF),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -49,7 +49,7 @@ async def test_button_press_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     entity_id: str,
-    expected_code: EdifierR1700BTCode,
+    expected_code: EdifierR1700BTsCode,
 ) -> None:
     """Test each button press sends the correct IR code."""
     await hass.services.async_call(

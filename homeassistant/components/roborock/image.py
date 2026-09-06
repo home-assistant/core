@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -42,23 +43,50 @@ async def async_setup_entry(
         coordinator: RoborockCoordinatorType,
     ) -> None:
         """Add entities for a specific coordinator."""
-        entities: list[ImageEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
-            entities.extend(
-                RoborockMap(
-                    config_entry,
-                    coordinator,
-                    coordinator.properties_api.home,
-                    map_info.map_flag,
-                    map_info.name,
+            map_entities: dict[int, RoborockMap] = {}
+
+            @callback
+            def async_update_map_entities() -> None:
+                """Add new map entities and remove deleted ones."""
+                if (map_infos := coordinator.properties_api.home.home_map_info) is None:
+                    return
+                current_flags = set(map_infos.keys())
+                existing_flags = set(map_entities.keys())
+
+                # Add new maps
+                new_entities = []
+                for map_flag in current_flags - existing_flags:
+                    map_info = map_infos[map_flag]
+                    entity = RoborockMap(
+                        config_entry,
+                        coordinator,
+                        coordinator.properties_api.home,
+                        map_info.map_flag,
+                        map_info.name,
+                    )
+                    map_entities[map_flag] = entity
+                    new_entities.append(entity)
+                if new_entities:
+                    async_add_entities(new_entities)
+
+                # Remove deleted maps
+                entity_registry = er.async_get(coordinator.hass)
+                for map_flag in existing_flags - current_flags:
+                    entity = map_entities.pop(map_flag)
+                    coordinator.hass.async_create_task(entity.async_remove())
+                    if entity.entity_id and entity_registry.async_get(entity.entity_id):
+                        entity_registry.async_remove(entity.entity_id)
+
+            async_update_map_entities()
+
+            config_entry.async_on_unload(
+                coordinator.properties_api.home.add_update_listener(
+                    async_update_map_entities
                 )
-                for map_info in (
-                    coordinator.properties_api.home.home_map_info or {}
-                ).values()
             )
         elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
-            entities.append(RoborockMapQ10(coordinator))
-        async_add_entities(entities)
+            async_add_entities([RoborockMapQ10(coordinator)])
 
     for coordinator in coordinators.values():
         async_add_coordinator_entities(coordinator)

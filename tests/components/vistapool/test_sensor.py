@@ -2,12 +2,63 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def _only_sensor_platform() -> Generator[None]:
+    """Restrict integration setup to the sensor platform for the snapshot."""
+    with patch("homeassistant.components.vistapool.PLATFORMS", [Platform.SENSOR]):
+        yield
+
+
+@pytest.mark.usefixtures("_only_sensor_platform", "entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test sensor entities when every module-gated sensor is present."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {
+            "hasCD": 1,
+            "hasCL": 1,
+            "hasPH": 1,
+            "hasRX": 1,
+            "hasUV": 1,
+            "hasHidro": 1,
+            "RSSI": -65,
+            "temperature": 25.5,
+            "version": 1,
+        },
+        "hidro": {"is_electrolysis": True, "current": 50},
+        "modules": {
+            "ph": {"current": "742"},
+            "rx": {"current": 707},
+            "cl": {"current": "120"},
+            "cd": {"current": "150"},
+            "uv": {"current": "100"},
+        },
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensors_default_modules(

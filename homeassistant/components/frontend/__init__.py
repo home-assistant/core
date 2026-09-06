@@ -382,8 +382,11 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if not update and panel.frontend_url_path in panels:
-        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
+    if not update and (existing := panels.get(panel.frontend_url_path)) is not None:
+        raise ValueError(
+            f"Overwriting panel {panel.frontend_url_path} owned by"
+            f" {existing.component_name}"
+        )
 
     panels[panel.frontend_url_path] = panel
 
@@ -558,19 +561,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Shopping list panel was replaced by todo panel in 2023.11
     hass.http.register_redirect("/shopping-list", "/todo")
 
-    # Developer tools moved to config panel in 2026.2
-    for url in (
-        "/developer-tools",
-        "/developer-tools/yaml",
-        "/developer-tools/state",
-        "/developer-tools/action",
-        "/developer-tools/template",
-        "/developer-tools/event",
-        "/developer-tools/statistics",
-        "/developer-tools/assist",
-        "/developer-tools/debug",
+    # Developer tools moved to config in 2026.2 and was renamed to
+    # "Tools" (/config/tools) in 2026.8. Redirect both the original
+    # top-level URLs and the 2026.2 config URLs to the new location.
+    for suffix in (
+        "",
+        "/yaml",
+        "/state",
+        "/action",
+        "/template",
+        "/event",
+        "/statistics",
+        "/assist",
+        "/debug",
     ):
-        hass.http.register_redirect(url, f"/config{url}")
+        hass.http.register_redirect(
+            f"/developer-tools{suffix}", f"/config/tools{suffix}"
+        )
+        hass.http.register_redirect(
+            f"/config/developer-tools{suffix}", f"/config/tools{suffix}"
+        )
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
@@ -900,6 +910,10 @@ class ManifestJSONView(HomeAssistantView):
     """View to return a manifest.json."""
 
     requires_auth = False
+    # The landing page detects Core availability by reading this public
+    # resource cross-origin when its request is redirected from the legacy
+    # HTTP port to the default port.
+    cors_allowed = True
     url = "/manifest.json"
     name = "manifestjson"
 

@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     ATTR_ELEVATION,
     ATTR_ENTITY_ID,
@@ -342,6 +343,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
+        if TargetSelection(call.data).has_any_target:
+            _LOGGER.warning(
+                "Reloading a config entry by target is deprecated and will stop "
+                "working in Home Assistant 2027.4, please specify the config entry "
+                "to reload in the 'entry_id' parameter instead"
+            )
         reload_entries.update(await async_extract_config_entry_ids(call))
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
@@ -391,7 +398,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 domain, SERVICE_RELOAD, context=call.context, blocking=True
             )
             for domain, domain_services in services.items()
-            if domain != "notify" and SERVICE_RELOAD in domain_services
+            if domain != NOTIFY_DOMAIN and SERVICE_RELOAD in domain_services
         ] + [
             hass.services.async_call(
                 domain, service, context=call.context, blocking=True

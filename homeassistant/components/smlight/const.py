@@ -4,6 +4,8 @@ from datetime import timedelta
 from enum import StrEnum
 import logging
 
+from pysmlight.const import ZB_TYPES
+
 DOMAIN = "smlight"
 
 ATTR_MANUFACTURER = "SMLIGHT"
@@ -26,3 +28,6 @@ class BLEScannerMode(StrEnum):
     AUTO = "auto"
     ACTIVE = "active"
     PASSIVE = "passive"
+
+
+ZWAVE_TYPES = tuple(k for k, v in ZB_TYPES.items() if v.lower().startswith("zwave"))

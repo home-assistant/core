@@ -8,7 +8,6 @@
       "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -55,6 +54,12 @@
   "exceptions": {
     "connection_closed": {
       "message": "Connection to the Android TV device is closed"
+    },
+    "direction_prefix_with_hold_secs": {
+      "message": "Command \"{command}\" combines a direction prefix with hold_secs; specify only one"
+    },
+    "empty_key_code": {
+      "message": "Command \"{command}\" is missing a key code after the direction prefix"
     },
     "invalid_channel": {
       "message": "Channel must be numeric: {media_id}"

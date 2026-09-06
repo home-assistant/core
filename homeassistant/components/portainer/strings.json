@@ -85,6 +85,29 @@
         "name": "Prune unused volumes"
       }
     },
+    "event": {
+      "docker_event": {
+        "name": "Docker event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "die": "Died",
+              "health_status_healthy": "Health check passed",
+              "health_status_starting": "Health check starting",
+              "health_status_unhealthy": "Health check failed",
+              "kill": "Killed",
+              "oom": "Out of memory",
+              "pause": "Paused",
+              "restart": "Restarted",
+              "start": "Started",
+              "stop": "Stopped",
+              "unpause": "Unpaused",
+              "update": "Updated"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "api_version": {
         "name": "API version"
@@ -98,6 +121,14 @@
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
       },
+      "container_health_state": {
+        "name": "Health",
+        "state": {
+          "healthy": "Healthy",
+          "starting": "Starting",
+          "unhealthy": "Unhealthy"
+        }
+      },
       "container_state": {
         "name": "State",
         "state": {
@@ -105,6 +136,7 @@
           "dead": "Dead",
           "exited": "Exited",
           "paused": "Paused",
+          "removing": "Removing",
           "restarting": "Restarting",
           "running": "Running"
         }
@@ -133,11 +165,17 @@
       "image": {
         "name": "Image"
       },
+      "image_created": {
+        "name": "Image created"
+      },
       "image_disk_usage_reclaimable": {
         "name": "Image disk usage reclaimable"
       },
       "image_disk_usage_total_size": {
         "name": "Image disk usage total size"
+      },
+      "image_version": {
+        "name": "Image version"
       },
       "images_count": {
         "name": "Image count"

@@ -48,12 +48,14 @@ class MockAITaskEntity(AITaskEntity):
         super().__init__()
         self.mock_generate_data_tasks = []
         self.mock_generate_image_tasks = []
+        self.mock_chat_logs = []
 
     async def _async_generate_data(
         self, task: GenDataTask, chat_log: ChatLog
     ) -> GenDataTaskResult:
         """Mock handling of generate data task."""
         self.mock_generate_data_tasks.append(task)
+        self.mock_chat_logs.append(chat_log)
         if task.structure is not None:
             data = {"name": "Tracy Chen", "age": 30}
             data_chat_log = json.dumps(data)

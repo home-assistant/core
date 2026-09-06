@@ -1,7 +1,7 @@
 """The tests for the hassio update entities."""
 
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -71,6 +71,7 @@ def mock_all(
         os_info.return_value,
         version="1.0.0dev2221",
         version_latest="1.0.0dev2222",
+        version_pending=None,
         update_available=True,
     )
     supervisor_info.return_value = replace(
@@ -275,7 +276,7 @@ async def test_addon_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 child_jobs=[],
                 extra={"total": 1234567890},
             )
@@ -540,10 +541,11 @@ async def test_update_os(
     await hass.async_block_till_done()
 
     async def mock_os_update(*args: Any) -> None:
-        """Simulate Supervisor reporting the new version after the update."""
+        """Simulate Supervisor keeping version stable while pending version updates."""
         os_info.return_value = replace(
             os_info.return_value,
-            version="1.0.0dev2222",
+            version="1.0.0dev2221",
+            version_pending="1.0.0dev2222",
             update_available=False,
         )
 
@@ -560,8 +562,8 @@ async def test_update_os(
     mock_create_backup.assert_not_called()
     supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
 
-    # The coordinator is refreshed after install so the new version
-    # shows up immediately
+    # The coordinator refresh reflects the new pending version while
+    # the base version remains unchanged.
     state = hass.states.get("update.home_assistant_operating_system_update")
     assert state is not None
     assert state.state == "off"
@@ -851,7 +853,7 @@ async def test_core_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 child_jobs=[],
                 extra={"total": 1234567890},
             )

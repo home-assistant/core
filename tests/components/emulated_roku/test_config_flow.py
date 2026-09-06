@@ -25,9 +25,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test that config flow works."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={"name": "Emulated Roku Test", "listen_port": 8060},
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"name": "Emulated Roku Test", "listen_port": 8060},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -42,9 +48,15 @@ async def test_flow_already_registered_entry(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={"name": "Emulated Roku Test", "listen_port": 8062},
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"name": "Emulated Roku Test", "listen_port": 8062},
     )
 
     assert result["type"] is FlowResultType.ABORT

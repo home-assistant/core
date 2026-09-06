@@ -38,10 +38,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    _LOGGER,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
     ISY_HVAC_MODES,
+    LOGGER,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
     UOM_HVAC_MODE_GENERIC,
@@ -213,13 +213,13 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        _LOGGER.debug("Requested fan mode %s", fan_mode)
+        LOGGER.debug("Requested fan mode %s", fan_mode)
         await self._node.set_fan_mode(HA_FAN_TO_ISY.get(fan_mode))
         self.async_write_ha_state()
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        _LOGGER.debug("Requested operation mode %s", hvac_mode)
+        LOGGER.debug("Requested operation mode %s", hvac_mode)
         await self._node.set_climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
         self.async_write_ha_state()

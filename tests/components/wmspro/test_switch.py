@@ -42,9 +42,11 @@ async def test_switch_device(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "499120")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "499120"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot
 
@@ -67,7 +69,7 @@ async def test_switch_update(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
@@ -80,7 +82,7 @@ async def test_switch_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status.mock_calls) > before
+    assert len(mock_hub_status.mock_calls) == before + 12
 
 
 @pytest.mark.parametrize(
@@ -100,7 +102,7 @@ async def test_switch_turn_on_and_off(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
@@ -110,7 +112,8 @@ async def test_switch_turn_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -122,13 +125,15 @@ async def test_switch_turn_on_and_off(
         entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_ON
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -140,4 +145,5 @@ async def test_switch_turn_on_and_off(
         entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_OFF
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1

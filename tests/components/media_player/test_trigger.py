@@ -9,10 +9,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     MediaPlayerState,
 )
+from homeassistant.components.media_player.trigger import TRIGGERS
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_all,
@@ -20,6 +22,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -93,6 +96,19 @@ def parametrize_muted_trigger_states(
     )
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "muted": TargetSupport.STANDARD,
+    "unmuted": TargetSupport.STANDARD,
+    "volume_changed": TargetSupport.STANDARD,
+    "volume_crossed_threshold": TargetSupport.STANDARD,
+    "paused_playing": TargetSupport.STANDARD,
+    "started_playing": TargetSupport.STANDARD,
+    "stopped_playing": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -127,6 +143,11 @@ async def test_media_player_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

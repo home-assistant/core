@@ -1,0 +1,12 @@
+{
+  "domain": "zonneplan",
+  "name": "Zonneplan",
+  "codeowners": ["@erwindouna"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zonneplan",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyzonneplan"],
+  "quality_scale": "bronze",
+  "requirements": ["pyzonneplan==0.1.2"]
+}

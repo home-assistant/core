@@ -1,11 +1,10 @@
 """Switches for AVM Fritz!Box functions."""
 
-import logging
 from typing import Any, override
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -17,19 +16,17 @@ from homeassistant.util import slugify
 
 from .const import (
     DOMAIN,
+    LOGGER,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_PROFILE,
     SWITCH_TYPE_WIFINETWORK,
     MeshRoles,
-    Platform,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzBoxBaseEntity
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
-
-_LOGGER = logging.getLogger(__name__)
 
 # Set a sane value to avoid too many updates
 PARALLEL_UPDATES = 5
@@ -74,7 +71,7 @@ async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str
             if s.startswith("WLANConfiguration")
         ]
     )
-    _LOGGER.debug("WiFi networks count: %s", wifi_count)
+    LOGGER.debug("WiFi networks count: %s", wifi_count)
     networks: dict[int, dict[str, Any]] = {}
     for i in range(1, wifi_count + 1):
         network_info = await avm_wrapper.async_get_wlan_configuration(i)
@@ -83,7 +80,7 @@ async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str
         networks[i] = network_info
         networks[i]["switch_name"] = switch_name
 
-    _LOGGER.debug("WiFi networks list: %s", networks)
+    LOGGER.debug("WiFi networks list: %s", networks)
     return networks
 
 
@@ -92,7 +89,7 @@ async def _migrate_to_new_unique_id(
 ) -> None:
     """Migrate old unique ids to new unique ids."""
 
-    _LOGGER.debug("Migrating Wi-Fi switches")
+    LOGGER.debug("Migrating Wi-Fi switches")
     entity_registry = er.async_get(hass)
 
     networks = await _get_wifi_networks_list(avm_wrapper)
@@ -125,13 +122,13 @@ async def _migrate_to_new_unique_id(
                 entity_id,
                 new_unique_id=new_unique_id,
             )
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Migrating Wi-FI switch unique_id from [%s] to [%s]",
                 old_unique_id,
                 new_unique_id,
             )
 
-    _LOGGER.debug("Migration completed")
+    LOGGER.debug("Migration completed")
 
 
 async def _async_deflection_entities_list(
@@ -139,10 +136,10 @@ async def _async_deflection_entities_list(
 ) -> list[FritzBoxDeflectionSwitch]:
     """Get list of deflection entities."""
 
-    _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
+    LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
     if not (call_deflections := avm_wrapper.data["call_deflections"]):
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+        LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
     return [
@@ -156,37 +153,37 @@ async def _async_port_entities_list(
 ) -> list[FritzBoxPortSwitch]:
     """Get list of port forwarding entities."""
 
-    _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
+    LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
     entities_list: list[FritzBoxPortSwitch] = []
     if not avm_wrapper.device_conn_type:
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
+        LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
 
     # Query port forwardings and setup a switch for each forward for the current device
     resp = await avm_wrapper.async_get_num_port_mapping(avm_wrapper.device_conn_type)
     if not resp:
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
+        LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
 
     port_forwards_count: int = resp["NewPortMappingNumberOfEntries"]
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Specific %s response: GetPortMappingNumberOfEntries=%s",
         SWITCH_TYPE_PORTFORWARD,
         port_forwards_count,
     )
 
-    _LOGGER.debug("IP source for %s is %s", avm_wrapper.host, local_ip)
+    LOGGER.debug("IP source for %s is %s", avm_wrapper.host, local_ip)
 
     for i in range(port_forwards_count):
         portmap = await avm_wrapper.async_get_port_mapping(
             avm_wrapper.device_conn_type, i
         )
         if not portmap:
-            _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+            LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
             continue
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Specific %s response: GetGenericPortMappingEntry=%s",
             SWITCH_TYPE_PORTFORWARD,
             portmap,
@@ -218,7 +215,7 @@ async def _async_wifi_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
-    _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
+    LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
 
     #
     # https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/wlanconfigSCPD.pdf
@@ -235,7 +232,7 @@ async def _async_profile_entities_list(
     data_fritz: FritzData,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the AVM device."""
-    _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PROFILE)
+    LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PROFILE)
 
     new_profiles: list[FritzBoxProfileSwitch] = []
 
@@ -246,7 +243,7 @@ async def _async_profile_entities_list(
         if device_filter_out_from_trackers(
             mac, device, data_fritz.profile_switches.values()
         ):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Skipping profile switch creation for device %s", device.hostname
             )
             continue
@@ -254,7 +251,7 @@ async def _async_profile_entities_list(
         new_profiles.append(FritzBoxProfileSwitch(avm_wrapper, device))
         data_fritz.profile_switches[avm_wrapper.unique_id].add(mac)
 
-    _LOGGER.debug("Creating %s profile switches", len(new_profiles))
+    LOGGER.debug("Creating %s profile switches", len(new_profiles))
     return new_profiles
 
 
@@ -284,11 +281,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up switches")
+    LOGGER.debug("Setting up switches")
     avm_wrapper = entry.runtime_data
     data_fritz = hass.data[FRITZ_DATA_KEY]
 
-    _LOGGER.debug("Fritzbox services: %s", avm_wrapper.connection.services)
+    LOGGER.debug("Fritzbox services: %s", avm_wrapper.connection.services)
 
     local_ip = await async_get_source_ip(avm_wrapper.hass, target_ip=avm_wrapper.host)
 
@@ -399,7 +396,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update data."""
-        _LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
+        LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
         await self._update()
 
     @override
@@ -454,7 +451,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         self.port_mapping = await self._avm_wrapper.async_get_port_mapping(
             self.connection_type, self._idx
         )
-        _LOGGER.debug(
+        LOGGER.debug(
             "Specific %s response: %s", SWITCH_TYPE_PORTFORWARD, self.port_mapping
         )
         if not self.port_mapping:
@@ -626,7 +623,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         wifi_info = await self._avm_wrapper.async_get_wlan_configuration(
             self._network_num
         )
-        _LOGGER.debug(
+        LOGGER.debug(
             "Specific %s response: GetInfo=%s", SWITCH_TYPE_WIFINETWORK, wifi_info
         )
 

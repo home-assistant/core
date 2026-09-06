@@ -1,0 +1,21 @@
+{
+  "domain": "harman_luxury",
+  "name": "Harman Luxury Audio",
+  "codeowners": ["@sbesh91"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/harman_luxury",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aioharmanluxury==0.2.3"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "Harman Luxury Audio"
+    },
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+      "manufacturer": "Harman Luxury Audio"
+    }
+  ]
+}

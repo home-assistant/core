@@ -346,11 +346,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._end = start + self._remaining
 
-        self._fire_event_and_write_state(event)
-
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )
+
+        self._fire_event_and_write_state(event)
 
     @callback
     def async_change(self, duration: timedelta) -> None:
@@ -375,13 +375,13 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._listener()
         self._end += duration
         self._remaining = new_remaining
+        self._listener = async_track_point_in_utc_time(
+            self.hass, self._async_finished, self._end
+        )
         # We don't use _fire_event_and_write_state here because we don't want to
         # update last_transition
         self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
-        self._listener = async_track_point_in_utc_time(
-            self.hass, self._async_finished, self._end
-        )
 
     @callback
     def async_pause(self) -> None:

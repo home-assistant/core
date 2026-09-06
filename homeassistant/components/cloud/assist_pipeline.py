@@ -24,7 +24,7 @@ from .const import (
 )
 
 
-async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
+async def async_create_cloud_pipeline(hass: HomeAssistant) -> None:
     """Create a cloud assist pipeline."""
     # Wait for stt and tts platforms to set up and entities to be added
     # before creating the pipeline.
@@ -43,34 +43,23 @@ async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
     )
     if new_stt_engine_id is None or new_tts_engine_id is None:
         # If there's no cloud stt or tts entity, we can't create a cloud pipeline.
-        return None
+        return
 
-    def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
-        """Return the ID of a cloud-enabled assist pipeline or None.
+    for pipeline in async_get_pipelines(hass):
+        # A cloud pipeline may still be on the legacy cloud engine ids.
+        if (
+            pipeline.conversation_engine == HOME_ASSISTANT_AGENT
+            and pipeline.stt_engine in (DOMAIN, new_stt_engine_id)
+            and pipeline.tts_engine in (DOMAIN, new_tts_engine_id)
+        ):
+            return
 
-        Check if a cloud pipeline already exists with either
-        legacy or current cloud engine ids.
-        """
-        for pipeline in async_get_pipelines(hass):
-            if (
-                pipeline.conversation_engine == HOME_ASSISTANT_AGENT
-                and pipeline.stt_engine in (DOMAIN, new_stt_engine_id)
-                and pipeline.tts_engine in (DOMAIN, new_tts_engine_id)
-            ):
-                return pipeline.id
-        return None
-
-    if (cloud_assist_pipeline(hass)) is not None or (
-        cloud_pipeline := await async_create_default_pipeline(
-            hass,
-            stt_engine_id=new_stt_engine_id,
-            tts_engine_id=new_tts_engine_id,
-            pipeline_name="Home Assistant Cloud",
-        )
-    ) is None:
-        return None
-
-    return cloud_pipeline.id
+    await async_create_default_pipeline(
+        hass,
+        stt_engine_id=new_stt_engine_id,
+        tts_engine_id=new_tts_engine_id,
+        pipeline_name="Home Assistant Cloud",
+    )
 
 
 async def async_migrate_cloud_pipeline_engine(

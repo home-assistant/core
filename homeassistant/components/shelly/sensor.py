@@ -195,7 +195,12 @@ class RpcBluTrvSensor(RpcSensor):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
@@ -1228,7 +1233,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "rssi": RpcSensorDescription(
@@ -1259,7 +1264,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "battery": RpcSensorDescription(

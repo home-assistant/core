@@ -46,6 +46,9 @@ def mock_vistapool_auth() -> Generator[MagicMock]:
     """Mock `AquariteAuth` across the config flow and the integration setup."""
     auth = MagicMock()
     auth.authenticate = AsyncMock()
+    # Home Assistant turns a truthy on-unload return value into a task, so this
+    # has to mirror the real method and return None.
+    auth.close = MagicMock(return_value=None)
     auth.user_id = MOCK_USER_ID
     auth.is_token_expiring = MagicMock(return_value=False)
     auth.calculate_sleep_duration = MagicMock(return_value=3600)

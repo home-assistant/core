@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNAVAILABLE,
     Platform,
     UnitOfLength,
     UnitOfTemperature,
@@ -365,3 +366,62 @@ async def test_min_extrusion_temp_not_created_when_absent(
         hass.states.get("sensor.workshop_mock_title_minimum_extrusion_temperature")
         is None
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_job_timestamps_not_derived_after_the_print(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_get_status_printing,
+    mock_job_api_printing,
+    mock_job_api_attention,
+) -> None:
+    """Test the job timestamps stop being derived once the print has ended."""
+    # A finished print keeps reporting the job while the printer waits for the
+    # part to be removed, with the printing time frozen and nothing remaining.
+    mock_job_api_printing["time_remaining"] = 0
+
+    with patch(
+        "homeassistant.components.prusalink.sensor.utcnow",
+        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title")
+    assert state is not None
+    assert state.state == "attention"
+
+    # Deriving these from the wall clock now only produces a drifting start and
+    # a finish that is forever "just now".
+    state = hass.states.get("sensor.workshop_mock_title_print_start")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.workshop_mock_title_print_finish")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_job_timestamps_kept_while_paused(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_get_status_printing,
+    mock_job_api_paused,
+) -> None:
+    """Test the job timestamps stay available while the job is paused."""
+    with patch(
+        "homeassistant.components.prusalink.sensor.utcnow",
+        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title_print_start")
+    assert state is not None
+    assert state.state == "2022-08-27T01:46:53+00:00"
+
+    state = hass.states.get("sensor.workshop_mock_title_print_finish")
+    assert state is not None
+    assert state.state == "2022-08-28T10:17:00+00:00"

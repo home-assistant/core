@@ -1,0 +1,63 @@
+{
+  "event": "WaterMeterController.Report",
+  "method": "Report",
+  "data": {
+    "state": {
+      "valve": "open",
+      "meter": 2443649,
+      "waterFlowing": true,
+      "meterVersion": "010073",
+      "pipeDiameter": 20
+    },
+    "alarm": {
+      "openReminder": false,
+      "leak": false,
+      "amountOverrun": false,
+      "durationOverrun": false,
+      "highTemp": false,
+      "reminder": false,
+      "lowTemp": false
+    },
+    "battery": 4,
+    "powerSupply": "battery",
+    "valveDelay": {
+      "ch": 1,
+      "off": 0
+    },
+    "attributes": {
+      "openReminder": 0,
+      "screenMeterUnit": 0,
+      "meterUnit": 3,
+      "alertInterval": 0,
+      "meterStepFactor": 10,
+      "leakLimit": 38,
+      "autoCloseValve": false,
+      "overrunAmountACV": true,
+      "overrunDurationACV": true,
+      "leakPlan": "on",
+      "overrunAmount": 0,
+      "overrunDuration": 0,
+      "tempLimit": {
+        "min": -873.9,
+        "max": -873.9
+      }
+    },
+    "version": "180a",
+    "tz": -4,
+    "recentUsage": {
+      "amount": 168,
+      "duration": 1
+    },
+    "temperature": 17.7,
+    "dailyUsage": 11098,
+    "loraP2PHash": 0,
+    "loraInfo": {
+      "netId": "010202",
+      "devNetType": "A",
+      "signal": -62,
+      "gatewayId": "REDACTED",
+      "gateways": 1
+    }
+  },
+  "deviceId": "REDACTED"
+}

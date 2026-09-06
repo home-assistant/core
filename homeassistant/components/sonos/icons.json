@@ -5,6 +5,11 @@
         "default": "mdi:microphone"
       }
     },
+    "button": {
+      "cancel_announcement": {
+        "default": "mdi:cancel"
+      }
+    },
     "sensor": {
       "audio_input_format": {
         "default": "mdi:import"

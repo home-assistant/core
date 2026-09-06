@@ -15,9 +15,9 @@ from typing import Any, cast
 from mcp import types
 from mcp.server import Server
 from mcp.server.lowlevel.helper_types import ReadResourceContents
+from probatio import to_openapi
 from pydantic import AnyUrl
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 SNAPSHOT_RESOURCE_URL = AnyUrl(SNAPSHOT_RESOURCE_URI)
 SNAPSHOT_RESOURCE_MIME_TYPE = "text/plain"
-LIVE_CONTEXT_TOOL_NAME = "GetLiveContext"
+LIVE_CONTEXT_TOOL_NAME = "homeassistant__GetLiveContext"
 
 
 def _has_live_context_tool(llm_api: llm.APIInstance) -> bool:
@@ -42,7 +42,7 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
-    input_schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    input_schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     return types.Tool(
         name=tool.name,
         description=tool.description or "",
@@ -115,7 +115,7 @@ async def create_server(
                 title="Assist context snapshot",
                 description=(
                     "A snapshot of the current Assist context, matching the"
-                    " existing GetLiveContext tool output."
+                    " existing homeassistant__GetLiveContext tool output."
                 ),
                 mimeType=SNAPSHOT_RESOURCE_MIME_TYPE,
             )

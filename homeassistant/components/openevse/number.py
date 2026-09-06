@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from openevsehttp.__main__ import OpenEVSE
+from openevsehttp import OpenEVSE
 
 from homeassistant.components.number import (
     NumberDeviceClass,

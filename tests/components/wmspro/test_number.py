@@ -47,26 +47,28 @@ async def test_number_update(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 7
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity == snapshot
+
+    before_status = len(mock_hub_status.mock_calls)
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status.mock_calls) >= 10
+    assert len(mock_hub_status.mock_calls) == before_status + 28
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value", "target_value"),
+    ("entity_id", "initial_value", "target_value", "num_action"),
     [
-        ("number.zonwering_begane_grond_keuken_alle_raw_rotation", "0", "80"),
-        ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50"),
-        ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
+        ("number.zonwering_begane_grond_keuken_alle_raw_rotation", "0", "80", 1),
+        ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50", 0),
+        ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100", 0),
     ],
 )
 @pytest.mark.parametrize(
@@ -85,12 +87,13 @@ async def test_number_set_value(
     entity_id: str,
     initial_value: str,
     target_value: str,
+    num_action: int,
 ) -> None:
     """Test that a number entity is created and value set correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 7
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -100,7 +103,8 @@ async def test_number_set_value(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -117,7 +121,8 @@ async def test_number_set_value(
         entity = hass.states.get(entity_id)
         assert entity is not None
         assert float(entity.state) == float(target_value)
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + num_action
 
 
 @pytest.mark.parametrize(
@@ -138,8 +143,6 @@ async def test_number_set_and_restore_value(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
-    mock_action_call: AsyncMock,
-    freezer: FrozenDateTimeFactory,
     entity_id: str,
     initial_value: str,
     target_value: str,
@@ -148,7 +151,7 @@ async def test_number_set_and_restore_value(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 7
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -190,7 +193,7 @@ async def test_number_update_handles_zero_value(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(
         "number.zonwering_begane_grond_keuken_alle_minimum_rotation"

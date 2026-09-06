@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         connections={(CONNECTION_BLUETOOTH, address)},
         manufacturer=manufacturer.manufacturer_name,
         model=f"{size} {color_scheme}",
-        sw_version=f"{fw['major']}.{fw['minor']}",
+        sw_version=f"{fw['major']}.{fw['minor']}.{fw['patch']}",
         hw_version=(
             f"{manufacturer.board_type_name or manufacturer.board_type}"
             f" rev. {manufacturer.board_revision}"

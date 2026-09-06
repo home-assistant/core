@@ -31,4 +31,4 @@ def _llm_context() -> llm.LLMContext:
 async def test_broadcast_tool_offered(hass: HomeAssistant) -> None:
     """Test the broadcast intent is exposed as an LLM tool."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert "HassBroadcast" in [tool.name for tool in result.tools]
+    assert "assist_satellite__HassBroadcast" in [tool.name for tool in result.tools]

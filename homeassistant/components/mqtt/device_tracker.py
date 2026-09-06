@@ -7,16 +7,18 @@ from typing import TYPE_CHECKING, Any, override
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import (
+    SourceType,
+    TrackerEntity,
+    TrackerEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -162,16 +164,18 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     ) -> None:
         """Extract the location from the extra state attributes."""
         if (
-            ATTR_LATITUDE in extra_state_attributes
-            or ATTR_LONGITUDE in extra_state_attributes
+            EntityStateAttribute.LATITUDE in extra_state_attributes
+            or EntityStateAttribute.LONGITUDE in extra_state_attributes
         ):
             latitude: float | None
             longitude: float | None
             gps_accuracy: float
             if isinstance(
-                latitude := extra_state_attributes.get(ATTR_LATITUDE), (int, float)
+                latitude := extra_state_attributes.get(EntityStateAttribute.LATITUDE),
+                (int, float),
             ) and isinstance(
-                longitude := extra_state_attributes.get(ATTR_LONGITUDE), (int, float)
+                longitude := extra_state_attributes.get(EntityStateAttribute.LONGITUDE),
+                (int, float),
             ):
                 self._attr_latitude = latitude
                 self._attr_longitude = longitude
@@ -187,9 +191,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     extra_state_attributes,
                 )
 
-            if ATTR_GPS_ACCURACY in extra_state_attributes:
+            if TrackerEntityStateAttribute.GPS_ACCURACY in extra_state_attributes:
                 if isinstance(
-                    gps_accuracy := extra_state_attributes[ATTR_GPS_ACCURACY],
+                    gps_accuracy := extra_state_attributes[
+                        TrackerEntityStateAttribute.GPS_ACCURACY
+                    ],
                     (int, float),
                 ):
                     self._attr_location_accuracy = gps_accuracy
@@ -210,5 +216,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         self._attr_extra_state_attributes = {
             attribute: value
             for attribute, value in extra_state_attributes.items()
-            if attribute not in {ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE}
+            if attribute
+            not in {
+                TrackerEntityStateAttribute.GPS_ACCURACY,
+                EntityStateAttribute.LATITUDE,
+                EntityStateAttribute.LONGITUDE,
+            }
         }

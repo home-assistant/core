@@ -30,6 +30,40 @@ async def test_tailscale_binary_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Client"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
 
+    state = hass.states.get("binary_sensor.frencks_iphone_connected_to_control")
+    entry = entity_registry.async_get(
+        "binary_sensor.frencks_iphone_connected_to_control"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "123456_connected_to_control"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_ON
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "frencks-iphone Connected to control"
+    )
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
+    )
+
+    state = hass.states.get("binary_sensor.host_no_connectivity_connected_to_control")
+    entry = entity_registry.async_get(
+        "binary_sensor.host_no_connectivity_connected_to_control"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "123458_connected_to_control"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "host-no-connectivity Connected to control"
+    )
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
+    )
+
     state = hass.states.get("binary_sensor.frencks_iphone_key_expiry_disabled")
     entry = entity_registry.async_get(
         "binary_sensor.frencks_iphone_key_expiry_disabled"

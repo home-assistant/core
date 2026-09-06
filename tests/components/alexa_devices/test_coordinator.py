@@ -143,12 +143,12 @@ async def test_async_update_data_errors(
         ),
         pytest.param(
             CannotConnect,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_connect",
         ),
         pytest.param(
             CannotRetrieveData,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
     ],
@@ -160,7 +160,7 @@ async def test_sync_history_state_error(
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test sync_history_state error handling."""
+    """Test sync_history_state error handling does not block setup."""
     mock_amazon_devices_client.sync_history_state.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
@@ -180,22 +180,22 @@ async def test_sync_history_state_error(
         ),
         pytest.param(
             CannotConnect,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_connect",
         ),
         pytest.param(
             TimeoutError,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="timeout_error",
         ),
         pytest.param(
             CannotRetrieveData,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
         pytest.param(
             ValueError,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="value_error",
         ),
     ],

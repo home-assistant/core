@@ -264,6 +264,7 @@ DEFAULT_INTEGRATIONS = {
     "occupancy",
     "power",
     "temperature",
+    "vibration",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {

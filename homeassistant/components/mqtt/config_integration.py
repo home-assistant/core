@@ -20,6 +20,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.FAN.value: vol.All(cv.ensure_list, [dict]),
         Platform.HUMIDIFIER.value: vol.All(cv.ensure_list, [dict]),
         Platform.IMAGE.value: vol.All(cv.ensure_list, [dict]),
+        Platform.INFRARED.value: vol.All(cv.ensure_list, [dict]),
         Platform.LAWN_MOWER.value: vol.All(cv.ensure_list, [dict]),
         Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
         Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),

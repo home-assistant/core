@@ -59,6 +59,7 @@ from .entity import (
     async_device_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
+    is_locally_administered_mac,
 )
 from .hub import UnifiHub
 
@@ -70,6 +71,13 @@ def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in hub.config.option_supported_clients:
         return True
+    client = hub.api.clients[obj_id]
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
+        return False
     return hub.config.option_allow_bandwidth_sensors
 
 
@@ -78,6 +86,13 @@ def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in hub.config.option_supported_clients:
         return True
+    client = hub.api.clients[obj_id]
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
+        return False
     return hub.config.option_allow_uptime_sensors
 
 
@@ -176,9 +191,7 @@ def async_uptime_value_changed_fn(
 @callback
 def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
-    # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
-    # supports metering
-    return hub.api.outlets[obj_id].caps == 3
+    return hub.api.outlets[obj_id].has_metering is True
 
 
 @callback
@@ -259,7 +272,7 @@ def _device_wan_latency_monitor(
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
     if device.uptime_stats and (uptime_stats_wan := device.uptime_stats.get(wan)):
-        for monitor in uptime_stats_wan["monitors"]:
+        for monitor in uptime_stats_wan.get("monitors", []):
             if monitor_target in monitor["target"]:
                 return monitor
     return None
@@ -629,6 +642,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,

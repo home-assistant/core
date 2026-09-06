@@ -104,12 +104,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=self.schema,
                 errors={"base": "invalid_auth"},
             )
-        except DaikinException as daikin_exp:
-            _LOGGER.error(daikin_exp)
+        except DaikinException:
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "unknown"},
+                errors={"base": "cannot_connect"},
             )
         except Exception:
             _LOGGER.exception("Unexpected error creating device")

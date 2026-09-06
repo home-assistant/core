@@ -155,13 +155,6 @@ async def test_device_status_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.hdmi_3")
-    if power_status in (POWER_ON, 4) and status is not None:
-        pytest.xfail(
-            reason=(
-                "`CecSwitchEntity.is_on` returns `False` here"
-                " instead of `true` as expected."
-            )
-        )
     assert state.state == expected_state
 
 

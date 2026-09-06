@@ -217,7 +217,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
         dev_registry = dr.async_get(hass)
-        device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+        device = dev_registry.async_get_device_by_identifier(
+            (DOMAIN, str(address)), config_entry.entry_id
+        )
         if device:
             dev_registry.async_remove_device(device.id)
 

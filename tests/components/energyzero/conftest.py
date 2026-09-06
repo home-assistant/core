@@ -1,13 +1,17 @@
 """Fixtures for EnergyZero integration tests."""
 
 from collections.abc import AsyncGenerator, Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
-from energyzero import Electricity, Gas
+from energyzero import EnergyPrices, PriceType
+from energyzero.models import REST_PRICE_STREAMS
 import pytest
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
@@ -40,11 +44,35 @@ async def mock_energyzero(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True
     ) as energyzero_mock:
         client = energyzero_mock.return_value
-        client.get_electricity_prices_legacy.return_value = Electricity.from_dict(
-            await async_load_json_object_fixture(hass, "today_energy.json", DOMAIN)
+        energy_data = await async_load_json_object_fixture(
+            hass, "today_energy.json", DOMAIN
         )
-        client.get_gas_prices_legacy.return_value = Gas.from_dict(
-            await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+        gas_data = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+
+        def _get_prices(data: dict, *args, **kwargs) -> EnergyPrices:
+            price_type = kwargs.get("price_type", args[0] if args else PriceType.ALL_IN)
+            filter_date = kwargs.get("start_date", dt_util.now().date())
+            local_tz = kwargs.get("local_tz", ZoneInfo(hass.config.time_zone))
+            stream = REST_PRICE_STREAMS[price_type]
+            filtered_data = {
+                **data,
+                stream: [
+                    item
+                    for item in data[stream]
+                    if datetime.strptime(item["start"], "%Y-%m-%dT%H:%M:%SZ")
+                    .replace(tzinfo=UTC)
+                    .astimezone(local_tz)
+                    .date()
+                    == filter_date
+                ],
+            }
+            return EnergyPrices.from_rest_dict(filtered_data, price_type)
+
+        client.get_electricity_prices.side_effect = lambda *a, **kw: _get_prices(
+            energy_data, *a, **kw
+        )
+        client.get_gas_prices.side_effect = lambda *a, **kw: _get_prices(
+            gas_data, *a, **kw
         )
         yield client
 

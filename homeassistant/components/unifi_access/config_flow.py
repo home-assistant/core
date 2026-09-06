@@ -131,10 +131,13 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         source_ip = discovery_info["source_ip"]
         mac = discovery_info["hw_addr"].replace(":", "").upper()
         await self.async_set_unique_id(mac)
+        # A console answers on every VLAN interface but discovery reports only
+        # one of them, so match every address it announced for itself.
+        known_hosts = {source_ip, *discovery_info.get("announced_ips", ())}
         for entry in self._async_current_entries():
             if entry.source == SOURCE_IGNORE:
                 continue
-            if entry.data.get(CONF_HOST) == source_ip:
+            if entry.data.get(CONF_HOST) in known_hosts:
                 if not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=mac)
                 return self.async_abort(reason="already_configured")

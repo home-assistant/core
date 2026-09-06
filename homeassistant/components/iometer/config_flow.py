@@ -5,8 +5,8 @@ from typing import Any, Final, override
 from iometer import (
     IOmeterClient,
     IOmeterConnectionError,
-    IOmeterNoReadingsError,
     IOmeterNoStatusError,
+    IOmeterTimeoutError,
 )
 import voluptuous as vol
 
@@ -40,19 +40,17 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         client = IOmeterClient(host=host, session=session)
         try:
             status = await client.get_current_status()
-            _ = await client.get_current_reading()
         except IOmeterNoStatusError:
             return self.async_abort(reason="no_status")
-        except IOmeterNoReadingsError:
-            return self.async_abort(reason="no_readings")
-        except IOmeterConnectionError:
+        except IOmeterTimeoutError, IOmeterConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        self._meter_number = status.meter.number
+        if not status.meter:
+            return self.async_abort(reason="no_readings")
 
+        self._meter_number = status.meter.number
         await self.async_set_unique_id(status.device.id)
         self._abort_if_unique_id_configured()
-
         self.context["title_placeholders"] = {"name": f"IOmeter {self._meter_number}"}
         return await self.async_step_zeroconf_confirm()
 
@@ -82,18 +80,19 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             client = IOmeterClient(host=self._host, session=session)
             try:
                 status = await client.get_current_status()
-                _ = await client.get_current_reading()
             except IOmeterNoStatusError:
                 errors["base"] = "no_status"
-            except IOmeterNoReadingsError:
-                errors["base"] = "no_readings"
-            except IOmeterConnectionError:
+            except IOmeterTimeoutError, IOmeterConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                self._meter_number = status.meter.number
-                await self.async_set_unique_id(status.device.id)
-                self._abort_if_unique_id_configured()
-                return await self._async_create_entry()
+                if not status.meter:
+                    errors["base"] = "no_readings"
+                else:
+                    self._meter_number = status.meter.number
+                    await self.async_set_unique_id(status.device.id)
+                    self._abort_if_unique_id_configured()
+                    return await self._async_create_entry()
+
         return self.async_show_form(
             step_id="user",
             data_schema=CONFIG_SCHEMA,

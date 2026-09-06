@@ -36,6 +36,8 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
 ]
 
 
@@ -64,6 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
     session = async_get_clientsession(hass)
 
     auth = AquariteAuth(session, user_config[CONF_USERNAME], user_config[CONF_PASSWORD])
+    # Home Assistant runs these callbacks on a failed setup as well, so
+    # registering before authenticating releases the Firestore gRPC channels
+    # on every path out of this function.
+    entry.async_on_unload(auth.close)
     try:
         await auth.authenticate()
     except AuthenticationError as exc:
@@ -150,9 +156,7 @@ def _async_remove_stale_devices(
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         pool_id = next((i[1] for i in device.identifiers if i[0] == DOMAIN), None)
         if pool_id is not None and pool_id not in valid_pool_ids:
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
 
 async def _async_initial_refresh(

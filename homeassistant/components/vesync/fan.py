@@ -20,6 +20,7 @@ from .const import (
     VS_DEVICES,
     VS_DISCOVERY,
     VS_FAN_MODE_AUTO,
+    VS_FAN_MODE_ECO,
     VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL,
     VS_FAN_MODE_PET,
@@ -40,6 +41,7 @@ VS_TO_HA_MODE_MAP = {
     VS_FAN_MODE_PET: VS_FAN_MODE_PET,
     VS_FAN_MODE_MANUAL: VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL: VS_FAN_MODE_NORMAL,
+    VS_FAN_MODE_ECO: VS_FAN_MODE_ECO,
 }
 
 PARALLEL_UPDATES = 1
@@ -163,15 +165,15 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         """Return the currently set speed."""
 
         current_level = self.device.state.fan_level
-        if (
-            self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL)
-            and current_level is not None
-        ):
+        if self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
             if current_level == 0:
                 return 0
-            return ordered_list_item_to_percentage(
-                self.device.fan_levels, current_level
-            )
+            # The device can report an out-of-range level (e.g. -1) when the
+            # speed is not applicable; treat it as unknown instead of crashing.
+            if current_level in self.device.fan_levels:
+                return ordered_list_item_to_percentage(
+                    self.device.fan_levels, current_level
+                )
         return None
 
     @property
@@ -313,6 +315,8 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         elif vs_mode == VS_FAN_MODE_NORMAL:
             if hasattr(self.device, "set_normal_mode"):
                 success = await self.device.set_normal_mode()
+        elif vs_mode == VS_FAN_MODE_ECO:
+            success = await self.device.set_mode(VS_FAN_MODE_ECO)
 
         if not success:
             if self.device.last_response:

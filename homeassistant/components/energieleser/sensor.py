@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from energieleser import (
     GasleserDevice,
+    GasleserPulseDevice,
     StromleserOneDevice,
     WaermeleserDevice,
     WasserleserDevice,
@@ -38,6 +39,9 @@ from .coordinator import EnergieleserConfigEntry, EnergieleserCoordinator
 
 PARALLEL_UPDATES = 0
 
+# both use the same payload
+type AnyGasleserDevice = GasleserDevice | GasleserPulseDevice
+
 
 @dataclass(frozen=True, kw_only=True)
 class StromleserSensorEntityDescription(SensorEntityDescription):
@@ -52,8 +56,8 @@ class StromleserSensorEntityDescription(SensorEntityDescription):
 class GasleserSensorEntityDescription(SensorEntityDescription):
     """Describes a gasleser sensor."""
 
-    value_fn: Callable[[GasleserDevice], StateType]
-    present_fn: Callable[[GasleserDevice], bool] = lambda _: True
+    value_fn: Callable[[AnyGasleserDevice], StateType]
+    present_fn: Callable[[AnyGasleserDevice], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -348,7 +352,7 @@ async def async_setup_entry(
             for description in STROMLESER_SENSORS
             if description.present_fn(device)
         )
-    elif isinstance(device, GasleserDevice):
+    elif isinstance(device, GasleserDevice | GasleserPulseDevice):
         async_add_entities(
             GasleserSensor(coordinator, description)
             for description in GASLESER_SENSORS
@@ -428,7 +432,7 @@ class StromleserSensor(_EnergieleserSensorBase):
 
 
 class GasleserSensor(_EnergieleserSensorBase):
-    """Sensor entity for a gasleser device."""
+    """Sensor entity for a gasleser or gasleser.pulse device."""
 
     entity_description: GasleserSensorEntityDescription
 
@@ -438,7 +442,7 @@ class GasleserSensor(_EnergieleserSensorBase):
         """Return the sensor value."""
         device = self.coordinator.data
         if TYPE_CHECKING:
-            assert isinstance(device, GasleserDevice)
+            assert isinstance(device, GasleserDevice | GasleserPulseDevice)
         return self.entity_description.value_fn(device)
 
 

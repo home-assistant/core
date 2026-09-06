@@ -164,7 +164,7 @@ async def test_form_with_broken_query_template(
         result["flow_id"],
         DATA_CONFIG,
     )
-    message = re.escape("Schema validation failed @ data['query']")
+    message = re.escape("Schema validation failed at 'query'")
     with pytest.raises(InvalidData, match=message):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -618,7 +618,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
         CONF_QUERY: "multiple_queries",
     }
 
-    message = re.escape("Schema validation failed @ data['query']")
+    message = re.escape("Schema validation failed at 'query'")
     with pytest.raises(InvalidData, match=message):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

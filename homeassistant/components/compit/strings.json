@@ -46,6 +46,12 @@
       "dust_alert": {
         "name": "Dust alert"
       },
+      "ground_heat_exchanger_attached": {
+        "name": "Ground heat exchanger attached"
+      },
+      "mixer_pump_status": {
+        "name": "Mixer pump"
+      },
       "pump_status": {
         "name": "Pump status"
       },

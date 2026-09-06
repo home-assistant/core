@@ -5,13 +5,14 @@
       'data': dict({
         'host': 'http://fronius',
         'is_logger': True,
+        'modbus_port': 502,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'fronius',
       'entry_id': 'f1e2b9837e8adaed6fa682acaa216fd8',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -368,6 +369,420 @@
       }),
       'timestamp': dict({
         'value': '2021-10-07T13:41:00+02:00',
+      }),
+    }),
+    'modbus': dict({
+      'inverters': dict({
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics_modbus
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': 'http://fronius',
+        'is_logger': False,
+        'modbus_port': 502,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'fronius',
+      'entry_id': 'f1e2b9837e8adaed6fa682acaa216fd8',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coordinators': dict({
+      'inverters': dict({
+        '1': dict({
+          'current_ac': dict({
+            'unit': 'A',
+            'value': 0.15894582867622375,
+          }),
+          'current_dc': dict({
+            'unit': 'A',
+            'value': 0.07832378149032593,
+          }),
+          'current_dc_2': dict({
+            'unit': 'A',
+            'value': 0.07539909332990646,
+          }),
+          'current_dc_3': dict({
+            'unit': 'A',
+            'value': None,
+          }),
+          'energy_day': dict({
+            'unit': 'Wh',
+            'value': None,
+          }),
+          'energy_total': dict({
+            'unit': 'Wh',
+            'value': 1530193.42,
+          }),
+          'energy_year': dict({
+            'unit': 'Wh',
+            'value': None,
+          }),
+          'error_code': dict({
+            'value': 0,
+          }),
+          'frequency_ac': dict({
+            'unit': 'Hz',
+            'value': 49.99169921875,
+          }),
+          'inverter_state': dict({
+            'value': 'Running',
+          }),
+          'power_ac': dict({
+            'unit': 'W',
+            'value': 37.32044982910156,
+          }),
+          'status': dict({
+            'Code': 0,
+            'Reason': '',
+            'UserMessage': '',
+          }),
+          'status_code': dict({
+            'value': 7,
+          }),
+          'timestamp': dict({
+            'value': '2021-11-26T11:07:53+00:00',
+          }),
+          'voltage_ac': dict({
+            'unit': 'V',
+            'value': 234.91676330566406,
+          }),
+          'voltage_dc': dict({
+            'unit': 'V',
+            'value': 411.3810729980469,
+          }),
+          'voltage_dc_2': dict({
+            'unit': 'V',
+            'value': 403.4312438964844,
+          }),
+          'voltage_dc_3': dict({
+            'unit': 'V',
+            'value': None,
+          }),
+        }),
+      }),
+      'logger': None,
+      'meter': dict({
+        '0': dict({
+          'current_ac_phase_1': dict({
+            'unit': 'A',
+            'value': 1.145,
+          }),
+          'current_ac_phase_2': dict({
+            'unit': 'A',
+            'value': 2.33,
+          }),
+          'current_ac_phase_3': dict({
+            'unit': 'A',
+            'value': 1.825,
+          }),
+          'enable': dict({
+            'value': 1,
+          }),
+          'energy_reactive_ac_consumed': dict({
+            'unit': 'VArh',
+            'value': 88221.0,
+          }),
+          'energy_reactive_ac_produced': dict({
+            'unit': 'VArh',
+            'value': 1989125.0,
+          }),
+          'energy_real_ac_minus': dict({
+            'unit': 'Wh',
+            'value': 3863340.0,
+          }),
+          'energy_real_ac_plus': dict({
+            'unit': 'Wh',
+            'value': 2013105.0,
+          }),
+          'energy_real_consumed': dict({
+            'unit': 'Wh',
+            'value': 2013105.0,
+          }),
+          'energy_real_produced': dict({
+            'unit': 'Wh',
+            'value': 3863340.0,
+          }),
+          'frequency_phase_average': dict({
+            'unit': 'Hz',
+            'value': 49.9,
+          }),
+          'manufacturer': dict({
+            'value': 'Fronius',
+          }),
+          'meter_location': dict({
+            'value': 0.0,
+          }),
+          'model': dict({
+            'value': 'Smart Meter TS 65A-3',
+          }),
+          'power_apparent': dict({
+            'unit': 'VA',
+            'value': 868.0,
+          }),
+          'power_apparent_phase_1': dict({
+            'unit': 'VA',
+            'value': 243.3,
+          }),
+          'power_apparent_phase_2': dict({
+            'unit': 'VA',
+            'value': 323.4,
+          }),
+          'power_apparent_phase_3': dict({
+            'unit': 'VA',
+            'value': 301.2,
+          }),
+          'power_factor': dict({
+            'value': 0.828,
+          }),
+          'power_factor_phase_1': dict({
+            'value': 0.441,
+          }),
+          'power_factor_phase_2': dict({
+            'value': 0.934,
+          }),
+          'power_factor_phase_3': dict({
+            'value': 0.832,
+          }),
+          'power_reactive': dict({
+            'unit': 'VAr',
+            'value': -517.4,
+          }),
+          'power_reactive_phase_1': dict({
+            'unit': 'VAr',
+            'value': -218.6,
+          }),
+          'power_reactive_phase_2': dict({
+            'unit': 'VAr',
+            'value': -132.8,
+          }),
+          'power_reactive_phase_3': dict({
+            'unit': 'VAr',
+            'value': -166.0,
+          }),
+          'power_real': dict({
+            'unit': 'W',
+            'value': 653.1,
+          }),
+          'power_real_phase_1': dict({
+            'unit': 'W',
+            'value': 106.8,
+          }),
+          'power_real_phase_2': dict({
+            'unit': 'W',
+            'value': 294.9,
+          }),
+          'power_real_phase_3': dict({
+            'unit': 'W',
+            'value': 251.3,
+          }),
+          'serial': '**REDACTED**',
+          'visible': dict({
+            'value': 1.0,
+          }),
+          'voltage_ac_phase_1': dict({
+            'unit': 'V',
+            'value': 235.9,
+          }),
+          'voltage_ac_phase_2': dict({
+            'unit': 'V',
+            'value': 236.1,
+          }),
+          'voltage_ac_phase_3': dict({
+            'unit': 'V',
+            'value': 236.9,
+          }),
+          'voltage_ac_phase_to_phase_12': dict({
+            'unit': 'V',
+            'value': 408.7,
+          }),
+          'voltage_ac_phase_to_phase_23': dict({
+            'unit': 'V',
+            'value': 409.6,
+          }),
+          'voltage_ac_phase_to_phase_31': dict({
+            'unit': 'V',
+            'value': 409.4,
+          }),
+        }),
+      }),
+      'ohmpilot': None,
+      'power_flow': dict({
+        'power_flow': dict({
+          'backup_mode': dict({
+            'value': False,
+          }),
+          'battery_mode': dict({
+            'value': 'disabled',
+          }),
+          'battery_standby': dict({
+            'value': False,
+          }),
+          'energy_day': dict({
+            'unit': 'Wh',
+            'value': None,
+          }),
+          'energy_total': dict({
+            'unit': 'Wh',
+            'value': 1530193.42,
+          }),
+          'energy_year': dict({
+            'unit': 'Wh',
+            'value': None,
+          }),
+          'meter_location': dict({
+            'value': 'grid',
+          }),
+          'meter_mode': dict({
+            'value': 'meter',
+          }),
+          'power_battery': dict({
+            'unit': 'W',
+            'value': None,
+          }),
+          'power_grid': dict({
+            'unit': 'W',
+            'value': 658.4,
+          }),
+          'power_load': dict({
+            'unit': 'W',
+            'value': -695.6827491760254,
+          }),
+          'power_photovoltaics': dict({
+            'unit': 'W',
+            'value': 62.94814872741699,
+          }),
+          'relative_autonomy': dict({
+            'unit': '%',
+            'value': 5.3591596485874495,
+          }),
+          'relative_self_consumption': dict({
+            'unit': '%',
+            'value': 100.0,
+          }),
+          'state_of_charge': dict({
+            'unit': '%',
+            'value': 0.0,
+          }),
+          'status': dict({
+            'Code': 0,
+            'Reason': '',
+            'UserMessage': '',
+          }),
+          'timestamp': dict({
+            'value': '2021-11-26T11:07:53+00:00',
+          }),
+        }),
+      }),
+      'storage': None,
+    }),
+    'inverter_info': dict({
+      'inverters': list([
+        dict({
+          'custom_name': dict({
+            'value': 'Inverter name',
+          }),
+          'device_id': dict({
+            'value': '1',
+          }),
+          'device_type': dict({
+            'manufacturer': 'Fronius',
+            'model': 'Gen24',
+            'value': 1,
+          }),
+          'error_code': dict({
+            'value': 0,
+          }),
+          'pv_power': dict({
+            'unit': 'W',
+            'value': 9360,
+          }),
+          'show': dict({
+            'value': 1,
+          }),
+          'status_code': dict({
+            'value': 7,
+          }),
+          'unique_id': '**REDACTED**',
+        }),
+      ]),
+      'status': dict({
+        'Code': 0,
+        'Reason': '',
+        'UserMessage': '',
+      }),
+      'timestamp': dict({
+        'value': '2021-11-26T11:07:53+00:00',
+      }),
+    }),
+    'modbus': dict({
+      'inverters': dict({
+        '1': dict({
+          'data': dict({
+            '1': dict({
+              'energy_total_pv': dict({
+                'value': 1000000,
+              }),
+              'mppt_1_current_dc': dict({
+                'value': 8.2,
+              }),
+              'mppt_1_energy': dict({
+                'value': 1000000,
+              }),
+              'mppt_1_power_dc': dict({
+                'value': 3300,
+              }),
+              'mppt_1_voltage_dc': dict({
+                'value': 402.1,
+              }),
+              'storage_energy_charged_total': dict({
+                'value': None,
+              }),
+              'storage_energy_discharged_total': dict({
+                'value': None,
+              }),
+            }),
+          }),
+          'float_mode': True,
+          'has_storage': False,
+          'model_chain': list([
+            dict({
+              'address': 40002,
+              'length': 66,
+              'model_id': 1,
+            }),
+            dict({
+              'address': 40070,
+              'length': 60,
+              'model_id': 113,
+            }),
+            dict({
+              'address': 40132,
+              'length': 24,
+              'model_id': 123,
+            }),
+            dict({
+              'address': 40158,
+              'length': 28,
+              'model_id': 160,
+            }),
+          ]),
+        }),
       }),
     }),
   })

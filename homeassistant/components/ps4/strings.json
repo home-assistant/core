@@ -27,7 +27,6 @@
         "data": {
           "code": "[%key:common::config_flow::data::pin%]",
           "ip_address": "[%key:common::config_flow::data::ip%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "region": "Region"
         },
         "data_description": {

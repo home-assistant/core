@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ouman_eh_800",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["ouman-eh-800-api==1.0.0"]
 }

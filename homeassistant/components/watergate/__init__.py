@@ -33,7 +33,9 @@ WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
 
 PLATFORMS: list[Platform] = [
     Platform.EVENT,
+    Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.VALVE,
 ]
 

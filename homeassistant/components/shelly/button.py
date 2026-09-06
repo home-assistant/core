@@ -25,7 +25,7 @@ from .const import (
     MODEL_FRANKEVER_WATER_VALVE,
     ROLE_GENERIC,
     SHELLY_GAS_MODELS,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -101,14 +101,18 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="turn_on_the_screen",
         press_action="wall_display_set_screen",
         params={"value": True},
-        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+        supported=lambda coordinator: coordinator.model.startswith(
+            SHELLY_WALL_DISPLAY_MODEL_PREFIX
+        ),
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_off_screen",
         translation_key="turn_off_the_screen",
         press_action="wall_display_set_screen",
         params={"value": False},
-        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+        supported=lambda coordinator: coordinator.model.startswith(
+            SHELLY_WALL_DISPLAY_MODEL_PREFIX
+        ),
     ),
 ]
 
@@ -283,7 +287,12 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
 
         self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{attribute}"
         self._attr_device_info = get_blu_trv_device_info(
-            config, ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            config,
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
     @rpc_call

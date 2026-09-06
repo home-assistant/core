@@ -643,11 +643,29 @@ async def test_setpoint_thermostat(
     client.async_send_command_no_wait.reset_mock()
 
 
-async def test_thermostat_heatit_z_trm6(
-    hass: HomeAssistant, client, climate_heatit_z_trm6, integration
+@pytest.fixture
+def heatit_trm_node(request: pytest.FixtureRequest) -> Node:
+    """Resolve the parametrized Heatit Z-TRM node fixture before integration setup."""
+    return request.getfixturevalue(request.param)
+
+
+@pytest.mark.parametrize(
+    ("heatit_trm_node", "target_temperature"),
+    [
+        pytest.param("climate_heatit_z_trm6", 19.0, id="z-trm6"),
+        pytest.param("climate_heatit_z_trm7", 15.0, id="z-trm7"),
+    ],
+    indirect=["heatit_trm_node"],
+)
+async def test_thermostat_heatit_z_trm6_trm7(
+    hass: HomeAssistant,
+    client: MagicMock,
+    heatit_trm_node: Node,
+    integration: MockConfigEntry,
+    target_temperature: float,
 ) -> None:
-    """Test a heatit Z-TRM6 entity."""
-    node = climate_heatit_z_trm6
+    """Test Heatit Z-TRM6/Z-TRM7 current_temperature follows config sensor mode."""
+    node = heatit_trm_node
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
@@ -658,7 +676,7 @@ async def test_thermostat_heatit_z_trm6(
         HVACMode.COOL,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
-    assert state.attributes[ATTR_TEMPERATURE] == 19
+    assert state.attributes[ATTR_TEMPERATURE] == target_temperature
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -670,7 +688,7 @@ async def test_thermostat_heatit_z_trm6(
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 40
 
-    # Try switching to external sensor (not connected so defaults to 0)
+    # External with floor limit → endpoint 3 (not connected so defaults to 0)
     event = Event(
         type="value updated",
         data={
@@ -684,7 +702,7 @@ async def test_thermostat_heatit_z_trm6(
                 "property": 2,
                 "propertyName": "Sensor mode",
                 "newValue": 4,
-                "prevValue": 2,
+                "prevValue": 1,
             },
         },
     )
@@ -693,7 +711,7 @@ async def test_thermostat_heatit_z_trm6(
     assert state
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
 
-    # Try switching to floor sensor
+    # Floor → endpoint 4
     event = Event(
         type="value updated",
         data={

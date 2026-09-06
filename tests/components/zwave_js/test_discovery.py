@@ -139,6 +139,17 @@ async def test_inovelli_lzw36(
     assert state
 
 
+async def test_leviton_vrf01(
+    hass: HomeAssistant, client, leviton_vrf01, integration
+) -> None:
+    """Test Leviton VRF01 multilevel switch is discovered as a fan, not a light."""
+    node = leviton_vrf01
+    assert node.device_class.specific.label == "Multilevel Scene Switch"
+
+    assert hass.states.get("fan.fan")
+    assert not hass.states.get("light.fan")
+
+
 async def test_vision_security_zl7432(
     hass: HomeAssistant, client, vision_security_zl7432, integration
 ) -> None:
@@ -683,8 +694,9 @@ async def test_fibaro_fgms001_unknown_firmware_setup(
     """
     assert integration.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, fibaro_fgms001_unknown_firmware)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_unknown_firmware),
+        integration.entry_id,
     )
     assert device is not None
 
@@ -717,8 +729,8 @@ async def test_fibaro_fgms001_v2_8_motion_discovery(
     or be misclassified, so we assert that exactly one binary_sensor entity
     with device_class=motion is created and no light entity exists.
     """
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, fibaro_fgms001_v2_8)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_v2_8), integration.entry_id
     )
     assert device is not None
 

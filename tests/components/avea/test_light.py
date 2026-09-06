@@ -77,12 +77,14 @@ async def test_init_state(
 
 async def test_device_info(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     setup_integration: MagicMock,
 ) -> None:
     """Test the device info."""
     bulb = setup_integration
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address),
+        mock_config_entry.entry_id,
     )
 
     assert device is not None
@@ -125,8 +127,9 @@ async def test_device_info_populates_when_connect_fails(
     mock_bulb.get_serial_number.assert_called_once()
     mock_bulb.disconnect.assert_not_called()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address),
+        mock_config_entry.entry_id,
     )
 
     assert device is not None
@@ -160,8 +163,9 @@ async def test_device_info_ignores_unknown_values(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address),
+        mock_config_entry.entry_id,
     )
 
     assert device is not None

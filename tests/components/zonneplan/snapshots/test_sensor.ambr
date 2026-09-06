@@ -1,0 +1,1213 @@
+# serializer version: 1
+# name: test_sensor[prices_incoming][sensor.zonneplan_current_electricity_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_current_electricity_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current electricity price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current electricity price',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_electricity_price',
+    'unique_id': '00000000-0000-4000-8000-000000000001_current_electricity_price',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_current_electricity_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Current electricity price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_current_electricity_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2351863',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_today_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low today end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low today end time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_today_end_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_today_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_today_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low today end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-30T15:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_today_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low today start time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low today start time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_today_start_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_today_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_today_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low today start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-30T07:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_tomorrow_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low tomorrow end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low tomorrow end time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_tomorrow_end_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_tomorrow_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_tomorrow_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low tomorrow end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_tomorrow_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low tomorrow start time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low tomorrow start time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_tomorrow_start_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_tomorrow_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_price_low_tomorrow_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low tomorrow start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_prices_tomorrow_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'incoming',
+        'available',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_prices_tomorrow_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity prices tomorrow status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Electricity prices tomorrow status',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_prices_tomorrow_status',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_prices_tomorrow_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_electricity_prices_tomorrow_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity prices tomorrow status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'incoming',
+        'available',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_prices_tomorrow_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'incoming',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_gas_price_daily-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_gas_price_daily',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gas price daily',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas price daily',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_price_today',
+    'unique_id': '00000000-0000-4000-8000-000000000001_gas_price_today',
+    'unit_of_measurement': 'EUR/m³',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_gas_price_daily-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Gas price daily',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_gas_price_daily',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_highest_electricity_price_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highest electricity price today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Highest electricity price today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'highest_electricity_price_today',
+    'unique_id': '00000000-0000-4000-8000-000000000001_highest_electricity_price_today',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_highest_electricity_price_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Highest electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3647561',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_highest_electricity_price_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highest electricity price tomorrow',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Highest electricity price tomorrow',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'highest_electricity_price_tomorrow',
+    'unique_id': '00000000-0000-4000-8000-000000000001_highest_electricity_price_tomorrow',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_highest_electricity_price_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Highest electricity price tomorrow',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_lowest_electricity_price_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest electricity price today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lowest electricity price today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_electricity_price_today',
+    'unique_id': '00000000-0000-4000-8000-000000000001_lowest_electricity_price_today',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_lowest_electricity_price_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Lowest electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1295896',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_lowest_electricity_price_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest electricity price tomorrow',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lowest electricity price tomorrow',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_electricity_price_tomorrow',
+    'unique_id': '00000000-0000-4000-8000-000000000001_lowest_electricity_price_tomorrow',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.zonneplan_lowest_electricity_price_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Lowest electricity price tomorrow',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_current_electricity_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_current_electricity_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current electricity price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current electricity price',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_electricity_price',
+    'unique_id': '00000000-0000-4000-8000-000000000001_current_electricity_price',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_current_electricity_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Current electricity price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_current_electricity_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1310052',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_today_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low today end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low today end time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_today_end_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_today_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_today_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low today end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-29T14:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_today_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low today start time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low today start time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_today_start_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_today_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_today_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low today start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_today_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-29T08:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_tomorrow_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low tomorrow end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low tomorrow end time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_tomorrow_end_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_tomorrow_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_tomorrow_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low tomorrow end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-30T15:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_tomorrow_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity price low tomorrow start time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Electricity price low tomorrow start time',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_price_low_tomorrow_start_time',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_price_low_tomorrow_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_price_low_tomorrow_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity price low tomorrow start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_price_low_tomorrow_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-08-30T07:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_prices_tomorrow_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'incoming',
+        'available',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_electricity_prices_tomorrow_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity prices tomorrow status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Electricity prices tomorrow status',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_prices_tomorrow_status',
+    'unique_id': '00000000-0000-4000-8000-000000000001_electricity_prices_tomorrow_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_electricity_prices_tomorrow_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Electricity prices tomorrow status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'incoming',
+        'available',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_electricity_prices_tomorrow_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'available',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_gas_price_daily-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_gas_price_daily',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gas price daily',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas price daily',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_price_today',
+    'unique_id': '00000000-0000-4000-8000-000000000001_gas_price_today',
+    'unit_of_measurement': 'EUR/m³',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_gas_price_daily-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Gas price daily',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_gas_price_daily',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.6029802',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_highest_electricity_price_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highest electricity price today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Highest electricity price today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'highest_electricity_price_today',
+    'unique_id': '00000000-0000-4000-8000-000000000001_highest_electricity_price_today',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_highest_electricity_price_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Highest electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3581586',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_highest_electricity_price_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highest electricity price tomorrow',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Highest electricity price tomorrow',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'highest_electricity_price_tomorrow',
+    'unique_id': '00000000-0000-4000-8000-000000000001_highest_electricity_price_tomorrow',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_highest_electricity_price_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Highest electricity price tomorrow',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_highest_electricity_price_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3647561',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_lowest_electricity_price_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest electricity price today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lowest electricity price today',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_electricity_price_today',
+    'unique_id': '00000000-0000-4000-8000-000000000001_lowest_electricity_price_today',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_lowest_electricity_price_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Lowest electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1289241',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_lowest_electricity_price_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest electricity price tomorrow',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lowest electricity price tomorrow',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_electricity_price_tomorrow',
+    'unique_id': '00000000-0000-4000-8000-000000000001_lowest_electricity_price_tomorrow',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.zonneplan_lowest_electricity_price_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zonneplan Lowest electricity price tomorrow',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zonneplan_lowest_electricity_price_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1295896',
+  })
+# ---

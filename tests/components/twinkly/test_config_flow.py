@@ -117,6 +117,26 @@ async def test_dhcp_full_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == TEST_MAC
 
 
+async def test_dhcp_cannot_connect(
+    hass: HomeAssistant, mock_twinkly_client: AsyncMock
+) -> None:
+    """Test DHCP discovery aborts when the device does not answer."""
+    mock_twinkly_client.get_details.side_effect = TimeoutError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="Twinkly_XYZ",
+            ip="1.2.3.4",
+            macaddress="002d133baabb",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 @pytest.mark.usefixtures("mock_twinkly_client")
 async def test_dhcp_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

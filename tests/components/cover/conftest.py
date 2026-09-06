@@ -64,4 +64,14 @@ def mock_cover_entities() -> list[MockCover]:
             supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
             reports_opening_closing=True,
         ),
+        MockCover(
+            name="Cover with speed support",
+            unique_id="unique_speed_cover",
+            current_cover_position=50,
+            supported_features=CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION,
+            supported_speeds=["slow", "fast", "default"],
+        ),
     ]

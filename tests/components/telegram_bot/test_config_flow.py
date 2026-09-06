@@ -786,9 +786,15 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         # test: import first entry success
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=data,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
         )
         await hass.async_block_till_done()
 
@@ -801,9 +807,15 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         # test: import 2nd entry failed due to duplicate
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=data,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
         )
         await hass.async_block_till_done()
 

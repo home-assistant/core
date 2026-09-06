@@ -81,8 +81,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         """
         device_registry = dr.async_get(hass)
         assert entry.unique_id
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.unique_id), entry.entry_id
         )
         assert device_entry
         device_registry.async_update_device(device_entry.id, name=entry.title)

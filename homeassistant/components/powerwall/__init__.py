@@ -28,6 +28,8 @@ from .const import (
     AUTH_COOKIE_KEY,
     CONFIG_ENTRY_COOKIE,
     DOMAIN,
+    MANUFACTURER,
+    MODEL,
     POWERWALL_API_CHANGED,
     POWERWALL_COORDINATOR,
 )
@@ -238,6 +240,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
 
     await async_migrate_entity_unique_ids(hass, entry, base_info)
 
+    # Register the gateway device so battery devices can link to it via
+    # via_device_id, which must resolve to an already-registered device.
+    model = (
+        f"{MODEL} ({base_info.device_type.name})"
+        if base_info.device_type is not None
+        else MODEL
+    )
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, gateway_din)},
+        manufacturer=MANUFACTURER,
+        model=model,
+        name=base_info.site_name,
+        sw_version=base_info.status.version if base_info.status else None,
+        configuration_url=base_info.url,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -253,7 +273,9 @@ async def async_migrate_entity_unique_ids(
     new_base_unique_id = base_info.gateway_din
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, old_base_unique_id), entry.entry_id
+    ):
         dev_reg.async_update_device(
             device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
         )

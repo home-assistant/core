@@ -28,11 +28,14 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import PlayerMocks
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -360,6 +363,34 @@ async def test_attr_bluesound_group(
     ).attributes.get("bluesound_group")
 
     assert attr_bluesound_group == ["player-name1111", "player-name2222"]
+
+
+async def test_attr_bluesound_group_skips_an_entry_that_is_not_loaded(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    config_entry_secondary: MockConfigEntry,
+    player_mocks: PlayerMocks,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test grouping passes over a player whose entry never loaded.
+
+    Such an entry carries no runtime data to read a sync status from.
+    """
+    config_entry_secondary.add_to_hass(hass)
+    assert config_entry_secondary.state is ConfigEntryState.NOT_LOADED
+
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        followers=[PairedPlayer("2.2.2.2", 11000)],
+    )
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
+
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
+    await hass.async_block_till_done()
+
+    assert "runtime_data" not in caplog.text
+    assert hass.states.get("media_player.player_name1111") is not None
 
 
 async def test_attr_bluesound_group_for_follower(

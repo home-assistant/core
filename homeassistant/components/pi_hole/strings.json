@@ -21,7 +21,6 @@
           "api_key": "App password or API key",
           "host": "[%key:common::config_flow::data::host%]",
           "location": "[%key:common::config_flow::data::location%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"

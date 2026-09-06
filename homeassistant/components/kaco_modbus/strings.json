@@ -1,0 +1,65 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_a_kaco_inverter": "That address answers, but the device is not a KACO inverter",
+      "not_a_sunspec_inverter": "That address answers Modbus, but not as a SunSpec inverter",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Unit ID"
+        },
+        "data_description": {
+          "host": "The inverter's hostname or IP address.",
+          "port": "The Modbus TCP port. KACO inverters use 502 unless changed.",
+          "unit_id": "Leave at 1 unless the inverter is reached through an RS485-to-TCP gateway, which needs the address configured on that gateway."
+        },
+        "description": "Enter the address of your KACO inverter. Modbus TCP must be enabled on the inverter, under its SunSpec or Modbus protocol settings."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_power": {
+        "name": "AC power"
+      },
+      "lifetime_energy": {
+        "name": "Total energy produced"
+      },
+      "operating_state": {
+        "name": "Operating state",
+        "state": {
+          "fault": "Fault",
+          "mppt": "Producing",
+          "off": "[%key:common::state::off%]",
+          "shutting_down": "Shutting down",
+          "sleeping": "Asleep",
+          "standby": "[%key:common::state::standby%]",
+          "starting": "Starting up",
+          "throttled": "Throttled"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to reach the inverter: {error}"
+    },
+    "no_component_answered": {
+      "message": "{name} accepted the connection but answered nothing."
+    },
+    "not_a_kaco_inverter": {
+      "message": "The device at this address is not a KACO inverter: {error}"
+    },
+    "sunspec_map_moved": {
+      "message": "The inverter's SunSpec register map moved, so the integration is reloading to find it again: {error}"
+    }
+  }
+}

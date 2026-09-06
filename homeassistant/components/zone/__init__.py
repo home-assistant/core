@@ -439,6 +439,7 @@ class Zone(collection.CollectionEntity):
         self._attrs: dict | None = None
         self._remove_listener: Callable[[], None] | None = None
         self._persons_in_zone: set[str] = set()
+        self._device_trackers_in_zone: set[str] = set()
         self._set_attrs_from_config()
 
     def _set_attrs_from_config(self) -> None:
@@ -484,27 +485,45 @@ class Zone(collection.CollectionEntity):
         self.async_write_ha_state()
 
     @callback
-    def _person_state_change_listener(self, evt: Event[EventStateChangedData]) -> None:
-        person_entity_id = evt.data["entity_id"]
-        persons_in_zone = self._persons_in_zone
-        cur_count = len(persons_in_zone)
+    def _update_tracked_in_zone(
+        self, tracked_in_zone: set[str], evt: Event[EventStateChangedData]
+    ) -> None:
+        entity_id = evt.data["entity_id"]
+        cur_count = len(tracked_in_zone)
         if self._state_is_in_zone(evt.data["new_state"]):
-            persons_in_zone.add(person_entity_id)
-        elif person_entity_id in persons_in_zone:
-            persons_in_zone.remove(person_entity_id)
+            tracked_in_zone.add(entity_id)
+        elif entity_id in tracked_in_zone:
+            tracked_in_zone.remove(entity_id)
 
-        if len(persons_in_zone) != cur_count:
+        if len(tracked_in_zone) != cur_count:
             self._generate_attrs()
             self.async_write_ha_state()
+
+    @callback
+    def _person_state_change_listener(self, evt: Event[EventStateChangedData]) -> None:
+        self._update_tracked_in_zone(self._persons_in_zone, evt)
+
+    @callback
+    def _device_tracker_state_change_listener(
+        self, evt: Event[EventStateChangedData]
+    ) -> None:
+        self._update_tracked_in_zone(self._device_trackers_in_zone, evt)
 
     @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        person_domain = "person"  # avoid circular import
+        # Domains are hardcoded to avoid circular imports.
+        person_domain = "person"
+        device_tracker_domain = "device_tracker"
         self._persons_in_zone = {
             state.entity_id
             for state in self.hass.states.async_all(person_domain)
+            if self._state_is_in_zone(state)
+        }
+        self._device_trackers_in_zone = {
+            state.entity_id
+            for state in self.hass.states.async_all(device_tracker_domain)
             if self._state_is_in_zone(state)
         }
         self._generate_attrs()
@@ -514,6 +533,13 @@ class Zone(collection.CollectionEntity):
                 self.hass,
                 event.TrackStates(False, set(), {person_domain}),
                 self._person_state_change_listener,
+            ).async_remove
+        )
+        self.async_on_remove(
+            event.async_track_state_change_filtered(
+                self.hass,
+                event.TrackStates(False, set(), {device_tracker_domain}),
+                self._device_tracker_state_change_listener,
             ).async_remove
         )
 
@@ -526,6 +552,9 @@ class Zone(collection.CollectionEntity):
             ZoneEntityStateAttribute.RADIUS: self._config[CONF_RADIUS],
             ZoneEntityStateAttribute.PASSIVE: self._config[CONF_PASSIVE],
             ZoneEntityStateAttribute.PERSONS: sorted(self._persons_in_zone),
+            ZoneEntityStateAttribute.DEVICE_TRACKERS: sorted(
+                self._device_trackers_in_zone
+            ),
             ZoneEntityStateAttribute.EDITABLE: self.editable,
         }
 

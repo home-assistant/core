@@ -1,0 +1,6493 @@
+# serializer version: 1
+# name: test_all_entities[sensor.air_conditioner_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_conditioner_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': '8765432109876543210-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air conditioner Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_conditioner_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_conditioner_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': '8765432109876543210-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air conditioner Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_conditioner_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_conditioner_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': '8765432109876543210-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air conditioner Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_conditioner_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_bean_container_empty-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_bean_container_empty',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bean container empty',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Bean container empty',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bean_container_empty',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.BeanContainerEmpty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_bean_container_empty-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Bean container empty',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_bean_container_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_10_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_10_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Calc'N'Clean in 10 cups",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Calc'N'Clean in 10 cups",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calc_n_clean_in10cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.CalcNCleanIn10Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_10_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Calc'N'Clean in 10 cups",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_10_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_15_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_15_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Calc'N'Clean in 15 cups",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Calc'N'Clean in 15 cups",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calc_n_clean_in15cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.CalcNCleanIn15Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_15_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Calc'N'Clean in 15 cups",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_15_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_20_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_20_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Calc'N'Clean in 20 cups",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Calc'N'Clean in 20 cups",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calc_n_clean_in20cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.CalcNCleanIn20Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_20_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Calc'N'Clean in 20 cups",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_20_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_5_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_5_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Calc'N'Clean in 5 cups",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Calc'N'Clean in 5 cups",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calc_n_clean_in5cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.CalcNCleanIn5Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_calc_n_clean_in_5_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Calc'N'Clean in 5 cups",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_calc_n_clean_in_5_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_10_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_descaling_in_10_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling in 10 cups',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Descaling in 10 cups',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_in_10_cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DescalingIn10Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_10_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Descaling in 10 cups',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_descaling_in_10_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_15_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_descaling_in_15_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling in 15 cups',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Descaling in 15 cups',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_in_15_cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DescalingIn15Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_15_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Descaling in 15 cups',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_descaling_in_15_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_20_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_descaling_in_20_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling in 20 cups',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Descaling in 20 cups',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_in_20_cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DescalingIn20Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_20_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Descaling in 20 cups',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_descaling_in_20_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_5_cups-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_descaling_in_5_cups',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling in 5 cups',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Descaling in 5 cups',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_in_5_cups',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DescalingIn5Cups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_descaling_in_5_cups-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Descaling in 5 cups',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_descaling_in_5_cups',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_calc_n_clean_blockage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_calc_n_clean_blockage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Device Calc'N'Clean blockage",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Device Calc'N'Clean blockage",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_calc_n_clean_blockage',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceCalcNCleanBlockage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_calc_n_clean_blockage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Device Calc'N'Clean blockage",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_calc_n_clean_blockage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_calc_n_clean_overdue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_calc_n_clean_overdue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Device Calc'N'Clean overdue",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Device Calc'N'Clean overdue",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_calc_n_clean_overdue',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceCalcNCleanOverdue',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_calc_n_clean_overdue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Device Calc'N'Clean overdue",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_calc_n_clean_overdue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_cleaning_overdue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_cleaning_overdue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device cleaning overdue',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device cleaning overdue',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_cleaning_overdue',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceCleaningOverdue',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_cleaning_overdue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Device cleaning overdue',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_cleaning_overdue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_descaling_blockage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_descaling_blockage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device descaling blockage',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device descaling blockage',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_descaling_blockage',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceDescalingBlockage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_descaling_blockage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Device descaling blockage',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_descaling_blockage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_descaling_overdue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_descaling_overdue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device descaling overdue',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device descaling overdue',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_descaling_overdue',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceDescalingOverdue',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_descaling_overdue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Device descaling overdue',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_descaling_overdue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_should_be_calc_n_cleaned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_should_be_calc_n_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "Device should be Calc'N'Cleaned",
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': "Device should be Calc'N'Cleaned",
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_should_be_calc_n_cleaned',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceShouldBeCalcNCleaned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_should_be_calc_n_cleaned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "CoffeeMaker Device should be Calc'N'Cleaned",
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_should_be_calc_n_cleaned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_should_be_cleaned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_should_be_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device should be cleaned',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device should be cleaned',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_should_be_cleaned',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceShouldBeCleaned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_should_be_cleaned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Device should be cleaned',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_should_be_cleaned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_should_be_descaled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_device_should_be_descaled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device should be descaled',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device should be descaled',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_should_be_descaled',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DeviceShouldBeDescaled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_device_should_be_descaled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Device should be descaled',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_device_should_be_descaled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_drip_tray_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_drip_tray_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drip tray full',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Drip tray full',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'drip_tray_full',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.DripTrayFull',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_drip_tray_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Drip tray full',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_drip_tray_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_keep_milk_tank_cool-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_keep_milk_tank_cool',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Keep milk tank cool',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Keep milk tank cool',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keep_milk_tank_cool',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.KeepMilkTankCool',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_keep_milk_tank_cool-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Keep milk tank cool',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_keep_milk_tank_cool',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_water_tank_empty-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_water_tank_empty',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water tank empty',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Water tank empty',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_tank_empty',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-ConsumerProducts.CoffeeMaker.Event.WaterTankEmpty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_water_tank_empty-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Water tank empty',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_water_tank_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cookprocessor_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': '123456789012345678-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CookProcessor Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cookprocessor_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cookprocessor_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': '123456789012345678-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CookProcessor Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cookprocessor_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_program_aborted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cookprocessor_program_aborted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program aborted',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program aborted',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_aborted',
+    'unique_id': '123456789012345678-BSH.Common.Event.ProgramAborted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_program_aborted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CookProcessor Program aborted',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cookprocessor_program_aborted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cookprocessor_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': '123456789012345678-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CookProcessor Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cookprocessor_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cookprocessor_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': '123456789012345678-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.cookprocessor_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CookProcessor Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cookprocessor_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_machine_care_and_filter_cleaning_reminder-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_machine_care_and_filter_cleaning_reminder',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Machine care and filter cleaning reminder',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Machine care and filter cleaning reminder',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'machine_care_and_filter_cleaning_reminder',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.MachineCareAndFilterCleaningReminder',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_machine_care_and_filter_cleaning_reminder-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Machine care and filter cleaning reminder',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_machine_care_and_filter_cleaning_reminder',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_machine_care_and_low_maintenance_filter_cleaning_reminder-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_machine_care_and_low_maintenance_filter_cleaning_reminder',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Machine care and low maintenance filter cleaning reminder',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Machine care and low maintenance filter cleaning reminder',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'machine_care_and_low_maintenance_filter_cleaning_reminder',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.MachineCareAndLowMaintenanceFilterCleaningReminder',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_machine_care_and_low_maintenance_filter_cleaning_reminder-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Machine care and low maintenance filter cleaning reminder',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_machine_care_and_low_maintenance_filter_cleaning_reminder',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_machine_care_reminder-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_machine_care_reminder',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Machine care reminder',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Machine care reminder',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'machine_care_reminder',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.MachineCareReminder',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_machine_care_reminder-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Machine care reminder',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_machine_care_reminder',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_aborted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_program_aborted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program aborted',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program aborted',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_aborted',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Event.ProgramAborted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_aborted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Program aborted',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_program_aborted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_blocked_salt_lack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_program_blocked_salt_lack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program blocked - salt lack',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program blocked - salt lack',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_blocked_salt_lack',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.ProgramBlockedSaltLack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_blocked_salt_lack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Program blocked - salt lack',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_program_blocked_salt_lack',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_rinse_aid_lack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_rinse_aid_lack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid lack',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Rinse aid lack',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_lack',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.RinseAidLack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_rinse_aid_lack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Rinse aid lack',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_rinse_aid_lack',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_rinse_aid_nearly_empty-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_rinse_aid_nearly_empty',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid nearly empty',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Rinse aid nearly empty',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_nearly_empty',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.RinseAidNearlyEmpty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_rinse_aid_nearly_empty-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Rinse aid nearly empty',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_rinse_aid_nearly_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_salt_lack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_salt_lack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt lack',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Salt lack',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_lack',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SaltLack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_salt_lack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Salt lack',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_salt_lack',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_salt_nearly_empty-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_salt_nearly_empty',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt nearly empty',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Salt nearly empty',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_nearly_empty',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SaltNearlyEmpty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_salt_nearly_empty-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Salt nearly empty',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_salt_nearly_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_smart_filter_cleaning_reminder-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_smart_filter_cleaning_reminder',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smart filter cleaning reminder',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Smart filter cleaning reminder',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_filter_cleaning_reminder',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SmartFilterCleaningReminder',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_smart_filter_cleaning_reminder-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Smart filter cleaning reminder',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_smart_filter_cleaning_reminder',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dne_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dne_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-000000000-000000000000-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dne_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DNE Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dne_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.dne_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dne_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-000000000-000000000000-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dne_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DNE Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dne_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_drying_process_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_drying_process_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying process finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Drying process finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'drying_process_finished',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-LaundryCare.Dryer.Event.DryingProcessFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_drying_process_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Drying process finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_drying_process_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.freezer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freezer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-D00000000003-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.freezer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freezer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.freezer_freezer_door_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freezer_freezer_door_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freezer door alarm',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Freezer door alarm',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_door_alarm',
+    'unique_id': 'BOSCH-HCS000000-D00000000003-Refrigeration.FridgeFreezer.Event.DoorAlarmFreezer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.freezer_freezer_door_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Freezer door alarm',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freezer_freezer_door_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.freezer_freezer_temperature_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freezer_freezer_temperature_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freezer temperature alarm',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Freezer temperature alarm',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_temperature_alarm',
+    'unique_id': 'BOSCH-HCS000000-D00000000003-Refrigeration.FridgeFreezer.Event.TemperatureAlarmFreezer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.freezer_freezer_temperature_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Freezer temperature alarm',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freezer_freezer_temperature_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.freezer_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freezer_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS000000-D00000000003-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.freezer_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freezer_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridgefreezer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'SIEMENS-HCS05FRF1-304F4F9E541D-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FridgeFreezer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridgefreezer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_freezer_door_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridgefreezer_freezer_door_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freezer door alarm',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Freezer door alarm',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_door_alarm',
+    'unique_id': 'SIEMENS-HCS05FRF1-304F4F9E541D-Refrigeration.FridgeFreezer.Event.DoorAlarmFreezer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_freezer_door_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FridgeFreezer Freezer door alarm',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridgefreezer_freezer_door_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_freezer_temperature_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridgefreezer_freezer_temperature_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freezer temperature alarm',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Freezer temperature alarm',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_temperature_alarm',
+    'unique_id': 'SIEMENS-HCS05FRF1-304F4F9E541D-Refrigeration.FridgeFreezer.Event.TemperatureAlarmFreezer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_freezer_temperature_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FridgeFreezer Freezer temperature alarm',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridgefreezer_freezer_temperature_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridgefreezer_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'SIEMENS-HCS05FRF1-304F4F9E541D-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FridgeFreezer Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridgefreezer_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_refrigerator_door_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridgefreezer_refrigerator_door_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Refrigerator door alarm',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Refrigerator door alarm',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'refrigerator_door_alarm',
+    'unique_id': 'SIEMENS-HCS05FRF1-304F4F9E541D-Refrigeration.FridgeFreezer.Event.DoorAlarmRefrigerator',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_refrigerator_door_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FridgeFreezer Refrigerator door alarm',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridgefreezer_refrigerator_door_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hob_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hob_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-68A40E000000-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hob_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hob_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.hob_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hob_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS000000-68A40E000000-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hob_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hob_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.hood_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_long_press-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_favorite_long_press',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite long press',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Favorite long press',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_long_press',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Event.Favorite.002.ExternalTrigger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_long_press-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Favorite long press',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_favorite_long_press',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_short_press-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_favorite_short_press',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite short press',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Favorite short press',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_short_press',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Event.Favorite.001.ExternalTrigger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_short_press-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Favorite short press',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_favorite_short_press',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hood_grease_filter_max_saturation_nearly_reached-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_grease_filter_max_saturation_nearly_reached',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grease filter max saturation nearly reached',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Grease filter max saturation nearly reached',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grease_filter_max_saturation_nearly_reached',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-Cooking.Common.Event.Hood.GreaseFilterMaxSaturationNearlyReached',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_grease_filter_max_saturation_nearly_reached-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Grease filter max saturation nearly reached',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_grease_filter_max_saturation_nearly_reached',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hood_grease_filter_max_saturation_reached-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_grease_filter_max_saturation_reached',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grease filter max saturation reached',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Grease filter max saturation reached',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grease_filter_max_saturation_reached',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-Cooking.Common.Event.Hood.GreaseFilterMaxSaturationReached',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_grease_filter_max_saturation_reached-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Grease filter max saturation reached',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_grease_filter_max_saturation_reached',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hood_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.hood_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.hood_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.hood_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': '541513213246313789-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': '541513213246313789-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_aborted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_program_aborted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program aborted',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program aborted',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_aborted',
+    'unique_id': '541513213246313789-BSH.Common.Event.ProgramAborted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_aborted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Program aborted',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_program_aborted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': '541513213246313789-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': '541513213246313789-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': '541513213246313789-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.oven_alarm_clock_elapsed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_alarm_clock_elapsed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm clock elapsed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Alarm clock elapsed',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_clock_elapsed',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Event.AlarmClockElapsed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_alarm_clock_elapsed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Alarm clock elapsed',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_alarm_clock_elapsed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.oven_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.oven_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.oven_pre_heat_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_pre_heat_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pre-heat finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Pre-heat finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preheat_finished',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-Cooking.Oven.Event.PreheatFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_pre_heat_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Pre-heat finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_pre_heat_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.oven_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.oven_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.oven_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.oven_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.oven_regular_pre_heat_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_regular_pre_heat_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Regular pre-heat finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Regular pre-heat finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'regular_preheat_finished',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-Cooking.Oven.Event.RegularPreheatFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_regular_pre_heat_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Regular pre-heat finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_regular_pre_heat_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-D00000000002-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS000000-D00000000002-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_refrigerator_door_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_refrigerator_door_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Refrigerator door alarm',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Refrigerator door alarm',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'refrigerator_door_alarm',
+    'unique_id': 'BOSCH-HCS000000-D00000000002-Refrigeration.FridgeFreezer.Event.DoorAlarmRefrigerator',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_refrigerator_door_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Refrigerator door alarm',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_refrigerator_door_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.washer_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.washer_poor_i_dos_1_fill_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_poor_i_dos_1_fill_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poor i-Dos 1 fill level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Poor i-Dos 1 fill level',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'poor_i_dos_1_fill_level',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-LaundryCare.Washer.Event.IDos1FillLevelPoor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_poor_i_dos_1_fill_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Poor i-Dos 1 fill level',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_poor_i_dos_1_fill_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washer_poor_i_dos_2_fill_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_poor_i_dos_2_fill_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poor i-Dos 2 fill level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Poor i-Dos 2 fill level',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'poor_i_dos_2_fill_level',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-LaundryCare.Washer.Event.IDos2FillLevelPoor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_poor_i_dos_2_fill_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Poor i-Dos 2 fill level',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_poor_i_dos_2_fill_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washer_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.washer_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washer_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.washer_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_operation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_operation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operation state',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_state',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Status.OperationState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_operation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Operation state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'inactive',
+        'ready',
+        'delayedstart',
+        'run',
+        'pause',
+        'actionrequired',
+        'finished',
+        'error',
+        'aborting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_operation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_poor_i_dos_1_fill_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_poor_i_dos_1_fill_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poor i-Dos 1 fill level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Poor i-Dos 1 fill level',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'poor_i_dos_1_fill_level',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-LaundryCare.Washer.Event.IDos1FillLevelPoor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_poor_i_dos_1_fill_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Poor i-Dos 1 fill level',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_poor_i_dos_1_fill_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_poor_i_dos_2_fill_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_poor_i_dos_2_fill_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poor i-Dos 2 fill level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Poor i-Dos 2 fill level',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'poor_i_dos_2_fill_level',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-LaundryCare.Washer.Event.IDos2FillLevelPoor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_poor_i_dos_2_fill_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Poor i-Dos 2 fill level',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_poor_i_dos_2_fill_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_program_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_program_finish_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finish time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Program finish time',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finish_time',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Option.RemainingProgramTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_program_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Program finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_program_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_program_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_program_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_finished',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Event.ProgramFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_program_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Program finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_program_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_program_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_program_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Program progress',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_progress',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Option.ProgramProgress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_program_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Program progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_program_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

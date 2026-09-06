@@ -1,16 +1,14 @@
 """Test the SMTP config flow."""
 
-from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
-from socket import gaierror
-from ssl import SSLCertVerificationError
 from unittest.mock import AsyncMock, MagicMock
 
+from aiosmtplib import SMTPAuthenticationError, SMTPException, SMTPTimeoutError
 import pytest
 
 from homeassistant.components.smtp.const import (
-    CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     DOMAIN,
+    SECTION_OPTIONS,
     SUBENTRY_TYPE_RECIPIENT,
 )
 from homeassistant.config_entries import (
@@ -37,10 +35,12 @@ from .conftest import USER_INPUT
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("smtp", "smtp_ssl")
-@pytest.mark.parametrize("encryption", ["tls", "starttls"])
+@pytest.mark.usefixtures("smtp")
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, encryption: str
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    aiosmtplib: AsyncMock,
+    client_context: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -53,17 +53,15 @@ async def test_form(
         result["flow_id"],
         {
             **USER_INPUT,
-            CONF_ENCRYPTION: encryption,
+            SECTION_OPTIONS: {},
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant"
-    assert result["data"] == {
-        **USER_INPUT,
-        CONF_ENCRYPTION: encryption,
-    }
+    assert result["data"] == USER_INPUT
+    assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -79,9 +77,19 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Recipient"
     assert result["unique_id"] == "recipient@example.com"
+    aiosmtplib.cls.assert_called_once_with(
+        hostname="mail.example.com",
+        port=587,
+        username="test-username",
+        password="test-password",
+        timeout=60,
+        use_tls=False,
+        start_tls=True,
+        tls_context=client_context(),
+    )
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_form_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -98,7 +106,10 @@ async def test_form_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        {
+            **USER_INPUT,
+            SECTION_OPTIONS: {CONF_TIMEOUT: 60},
+        },
     )
     await hass.async_block_till_done()
 
@@ -110,18 +121,16 @@ async def test_form_already_configured(
     ("exception", "text_error"),
     [
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
-        (ConnectionRefusedError, "cannot_connect"),
-        (TimeoutError, "timeout_connect"),
-        (SMTPServerDisconnected, "cannot_connect"),
-        (gaierror, "cannot_connect"),
-        (SSLCertVerificationError, "invalid_cert"),
+        (SMTPException(""), "cannot_connect"),
+        (SMTPTimeoutError(""), "timeout_connect"),
         (ValueError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("smtp")
 async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    smtp: MagicMock,
+    aiosmtplib: MagicMock,
     exception: Exception,
     text_error: str,
 ) -> None:
@@ -130,31 +139,38 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    smtp.login.side_effect = exception
+    aiosmtplib.cls.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        {
+            **USER_INPUT,
+            SECTION_OPTIONS: {CONF_TIMEOUT: 60},
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    smtp.login.side_effect = None
+    aiosmtplib.cls.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        {
+            **USER_INPUT,
+            SECTION_OPTIONS: {CONF_TIMEOUT: 60},
+        },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant"
     assert result["data"] == USER_INPUT
+    assert result["options"] == {CONF_TIMEOUT: 60}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_form_recipient_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -184,7 +200,7 @@ async def test_form_recipient_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_options_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -217,7 +233,10 @@ async def test_options_flow(
 
 @pytest.mark.usefixtures("smtp")
 async def test_form_reconfigure(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aiosmtplib: AsyncMock,
+    client_context: MagicMock,
 ) -> None:
     """Test reconfigure flow."""
 
@@ -250,9 +269,19 @@ async def test_form_reconfigure(
     }
 
     assert len(hass.config_entries.async_entries()) == 1
+    aiosmtplib.cls.assert_called_once_with(
+        hostname="mail.example.com",
+        port=587,
+        username="new-username",
+        password="new-password",
+        timeout=1312,
+        use_tls=False,
+        start_tls=True,
+        tls_context=client_context(),
+    )
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_form_reconfigure_already_configured(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -294,11 +323,8 @@ async def test_form_reconfigure_already_configured(
     ("exception", "text_error"),
     [
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
-        (ConnectionRefusedError, "cannot_connect"),
-        (SMTPServerDisconnected, "cannot_connect"),
-        (TimeoutError, "timeout_connect"),
-        (gaierror, "cannot_connect"),
-        (SSLCertVerificationError, "invalid_cert"),
+        (SMTPException(""), "cannot_connect"),
+        (SMTPTimeoutError(""), "timeout_connect"),
         (ValueError, "unknown"),
     ],
 )
@@ -306,13 +332,13 @@ async def test_form_reconfigure_already_configured(
 async def test_form_reconfigure_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    smtp: MagicMock,
+    aiosmtplib: AsyncMock,
     exception: Exception,
     text_error: str,
 ) -> None:
     """Test reconfigure flow connection errors."""
 
-    smtp.login.side_effect = exception
+    aiosmtplib.cls.side_effect = exception
 
     config_entry.add_to_hass(hass)
 
@@ -334,7 +360,7 @@ async def test_form_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    smtp.login.side_effect = None
+    aiosmtplib.cls.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -359,7 +385,12 @@ async def test_form_reconfigure_errors(
 
 
 @pytest.mark.usefixtures("smtp")
-async def test_form_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_form_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aiosmtplib: AsyncMock,
+    client_context: MagicMock,
+) -> None:
     """Test reauth flow."""
 
     config_entry.add_to_hass(hass)
@@ -388,15 +419,24 @@ async def test_form_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -
     }
 
     assert len(hass.config_entries.async_entries()) == 1
+    aiosmtplib.cls.assert_called_once_with(
+        hostname="mail.example.com",
+        port=587,
+        username="new-username",
+        password="new-password",
+        timeout=1312,
+        use_tls=False,
+        start_tls=True,
+        tls_context=client_context(),
+    )
 
 
 @pytest.mark.parametrize(
     ("exception", "text_error"),
     [
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
-        (ConnectionRefusedError, "cannot_connect"),
-        (gaierror, "cannot_connect"),
-        (SSLCertVerificationError, "invalid_cert"),
+        (SMTPException(""), "cannot_connect"),
+        (SMTPTimeoutError(""), "timeout_connect"),
         (ValueError, "unknown"),
     ],
 )
@@ -404,13 +444,13 @@ async def test_form_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -
 async def test_form_reauth_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    smtp: MagicMock,
+    aiosmtplib: AsyncMock,
     exception: Exception,
     text_error: str,
 ) -> None:
     """Test reauth flow connection errors."""
 
-    smtp.login.side_effect = exception
+    aiosmtplib.cls.side_effect = exception
 
     config_entry.add_to_hass(hass)
 
@@ -430,7 +470,7 @@ async def test_form_reauth_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    smtp.login.side_effect = None
+    aiosmtplib.cls.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -451,7 +491,7 @@ async def test_form_reauth_errors(
     assert len(hass.config_entries.async_entries()) == 1
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_form_subentry_reconfigure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -492,7 +532,7 @@ async def test_form_subentry_reconfigure(
     assert entity.unique_id == "123456789_changed@example.com"
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_form_subentry_reconfigure_already_configured(
     hass: HomeAssistant,
 ) -> None:
@@ -539,7 +579,7 @@ async def test_form_subentry_reconfigure_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_form_subentry_reconfigure_updates_title(
     hass: HomeAssistant,
 ) -> None:

@@ -61,6 +61,9 @@
       "last_order_total_price": {
         "name": "Total price of last order"
       },
+      "next_delivery_estimated_arrival": {
+        "name": "Estimated arrival of next delivery"
+      },
       "next_delivery_eta_end": {
         "name": "Expected end of next delivery"
       },

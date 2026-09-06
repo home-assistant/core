@@ -50,8 +50,8 @@ async def test_device_info_sw_version_is_string(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"), mock_config_entry.entry_id
     )
     assert device_entry
     assert device_entry.sw_version == "120"

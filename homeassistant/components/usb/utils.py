@@ -19,6 +19,7 @@ def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
 
     return USBDevice(
         device=port.device,
+        resolved_device=port.resolved_device,
         vid=f"{hex(port.vid)[2:]:0>4}".upper(),
         pid=f"{hex(port.pid)[2:]:0>4}".upper(),
         serial_number=port.serial_number,
@@ -34,6 +35,7 @@ def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
     """Convert serialx SerialPortInfo to SerialDevice."""
     return SerialDevice(
         device=port.device,
+        resolved_device=port.resolved_device,
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
         description=port.description,

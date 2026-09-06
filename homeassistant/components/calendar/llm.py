@@ -21,7 +21,7 @@ from .const import DOMAIN
 class CalendarGetEventsTool(Tool):
     """LLM Tool allowing querying a calendar."""
 
-    name = "calendar_get_events"
+    name = "calendar__get_events"
     description = (
         "Get events from a calendar. "
         "When asked if something happens, search the whole week. "

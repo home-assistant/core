@@ -163,14 +163,14 @@ async def test_cloud_setup(
     assert entity_registry.async_is_registered(FIRST_CLOUD_ENTITY_ID)
     assert entity_registry.async_is_registered(SECOND_CLOUD_ENTITY_ID)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SITE_UUID + "_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SITE_UUID + "_0"), setup_risco_cloud.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SITE_UUID + "_1")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SITE_UUID + "_1"), setup_risco_cloud.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Risco"
@@ -581,14 +581,14 @@ async def test_local_setup(
     assert entity_registry.async_is_registered(FIRST_LOCAL_ENTITY_ID)
     assert entity_registry.async_is_registered(SECOND_LOCAL_ENTITY_ID)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SITE_UUID + "_0_local")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SITE_UUID + "_0_local"), setup_risco_local.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SITE_UUID + "_1_local")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SITE_UUID + "_1_local"), setup_risco_local.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Risco"

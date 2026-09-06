@@ -11,6 +11,8 @@ from homeassistant.components.event import (
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
@@ -42,8 +44,8 @@ CONF_EVENT_TYPES = "event_types"
 
 MQTT_EVENT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        event.ATTR_EVENT_TYPE,
-        event.ATTR_EVENT_TYPES,
+        EventEntityStateAttribute.EVENT_TYPE,
+        EventEntityCapabilityAttribute.EVENT_TYPES,
     }
 )
 

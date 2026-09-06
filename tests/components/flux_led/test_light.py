@@ -189,8 +189,8 @@ async def test_light_device_registry(
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS), config_entry.entry_id
     )
     assert device.sw_version == str(sw_version)
     assert device.model == model

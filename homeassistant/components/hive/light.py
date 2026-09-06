@@ -35,7 +35,9 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("light")
     if not devices:
         return
-    async_add_entities((HiveDeviceLight(hive, dev) for dev in devices), True)
+    async_add_entities(
+        (HiveDeviceLight(hass, entry, hive, dev) for dev in devices), True
+    )
 
 
 class HiveDeviceLight(HiveEntity, LightEntity):
@@ -44,9 +46,15 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     _attr_min_color_temp_kelvin = 2700  # 370 Mireds
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
+        hive: Hive,
+        hive_device: dict[str, Any],
+    ) -> None:
         """Initialise hive light."""
-        super().__init__(hive, hive_device)
+        super().__init__(hass, entry, hive, hive_device)
         if self.device["hiveType"] == "warmwhitelight":
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_color_mode = ColorMode.BRIGHTNESS

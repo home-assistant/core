@@ -319,9 +319,15 @@ async def test_flow_non_encrypted_already_configured_abort(hass: HomeAssistant) 
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={**MOCK_BASIC_DATA},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_BASIC_DATA},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -338,9 +344,15 @@ async def test_flow_encrypted_already_configured_abort(hass: HomeAssistant) -> N
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={**MOCK_BASIC_DATA},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_BASIC_DATA},
     )
 
     assert result["type"] is FlowResultType.ABORT

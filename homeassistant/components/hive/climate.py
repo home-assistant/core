@@ -61,7 +61,9 @@ async def async_setup_entry(
     hive = entry.runtime_data
     devices = hive.session.deviceList.get("climate")
     if devices:
-        async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)
+        async_add_entities(
+            (HiveClimateEntity(hass, entry, hive, dev) for dev in devices), True
+        )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -97,9 +99,15 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
+        hive: Hive,
+        hive_device: dict[str, Any],
+    ) -> None:
         """Initialize the Climate device."""
-        super().__init__(hive, hive_device)
+        super().__init__(hass, entry, hive, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
         self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 

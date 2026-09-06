@@ -13,10 +13,9 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import (
     ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -68,12 +67,8 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
 
         address = kiwi_lock.get("address")
-        address.update(
-            {
-                ATTR_LATITUDE: address.pop("lat", None),
-                ATTR_LONGITUDE: address.pop("lng", None),
-            }
-        )
+        latitude = address.pop("lat", None)
+        longitude = address.pop("lng", None)
 
         self._device_attrs = {
             ATTR_ID: self.lock_id,
@@ -81,6 +76,8 @@ class KiwiLock(LockEntity):
             ATTR_PERMISSION: kiwi_lock.get("highest_permission"),
             ATTR_CAN_INVITE: kiwi_lock.get("can_invite"),
             **address,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
         }
 
     @property

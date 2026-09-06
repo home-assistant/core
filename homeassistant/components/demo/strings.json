@@ -30,6 +30,18 @@
         }
       }
     },
+    "cover": {
+      "living_room_window": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "slow": "Slow"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "push": {
         "state_attributes": {

@@ -26,7 +26,12 @@ from homeassistant.helpers.singleton import singleton
 from .const import DATA_MANAGER
 from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
+from .models import (
+    BluetoothCallback,
+    BluetoothCallbackReplay,
+    BluetoothChange,
+    ProcessAdvertisementCallback,
+)
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -143,6 +148,7 @@ def async_register_callback(
     *,
     scan_interval: float | None = None,
     scan_duration: float | None = None,
+    replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
@@ -155,10 +161,13 @@ def async_register_callback(
     values. Without an address in the matcher the active-scan request
     is skipped; the callback itself still fires normally.
 
+    ``replay`` controls which cached advertisements are replayed to the
+    callback on registration; defaults to OLDEST_FIRST.
+
     Returns a callback that can be used to cancel the registration.
     """
     return _get_manager(hass).async_register_callback(
-        callback, match_dict, mode, scan_interval, scan_duration
+        callback, match_dict, mode, scan_interval, scan_duration, replay
     )
 
 

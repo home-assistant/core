@@ -220,8 +220,8 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def tibber_mock() -> AsyncGenerator[MagicMock]:
-    """Patch the Tibber libraries used by the integration."""
+def tibber_client_cls() -> AsyncGenerator[MagicMock]:
+    """Patch the Tibber class used by the integration."""
     unique_user_id = "unique_user_id"
     title = "title"
 
@@ -246,7 +246,13 @@ def tibber_mock() -> AsyncGenerator[MagicMock]:
         data_api_mock.get_userinfo = AsyncMock()
         tibber_mock.data_api = data_api_mock
 
-        yield tibber_mock
+        yield mock_tibber
+
+
+@pytest.fixture
+def tibber_mock(tibber_client_cls: MagicMock) -> MagicMock:
+    """Return the patched Tibber client instance."""
+    return tibber_client_cls.return_value
 
 
 @pytest.fixture

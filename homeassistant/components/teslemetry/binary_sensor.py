@@ -140,6 +140,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
+        key="climate_state_is_rear_defroster_on",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_RearDefrostEnabled(
+            callback
+        ),
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
         key="vehicle_state_dashcam_state",
         polling=True,
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -327,13 +337,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="driver_seat_occupied",
         streaming_listener=lambda vehicle, callback: vehicle.listen_DriverSeatOccupied(
-            callback
-        ),
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
-        key="passenger_seat_belt",
-        streaming_listener=lambda vehicle, callback: vehicle.listen_PassengerSeatBelt(
             callback
         ),
         entity_registry_enabled_default=False,

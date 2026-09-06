@@ -66,7 +66,9 @@ async def test_binary_sensor(
     # Emulate websocket message: device was deleted
     test_gateway.publisher.dispatch("Test", ("Test", "del"))
     await hass.async_block_till_done()
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "Test")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Test"), entry.entry_id
+    )
     assert not device
 
 

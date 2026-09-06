@@ -5,6 +5,8 @@ from typing import override
 from bosch_alarm_mode2 import Panel
 
 from homeassistant.components.sensor import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
@@ -56,9 +58,11 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         panel: Panel,
         area_id: int,
         unique_id: str,
+        config_entry_id: str,
         observe_alarms: bool,
         observe_ready: bool,
         observe_status: bool,
@@ -75,7 +79,9 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._area_unique_id)},
             name=self._area.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
     @override
@@ -104,7 +110,14 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
 class BoschAlarmPointEntity(BoschAlarmEntity):
     """A base entity for point related entities within a bosch alarm panel."""
 
-    def __init__(self, panel: Panel, point_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        point_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
         self._point_id = point_id
@@ -114,7 +127,9 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._point_unique_id)},
             name=self._point.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
     @override
@@ -133,7 +148,14 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
 class BoschAlarmDoorEntity(BoschAlarmEntity):
     """A base entity for area related entities within a bosch alarm panel."""
 
-    def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        door_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
         self._door_id = door_id
@@ -143,7 +165,9 @@ class BoschAlarmDoorEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._door_unique_id)},
             name=self._door.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
     @override
@@ -162,7 +186,14 @@ class BoschAlarmDoorEntity(BoschAlarmEntity):
 class BoschAlarmOutputEntity(BoschAlarmEntity):
     """A base entity for area related entities within a bosch alarm panel."""
 
-    def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        output_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up a output related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
         self._output_id = output_id
@@ -172,7 +203,9 @@ class BoschAlarmOutputEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._output_unique_id)},
             name=self._output.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
     @override

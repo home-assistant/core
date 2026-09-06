@@ -100,7 +100,7 @@ async def test_update_automation_config(
     [
         (
             {"action": []},
-            "required key not provided @ data['triggers']",
+            "required key not provided at 'triggers'",
         ),
         (
             {

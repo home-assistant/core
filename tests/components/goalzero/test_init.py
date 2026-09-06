@@ -91,7 +91,9 @@ async def test_device_info(
     """Test device info."""
     entry = await async_init_integration(hass, aioclient_mock)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
     assert device.connections == {("mac", "12:34:56:78:90:12")}
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

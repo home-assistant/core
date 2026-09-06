@@ -100,7 +100,15 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
         return_value=system_board,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -118,7 +126,15 @@ async def test_form_unique_id_error(hass: HomeAssistant) -> None:
         return_value=system_board,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -133,7 +149,15 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         side_effect=QswError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["errors"] == {CONF_URL: "cannot_connect"}
@@ -147,7 +171,15 @@ async def test_login_error(hass: HomeAssistant) -> None:
         side_effect=LoginError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
