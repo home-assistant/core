@@ -34,6 +34,23 @@ class StorageQuotaData:
     usage_in_trash: int
 
 
+def _parse_backup_metadata(file: dict[str, Any]) -> AgentBackup | None:
+    """Return the backup a Drive file describes, or None if it cannot be read.
+
+    The metadata lives in the file description, which the user can edit or clear
+    from the Google Drive UI. One unreadable file should not hide the others.
+    """
+    try:
+        return AgentBackup.from_dict(json.loads(file["description"]))
+    except (KeyError, TypeError, ValueError) as err:
+        _LOGGER.warning(
+            "Ignoring backup file %s: its description is not valid backup metadata: %s",
+            file.get("id", "?"),
+            err,
+        )
+        return None
+
+
 class AsyncConfigEntryAuth(AbstractAuth):
     """Provide Google Drive authentication tied to an OAuth2 based config entry."""
 
@@ -195,42 +212,49 @@ class DriveClient:
             backup_metadata["name"],
         )
 
-    async def async_list_backups(self) -> list[AgentBackup]:
-        """List backups."""
-        query = " and ".join(
+    def _backup_query(self, *extra: str) -> str:
+        """Return a query matching the backups of this Home Assistant instance."""
+        return " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
                 "properties has { key='instance_id'"
                 f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
+                *extra,
             ]
         )
+
+    async def async_list_backups(self) -> list[AgentBackup]:
+        """List backups."""
         res = await self._api.list_files(
-            params={"q": query, "fields": "files(description)"}
+            params={"q": self._backup_query(), "fields": "files(id,description)"}
         )
-        backups = []
-        for file in res["files"]:
-            backup = AgentBackup.from_dict(json.loads(file["description"]))
-            backups.append(backup)
-        return backups
+        return [
+            backup
+            for file in res["files"]
+            if (backup := _parse_backup_metadata(file)) is not None
+        ]
 
     async def async_get_size_of_all_backups(self) -> int:
         """Get size of all backups."""
-        backups = await self.async_list_backups()
-
-        return sum(backup.size for backup in backups)
+        # Ask Drive for the size of each file instead of adding up the sizes stored
+        # in the metadata, which would mean downloading and parsing every backup's
+        # description just to update a sensor.
+        res = await self._api.list_files(
+            params={"q": self._backup_query(), "fields": "files(size)"}
+        )
+        return sum(int(file["size"]) for file in res["files"] if "size" in file)
 
     async def async_get_backup_file_id(self, backup_id: str) -> str | None:
         """Get file_id of backup if it exists."""
-        query = " and ".join(
-            [
-                "properties has { key='home_assistant' and value='backup' }",
-                "properties has { key='instance_id'"
-                f" and value='{self._ha_instance_id}' }}",
-                f"properties has {{ key='backup_id' and value='{backup_id}' }}",
-            ]
+        res = await self._api.list_files(
+            params={
+                "q": self._backup_query(
+                    f"properties has {{ key='backup_id' and value='{backup_id}' }}"
+                ),
+                "fields": "files(id)",
+            }
         )
-        res = await self._api.list_files(params={"q": query, "fields": "files(id)"})
         for file in res["files"]:
             return str(file["id"])
         return None

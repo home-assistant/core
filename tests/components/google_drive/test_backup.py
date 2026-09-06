@@ -73,6 +73,23 @@ async def consume_stream(
         pass
 
 
+async def consume_stream_twice(
+    file_metadata: Any,
+    open_stream: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Consume the stream twice, like a resumable upload that had to retry.
+
+    A retried upload reopens the stream from the beginning and skips whatever
+    the server already received.
+    """
+    for _ in range(2):
+        stream = await open_stream()
+        async for _ in stream:
+            pass
+
+
 @pytest.fixture(autouse=True)
 async def setup_integration(
     hass: HomeAssistant,
@@ -141,6 +158,40 @@ async def test_agents_list_backups(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
+
+
+async def test_agents_list_backups_ignores_unreadable_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a backup whose description cannot be read is skipped.
+
+    The description is editable from the Google Drive UI, so one unreadable
+    file must not hide the others.
+    """
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "no description at all"},
+                {"id": "not json", "description": "cleared by the user"},
+                {"id": "not backup metadata", "description": '{"foo": "bar"}'},
+                {"description": json.dumps(TEST_AGENT_BACKUP.as_dict())},
+            ]
+        }
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
+    assert "Ignoring backup file no description at all" in caplog.text
+    assert "Ignoring backup file not json" in caplog.text
+    assert "Ignoring backup file not backup metadata" in caplog.text
 
 
 async def test_agents_list_backups_fail(
@@ -374,6 +425,37 @@ async def test_agents_upload_progress(
 ) -> None:
     """Test agent upload reports progress."""
     mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    agent = GoogleDriveBackupAgent(entries[0])
+
+    progress_calls = []
+
+    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+        progress_calls.append(bytes_uploaded)
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            yield b"chunk1"
+            yield b"chunk2"
+
+        return stream()
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert progress_calls == [6, 12]
+
+
+async def test_agents_upload_progress_does_not_go_backwards_on_retry(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+) -> None:
+    """Test agent upload progress is not reported twice when the upload retries."""
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream_twice)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     agent = GoogleDriveBackupAgent(entries[0])
