@@ -1,7 +1,7 @@
 """Helper functions for Android TV Remote integration."""
 
 from functools import partial
-from ipaddress import ip_address
+from ipaddress import IPv6Address, ip_address
 
 from androidtvremote2 import AndroidTVRemote
 import getmac
@@ -47,6 +47,8 @@ async def async_get_nic_mac_address(hass: HomeAssistant, host: str) -> str | Non
                 partial(getmac.get_mac_address, ip=host)
             )
         else:
+            # Drop scope_id from IPv6 address by converting via int
+            ip_addr = IPv6Address(int(ip_addr))
             mac = await hass.async_add_executor_job(
                 partial(getmac.get_mac_address, ip6=str(ip_addr))
             )

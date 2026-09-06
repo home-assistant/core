@@ -196,8 +196,8 @@ async def test_async_get_nic_mac_address_ipv6(
     hass: HomeAssistant,
     mock_get_mac_address: MagicMock,
 ) -> None:
-    """Test async_get_nic_mac_address with IPv6 address."""
-    mac = await async_get_nic_mac_address(hass, "2001:db8::1")
+    """Test async_get_nic_mac_address with scoped IPv6 address."""
+    mac = await async_get_nic_mac_address(hass, "2001:db8::1%eth0")
     assert mac == "aa:bb:cc:11:22:33"
     assert mock_get_mac_address.call_args.kwargs == {"ip6": "2001:db8::1"}
 
