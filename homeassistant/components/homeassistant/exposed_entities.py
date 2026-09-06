@@ -60,7 +60,6 @@ LEGACY_ENTITY_PURGE_INTERVAL = timedelta(days=30)
 # Entities processed per sweep chunk before yielding to the event loop, so a
 # sweep over a store with millions of legacy records -- the exact installs
 # this is meant to fix -- can't block it for the length of a full pass.
-# Matches recorder's purge batch size.
 LEGACY_ENTITY_SWEEP_CHUNK_SIZE = 1000
 
 DEFAULT_EXPOSED_DOMAINS = {

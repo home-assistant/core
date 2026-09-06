@@ -608,14 +608,7 @@ async def test_legacy_entity_survives_transient_removal(hass: HomeAssistant) -> 
 async def test_purge_stale_legacy_entities_periodic_sweep(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Stale legacy entries with no live state are purged by the periodic sweep.
-
-    A record is only purged once it's been continuously missing for the
-    full LEGACY_ENTITY_PURGE_INTERVAL, confirmed across repeated sweeps --
-    not on the first sweep that happens to observe it missing (see
-    test_purge_stale_legacy_entities_clears_tracking_on_reappearance for
-    why that distinction matters).
-    """
+    """Stale legacy entries with no live state are purged by the periodic sweep."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     hass.states.async_set("sensor.still_around", "on", {})
