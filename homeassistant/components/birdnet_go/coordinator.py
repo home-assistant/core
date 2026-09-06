@@ -13,6 +13,7 @@ from aiobirdnetgo import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -47,8 +48,8 @@ class BirdNetGoDataUpdateCoordinator(DataUpdateCoordinator[DashboardKPIs]):
         try:
             return await self.client.get_kpis()
         except BirdNetGoAuthenticationError as err:
-            raise UpdateFailed(
-                f"Authentication error communicating with BirdNET-Go at {self.client.base_url}: {err}"
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed for {self.client.base_url}"
             ) from err
         except (BirdNetGoConnectionError, BirdNetGoTimeoutError) as err:
             raise UpdateFailed(
