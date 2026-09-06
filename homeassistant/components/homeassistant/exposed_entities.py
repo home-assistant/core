@@ -302,6 +302,7 @@ class ExposedEntities:
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
         entity_ids = list(self.entities)
         changed = False
+        purged_assistants: set[str] = set()
 
         for i in range(0, len(entity_ids), LEGACY_ENTITY_SWEEP_CHUNK_SIZE):
             for entity_id in entity_ids[i : i + LEGACY_ENTITY_SWEEP_CHUNK_SIZE]:
@@ -323,12 +324,20 @@ class ExposedEntities:
                     changed = True
                 elif now - exposed_entity.orphaned_since >= purge_after:
                     del self.entities[entity_id]
+                    purged_assistants.update(exposed_entity.assistants)
                     changed = True
 
             await asyncio.sleep(0)
 
         if changed:
             self._async_schedule_save()
+
+        # Purged records vanish from async_get_assistant_settings(); consumers
+        # like cloud Alexa cache those settings and only sync remote removals
+        # when notified, so tell each affected assistant's listeners.
+        for assistant in purged_assistants:
+            for listener in self._listeners.get(assistant, []):
+                listener()
 
     @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
