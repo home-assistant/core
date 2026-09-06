@@ -199,5 +199,6 @@ async def test_switch_command_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
-    assert exc_info.value.translation_placeholders == {"error": str(exception)}
+    assert exc_info.value.translation_placeholders is None
+    assert exc_info.value.__cause__ is exception
     assert mock_homevolt_client.update_info.await_count == refresh_count

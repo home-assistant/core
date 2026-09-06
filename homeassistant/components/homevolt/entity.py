@@ -60,21 +60,18 @@ def homevolt_exception_handler[_HomevoltEntityT: HomevoltEntity, **_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_rejected",
-                translation_placeholders={"error": str(error)},
             ) from error
         except HomevoltCommandVerificationError as error:
             await self.coordinator.async_refresh()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_verification_failed",
-                translation_placeholders={"error": str(error)},
             ) from error
         except HomevoltCommandOutcomeUnknownError as error:
             await self.coordinator.async_refresh()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_outcome_unknown",
-                translation_placeholders={"error": str(error)},
             ) from error
         except HomevoltConnectionError as error:
             raise HomeAssistantError(
