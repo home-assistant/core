@@ -1,10 +1,9 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "xxxxxxxxxxxxxxx",
+  "terminal_id": "1785319679174WETrZx",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "xxxxxxxxxxxxxxx",
   "name": "Smart Circuit Breaker",
   "category": "znjdq",
   "product_id": "au6dqazvkxqnpaak",
@@ -253,9 +252,9 @@
     "switch_1": true,
     "countdown_1": 0,
     "add_ele": 7,
-    "cur_current": 257,
-    "cur_power": 142,
-    "cur_voltage": 2289,
+    "cur_current": 258,
+    "cur_power": 143,
+    "cur_voltage": 2286,
     "voltage_coe": 15950,
     "electric_coe": 12638,
     "power_coe": 3126,
@@ -264,147 +263,8 @@
     "light_mode": "relay",
     "child_lock": false
   },
-  "set_up": true,
+  "set_up": false,
   "support_local": true,
   "quirk": null,
-  "warnings": null,
-  "home_assistant": {
-    "name": "Smart Circuit Breaker",
-    "name_by_user": null,
-    "disabled": false,
-    "disabled_by": null,
-    "entities": [
-      {
-        "disabled": false,
-        "disabled_by": null,
-        "entity_category": null,
-        "device_class": null,
-        "original_device_class": null,
-        "icon": null,
-        "original_icon": "mdi:timer-sand",
-        "unit_of_measurement": "s",
-        "state": {
-          "entity_id": "number.smart_circuit_breaker_countdown",
-          "state": "0.0",
-          "attributes": {
-            "min": 0.0,
-            "max": 86400.0,
-            "step": 1.0,
-            "mode": "auto",
-            "unit_of_measurement": "s",
-            "icon": "mdi:timer-sand",
-            "friendly_name": "Smart Circuit Breaker Countdown"
-          },
-          "last_changed": "2026-09-06T14:43:41.266933+00:00",
-          "last_reported": "2026-09-06T14:43:41.266933+00:00",
-          "last_updated": "2026-09-06T14:43:41.266933+00:00"
-        }
-      },
-      {
-        "disabled": false,
-        "disabled_by": null,
-        "entity_category": "config",
-        "device_class": null,
-        "original_device_class": null,
-        "icon": null,
-        "original_icon": null,
-        "unit_of_measurement": null,
-        "state": {
-          "entity_id": "select.smart_circuit_breaker_power_on_behavior",
-          "state": "memory",
-          "attributes": {
-            "options": ["off", "on", "memory"],
-            "friendly_name": "Smart Circuit Breaker Power On Behavior"
-          },
-          "last_changed": "2026-09-06T14:43:41.274936+00:00",
-          "last_reported": "2026-09-06T14:43:41.274936+00:00",
-          "last_updated": "2026-09-06T14:43:41.274936+00:00"
-        }
-      },
-      {
-        "disabled": false,
-        "disabled_by": null,
-        "entity_category": "config",
-        "device_class": null,
-        "original_device_class": null,
-        "icon": null,
-        "original_icon": null,
-        "unit_of_measurement": null,
-        "state": {
-          "entity_id": "select.smart_circuit_breaker_indicator_light_mode",
-          "state": "relay",
-          "attributes": {
-            "options": ["relay", "pos", "none", "on"],
-            "friendly_name": "Smart Circuit Breaker Indicator Light Mode"
-          },
-          "last_changed": "2026-09-06T14:43:41.275496+00:00",
-          "last_reported": "2026-09-06T14:43:41.275496+00:00",
-          "last_updated": "2026-09-06T14:43:41.275496+00:00"
-        }
-      },
-      {
-        "disabled": false,
-        "disabled_by": null,
-        "entity_category": null,
-        "device_class": null,
-        "original_device_class": null,
-        "icon": null,
-        "original_icon": null,
-        "unit_of_measurement": null,
-        "state": {
-          "entity_id": "switch.smart_circuit_breaker",
-          "state": "on",
-          "attributes": {
-            "friendly_name": "Smart Circuit Breaker"
-          },
-          "last_changed": "2026-09-06T14:43:41.298960+00:00",
-          "last_reported": "2026-09-06T14:43:41.298960+00:00",
-          "last_updated": "2026-09-06T14:43:41.298960+00:00"
-        }
-      },
-      {
-        "disabled": false,
-        "disabled_by": null,
-        "entity_category": null,
-        "device_class": null,
-        "original_device_class": null,
-        "icon": null,
-        "original_icon": null,
-        "unit_of_measurement": null,
-        "state": {
-          "entity_id": "switch.smart_circuit_breaker_child_lock",
-          "state": "off",
-          "attributes": {
-            "friendly_name": "Smart Circuit Breaker Child lock"
-          },
-          "last_changed": "2026-09-06T14:43:41.299079+00:00",
-          "last_reported": "2026-09-06T14:43:41.299079+00:00",
-          "last_updated": "2026-09-06T14:43:41.299079+00:00"
-        }
-      },
-      {
-        "disabled": false,
-        "disabled_by": null,
-        "entity_category": null,
-        "device_class": null,
-        "original_device_class": "energy",
-        "icon": null,
-        "original_icon": null,
-        "unit_of_measurement": "kWh",
-        "state": {
-          "entity_id": "sensor.smart_circuit_breaker_total_energy",
-          "state": "0",
-          "attributes": {
-            "state_class": "total_increasing",
-            "unit_of_measurement": "kWh",
-            "device_class": "energy",
-            "friendly_name": "Smart Circuit Breaker Total Energy"
-          },
-          "last_changed": "2026-09-06T14:43:41.289278+00:00",
-          "last_reported": "2026-09-06T14:43:50.272446+00:00",
-          "last_updated": "2026-09-06T14:43:41.289278+00:00"
-        }
-      }
-    ]
-  }
+  "warnings": null
 }
