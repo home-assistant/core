@@ -53,7 +53,7 @@ SENSOR_DESCRIPTIONS: tuple[BirdNetGoSensorEntityDescription, ...] = (
     BirdNetGoSensorEntityDescription(
         key="best_day_count",
         translation_key="best_day_count",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda kpis: kpis.best_day.count,
     ),
 )

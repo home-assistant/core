@@ -28,7 +28,7 @@
   "entity": {
     "sensor": {
       "best_day_count": {
-        "name": "Best day detections"
+        "name": "Best day detections (past year)"
       },
       "detection_streak": {
         "name": "Detection streak"

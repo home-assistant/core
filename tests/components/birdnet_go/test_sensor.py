@@ -35,9 +35,12 @@ async def test_sensors(
     assert state.state == "17"
     assert state.attributes.get("unit_of_measurement") == "d"
 
-    state = hass.states.get("sensor.birdnet_go_192_168_1_100_8080_best_day_detections")
+    state = hass.states.get(
+        "sensor.birdnet_go_192_168_1_100_8080_best_day_detections_past_year"
+    )
     assert state is not None
     assert state.state == "420"
+    assert state.attributes.get("state_class") == "measurement"
 
     entry = entity_registry.async_get(
         "sensor.birdnet_go_192_168_1_100_8080_today_s_detections"
