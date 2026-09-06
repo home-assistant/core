@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This stop is already configured.",
+      "cannot_connect": "Failed to connect to Bizkaibus.",
       "invalid_stop_id": "The stop identifier is not valid.",
       "reconfigure_successful": "Reconfiguration was successful."
     },
@@ -72,6 +73,9 @@
     }
   },
   "options": {
+    "abort": {
+      "cannot_connect": "Failed to connect to Bizkaibus."
+    },
     "error": {
       "cannot_connect": "Failed to connect to Bizkaibus."
     },

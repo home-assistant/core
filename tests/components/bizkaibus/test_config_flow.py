@@ -78,9 +78,8 @@ async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_STOP_ID: stop_id}
         )
 
-        # Should return to user form when offline
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
@@ -441,9 +440,8 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_STOP_ID: "9999"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -510,9 +508,8 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_import_flow(hass: HomeAssistant) -> None:
@@ -531,9 +528,8 @@ async def test_import_flow(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_STOP_ID: "1234"}
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Bizkaibus 1234"
-    assert result["data"] == {CONF_STOP_ID: "1234"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:

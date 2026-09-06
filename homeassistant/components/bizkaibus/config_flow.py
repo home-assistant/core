@@ -127,11 +127,11 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 api = BizkaibusAPI(BizkaibusLanguages.ES, self._stop_id)
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
-                    errors["base"] = "cannot_connect"
-                else:
-                    self._title = await _get_title_name(api, self._stop_id)
+                    return self.async_abort(reason="cannot_connect")
 
-                    return await self.async_step_lines(user_input=user_input)
+                self._title = await _get_title_name(api, self._stop_id)
+
+                return await self.async_step_lines(user_input=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -190,11 +190,11 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
-                    errors["base"] = "cannot_connect"
-                else:
-                    self._stop_id = stop_id
-                    self._title = await _get_title_name(api, self._stop_id)
-                    return await self.async_step_lines()
+                    return self.async_abort(reason="cannot_connect")
+
+                self._stop_id = stop_id
+                self._title = await _get_title_name(api, self._stop_id)
+                return await self.async_step_lines()
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -218,6 +218,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
         line_ids, lines = await _async_get_lines(api)
+        if line_ids == []:
+            return self.async_abort(reason="cannot_connect")
+
         route_id = info.get(CONF_LINE_IDS, info.get(OLD_CONF_ROUTE_ID))
 
         if route_id in line_ids:
@@ -259,7 +262,7 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
         if user_input is None:
             self._line_ids, self._lines = await _async_get_lines(api)
             if self._line_ids == []:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="cannot_connect")
 
             selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
             return self.async_show_form(
