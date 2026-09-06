@@ -493,6 +493,13 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="ionizer",
         ),
     ),
+    DeviceCategory.KTKZQ: (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.MAL: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_ALARM_SOUND,

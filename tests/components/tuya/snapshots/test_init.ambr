@@ -8240,7 +8240,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'VITAL+ (unsupported)',
+    'model': 'VITAL+',
     'model_id': 'urzivdhumrwfakie',
     'name': 'VITAL+',
     'name_by_user': None,
