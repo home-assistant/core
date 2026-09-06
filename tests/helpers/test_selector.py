@@ -50,7 +50,6 @@ def test_allowed_context_keys_not_shared_between_instances() -> None:
     class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
         """Test selector config class."""
 
-    @selector.SELECTORS.register("test")
     class TestSelector(selector.Selector):
         """Test selector used to verify instance isolation."""
 
