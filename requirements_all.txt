@@ -501,7 +501,7 @@ airgradient==0.10.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.9
+airos==0.6.12
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
