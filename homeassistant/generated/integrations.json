@@ -7033,6 +7033,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "steinway_lyngdorf": {
+      "name": "Steinway & Lyngdorf",
+      "integration_type": "virtual",
+      "supported_by": "lyngdorf"
+    },
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",
       "integration_type": "device",
