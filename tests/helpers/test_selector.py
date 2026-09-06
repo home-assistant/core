@@ -44,23 +44,19 @@ def test_invalid_base_schema(schema) -> None:
         selector.validate_selector(schema)
 
 
-def test_allowed_context_keys_not_mutable() -> None:
-    """Test the allowed_context_keys attribute is not mutable."""
+def test_allowed_context_keys_not_shared_between_instances() -> None:
+    """Test allowed_context_keys is isolated between selector instances."""
 
     class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
         """Test selector config class."""
 
     @selector.SELECTORS.register("test")
     class TestSelector(selector.Selector):
-        """Test selector to test allowed_context_keys attribute is not mutable."""
+        """Test selector used to verify instance isolation."""
 
         CONFIG_SCHEMA = selector.make_selector_config_schema({})
 
         selector_type = "test"
-
-        def __init__(self, config: TestSelectorConfig | None = None) -> None:
-            """Test mutation fails."""
-            super().__init__(config)
 
         def __call__(self, data: Any) -> Any:
             """Validate the passed selection."""
