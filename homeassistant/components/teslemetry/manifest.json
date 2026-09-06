@@ -12,6 +12,6 @@
   "requirements": [
     "aiopowerwall==0.2.0",
     "tesla-fleet-api==1.12.1",
-    "teslemetry-stream==0.10.0"
+    "teslemetry-stream==0.13.1"
   ]
 }
