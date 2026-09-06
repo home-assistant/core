@@ -22,13 +22,15 @@ def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice
         raise ValueError(f"Device {device_id} not found")
 
     subentry_id = get_subentry_id_from_identifiers(registry_device.identifiers)
-    assert subentry_id is not None
+    if subentry_id is None:
+        raise ValueError(f"Device {device_id} has no rfxtrx identifier")
     entry = hass.config_entries.async_get_entry(registry_device.primary_config_entry)
     assert entry
     subentry = entry.subentries[subentry_id]
 
     event = get_rfx_object(subentry.data[CONF_EVENT_CODE])
-    assert event
+    if event is None:
+        raise ValueError(f"Device {device_id} has an invalid event code")
     device_tuple = get_device_tuple_from_device(
         event.device, data_bits=subentry.data.get(CONF_DATA_BITS)
     )
