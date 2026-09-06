@@ -3,10 +3,11 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, override
+from typing import override
 
 from tesla_fleet_api import firmware_at_least
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
+from teslemetry_stream.const import CreditsEvent
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -1992,13 +1993,9 @@ class TeslemetryCreditQuotaSensor(RestoreSensor):
 
         self.async_on_remove(self.stream.listen_Credits(self._async_update))
 
-    def _async_update(self, credits: dict[str, Any]) -> None:
+    def _async_update(self, credits: CreditsEvent) -> None:
         """Handle updated data from the stream."""
-        quota = credits.get("quota")
-        if not isinstance(quota, dict):
-            return
-
-        fraction = quota.get("fraction")
+        fraction = credits.quota.get("fraction")
         if not isinstance(fraction, (float, int)) or isinstance(fraction, bool):
             return
 
