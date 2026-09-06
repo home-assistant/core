@@ -11,8 +11,8 @@ from homeassistant.components.hydroquebec_peak.const import CONF_OFFER, DOMAIN
 
 from tests.common import MockConfigEntry
 
-TEST_OFFER = "Credit hivernal Residentiel (CPC-D)"
-OTHER_OFFER = "Flex Residentiel (TPC-DPC)"
+TEST_OFFER = "CPC-D"
+OTHER_OFFER = "TPC-DPC"
 
 EST = timezone(timedelta(hours=-5))
 

@@ -1,51 +1,46 @@
 """Tests for the Hydro-Québec Peak Events sensors."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_sensors_next_event(
+@pytest.mark.parametrize(
+    "now",
+    [
+        # 12:00 EST: morning event over, evening event (16:00-20:00 EST) upcoming
+        "2026-01-09T17:00:00+00:00",
+        # 17:00 EST: the evening event is in progress
+        "2026-01-09T22:00:00+00:00",
+    ],
+)
+async def test_sensors(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    now: str,
 ) -> None:
-    """Sensors expose the upcoming event when none is active."""
-    # 12:00 EST: morning event over, evening event (16:00-20:00 EST) upcoming
-    freezer.move_to("2026-01-09T17:00:00+00:00")
-    await setup_integration(hass, mock_config_entry)
+    """Test the sensor entities before and during an event."""
+    freezer.move_to(now)
+    with patch(
+        "homeassistant.components.hydroquebec_peak.PLATFORMS", [Platform.SENSOR]
+    ):
+        await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.credit_hivernal_residentiel_cpc_d_event_begins")
-    assert state is not None
-    assert state.state == "2026-01-09T21:00:00+00:00"
-
-    state = hass.states.get("sensor.credit_hivernal_residentiel_cpc_d_event_ends")
-    assert state is not None
-    assert state.state == "2026-01-10T01:00:00+00:00"
-
-
-async def test_sensors_active_event(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Sensors expose the event in progress over the next one."""
-    # 17:00 EST: the evening event is in progress
-    freezer.move_to("2026-01-09T22:00:00+00:00")
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.credit_hivernal_residentiel_cpc_d_event_begins")
-    assert state is not None
-    assert state.state == "2026-01-09T21:00:00+00:00"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensors_roll_over_at_boundary(
@@ -59,7 +54,7 @@ async def test_sensors_roll_over_at_boundary(
     freezer.move_to("2026-01-10T00:59:00+00:00")
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.credit_hivernal_residentiel_cpc_d_event_begins")
+    state = hass.states.get("sensor.cpc_d_peak_event_begins")
     assert state is not None
     assert state.state == "2026-01-09T21:00:00+00:00"
 
@@ -68,7 +63,7 @@ async def test_sensors_roll_over_at_boundary(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.credit_hivernal_residentiel_cpc_d_event_begins")
+    state = hass.states.get("sensor.cpc_d_peak_event_begins")
     assert state is not None
     assert state.state == "2026-01-10T11:00:00+00:00"
 
@@ -84,6 +79,6 @@ async def test_sensors_no_events(
     mock_client.get_events.return_value = ()
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.credit_hivernal_residentiel_cpc_d_event_begins")
+    state = hass.states.get("sensor.cpc_d_peak_event_begins")
     assert state is not None
     assert state.state == STATE_UNKNOWN

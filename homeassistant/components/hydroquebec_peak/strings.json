@@ -18,10 +18,10 @@
   "entity": {
     "sensor": {
       "event_begin": {
-        "name": "Event begins"
+        "name": "Peak event begins"
       },
       "event_end": {
-        "name": "Event ends"
+        "name": "Peak event ends"
       }
     }
   },
