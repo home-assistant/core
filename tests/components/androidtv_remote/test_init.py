@@ -170,7 +170,6 @@ async def test_existing_device_registry_connections_updated(
     )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f")}
 
-    # Now setup entry
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -180,6 +179,33 @@ async def test_existing_device_registry_connections_updated(
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f") in device.connections
     assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
+
+
+async def test_existing_device_registry_connections_not_updated_when_nic_mac_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_get_mac_address: MagicMock,
+) -> None:
+    """Test that existing device connections are preserved when nic_mac lookup fails."""
+    mock_get_mac_address.return_value = None
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f")},
+    )
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f")}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "1a:2b:3c:4d:5e:6f")}
 
 
 async def test_async_get_nic_mac_address_ipv4(

@@ -78,10 +78,11 @@ async def async_setup_entry(
     if device := dev_reg.async_get_device_by_identifier(
         (DOMAIN, entry.unique_id), entry.entry_id
     ):
-        dev_reg.async_update_device(
-            device.id,
-            new_connections=device.connections | connections,
-        )
+        if nic_mac:
+            dev_reg.async_update_device(
+                device.id,
+                new_connections=connections,
+            )
     elif api.device_info is not None:
         device_info = api.device_info
         dev_reg.async_get_or_create(
