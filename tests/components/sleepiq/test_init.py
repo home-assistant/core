@@ -384,7 +384,7 @@ def test_deduplicate_sleepers_removes_duplicates() -> None:
 
 
 def test_deduplicate_sleepers_keeps_distinct() -> None:
-    """Test that distinct sleeper IDs are preserved and falsy IDs are never deduplicated."""
+    """Test that distinct sleeper IDs are preserved and falsy IDs are deduplicated."""
     gateway = MagicMock()
     bed = create_autospec(SleepIQBed)
     bed.name = "Test Bed"
@@ -396,7 +396,6 @@ def test_deduplicate_sleepers_keeps_distinct() -> None:
     sleeper_b = create_autospec(SleepIQSleeper)
     sleeper_b.sleeper_id = SLEEPER_R_ID
 
-    # Two sleepers with None IDs should both be kept
     sleeper_c = create_autospec(SleepIQSleeper)
     sleeper_c.sleeper_id = None
 
@@ -408,11 +407,10 @@ def test_deduplicate_sleepers_keeps_distinct() -> None:
 
     _deduplicate_sleepers(gateway)
 
-    assert len(bed.sleepers) == 4
+    assert len(bed.sleepers) == 3
     assert bed.sleepers[0] is sleeper_a
     assert bed.sleepers[1] is sleeper_b
     assert bed.sleepers[2] is sleeper_c
-    assert bed.sleepers[3] is sleeper_d
 
 
 def test_deduplicate_sleepers_empty() -> None:
