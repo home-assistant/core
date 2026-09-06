@@ -130,6 +130,7 @@
           },
           "preset_mode": {
             "state": {
+              "dry_comfort": "Dry comfort",
               "long_wind": "Long wind",
               "motion_direct": "Motion direct",
               "motion_indirect": "Motion indirect",
@@ -1145,9 +1146,6 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
     }

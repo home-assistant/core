@@ -264,8 +264,8 @@
       "modbus_mppt_current_dc": {
         "name": "MPPT {mppt_no} DC current"
       },
-      "modbus_mppt_energy_dc": {
-        "name": "MPPT {mppt_no} DC energy"
+      "modbus_mppt_energy": {
+        "name": "MPPT {mppt_no} energy"
       },
       "modbus_mppt_power_dc": {
         "name": "MPPT {mppt_no} DC power"

@@ -69,3 +69,17 @@ delete_vehicle_token:
       required: true
       selector:
         text:
+
+authorize_charge_session:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    uid:
+      selector:
+        text:
+    description:
+      selector:
+        text:

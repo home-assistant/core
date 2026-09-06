@@ -10,9 +10,10 @@ from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -94,7 +95,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_registry_enabled_default=False,
         is_dock_entity=True,
         is_supported=lambda coordinator: (
-            coordinator.properties_api.wash_towel_mode is not None
+            coordinator.properties_api.device_features.dock_features.is_cleaning_brush_supported
         ),
     ),
 ]
@@ -141,6 +142,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock button platform."""
     coordinators = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     @callback
     def async_add_coordinator_entities(
@@ -149,11 +151,18 @@ async def async_setup_entry(
         """Add entities for a specific coordinator."""
         entities: list[ButtonEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
-            entities.extend(
-                RoborockButtonEntity(coordinator, description)
-                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
-                if description.is_supported(coordinator)
-            )
+            for description in CONSUMABLE_BUTTON_DESCRIPTIONS:
+                unique_id = f"{description.key}_{coordinator.duid_slug}"
+                if description.is_supported(coordinator):
+                    entities.append(
+                        RoborockButtonEntity(unique_id, coordinator, description)
+                    )
+                elif entity_id := entity_registry.async_get_entity_id(
+                    Platform.BUTTON,
+                    DOMAIN,
+                    unique_id,
+                ):
+                    entity_registry.async_remove(entity_id)
 
             async def async_add_routine_buttons() -> None:
                 try:
@@ -213,6 +222,7 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
 
     def __init__(
         self,
+        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockButtonDescription,
     ) -> None:
@@ -223,7 +233,7 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
             else coordinator.device_info
         )
         super().__init__(
-            f"{entity_description.key}_{coordinator.duid_slug}",
+            unique_id,
             device_info,
             api=coordinator.properties_api.command,
         )

@@ -90,7 +90,6 @@
       ]),
       'connected': True,
       'lipsync': 50.0,
-      'max_volume': 0.0,
       'model': 'MP_60',
       'mute_enabled': False,
       'power_on': False,

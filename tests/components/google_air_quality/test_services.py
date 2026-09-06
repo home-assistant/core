@@ -1,7 +1,6 @@
 """Test services for Google Air Quality."""
 
 from datetime import timedelta
-import json
 from unittest.mock import AsyncMock
 
 from google_air_quality_api.model import AirQualityForecastData
@@ -18,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -27,16 +26,17 @@ async def test_get_forecast_service(
     mock_config_entry: MockConfigEntry,
     mock_api: AsyncMock,
     snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test fetching a forecast for a subentry."""
-    device = dr.async_get(hass).async_get_device_by_identifier(  # pylint: disable=home-assistant-tests-registry-fixtures
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{mock_config_entry.entry_id}_home-subentry-id"),
         mock_config_entry.entry_id,
     )
     assert device is not None
 
     forecast = AirQualityForecastData.from_dict(
-        json.loads(await async_load_fixture(hass, "air_quality_forecast.json", DOMAIN))
+        await async_load_json_object_fixture(hass, "air_quality_forecast.json", DOMAIN)
     )
     mock_api.async_get_forecast.return_value = forecast
 
