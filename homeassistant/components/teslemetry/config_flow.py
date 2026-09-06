@@ -234,7 +234,6 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
             if CONF_VIN in subentry.data
         }
-        # A paired vehicle reuses the existing device, so no new device is created here.
         choices = {
             vehicle.vin: vehicle.device["name"] or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
@@ -293,7 +292,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if device is None:
                 errors["base"] = "device_not_found"
             else:
-                # Keep the default keepalive (unlike command routing) so the link survives the on-screen key-approval wait.
+                # Uses default keepalive so the link survives the on-screen key-approval wait.
                 self._vehicle = parent.vehicles.createBluetooth(
                     self._vin, device=device
                 )
@@ -373,20 +372,16 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         try:
             task.result()
         except (BluetoothTransportError, BleakError) as err:
-            # Transport failure (link dropped), not the user failing to approve in time.
             LOGGER.debug("Bluetooth transport failed during pairing: %s", err)
             self._pair_error = {"base": "cannot_connect"}
             return self.async_show_progress_done(next_step_id="instructions")
         except (BluetoothTimeout, TimeoutError) as err:
-            # The key was sent but never confirmed - the user has not approved it yet.
             LOGGER.debug("Bluetooth pairing timed out: %s", err)
             self._pair_error = {"base": "timeout"}
             return self.async_show_progress_done(next_step_id="instructions")
         except WhitelistOperationAttemptingToAddExistingKey as err:
-            # This exception means the key is already whitelisted, so pairing succeeded; fall through to re-handshake.
             LOGGER.debug("Virtual key is already on the whitelist: %s", err)
         except TeslaFleetError as err:
-            # The vehicle rejected the key (whitelist full, denied, or valet mode) - not a waitable timeout.
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")

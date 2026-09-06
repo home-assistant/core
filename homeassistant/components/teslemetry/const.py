@@ -13,13 +13,9 @@ TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
 
 SUBENTRY_TYPE_VEHICLE = "vehicle"
-
 CONF_VIN = "vin"
-
 VEHICLE_KEY_FILE = "tesla_vehicle.key"
-
 BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"
-
 BLE_PARENT_LOCK_KEY = f"{DOMAIN}_ble_parent_lock"
 
 SUBENTRY_TYPE_ENERGY_SITE = "energy_site"

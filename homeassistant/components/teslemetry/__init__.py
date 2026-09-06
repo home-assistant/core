@@ -293,9 +293,6 @@ def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
     return None
 
 
-# Loading the BLE key raises OSError (I/O), ValueError (bad PEM),
-# AssertionError (a valid PEM that is not an EC private key), or TypeError
-# (an encrypted PEM, which cryptography rejects when no password is given).
 _BLE_KEY_ERRORS: Final = (OSError, ValueError, AssertionError, TypeError)
 
 
@@ -321,7 +318,7 @@ async def _async_resolve_vehicle_api(
             exc_info=True,
         )
         return cloud_vehicle
-    # raise_unconfirmed=False avoids re-sending a non-idempotent command to cloud; keepalive_interval=None avoids holding the link open and keeping the car awake.
+    # disable keep alive to allow vehicles to sleep
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
         confirmation="verify",
