@@ -6,13 +6,18 @@ from typing import Any, override
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, async_setup_platform_entry, get_pt2262_cmd
+from . import (
+    DeviceTuple,
+    async_setup_platform_entry,
+    get_device_tuple_from_device,
+    get_pt2262_cmd,
+)
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -46,13 +51,17 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
+        entity_info = subentry.data
+        device_id = get_device_tuple_from_device(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         return [
             RfxtrxSwitch(
                 event.device,
                 device_id,
+                subentry.subentry_id,
                 entity_info.get(CONF_DATA_BITS),
                 entity_info.get(CONF_COMMAND_ON),
                 entity_info.get(CONF_COMMAND_OFF),
@@ -72,13 +81,14 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         data_bits: int | None = None,
         cmd_on: int | None = None,
         cmd_off: int | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the RFXtrx switch."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_id, subentry_id, event=event)
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off

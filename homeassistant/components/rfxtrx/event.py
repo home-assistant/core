@@ -1,18 +1,18 @@
 """Support for RFXtrx sensors."""
 
 import logging
-from typing import Any, override
+from typing import override
 
 from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
 from homeassistant.components.event import EventEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import DeviceTuple, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry, get_device_tuple_from_device
 from .const import DEVICE_PACKET_TYPE_LIGHTING4
 from .entity import RfxtrxEntity
 
@@ -35,22 +35,32 @@ async def async_setup_entry(
     def _constructor(
         event: RFXtrxEvent,
         auto: RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
+        device_id = get_device_tuple_from_device(event.device)
         entities: list[Entity] = []
 
         if hasattr(event.device, "COMMANDS"):
             entities.append(
                 RfxtrxEventEntity(
-                    event.device, device_id, "COMMANDS", "Command", "command"
+                    event.device,
+                    device_id,
+                    subentry.subentry_id,
+                    "COMMANDS",
+                    "Command",
+                    "command",
                 )
             )
 
         if hasattr(event.device, "STATUS"):
             entities.append(
                 RfxtrxEventEntity(
-                    event.device, device_id, "STATUS", "Sensor Status", "status"
+                    event.device,
+                    device_id,
+                    subentry.subentry_id,
+                    "STATUS",
+                    "Sensor Status",
+                    "status",
                 )
             )
 
@@ -68,15 +78,15 @@ class RfxtrxEventEntity(RfxtrxEntity, EventEntity):
         self,
         device: RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         device_attribute: str,
         value_attribute: str,
         translation_key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, device_id)
+        super().__init__(device, device_id, subentry_id)
         commands: dict[int, str] = getattr(device, device_attribute)
         self._attr_name = None
-        self._attr_unique_id = "_".join(x for x in device_id)
         self._attr_event_types = [slugify(command) for command in commands.values()]
         self._attr_translation_key = translation_key
         self._value_attribute = value_attribute

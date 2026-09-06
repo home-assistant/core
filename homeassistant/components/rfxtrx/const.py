@@ -6,7 +6,9 @@ CONF_OFF_DELAY = "off_delay"
 CONF_VENETIAN_BLIND_MODE = "venetian_blind_mode"
 CONF_PROTOCOLS = "protocols"
 
-CONF_REPLACE_DEVICE = "replace_device"
+CONF_EVENT_CODE = "event_code"
+
+SUBENTRY_TYPE_DEVICE = "device"
 
 CONST_VENETIAN_BLIND_MODE_DEFAULT = "Unknown"
 CONST_VENETIAN_BLIND_MODE_EU = "EU"

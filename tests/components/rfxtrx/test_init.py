@@ -8,7 +8,7 @@ from homeassistant.components.rfxtrx import DOMAIN, DeviceTuple
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_rfx_test_cfg
@@ -126,7 +126,7 @@ async def test_ws_device_remove(
     )
 
     # Verify that the config entry has removed the device
-    assert mock_entry.data["devices"] == {}
+    assert mock_entry.subentries == {}
 
 
 async def test_connect(
@@ -219,7 +219,9 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
 
 
 async def test_migrate_entry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entry data."""
     legacy_config = {
@@ -256,6 +258,21 @@ async def test_migrate_entry(
         },
     )
 
+    entity_1 = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "11_0_213c7f2:16_signal_strength",
+        config_entry=entry,
+        device_id=device_1.id,
+    )
+    entity_2 = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "16_0_00:90",
+        config_entry=entry,
+        device_id=device_2.id,
+    )
+
     await entry.async_migrate(hass)
 
     assert dict(entry.data) == {
@@ -264,23 +281,46 @@ async def test_migrate_entry(
         "port": None,
         "automatic_add": True,
         "protocols": [],
-        "devices": {
-            "0b1100cd0213c7f210010f51": {
-                "fire_event": True,
-                "device_id": ["11", "0", "213c7f2:16"],
-            },
-            "0716000100900970": {},
-        },
     }
-    assert entry.version == 2
+    assert entry.version == 3
+
+    subentries = {
+        subentry.unique_id: subentry for subentry in entry.subentries.values()
+    }
+    assert subentries.keys() == {"11_0_213c7f2:16", "16_0_00:90"}
+
+    subentry_1 = subentries["11_0_213c7f2:16"]
+    assert subentry_1.title == "AC 213c7f2:16"
+    assert dict(subentry_1.data) == {
+        "fire_event": True,
+        "event_code": "0b1100cd0213c7f210010f51",
+    }
+
+    subentry_2 = subentries["16_0_00:90"]
+    assert subentry_2.title == "Byron SX 00:90"
+    assert dict(subentry_2.data) == {"event_code": "0716000100900970"}
 
     device_1 = device_registry.async_get(device_1.id)
+    assert device_1
     assert device_1.identifiers == {
-        (DOMAIN, "11_0_213c7f2:16"),
+        (DOMAIN, subentry_1.subentry_id),
         ("dummy", "id"),
     }
+    assert device_1.config_subentry_id == subentry_1.subentry_id
 
     device_2 = device_registry.async_get(device_2.id)
+    assert device_2
     assert device_2.identifiers == {
-        (DOMAIN, "16_0_00:90"),
+        (DOMAIN, subentry_2.subentry_id),
     }
+    assert device_2.config_subentry_id == subentry_2.subentry_id
+
+    entity_1 = entity_registry.async_get(entity_1.entity_id)
+    assert entity_1
+    assert entity_1.unique_id == f"{subentry_1.subentry_id}_signal_strength"
+    assert entity_1.config_subentry_id == subentry_1.subentry_id
+
+    entity_2 = entity_registry.async_get(entity_2.entity_id)
+    assert entity_2
+    assert entity_2.unique_id == subentry_2.subentry_id
+    assert entity_2.config_subentry_id == subentry_2.subentry_id

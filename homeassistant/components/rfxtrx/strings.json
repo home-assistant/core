@@ -38,6 +38,51 @@
       }
     }
   },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Device",
+      "error": {
+        "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+        "invalid_event_code": "Invalid event code",
+        "invalid_input_2262_off": "Invalid input for command off",
+        "invalid_input_2262_on": "Invalid input for command on"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure device",
+        "user": "Add device"
+      },
+      "step": {
+        "device_options": {
+          "data": {
+            "command_off": "Data bits value for command off",
+            "command_on": "Data bits value for command on",
+            "data_bits": "Number of data bits",
+            "off_delay": "Off delay",
+            "venetian_blind_mode": "Venetian blind mode"
+          },
+          "title": "Configure device options"
+        },
+        "reconfigure": {
+          "data": {
+            "event_code": "Event code"
+          },
+          "data_description": {
+            "event_code": "Change this only if the physical device was replaced with new hardware."
+          },
+          "title": "Reconfigure device"
+        },
+        "user": {
+          "data": {
+            "event_code": "Enter event code to add"
+          },
+          "title": "Add device"
+        }
+      }
+    }
+  },
   "device_automation": {
     "action_type": {
       "send_command": "Send command: {subtype}",
@@ -195,35 +240,13 @@
     }
   },
   "options": {
-    "error": {
-      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_event_code": "Invalid event code",
-      "invalid_input_2262_off": "Invalid input for command off",
-      "invalid_input_2262_on": "Invalid input for command on",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "step": {
-      "prompt_options": {
+      "init": {
         "data": {
           "automatic_add": "Enable automatic add",
-          "debug": "Enable debugging",
-          "device": "Select device to configure",
-          "event_code": "Enter event code to add",
           "protocols": "Protocols"
         },
         "title": "RFXtrx options"
-      },
-      "set_device_options": {
-        "data": {
-          "command_off": "Data bits value for command off",
-          "command_on": "Data bits value for command on",
-          "data_bits": "Number of data bits",
-          "off_delay": "Off delay",
-          "off_delay_enabled": "Enable off delay",
-          "replace_device": "Select device to replace",
-          "venetian_blind_mode": "Venetian blind mode"
-        },
-        "title": "Configure device options"
       }
     }
   },
