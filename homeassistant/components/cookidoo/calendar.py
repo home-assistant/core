@@ -14,7 +14,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
+from .coordinator import (
+    CookidooConfigEntry,
+    CookidooDataUpdateCoordinator,
+    persist_auth_data,
+)
 from .entity import CookidooBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,6 +73,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 return recipe_to_event(day_date, recipe)
         return None
 
+    @persist_auth_data
     async def _fetch_week_plan(self, week_day: date) -> list:
         """Fetch a single Cookidoo week plan, retrying once on auth failure."""
         try:
@@ -91,9 +96,6 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 translation_domain=DOMAIN,
                 translation_key="calendar_fetch_failed",
             ) from e
-        finally:
-            # Any request can rotate the tokens, not just the re-login
-            self.coordinator.save_auth_data()
 
     @override
     async def async_get_events(

@@ -28,3 +28,7 @@ class CookidooBaseEntity(CoordinatorEntity[CookidooDataUpdateCoordinator]):
             manufacturer="Vorwerk International & Co. KmG",
             model="Cookidoo - Thermomix® recipe portal",
         )
+
+    def save_auth_data(self) -> None:
+        """Persist the tokens, so entity actions can use @persist_auth_data."""
+        self.coordinator.save_auth_data()
