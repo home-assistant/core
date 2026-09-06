@@ -18,6 +18,7 @@ from asyncsleepiq import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sleepiq import _deduplicate_sleepers
 from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from homeassistant.components.sleepiq.coordinator import (
     LONGER_UPDATE_INTERVAL,
@@ -25,7 +26,7 @@ from homeassistant.components.sleepiq.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_USERNAME, PRESSURE
+from homeassistant.const import CONF_USERNAME, PRESSURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -356,3 +357,98 @@ async def test_duplicate_beds_none_sleeper_ids_not_filtered(
     entry = await setup_platform(hass, "sensor")
     assert entry.state is ConfigEntryState.LOADED
     assert "ghost_001" in mock_asyncsleepiq.beds
+
+
+def test_deduplicate_sleepers_removes_duplicates() -> None:
+    """Test that duplicate sleepers with the same sleeper_id are removed."""
+    gateway = MagicMock()
+    bed = create_autospec(SleepIQBed)
+    bed.name = "Test Bed"
+    bed.id = "bed_1"
+
+    sleeper_a = create_autospec(SleepIQSleeper)
+    sleeper_a.sleeper_id = "0"
+    sleeper_a.side = Side.LEFT
+
+    sleeper_b = create_autospec(SleepIQSleeper)
+    sleeper_b.sleeper_id = "0"
+    sleeper_b.side = Side.RIGHT
+
+    bed.sleepers = [sleeper_a, sleeper_b]
+    gateway.beds = {"bed_1": bed}
+
+    _deduplicate_sleepers(gateway)
+
+    assert len(bed.sleepers) == 1
+    assert bed.sleepers[0] is sleeper_a
+
+
+def test_deduplicate_sleepers_keeps_distinct() -> None:
+    """Test that distinct sleeper IDs are preserved and falsy IDs are never deduplicated."""
+    gateway = MagicMock()
+    bed = create_autospec(SleepIQBed)
+    bed.name = "Test Bed"
+    bed.id = "bed_1"
+
+    sleeper_a = create_autospec(SleepIQSleeper)
+    sleeper_a.sleeper_id = SLEEPER_L_ID
+
+    sleeper_b = create_autospec(SleepIQSleeper)
+    sleeper_b.sleeper_id = SLEEPER_R_ID
+
+    # Two sleepers with None IDs should both be kept
+    sleeper_c = create_autospec(SleepIQSleeper)
+    sleeper_c.sleeper_id = None
+
+    sleeper_d = create_autospec(SleepIQSleeper)
+    sleeper_d.sleeper_id = None
+
+    bed.sleepers = [sleeper_a, sleeper_b, sleeper_c, sleeper_d]
+    gateway.beds = {"bed_1": bed}
+
+    _deduplicate_sleepers(gateway)
+
+    assert len(bed.sleepers) == 4
+    assert bed.sleepers[0] is sleeper_a
+    assert bed.sleepers[1] is sleeper_b
+    assert bed.sleepers[2] is sleeper_c
+    assert bed.sleepers[3] is sleeper_d
+
+
+def test_deduplicate_sleepers_empty() -> None:
+    """Test that an empty sleeper list causes no error."""
+    gateway = MagicMock()
+    bed = create_autospec(SleepIQBed)
+    bed.name = "Empty Bed"
+    bed.id = "bed_1"
+    bed.sleepers = []
+    gateway.beds = {"bed_1": bed}
+
+    _deduplicate_sleepers(gateway)
+
+    assert bed.sleepers == []
+
+
+async def test_duplicate_sleepers_no_unique_id_errors(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+    mock_bed: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that duplicate sleepers do not produce unique ID errors."""
+    # Add a duplicate of the left sleeper
+    dup_sleeper = create_autospec(SleepIQSleeper)
+    dup_sleeper.side = Side.RIGHT
+    dup_sleeper.name = "Duplicate"
+    dup_sleeper.sleeper_id = SLEEPER_L_ID
+    dup_sleeper.in_bed = False
+    dup_sleeper.sleep_number = 50
+    dup_sleeper.pressure = 1200
+    dup_sleeper.sleep_data = SleepData(
+        duration=0, sleep_score=0, heart_rate=0, respiratory_rate=0, hrv=0
+    )
+    mock_bed.sleepers.append(dup_sleeper)
+
+    entry = await setup_platform(hass, Platform.BINARY_SENSOR)
+    assert entry.state is ConfigEntryState.LOADED
+    assert "does not generate unique IDs" not in caplog.text
