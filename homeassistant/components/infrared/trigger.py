@@ -57,11 +57,33 @@ _COMMAND_SCHEMA = vol.Schema(
     }
 )
 
+
+def _distinct_commands(value: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Validate no two commands are the same infrared command.
+
+    Only the first matching command fires, so capturing a button twice leaves
+    a name that can never be reported.
+    """
+    seen: list[tuple[str, list[int]]] = []
+    for command in value:
+        frame = code_to_frame(command[CONF_CODE])
+        for name, previous_frame in seen:
+            if frames_match(frame, previous_frame):
+                raise vol.Invalid(
+                    f"Command '{command[CONF_NAME]}' is the same infrared command"
+                    f" as '{name}'"
+                )
+        seen.append((command[CONF_NAME], frame))
+    return value
+
+
 _TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_COMMANDS): vol.All([_COMMAND_SCHEMA], vol.Length(min=1)),
+            vol.Required(CONF_COMMANDS): vol.All(
+                [_COMMAND_SCHEMA], vol.Length(min=1), _distinct_commands
+            ),
         },
     }
 )

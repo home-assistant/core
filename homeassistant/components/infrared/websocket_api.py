@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .code import signal_to_code
+from .code import code_to_frame, frames_match, signal_to_code, signal_to_frame
 from .entity import InfraredReceivedSignal
 from .helpers import async_subscribe_receiver
 
@@ -28,6 +28,9 @@ def async_setup(hass: HomeAssistant) -> None:
     {
         vol.Required("type"): "infrared/receiver/subscribe",
         vol.Required("entity_id"): cv.entity_id,
+        # Codes the client already holds. A signal matching one of them is
+        # reported as a duplicate instead of being captured again.
+        vol.Optional("known_codes", default=list): [cv.string],
     }
 )
 @callback
@@ -36,8 +39,18 @@ def websocket_subscribe_receiver(
 ) -> None:
     """Forward the codes a receiver picks up to the websocket.
 
-    Used by the automation editor to capture the codes of a remote.
+    Used by the automation editor to capture the codes of a remote. Two presses
+    of the same button never report the exact same code, so recognizing a code
+    the client already holds has to happen here, on the timings.
     """
+    known_codes: list[str] = msg["known_codes"]
+    try:
+        known_frames = [code_to_frame(code) for code in known_codes]
+    except ValueError as err:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, f"Invalid infrared code: {err}"
+        )
+        return
 
     @callback
     def forward_signal(signal: InfraredReceivedSignal) -> None:
@@ -47,7 +60,16 @@ def websocket_subscribe_receiver(
         except ValueError:
             _LOGGER.debug("Discarding unusable signal: %s", signal)
             return
-        connection.send_event(msg["id"], {"code": code})
+        frame = signal_to_frame(signal)
+        duplicate_of = next(
+            (
+                known_codes[index]
+                for index, known_frame in enumerate(known_frames)
+                if frames_match(frame, known_frame)
+            ),
+            None,
+        )
+        connection.send_event(msg["id"], {"code": code, "duplicate_of": duplicate_of})
 
     try:
         connection.subscriptions[msg["id"]] = async_subscribe_receiver(

@@ -287,6 +287,16 @@ async def test_trigger_without_target(
             "required key not provided at 'options.commands[0].name'",
             id="name_missing",
         ),
+        pytest.param(
+            {
+                "commands": [
+                    {"name": "Power", "code": _code(POWER)},
+                    {"name": "Power again", "code": _code(POWER)},
+                ]
+            },
+            "Command 'Power again' is the same infrared command as 'Power'",
+            id="same_button_captured_twice",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_infrared_receiver_entity")
