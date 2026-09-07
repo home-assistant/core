@@ -1,11 +1,11 @@
-"""SwitchBot Cloud Custom Service."""
+"""Support for SwitchBot Cloud services."""
 
 from logging import getLogger
 
 from switchbot_api import ArtFrameCommands
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
@@ -49,8 +49,9 @@ async def handle_upload_image(call: ServiceCall) -> None:
         )
 
 
-def async_register_services(hass: HomeAssistant) -> None:
-    """Async register services."""
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register the SwitchBot Cloud services."""
     hass.services.async_register(
         DOMAIN,
         AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,

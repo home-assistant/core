@@ -121,6 +121,10 @@ async def _assert_service_call(
             DummyDevice(DeviceType.CF, attributes={CFAttributes.aux_heating: True}),
             id="cf",
         ),
+        pytest.param(
+            DummyDevice(DeviceType.C2, attributes={"child_lock": True}),
+            id="c2",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -175,6 +179,51 @@ async def test_ac_switch_services(
         entity_entry.entity_id,
         SERVICE_TURN_OFF,
         [("set_attribute", ACAttributes.aux_heating, False)],
+        device,
+    )
+
+
+CHILD_LOCK_DEVICE_TYPES = [
+    DeviceType.X34,
+    DeviceType.A1,
+    DeviceType.C2,
+    DeviceType.CE,
+    DeviceType.E1,
+    DeviceType.ED,
+    DeviceType.FA,
+    DeviceType.FB,
+    DeviceType.FC,
+]
+
+
+@pytest.mark.parametrize("device_type", CHILD_LOCK_DEVICE_TYPES)
+async def test_child_lock_switch_created_and_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+) -> None:
+    """Test the child lock switch is created and its services reach the device."""
+    device = DummyDevice(device_type, attributes={"child_lock": True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_child_lock"]
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "on"
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", "child_lock", False)],
+        device,
+    )
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", "child_lock", True)],
         device,
     )
 
