@@ -20,15 +20,7 @@ def is_device_time_out_of_sync(
     hass: HomeAssistant,
     threshold_seconds: int = 300,
 ) -> bool:
-    """Return True if device time and HA time differ by more than threshold_seconds.
-
-    ``MBF_PAR_TIME`` and ``prepare_device_time`` are both TZ-less wall-clock
-    epochs, so comparing them directly avoids the DST fold ambiguity that a
-    decode-through-UTC comparison would hit during the repeated hour at
-    fall-back. The default is loose on purpose: correct a clock that drifted
-    far (e.g. after a power loss), not small offsets from bus latency or
-    minute-granular RTC.
-    """
+    """Return whether the device/HA wall-clock drift exceeds threshold_seconds."""
     device_ts: int | None = data.get("MBF_PAR_TIME")
     if device_ts is None:
         return False
