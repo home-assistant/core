@@ -1,6 +1,6 @@
 """The test repairing statistics schema."""
 
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, call, patch
 
 import pytest
 
@@ -127,4 +127,39 @@ async def test_validate_db_schema_fix_collation_issue(
     assert (
         "Updating table statistics to character set utf8mb4 and collation utf8mb4_bin"
         in caplog.text
+    )
+
+
+@pytest.mark.parametrize("enable_schema_validation", [True])
+async def test_validate_db_schema_fix_missing_index(
+    hass: HomeAssistant,
+    async_test_recorder: RecorderInstanceContextManager,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating and repairing a missing index on the statistics table.
+
+    Note: The test uses SQLite, the purpose is only to exercise the code.
+    """
+    with (
+        patch(
+            "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_has_indexes",
+            return_value={
+                "statistics.missing_index.ix_statistics_statistic_id_start_ts"
+            },
+        ),
+        patch(
+            "homeassistant.components.recorder.migration._create_index"
+        ) as create_index_mock,
+    ):
+        async with async_test_recorder(hass):
+            await async_wait_recording_done(hass)
+
+    assert "Schema validation failed" not in caplog.text
+    assert (
+        "Database is about to correct DB schema errors: "
+        "statistics.missing_index.ix_statistics_statistic_id_start_ts"
+        in caplog.text
+    )
+    create_index_mock.assert_any_call(
+        ANY, ANY, "statistics", "ix_statistics_statistic_id_start_ts"
     )
