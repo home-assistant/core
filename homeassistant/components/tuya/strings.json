@@ -232,6 +232,9 @@
       "indexed_power_warning_threshold": {
         "name": "Power warning threshold {index}"
       },
+      "indexed_switch_duration": {
+        "name": "Switch duration {index}"
+      },
       "indexed_temperature": {
         "name": "Temperature {index}"
       },
