@@ -1,4 +1,4 @@
-"""Test the De Dietrich Diematic Modbus config flow."""
+"""Test the De Dietrich config flow."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager

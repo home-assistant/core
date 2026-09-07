@@ -1,4 +1,4 @@
-"""Test the De Dietrich Diematic Modbus sensor platform."""
+"""Test the De Dietrich sensor platform."""
 
 from datetime import timedelta
 from unittest.mock import patch

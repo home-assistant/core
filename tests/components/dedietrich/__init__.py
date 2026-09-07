@@ -1,4 +1,4 @@
-"""Tests for the De Dietrich Diematic Modbus integration."""
+"""Tests for the De Dietrich integration."""
 
 from modbus_connection.mock import MockModbusUnit
 

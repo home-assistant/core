@@ -1,4 +1,4 @@
-"""Common fixtures for the De Dietrich Diematic Modbus tests."""
+"""Common fixtures for the De Dietrich tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch

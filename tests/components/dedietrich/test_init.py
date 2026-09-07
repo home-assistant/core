@@ -1,4 +1,4 @@
-"""Test the De Dietrich Diematic Modbus setup."""
+"""Test the De Dietrich setup."""
 
 from unittest.mock import patch
 
