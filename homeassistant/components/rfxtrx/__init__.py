@@ -175,10 +175,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     device_registry = dr.async_get(hass)
 
-    # Automatic discovery persists new devices as subentries directly, without
-    # going through a subentry flow, so it must not trigger the reload that
-    # `_async_reload_on_update` performs for user-driven subentry changes.
-    skip_next_reload = False
+    # Automatic discovery persists new devices as subentries directly, avoid
+    # reloads for these.
+    pending_internal_updates = 0
 
     async def _async_do_reload() -> None:
         await hass.config_entries.async_reload(entry.entry_id)
@@ -196,9 +195,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     async def _async_reload_on_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Reload the entry when it is updated through a config/subentry flow."""
-        nonlocal skip_next_reload
-        if skip_next_reload:
-            skip_next_reload = False
+        nonlocal pending_internal_updates
+        if pending_internal_updates > 0:
+            pending_internal_updates -= 1
             return
         await reload_debouncer.async_call()
 
@@ -261,7 +260,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     @callback
     def _add_device(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Add a device to config entry."""
-        nonlocal skip_next_reload
+        nonlocal pending_internal_updates
         event_code = binascii.hexlify(event.data).decode("ASCII")
 
         _LOGGER.debug(
@@ -278,19 +277,19 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
             title=f"{event.device.type_string} {device_id.id_string}",
             unique_id=device_id.unique_id,
         )
-        skip_next_reload = True
+        pending_internal_updates += 1
         hass.config_entries.async_add_subentry(entry, subentry)
         devices[device_id] = subentry
 
     @callback
     def _remove_device(subentry_id: str) -> None:
-        nonlocal skip_next_reload
+        nonlocal pending_internal_updates
         device_id = next(
             (d for d, s in devices.items() if s.subentry_id == subentry_id), None
         )
         if device_id is not None:
             devices.pop(device_id)
-        skip_next_reload = True
+        pending_internal_updates += 1
         hass.config_entries.async_remove_subentry(entry, subentry_id)
 
     @callback
@@ -407,7 +406,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
-        subentry_by_unique_id: dict[str, str] = {}
+        # Pre-seeded from existing subentries so a migration retried after a
+        # partially completed run (or two legacy event codes that compute the
+        # same device, e.g. duplicate PT2262/cover codes) does not try to add
+        # a second subentry with the same unique_id and abort.
+        subentry_by_unique_id: dict[str, str] = {
+            subentry.unique_id: subentry.subentry_id
+            for subentry in entry.subentries.values()
+            if subentry.unique_id is not None
+        }
 
         for event_code, entity_info in entry.data[CONF_DEVICES].items():
             if (event := get_rfx_object(event_code)) is None:
@@ -415,6 +422,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_id = get_device_tuple_from_device(
                 event.device, data_bits=entity_info.get(CONF_DATA_BITS)
             )
+            if device_id.unique_id in subentry_by_unique_id:
+                continue
             subentry_data = {
                 key: value
                 for key, value in entity_info.items()

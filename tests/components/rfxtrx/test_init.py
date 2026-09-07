@@ -7,6 +7,7 @@ import RFXtrx as rfxtrxmod
 from homeassistant.components.rfxtrx import (
     DOMAIN,
     DeviceTuple,
+    get_device_tuple_from_device,
     get_pt2262_cmd,
     get_pt2262_deviceid,
     get_rfx_object,
@@ -367,6 +368,9 @@ async def test_migrate_entry(
             },
             "0716000100900970": {},
             "not_hex": {},
+            # Two legacy event codes that mask to the same PT2262 device.
+            "0913000022670e013970": {"data_bits": 4, "off_delay": 5},
+            "09130000226707013970": {"data_bits": 4, "off_delay": 99},
         },
     }
 
@@ -436,7 +440,22 @@ async def test_migrate_entry(
     subentries = {
         subentry.unique_id: subentry for subentry in entry.subentries.values()
     }
-    assert subentries.keys() == {"11_0_213c7f2:16", "16_0_00:90"}
+    duplicate_event = get_rfx_object("0913000022670e013970")
+    assert duplicate_event
+    duplicate_device_id = get_device_tuple_from_device(
+        duplicate_event.device, data_bits=4
+    )
+    assert subentries.keys() == {
+        "11_0_213c7f2:16",
+        "16_0_00:90",
+        duplicate_device_id.unique_id,
+    }
+
+    # Only one subentry is created for the two event codes that mask to the
+    # same device, using the data from whichever is processed first.
+    subentry_dup = subentries[duplicate_device_id.unique_id]
+    assert subentry_dup.data["event_code"] == "0913000022670e013970"
+    assert subentry_dup.data["off_delay"] == 5
 
     subentry_1 = subentries["11_0_213c7f2:16"]
     assert subentry_1.title == "AC 213c7f2:16"
