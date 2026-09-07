@@ -23,9 +23,6 @@ from homeassistant.loader import async_get_integration
 
 from .const import CONF_DEFAULT_HOST, DOMAIN
 
-DATA_FILES_ADDON_DIR = "/addon_configs/"
-DEF_TOKEN_FILE = "def_token.set"
-
 
 class HbtnComm:
     """Habitron communication wrapper class mapping to Home Assistant."""
