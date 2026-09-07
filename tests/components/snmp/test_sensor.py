@@ -71,7 +71,6 @@ async def test_backoff_when_device_stays_unreachable(hass: HomeAssistant) -> Non
     clock = 0.0
     now = dt_util.utcnow()
     interval = SCAN_INTERVAL.total_seconds()
-    skipped_polls = int(MIN_BACKOFF // interval)
 
     def _monotonic() -> float:
         return clock
@@ -92,24 +91,28 @@ async def test_backoff_when_device_stays_unreachable(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
         assert get_cmd.call_count == 1
 
-        # Early failures are still retried on every scan interval.
+        # Failures below the threshold are retried on every scan interval.
         for expected in range(2, FAILURES_BEFORE_BACKOFF + 1):
             await _poll()
             assert get_cmd.call_count == expected
 
-        # Threshold passed: the next MIN_BACKOFF seconds of polls are skipped.
+        # The failure that exceeds the threshold still polls, and arms the backoff.
+        await _poll()
         calls = get_cmd.call_count
-        for _ in range(skipped_polls):
+        assert calls == FAILURES_BEFORE_BACKOFF + 1
+
+        # Polls inside the backoff window are skipped.
+        for _ in range(int(MIN_BACKOFF // interval) - 1):
             await _poll()
         assert get_cmd.call_count == calls
 
-        # Once the delay expires, polling resumes.
+        # The poll at the end of the window runs, and doubles the delay.
         await _poll()
         assert get_cmd.call_count == calls + 1
-
-        # That failure doubled the delay, so MIN_BACKOFF is no longer enough.
         calls = get_cmd.call_count
-        for _ in range(skipped_polls):
+
+        # MIN_BACKOFF is no longer long enough to reach the next poll.
+        for _ in range(int(MIN_BACKOFF // interval)):
             await _poll()
         assert get_cmd.call_count == calls
 
