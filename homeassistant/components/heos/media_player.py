@@ -150,7 +150,7 @@ def catch_action_error[**P, R](
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             try:
                 return await func(*args, **kwargs)
-            except (HeosError, ValueError) as ex:
+            except (HeosError, TypeError, ValueError) as ex:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="action_error",
@@ -234,18 +234,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_completed = False
             self._announce_restore_state = self._snapshot_state()
             self._announce_restore_state["tts_url"] = media_id
-            self._announce_restore_state["queue_ids_before"] = None
-            try:
-                queue_before = await self._player.get_queue()
-            except HeosError as err:
-                _LOGGER.warning(
-                    "Could not snapshot the queue before announcement: %s", err
-                )
-                self._announce_restore_state["queue_ids_before"] = None
-            else:
-                self._announce_restore_state["queue_ids_before"] = {
-                    item.queue_id for item in queue_before
-                }
             _LOGGER.debug(
                 "Saving state for announcement: play_state=%s, volume=%s",
                 self._announce_restore_state["play_state"],
@@ -296,7 +284,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             else:
                 self._announce_lock.release()
             if isinstance(err, TypeError):
-                raise ValueError("Invalid announcement value") from err
+                raise TypeError("Invalid announcement value") from err
             raise
 
     async def _capture_announcement_signature(self) -> None:
@@ -327,6 +315,17 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def _announcement_watchdog(self) -> None:
         """Restore state if HEOS never sends an announcement completion event."""
         await asyncio.sleep(30)
+        while self._announce_in_progress and not self._announce_completed:
+            signature = self._announce_media_signature
+            if signature and signature.get("duration") and self._announce_start_time:
+                elapsed = (utcnow() - self._announce_start_time).total_seconds()
+                remaining = signature["duration"] / 1000 + 10 - elapsed
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
+                    continue
+
+            break
+
         if self._announce_in_progress and not self._announce_completed:
             _LOGGER.warning(
                 "Announcement completion event was not received; restoring state"
@@ -338,6 +337,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Return the HEOS fields used to identify the current media."""
         return {
             "media_id": media.media_id,
+            "queue_id": media.queue_id,
+            "duration": media.duration,
             "song": getattr(media, "song", None),
             "album": getattr(media, "album", None),
             "artist": getattr(media, "artist", None),
@@ -385,6 +386,16 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             return
 
         state = self._announce_restore_state
+        current_media = self._player.now_playing_media
+        announcement_queue_id = (
+            self._announce_media_signature.get("queue_id")
+            if self._announce_media_signature
+            else (
+                current_media.queue_id
+                if self._is_announcement_media(current_media, state["tts_url"])
+                else None
+            )
+        )
         _LOGGER.debug(
             "Restoring state after announcement: play_state=%s, volume=%s",
             state["play_state"],
@@ -396,7 +407,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             if state["tts_url"]:
                 await asyncio.sleep(0.2)
                 await self._remove_tts_from_queue(
-                    state["tts_url"], state["queue_ids_before"]
+                    state["tts_url"], announcement_queue_id
                 )
 
             # Restore independent settings even when an earlier command fails.
@@ -465,6 +476,19 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 watchdog_task.cancel()
             self._announce_lock.release()
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel announcement tasks when the entity is removed."""
+        for task in (
+            self._announce_completion_task,
+            self._announce_watchdog_task,
+        ):
+            if task and not task.done():
+                task.cancel()
+        self._announce_completion_task = None
+        self._announce_watchdog_task = None
+        await super().async_will_remove_from_hass()
+
     def _clear_announcement_state(self) -> None:
         """Clear announcement state after a failed announcement."""
         self._announce_restore_state = None
@@ -475,29 +499,48 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_start_time = None
 
     async def _remove_tts_from_queue(
-        self, tts_url: str, queue_ids_before: set[int] | None
+        self,
+        tts_url: str, announcement_queue_id: int | None = None
     ) -> None:
         """Remove TTS URL from the queue if it was added."""
-        if queue_ids_before is None:
-            _LOGGER.warning(
-                "Skipping TTS queue cleanup because the queue snapshot failed"
-            )
-            return
-
         try:
             # Get current queue after TTS
             queue_after = await self._player.get_queue()
             _LOGGER.debug("Queue after TTS: %d items", len(queue_after))
-            
-            # Match only the URL created by this announcement.
+
+            # Match by media ID when available. Some HEOS versions expose URL
+            # playback only through the generic "Url Stream" fields.
             tts_queue_ids = []
             for item in queue_after:
-                if item.media_id == tts_url and item.queue_id not in queue_ids_before:
+                if item.queue_id == announcement_queue_id:
                     tts_queue_ids.append(item.queue_id)
                     _LOGGER.debug(
-                        "Found TTS Url Stream item: queue_id=%s, song=%s",
+                        "Found announcement queue item: queue_id=%s",
                         item.queue_id,
-                        item.song,
+                    )
+                    continue
+
+                if announcement_queue_id is not None:
+                    continue
+
+                item_media_id = getattr(item, "media_id", None)
+                if item_media_id and item_media_id == tts_url:
+                    tts_queue_ids.append(item.queue_id)
+                    _LOGGER.debug(
+                        "Found TTS item by media ID: queue_id=%s",
+                        item.queue_id,
+                    )
+                elif (
+                    not item_media_id
+                    and getattr(item, "song", None) == "Url Stream"
+                    and getattr(item, "album", None) == "Url Stream"
+                    and getattr(item, "artist", None) == "Url Stream"
+                    and not tts_queue_ids
+                ):
+                    tts_queue_ids.append(item.queue_id)
+                    _LOGGER.debug(
+                        "Found TTS item by Url Stream metadata: queue_id=%s",
+                        item.queue_id,
                     )
             
             # Remove TTS items from queue
