@@ -4,7 +4,7 @@ from base64 import urlsafe_b64decode, urlsafe_b64encode
 from datetime import timedelta
 import logging
 from pathlib import PurePath
-from typing import cast, override
+from typing import Any, cast, override
 
 from aiohttp import web
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
@@ -97,10 +97,10 @@ class MotionEyeMediaProxyView(HomeAssistantView):
         try:
             media_path = urlsafe_b64decode(path.encode("ascii")).decode("utf-8")
             camera = int(camera_id)
-        except (ValueError, UnicodeDecodeError):
+        except ValueError, UnicodeDecodeError:
             return web.Response(status=400)
 
-        data = await entry.runtime_data.client.async_get_media(
+        data = await cast(Any, entry.runtime_data.client).async_get_media(
             camera,
             media_path,
             image=kind == "images",
