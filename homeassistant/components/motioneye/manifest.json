@@ -19,6 +19,6 @@
     "motioneye_client"
   ],
   "requirements": [
-    "motioneye-client @ git+https://github.com/mkrawcz1/motioneye-client.git@857d1058d1465d57c96d06fbd3ac55462b2fff7e"
+    "motioneye-client==0.3.14"
   ]
 }
