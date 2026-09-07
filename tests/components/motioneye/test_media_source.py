@@ -1,7 +1,7 @@
 """Test Local Media Source."""
 
 import logging
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from motioneye_client.client import MotionEyeClientPathError
 import pytest
@@ -71,6 +71,16 @@ TEST_IMAGES = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def mock_sign_path() -> None:
+    """Return a deterministic signed media proxy URL."""
+    with patch(
+        "homeassistant.components.motioneye.media_source.async_sign_path",
+        return_value="http://signed",
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -250,8 +260,7 @@ async def test_async_browse_media_success(
         "not_shown": 0,
     }
 
-    client.get_movie_url = Mock(return_value="http://movie")
-    media = await async_browse_media(
+        media = await async_browse_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{config.entry_id}#{device.id}#movies#/2021-04-25",
     )
@@ -283,7 +292,7 @@ async def test_async_browse_media_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://movie",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             },
             {
@@ -299,7 +308,7 @@ async def test_async_browse_media_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://movie",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             },
             {
@@ -315,7 +324,7 @@ async def test_async_browse_media_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://movie",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             },
         ],
@@ -337,8 +346,7 @@ async def test_async_browse_media_images_success(
     )
 
     client.async_get_images = AsyncMock(return_value=TEST_IMAGES)
-    client.get_image_url = Mock(return_value="http://image")
-
+    
     media = await async_browse_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{config.entry_id}#{device.id}#images#/2021-04-12",
@@ -371,7 +379,7 @@ async def test_async_browse_media_images_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://image",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             }
         ],
@@ -394,24 +402,20 @@ async def test_async_resolve_media_success(
     )
 
     # Test successful resolve for a movie.
-    client.get_movie_url = Mock(return_value="http://movie-url")
     media = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
         None,
     )
-    assert media == PlayMedia(url="http://movie-url", mime_type="video/mp4")
-    assert client.get_movie_url.call_args == call(TEST_CAMERA_ID, "/foo.mp4")
+    assert media == PlayMedia(url="http://signed", mime_type="video/mp4")
 
     # Test successful resolve for an image.
-    client.get_image_url = Mock(return_value="http://image-url")
     media = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg",
         None,
     )
-    assert media == PlayMedia(url="http://image-url", mime_type="image/jpeg")
-    assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
+    assert media == PlayMedia(url="http://signed", mime_type="image/jpeg")
 
 
 async def test_async_resolve_media_failure(
