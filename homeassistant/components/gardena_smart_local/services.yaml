@@ -1,0 +1,15 @@
+open_valve:
+  target:
+    entity:
+      integration: gardena_smart_local
+      domain: valve
+  fields:
+    duration:
+      required: false
+      example: 900
+      selector:
+        number:
+          min: 60
+          max: 10800
+          unit_of_measurement: s
+          mode: box
