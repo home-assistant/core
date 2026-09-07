@@ -201,7 +201,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             self.logger.warning(
                 (
                     "Config entry %s (%s) for %s.%s was never loaded, "
-                    "possibly because its platform setup failed earlier; "
+                    "possibly because its platform setup never completed; "
                     "there is nothing to unload"
                 ),
                 config_entry.title,
