@@ -7536,6 +7536,67 @@ async def test_update_entry_without_reload(
 
 
 @pytest.mark.parametrize(
+    "helper",
+    [
+        pytest.param("async_update_and_abort", id="without_reload"),
+        pytest.param("async_update_reload_and_abort", id="with_reload"),
+    ],
+)
+@pytest.mark.parametrize(
+    "start_flow",
+    [
+        pytest.param("start_reauth_flow", id="reauth"),
+        pytest.param("start_reconfigure_flow", id="reconfigure"),
+    ],
+)
+async def test_update_entry_and_abort_with_custom_reason(
+    hass: HomeAssistant,
+    helper: str,
+    start_flow: str,
+) -> None:
+    """Test a custom abort reason is not translated in the homeassistant domain."""
+    entry = MockConfigEntry(domain="comp", data={"vendor": "data"})
+    entry.add_to_hass(hass)
+
+    comp = MockModule(
+        "comp",
+        async_setup_entry=AsyncMock(return_value=True),
+        async_unload_entry=AsyncMock(return_value=True),
+    )
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
+
+        async def async_step_reconfigure(self, data):
+            """Mock Reconfigure."""
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
+
+    with mock_config_flow("comp", MockFlowHandler):
+        result = await getattr(entry, start_flow)(hass)
+
+    await hass.async_block_till_done()
+
+    assert entry.data == {"vendor": "data", "buyer": "me"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "custom_reason"
+    assert "translation_domain" not in result
+
+
+@pytest.mark.parametrize(
     (
         "kwargs",
         "expected_title",
