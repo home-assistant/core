@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_devices_found": "Could not find any heat pumps on this account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "You can only reauthenticate this account with the same user."
     },
     "create_entry": {
