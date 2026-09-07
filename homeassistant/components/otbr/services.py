@@ -170,6 +170,44 @@ async def _async_repoint_preferred_dataset(
         store.preferred_dataset = target_id
 
 
+async def _async_refresh_issues_on_the_mesh(
+    hass: HomeAssistant,
+    entry: OTBRConfigEntry,
+    source_extended_pan_id: str,
+    migrated_tlvs: bytes,
+) -> None:
+    """Update the repair issues of the other routers the migration reaches.
+
+    The pending dataset reaches every border router on the mesh, so the
+    issues raised against the network being left -- insecure credentials, a
+    channel another radio is pinned to -- are as stale on the others as on
+    the router the action was handed to. They are otherwise only recomputed
+    when an entry is set up again.
+
+    A router that cannot be read is skipped rather than raising: the mesh is
+    migrating and cannot be called back, and its issues are recomputed at its
+    next setup anyway. That is also why this runs last.
+    """
+    other: OTBRConfigEntry
+    for other in hass.config_entries.async_loaded_entries(DOMAIN):
+        if other.entry_id == entry.entry_id:
+            continue
+        try:
+            other_tlvs = await other.runtime_data.get_active_dataset_tlvs()
+            if other_tlvs is None:
+                # Not on any mesh, so not on this one.
+                continue
+            other_active = tlv_parser.parse_tlv(other_tlvs.hex())
+            other_xpan = other_active.get(MeshcopTLVType.EXTPANID)
+            if other_xpan is None or str(other_xpan).lower() != source_extended_pan_id:
+                continue
+            await update_issues(hass, other.runtime_data, migrated_tlvs)
+        except (HomeAssistantError, tlv_parser.TLVError) as err:
+            _LOGGER.debug(
+                "Could not refresh the repair issues of %s: %s", other.title, err
+            )
+
+
 async def _pinned_channel_of_another_router(
     hass: HomeAssistant,
     entry: OTBRConfigEntry,
@@ -495,11 +533,17 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
             preferred_border_agent_id=border_agent_id,
             preferred_extended_address=extended_address,
         )
-        # The repair issues describe the credentials the network is adopting,
-        # the same way the create and set-network paths report them.
-        await update_issues(call.hass, data, migrated_tlvs)
         await _async_repoint_preferred_dataset(
             call.hass, source_xpan, str(target[MeshcopTLVType.EXTPANID])
+        )
+        # The repair issues describe the credentials the network is adopting,
+        # the same way the create and set-network paths report them, and they
+        # describe them for every router the pending dataset reaches, not only
+        # the one it was handed to. Done last: the store is what the rest of
+        # Home Assistant reads, and these calls talk to other routers.
+        await update_issues(call.hass, data, migrated_tlvs)
+        await _async_refresh_issues_on_the_mesh(
+            call.hass, entry, source_xpan, migrated_tlvs
         )
         # The store saves on a delay, and a normal restart flushes it; a crash
         # inside that delay would not. The mesh is migrating either way, so
@@ -513,9 +557,9 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
             # and cannot be called back, so say so rather than report a success
             # Home Assistant cannot back up.
             #
-            # Reported after the two calls above on purpose: they describe
+            # Reported after the bookkeeping above on purpose: it describes
             # which network is being adopted rather than with which
-            # credentials, so they are right either way and must still run --
+            # credentials, so it is right either way and must still run --
             # in particular the preferred pointer, which this action's own
             # default target reads.
             raise HomeAssistantError(
