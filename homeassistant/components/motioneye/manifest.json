@@ -1,13 +1,24 @@
 {
   "domain": "motioneye",
   "name": "motionEye",
-  "after_dependencies": ["media_source"],
-  "codeowners": ["@dermotduffy"],
+  "after_dependencies": [
+    "media_source"
+  ],
+  "codeowners": [
+    "@dermotduffy"
+  ],
   "config_flow": true,
-  "dependencies": ["http", "webhook"],
+  "dependencies": [
+    "http",
+    "webhook"
+  ],
   "documentation": "https://www.home-assistant.io/integrations/motioneye",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["motioneye_client"],
-  "requirements": ["motioneye-client==0.3.14"]
+  "loggers": [
+    "motioneye_client"
+  ],
+  "requirements": [
+    "motioneye-client @ git+https://github.com/mkrawcz1/motioneye-client.git@857d1058d1465d57c96d06fbd3ac55462b2fff7e"
+  ]
 }
