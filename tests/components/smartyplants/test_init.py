@@ -122,7 +122,7 @@ async def test_entities_are_created_from_the_first_poll(hass: HomeAssistant) -> 
     assert hass.states.get("sensor.monstera_illuminance").state == "1200"
     assert hass.states.get("sensor.monstera_light_quality").state == "78"
     assert hass.states.get("sensor.monstera_health_score").state == "82"
-    assert hass.states.get("sensor.monstera_fertilise_in").state == "21"
+    assert hass.states.get("sensor.monstera_fertilize_in").state == "21"
     assert hass.states.get("sensor.monstera_battery").state == "87"
 
 
@@ -270,7 +270,7 @@ async def test_calculating_metric_reports_unknown(hass: HomeAssistant) -> None:
     readings["fertiliser"]["isCalculating"] = True
     await _setup(hass, [_sensor(readings=readings)])
 
-    assert hass.states.get("sensor.monstera_fertilise_in").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.monstera_fertilize_in").state == STATE_UNKNOWN
 
 
 async def test_temperature_follows_the_backend_unit(hass: HomeAssistant) -> None:
@@ -490,7 +490,7 @@ async def test_push_during_a_poll_is_not_reverted(
 ) -> None:
     """A push that lands mid-poll survives the response the poll is storing.
 
-    Both write the cached sensors, so without serialising them the poll would
+    Both write the cached sensors, so without serializing them the poll would
     finish last and put its older readings back.
     """
     _, client = await _setup(hass)

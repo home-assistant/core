@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
 from .entity import SmartyPlantsEntity
 
-# Read-only and coordinator-driven, so updates need not be serialised.
+# Read-only and coordinator-driven, so updates need not be serialized.
 PARALLEL_UPDATES = 0
 
 
@@ -45,7 +45,7 @@ def _metric(pick: Callable[[Readings], Reading]) -> Callable[[Sensor], float | N
     return value
 
 
-def _fertilise_days(sensor: Sensor) -> float | None:
+def _fertilize_days(sensor: Sensor) -> float | None:
     """Return how long until the plant is due to be fed."""
     if sensor.readings is None or sensor.readings.fertiliser.is_calculating:
         return None
@@ -131,11 +131,11 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         value_fn=_health_score,
     ),
     SmartyPlantsSensorDescription(
-        key="fertilise_days",
-        translation_key="fertilise_days",
+        key="fertilize_days",
+        translation_key="fertilize_days",
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfTime.DAYS,
-        value_fn=_fertilise_days,
+        value_fn=_fertilize_days,
     ),
     SmartyPlantsSensorDescription(
         key="battery",

@@ -32,8 +32,8 @@
   },
   "entity": {
     "sensor": {
-      "fertilise_days": {
-        "name": "Fertilise in"
+      "fertilize_days": {
+        "name": "Fertilize in"
       },
       "health_score": {
         "name": "Health score"
