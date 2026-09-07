@@ -147,7 +147,9 @@ async def test_setup_registers_hub_device(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_UID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_UID), entry.entry_id
+    )
     assert device is not None
     assert device.manufacturer == "Habitron GmbH"
     assert device.sw_version == "9.9.9"
@@ -251,8 +253,8 @@ async def test_setup_without_a_mac_keeps_the_entry_id(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "habitron_192.168.1.50")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "habitron_192.168.1.50"), entry.entry_id
     )
     assert device is not None
     assert device.connections == set()
@@ -302,7 +304,9 @@ async def test_setup_registers_every_interface_mac(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "aabbccddeeff")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "aabbccddeeff"), entry.entry_id
+    )
     assert device is not None
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
