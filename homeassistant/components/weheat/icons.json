@@ -33,6 +33,9 @@
       "cop": {
         "default": "mdi:speedometer"
       },
+      "dhw_control_method": {
+        "default": "mdi:tune"
+      },
       "dhw_flow_volume": {
         "default": "mdi:pump"
       },
@@ -49,6 +52,9 @@
         "default": "mdi:flash"
       },
       "electricity_used_heating": {
+        "default": "mdi:flash"
+      },
+      "electricity_used_indoor_unit": {
         "default": "mdi:flash"
       },
       "energy_output": {
