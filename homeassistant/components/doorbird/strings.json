@@ -5,7 +5,6 @@
       "link_local_address": "Link local addresses are not supported",
       "not_doorbird_device": "This device is not a DoorBird",
       "not_ipv4_address": "Only IPv4 addresses are supported",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_device": "Device MAC address does not match"
     },
     "error": {

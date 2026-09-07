@@ -188,14 +188,15 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_KEYFILE: "",
-            CONF_CERTFILE: "",
-            CONF_CA_CERTS: "",
-        },
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "1.1.1.1"},
     )
     assert result["type"] is FlowResultType.FORM
 

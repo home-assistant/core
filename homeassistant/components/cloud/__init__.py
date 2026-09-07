@@ -386,16 +386,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await async_create_cloud_pipeline(hass)
         async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
 
-    async def _on_cloud_login_failed(event: CloudEvent) -> None:
+    def _on_cloud_login_failed(event: CloudEvent) -> None:
         """Handle hass_nabucasa giving up on a pending auto-login."""
         # The event bus types every handler against the CloudEvent base class.
         if not isinstance(event, LoginFailedEvent) or not event.auto:
             return
-
-        # Keep the registration around, so a client that was not connected when
-        # this fired can still find out why it stopped.
-        if pending := hass.data[DATA_PENDING_AUTO_LOGIN]:
-            pending.mark_failed(event.reason)
 
         async_dispatcher_send(
             hass,

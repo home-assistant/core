@@ -134,10 +134,11 @@ async def test_fan_turn_on_with_percentage(
         attribute_path="1/514/2",
         value=50,
     )
-    # test again where percentage is omitted in the service call
-    # PercentCurrent is 255 (auto) on this fixture, which is not a valid
-    # value to write back, so it should fall back to the last known preset
-    # mode instead of blindly replaying the sentinel value.
+    # test again where percentage is omitted in the service call.
+    # This fixture's PercentCurrent is 255, a device-specific quirk value
+    # (not part of the Matter spec) that is not valid to write back, so it
+    # should fall back to the last known preset mode instead of blindly
+    # replaying that sentinel value.
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -150,6 +151,33 @@ async def test_fan_turn_on_with_percentage(
         node_id=matter_node.node_id,
         attribute_path="1/514/0",
         value=clusters.FanControl.Enums.FanModeEnum.kAuto,
+    )
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+async def test_fan_turn_on_replays_last_known_percentage(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that a bare turn_on replays a real last known percentage."""
+    entity_id = "fan.mock_air_purifier"
+    # simulate the device confirming a real (non-quirk) speed
+    set_node_attribute(matter_node, 1, 514, 3, 70)
+    await trigger_subscription_callback(hass, matter_client)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path="1/514/2",
+        value=70,
     )
 
 
