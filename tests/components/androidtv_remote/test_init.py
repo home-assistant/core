@@ -162,7 +162,7 @@ async def test_existing_device_registry_connections_updated(
 ) -> None:
     """Test that an existing device registry entry without NIC MAC is updated."""
     mock_config_entry.add_to_hass(hass)
-    # Pre-create device with only Bluetooth MAC as existed prior to this change
+    # Pre-create device with only Bluetooth MAC
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, mock_config_entry.unique_id)},
