@@ -168,6 +168,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def config_entry(
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> MockConfigEntry:
+    """Return a mock config entry fixture."""
+    return mock_config_entry(default_ac_device())
+
+
+@pytest.fixture
 def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
     """Return a function that creates a mock config entry for a given device."""
 

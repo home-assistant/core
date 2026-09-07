@@ -338,6 +338,12 @@
       "hub4_ac_grid_setpoint": {
         "name": "AC grid setpoint"
       },
+      "hub4_max_charge_power": {
+        "name": "Maximum charge power"
+      },
+      "hub4_max_discharge_power": {
+        "name": "Maximum discharge power"
+      },
       "multi_ess_min_soc_limit": {
         "name": "ESS minimum SoC limit"
       },
@@ -346,6 +352,9 @@
       },
       "multiplus_assist_current_boost_factor": {
         "name": "Assist current boost factor"
+      },
+      "pvinverter_power_limit": {
+        "name": "Power limit"
       },
       "solarcharger_charge_current_limit": {
         "name": "[%key:component::victron_gx::common::charge_current_limit%]"
@@ -987,6 +996,18 @@
       "dcload_voltage": {
         "name": "[%key:component::victron_gx::common::voltage%]"
       },
+      "dcsource_current": {
+        "name": "[%key:component::victron_gx::common::current%]"
+      },
+      "dcsource_power": {
+        "name": "[%key:component::victron_gx::common::power%]"
+      },
+      "dcsource_temperature": {
+        "name": "[%key:component::victron_gx::common::temperature%]"
+      },
+      "dcsource_voltage": {
+        "name": "[%key:component::victron_gx::common::voltage%]"
+      },
       "dcsystem_aux_voltage": {
         "name": "Auxiliary voltage"
       },
@@ -1524,6 +1545,21 @@
       },
       "platform_venus_firmware_installed_version": {
         "name": "Installed version"
+      },
+      "platform_venus_firmware_progress": {
+        "name": "Firmware update progress"
+      },
+      "platform_venus_firmware_state": {
+        "name": "Firmware update state",
+        "state": {
+          "checking": "Checking",
+          "downloading_and_installing": "Downloading and installing",
+          "error_during_check": "Error during check",
+          "error_during_update": "Error during update",
+          "idle": "[%key:common::state::idle%]",
+          "rebooting": "Rebooting",
+          "update_file_not_found": "Update file not found"
+        }
       },
       "pvinverter_current_phase": {
         "name": "Current {phase}"
