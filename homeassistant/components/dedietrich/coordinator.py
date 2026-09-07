@@ -1,4 +1,4 @@
-"""Data update coordinator for De Dietrich Diematic devices."""
+"""Data update coordinator for De Dietrich devices."""
 
 from datetime import timedelta
 import logging

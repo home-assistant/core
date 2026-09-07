@@ -1,4 +1,4 @@
-"""Config flow for De Dietrich Diematic devices."""
+"""Config flow for De Dietrich devices."""
 
 import logging
 from typing import Any, override

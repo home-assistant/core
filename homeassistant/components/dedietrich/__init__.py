@@ -1,4 +1,4 @@
-"""Integrate De Dietrich Diematic devices into Home Assistant."""
+"""Integrate De Dietrich devices into Home Assistant."""
 
 import logging
 
@@ -40,7 +40,7 @@ async def _async_read_identity(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DeDietrichConfigEntry) -> bool:
-    """Set up De Dietrich Diematic Modbus from a config entry."""
+    """Set up De Dietrich from a config entry."""
     unit = async_get_unit(
         hass,
         entry,

@@ -1,4 +1,4 @@
-"""Build a Diematic device for a configured system, shared by probe and setup."""
+"""Build a De Dietrich device for a configured system, shared by probe and setup."""
 
 from diematic_modbus import Diematic, DiematicISystem, DiematicVariant
 from modbus_connection import ModbusUnit
