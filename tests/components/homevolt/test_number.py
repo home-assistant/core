@@ -3,11 +3,18 @@
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from homevolt import HomevoltConnectionError
+from homevolt import (
+    HomevoltAuthenticationError,
+    HomevoltCommandOutcomeUnknownError,
+    HomevoltCommandRejectedError,
+    HomevoltCommandVerificationError,
+    HomevoltConnectionError,
+    HomevoltError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homevolt.const import SCAN_INTERVAL
+from homeassistant.components.homevolt.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -20,7 +27,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -145,16 +156,79 @@ async def test_invalid_number_value(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    (
+        "error",
+        "expected_exception",
+        "translation_key",
+        "translation_placeholders",
+        "refresh_count",
+    ),
+    [
+        pytest.param(
+            HomevoltAuthenticationError("authentication failed"),
+            ConfigEntryAuthFailed,
+            "auth_failed",
+            None,
+            0,
+            id="authentication",
+        ),
+        pytest.param(
+            HomevoltCommandRejectedError("command rejected"),
+            HomeAssistantError,
+            "command_rejected",
+            None,
+            0,
+            id="command-rejected",
+        ),
+        pytest.param(
+            HomevoltCommandVerificationError("command verification failed"),
+            HomeAssistantError,
+            "command_verification_failed",
+            None,
+            1,
+            id="command-verification",
+        ),
+        pytest.param(
+            HomevoltCommandOutcomeUnknownError("command outcome unknown"),
+            HomeAssistantError,
+            "command_outcome_unknown",
+            None,
+            1,
+            id="command-outcome-unknown",
+        ),
+        pytest.param(
+            HomevoltConnectionError("connection failed"),
+            HomeAssistantError,
+            "communication_error",
+            {"error": "connection failed"},
+            0,
+            id="connection",
+        ),
+        pytest.param(
+            HomevoltError("unknown error"),
+            HomeAssistantError,
+            "unknown_error",
+            {"error": "unknown error"},
+            0,
+            id="unknown",
+        ),
+    ],
+)
 async def test_set_number_value_error(
     hass: HomeAssistant,
     mock_homevolt_client: MagicMock,
+    error: HomevoltError,
+    expected_exception: type[HomeAssistantError],
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+    refresh_count: int,
 ) -> None:
     """Test number actions use the shared translated error handler."""
-    mock_homevolt_client.set_battery_parameters.side_effect = HomevoltConnectionError(
-        "Connection failed"
-    )
+    mock_homevolt_client.set_battery_parameters.side_effect = error
+    mock_homevolt_client.update_info.reset_mock()
 
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(expected_exception) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -162,8 +236,11 @@ async def test_set_number_value_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "communication_error"
-    assert exc_info.value.translation_placeholders == {"error": "Connection failed"}
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+    assert exc_info.value.__cause__ is error
+    assert mock_homevolt_client.update_info.await_count == refresh_count
 
 
 async def test_commands_preserve_telemetry_polling(
