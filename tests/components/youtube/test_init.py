@@ -242,12 +242,7 @@ async def test_migration(
     assert migrated_entity.device_id == device.id
 
     # The untracked channel's device and entity are cleaned up
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, LINUS_CHANNEL_ID), entry.entry_id
-        )
-        is None
-    )
+    assert device_registry.async_get(orphan_device.id) is None
     assert (
         entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{entry.entry_id}_{LINUS_CHANNEL_ID}_subscribers"
@@ -380,7 +375,7 @@ async def test_missing_channel_does_not_affect_other_channels(
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
     assert diagnostics[CHANNEL_ID]["title"] == "Google for Developers"
-    assert diagnostics[LINUS_CHANNEL_ID] is None
+    assert LINUS_CHANNEL_ID not in diagnostics
 
 
 async def test_migration_channel_missing_from_api(
@@ -434,7 +429,7 @@ async def test_entry_data_update_does_not_reload(
     """Test token refreshes and other entry data updates do not reload."""
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    coordinators = entry.runtime_data
+    coordinator = entry.runtime_data
 
     hass.config_entries.async_update_entry(
         entry,
@@ -445,7 +440,7 @@ async def test_entry_data_update_does_not_reload(
     )
     await hass.async_block_till_done()
 
-    assert entry.runtime_data is coordinators
+    assert entry.runtime_data is coordinator
 
 
 async def test_oauth_implementation_not_available(

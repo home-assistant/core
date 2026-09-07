@@ -5,7 +5,6 @@ from types import MappingProxyType
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -18,7 +17,6 @@ from .const import (
     CONF_CHANNEL_ID,
     CONF_CHANNELS,
     DOMAIN,
-    LOGGER,
     SUBENTRY_TYPE_CHANNEL,
 )
 from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
@@ -33,25 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> b
     auth = AsyncConfigEntryAuth(hass, session)
     await auth.check_and_refresh_token()
 
-    entry.runtime_data = {}
+    coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
+    await coordinator.async_config_entry_first_refresh()
+
+    data = coordinator.data
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
-        coordinator = YouTubeDataUpdateCoordinator(hass, entry, subentry, auth)
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryNotReady:
-            # Keep the failed coordinator: its entities are set up as
-            # unavailable instead of taking the other channels down.
-            LOGGER.warning(
-                "Failed to set up channel %s: %s",
-                subentry.data[CONF_CHANNEL_ID],
-                coordinator.last_exception,
-            )
-        entry.runtime_data[subentry.subentry_id] = coordinator
-        if (data := coordinator.data) is not None and (
-            (title := data[ATTR_TITLE]) != subentry.title
-        ):
+        channel = data.get(subentry.data[CONF_CHANNEL_ID])
+        if channel is not None and (title := channel[ATTR_TITLE]) != subentry.title:
             hass.config_entries.async_update_subentry(entry, subentry, title=title)
 
+    entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -65,13 +54,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> 
 
 async def async_update_listener(hass: HomeAssistant, entry: YouTubeConfigEntry) -> None:
     """Reload the config entry when channels are added or removed."""
-    channel_subentry_ids = {
+    subentry_ids = {
         subentry.subentry_id
         for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL)
     }
-    if channel_subentry_ids == set(entry.runtime_data):
-        # Token refreshes update the entry data only; the coordinators
-        # use the refreshed token without needing a reload.
+    if subentry_ids == entry.runtime_data.subentry_ids:
+        # Token refreshes update the entry data only; the coordinator
+        # uses the refreshed token without needing a reload.
         return
     await hass.config_entries.async_reload(entry.entry_id)
 

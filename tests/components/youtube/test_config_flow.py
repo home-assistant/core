@@ -529,17 +529,16 @@ async def test_subentry_flow_add_channel(
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    with (
-        patch(
-            "homeassistant.components.youtube.config_flow.YouTube",
-            return_value=MockYouTube(hass, channel_fixture="get_channel_2.json"),
-        ),
-        patch(
-            "homeassistant.components.youtube.api.YouTube",
-            return_value=MockYouTube(
-                hass, extra_channel_fixtures=["get_channel_2.json"]
-            ),
-        ),
+    # Listing shows the Linus channel, the Google channel is already tracked;
+    # the reload after adding needs both channels
+    mock = MockYouTube(
+        hass,
+        channel_fixture="get_channel_2.json",
+        extra_channel_fixtures=["get_channel.json"],
+    )
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=mock,
     ):
         result = await hass.config_entries.subentries.async_init(
             (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
@@ -578,7 +577,7 @@ async def test_subentry_flow_no_channels_left(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     with patch(
-        "homeassistant.components.youtube.config_flow.YouTube",
+        "homeassistant.components.youtube.api.YouTube",
         return_value=MockYouTube(hass),
     ):
         result = await hass.config_entries.subentries.async_init(
@@ -601,15 +600,9 @@ async def test_subentry_flow_add_own_channel(
     await hass.async_block_till_done()
     assert not entry.subentries
 
-    with (
-        patch(
-            "homeassistant.components.youtube.config_flow.YouTube",
-            return_value=MockYouTube(hass),
-        ),
-        patch(
-            "homeassistant.components.youtube.api.YouTube",
-            return_value=MockYouTube(hass),
-        ),
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(hass),
     ):
         result = await hass.config_entries.subentries.async_init(
             (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
@@ -646,12 +639,9 @@ async def test_subentry_flow_unknown_channel(
 
     # The subscription lists the channel, but it cannot be fetched anymore
     mock = MockYouTube(hass, channel_fixture="get_no_channel.json")
-    with (
-        patch(
-            "homeassistant.components.youtube.config_flow.YouTube",
-            return_value=mock,
-        ),
-        patch("homeassistant.components.youtube.api.YouTube", return_value=mock),
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=mock,
     ):
         result = await hass.config_entries.subentries.async_init(
             (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
@@ -703,7 +693,7 @@ async def test_subentry_flow_api_error_listing_channels(
     mock = MockYouTube(hass)
     with (
         patch(
-            "homeassistant.components.youtube.config_flow.YouTube",
+            "homeassistant.components.youtube.api.YouTube",
             return_value=mock,
         ),
         patch.object(mock, "get_user_channels", side_effect=exception),
@@ -754,7 +744,7 @@ async def test_subentry_flow_api_error_fetching_channel(
     mock = MockYouTube(hass)
     mock.set_thrown_exception(exception)
     with patch(
-        "homeassistant.components.youtube.config_flow.YouTube",
+        "homeassistant.components.youtube.api.YouTube",
         return_value=mock,
     ):
         result = await hass.config_entries.subentries.async_init(

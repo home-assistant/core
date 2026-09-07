@@ -17,9 +17,13 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -27,6 +31,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from .api import AsyncConfigEntryAuth
 from .const import (
     CHANNEL_CREATION_HELP_URL,
     CONF_CHANNEL_ID,
@@ -40,16 +45,13 @@ from .coordinator import YouTubeConfigEntry
 
 
 async def async_get_channel_options(
-    hass: HomeAssistant, token: str
+    youtube: YouTube,
 ) -> tuple[list[SelectOptionDict], dict[str, str], bool]:
     """List the channels the user can track.
 
     Returns the selectable options, a mapping of channel id to title, and
     whether the user has their own channel.
     """
-    youtube = YouTube(session=async_get_clientsession(hass))
-    await youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
-
     own_channels = [
         channel
         async for channel in youtube.get_user_channels()
@@ -203,13 +205,15 @@ class OAuth2FlowHandler(
                     for channel_id in channel_ids
                 ],
             )
+        youtube = YouTube(session=async_get_clientsession(self.hass))
+        await youtube.set_user_authentication(
+            self._data[CONF_TOKEN][CONF_ACCESS_TOKEN], [AuthScope.READ_ONLY]
+        )
         (
             selectable_channels,
             channel_titles,
             _has_own_channel,
-        ) = await async_get_channel_options(
-            self.hass, self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-        )
+        ) = await async_get_channel_options(youtube)
         self._channel_titles = channel_titles
         return self.async_show_form(
             step_id="channels",
@@ -243,7 +247,7 @@ class ChannelFlowHandler(ConfigSubentryFlow):
                 _channel_titles,
                 _has_own_channel,
             ) = await async_get_channel_options(
-                self.hass, config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+                await self._async_get_youtube(config_entry)
             )
         except ForbiddenError as ex:
             error = ex.args[0]
@@ -289,13 +293,20 @@ class ChannelFlowHandler(ConfigSubentryFlow):
             if subentry.unique_id
         }
 
+    async def _async_get_youtube(self, config_entry: YouTubeConfigEntry) -> YouTube:
+        """Return a YouTube client using a refreshed OAuth token."""
+        implementation = await async_get_config_entry_implementation(
+            self.hass, config_entry
+        )
+        auth = AsyncConfigEntryAuth(
+            self.hass, OAuth2Session(self.hass, config_entry, implementation)
+        )
+        return await auth.get_resource()
+
     async def _async_create_entry(self, channel_id: str) -> SubentryFlowResult:
         """Create a subentry for the selected channel."""
         config_entry: YouTubeConfigEntry = self._get_entry()
-        youtube = YouTube(session=async_get_clientsession(self.hass))
-        await youtube.set_user_authentication(
-            config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN], [AuthScope.READ_ONLY]
-        )
+        youtube = await self._async_get_youtube(config_entry)
         try:
             channels = [channel async for channel in youtube.get_channels([channel_id])]
         except ForbiddenError as ex:
