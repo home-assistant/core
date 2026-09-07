@@ -827,11 +827,16 @@ async def test_purge_stale_legacy_entities_spans_multiple_chunks(
         for entity_id in entity_ids
     )
 
+    # A purge spanning multiple chunks still notifies each assistant once.
+    listener = Mock()
+    exposed_entities.async_listen_entity_updates("test1", listener)
+
     freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not exposed_entities.entities
+    listener.assert_called_once()
 
 
 async def test_purge_sweep_checkpoints_each_chunk(

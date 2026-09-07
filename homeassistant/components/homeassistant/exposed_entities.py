@@ -126,10 +126,12 @@ class ExposedEntity:
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
-        return {
-            "assistants": self.assistants,
-            "orphaned_since": self.orphaned_since,
-        }
+        data: dict[str, Any] = {"assistants": self.assistants}
+        # Omitted when None so untouched records serialize exactly as they
+        # did before orphan tracking existed.
+        if self.orphaned_since is not None:
+            data["orphaned_since"] = self.orphaned_since
+        return data
 
 
 class SerializedExposedEntities(TypedDict):
@@ -300,10 +302,10 @@ class ExposedEntities:
         now = time.time()
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
         entity_ids = list(self.entities)
+        purged_assistants: set[str] = set()
 
         for i in range(0, len(entity_ids), LEGACY_ENTITY_SWEEP_CHUNK_SIZE):
             changed = False
-            purged_assistants: set[str] = set()
             for entity_id in entity_ids[i : i + LEGACY_ENTITY_SWEEP_CHUNK_SIZE]:
                 if (exposed_entity := self.entities.get(entity_id)) is None:
                     continue
@@ -333,14 +335,17 @@ class ExposedEntities:
             # flushed at final write.
             if changed:
                 self._async_schedule_save()
-                # Purged records vanish from async_get_assistant_settings();
-                # consumers like cloud Alexa cache those settings and only
-                # sync remote removals when notified.
-                for assistant in purged_assistants:
-                    for listener in self._listeners.get(assistant, []):
-                        listener()
 
             await asyncio.sleep(0)
+
+        # Purged records vanish from async_get_assistant_settings(); consumers
+        # like cloud Alexa cache those settings and only sync remote removals
+        # when notified. Notify once per assistant after the pass: listeners
+        # debounce-resync on every call (cloud SYNC_DELAY is 1s), so per-chunk
+        # calls could trigger repeated full syncs mid-sweep.
+        for assistant in purged_assistants:
+            for listener in self._listeners.get(assistant, []):
+                listener()
 
     @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
