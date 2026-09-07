@@ -73,7 +73,9 @@ async def _async_probe(
     async with async_get_temporary_unit(hass, params, unit_id) as unit:
         unit.set_message_spacing(MESSAGE_SPACING)
         device = build_device(unit, system)
-        await device.async_update()
+        report = await device.async_update()
+        if "identity" in report.failed:
+            raise report.failed["identity"]
     return device
 
 
@@ -107,7 +109,6 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-                        CONF_SYSTEM: user_input[CONF_SYSTEM],
                     }
                 )
                 return self.async_create_entry(

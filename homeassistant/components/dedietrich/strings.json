@@ -34,7 +34,7 @@
           "system": "The Diematic system the boiler's control panel reports.",
           "unit_id": "The boiler's Modbus unit ID, also called its Modbus device address."
         },
-        "description": "Connect over Modbus TCP. The boiler's identity and register map are detected automatically."
+        "description": "Connect over Modbus TCP. Choose the Diematic system that matches your control panel. The boiler's identity is read automatically."
       }
     }
   },

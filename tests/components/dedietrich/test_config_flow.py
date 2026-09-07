@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, _patch, patch
 
 from diematic_modbus import Diematic, DiematicISystem, DiematicVariant
-from modbus_connection import ModbusConnectionError, ModbusTcpParams
+from modbus_connection import ModbusConnectionError, ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
@@ -52,30 +52,12 @@ async def test_user_step_shows_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-@pytest.mark.parametrize(
-    ("system", "expected_type", "expected_variant"),
-    [
-        pytest.param(
-            SYSTEM_DIEMATIC_3, Diematic, DiematicVariant.DIEMATIC_3, id="diematic_3"
-        ),
-        pytest.param(
-            SYSTEM_DIEMATIC_4, Diematic, DiematicVariant.DIEMATIC_4, id="diematic_4"
-        ),
-        pytest.param(SYSTEM_ISYSTEM, DiematicISystem, None, id="isystem"),
-    ],
-)
-async def test_user_step_success(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    system: str,
-    expected_type: type,
-    expected_variant: DiematicVariant | None,
-) -> None:
-    """Test a successful flow builds the device matching the chosen system."""
+async def _run_user_flow(
+    hass: HomeAssistant, system: str
+) -> tuple[config_entries.ConfigFlowResult, list[Diematic | DiematicISystem]]:
+    """Drive the user step for one system and capture the built device."""
     mock_conn = MockModbusConnection()
     seed_boiler(mock_conn.for_unit(10))
-    user_input = {**MOCK_USER_INPUT, CONF_SYSTEM: system}
-
     built: list[Diematic | DiematicISystem] = []
 
     def _capture(unit: object, system_arg: str) -> Diematic | DiematicISystem:
@@ -91,15 +73,46 @@ async def test_user_step_success(
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={**MOCK_USER_INPUT, CONF_SYSTEM: system},
         )
+    return result, built
+
+
+@pytest.mark.parametrize(
+    ("system", "expected_variant"),
+    [
+        pytest.param(SYSTEM_DIEMATIC_3, DiematicVariant.DIEMATIC_3, id="diematic_3"),
+        pytest.param(SYSTEM_DIEMATIC_4, DiematicVariant.DIEMATIC_4, id="diematic_4"),
+    ],
+)
+async def test_user_step_base_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    system: str,
+    expected_variant: DiematicVariant,
+) -> None:
+    """Test a base-layout flow builds a Diematic with the chosen variant."""
+    result, built = await _run_user_flow(hass, system)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == user_input
+    assert result["data"][CONF_SYSTEM] == system
     assert len(built) == 1
-    assert isinstance(built[0], expected_type)
-    if expected_variant is not None:
-        assert built[0].variant is expected_variant
+    assert isinstance(built[0], Diematic)
+    assert built[0].variant is expected_variant
+
+
+async def test_user_step_isystem_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test an iSystem flow builds a DiematicISystem."""
+    result, built = await _run_user_flow(hass, SYSTEM_ISYSTEM)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SYSTEM] == SYSTEM_ISYSTEM
+    assert len(built) == 1
+    assert isinstance(built[0], DiematicISystem)
 
 
 async def test_user_step_cannot_connect(
@@ -130,6 +143,25 @@ async def test_user_step_cannot_connect(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_step_identity_read_fails(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test cannot_connect when the identity read fails though the link is alive."""
+    mock_conn = MockModbusConnection()
+    mock_conn.for_unit(10).fail_read(457, ModbusTimeoutError("no identity"))
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:

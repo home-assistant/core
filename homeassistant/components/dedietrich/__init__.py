@@ -57,7 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeDietrichConfigEntry) -
 
     coordinator = DeDietrichDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
-    await coordinator.async_refresh()
 
     # Not tied to the coordinator: identity never changes once read.
     await _async_read_identity(entry, device)

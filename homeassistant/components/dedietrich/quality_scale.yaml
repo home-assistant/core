@@ -1,13 +1,17 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any service actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any service actions.
   docs-conditions:
     status: exempt
     comment: This integration does not provide any conditions.
@@ -28,9 +32,13 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any service actions.
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -39,11 +47,11 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: Local Modbus TCP; there is no authentication that can expire or be invalidated.
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: Modbus TCP gateways have no discovery protocol to update network info from.
@@ -57,7 +65,9 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices:
+    status: exempt
+    comment: A config entry maps to a single boiler, so no devices are added dynamically.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -66,7 +76,9 @@ rules:
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: A config entry maps to a single boiler removed with the entry, so none become stale.
 
   # Platinum
   async-dependency: done

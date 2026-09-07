@@ -55,7 +55,6 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             manufacturer=ATTR_MANUFACTURER,
             model=str(identity.boiler_type),
             serial_number=None,
-            hw_version=str(identity.boiler_type),
             sw_version=str(sw_version) if sw_version is not None else None,
         )
 
