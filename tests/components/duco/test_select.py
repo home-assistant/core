@@ -1,7 +1,6 @@
 """Tests for the Duco select platform."""
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import replace
 from unittest.mock import AsyncMock
 
@@ -114,23 +113,14 @@ def _assert_select_state(hass: HomeAssistant, expected_state: str) -> None:
     assert state.state == expected_state
 
 
-async def _async_wait_for_state(
-    hass: HomeAssistant, entity_id: str, expected_state: str
+async def _async_select_option(
+    hass: HomeAssistant, option: str, entity_id: str = _SELECT_ENTITY
 ) -> None:
-    """Wait for an entity state."""
-    async with asyncio.timeout(1):
-        while (state := hass.states.get(entity_id)) is None or (
-            state.state != expected_state
-        ):
-            await asyncio.sleep(0)
-
-
-async def _async_select_option(hass: HomeAssistant, option: str) -> None:
     """Select a ventilation option."""
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: _SELECT_ENTITY, ATTR_OPTION: option},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
         blocking=True,
     )
 
@@ -143,43 +133,6 @@ async def _async_set_fan_percentage(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "fan.living", ATTR_PERCENTAGE: 33},
         blocking=True,
     )
-
-
-async def _async_start_blocked_readback(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    outcome: Node | DucoError,
-) -> tuple[asyncio.Task[None], asyncio.Event]:
-    """Start a select action with a blocked node readback."""
-    readback_started = asyncio.Event()
-    release_readback = asyncio.Event()
-
-    async def get_node_info(node_id: int) -> Node:
-        readback_started.set()
-        await release_readback.wait()
-        if isinstance(outcome, DucoError):
-            raise outcome
-        return outcome
-
-    mock_duco_client.async_get_node_info.side_effect = get_node_info
-    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
-    await readback_started.wait()
-    return write_task, release_readback
-
-
-def _nodes_with_updated_box(nodes: list[Node]) -> list[Node]:
-    """Return poll data with an updated box state."""
-    return [_replace_node_state(nodes[0], "CNT2"), *nodes[1:]]
-
-
-def _nodes_without_box(nodes: list[Node]) -> list[Node]:
-    """Return poll data without the box node."""
-    return [node for node in nodes if node.node_id != 1]
-
-
-def _failed_poll(nodes: list[Node]) -> DucoError:
-    """Return a failed poll outcome."""
-    return DucoError("Temporary update failure")
 
 
 @pytest.fixture
@@ -360,13 +313,26 @@ async def test_select_auto_option_allows_cnt1_readback(
     assert state.state == "CNT1"
 
 
+@pytest.mark.parametrize(
+    ("failed_entity_id", "expected_state"),
+    [
+        pytest.param(_SELECT_ENTITY, "CNT1", id="same-node"),
+        pytest.param(_VALVE_SELECT_ENTITY, STATE_UNAVAILABLE, id="other-node"),
+    ],
+)
 async def test_targeted_readback_failure_and_recovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
+    failed_entity_id: str,
+    expected_state: str,
 ) -> None:
-    """Test a later targeted readback recovers an earlier failure."""
+    """Test a targeted success only clears its own node's failure."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
+        [1, 60], options=["AUTO", "CNT1", "MAN3"]
+    )
     await setup_platform_integration(
         hass, mock_config_entry, [Platform.FAN, Platform.SELECT]
     )
@@ -383,77 +349,60 @@ async def test_targeted_readback_failure_and_recovery(
     mock_duco_client.async_set_ventilation_state.side_effect = set_ventilation_state
     mock_duco_client.async_get_node_info.side_effect = [
         DucoError("Readback failed"),
-        _replace_node_state(mock_nodes[0], "CNT1"),
+        _replace_node_state(mock_sensor_nodes[0], "CNT1"),
     ]
 
     fan_task = asyncio.create_task(_async_set_fan_percentage(hass))
     await fan_write_started.wait()
 
-    await _async_select_option(hass, "MAN3")
+    await _async_select_option(hass, "MAN3", failed_entity_id)
     _assert_select_state(hass, STATE_UNAVAILABLE)
 
     release_fan_write.set()
     await fan_task
 
-    _assert_select_state(hass, "CNT1")
+    _assert_select_state(hass, expected_state)
 
 
-@pytest.mark.parametrize(
-    ("readback_error", "expected_state"),
-    [
-        pytest.param(None, "MAN3", id="success"),
-        pytest.param(DucoError("Readback failed"), STATE_UNAVAILABLE, id="failure"),
-    ],
-)
-async def test_targeted_outcome_survives_older_coordinator_poll(
+async def test_targeted_readback_restores_node_omitted_by_older_poll(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
-    readback_error: DucoError | None,
-    expected_state: str,
 ) -> None:
-    """Test an older in-flight poll cannot overwrite a targeted outcome."""
-    await setup_platform_integration(
-        hass, mock_config_entry, [Platform.SELECT, Platform.SENSOR]
-    )
+    """Test a targeted readback restores a node omitted by an older poll."""
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
     poll_started = asyncio.Event()
     release_poll = asyncio.Event()
+    write_started = asyncio.Event()
 
     async def get_nodes() -> list[Node]:
         poll_started.set()
         await release_poll.wait()
-        assert mock_nodes[3].sensor is not None
-        return [
-            _replace_node_state(mock_nodes[0], "CNT2"),
-            *mock_nodes[1:3],
-            replace(
-                mock_nodes[3],
-                sensor=replace(mock_nodes[3].sensor, rh=62.0),
-            ),
-        ]
+        return mock_nodes[1:]
+
+    def set_ventilation_state(node_id: int, state: str | VentilationState) -> None:
+        write_started.set()
 
     mock_duco_client.async_get_nodes.side_effect = get_nodes
+    mock_duco_client.async_set_ventilation_state.side_effect = set_ventilation_state
+    mock_duco_client.async_get_node_info.return_value = _replace_node_state(
+        mock_nodes[0], "MAN3"
+    )
+    mock_duco_client.async_get_node_info.side_effect = None
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await poll_started.wait()
 
-    write_task, release_readback = await _async_start_blocked_readback(
-        hass,
-        mock_duco_client,
-        readback_error or _replace_node_state(mock_nodes[0], "MAN3"),
-    )
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await write_started.wait()
 
     release_poll.set()
-    await _async_wait_for_state(hass, "sensor.kitchen_rh_humidity", "62.0")
-    _assert_select_state(hass, "AUTO")
-
-    release_readback.set()
     await write_task
 
-    _assert_select_state(hass, expected_state)
+    _assert_select_state(hass, "MAN3")
 
 
 async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
@@ -468,7 +417,12 @@ async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
     )
     first_readback_started = asyncio.Event()
     release_first_readback = asyncio.Event()
+    select_write_started = asyncio.Event()
     readback_count = 0
+
+    def set_ventilation_state(node_id: int, state: str | VentilationState) -> None:
+        if state == "MAN3":
+            select_write_started.set()
 
     async def get_node_info(node_id: int) -> Node:
         nonlocal readback_count
@@ -479,39 +433,27 @@ async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
             return _replace_node_state(mock_nodes[0], "CNT1")
         return _replace_node_state(mock_nodes[0], "MAN3")
 
+    mock_duco_client.async_set_ventilation_state.side_effect = set_ventilation_state
     mock_duco_client.async_get_node_info.side_effect = get_node_info
     fan_task = asyncio.create_task(_async_set_fan_percentage(hass))
     await first_readback_started.wait()
 
-    await _async_select_option(hass, "MAN3")
-    _assert_select_state(hass, "MAN3")
+    select_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await select_write_started.wait()
 
     release_first_readback.set()
-    await fan_task
+    await asyncio.gather(fan_task, select_task)
 
     _assert_select_state(hass, "MAN3")
 
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("poll_result_factory", "readback_outcome", "expected_state"),
+    "readback_error",
     [
+        pytest.param(None, id="success"),
         pytest.param(
-            _nodes_with_updated_box,
             DucoError("Readback failed"),
-            "CNT2",
-            id="success",
-        ),
-        pytest.param(
-            _nodes_without_box,
-            None,
-            STATE_UNAVAILABLE,
-            id="node-removed",
-        ),
-        pytest.param(
-            _failed_poll,
-            None,
-            STATE_UNAVAILABLE,
             id="failure",
         ),
     ],
@@ -521,26 +463,35 @@ async def test_newer_coordinator_poll_supersedes_targeted_outcome(
     mock_duco_client: AsyncMock,
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
-    poll_result_factory: Callable[[list[Node]], list[Node] | DucoError],
-    readback_outcome: DucoError | None,
-    expected_state: str,
+    readback_error: DucoError | None,
 ) -> None:
     """Test a newer coordinator poll supersedes an older targeted outcome."""
-    write_task, release_readback = await _async_start_blocked_readback(
-        hass,
-        mock_duco_client,
-        readback_outcome or _replace_node_state(mock_nodes[0], "MAN3"),
-    )
+    readback_started = asyncio.Event()
+    release_readback = asyncio.Event()
 
-    mock_duco_client.async_get_nodes.side_effect = [poll_result_factory(mock_nodes)]
+    async def get_node_info(node_id: int) -> Node:
+        readback_started.set()
+        await release_readback.wait()
+        if readback_error:
+            raise readback_error
+        return _replace_node_state(mock_nodes[0], "MAN3")
+
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await readback_started.wait()
+
+    mock_duco_client.async_get_nodes.return_value = [
+        _replace_node_state(mock_nodes[0], "CNT2"),
+        *mock_nodes[1:],
+    ]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await _async_wait_for_state(hass, _SELECT_ENTITY, expected_state)
 
     release_readback.set()
     await write_task
+    await hass.async_block_till_done()
 
-    _assert_select_state(hass, expected_state)
+    _assert_select_state(hass, "CNT2")
 
 
 async def test_select_entity_is_added_when_action_discovery_succeeds_later(

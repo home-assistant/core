@@ -1,5 +1,6 @@
 """Data update coordinator for the Duco integration."""
 
+import asyncio
 from contextlib import suppress
 from dataclasses import dataclass, replace
 import logging
@@ -52,10 +53,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     config_entry: DucoConfigEntry
     board_info: BoardInfo
     _configured_node_names: dict[int, str]
-    _update_version: int
-    _poll_version: int
-    _node_update_errors: dict[int, tuple[int, DucoError]]
-    _node_update_versions: dict[int, int]
+    _node_update_errors: dict[int, DucoError]
+    _request_lock: asyncio.Lock
 
     def __init__(
         self,
@@ -73,52 +72,37 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
-        self._update_version = 0
-        self._poll_version = 0
         self._node_update_errors = {}
-        self._node_update_versions = {}
+        self._request_lock = asyncio.Lock()
 
     async def async_refresh_node(self, node_id: int) -> None:
         """Refresh one node and publish its latest reported state."""
-        self._update_version += 1
-        refresh_version = self._update_version
-        self._node_update_versions[node_id] = refresh_version
-
-        try:
-            node = await self.client.async_get_node_info(node_id)
-        except DucoError as err:
-            if (
-                self._poll_version <= refresh_version
-                and self._node_update_versions[node_id] == refresh_version
-            ):
-                self._node_update_errors[node_id] = (refresh_version, err)
+        async with self._request_lock:
+            try:
+                node = await self.client.async_get_node_info(node_id)
+            except DucoError as err:
+                self._node_update_errors[node_id] = err
                 self.async_set_update_error(err)
-            return
+                return
 
-        # Do not publish a readback superseded by a later operation.
-        if (
-            self._poll_version > refresh_version
-            or self._node_update_versions[node_id] != refresh_version
-        ):
-            return
+            if current_node := self.data.nodes.get(node_id):
+                node = replace(
+                    node,
+                    general=replace(
+                        node.general,
+                        name=current_node.general.name,
+                    ),
+                )
 
-        if (current_node := self.data.nodes.get(node_id)) is None:
-            return
-
-        node = replace(
-            node,
-            general=replace(
-                node.general,
-                name=current_node.general.name,
-            ),
-        )
-        self._node_update_errors.pop(node_id, None)
-        self.async_set_updated_data(
-            replace(
+            self._node_update_errors.pop(node_id, None)
+            data = replace(
                 self.data,
                 nodes={**self.data.nodes, node_id: node},
             )
-        )
+            if self._node_update_errors:
+                self.data = data
+            else:
+                self.async_set_updated_data(data)
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -167,9 +151,11 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     @override
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
-        self._update_version += 1
-        update_version = self._update_version
-        self._poll_version = update_version
+        async with self._request_lock:
+            return await self._async_fetch_data()
+
+    async def _async_fetch_data(self) -> DucoData:
+        """Fetch node data while holding the request lock."""
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
@@ -198,8 +184,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 )
                 for node in nodes
             ]
-
-        nodes_by_id = {node.node_id: node for node in nodes}
 
         try:
             node_actions = await self.client.async_get_node_actions()
@@ -263,28 +247,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
             ) from err
 
-        # The bulk node response may predate a write completed during this poll.
-        if self.data is not None:
-            for node_id, version in self._node_update_versions.items():
-                if version <= update_version:
-                    continue
-                if (
-                    node_update_error := self._node_update_errors.get(node_id)
-                ) and node_update_error[0] > update_version:
-                    error = node_update_error[1]
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key=(
-                            "cannot_connect"
-                            if isinstance(error, DucoConnectionError)
-                            else "api_error"
-                        ),
-                    ) from error
-                if node_id in nodes_by_id and node_id in self.data.nodes:
-                    nodes_by_id[node_id] = self.data.nodes[node_id]
-
+        self._node_update_errors.clear()
         return DucoData(
-            nodes=nodes_by_id,
+            nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
