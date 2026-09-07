@@ -40,9 +40,7 @@ MEDIA_CLASS_MAP = {
 
 _LOGGER = logging.getLogger(__name__)
 
-MEDIA_PROXY_URL = (
-    "/api/motioneye/media/{config_id}/{camera_id}/{kind}/{preview}/{path}"
-)
+MEDIA_PROXY_URL = "/api/motioneye/media/{config_id}/{camera_id}/{kind}/{preview}/{path}"
 
 
 def _encode_media_path(path: str) -> str:
