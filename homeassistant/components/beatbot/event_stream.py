@@ -8,7 +8,6 @@ from beatbot_cloud import (
     BeatbotAuthenticationError,
     BeatbotClient,
     BeatbotConnectionError,
-    BeatbotEvent,
     BeatbotEventClient as BeatbotCloudEventClient,
 )
 
@@ -46,13 +45,14 @@ class BeatbotEventClient:
         self._hass = hass
         self._entry = entry
         self._oauth_session = oauth_session
-        self._coordinator = coordinator
         self._task: asyncio.Task[None] | None = None
         self._client = BeatbotCloudEventClient(
             async_get_clientsession(hass),
             api.event_stream_url,
             api.async_get_access_token,
-            self._handle_event,
+            state_callback=coordinator.async_apply_device_event,
+            device_added_callback=self._handle_device_added,
+            device_removed_callback=self._handle_device_removed,
             reconnect_callback=coordinator.async_request_refresh,
             token_refresh_callback=self._async_refresh_token,
         )
@@ -109,26 +109,14 @@ class BeatbotEventClient:
             raise BeatbotAuthenticationError
         return access_token
 
-    def _handle_event(self, event: BeatbotEvent) -> None:
-        """Apply one validated event to Home Assistant state."""
-        event_type = event.event_type
-        device_id = event.device_id
-        _LOGGER.debug(
-            "Received Beatbot event eventId=%s deviceId=%s type=%s",
-            event.event_id,
-            device_id,
-            event_type,
-        )
+    def _handle_device_added(self, device_id: str) -> None:
+        """Reload platforms to create entities for a newly discovered device."""
+        self._schedule_entry_reload()
 
-        if event_type in ("properties_changed", "status"):
-            self._coordinator.async_apply_device_event(event)
-        elif event_type == "device_added":
-            self._schedule_entry_reload()
-        elif event_type == "device_removed":
-            self._remove_device_from_registries(device_id)
-            self._schedule_entry_reload()
-        else:
-            _LOGGER.debug("Ignoring unknown Beatbot event type %s", event_type)
+    def _handle_device_removed(self, device_id: str) -> None:
+        """Remove device entities and reload the entry."""
+        self._remove_device_from_registries(device_id)
+        self._schedule_entry_reload()
 
     def _schedule_entry_reload(self) -> None:
         """Reload all platforms after the account's device set changes."""

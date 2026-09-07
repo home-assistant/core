@@ -102,7 +102,7 @@ def test_start_registers_entry_background_task(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("event_type", ["properties_changed", "status"])
-def test_state_event_routes_incremental_state(
+async def test_state_event_routes_incremental_state(
     event_client: tuple[BeatbotEventClient, Mock],
     event_factory: EventFactory,
     event_type: str,
@@ -111,18 +111,20 @@ def test_state_event_routes_incremental_state(
     client, coordinator = event_client
     event = event_factory("event-1", event_type, {"online": False})
 
-    client._handle_event(event)
+    await client._client._async_dispatch_event(event)
 
     coordinator.async_apply_device_event.assert_called_once_with(event)
 
 
-def test_unknown_event_does_not_route(
+async def test_unknown_event_does_not_route(
     event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
 ) -> None:
     """Ignore unsupported events returned by the library."""
     client, coordinator = event_client
 
-    client._handle_event(event_factory("event-2", "future_type", {}))
+    await client._client._async_dispatch_event(
+        event_factory("event-2", "future_type", {})
+    )
 
     coordinator.async_apply_device_event.assert_not_called()
 
@@ -140,19 +142,27 @@ async def test_library_authentication_error_starts_reauth(
     client._entry.async_start_reauth.assert_called_once_with(hass)
 
 
-@pytest.mark.parametrize("event_type", ["device_added", "device_removed"])
-def test_topology_event_reloads_entry(
+@pytest.mark.parametrize(
+    ("event_type", "payload"),
+    [
+        pytest.param("device_added", {"deviceId": "dev-1"}, id="added"),
+        pytest.param("device_removed", None, id="removed"),
+    ],
+)
+async def test_topology_event_reloads_entry(
     hass: HomeAssistant,
     event_client: tuple[BeatbotEventClient, Mock],
     event_factory: EventFactory,
     event_type: str,
+    payload: dict[str, str] | None,
 ) -> None:
     """Reload the entry after a device topology event."""
     client, coordinator = event_client
     hass.config_entries.async_schedule_reload = Mock()
-    payload = None if event_type == "device_removed" else {"deviceId": "dev-1"}
 
-    client._handle_event(event_factory("event-3", event_type, payload))
+    await client._client._async_dispatch_event(
+        event_factory("event-3", event_type, payload)
+    )
 
     hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
     coordinator.async_apply_device_event.assert_not_called()
@@ -230,6 +240,9 @@ def test_library_callbacks_are_registered(
     """Register Home Assistant callbacks with the client library."""
     client, coordinator = event_client
 
-    assert client._client._event_callback == client._handle_event
+    assert client._client._event_callback is None
+    assert client._client._state_callback == coordinator.async_apply_device_event
+    assert client._client._device_added_callback == client._handle_device_added
+    assert client._client._device_removed_callback == client._handle_device_removed
     assert client._client._reconnect_callback == coordinator.async_request_refresh
     assert client._client._token_refresh_callback == client._async_refresh_token

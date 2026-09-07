@@ -69,7 +69,6 @@ SENSOR_DESCRIPTIONS: tuple[BeatbotSensorEntityDescription, ...] = (
     ),
     BeatbotSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

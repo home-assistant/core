@@ -92,11 +92,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             len(states),
         )
 
-        previous_data = self.data if isinstance(self.data, dict) else {}
         for device_id, device in result.items():
-            previous_device = previous_data.get(device_id)
-            if previous_device is not None:
-                device.copy_runtime_state_from(previous_device)
             if (state := states.get(device_id)) is not None:
                 self._apply_state_with_logging(
                     device_id,
@@ -105,7 +101,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                     state.get("is_online"),
                     source="batch",
                 )
-            elif previous_device is None:
+            else:
                 device.is_online = False
         self._reconcile_device_set(result)
         return result

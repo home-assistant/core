@@ -305,8 +305,10 @@ def test_entry_reload_is_scheduled_once(hass: HomeAssistant) -> None:
     hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
 
 
-async def test_poll_preserves_state_missing_from_batch(hass: HomeAssistant) -> None:
-    """Preserve last-known runtime state when batch data omits a device."""
+async def test_poll_missing_batch_state_marks_device_offline(
+    hass: HomeAssistant,
+) -> None:
+    """Do not present cached runtime state as current when a device is omitted."""
     previous = _device("dev-1", SUPPORTED_PRODUCT)
     previous.battery_level = 42
     discovered = _device("dev-1", SUPPORTED_PRODUCT)
@@ -321,13 +323,14 @@ async def test_poll_preserves_state_missing_from_batch(hass: HomeAssistant) -> N
     data = await coordinator._async_update_data()
 
     assert data["dev-1"].name == "Updated name"
-    assert data["dev-1"].battery_level == 42
+    assert data["dev-1"].battery_level == 80
+    assert data["dev-1"].is_online is False
 
 
-async def test_poll_preserves_state_missing_from_partial_batch(
+async def test_poll_does_not_copy_old_fields_into_partial_batch(
     hass: HomeAssistant,
 ) -> None:
-    """Overlay partial batch data without resetting last-known runtime fields."""
+    """Use the current discovery and batch data without copying old fields."""
     previous = _device("dev-1", SUPPORTED_PRODUCT)
     previous.work_status = 5
     previous.battery_level = 42
@@ -343,7 +346,7 @@ async def test_poll_preserves_state_missing_from_partial_batch(
 
     data = await coordinator._async_update_data()
 
-    assert data["dev-1"].work_status == 5
+    assert data["dev-1"].work_status == 0
     assert data["dev-1"].battery_level == 75
     assert data["dev-1"].is_online is True
 

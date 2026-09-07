@@ -138,6 +138,7 @@ async def test_async_setup_entry_loads_sensor_platform(
     assert error_entity_id is not None
     assert hass.states.get(status_entity_id) is not None
     assert hass.states.get(battery_entity_id) is not None
+    assert hass.states.get(battery_entity_id).name == "Battery"
     assert hass.states.get(error_entity_id) is not None
 
 
