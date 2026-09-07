@@ -77,20 +77,22 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         channel_id = self.subentry.data[CONF_CHANNEL_ID]
         try:
             channels = [channel async for channel in youtube.get_channels([channel_id])]
+            if not channels or channels[0].snippet is None:
+                raise UpdateFailed("Channel is not available")
+            channel = channels[0]
+            # Fetch up to 10 recent videos to find a Short and a non-Short.
+            videos = [
+                v
+                async for v in youtube.get_playlist_items(
+                    channel.upload_playlist_id, 10
+                )
+            ]
+            LOGGER.debug("Fetched %d videos for channel %s", len(videos), channel_id)
+            is_short_flags = await self._get_is_short_flags(youtube, videos)
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except YouTubeBackendError as err:
             raise UpdateFailed("Couldn't connect to YouTube") from err
-        if not channels or channels[0].snippet is None:
-            raise UpdateFailed("Channel is not available")
-        channel = channels[0]
-
-        # Fetch up to 10 recent videos to find a Short and a non-Short.
-        videos = [
-            v async for v in youtube.get_playlist_items(channel.upload_playlist_id, 10)
-        ]
-        LOGGER.debug("Fetched %d videos for channel %s", len(videos), channel_id)
-        is_short_flags = await self._get_is_short_flags(youtube, videos)
 
         latest_video: dict[str, Any] | None = None
         latest_short: dict[str, Any] | None = None

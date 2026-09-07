@@ -31,9 +31,10 @@
     "channel": {
       "abort": {
         "access_not_configured": "[%key:component::youtube::config::abort::access_not_configured%]",
-        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-        "no_subscriptions": "[%key:component::youtube::config::abort::no_subscriptions%]",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
+        "already_configured": "This channel is already configured.",
+        "no_subscriptions": "There are no channels available to add.",
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "unknown_channel": "The selected channel is no longer available."
       },
       "entry_type": "YouTube channel",
       "initiate_flow": {

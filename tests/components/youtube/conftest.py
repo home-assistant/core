@@ -37,6 +37,7 @@ SCOPES = [
 ]
 TITLE = "Google for Developers"
 CHANNEL_ID = "UC_x5XG1OV2P6uZZ5FSM9Ttw"
+LINUS_CHANNEL_ID = "UCXuqSBlHAE6Xw-yeJA0Tunw"
 TOKEN = (
     "homeassistant.components.youtube.api"
     ".config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"

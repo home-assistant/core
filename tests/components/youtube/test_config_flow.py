@@ -22,6 +22,7 @@ from .conftest import (
     CLIENT_ID,
     GOOGLE_AUTH_URI,
     GOOGLE_TOKEN_URI,
+    LINUS_CHANNEL_ID,
     SCOPES,
     TITLE,
     ComponentSetup,
@@ -30,8 +31,6 @@ from .conftest import (
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-LINUS_CHANNEL_ID = "UCXuqSBlHAE6Xw-yeJA0Tunw"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -590,3 +589,82 @@ async def test_subentry_flow_no_channels_left(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_subscriptions"
+
+
+async def test_subentry_flow_add_own_channel(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the account's own channel can be added if not tracked yet."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+    assert not entry.subentries
+
+    with (
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=MockYouTube(hass),
+        ),
+        patch(
+            "homeassistant.components.youtube.api.YouTube",
+            return_value=MockYouTube(hass),
+        ),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        options = result["data_schema"].schema[CONF_CHANNEL_ID].config["options"]
+        assert [option["value"] for option in options] == [CHANNEL_ID]
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Google for Developers"
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.unique_id == CHANNEL_ID
+    assert subentry.title == "Google for Developers"
+    assert hass.states.get("sensor.google_for_developers_subscribers") is not None
+
+
+async def test_subentry_flow_unknown_channel(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the subentry flow aborts when the channel is not available."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+
+    # The subscription lists the channel, but it cannot be fetched anymore
+    mock = MockYouTube(hass, channel_fixture="get_no_channel.json")
+    with (
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=mock,
+        ),
+        patch("homeassistant.components.youtube.api.YouTube", return_value=mock),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_channel"
+    assert not entry.subentries
+    assert entry.state is config_entries.ConfigEntryState.LOADED

@@ -75,7 +75,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     prefix = f"{entry.entry_id}_"
-    for channel_id in dict.fromkeys(entry.options.get(CONF_CHANNELS, [])):
+    channel_ids = dict.fromkeys(entry.options.get(CONF_CHANNELS, []))
+
+    subentries: dict[str, ConfigSubentry] = {}
+    for channel_id in channel_ids:
         subentry = ConfigSubentry(
             data=MappingProxyType({CONF_CHANNEL_ID: channel_id}),
             subentry_type=SUBENTRY_TYPE_CHANNEL,
@@ -83,24 +86,53 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unique_id=channel_id,
         )
         hass.config_entries.async_add_subentry(entry, subentry)
-        device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{prefix}{channel_id}"), entry.entry_id
+        subentries[channel_id] = subentry
+
+    # Attach the entities of tracked channels to their subentry and remove
+    # entities left behind by channels which are no longer tracked.
+    channel_prefixes = {
+        f"{prefix}{channel_id}_": channel_id for channel_id in channel_ids
+    }
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        channel_subentry = next(
+            (
+                subentries[channel_id]
+                for channel_prefix, channel_id in channel_prefixes.items()
+                if entity_entry.unique_id.startswith(channel_prefix)
+            ),
+            None,
         )
-        if device is not None:
-            device_registry.async_update_device(
-                device.id,
-                new_identifiers={(DOMAIN, channel_id)},
-                new_config_subentry_id=subentry.subentry_id,
-            )
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        ):
-            if not entity_entry.unique_id.startswith(f"{prefix}{channel_id}_"):
-                continue
+        if channel_subentry is None:
+            entity_registry.async_remove(entity_entry.entity_id)
+        else:
             entity_registry.async_update_entity(
                 entity_entry.entity_id,
-                new_unique_id=entity_entry.unique_id.removeprefix(prefix),
-                config_subentry_id=subentry.subentry_id,
+                config_subentry_id=channel_subentry.subentry_id,
             )
+
+    # Move the devices of tracked channels to their subentry and remove
+    # devices left behind by channels which are no longer tracked.
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        channel_id = next(
+            (
+                identifier[1].removeprefix(prefix)
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN and identifier[1].startswith(prefix)
+            ),
+            None,
+        )
+        if channel_id is not None and channel_id in subentries:
+            device_registry.async_update_device(
+                device_entry.id,
+                new_identifiers={(DOMAIN, channel_id)},
+                new_config_subentry_id=subentries[channel_id].subentry_id,
+            )
+        else:
+            device_registry.async_remove_device(device_entry.id)
+
     hass.config_entries.async_update_entry(entry, version=2, options={})
     return True

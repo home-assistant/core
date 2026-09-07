@@ -20,7 +20,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import MockYouTube
-from .conftest import CHANNEL_ID, GOOGLE_TOKEN_URI, TITLE, ComponentSetup
+from .conftest import (
+    CHANNEL_ID,
+    GOOGLE_TOKEN_URI,
+    LINUS_CHANNEL_ID,
+    TITLE,
+    ComponentSetup,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -175,14 +181,31 @@ async def test_migration(
         manufacturer="Google, Inc.",
         name="Google for Developers",
     )
-    entity_entry = entity_registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         f"{entry.entry_id}_{CHANNEL_ID}_subscribers",
         config_entry=entry,
         device_id=device.id,
+        suggested_object_id="google_for_developers_subscribers",
     )
-    assert entity_entry.entity_id
+    # Device and entity left behind by a channel which is no longer tracked,
+    # as happened when it was removed from the options before this migration.
+    orphan_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, f"{entry.entry_id}_{LINUS_CHANNEL_ID}")},
+        manufacturer="Google, Inc.",
+        name="Linus Tech Tips",
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{entry.entry_id}_{LINUS_CHANNEL_ID}_subscribers",
+        config_entry=entry,
+        device_id=orphan_device.id,
+        suggested_object_id="linus_tech_tips_subscribers",
+    )
 
     with patch(
         "homeassistant.components.youtube.api.YouTube",
@@ -208,8 +231,10 @@ async def test_migration(
     assert migrated_device.id == device.id
     assert migrated_device.config_subentry_id == subentry.subentry_id
 
+    # The unique id keeps the entry id prefix so two accounts can track
+    # the same channel.
     migrated_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{CHANNEL_ID}_subscribers"
+        "sensor", DOMAIN, f"{entry.entry_id}_{CHANNEL_ID}_subscribers"
     )
     assert migrated_entity_id is not None
     migrated_entity = entity_registry.async_get(migrated_entity_id)
@@ -217,6 +242,19 @@ async def test_migration(
     assert migrated_entity.config_subentry_id == subentry.subentry_id
     assert migrated_entity.device_id == device.id
 
+    # The untracked channel's device and entity are cleaned up
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, LINUS_CHANNEL_ID), entry.entry_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{entry.entry_id}_{LINUS_CHANNEL_ID}_subscribers"
+        )
+        is None
+    )
     assert hass.states.get("sensor.google_for_developers_subscribers") is not None
 
 

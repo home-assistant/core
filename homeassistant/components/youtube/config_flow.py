@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any, override
 
 import voluptuous as vol
@@ -13,7 +12,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlowResult,
-    ConfigSubentry,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -190,11 +189,20 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Select which channels to track."""
         if user_input:
-            self._channel_titles = {
-                channel_id: self._channel_titles.get(channel_id, channel_id)
-                for channel_id in dict.fromkeys(user_input[CONF_CHANNELS])
-            }
-            return self.async_create_entry(title=self._title, data=self._data)
+            channel_ids = dict.fromkeys(user_input[CONF_CHANNELS])
+            return self.async_create_entry(
+                title=self._title,
+                data=self._data,
+                subentries=[
+                    ConfigSubentryData(
+                        data={CONF_CHANNEL_ID: channel_id},
+                        subentry_type=SUBENTRY_TYPE_CHANNEL,
+                        title=self._channel_titles[channel_id],
+                        unique_id=channel_id,
+                    )
+                    for channel_id in channel_ids
+                ],
+            )
         (
             selectable_channels,
             channel_titles,
@@ -224,22 +232,6 @@ class OAuth2FlowHandler(
                 }
             ),
         )
-
-    @override
-    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
-        """Create a subentry for each channel selected in the initial flow."""
-        entry: ConfigEntry = result["result"]
-        for channel_id, title in self._channel_titles.items():
-            self.hass.config_entries.async_add_subentry(
-                entry,
-                ConfigSubentry(
-                    data=MappingProxyType({CONF_CHANNEL_ID: channel_id}),
-                    subentry_type=SUBENTRY_TYPE_CHANNEL,
-                    title=title,
-                    unique_id=channel_id,
-                ),
-            )
-        return result
 
 
 class ChannelFlowHandler(ConfigSubentryFlow):
@@ -295,17 +287,14 @@ class ChannelFlowHandler(ConfigSubentryFlow):
 
     @callback
     def _async_configured_channel_ids(self) -> set[str]:
-        """Return channel ids already tracked in this Home Assistant instance."""
-        configured: set[str] = set()
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id:
-                configured.add(entry.unique_id)
-            configured |= {
-                subentry.unique_id
-                for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL)
-                if subentry.unique_id
-            }
-        return configured
+        """Return channel ids already tracked by this config entry."""
+        return {
+            subentry.unique_id
+            for subentry in self._get_entry().get_subentries_of_type(
+                SUBENTRY_TYPE_CHANNEL
+            )
+            if subentry.unique_id
+        }
 
     async def _async_create_entry(self, channel_id: str) -> SubentryFlowResult:
         """Create a subentry for the selected channel."""
@@ -327,9 +316,10 @@ class ChannelFlowHandler(ConfigSubentryFlow):
         except Exception as ex:  # noqa: BLE001
             LOGGER.error("Unknown error occurred: %s", ex.args)
             return self.async_abort(reason="unknown")
-        title = channel_id
-        if channels and channels[0].snippet is not None:
-            title = channels[0].snippet.title
+        if not channels or channels[0].snippet is None:
+            return self.async_abort(reason="unknown_channel")
         return self.async_create_entry(
-            title=title, data={CONF_CHANNEL_ID: channel_id}, unique_id=channel_id
+            title=channels[0].snippet.title,
+            data={CONF_CHANNEL_ID: channel_id},
+            unique_id=channel_id,
         )

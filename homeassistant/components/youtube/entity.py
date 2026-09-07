@@ -22,7 +22,11 @@ class YouTubeChannelEntity(CoordinatorEntity[YouTubeDataUpdateCoordinator]):
         """Initialize a YouTube entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{channel_id}_{description.key}"
+        # The entry id prefix keeps unique ids unique when two accounts
+        # track the same channel.
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{channel_id}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, channel_id)},
