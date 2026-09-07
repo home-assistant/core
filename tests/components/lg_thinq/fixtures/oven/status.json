@@ -1,0 +1,28 @@
+[
+  {
+    "location": {
+      "locationName": "UPPER"
+    },
+    "runState": {
+      "currentState": "COOKING_IN_PROGRESS"
+    },
+    "timer": {
+      "remainHour": 0,
+      "remainMinute": 10,
+      "remainSecond": 0
+    }
+  },
+  {
+    "location": {
+      "locationName": "LOWER"
+    },
+    "runState": {
+      "currentState": "COOKING_IN_PROGRESS"
+    },
+    "timer": {
+      "remainHour": 0,
+      "remainMinute": 10,
+      "remainSecond": 0
+    }
+  }
+]

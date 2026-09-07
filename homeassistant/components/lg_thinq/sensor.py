@@ -524,6 +524,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.OVEN: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         TEMPERATURE_SENSOR_DESC[ThinQProperty.TARGET_TEMPERATURE],
+        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
     ),
     DeviceType.PLANT_CULTIVATOR: (
         LIGHT_SENSOR_DESC[ThinQProperty.BRIGHTNESS],
@@ -658,7 +659,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for sensor platform."""
     entities: list[
-        ThinQSensorEntity | ThinQEnergySensorEntity | ThinQEnumTempSensorEntity
+        ThinQSensorEntity
+        | ThinQOvenTimerSensorEntity
+        | ThinQEnergySensorEntity
+        | ThinQEnumTempSensorEntity
     ] = []
     for coordinator in entry.runtime_data.coordinators.values():
         if (
@@ -667,8 +671,14 @@ async def async_setup_entry(
             )
         ) is not None:
             for description in descriptions:
+                sensor_type = (
+                    ThinQOvenTimerSensorEntity
+                    if coordinator.api.device.device_type == DeviceType.OVEN
+                    and description.key == TimerProperty.REMAIN
+                    else ThinQSensorEntity
+                )
                 entities.extend(
-                    ThinQSensorEntity(coordinator, description, property_id)
+                    sensor_type(coordinator, description, property_id)
                     for property_id in coordinator.api.get_active_idx(
                         description.key,
                         (
@@ -715,6 +725,53 @@ async def async_setup_entry(
             )
     if entities:
         async_add_entities(entities)
+
+
+class ThinQOvenTimerSensorEntity(ThinQEntity, SensorEntity):
+    """Expose a stable cook-timer deadline without extending cached readings."""
+
+    def __init__(
+        self,
+        coordinator: DeviceDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+        property_id: str,
+    ) -> None:
+        """Initialize the timer using the existing per-cavity ThinQ identity."""
+        super().__init__(coordinator, entity_description, property_id)
+        self._last_remaining: time | None = None
+        self._attr_native_value: datetime | None = None
+        self._device_state_id = (
+            f"{self.location}_{ThinQProperty.CURRENT_STATE}"
+            if self.location is not None
+            else ThinQProperty.CURRENT_STATE
+        )
+
+    @override
+    def _update_status(self) -> None:
+        """Re-anchor only when LG reports a changed, active cook timer."""
+        status = self.coordinator.data.get(self._device_state_id)
+        remaining = self.data.value
+        if (
+            status is None
+            or status.value not in {"preheating", "cooking_in_progress"}
+            or not isinstance(remaining, time)
+            or remaining == time.min
+        ):
+            self._last_remaining = None
+            self._attr_native_value = None
+            return
+
+        # Other-cavity updates must not extend a cached timer reading.
+        if remaining == self._last_remaining:
+            return
+        self._last_remaining = remaining
+        deadline = dt_util.utcnow() + timedelta(
+            hours=remaining.hour, minutes=remaining.minute, seconds=remaining.second
+        )
+        if self._attr_native_value is None or abs(
+            deadline - self._attr_native_value
+        ) > timedelta(seconds=5):
+            self._attr_native_value = deadline
 
 
 class ThinQSensorEntity(ThinQEntity, SensorEntity):
