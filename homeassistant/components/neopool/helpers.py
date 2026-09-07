@@ -3,23 +3,10 @@
 import datetime
 from typing import Any
 
-from neopool_modbus.decoders import decode_device_time, encode_device_time
+from neopool_modbus.decoders import encode_device_time
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
-
-
-def get_device_time(
-    data: dict[str, Any], hass: HomeAssistant | None = None
-) -> datetime.datetime | None:
-    """Decode ``MBF_PAR_TIME`` as UTC-normalised wall-clock time."""
-    unix_ts = data.get("MBF_PAR_TIME")
-    if unix_ts is None:
-        return None
-    tz = (
-        dt_util.get_time_zone(hass.config.time_zone) if hass else datetime.UTC
-    ) or datetime.UTC
-    return decode_device_time(unix_ts, tz)
 
 
 def prepare_device_time(hass: HomeAssistant) -> int:
@@ -30,17 +17,19 @@ def prepare_device_time(hass: HomeAssistant) -> int:
 
 def is_device_time_out_of_sync(
     data: dict[str, Any],
-    hass: HomeAssistant | None = None,
+    hass: HomeAssistant,
     threshold_seconds: int = 300,
 ) -> bool:
-    """Return True if device and HA time differ by more than threshold_seconds.
+    """Return True if device time and HA time differ by more than threshold_seconds.
 
-    The default is loose on purpose: correct a clock that drifted far (e.g. after
-    a power loss), not small offsets from bus latency or minute-granular RTC.
+    ``MBF_PAR_TIME`` and ``prepare_device_time`` are both TZ-less wall-clock
+    epochs, so comparing them directly avoids the DST fold ambiguity that a
+    decode-through-UTC comparison would hit during the repeated hour at
+    fall-back. The default is loose on purpose: correct a clock that drifted
+    far (e.g. after a power loss), not small offsets from bus latency or
+    minute-granular RTC.
     """
-    device_dt = get_device_time(data, hass)
-    if device_dt is None:
+    device_ts: int | None = data.get("MBF_PAR_TIME")
+    if device_ts is None:
         return False
-    now_dt = dt_util.utcnow().replace(tzinfo=datetime.UTC)
-    diff = abs((device_dt - now_dt).total_seconds())
-    return diff > threshold_seconds
+    return abs(device_ts - prepare_device_time(hass)) > threshold_seconds
