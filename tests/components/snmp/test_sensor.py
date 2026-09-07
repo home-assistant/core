@@ -1,11 +1,16 @@
 """Tests for SNMP sensor platform setup behaviour."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from pysnmp.proto.rfc1902 import Integer32
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.snmp.sensor import FAILURES_BEFORE_BACKOFF, SCAN_INTERVAL
+from homeassistant.components.snmp.sensor import (
+    FAILURES_BEFORE_BACKOFF,
+    MIN_BACKOFF,
+    SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -56,36 +61,67 @@ async def test_entity_recovers_when_device_unreachable(hass: HomeAssistant) -> N
     assert hass.states.get("sensor.snmp").state == "13"
 
 
+TIMEOUT_RESULT = ("No SNMP response received before timeout", None, None, None)
+OK_RESULT = (None, None, None, [[Integer32(13)]])
+
+
 async def test_backoff_when_device_stays_unreachable(hass: HomeAssistant) -> None:
-    """Test polling backs off once a device has failed repeatedly."""
-    get_cmd = AsyncMock(
-        return_value=("No SNMP response received before timeout", None, None, None)
-    )
+    """Test polling backs off, recovers and resets for an unreachable device."""
+    get_cmd = AsyncMock(return_value=TIMEOUT_RESULT)
+    clock = 0.0
+    now = dt_util.utcnow()
+    interval = SCAN_INTERVAL.total_seconds()
+    skipped_polls = int(MIN_BACKOFF // interval)
 
-    with patch("homeassistant.components.snmp.sensor.get_cmd", get_cmd):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+    def _monotonic() -> float:
+        return clock
 
-        # The first failures are still retried at the normal scan interval.
-        now = dt_util.utcnow()
-        for _ in range(FAILURES_BEFORE_BACKOFF - 1):
-            now += SCAN_INTERVAL
-            async_fire_time_changed(hass, now)
-            await hass.async_block_till_done()
-
-        assert get_cmd.call_count == FAILURES_BEFORE_BACKOFF
-
-        # Once the threshold is passed, further scan intervals are skipped.
+    async def _poll() -> None:
+        """Advance the scan timer and the backoff clock by one interval."""
+        nonlocal clock, now
+        clock += interval
         now += SCAN_INTERVAL
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
-        calls_at_backoff = get_cmd.call_count
 
-        for _ in range(3):
-            now += SCAN_INTERVAL
-            async_fire_time_changed(hass, now)
-            await hass.async_block_till_done()
+    with (
+        patch("homeassistant.components.snmp.sensor.get_cmd", get_cmd),
+        patch("homeassistant.components.snmp.sensor.monotonic", _monotonic),
+    ):
+        assert await async_setup_component(hass, SENSOR_DOMAIN, CONFIG)
+        await hass.async_block_till_done()
+        assert get_cmd.call_count == 1
 
-        assert get_cmd.call_count == calls_at_backoff
+        # Early failures are still retried on every scan interval.
+        for expected in range(2, FAILURES_BEFORE_BACKOFF + 1):
+            await _poll()
+            assert get_cmd.call_count == expected
 
-    assert hass.states.get("sensor.snmp").state == "unknown"
+        # Threshold passed: the next MIN_BACKOFF seconds of polls are skipped.
+        calls = get_cmd.call_count
+        for _ in range(skipped_polls):
+            await _poll()
+        assert get_cmd.call_count == calls
+
+        # Once the delay expires, polling resumes.
+        await _poll()
+        assert get_cmd.call_count == calls + 1
+
+        # That failure doubled the delay, so MIN_BACKOFF is no longer enough.
+        calls = get_cmd.call_count
+        for _ in range(skipped_polls):
+            await _poll()
+        assert get_cmd.call_count == calls
+
+        # A success clears the backoff entirely.
+        clock += 2 * MIN_BACKOFF
+        now += timedelta(seconds=2 * MIN_BACKOFF)
+        get_cmd.return_value = OK_RESULT
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.snmp").state == "13"
+
+        # Normal polling resumes immediately after recovery.
+        calls = get_cmd.call_count
+        await _poll()
+        assert get_cmd.call_count == calls + 1
