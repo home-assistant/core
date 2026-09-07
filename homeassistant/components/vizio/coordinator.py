@@ -18,6 +18,7 @@ from vizaio import (
     VizioAuthError,
     VizioError,
     VizioNotFoundError,
+    VizioUnsupportedError,
     fetch_app_availability,
     fetch_remote_app_catalog,
     is_app_input,
@@ -151,10 +152,9 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        # Modern TV firmware bundles power/input/app state into one endpoint;
-        # firmware without it never gains it, so probe only until the first
-        # URI_NOT_FOUND response. Audio devices do not support this endpoint.
-        self._use_state_extended = device.profile.has_inputs
+        # Supported firmware bundles power/input/app state into one endpoint.
+        # Probe until the library reports that the endpoint is unavailable.
+        self._use_state_extended = True
 
     @override
     async def _async_setup(self) -> None:
@@ -193,8 +193,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             try:
                 state = await self.device.get_state_extended()
             except VizioAuthError as err:
-                raise ConfigEntryAuthFailed from err
-            except VizioNotFoundError:
+                if self.device.profile.requires_auth:
+                    raise ConfigEntryAuthFailed from err
+                self._use_state_extended = False
+            except VizioNotFoundError, VizioUnsupportedError:
                 self._use_state_extended = False
             except VizioError as err:
                 raise self._update_failed() from err
