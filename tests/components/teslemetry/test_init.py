@@ -187,16 +187,9 @@ async def test_energy_site_refresh_error(
 async def test_vehicle_stream(
     hass: HomeAssistant,
     mock_add_listener: MagicMock,
-    mock_metadata: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
-
-    # is_user_present is a polling-only entity, so the vehicle must qualify for
-    # polling; it still streams, updating via the vehicle_data push below.
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"]["LRW3F7EK4NC700000"]["discounted"] = True
-    mock_metadata.return_value = metadata
 
     await setup_platform(hass, [Platform.BINARY_SENSOR])
     mock_add_listener.assert_called()
@@ -204,10 +197,6 @@ async def test_vehicle_stream(
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-
-    state = hass.states.get("binary_sensor.test_user_present")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
 
     mock_add_listener.send(
         {
@@ -220,10 +209,6 @@ async def test_vehicle_stream(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
-    assert state is not None
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.test_user_present")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -931,27 +916,28 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
 
 
 @pytest.mark.parametrize(
-    ("polling", "discounted", "has_polling_only"),
+    ("polling", "has_polling_only"),
     [
-        (True, False, True),
-        (False, True, True),
-        (False, False, False),
+        (True, True),
+        (None, True),
+        (False, False),
     ],
-    ids=["non_streaming", "discounted_streaming", "plain_streaming"],
+    ids=["polling", "unknown_polling", "streaming"],
 )
 async def test_polling_only_entities_require_metadata(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
-    polling: bool,
-    discounted: bool,
+    polling: bool | None,
     has_polling_only: bool,
 ) -> None:
-    """Create a polling-only entity only for a polling or discounted vehicle."""
+    """Create a polling-only entity unless the vehicle is explicitly stream-only.
+
+    A null polling flag is unknown, not stream-only, so its entities are kept.
+    """
     vin = "LRW3F7EK4NC700000"
     metadata = deepcopy(METADATA)
     metadata["vehicles"][vin]["polling"] = polling
-    metadata["vehicles"][vin]["discounted"] = discounted
     mock_metadata.return_value = metadata
 
     entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
@@ -971,80 +957,6 @@ async def test_polling_only_entities_require_metadata(
         is not None
     )
     assert entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(
-    ("polling", "discounted", "firmware", "has_dual"),
-    [
-        (False, False, "2026.0.0", True),
-        (True, False, "2020.0.0", True),
-        (False, True, "2020.0.0", True),
-        (False, False, "2020.0.0", False),
-    ],
-    ids=[
-        "streaming_current_firmware",
-        "polling_old_firmware",
-        "discounted_old_firmware",
-        "plain_streaming_old_firmware",
-    ],
-)
-async def test_streamable_entity_requires_stream_or_polling(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_metadata: AsyncMock,
-    polling: bool,
-    discounted: bool,
-    firmware: str,
-    has_dual: bool,
-) -> None:
-    """Omit a dual entity a vehicle can neither stream nor be polled for."""
-    vin = "LRW3F7EK4NC700000"
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][vin]["polling"] = polling
-    metadata["vehicles"][vin]["discounted"] = discounted
-    metadata["vehicles"][vin]["firmware"] = firmware
-    mock_metadata.return_value = metadata
-
-    entry = await setup_platform(hass, [Platform.COVER])
-
-    # The window cover is a dual entity gated on streaming firmware "2024.26".
-    assert (
-        entity_registry.async_get_entity_id(Platform.COVER, DOMAIN, f"{vin}-windows")
-        is not None
-    ) is has_dual
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_stale_streamable_entity_removed_on_setup(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_metadata: AsyncMock,
-) -> None:
-    """Prune a dual entity when its vehicle can no longer stream or poll it."""
-    vin = "LRW3F7EK4NC700000"
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][vin]["firmware"] = "2020.0.0"
-    mock_metadata.return_value = metadata
-
-    entry = mock_config_entry()
-    entry.add_to_hass(hass)
-
-    # Left over from before the vehicle dropped below streaming firmware.
-    stale = entity_registry.async_get_or_create(
-        Platform.COVER,
-        DOMAIN,
-        f"{vin}-windows",
-        config_entry=entry,
-    )
-
-    with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.COVER]):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (
-        entity_registry.async_get_entity_id(Platform.COVER, DOMAIN, stale.unique_id)
-        is None
-    )
 
 
 async def test_streaming_vehicle_coordinator_never_polls(

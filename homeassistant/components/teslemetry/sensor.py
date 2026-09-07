@@ -1660,18 +1660,20 @@ async def async_setup_entry(
                 )
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
-            elif description.polling and vehicle.pollable:
+            elif description.polling and vehicle.poll is not False:
+                # poll may be None (unknown); only an explicit False is stream-only
                 entities.append(TeslemetryVehicleSensorEntity(vehicle, description))
 
         for time_description in VEHICLE_TIME_DESCRIPTIONS:
-            poll = vehicle.poll_or_stream(time_description.streaming_firmware)
-            if poll is True:
-                entities.append(
-                    TeslemetryVehicleTimeSensorEntity(vehicle, time_description)
-                )
-            elif poll is False:
+            if not vehicle.poll and firmware_at_least(
+                vehicle.firmware, time_description.streaming_firmware
+            ):
                 entities.append(
                     TeslemetryStreamTimeSensorEntity(vehicle, time_description)
+                )
+            else:
+                entities.append(
+                    TeslemetryVehicleTimeSensorEntity(vehicle, time_description)
                 )
 
     entities.extend(

@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -226,20 +227,21 @@ async def async_setup_entry(
             ):
                 continue
             if description.streaming_listener is None:
-                # A polling-only feature, created only for a pollable vehicle.
-                if vehicle.pollable:
+                # Polling-only feature; poll may be None (unknown), only an
+                # explicit False marks a stream-only vehicle.
+                if vehicle.poll is not False:
                     entities.append(
                         TeslemetryVehiclePollingSelectEntity(
                             vehicle, description, entry.runtime_data.scopes
                         )
                     )
-            elif (poll := vehicle.poll_or_stream("2024.26")) is True:
+            elif vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26"):
                 entities.append(
                     TeslemetryVehiclePollingSelectEntity(
                         vehicle, description, entry.runtime_data.scopes
                     )
                 )
-            elif poll is False:
+            else:
                 entities.append(
                     TeslemetryStreamingSelectEntity(
                         vehicle, description, entry.runtime_data.scopes

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -22,7 +23,6 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
@@ -35,11 +35,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import (
-    async_remove_stale_vehicle_entities,
-    handle_command,
-    handle_vehicle_command,
-)
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -140,7 +136,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry number platform from a config entry."""
 
-    entities = list(
+    async_add_entities(
         chain(
             (
                 TeslemetryVehiclePollingNumberEntity(
@@ -148,14 +144,13 @@ async def async_setup_entry(
                     description,
                     entry.runtime_data.scopes,
                 )
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingNumberEntity(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
                 )
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.26")) is not None
                 for description in VEHICLE_DESCRIPTIONS
             ),
             (
@@ -171,15 +166,6 @@ async def async_setup_entry(
             ),
         )
     )
-
-    async_remove_stale_vehicle_entities(
-        hass,
-        entry.entry_id,
-        Platform.NUMBER,
-        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
-        {entity.unique_id for entity in entities if entity.unique_id},
-    )
-    async_add_entities(entities)
 
 
 class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):

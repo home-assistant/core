@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
@@ -12,14 +13,13 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
 )
-from homeassistant.const import EntityStateAttribute, Platform
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
-from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -80,26 +80,20 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
-            poll = vehicle.poll_or_stream(description.streaming_firmware)
-            if poll is True:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling_prefix:
                     entities.append(
                         TeslemetryVehiclePollingDeviceTrackerEntity(
                             vehicle, description
                         )
                     )
-            elif poll is False:
+            else:
                 entities.append(
                     TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
                 )
 
-    async_remove_stale_vehicle_entities(
-        hass,
-        entry.entry_id,
-        Platform.DEVICE_TRACKER,
-        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
-        {entity.unique_id for entity in entities if entity.unique_id},
-    )
     async_add_entities(entities)
 
 

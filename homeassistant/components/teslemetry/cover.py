@@ -20,7 +20,6 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -31,7 +30,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import async_remove_stale_vehicle_entities, handle_vehicle_command
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 OPEN = 1
@@ -48,52 +47,48 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry cover platform from a config entry."""
 
-    entities = list(
+    async_add_entities(
         chain(
             (
                 TeslemetryVehiclePollingWindowEntity(vehicle, entry.runtime_data.scopes)
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingWindowEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.26")) is not None
             ),
             (
                 TeslemetryVehiclePollingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.44.25")) is not None
             ),
             (
                 TeslemetryVehiclePollingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.26")) is not None
             ),
             (
                 TeslemetryVehiclePollingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.26")) is not None
             ),
             (
                 TeslemetrySunroofEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
-                if vehicle.pollable
+                if vehicle.poll
                 and vehicle.coordinator.data.get("vehicle_config_sun_roof_installed")
             ),
             (
@@ -106,15 +101,6 @@ async def async_setup_entry(
             ),
         )
     )
-
-    async_remove_stale_vehicle_entities(
-        hass,
-        entry.entry_id,
-        Platform.COVER,
-        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
-        {entity.unique_id for entity in entities if entity.unique_id},
-    )
-    async_add_entities(entities)
 
 
 class CoverRestoreEntity(RestoreEntity, CoverEntity):

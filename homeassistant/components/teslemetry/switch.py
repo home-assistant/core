@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import AutoSeat, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -13,7 +14,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -26,11 +26,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import (
-    async_remove_stale_vehicle_entities,
-    handle_command,
-    handle_vehicle_command,
-)
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -167,15 +163,16 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
-            poll = vehicle.poll_or_stream(description.streaming_firmware)
-            if poll is True:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling:
                     entities.append(
                         TeslemetryVehiclePollingVehicleSwitchEntity(
                             vehicle, description, entry.runtime_data.scopes
                         )
                     )
-            elif poll is False:
+            else:
                 entities.append(
                     TeslemetryStreamingVehicleSwitchEntity(
                         vehicle, description, entry.runtime_data.scopes
@@ -197,13 +194,6 @@ async def async_setup_entry(
         if energysite.info_coordinator.data.get("components_storm_mode_capable")
     )
 
-    async_remove_stale_vehicle_entities(
-        hass,
-        entry.entry_id,
-        Platform.SWITCH,
-        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
-        {entity.unique_id for entity in entities if entity.unique_id},
-    )
     async_add_entities(entities)
 
 

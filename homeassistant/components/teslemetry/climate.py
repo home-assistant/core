@@ -3,6 +3,7 @@
 from itertools import chain
 from typing import Any, cast, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -18,7 +19,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     PRECISION_WHOLE,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import async_remove_stale_vehicle_entities, handle_vehicle_command
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 DEFAULT_MIN_TEMP = 15
@@ -61,41 +61,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Climate platform from a config entry."""
 
-    entities = list(
+    async_add_entities(
         chain(
             (
                 TeslemetryVehiclePollingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.44.25")) is not None
             ),
             (
                 TeslemetryVehiclePollingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if poll
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 for vehicle in entry.runtime_data.vehicles
-                if (poll := vehicle.poll_or_stream("2024.44.25")) is not None
             ),
         )
     )
-
-    async_remove_stale_vehicle_entities(
-        hass,
-        entry.entry_id,
-        Platform.CLIMATE,
-        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
-        {entity.unique_id for entity in entities if entity.unique_id},
-    )
-    async_add_entities(entities)
 
 
 class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):

@@ -567,7 +567,8 @@ async def async_setup_entry(
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)
                 )
-            elif description.polling and vehicle.pollable:
+            elif description.polling and vehicle.poll is not False:
+                # poll may be None (unknown); only an explicit False is stream-only
                 entities.append(
                     TeslemetryVehiclePollingBinarySensorEntity(vehicle, description)
                 )
