@@ -2260,6 +2260,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "foreca": {
+      "name": "Foreca",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "forecast_solar": {
       "name": "Forecast.Solar",
       "integration_type": "service",
