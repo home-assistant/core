@@ -266,7 +266,14 @@ async def test_url_error(
 
     aioclient_mock.get(url=service_data[ATTR_URL], status=status)
 
-    with pytest.raises(HomeAssistantError) as exc_info:
+    # The body of a non-OK response must not be downloaded at all
+    with (
+        patch(
+            "tests.test_util.aiohttp.AiohttpClientMockResponse.read",
+            side_effect=AssertionError("body read for a non-OK response"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )

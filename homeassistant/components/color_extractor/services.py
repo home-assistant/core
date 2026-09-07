@@ -83,8 +83,16 @@ async def _async_extract_color_from_url(
     try:
         session = aiohttp_client.async_get_clientsession(hass)
 
-        async with asyncio.timeout(10):
-            response = await session.get(url)
+        async with asyncio.timeout(10), session.get(url) as response:
+            if response.status != HTTPStatus.OK:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="http_error",
+                    translation_placeholders={
+                        "url": url,
+                        "status": str(response.status),
+                    },
+                )
             content = await response.read()
 
     except TimeoutError as err:
@@ -99,13 +107,6 @@ async def _async_extract_color_from_url(
             translation_key="fetch_failed",
             translation_placeholders={"url": url, "error": str(err)},
         ) from err
-
-    if response.status != HTTPStatus.OK:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="http_error",
-            translation_placeholders={"url": url, "status": str(response.status)},
-        )
 
     with io.BytesIO(content) as _file:
         _file.name = "color_extractor.jpg"
