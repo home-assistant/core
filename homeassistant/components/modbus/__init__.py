@@ -5,6 +5,7 @@ import logging
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -26,7 +27,25 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
-    """Return modbus hub with name."""
+    """Return modbus hub with name.
+
+    Deprecated. Use `async_get_unit` instead, which builds a connection from
+    credentials the integration holds rather than attaching to a hub the user
+    configured in YAML under a name the integration has to be told.
+    """
+    report_usage(
+        "calls `modbus.get_hub`, which is deprecated in favour of "
+        "`modbus.async_get_unit`. Collect the connection details in your own "
+        "config flow and ask for a unit on them",
+        breaks_in_ha_version="2027.10",
+        core_behavior=ReportBehavior.IGNORE,
+        core_integration_behavior=ReportBehavior.IGNORE,
+        custom_integration_behavior=ReportBehavior.LOG,
+        # get_hub is defined here, so its own frame is the first one the stack
+        # walk meets. Without this it reports modbus every time, and the core
+        # behavior above then silences the caller it was meant to name.
+        exclude_integrations={DOMAIN},
+    )
     return hass.data[DATA_MODBUS_HUBS][name]
 
 

@@ -10,7 +10,7 @@ from homeassistant.components import cloud
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
+from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -95,13 +95,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
 
 async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
     """Set up Monzo from a config entry."""
-    try:
-        external_api = await _async_create_api(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    external_api = await _async_create_api(hass, entry)
 
     coordinator = MonzoCoordinator(hass, entry, external_api)
 

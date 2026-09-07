@@ -130,21 +130,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except (
-        config_entry_oauth2_flow.ImplementationUnavailableError,
-        ValueError,
-    ) as err:
-        # Application Credentials missing or removed — user must re-authenticate
-        _LOGGER.debug("OAuth2 implementation unavailable: %s", err)
-        raise ConfigEntryAuthFailed(
-            "OAuth2 implementation unavailable, please re-authenticate"
-        ) from err
+    )
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:

@@ -19,7 +19,7 @@ from .const import (
     IHC_CONTROLLER_INDEX,
 )
 from .manual_setup import IHC_SCHEMA, get_manual_configuration
-from .service_functions import setup_service_functions
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IHC integration."""
+    hass.data.setdefault(DOMAIN, {})
+    setup_services(hass)
     conf = config[DOMAIN]
     for index, controller_conf in enumerate(conf):
         if not ihc_setup(hass, config, controller_conf, index):
@@ -55,7 +57,6 @@ def ihc_setup(
         return False
     controller_id: str = ihc_controller.client.get_system_info()["serial_number"]
     # Store controller configuration
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][controller_id] = {
         IHC_CONTROLLER: ihc_controller,
         CONF_INFO: controller_conf[CONF_INFO],
@@ -66,7 +67,4 @@ def ihc_setup(
     ):
         return False
     get_manual_configuration(hass, config, controller_conf, controller_id)
-    # We only want to register the service functions once for the first controller
-    if controller_index == 0:
-        setup_service_functions(hass)
     return True
