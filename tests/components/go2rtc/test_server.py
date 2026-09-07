@@ -425,3 +425,43 @@ async def test_server_restart_error(
     assert "Unexpected error when restarting go2rtc server" in caplog.text
 
     await server.stop()
+
+
+@pytest.mark.parametrize(
+    ("server_stdout", "expected_stdout"),
+    [
+        (
+            [
+                "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
+                "10:27:02.622 WRN producer.go:170 >"
+                ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
+                " url=rtsp://admin:hunter2@192.168.1.145:554/Preview_01_sub",
+                "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
+                "?channel=0&user=admin&password=hunter2",
+            ],
+            [
+                "10:27:02.622 WRN producer.go:170 >"
+                ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
+                " url=rtsp://****@192.168.1.145:554/Preview_01_sub",
+                "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
+                "?channel=0&user=****&password=****",
+            ],
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_tempfile", "rest_client")
+async def test_credentials_redacted_from_server_output(
+    hass: HomeAssistant,
+    mock_create_subprocess: MagicMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    expected_stdout: list[str],
+) -> None:
+    """Test credentials in urls are redacted from the logged server output."""
+    await server.start()
+    await hass.async_block_till_done()
+
+    assert_server_output_logged(expected_stdout, caplog, logging.WARNING)
+    assert "hunter2" not in caplog.text
+
+    await server.stop()
