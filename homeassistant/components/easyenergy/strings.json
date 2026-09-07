@@ -50,6 +50,9 @@
     "connection_error": {
       "message": "Error communicating with the easyEnergy API."
     },
+    "fetch_prices_error": {
+      "message": "Error fetching prices from the easyEnergy API."
+    },
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
     }
