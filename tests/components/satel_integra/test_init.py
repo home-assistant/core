@@ -295,7 +295,6 @@ async def test_connection_state_logging(
     """Test logging an outage and subsequent recovery."""
     await setup_integration(hass, mock_config_entry)
 
-    # Retrieve the status change callback that was registered during setup.
     assert mock_satel.add_connection_status_callback.called
     connection_status_callback = (
         mock_satel.add_connection_status_callback.call_args.args[0]

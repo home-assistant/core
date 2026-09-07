@@ -106,11 +106,6 @@ class SatelClient:
                 translation_key="connection_initialization_failed",
             ) from ex
 
-        self._unsubscribe_connection_status = (
-            self.controller.add_connection_status_callback(
-                self._on_connection_state_change
-            )
-        )
         self.controller.register_callbacks(
             alarm_status_callback=partitions_update_callback,
             zone_changed_callback=zones_update_callback,
@@ -125,6 +120,12 @@ class SatelClient:
                 translation_key="monitoring_start_failed",
             ) from ex
 
+        self._unsubscribe_connection_status = (
+            self.controller.add_connection_status_callback(
+                self._on_connection_state_change
+            )
+        )
+
     async def async_close(self) -> None:
         """Close the connection."""
 
@@ -136,6 +137,10 @@ class SatelClient:
     def _on_connection_state_change(self) -> None:
         """Handle connection state changes."""
         if self.controller.connected:
-            _LOGGER.info("Satel Integra device is back online")
+            _LOGGER.info(
+                "Satel Integra device is back online: %s", self.config_entry.title
+            )
         else:
-            _LOGGER.info("Satel Integra device is unavailable")
+            _LOGGER.info(
+                "Satel Integra device is unavailable: %s", self.config_entry.title
+            )
