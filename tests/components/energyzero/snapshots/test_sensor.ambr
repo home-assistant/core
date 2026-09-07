@@ -86,12 +86,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current hour',
+    'original_name': 'Current price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_current_hour_price',
     'supported_features': 0,
-    'translation_key': 'current_hour_price',
+    'translation_key': 'current_price',
     'unique_id': '12345_today_energy_current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
@@ -100,7 +100,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current price',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
@@ -191,22 +191,21 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hours priced equal or lower than current - today',
+    'original_name': 'Periods priced equal or lower',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_hours_priced_equal_or_lower',
     'supported_features': 0,
     'translation_key': 'hours_priced_equal_or_lower',
     'unique_id': '12345_today_energy_hours_priced_equal_or_lower',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_hours_priced_equal_or_lower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Hours priced equal or lower than current - today',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Periods priced equal or lower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_hours_priced_equal_or_lower',
@@ -408,12 +407,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Next hour',
+    'original_name': 'Next price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_next_hour_price',
     'supported_features': 0,
-    'translation_key': 'next_hour_price',
+    'translation_key': 'next_price',
     'unique_id': '12345_today_energy_next_hour_price',
     'unit_of_measurement': '€/kWh',
   })
@@ -422,7 +421,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Next hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Next price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
