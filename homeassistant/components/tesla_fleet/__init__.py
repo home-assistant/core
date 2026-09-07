@@ -110,12 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     implementation = await async_get_config_entry_implementation(hass, entry)
 
     oauth_session = OAuth2Session(hass, entry, implementation)
-    try:
-        await oauth_session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
+    await oauth_session.async_ensure_token_valid()
 
     access_token = oauth_session.token[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
