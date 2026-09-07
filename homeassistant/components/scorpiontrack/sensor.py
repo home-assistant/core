@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfSpeed
+from homeassistant.const import DEGREE, EntityCategory, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -34,6 +34,15 @@ class ScorpionTrackSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[ScorpionTrackSensorEntityDescription, ...] = (
+    ScorpionTrackSensorEntityDescription(
+        key="heading",
+        translation_key="heading",
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        value_fn=lambda vehicle: vehicle.position.bearing,
+    ),
     ScorpionTrackSensorEntityDescription(
         key="speed",
         device_class=SensorDeviceClass.SPEED,
