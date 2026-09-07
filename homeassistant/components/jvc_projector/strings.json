@@ -298,10 +298,10 @@
           "wqxga": "WQXGA",
           "wsxgap1680x1050": "WSXGA+ 1680x1050",
           "wuxga-1920x1200": "WUXGA 1920x1200",
-          "wxgapp1600x900": "WXGA++ 1600x900",
-          "wxgap1440x900": "WXGA+ 1440x900",
           "wxga-1280x768": "WXGA 1280x768",
           "wxga-1280x800": "WXGA 1280x800",
+          "wxgapp1600x900": "WXGA++ 1600x900",
+          "wxgap1440x900": "WXGA+ 1440x900",
           "xga-1024x768": "XGA 1024x768"
         }
       },
