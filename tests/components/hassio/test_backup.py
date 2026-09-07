@@ -805,6 +805,7 @@ async def test_agent_get_backup_with_error(
     client = await hass_ws_client(hass)
     backup_id = "abc123"
 
+    # The agent reads the backup details twice before the update check does
     supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
     await client.send_json_auto_id(
         {
@@ -3082,16 +3083,16 @@ async def test_reader_writer_restore_supervisor_update_error(
     ),
     [
         pytest.param(
-            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR, SupervisorNotFoundError()],
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR] * 2 + [SupervisorNotFoundError()],
             [None],
             None,
             "backup_not_found",
             "backup_not_found",
-            "Backup abc123 not found",
+            "Backup not found",
             id="backup_not_found",
         ),
         pytest.param(
-            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR, SupervisorError("Boom!")],
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR] * 2 + [SupervisorError("Boom!")],
             [None],
             None,
             "home_assistant_error",
@@ -3100,10 +3101,7 @@ async def test_reader_writer_restore_supervisor_update_error(
             id="backup_info_error",
         ),
         pytest.param(
-            [
-                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-            ],
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR] * 3,
             [SupervisorError("Boom!")],
             None,
             "home_assistant_error",
@@ -3112,10 +3110,7 @@ async def test_reader_writer_restore_supervisor_update_error(
             id="supervisor_info_error",
         ),
         pytest.param(
-            [
-                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-            ],
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR] * 3,
             [None],
             SupervisorError("Boom!"),
             "home_assistant_error",
@@ -3124,10 +3119,7 @@ async def test_reader_writer_restore_supervisor_update_error(
             id="supervisor_reload_error",
         ),
         pytest.param(
-            [
-                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-            ],
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR] * 3,
             [None, SupervisorError("Boom!")],
             None,
             "home_assistant_error",
