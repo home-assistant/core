@@ -249,10 +249,12 @@ python-backoff<2.4.0
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
 # https://github.com/xolox/python-coloredlogs -> unmaintained
 # https://github.com/pypa/setuptools
+# https://github.com/jawah/urllib3.future
 azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
 setuptools==81.0.0
+urllib3-future==2.24.907
 
 # Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
 # https://github.com/home-assistant/core/issues/175832
