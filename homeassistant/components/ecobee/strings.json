@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_mfa_code": "The MFA code was not accepted by ecobee; please try again.",

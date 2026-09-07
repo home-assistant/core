@@ -7308,8 +7308,16 @@ def test_raise_trying_to_add_same_config_entry_twice(
 @pytest.mark.parametrize(
     ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful", HOMEASSISTANT_DOMAIN),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful", None),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_and_reload(
@@ -7451,8 +7459,16 @@ async def test_update_entry_and_reload_with_listener_logs(
 @pytest.mark.parametrize(
     ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful", HOMEASSISTANT_DOMAIN),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful", None),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_without_reload(
@@ -7528,20 +7544,26 @@ async def test_update_entry_without_reload(
 
 
 @pytest.mark.parametrize(
-    "update_and_abort",
-    ["async_update_and_abort", "async_update_reload_and_abort"],
+    "helper",
+    [
+        pytest.param("async_update_and_abort", id="without_reload"),
+        pytest.param("async_update_reload_and_abort", id="with_reload"),
+    ],
 )
 @pytest.mark.parametrize(
-    "source",
-    [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE],
+    "start_flow",
+    [
+        pytest.param("start_reauth_flow", id="reauth"),
+        pytest.param("start_reconfigure_flow", id="reconfigure"),
+    ],
 )
-async def test_update_entry_custom_reason_stays_local(
+async def test_update_entry_and_abort_with_custom_reason(
     hass: HomeAssistant,
-    source: str,
-    update_and_abort: str,
+    helper: str,
+    start_flow: str,
 ) -> None:
-    """Test a caller supplied reason resolves against the integration itself."""
-    entry = MockConfigEntry(domain="comp", unique_id="1234", title="Test")
+    """Test a custom abort reason is not translated in the homeassistant domain."""
+    entry = MockConfigEntry(domain="comp", data={"vendor": "data"})
     entry.add_to_hass(hass)
 
     comp = MockModule(
@@ -7561,20 +7583,22 @@ async def test_update_entry_custom_reason_stays_local(
 
         async def async_step_reauth(self, data):
             """Mock Reauth."""
-            return getattr(self, update_and_abort)(entry, reason="custom_reason")
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
 
         async def async_step_reconfigure(self, data):
             """Mock Reconfigure."""
-            return getattr(self, update_and_abort)(entry, reason="custom_reason")
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
 
     with mock_config_flow("comp", MockFlowHandler):
-        result = await {
-            config_entries.SOURCE_REAUTH: entry.start_reauth_flow,
-            config_entries.SOURCE_RECONFIGURE: entry.start_reconfigure_flow,
-        }[source](hass)
+        result = await getattr(entry, start_flow)(hass)
 
     await hass.async_block_till_done()
 
+    assert entry.data == {"vendor": "data", "buyer": "me"}
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "custom_reason"
     assert "translation_domain" not in result

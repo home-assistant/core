@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "already_configured_as_subentry": "This Steam account is already configured as a sub-entry.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured_as_subentry": "This Steam account is already configured as a sub-entry."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

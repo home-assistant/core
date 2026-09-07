@@ -3547,7 +3547,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 reason = "reconfigure_successful"
             else:
                 reason = "reauth_successful"
-                translation_domain = HOMEASSISTANT_DOMAIN
+            translation_domain = HOMEASSISTANT_DOMAIN
         return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
@@ -3605,7 +3605,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 reason = "reconfigure_successful"
             else:
                 reason = "reauth_successful"
-                translation_domain = HOMEASSISTANT_DOMAIN
+            translation_domain = HOMEASSISTANT_DOMAIN
         return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback

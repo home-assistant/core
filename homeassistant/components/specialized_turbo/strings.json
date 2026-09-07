@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "not_encrypted": "This bike has no stored encryption key to reconfigure.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "not_encrypted": "This bike has no stored encryption key to reconfigure."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
