@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "escape": {
+        "default": "mdi:reload-alert"
+      },
+      "sync_time": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
     "light": {
       "light": {
         "default": "mdi:lightbulb-off",
@@ -66,6 +74,53 @@
           "ph_under": "mdi:alert",
           "pump_stopped": "mdi:alert",
           "tank_level": "mdi:alert"
+        }
+      }
+    },
+    "switch": {
+      "aux": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
+      },
+      "backwash": {
+        "default": "mdi:waves-arrow-right",
+        "state": {
+          "on": "mdi:waves-arrow-left"
+        }
+      },
+      "clima_onoff": {
+        "default": "mdi:hvac-off",
+        "state": {
+          "on": "mdi:hvac"
+        }
+      },
+      "filt_manual_state": {
+        "default": "mdi:pump"
+      },
+      "hidro_cover_enable": {
+        "default": "mdi:pool-thermometer",
+        "state": {
+          "on": "mdi:pool"
+        }
+      },
+      "hidro_temp_shutdown": {
+        "default": "mdi:thermometer-off",
+        "state": {
+          "on": "mdi:thermometer-alert"
+        }
+      },
+      "smart_anti_freeze": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "on": "mdi:snowflake-melt"
+        }
+      },
+      "uv_mode": {
+        "default": "mdi:lightbulb-fluorescent-tube-outline",
+        "state": {
+          "on": "mdi:lightbulb-fluorescent-tube"
         }
       }
     }

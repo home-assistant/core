@@ -430,8 +430,8 @@ async def async_extract_config_entry_ids(
 
     # Some devices may have no entities
     for device_id in referenced.referenced_devices:
-        if (device_id in dev_reg.devices or device_id in dev_reg.child_devices) and (
-            device := dev_reg.async_get(device_id)
+        if (
+            device := dev_reg.async_get(device_id, include_composite_devices=False)
         ) is not None:
             config_entry_ids.update(device.config_entries)
 
@@ -612,7 +612,16 @@ def async_set_service_schema(
     }
 
     if "target" in schema:
-        description["target"] = schema["target"]
+        # Match validation applied to descriptions loaded from services.yaml.
+        try:
+            description["target"] = TargetSelector.CONFIG_SCHEMA(schema["target"])
+        except vol.Invalid as err:
+            _LOGGER.warning(
+                "Invalid target in the description of service %s.%s, ignoring it: %s",
+                domain,
+                service,
+                err,
+            )
 
     if (
         response := hass.services.supports_response(domain, service)
@@ -1414,3 +1423,42 @@ def _async_get_single_loaded_config_entry(
             },
         )
     return config_entry
+
+
+@callback
+def async_get_device_and_config_entry(
+    hass: HomeAssistant, domain: str, device_id: str
+) -> tuple[device_registry.DeviceEntry, ConfigEntry]:
+    """Get and validate the device and the loaded config entry of the domain owning it.
+
+    Raises ServiceValidationError if the device is unknown, is not owned by a
+    config entry of the domain, or if that config entry is not loaded.
+    """
+    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=domain
+    )
+    if device is None:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
+    if config_entry is None:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_device_wrong_domain",
+            translation_placeholders={
+                "device_name": device.name_by_user or device.name or device_id,
+                "domain": domain,
+            },
+        )
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_loaded",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    return device, config_entry

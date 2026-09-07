@@ -19,7 +19,6 @@ from homeassistant.helpers import (
     integration_platform,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -62,7 +61,7 @@ class DiagnosticsPlatformData:
     )
     device_diagnostics: (
         Callable[
-            [HomeAssistant, ConfigEntry, DeviceEntry],
+            [HomeAssistant, ConfigEntry, dr.AnyDeviceEntry],
             Coroutine[Any, Any, Mapping[str, Any]],
         ]
         | None
@@ -100,9 +99,12 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: dr.AnyDeviceEntry
     ) -> Mapping[str, Any]:
-        """Return diagnostics for a device."""
+        """Return diagnostics for a device.
+
+        Only integrations that register child devices can receive a child device.
+        """
 
 
 @callback
@@ -306,7 +308,16 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if sub_id is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        if (device := dev_reg.async_get(sub_id)) is None:
+        # Reject unknown and composite device which spans multiple config entries and
+        # has no single owner; not supported.
+        if (
+            device := dev_reg.async_get(sub_id, include_composite_devices=False)
+        ) is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        # Reject a device not owned by this config entry; without this a foreign
+        # (possibly child) device would be handed to the integration's handler.
+        if device.config_entry_id != config_entry.entry_id:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename += f"-{device.name}-{device.id}"
@@ -314,10 +325,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if info.device_diagnostics is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        # A device's diagnostics may be requested for a child device, but the
-        # callback is currently typed for a main device. Ignoring the mismatch until
-        # DiagnosticsPlatformData.device_diagnostics is widened to accept AnyDeviceEntry.
-        data = await info.device_diagnostics(hass, config_entry, device)  # type: ignore[arg-type]
+        data = await info.device_diagnostics(hass, config_entry, device)
         return await _async_get_json_file_response(
             hass, data, data_issues, filename, config_entry.domain, d_id, sub_id
         )

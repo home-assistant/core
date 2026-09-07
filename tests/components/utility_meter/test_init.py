@@ -560,13 +560,13 @@ async def test_setup_and_remove_config_entry(
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
     [
-        ([], {"sensor.my_utility_meter"}),
+        ([], {"sensor.mock_title_my_utility_meter"}),
         (
             ["peak", "offpeak"],
             {
                 "select.my_utility_meter",
-                "sensor.my_utility_meter_offpeak",
-                "sensor.my_utility_meter_peak",
+                "sensor.mock_title_my_utility_meter_offpeak",
+                "sensor.mock_title_my_utility_meter_peak",
             },
         ),
     ],
@@ -632,13 +632,13 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
     [
-        ([], {"sensor.my_utility_meter"}),
+        ([], {"sensor.mock_title_my_utility_meter"}),
         (
             ["peak", "offpeak"],
             {
                 "select.my_utility_meter",
-                "sensor.my_utility_meter_offpeak",
-                "sensor.my_utility_meter_peak",
+                "sensor.mock_title_my_utility_meter_offpeak",
+                "sensor.mock_title_my_utility_meter_peak",
             },
         ),
     ],
@@ -706,13 +706,13 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
     [
-        ([], {"sensor.my_utility_meter"}),
+        ([], {"sensor.mock_title_my_utility_meter"}),
         (
             ["peak", "offpeak"],
             {
                 "select.my_utility_meter",
-                "sensor.my_utility_meter_offpeak",
-                "sensor.my_utility_meter_peak",
+                "sensor.mock_title_my_utility_meter_offpeak",
+                "sensor.mock_title_my_utility_meter_peak",
             },
         ),
     ],
@@ -779,13 +779,13 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
     [
-        ([], {"sensor.my_utility_meter"}),
+        ([], {"sensor.mock_title_my_utility_meter"}),
         (
             ["peak", "offpeak"],
             {
                 "select.my_utility_meter",
-                "sensor.my_utility_meter_offpeak",
-                "sensor.my_utility_meter_peak",
+                "sensor.mock_title_my_utility_meter_offpeak",
+                "sensor.mock_title_my_utility_meter_peak",
             },
         ),
     ],
@@ -862,13 +862,13 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
     [
-        ([], {"sensor.my_utility_meter"}),
+        ([], {"sensor.mock_title_my_utility_meter"}),
         (
             ["peak", "offpeak"],
             {
                 "select.my_utility_meter",
-                "sensor.my_utility_meter_offpeak",
-                "sensor.my_utility_meter_peak",
+                "sensor.mock_title_my_utility_meter_offpeak",
+                "sensor.mock_title_my_utility_meter_peak",
             },
         ),
     ],
@@ -930,13 +930,13 @@ async def test_async_handle_source_entity_new_entity_id(
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
     [
-        ([], {"sensor.my_utility_meter"}),
+        ([], {"sensor.mock_title_my_utility_meter"}),
         (
             ["peak", "offpeak"],
             {
                 "select.my_utility_meter",
-                "sensor.my_utility_meter_offpeak",
-                "sensor.my_utility_meter_peak",
+                "sensor.mock_title_my_utility_meter_offpeak",
+                "sensor.mock_title_my_utility_meter_peak",
             },
         ),
     ],

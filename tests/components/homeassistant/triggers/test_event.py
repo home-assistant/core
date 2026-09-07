@@ -1,13 +1,17 @@
 """The tests for the Event automation."""
 
+import logging
+
+import attr
 import pytest
 
 from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr, script, trigger
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component
+from tests.common import MockConfigEntry, mock_component
 
 
 @pytest.fixture
@@ -594,8 +598,8 @@ async def test_state_reported_event(
     assert len(service_calls) == 0
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Can't "
-        "listen to state_reported in event trigger for dictionary value @ "
-        "data['event_type']. Got None" in caplog.text
+        "listen to state_reported in event trigger at 'event_type'. Got None"
+        in caplog.text
     )
 
 
@@ -629,3 +633,109 @@ async def test_templated_state_reported_event(
         "Got error 'Can't listen to state_reported in event trigger' "
         "when setting up triggers for automation 0" in caplog.text
     )
+
+
+COMPOSITE_ID = "composite00000000000000000000ab"
+
+
+@pytest.fixture
+def split_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> tuple[dr.DeviceEntry, dr.DeviceEntry]:
+    """Create two devices which are splits of a pre-migration composite device."""
+    entry_1 = MockConfigEntry(domain="itg1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="itg2")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        identifiers={("itg1", "1")},
+        name="Split device 1",
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("itg2", "1")},
+        name="Split device 2",
+    )
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=COMPOSITE_ID
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=COMPOSITE_ID
+    )
+    return device_registry._devices[device_1.id], device_registry._devices[device_2.id]
+
+
+_EVENT_TRIGGER = {
+    "platform": "event",
+    "event_type": "my_event",
+    "event_data": {"device_id": COMPOSITE_ID},
+}
+
+
+def _expected_composite_warning(
+    device_1: dr.DeviceEntry, device_2: dr.DeviceEntry
+) -> str:
+    """Return the exact warning the event validator logs for a composite device id."""
+    return (
+        f"Event trigger filters on device '{COMPOSITE_ID}', which was split into one "
+        "device per integration and no longer exists, so the trigger can no longer fire. "
+        "Update the automation, script or template entity to filter on one of these "
+        "devices instead: "
+        f"Split device 1 ({device_1.id}) from the itg1 integration, "
+        f"Split device 2 ({device_2.id}) from the itg2 integration.\n"
+        "The affected trigger is configured as:\n"
+        "platform: event\n"
+        "event_type: my_event\n"
+        "event_data:\n"
+        f"  device_id: {COMPOSITE_ID}\n"
+    )
+
+
+async def test_composite_device_id_logs_warning(
+    hass: HomeAssistant,
+    split_devices: tuple[dr.DeviceEntry, dr.DeviceEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a composite event_data.device_id filter logs the full warning."""
+    with caplog.at_level(logging.WARNING):
+        await trigger.async_validate_trigger_config(hass, [_EVENT_TRIGGER])
+    assert caplog.messages == [_expected_composite_warning(*split_devices)]
+
+
+async def test_live_device_id_no_warning(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a live event_data.device_id filter does not warn."""
+    entry = MockConfigEntry(domain="itg")
+    entry.add_to_hass(hass)
+    live_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("itg", "1")}
+    )
+    with caplog.at_level(logging.WARNING):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": "event",
+                    "event_type": "my_event",
+                    "event_data": {"device_id": live_device.id},
+                }
+            ],
+        )
+    assert caplog.messages == []
+
+
+async def test_wait_for_trigger_composite_device_id_logs_warning(
+    hass: HomeAssistant,
+    split_devices: tuple[dr.DeviceEntry, dr.DeviceEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a composite device_id in a wait_for_trigger event trigger warns too."""
+    with caplog.at_level(logging.WARNING):
+        await script.async_validate_actions_config(
+            hass, [{"wait_for_trigger": [_EVENT_TRIGGER]}]
+        )
+    assert caplog.messages == [_expected_composite_warning(*split_devices)]

@@ -17,11 +17,14 @@
       "current_hour_price": {
         "name": "Current hour"
       },
+      "current_price": {
+        "name": "Current price"
+      },
       "highest_price_time": {
         "name": "Time of highest price - today"
       },
       "hours_priced_equal_or_lower": {
-        "name": "Hours priced equal or lower than current - today"
+        "name": "Periods priced equal or lower"
       },
       "lowest_price_time": {
         "name": "Time of lowest price - today"
@@ -35,6 +38,9 @@
       "next_hour_price": {
         "name": "Next hour"
       },
+      "next_price": {
+        "name": "Next price"
+      },
       "percentage_of_max": {
         "name": "Current percentage of highest price - today"
       }
@@ -43,6 +49,12 @@
   "exceptions": {
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
+    },
+    "invalid_range": {
+      "message": "Invalid date range provided. End {end} must be after start {start}."
+    },
+    "no_data": {
+      "message": "No price data available for {date}."
     }
   },
   "services": {

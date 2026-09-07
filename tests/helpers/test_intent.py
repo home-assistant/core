@@ -80,9 +80,7 @@ async def test_async_match_states(
         suggested_object_id="kitchen",
         original_name="kitchen light",
     )
-    entity_registry.async_update_entity(
-        state1.entity_id, area_id=area_kitchen.id, aliases=[er.COMPUTED_NAME]
-    )
+    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
 
     entity_registry.async_get_or_create(
         "switch",
@@ -228,7 +226,6 @@ async def test_async_match_targets(
     kitchen_outlet = entity_registry.async_update_entity(
         kitchen_outlet.entity_id,
         name="kitchen outlet",
-        aliases=[er.COMPUTED_NAME],
         device_class=switch.SwitchDeviceClass.OUTLET,
         area_id=area_kitchen.id,
     )
@@ -262,7 +259,6 @@ async def test_async_match_targets(
     bedroom_switch_2 = entity_registry.async_update_entity(
         bedroom_switch_2.entity_id,
         name="second floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_2.id,
     )
     state_bedroom_switch_2 = State(
@@ -298,7 +294,6 @@ async def test_async_match_targets(
     bedroom_switch_3 = entity_registry.async_update_entity(
         bedroom_switch_3.entity_id,
         name="third floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_3.id,
     )
     state_bedroom_switch_3 = State(

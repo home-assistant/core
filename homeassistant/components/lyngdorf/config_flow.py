@@ -4,10 +4,12 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
-from lyngdorf.device import (
-    async_find_receiver_model,
-    async_get_device_serial,
-    lookup_receiver_model,
+from lyngdorf import (
+    LyngdorfModel,
+    discover_model,
+    discover_ssdp_location,
+    fetch_device_serial,
+    lookup_model,
 )
 import voluptuous as vol
 
@@ -15,6 +17,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -54,31 +57,26 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-
             try:
-                model = await async_find_receiver_model(self._host)
-            except TimeoutError:
+                model, serial = await self._async_probe(self._host)
+            except TimeoutConnect:
                 errors["base"] = "timeout_connect"
-            except OSError:
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
-
-            if not errors and not model:
+            except UnsupportedModel:
                 errors["base"] = "unsupported_model"
-
-            if not errors and model:
+            except CannotDetermineId:
+                errors["base"] = "cannot_determine_id"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 self._device_model = model.model_name
                 self._name = model.model_name
-
-                serial = await async_get_device_serial(self._host)
-                if not serial:
-                    errors["base"] = "cannot_determine_id"
-                else:
-                    self._device_serial_number = serial.lower()
-                    await self.async_set_unique_id(self._device_serial_number)
-                    self._abort_if_unique_id_configured()
-                    return await self._create_entry()
+                self._device_serial_number = serial
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+                return await self._create_entry()
 
         return self.async_show_form(
             step_id="user",
@@ -86,6 +84,83 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): cv.string,
                 }
+            ),
+            errors=errors,
+        )
+
+    async def _async_probe(self, host: str) -> tuple[LyngdorfModel, str]:
+        """Return the model and serial of the device at a host."""
+        try:
+            model = await discover_model(host)
+        except TimeoutError as err:
+            raise TimeoutConnect from err
+        except OSError as err:
+            raise CannotConnect from err
+        if not model:
+            raise UnsupportedModel
+
+        try:
+            location = await discover_ssdp_location(host)
+            serial = (
+                await fetch_device_serial(
+                    location, session=async_get_clientsession(self.hass)
+                )
+                if location
+                else None
+            )
+        except TimeoutError as err:
+            raise TimeoutConnect from err
+        except OSError as err:
+            raise CannotConnect from err
+        if not serial:
+            raise CannotDetermineId
+
+        return model, serial.lower()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry.
+
+        SSDP rediscovery only recovers a changed address while the device is
+        still announcing somewhere Home Assistant can hear it, which a move to
+        a static address or another subnet can end.
+        """
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            try:
+                model, serial = await self._async_probe(host)
+            except TimeoutConnect:
+                errors["base"] = "timeout_connect"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except UnsupportedModel:
+                errors["base"] = "unsupported_model"
+            except CannotDetermineId:
+                errors["base"] = "cannot_determine_id"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: host,
+                        CONF_MODEL: model.model_name,
+                        CONF_SERIAL_NUMBER: serial,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                reconfigure_entry.data,
             ),
             errors=errors,
         )
@@ -99,7 +174,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         assert self._host
         try:
-            model = await async_find_receiver_model(self._host)
+            model = await discover_model(self._host)
         except TimeoutError, OSError:
             return self.async_abort(reason="cannot_connect")
         if not model:
@@ -160,7 +235,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("cannot_connect")
 
         device_model_name = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
-        if not (model := lookup_receiver_model(device_model_name)):
+        if not (model := lookup_model(device_model_name)):
             _LOGGER.warning(
                 "SSDP discovered device with unrecognized model name %r at %s",
                 device_model_name,
@@ -181,3 +256,19 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("cannot_determine_id")
         await self.async_set_unique_id(self._device_serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
+
+
+class TimeoutConnect(Exception):
+    """Error to indicate the device did not answer in time."""
+
+
+class UnsupportedModel(Exception):
+    """Error to indicate the device is not a model we support."""
+
+
+class CannotDetermineId(Exception):
+    """Error to indicate the device did not report a serial."""

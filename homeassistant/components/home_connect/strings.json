@@ -10,12 +10,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
@@ -1583,12 +1577,6 @@
     "auth_error": {
       "message": "Authentication error: {error}. Please, re-authenticate your account"
     },
-    "config_entry_not_found": {
-      "message": "Config entry for device ID {device_id} not found"
-    },
-    "device_entry_not_found": {
-      "message": "Device entry for device ID {device_id} not found"
-    },
     "execute_command": {
       "message": "Error executing command {command}: {error}"
     },
@@ -1600,9 +1588,6 @@
     },
     "no_program_to_start": {
       "message": "No program to start"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "pause_program": {
       "message": "Error pausing program: {error}"

@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You must authenticate with the same Abode account that was originally configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -29,6 +30,11 @@
         },
         "title": "Fill in your Abode login information"
       }
+    }
+  },
+  "exceptions": {
+    "change_setting_failed": {
+      "message": "Failed to change Abode setting: {error}"
     }
   },
   "services": {

@@ -28,18 +28,30 @@ async def test_form(hass: HomeAssistant) -> None:
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=None,
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=None,
         )
 
         assert result["step_id"] == "user"
 
         # test with required
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_PHONE_NUMBER: "0521234567"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -70,9 +82,15 @@ async def test_one_time_password(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_PHONE_NUMBER: "0521234567", CONF_OTP: "1234"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
         )
 
         # test with required
@@ -98,9 +116,15 @@ async def test_one_time_password_api_error(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_PHONE_NUMBER: "0521234567"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
         )
 
         result = await hass.config_entries.flow.async_configure(
@@ -119,9 +143,15 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_PHONE_NUMBER: "0521234567"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -141,9 +171,15 @@ async def test_invalid_phone_number(hass: HomeAssistant) -> None:
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_PHONE_NUMBER: "0521234567"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -173,9 +209,15 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_PHONE_NUMBER: "0521234567", CONF_OTP: "1234"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
         )
 
         result = await hass.config_entries.flow.async_configure(

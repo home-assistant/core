@@ -20,10 +20,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_SANDBOX
-from .const import DATA_CONFIG
+from .const import DATA_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +112,8 @@ class MailgunNotificationService(BaseNotificationService):
                 files=files,
             )
             _LOGGER.debug("Message sent: %s", resp)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except MailgunError:
-            _LOGGER.exception("Failed to send message")
+        except MailgunError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from err

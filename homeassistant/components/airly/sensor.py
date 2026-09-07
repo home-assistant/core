@@ -51,7 +51,7 @@ from .const import (
 )
 from .coordinator import AirlyConfigEntry, AirlyDataUpdateCoordinator
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)

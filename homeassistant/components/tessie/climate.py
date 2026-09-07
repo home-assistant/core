@@ -1,11 +1,14 @@
 """Climate platform for Tessie integration."""
 
+from itertools import chain
 from typing import Any, override
 
 from tessie_api import (
     set_climate_keeper_mode,
     set_temperature,
+    start_cabin_overheat_protection,
     start_climate_preconditioning,
+    stop_cabin_overheat_protection,
     stop_climate,
 )
 
@@ -26,6 +29,9 @@ from .models import TessieVehicleData
 
 PARALLEL_UPDATES = 0
 
+# FanOnly currently not supported by upstream library
+COP_MODES = {"Off": HVACMode.OFF, "On": HVACMode.COOL}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -35,7 +41,15 @@ async def async_setup_entry(
     """Set up the Tessie Climate platform from a config entry."""
     data = entry.runtime_data
 
-    async_add_entities(TessieClimateEntity(vehicle) for vehicle in data.vehicles)
+    async_add_entities(
+        chain(
+            (TessieClimateEntity(vehicle) for vehicle in data.vehicles),
+            (
+                TessieCabinOverheatProtectionClimateEntity(vehicle)
+                for vehicle in data.vehicles
+            ),
+        )
+    )
 
 
 class TessieClimateEntity(TessieEntity, ClimateEntity):
@@ -153,3 +167,50 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
                 preset_mode != self._attr_preset_modes[0],
             ),
         )
+
+
+class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
+    """Vehicle Cabin Overheat Protection."""
+
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
+    _attr_entity_registry_enabled_default = False
+    _attr_supported_features = (
+        ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+    )
+    _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(
+        self,
+        vehicle: TessieVehicleData,
+    ) -> None:
+        """Initialize the cabin overheat protection climate entity."""
+        super().__init__(vehicle, "climate_state_cabin_overheat_protection")
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode | None:
+        """Return current cabin overheat protection mode."""
+        if (state := self._value) is None:
+            return None
+        return COP_MODES.get(state)
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Set the cabin overheat protection state to on."""
+        await self.async_set_hvac_mode(HVACMode.COOL)
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Set the cabin overheat protection state to off."""
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the cabin overheat protection mode."""
+        if hvac_mode == HVACMode.OFF:
+            await self.run(stop_cabin_overheat_protection)
+            self.set((self.key, "Off"))
+        elif hvac_mode == HVACMode.COOL:
+            await self.run(start_cabin_overheat_protection)
+            self.set((self.key, "On"))
