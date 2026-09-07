@@ -519,7 +519,7 @@ def _async_get_full_entity_name(
     if name is None and overridden_name is not None:
         full_name = overridden_name
 
-    elif not use_legacy_naming or name is None:
+    elif not use_legacy_naming or not name:
         device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)

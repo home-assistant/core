@@ -3255,6 +3255,16 @@ async def test_restore_states(
         pytest.param(
             None, None, "Living Room Fan", "Living Room Fan", id="device_rename_applied"
         ),
+        pytest.param(
+            "Temperature", "", None, "Pedestal Fan", id="empty_name_uses_device_name"
+        ),
+        pytest.param(
+            "Temperature",
+            "",
+            "Living Room Fan",
+            "Living Room Fan",
+            id="empty_name_uses_renamed_device",
+        ),
     ],
 )
 async def test_restore_state_uses_device_name(
