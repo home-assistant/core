@@ -1,15 +1,13 @@
 """The Weheat integration."""
 
 import asyncio
-from http import HTTPStatus
 
-import aiohttp
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.exceptions import UnauthorizedException
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -34,17 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     session = OAuth2Session(hass, entry, implementation)
 
-    try:
-        await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as ex:
-        LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
-        if ex.status in (
-            HTTPStatus.BAD_REQUEST,
-            HTTPStatus.UNAUTHORIZED,
-            HTTPStatus.FORBIDDEN,
-        ):
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-        raise ConfigEntryNotReady from ex
+    # Renewing the token talks to the login provider rather than to the API, and
+    # says for itself whether that is worth retrying or needs logging in again.
+    await session.async_ensure_token_valid()
 
     token = session.token[CONF_ACCESS_TOKEN]
     entry.runtime_data = []
