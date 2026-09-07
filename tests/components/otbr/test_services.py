@@ -868,6 +868,84 @@ async def test_migration_refreshes_repair_issues(
     )
 
 
+async def test_migration_refreshes_repair_issues_on_the_whole_mesh(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Every router the migration reaches gets its repair issues refreshed.
+
+    The pending dataset reaches the whole mesh, so credentials the migration
+    adopts are as insecure on the other border routers as on the one the
+    action was handed to.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    insecure = dict(tlv_parser.parse_tlv(TARGET))
+    insecure[MeshcopTLVType.NETWORKKEY] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.NETWORKKEY, INSECURE_NETWORK_KEYS[0]
+    )
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+
+    await call_migrate(
+        hass,
+        dataset=tlv_parser.encode_tlv(insecure),
+        config_entry=otbr_config_entry_multipan,
+    )
+
+    for entry_id in (otbr_config_entry_multipan, thread_entry.entry_id):
+        assert issue_registry.async_get_issue(
+            domain="otbr", issue_id=f"insecure_thread_network_{entry_id}"
+        )
+
+
+async def test_a_router_on_another_mesh_keeps_its_repair_issues(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A border router the pending dataset never reaches is left alone."""
+    mock_pending_endpoint(aioclient_mock)
+    insecure = dict(tlv_parser.parse_tlv(TARGET))
+    insecure[MeshcopTLVType.NETWORKKEY] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.NETWORKKEY, INSECURE_NETWORK_KEYS[0]
+    )
+    elsewhere = dict(tlv_parser.parse_tlv(DATASET_CH16.hex()))
+    elsewhere[MeshcopTLVType.EXTPANID] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.EXTPANID, bytes.fromhex("5555666677778888")
+    )
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+
+    with patch.object(
+        thread_entry.runtime_data,
+        "get_active_dataset_tlvs",
+        return_value=bytes.fromhex(tlv_parser.encode_tlv(elsewhere)),
+    ):
+        await call_migrate(
+            hass,
+            dataset=tlv_parser.encode_tlv(insecure),
+            config_entry=otbr_config_entry_multipan,
+        )
+
+    assert issue_registry.async_get_issue(
+        domain="otbr", issue_id=f"insecure_thread_network_{otbr_config_entry_multipan}"
+    )
+    assert not issue_registry.async_get_issue(
+        domain="otbr", issue_id=f"insecure_thread_network_{thread_entry.entry_id}"
+    )
+
+
 async def test_migration_reports_a_discarded_store_write(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
