@@ -1,20 +1,10 @@
 {
-  "conditions": {
-    "_": {
-      "condition": "mdi:remote"
-    }
-  },
   "entity_component": {
     "_": {
       "default": "mdi:led-on"
     },
     "receiver": {
       "default": "mdi:led-off"
-    }
-  },
-  "triggers": {
-    "_": {
-      "trigger": "mdi:remote"
     }
   }
 }

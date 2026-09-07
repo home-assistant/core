@@ -7,13 +7,14 @@ from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.components.infrared.code import code_to_frame, frames_match
 from homeassistant.core import HomeAssistant
 
-from .common import MockInfraredReceiverEntity
+from .common import MockInfraredReceiverEntity, captured_code, received_signal
 
 from tests.typing import WebSocketGenerator
 
 RECEIVER_ENTITY_ID = "infrared.test_ir_receiver"
 
 TEST_COMMAND = NECCommand(address=0x04FB, command=0xF7)
+OTHER_COMMAND = NECCommand(address=0x04FB, command=0xF6)
 
 
 async def test_subscribe_receiver(
@@ -106,3 +107,34 @@ async def test_subscribe_receiver_requires_admin(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.usefixtures("mock_infrared_receiver_entity")
+async def test_subscribe_receiver_reports_a_known_command(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a signal that is a known command is reported as a duplicate."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "infrared/commands/create",
+            "name": "Power",
+            "code": captured_code(TEST_COMMAND),
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json_auto_id(
+        {"type": "infrared/receiver/subscribe", "entity_id": RECEIVER_ENTITY_ID}
+    )
+    assert (await client.receive_json())["success"]
+
+    mock_infrared_receiver_entity._handle_received_signal(received_signal(TEST_COMMAND))
+    assert (await client.receive_json())["event"]["duplicate_of"] == "power"
+
+    mock_infrared_receiver_entity._handle_received_signal(
+        received_signal(OTHER_COMMAND)
+    )
+    assert (await client.receive_json())["event"]["duplicate_of"] is None

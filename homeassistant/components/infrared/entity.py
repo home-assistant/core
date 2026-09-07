@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,22 @@ class InfraredReceivedSignal:
 # this instead of to the entity itself.
 SIGNAL_INFRARED_RECEIVED: SignalType[str, InfraredReceivedSignal] = SignalType(
     "infrared_received"
+)
+
+# The receivers that are added to hass, keyed by the platform that added them
+# and their unique id. An entity of another domain that belongs to a receiver -
+# its event entity - only knows the receiver by that key.
+DATA_RECEIVERS: HassKey[dict[tuple[str, str], InfraredReceiverEntity]] = HassKey(
+    "infrared_receivers"
+)
+
+# Announce the receivers by their key, because the entities that belong to one
+# can be added before or after it.
+SIGNAL_INFRARED_RECEIVER_ADDED: SignalType[tuple[str, str]] = SignalType(
+    "infrared_receiver_added"
+)
+SIGNAL_INFRARED_RECEIVER_REMOVED: SignalType[tuple[str, str]] = SignalType(
+    "infrared_receiver_removed"
 )
 
 
@@ -118,6 +135,7 @@ class InfraredReceiverEntity(RestoreEntity):
     _attr_state: None = None
 
     __last_signal_received: str | None = None
+    __registry_key: tuple[str, str] | None = None
 
     @override
     def _default_to_device_class_name(self) -> bool:
@@ -151,6 +169,21 @@ class InfraredReceiverEntity(RestoreEntity):
             None,
         ):
             self.__last_signal_received = state.state
+
+        if (unique_id := self.unique_id) is not None:
+            self.__registry_key = key = (self.platform.platform_name, unique_id)
+            self.hass.data.setdefault(DATA_RECEIVERS, {})[key] = self
+            async_dispatcher_send(self.hass, SIGNAL_INFRARED_RECEIVER_ADDED, key)
+
+    @final
+    @override
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Call when the infrared entity will be removed from hass."""
+        await super().async_internal_will_remove_from_hass()
+        if (key := self.__registry_key) is not None:
+            self.__registry_key = None
+            self.hass.data[DATA_RECEIVERS].pop(key, None)
+            async_dispatcher_send(self.hass, SIGNAL_INFRARED_RECEIVER_REMOVED, key)
 
     @final
     def _handle_received_signal(self, signal: InfraredReceivedSignal) -> None:

@@ -6,6 +6,7 @@ from infrared_protocols.commands.nec import NECCommand
 
 from homeassistant.components.event import EventEntity
 from homeassistant.components.infrared import (
+    InfraredCommandEventEntity,
     InfraredReceivedSignal,
     InfraredReceiverConsumerEntity,
 )
@@ -22,7 +23,10 @@ from .const import (
     INFRARED_CMD_SPEED_HIGH,
     INFRARED_CMD_SPEED_LOW,
     INFRARED_CMD_SPEED_MEDIUM,
+    INFRARED_DEVICE_ID,
+    INFRARED_DEVICE_NAME,
     INFRARED_FAN_ADDRESS,
+    INFRARED_RECEIVER_UNIQUE_ID,
 )
 
 PARALLEL_UPDATES = 0
@@ -42,6 +46,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo infrared event platform."""
+    async_add_entities(
+        [
+            InfraredCommandEventEntity(
+                INFRARED_RECEIVER_UNIQUE_ID,
+                DeviceInfo(
+                    identifiers={(DOMAIN, INFRARED_DEVICE_ID)},
+                    name=INFRARED_DEVICE_NAME,
+                ),
+            )
+        ]
+    )
+
     for subentry_id, subentry in config_entry.subentries.items():
         if subentry.subentry_type != "infrared_fan":
             continue

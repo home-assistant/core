@@ -1,8 +1,0 @@
-# Describes the format for infrared conditions
-
-_:
-  fields:
-    command:
-      required: true
-      selector:
-        infrared_command_name:

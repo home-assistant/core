@@ -11,6 +11,11 @@ DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )
 
+INFRARED_DEVICE_ID = "infrared"
+INFRARED_DEVICE_NAME = "IR Blaster"
+INFRARED_EMITTER_UNIQUE_ID = "ir_emitter"
+INFRARED_RECEIVER_UNIQUE_ID = "ir_receiver"
+
 INFRARED_FAN_ADDRESS = 0x1234
 INFRARED_CMD_POWER_ON = 0x01
 INFRARED_CMD_POWER_OFF = 0x02

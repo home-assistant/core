@@ -58,6 +58,13 @@
       "name": "Power strip with {number_of_sockets} sockets"
     }
   },
+  "entity": {
+    "event": {
+      "infrared_command": {
+        "name": "Infrared command"
+      }
+    }
+  },
   "issues": {
     "bad_psu": {
       "fix_flow": {

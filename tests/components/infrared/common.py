@@ -1,5 +1,7 @@
 """Common test tools for the Infrared integration."""
 
+from typing import Any
+
 from infrared_protocols.commands import Command as InfraredCommand
 from infrared_protocols.commands.nec import NECCommand
 
@@ -16,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 RECEIVER_ENTITY_ID = "infrared.test_ir_receiver"
+COMMANDS_STORAGE_KEY = "infrared.commands"
 
 
 def received_signal(
@@ -35,6 +38,33 @@ def received_signal(
 def captured_code(command: NECCommand) -> str:
     """Return the stored code for a command, as the frontend captures it."""
     return signal_to_code(received_signal(command))
+
+
+def captured_code_again(command: NECCommand) -> str:
+    """Return the code of a second press of the same button.
+
+    A receiver never reports the exact same durations twice, so the code of a
+    button differs from press to press.
+    """
+    signal = received_signal(command)
+    return signal_to_code(
+        InfraredReceivedSignal(
+            timings=[
+                timing + (100 if timing > 0 else -100) for timing in signal.timings
+            ],
+            modulation=signal.modulation,
+        )
+    )
+
+
+def seed_commands(hass_storage: dict[str, Any], commands: list[dict[str, str]]) -> None:
+    """Store known infrared commands, to be loaded on setup."""
+    hass_storage[COMMANDS_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": COMMANDS_STORAGE_KEY,
+        "data": {"items": commands},
+    }
 
 
 class MockInfraredEntity(InfraredEntity):

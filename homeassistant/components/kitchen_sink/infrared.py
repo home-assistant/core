@@ -21,6 +21,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
+from .const import (
+    INFRARED_DEVICE_ID,
+    INFRARED_DEVICE_NAME,
+    INFRARED_EMITTER_UNIQUE_ID,
+    INFRARED_RECEIVER_UNIQUE_ID,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -36,11 +42,11 @@ async def async_setup_entry(
     async_add_entities(
         [
             DemoInfraredEmitter(
-                unique_id="ir_emitter",
+                unique_id=INFRARED_EMITTER_UNIQUE_ID,
                 entity_name="Infrared Emitter",
             ),
             DemoInfraredReceiver(
-                unique_id="ir_receiver",
+                unique_id=INFRARED_RECEIVER_UNIQUE_ID,
                 entity_name="Infrared Receiver",
             ),
         ]
@@ -59,7 +65,7 @@ class DemoInfraredEntityBase(Entity):
         super().__init__()
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "infrared")}, name="IR Blaster"
+            identifiers={(DOMAIN, INFRARED_DEVICE_ID)}, name=INFRARED_DEVICE_NAME
         )
         self._attr_name = entity_name
 

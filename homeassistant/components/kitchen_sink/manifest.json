@@ -3,6 +3,7 @@
   "name": "Everything but the Kitchen Sink",
   "after_dependencies": ["recorder"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/kitchen_sink",
   "iot_class": "calculated",
   "preview_features": {

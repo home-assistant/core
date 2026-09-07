@@ -9,6 +9,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from .command_event import InfraredCommandEventEntity
+from .commands import (
+    DATA_COMMANDS,
+    InfraredCommandItem,
+    KnownCommands,
+    async_setup as async_setup_commands,
+)
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (  # noqa: F401
     InfraredCommand,
@@ -30,8 +37,11 @@ from .helpers import (
 from .websocket_api import async_setup as async_setup_websocket_api
 
 __all__ = [
+    "DATA_COMMANDS",
     "DOMAIN",
     "InfraredCommand",
+    "InfraredCommandEventEntity",
+    "InfraredCommandItem",
     "InfraredEmitterConsumerEntity",
     "InfraredEmitterEntity",
     "InfraredEmitterEntityDescription",
@@ -41,6 +51,7 @@ __all__ = [
     "InfraredReceiverConsumerEntity",
     "InfraredReceiverEntity",
     "InfraredReceiverEntityDescription",
+    "KnownCommands",
     "async_get_emitters",
     "async_get_receivers",
     "async_send_command",
@@ -62,6 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         InfraredEmitterEntity | InfraredReceiverEntity
     ](_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
+    await async_setup_commands(hass)
     async_setup_websocket_api(hass)
 
     return True
