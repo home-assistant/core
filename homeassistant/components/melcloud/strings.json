@@ -62,6 +62,21 @@
         "name": "Water pump {number}"
       }
     },
+    "number": {
+      "flow_temperature": {
+        "name": "Flow temperature"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "curve": "Curve",
+          "flow": "Flow",
+          "room": "Room"
+        }
+      }
+    },
     "sensor": {
       "condensing_temperature": {
         "name": "Condensing temperature"
@@ -120,6 +135,11 @@
       "tank_temperature": {
         "name": "Tank temperature"
       }
+    }
+  },
+  "exceptions": {
+    "set_number_failed": {
+      "message": "Failed to send the value to the device."
     }
   },
   "services": {

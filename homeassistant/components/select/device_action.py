@@ -25,7 +25,6 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import (
     ATTR_CYCLE,
-    ATTR_OPTIONS,
     CONF_CYCLE,
     CONF_OPTION,
     DOMAIN,
@@ -33,6 +32,7 @@ from .const import (
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
+    SelectEntityCapabilityAttribute,
 )
 
 _ACTION_SCHEMA = vol.Any(
@@ -142,7 +142,12 @@ async def async_get_action_capabilities(
             entry = async_get_entity_registry_entry_or_raise(
                 hass, config[CONF_ENTITY_ID]
             )
-            options = get_capability(hass, entry.entity_id, ATTR_OPTIONS) or []
+            options = (
+                get_capability(
+                    hass, entry.entity_id, SelectEntityCapabilityAttribute.OPTIONS
+                )
+                or []
+            )
         return {
             "extra_fields": vol.Schema({vol.Required(CONF_OPTION): vol.In(options)})
         }

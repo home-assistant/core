@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -58,21 +59,18 @@ class VerisureThermometer(
         super().__init__(coordinator)
         self._attr_unique_id = f"{serial_number}_temperature"
         self.serial_number = serial_number
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        device_type = self.coordinator.data["climate"][self.serial_number]["device"][
-            "gui"
-        ]["label"]
-        area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
-        return DeviceInfo(
-            name=area,
+        device = coordinator.data["climate"][serial_number]["device"]
+        device_type = device["gui"]["label"]
+        self._attr_device_info = DeviceInfo(
+            name=device["area"],
             manufacturer="Verisure",
             model=DEVICE_TYPE_NAME.get(device_type, device_type),
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 
@@ -111,21 +109,18 @@ class VerisureHygrometer(
         super().__init__(coordinator)
         self._attr_unique_id = f"{serial_number}_humidity"
         self.serial_number = serial_number
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        device_type = self.coordinator.data["climate"][self.serial_number]["device"][
-            "gui"
-        ]["label"]
-        area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
-        return DeviceInfo(
-            name=area,
+        device = coordinator.data["climate"][serial_number]["device"]
+        device_type = device["gui"]["label"]
+        self._attr_device_info = DeviceInfo(
+            name=device["area"],
             manufacturer="Verisure",
             model=DEVICE_TYPE_NAME.get(device_type, device_type),
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 

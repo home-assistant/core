@@ -114,6 +114,9 @@
     "pressure": {
       "default": "mdi:gauge"
     },
+    "radon": {
+      "default": "mdi:radioactive"
+    },
     "reactive_energy": {
       "default": "mdi:lightning-bolt"
     },

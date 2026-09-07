@@ -5,12 +5,11 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.mdi_icons import MdiIconsChecker
 from pylint_home_assistant.helpers.icons import clear_icons_cache
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="mdi_checker")
@@ -78,11 +77,9 @@ def test_python_no_warning(
 ) -> None:
     """Test that valid MDI icons in Python code pass."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, mdi_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -118,9 +115,7 @@ def test_python_invalid_icon_flagged(
 ) -> None:
     """Test that invalid MDI icons in Python code are flagged."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
-    walker.walk(root_node)
+    walk_checker(linter, mdi_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -137,11 +132,9 @@ def test_python_not_integration_ignored(
         'ICON = "mdi:nonexistent-icon"',
         "tests.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, mdi_checker, root_node)
 
 
 # --- icons.json tests ---
@@ -173,11 +166,8 @@ def test_icons_json_valid(
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, mdi_checker, root_node)
 
 
 def test_icons_json_invalid_flagged(
@@ -203,9 +193,7 @@ def test_icons_json_invalid_flagged(
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
-    walker.walk(root_node)
+    walk_checker(linter, mdi_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -227,11 +215,8 @@ def test_icons_json_no_file_no_warning(
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, mdi_checker, root_node)
 
 
 def test_icons_json_nested_invalid_flagged(
@@ -265,9 +250,7 @@ def test_icons_json_nested_invalid_flagged(
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(mdi_checker)
-    walker.walk(root_node)
+    walk_checker(linter, mdi_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1

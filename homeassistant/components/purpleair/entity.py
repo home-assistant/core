@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiopurpleair.models.sensors import SensorModel
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP, EntityStateAttribute
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,15 +43,15 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
 
         # Displaying the geography on the map relies upon putting the latitude/longitude
         # in the entity attributes with "latitude" and "longitude" as the keys.
         # Conversely, we can hide the location on the map by using other keys, like
         # "lati" and "long":
         if self._entry.options.get(CONF_SHOW_ON_MAP):
-            attrs[ATTR_LATITUDE] = self.sensor_data.latitude
-            attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
+            attrs[EntityStateAttribute.LATITUDE] = self.sensor_data.latitude
+            attrs[EntityStateAttribute.LONGITUDE] = self.sensor_data.longitude
         else:
             attrs["lati"] = self.sensor_data.latitude
             attrs["long"] = self.sensor_data.longitude

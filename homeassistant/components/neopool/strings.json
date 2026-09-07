@@ -1,0 +1,249 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "serial_mismatch": "The device at this address has a different serial number than the one originally configured."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check unit ID and framer settings."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "modbus_framer": "[%key:component::neopool::config::step::user::data::modbus_framer%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "[%key:component::neopool::config::step::user::data::unit_id%]"
+        },
+        "data_description": {
+          "host": "[%key:component::neopool::config::step::user::data_description::host%]",
+          "modbus_framer": "[%key:component::neopool::config::step::user::data_description::modbus_framer%]",
+          "port": "[%key:component::neopool::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::neopool::config::step::user::data_description::unit_id%]"
+        },
+        "description": "Update the connection settings for your NeoPool controller.",
+        "title": "Reconfigure NeoPool Connection"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "modbus_framer": "Modbus framer",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Unit ID"
+        },
+        "data_description": {
+          "host": "Enter the IP address of the Modbus TCP gateway connected to your pool controller.",
+          "modbus_framer": "Wire protocol used by the gateway. Select TCP for MBAP framing (default for Ethernet-native gateways). Select RTU for RTU framing tunnelled through a TCP socket, used by passthrough serial-to-TCP bridges like ESPHome's stream_server.",
+          "port": "Standard Modbus TCP port (default: 502). Change only if your gateway uses a non-standard port.",
+          "unit_id": "Modbus device address (1-247). Identifies the specific device on a shared bus. Most direct-connected devices use 1. Gateways may route requests to different addresses."
+        },
+        "description": "Configure the connection to your NeoPool controller.",
+        "title": "NeoPool Connection"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "escape": {
+        "name": "Clear error messages"
+      },
+      "reset_cell_partial": {
+        "name": "Reset partial runtime counters"
+      },
+      "sync_time": {
+        "name": "Synchronize device time"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Pool light"
+      }
+    },
+    "sensor": {
+      "cell_runtime_part": {
+        "name": "Cell runtime since reset"
+      },
+      "cell_runtime_pol_changes": {
+        "name": "Cell polarity changes"
+      },
+      "cell_runtime_pola": {
+        "name": "Cell runtime in polarity 1"
+      },
+      "cell_runtime_polb": {
+        "name": "Cell runtime in polarity 2"
+      },
+      "cell_runtime_total": {
+        "name": "Cell runtime total"
+      },
+      "filt_mode": {
+        "name": "Filtration mode",
+        "state": {
+          "auto": "Automatic",
+          "backwash": "Backwash",
+          "heating": "Heating",
+          "intelligent": "Intelligent",
+          "manual": "[%key:common::state::manual%]",
+          "smart": "Smart"
+        }
+      },
+      "filtration_speed": {
+        "name": "Current filtration speed",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "Medium",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "filtvalve_remaining": {
+        "name": "Backwash time remaining"
+      },
+      "hidro_current": {
+        "name": "Hydrolysis intensity"
+      },
+      "hidro_polarity": {
+        "name": "Hydrolysis polarity",
+        "state": {
+          "dead_time": "Dead time",
+          "no_flow": "No flow",
+          "off": "[%key:common::state::off%]",
+          "pol1": "Polarity 1",
+          "pol2": "Polarity 2"
+        }
+      },
+      "hidro_voltage": {
+        "name": "Hydrolysis voltage"
+      },
+      "intelligent_intervals": {
+        "name": "Intelligent mode intervals"
+      },
+      "intelligent_tt_next_interval": {
+        "name": "Intelligent mode next interval start"
+      },
+      "ion_current": {
+        "name": "Ionization level"
+      },
+      "ion_polarity": {
+        "name": "Ionizer polarity",
+        "state": {
+          "dead_time": "Dead time",
+          "off": "[%key:common::state::off%]",
+          "pol1": "Polarity 1",
+          "pol2": "Polarity 2"
+        }
+      },
+      "measure_cl": {
+        "name": "Salt level"
+      },
+      "measure_conductivity": {
+        "name": "Conductivity level"
+      },
+      "measure_rx": {
+        "name": "Redox potential"
+      },
+      "measure_temperature": {
+        "name": "Water temperature"
+      },
+      "ph_pump_status": {
+        "name": "pH pump status",
+        "state": {
+          "acid": "Acid pump",
+          "base": "Base pump",
+          "both": "Both pumps",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "ph_status_alarm": {
+        "name": "pH alarm",
+        "state": {
+          "ok": "OK",
+          "ph_high": "pH too high",
+          "ph_low": "pH too low",
+          "ph_over": "pH higher than the set point",
+          "ph_under": "pH lower than the set point",
+          "pump_stopped": "Pump stopped (exceeded working time)",
+          "tank_level": "Tank level alarm"
+        }
+      }
+    },
+    "switch": {
+      "aux": {
+        "name": "Auxiliary relay {number}"
+      },
+      "backwash": {
+        "name": "Backwash"
+      },
+      "clima_onoff": {
+        "name": "Climate mode for heating"
+      },
+      "filt_manual_state": {
+        "name": "Filtration"
+      },
+      "hidro_cover_enable": {
+        "name": "Enable cover reduction (when covered)"
+      },
+      "hidro_temp_shutdown": {
+        "name": "Enable hydrolysis shutdown on high temperature"
+      },
+      "smart_anti_freeze": {
+        "name": "Smart antifreeze"
+      },
+      "uv_mode": {
+        "name": "UV mode"
+      }
+    }
+  },
+  "exceptions": {
+    "filtration_boost_active": {
+      "message": "Filtration cannot be switched on or off while boost mode is active. Turn off boost mode first."
+    },
+    "filtration_not_manual_mode": {
+      "message": "Filtration can only be switched on or off when the controller is in manual filtration mode. Change the filtration mode to Manual first."
+    },
+    "filtvalve_in_auto_mode": {
+      "message": "The backwash valve is currently in automatic mode. Change the mode to manual first to start or stop a backwash directly."
+    },
+    "filtvalve_interval_not_set": {
+      "message": "No backwash duration is configured. Set the backwash duration first, then start the backwash."
+    },
+    "modbus_communication_error": {
+      "message": "An error occurred while communicating with the NeoPool controller: {error}"
+    },
+    "relay_in_auto_mode": {
+      "message": "This relay is currently in automatic mode. Change the mode to manual first to control it directly."
+    }
+  },
+  "issues": {
+    "corrupted_gpio": {
+      "description": "The following GPIO register(s) on your pool controller contain invalid values:\n\n{details}\n\nThis typically happens when the Modbus gateway framing mode does not match the integration's framer setting. The affected function(s) will not work correctly until the register(s) are restored to valid values.\n\nSee the integration documentation for repair instructions.",
+      "title": "Corrupted GPIO register(s) detected"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_aux1": "Enable Aux1 Relay",
+          "use_aux2": "Enable Aux2 Relay",
+          "use_aux3": "Enable Aux3 Relay",
+          "use_aux4": "Enable Aux4 Relay",
+          "use_cover_sensor": "Enable pool cover options",
+          "use_light": "Enable pool light relay"
+        },
+        "data_description": {
+          "use_aux1": "Creates a switch entity for this auxiliary relay output.",
+          "use_aux2": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
+          "use_aux3": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
+          "use_aux4": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
+          "use_cover_sensor": "Enables the hydrolysis cover reduction switch.",
+          "use_light": "Creates entities to control and monitor the pool light relay."
+        },
+        "description": "Changes take effect immediately and reload the integration.",
+        "title": "NeoPool settings"
+      }
+    }
+  }
+}

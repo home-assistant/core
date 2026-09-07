@@ -59,18 +59,19 @@ async def async_setup_entry(
     """Set up switch entities for outputs."""
 
     panel = config_entry.runtime_data
+    unique_id = config_entry.unique_id or config_entry.entry_id
     entities: list[SwitchEntity] = [
-        PanelOutputEntity(
-            panel, output_id, config_entry.unique_id or config_entry.entry_id
-        )
+        PanelOutputEntity(hass, panel, output_id, unique_id, config_entry.entry_id)
         for output_id in panel.outputs
     ]
 
     entities.extend(
         PanelDoorEntity(
+            hass,
             panel,
             door_id,
-            config_entry.unique_id or config_entry.entry_id,
+            unique_id,
+            config_entry.entry_id,
             entity_description,
         )
         for door_id in panel.doors
@@ -90,13 +91,15 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         panel: Panel,
         door_id: int,
         unique_id: str,
+        config_entry_id: str,
         entity_description: BoschAlarmSwitchEntityDescription,
     ) -> None:
         """Set up a switch entity for a door on a bosch alarm panel."""
-        super().__init__(panel, door_id, unique_id)
+        super().__init__(hass, panel, door_id, unique_id, config_entry_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._door_unique_id}_{entity_description.key}"
 
@@ -134,9 +137,16 @@ class PanelOutputEntity(BoschAlarmOutputEntity, SwitchEntity):
 
     _attr_name = None
 
-    def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        output_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up an output entity for a bosch alarm panel."""
-        super().__init__(panel, output_id, unique_id)
+        super().__init__(hass, panel, output_id, unique_id, config_entry_id)
         self._attr_unique_id = self._output_unique_id
 
     @property

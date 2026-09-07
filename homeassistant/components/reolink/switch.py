@@ -74,6 +74,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ir_lights",
         cmd_key="GetIrLights",
+        cmd_id=208,
         translation_key="ir_lights",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ir_lights"),
@@ -83,6 +84,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record_audio",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="record_audio",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "audio"),
@@ -92,11 +94,22 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="siren_on_event",
         cmd_key="GetAudioAlarm",
+        cmd_id=232,
         translation_key="siren_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "siren"),
         value=lambda api, ch: api.audio_alarm_enabled(ch),
         method=lambda api, ch, value: api.set_audio_alarm(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pre_siren_on_event",
+        cmd_key="GetAudioCfg",
+        cmd_id=264,
+        translation_key="pre_siren_on_event",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        value=lambda api, ch: api.pre_alarm_enabled(ch),
+        method=lambda api, ch, value: api.set_pre_alarm(ch, value),
     ),
     ReolinkSwitchEntityDescription(
         key="auto_tracking",
@@ -136,6 +149,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="email",
         cmd_key="GetEmail",
+        cmd_id=217,
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "email") and api.is_nvr,
@@ -145,6 +159,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ftp_upload",
         cmd_key="GetFtp",
+        cmd_id=70,
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ftp") and api.is_nvr,
@@ -163,6 +178,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record",
         cmd_key="GetRec",
+        cmd_id=81,
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "rec_enable") and api.is_nvr,
@@ -200,6 +216,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="doorbell_button_sound",
         cmd_key="GetAudioCfg",
+        cmd_id=264,
         translation_key="doorbell_button_sound",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
@@ -209,6 +226,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="pir_enabled",
         cmd_key="GetPirInfo",
+        cmd_id=212,
         translation_key="pir_enabled",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -219,12 +237,24 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="pir_reduce_alarm",
         cmd_key="GetPirInfo",
+        cmd_id=212,
         translation_key="pir_reduce_alarm",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "PIR"),
         value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
         method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="tamper_enabled",
+        cmd_key="763",
+        cmd_id=763,
+        translation_key="tamper_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "tamper"),
+        value=lambda api, ch: api.baichuan.tamper_enabled(ch) is True,
+        method=lambda api, ch, value: api.baichuan.set_tamper(ch, enable=value),
     ),
     ReolinkSwitchEntityDescription(
         key="privacy_mode",
@@ -239,6 +269,7 @@ SWITCH_ENTITIES = (
         key="privacy_mask",
         cmd_key="GetMask",
         translation_key="privacy_mask",
+        lens_entity=True,
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "privacy_mask"),
         value=lambda api, ch: api.privacy_mask_enabled(ch),
@@ -260,6 +291,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="email",
         cmd_key="GetEmail",
+        cmd_id=217,
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "email") and not api.is_hub,
@@ -269,6 +301,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="ftp_upload",
         cmd_key="GetFtp",
+        cmd_id=70,
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "ftp") and not api.is_hub,
@@ -287,6 +320,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="record",
         cmd_key="GetRec",
+        cmd_id=81,
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "rec_enable") and not api.is_hub,
@@ -336,7 +370,7 @@ async def async_setup_entry(
     entities: list[SwitchEntity] = [
         ReolinkSwitchEntity(reolink_data, channel, entity_description)
         for entity_description in SWITCH_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
@@ -379,6 +413,11 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Initialize Reolink switch entity."""
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
+        if self.entity_description.lens_entity and self._host.api.is_dual_lens:
+            self._attr_translation_key = f"{entity_description.translation_key}_lens"
+            self._attr_translation_placeholders = {
+                "channel": str(self._channel),
+            }
 
     @property
     @override

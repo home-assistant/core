@@ -306,7 +306,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:03:05:07:12:34-pm1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[e1][sensor.ruuvi_air_884f_pm1-state]
@@ -315,7 +315,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ruuvi Air 884F PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ruuvi_air_884f_pm1',
@@ -361,7 +361,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:03:05:07:12:34-pm10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[e1][sensor.ruuvi_air_884f_pm10-state]
@@ -370,7 +370,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ruuvi Air 884F PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ruuvi_air_884f_pm10',
@@ -416,7 +416,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:03:05:07:12:34-pm25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[e1][sensor.ruuvi_air_884f_pm2_5-state]
@@ -425,7 +425,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ruuvi Air 884F PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ruuvi_air_884f_pm2_5',
@@ -471,7 +471,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:03:05:07:12:34-pm4',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[e1][sensor.ruuvi_air_884f_pm4-state]
@@ -480,7 +480,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm4',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ruuvi Air 884F PM4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ruuvi_air_884f_pm4',
@@ -1574,7 +1574,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:03:05:07:12:34-pm25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[v6][sensor.ruuvitag_884f_pm2_5-state]
@@ -1583,7 +1583,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RuuviTag 884F PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ruuvitag_884f_pm2_5',

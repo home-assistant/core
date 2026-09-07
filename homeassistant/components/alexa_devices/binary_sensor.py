@@ -13,12 +13,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
 from .utils import async_update_unique_id
@@ -118,9 +118,9 @@ async def async_setup_entry(
         for serial_num in coordinator.data:
             unique_id = f"{serial_num}-{sensor_desc.key}"
             if entity_id := entity_registry.async_get_entity_id(
-                BINARY_SENSOR_DOMAIN, DOMAIN, unique_id
+                Platform.BINARY_SENSOR, DOMAIN, unique_id
             ):
-                _LOGGER.debug("Removing deprecated entity %s", entity_id)
+                LOGGER.debug("Removing deprecated entity %s", entity_id)
                 entity_registry.async_remove(entity_id)
 
     known_devices: set[str] = set()

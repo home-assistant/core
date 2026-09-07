@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_carbon_dioxide-state]
@@ -46,7 +46,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -92,7 +92,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_humidity-state]
@@ -103,7 +103,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -149,7 +149,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm10-state]
@@ -160,7 +160,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm10',
@@ -206,7 +206,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_DUST',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm2_5-state]
@@ -217,7 +217,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -263,7 +263,7 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_score-state]
@@ -272,7 +272,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -378,7 +378,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
@@ -389,7 +389,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -435,7 +435,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_carbon_dioxide-state]
@@ -446,7 +446,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -492,7 +492,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_humidity-state]
@@ -503,7 +503,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -549,7 +549,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_pm2_5-state]
@@ -560,7 +560,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -606,7 +606,7 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_score-state]
@@ -615,7 +615,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -721,7 +721,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
@@ -732,7 +732,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -778,7 +778,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_carbon_dioxide-state]
@@ -789,7 +789,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -835,7 +835,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_humidity-state]
@@ -846,7 +846,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -892,7 +892,7 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_score-state]
@@ -901,7 +901,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -1007,7 +1007,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
@@ -1018,7 +1018,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -1064,7 +1064,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_humidity-state]
@@ -1075,7 +1075,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -1177,7 +1177,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_pm2_5-state]
@@ -1188,7 +1188,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -1234,7 +1234,7 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_score-state]
@@ -1243,7 +1243,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -1349,7 +1349,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
@@ -1360,7 +1360,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -1406,7 +1406,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_carbon_dioxide-state]
@@ -1417,7 +1417,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -1463,7 +1463,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_humidity-state]
@@ -1474,7 +1474,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -1576,7 +1576,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_pm2_5-state]
@@ -1587,7 +1587,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -1633,7 +1633,7 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_score-state]
@@ -1642,7 +1642,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -1804,7 +1804,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
@@ -1815,7 +1815,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -1864,7 +1864,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_absolute_humidity',
-    'unit_of_measurement': 'g/m³',
+    'unit_of_measurement': <UnitOfDensity.GRAMS_PER_CUBIC_METER: 'g/m³'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_absolute_humidity-state]
@@ -1874,7 +1874,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'absolute_humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Absolute humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'g/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.GRAMS_PER_CUBIC_METER: 'g/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_absolute_humidity',
@@ -1920,7 +1920,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_carbon_dioxide-state]
@@ -1930,7 +1930,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_carbon_dioxide',
@@ -2035,7 +2035,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_humidity-state]
@@ -2045,7 +2045,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_humidity',
@@ -2091,7 +2091,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_pm2_5-state]
@@ -2101,7 +2101,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_pm2_5',
@@ -2147,7 +2147,7 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair-element_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_score-state]
@@ -2156,7 +2156,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_score',
@@ -2261,7 +2261,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_volatile_organic_compounds_parts-state]
@@ -2271,7 +2271,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_volatile_organic_compounds_parts',

@@ -381,6 +381,44 @@ def _mock_calendar(name: str, supported_components: list[str] | None = None) -> 
     return calendar
 
 
+async def _get_api_events_for_vevent(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    vevent: str,
+    uid: str,
+) -> list[dict[str, Any]]:
+    """Set up a calendar holding a single VEVENT and return its events from the API.
+
+    Used by tests that assert on how one specific VEVENT property is parsed,
+    which the shared EVENTS series cannot express: it is fixed at 18 entries
+    that other tests count on.
+    """
+    calendar = Mock()
+    calendar.name = "Example"
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar.search = MagicMock(
+        return_value=[Event(None, "0.ics", vevent, calendar, uid)]
+    )
+
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient"
+    ) as mock_client:
+        mock_client.return_value.principal.return_value.calendars.return_value = [
+            calendar
+        ]
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": CALDAV_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}?start=2017-11-27&end=2017-11-28"
+    )
+    assert response.status == HTTPStatus.OK
+    return await response.json()
+
+
 @pytest.fixture(name="config")
 def mock_config() -> dict[str, Any]:
     """Fixture to provide calendar configuration.yaml."""
@@ -436,7 +474,9 @@ async def test_setup_component_config(
     await setup_platform_cb()
 
     all_calendar_entities = hass.states.async_entity_ids("calendar")
-    assert all_calendar_entities == expected_entities
+    # Entities are added after a concurrent first refresh, so order is not
+    # guaranteed; assert on the set of created entities instead.
+    assert sorted(all_calendar_entities) == sorted(expected_entities)
 
 
 @pytest.mark.parametrize("tz", [UTC])
@@ -1076,6 +1116,7 @@ async def test_get_events_custom_calendars(
             "uid": "0",
             "recurrence_id": None,
             "rrule": None,
+            "status": None,
         }
     ]
 
@@ -1099,39 +1140,55 @@ LOCATION:Hamburg
 DESCRIPTION:This occurrence was moved
 END:VEVENT
 END:VCALENDAR"""
-    calendar = Mock()
-    calendar.name = "Example"
-    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
-    calendar.search = MagicMock(
-        return_value=[
-            Event(
-                None, "0.ics", vevent_with_recurrence_id, calendar, "original-event-uid"
-            )
-        ]
+    events = await _get_api_events_for_vevent(
+        hass, hass_client, vevent_with_recurrence_id, "original-event-uid"
     )
-
-    with patch(
-        "homeassistant.components.caldav.calendar.caldav.DAVClient"
-    ) as mock_client:
-        mock_client.return_value.principal.return_value.calendars.return_value = [
-            calendar
-        ]
-        assert await async_setup_component(
-            hass, "calendar", {"calendar": CALDAV_CONFIG}
-        )
-        await hass.async_block_till_done()
-
-    client = await hass_client()
-    response = await client.get(
-        f"/api/calendars/{TEST_ENTITY}?start=2017-11-27&end=2017-11-28"
-    )
-    assert response.status == HTTPStatus.OK
-    events = await response.json()
 
     assert len(events) == 1
     assert events[0]["uid"] == "original-event-uid"
     assert events[0]["recurrence_id"] == "2017-11-27 17:00:00+00:00"
     assert events[0]["summary"] == "Modified occurrence"
+
+
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:status-event-uid
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+SUMMARY:This is an event with a status
+LOCATION:Hamburg
+DESCRIPTION:Surprisingly rainy
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR"""
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_status"),
+    [
+        pytest.param("TENTATIVE", "tentative", id="tentative"),
+        pytest.param("CONFIRMED", "confirmed", id="confirmed"),
+        pytest.param("Tentative", "tentative", id="mixed_case"),
+        pytest.param("CANCELLED", None, id="cancelled_is_not_reported"),
+        pytest.param("X-VENDOR-SPECIFIC", None, id="unsupported_value"),
+    ],
+)
+async def test_get_events_with_status(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    status: str,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is populated from VEVENT data."""
+    events = await _get_api_events_for_vevent(
+        hass, hass_client, ICS_WITH_STATUS.format(status=status), "status-event-uid"
+    )
+
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status
 
 
 @pytest.mark.parametrize(

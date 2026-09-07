@@ -12,11 +12,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_NAME,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -24,6 +22,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -57,7 +56,7 @@ HM_STATE_HA_CAST = {
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "HUMIDITY": SensorEntityDescription(
         key="HUMIDITY",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -129,7 +128,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "CONCENTRATION": SensorEntityDescription(
         key="CONCENTRATION",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -204,15 +203,15 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "VALVE_STATE": SensorEntityDescription(
         key="VALVE_STATE",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     "CARRIER_SENSE_LEVEL": SensorEntityDescription(
         key="CARRIER_SENSE_LEVEL",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     "DUTY_CYCLE_LEVEL": SensorEntityDescription(
         key="DUTY_CYCLE_LEVEL",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     "BRIGHTNESS": SensorEntityDescription(
         key="BRIGHTNESS",
@@ -221,37 +220,37 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "MASS_CONCENTRATION_PM_1": SensorEntityDescription(
         key="MASS_CONCENTRATION_PM_1",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "MASS_CONCENTRATION_PM_2_5": SensorEntityDescription(
         key="MASS_CONCENTRATION_PM_2_5",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "MASS_CONCENTRATION_PM_10": SensorEntityDescription(
         key="MASS_CONCENTRATION_PM_10",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "MASS_CONCENTRATION_PM_1_24H_AVERAGE": SensorEntityDescription(
         key="MASS_CONCENTRATION_PM_1_24H_AVERAGE",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": SensorEntityDescription(
         key="MASS_CONCENTRATION_PM_2_5_24H_AVERAGE",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "MASS_CONCENTRATION_PM_10_24H_AVERAGE": SensorEntityDescription(
         key="MASS_CONCENTRATION_PM_10_24H_AVERAGE",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),

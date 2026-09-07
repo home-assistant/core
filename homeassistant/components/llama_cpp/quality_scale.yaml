@@ -1,0 +1,104 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No service actions are registered by this integration.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not poll and is push-based.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No service actions are registered by this integration.
+  docs-conditions:
+    status: exempt
+    comment: No custom conditions are supported by this integration.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: No custom triggers are supported by this integration.
+  entity-event-setup:
+    status: exempt
+    comment: No event entities or helper events are supported by this integration.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No service actions are registered by this integration.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Conversation entities do not have an unavailable state.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: Conversation entities do not have an unavailable state.
+  parallel-updates:
+    status: exempt
+    comment: No periodic updates are performed by this integration.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: The integration does not support discovery.
+  docs-data-update:
+    status: exempt
+    comment: No periodic data updates are performed by this integration.
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: The integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: No physical devices are supported.
+  entity-category:
+    status: exempt
+    comment: Conversation entity does not require an entity category.
+  entity-device-class:
+    status: exempt
+    comment: Conversation entity does not require a device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Conversation entity should be enabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: No icons are defined for this integration.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No repair issues are defined for this integration.
+  stale-devices:
+    status: exempt
+    comment: No physical devices are supported.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

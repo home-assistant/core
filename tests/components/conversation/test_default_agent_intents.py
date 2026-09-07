@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import (
+    climate,
     conversation,
     cover,
     light,
@@ -25,6 +26,8 @@ from homeassistant.components.vacuum import intent as vaccum_intent
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
+    STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -127,29 +130,39 @@ async def test_cover_set_position(
 async def test_cover_device_class(
     hass: HomeAssistant,
     init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the open position for covers by device class."""
     await cover_intent.async_setup_intents(hass)
 
-    entity_id = f"{cover.DOMAIN}.front"
-    hass.states.async_set(
-        entity_id, STATE_CLOSED, attributes={"device_class": "garage"}
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+
+    kitchen_window = entity_registry.async_get_or_create(
+        "cover", "demo", "kitchen_window"
     )
-    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+    kitchen_window = entity_registry.async_update_entity(
+        kitchen_window.entity_id, area_id=area_kitchen.id
+    )
+    hass.states.async_set(
+        kitchen_window.entity_id, STATE_CLOSED, attributes={"device_class": "window"}
+    )
+    async_expose_entity(hass, conversation.DOMAIN, kitchen_window.entity_id, True)
 
     # Open service
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
     result = await conversation.async_converse(
-        hass, "open the garage door", None, Context(), None
+        hass, "open the window in the kitchen", None, Context(), None, device_id=None
     )
     await hass.async_block_till_done()
 
     response = result.response
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Opening the garage"
+    assert response.speech["plain"]["speech"] == "Opening the window"
     assert len(calls) == 1
     call = calls[0]
-    assert call.data == {"entity_id": entity_id}
+    assert call.data == {"entity_id": kitchen_window.entity_id}
 
 
 async def test_valve_intents(
@@ -451,6 +464,49 @@ async def test_todo_add_item_fr(
         assert mock_handle.call_args.args
         intent_obj = mock_handle.call_args.args[0]
         assert intent_obj.slots.get("item", {}).get("value", "").strip() == "farine"
+
+
+async def test_climate_turn_on_off(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test turning a climate device on and off."""
+    entity_id = f"{climate.DOMAIN}.thermostat"
+    attributes = {
+        ATTR_SUPPORTED_FEATURES: climate.ClimateEntityFeature.TURN_ON
+        | climate.ClimateEntityFeature.TURN_OFF
+    }
+
+    hass.states.async_set(entity_id, STATE_OFF, attributes=attributes)
+    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+
+    # turn on
+    on_calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_TURN_ON)
+    result = await conversation.async_converse(
+        hass, "turn on the thermostat", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(on_calls) == 1
+    call = on_calls[0]
+    assert call.data == {"entity_id": [entity_id]}
+
+    hass.states.async_set(entity_id, STATE_ON, attributes=attributes)
+
+    # turn off
+    off_calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_TURN_OFF)
+    result = await conversation.async_converse(
+        hass, "turn off the thermostat", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(off_calls) == 1
+    call = off_calls[0]
+    assert call.data == {"entity_id": [entity_id]}
 
 
 @pytest.mark.freeze_time(

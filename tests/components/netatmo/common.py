@@ -15,14 +15,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
+
+HOME_ID = "91763b24c43d3e344f424e8b"
 
 COMMON_RESPONSE = {
     "user_id": "91763b24c43d3e344f424e8d",
-    "home_id": "91763b24c43d3e344f424e8b",
+    "home_id": HOME_ID,
     "home_name": "MYHOME",
-    "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
+    "user": {"id": HOME_ID, "email": "john@doe.com"},
 }
 
 FAKE_WEBHOOK_ACTIVATION = {
@@ -76,12 +78,12 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
 
     elif endpoint == "homestatus":
         home_id = kwargs.get("params", {}).get("home_id")
-        payload = json.loads(
-            await async_load_fixture(hass, f"{endpoint}_{home_id}.json", DOMAIN)
+        payload = await async_load_json_object_fixture(
+            hass, f"{endpoint}_{home_id}.json", DOMAIN
         )
 
     else:
-        payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
+        payload = await async_load_json_object_fixture(hass, f"{endpoint}.json", DOMAIN)
 
     # Apply test-specific modifications to the payload
     if "msg_callback" in kwargs:
@@ -121,12 +123,12 @@ async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> No
 def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
     """Restrict loaded platforms to list given."""
     with (
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", platforms),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", platforms),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         yield

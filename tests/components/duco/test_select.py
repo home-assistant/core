@@ -13,6 +13,7 @@ from duco_connectivity import (
     Node,
     NodeActionItemList,
     NodeListActionItemList,
+    NodeType,
     VentilationState,
 )
 import pytest
@@ -32,7 +33,10 @@ from . import setup_platform_integration
 from tests.common import MockConfigEntry
 
 _SELECT_ENTITY = "select.living_ventilation_state"
+_VALVE_SELECT_ENTITY = "select.bedroom_valve_ventilation_state"
 _UNSUPPORTED_SELECT_ENTITY = "select.office_co2_ventilation_state"
+# Node 50 "Kitchen RH" (a non-box satellite node) repurposed as a controllable node.
+_CONTROLLABLE_SELECT_ENTITY = "select.kitchen_rh_ventilation_state"
 
 
 def _build_node_actions(
@@ -120,20 +124,58 @@ async def test_select_entity_created_with_dynamic_options(
     assert hass.states.get(_UNSUPPORTED_SELECT_ENTITY) is None
 
 
-async def test_select_ignores_non_box_nodes_even_when_actions_exist(
+@pytest.mark.parametrize(
+    "valve_node_type",
+    [
+        pytest.param(NodeType.VLV, id="vlv"),
+        pytest.param(NodeType.VLVRH, id="vlvrh"),
+        pytest.param(NodeType.VLVVOC, id="vlvvoc"),
+        pytest.param(NodeType.VLVCO2, id="vlvco2"),
+        pytest.param(NodeType.VLVCO2RH, id="vlvco2rh"),
+        pytest.param(NodeType.EAV, id="eav"),
+        pytest.param(NodeType.EAVRH, id="eavrh"),
+        pytest.param(NodeType.EAVVOC, id="eavvoc"),
+        pytest.param(NodeType.EAVCO2, id="eavco2"),
+    ],
+)
+async def test_select_creates_entities_for_controllable_valve_nodes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    valve_node_type: NodeType,
 ) -> None:
-    """Test select discovery ignores non-box nodes that expose the same action."""
+    """Test select discovery includes valve nodes when they advertise control."""
+    # Mutate a non-box node (node 50 "Kitchen RH", index 3); mutating the box
+    # node would make its via_device link resolve to itself.
+    mock_nodes = [
+        *mock_sensor_nodes[:3],
+        replace(
+            mock_sensor_nodes[3],
+            general=replace(mock_sensor_nodes[3].general, node_type=valve_node_type),
+        ),
+        *mock_sensor_nodes[4:],
+    ]
+    mock_duco_client.async_get_nodes.return_value = mock_nodes
     mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
-        [1, 2, 50, 113],
+        [node.node_id for node in mock_nodes],
         options=["AUTO", "CNT1", "CNT2", "CNT3", "MAN1", "MAN2", "MAN3"],
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
-    assert hass.states.get(_SELECT_ENTITY) is not None
+    assert hass.states.get(_CONTROLLABLE_SELECT_ENTITY) is not None
+    valve_state = hass.states.get(_VALVE_SELECT_ENTITY)
+    assert valve_state is not None
+    assert valve_state.attributes[ATTR_OPTIONS] == [
+        "AUTO",
+        "CNT1",
+        "CNT2",
+        "CNT3",
+        "MAN1",
+        "MAN2",
+        "MAN3",
+    ]
     assert hass.states.get(_UNSUPPORTED_SELECT_ENTITY) is None
 
 

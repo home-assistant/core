@@ -1,18 +1,14 @@
 """The Husqvarna Automower integration."""
 
 from aioautomower.session import AutomowerSession
-from aiohttp import ClientResponseError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
-)
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -45,17 +41,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
     """Set up this integration using UI."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     api_api = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
@@ -66,12 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         api_api,
         await dt_util.async_get_time_zone(time_zone_str),
     )
-    try:
-        await api_api.async_get_access_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
+    await api_api.async_get_access_token()
 
     if "amc:api" not in entry.data["token"]["scope"]:
         # We raise ConfigEntryAuthFailed here because the websocket can't be used

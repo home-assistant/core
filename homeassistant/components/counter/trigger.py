@@ -2,16 +2,17 @@
 
 from typing import override
 
-from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
 )
 
-from . import CONF_INITIAL, DOMAIN
+from . import DOMAIN
+from .const import CounterEntityStateAttribute
 
 
 def _is_integer_state(state: State) -> bool:
@@ -30,7 +31,11 @@ class CounterBaseIntegerTrigger(EntityTriggerBase):
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state is valid."""
         return _is_integer_state(state)
 
@@ -63,9 +68,15 @@ class CounterMaxReachedTrigger(CounterValueBaseTrigger):
     """Trigger for when a counter reaches its maximum value."""
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (max_value := state.attributes.get(CONF_MAXIMUM)) is None:
+        if (
+            max_value := state.attributes.get(CounterEntityStateAttribute.MAXIMUM)
+        ) is None:
             return False
         return state.state == str(max_value)
 
@@ -74,9 +85,15 @@ class CounterMinReachedTrigger(CounterValueBaseTrigger):
     """Trigger for when a counter reaches its minimum value."""
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (min_value := state.attributes.get(CONF_MINIMUM)) is None:
+        if (
+            min_value := state.attributes.get(CounterEntityStateAttribute.MINIMUM)
+        ) is None:
             return False
         return state.state == str(min_value)
 
@@ -85,9 +102,15 @@ class CounterResetTrigger(CounterValueBaseTrigger):
     """Trigger for reset of counter entities."""
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (init_state := state.attributes.get(CONF_INITIAL)) is None:
+        if (
+            init_state := state.attributes.get(CounterEntityStateAttribute.INITIAL)
+        ) is None:
             return False
         return state.state == str(init_state)
 

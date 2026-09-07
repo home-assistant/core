@@ -151,8 +151,7 @@ async def async_attach_trigger(
             if isinstance(
                 automation_result, ScriptRunResult
             ) and automation_result.conversation_response not in (None, UNDEFINED):
-                # mypy does not understand the type narrowing, unclear why
-                return automation_result.conversation_response  # type: ignore[return-value]
+                return automation_result.conversation_response
 
         # It's important to return None here instead of a string.
         #

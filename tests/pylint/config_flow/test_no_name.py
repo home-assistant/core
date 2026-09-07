@@ -8,10 +8,9 @@ from pathlib import Path
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -62,11 +61,9 @@ def test_enforce_config_flow_no_name(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_name_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_config_flow_no_name_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -110,10 +107,8 @@ def test_enforce_config_flow_no_name_bad(
 ) -> None:
     """Bad test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_name_checker)
 
-    walker.walk(root_node)
+    walk_checker(linter, enforce_config_flow_no_name_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-config-flow-name-field"
@@ -134,11 +129,9 @@ def test_enforce_config_flow_no_name_subentry_flow(
             )
     """
     root_node = astroid.parse(code, "homeassistant.components.test.config_flow")
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_name_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_config_flow_no_name_checker, root_node)
 
 
 def test_enforce_config_flow_no_name_helper_integration(
@@ -160,11 +153,8 @@ def test_enforce_config_flow_no_name_helper_integration(
     root_node = astroid.parse(code, "homeassistant.components.my_helper.config_flow")
     root_node.file = str(integration_dir / "config_flow.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_name_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_config_flow_no_name_checker, root_node)
 
 
 def test_enforce_config_flow_no_name_non_helper_integration(
@@ -184,10 +174,7 @@ def test_enforce_config_flow_no_name_non_helper_integration(
     root_node = astroid.parse(code, "homeassistant.components.my_device.config_flow")
     root_node.file = str(integration_dir / "config_flow.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_name_checker)
-
-    walker.walk(root_node)
+    walk_checker(linter, enforce_config_flow_no_name_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-config-flow-name-field"

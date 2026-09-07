@@ -12,18 +12,24 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
+from probatio import from_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert_to_voluptuous
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.json import JsonObjectType
+from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
+from .auth import AuthenticateHeader
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +38,26 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]
+
+
+def _create_sse_httpx_client(
+    headers: dict[str, str] | None = None,
+    timeout: httpx.Timeout | None = None,
+    auth: httpx.Auth | None = None,
+) -> httpx.AsyncClient:
+    """Create the httpx client used by the SSE transport.
+
+    The SSE transport closes the client itself, so it cannot be handed one of
+    the Home Assistant managed clients. Building it here keeps it off the SDK
+    default, which reads the CA bundle from disk inside the event loop.
+    """
+    return httpx.AsyncClient(
+        verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
+        follow_redirects=True,
+        headers=headers,
+        timeout=timeout,
+        auth=auth,
+    )
 
 
 @asynccontextmanager
@@ -76,7 +102,11 @@ async def mcp_client(
             )
             try:
                 async with (
-                    sse_client(url=url, headers=headers) as streams,
+                    sse_client(
+                        url=url,
+                        headers=headers,
+                        httpx_client_factory=_create_sse_httpx_client,
+                    ) as streams,
                     ClientSession(*streams) as session,
                 ):
                     await session.initialize()
@@ -98,6 +128,7 @@ class ModelContextProtocolTool(llm.Tool):
         description: str | None,
         parameters: vol.Schema,
         server_url: str,
+        config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
     ) -> None:
         """Initialize the tool."""
@@ -105,6 +136,7 @@ class ModelContextProtocolTool(llm.Tool):
         self.description = description
         self.parameters = parameters
         self.server_url = server_url
+        self.config_entry = config_entry
         self.token_manager = token_manager
 
     @override
@@ -126,9 +158,32 @@ class ModelContextProtocolTool(llm.Tool):
         except TimeoutError as error:
             _LOGGER.debug("Timeout when calling tool: %s", error)
             raise HomeAssistantError(f"Timeout when calling tool: {error}") from error
+        except OAuth2TokenRequestReauthError as error:
+            _LOGGER.debug("OAuth token request failed when calling tool: %s", error)
+            self.config_entry.async_start_reauth(hass)
+            raise ConfigEntryAuthFailed(
+                "OAuth token request failed when calling tool"
+            ) from error
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
+            if error.response.status_code == 401:
+                auth_header = AuthenticateHeader.from_header(
+                    self.server_url, error.response
+                )
+                self.config_entry.async_start_reauth(
+                    hass, data={"auth_header": auth_header}
+                )
+                raise ConfigEntryAuthFailed(
+                    "The MCP server requires authentication"
+                ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
+        except httpx.HTTPError as error:
+            _LOGGER.debug(
+                "Error communicating with MCP server when calling tool: %s", error
+            )
+            raise HomeAssistantError(
+                f"Error communicating with MCP server when calling tool: {error}"
+            ) from error
         return result.model_dump(exclude_unset=True, exclude_none=True)
 
 
@@ -169,9 +224,18 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         except TimeoutError as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
             raise UpdateFailed(f"Timeout when listing tools: {error}") from error
+        except OAuth2TokenRequestReauthError as error:
+            _LOGGER.debug("OAuth token request failed: %s", error)
+            raise ConfigEntryAuthFailed("OAuth token request failed") from error
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error communicating with API: %s", error)
-            if error.response.status_code == 401 and self.token_manager is not None:
+            if error.response.status_code == 401:
+                auth_header = AuthenticateHeader.from_header(
+                    self.config_entry.data[CONF_URL], error.response
+                )
+                self.config_entry.async_start_reauth(
+                    self.hass, data={"auth_header": auth_header}
+                )
                 raise ConfigEntryAuthFailed(
                     "The MCP server requires authentication"
                 ) from error
@@ -184,7 +248,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = convert_to_voluptuous(tool.inputSchema)
+                parameters = from_openapi(tool.inputSchema)
             except Exception as err:
                 raise UpdateFailed(
                     f"Error converting schema {err}: {tool.inputSchema}"
@@ -195,6 +259,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     tool.description,
                     parameters,
                     self.config_entry.data[CONF_URL],
+                    self.config_entry,
                     self.token_manager,
                 )
             )

@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
@@ -10,12 +9,11 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
+    LOGGER,
     OTA_BEGIN,
     OTA_ERROR,
     OTA_PROGRESS,
@@ -42,8 +41,6 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import get_device_entry_gen, get_release_url
-
-LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -84,6 +81,90 @@ REST_UPDATES: Final = {
     ),
 }
 
+
+class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
+    """Represent a RPC LoRa add-on update entity."""
+
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
+    entity_description: RpcUpdateDescription
+
+    @property
+    def _update_status(self) -> dict[str, Any]:
+        """Status of the LoRa add-on update, reported by the lora component."""
+        return self.status.get("update") or {}
+
+    @property
+    @override
+    def installed_version(self) -> str | None:
+        """Version currently in use."""
+        return cast(str | None, self.status.get("fw_version"))
+
+    @property
+    @override
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        status = self.entity_description.latest_version(self.status)
+        # After firmware update, available_updates can be None, for a brief moment.
+        new_version = (status.get("available_updates") or {}).get(
+            "stable", {"version": ""}
+        )["version"]
+        if new_version:
+            return cast(str, new_version)
+
+        return self.installed_version
+
+    @property
+    @override
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return bool(self._update_status.get("state") in ("started", "updating"))
+
+    @property
+    @override
+    def update_percentage(self) -> int | None:
+        """Update installation progress."""
+        return cast(int | None, self._update_status.get("progress"))
+
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install the latest firmware version."""
+        update_data = self.status["available_updates"]
+        LOGGER.debug("LoRa add-on OTA update service - update_data: %s", update_data)
+
+        new_version = update_data.get("stable", {"version": ""})["version"]
+
+        LOGGER.info(
+            "Starting OTA update of LoRa add-on on device %s from '%s' to '%s'",
+            self.coordinator.name,
+            self.installed_version,
+            new_version,
+        )
+        try:
+            await self.coordinator.device.trigger_add_on_ota_update()
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_connection_error",
+                translation_placeholders={"device": self.coordinator.name},
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_rpc_error",
+                translation_placeholders={"device": self.coordinator.name},
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+        else:
+            LOGGER.debug(
+                "LoRa add-on OTA update call for %s successful", self.coordinator.name
+            )
+
+
 RPC_UPDATES: Final = {
     "fwupdate": RpcUpdateDescription(
         key="sys",
@@ -102,6 +183,16 @@ RPC_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+    ),
+    "loraupdate": RpcUpdateDescription(
+        key="lora",
+        translation_key="lora_firmware",
+        # Right after firmware update, lora status can be None
+        latest_version=lambda status: status or {},
+        beta=False,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        entity_class=RpcLoraAddOnUpdateEntity,
     ),
 }
 
@@ -391,7 +482,9 @@ class RpcSleepingUpdateEntity(
         if self.last_state is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_INSTALLED_VERSION)
+        return self.last_state.attributes.get(
+            UpdateEntityStateAttribute.INSTALLED_VERSION
+        )
 
     @property
     @override
@@ -407,7 +500,7 @@ class RpcSleepingUpdateEntity(
         if self.last_state is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_LATEST_VERSION)
+        return self.last_state.attributes.get(UpdateEntityStateAttribute.LATEST_VERSION)
 
     @property
     @override

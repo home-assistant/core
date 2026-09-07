@@ -14,11 +14,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN, FroniusConfigEntryData
+from .const import CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT, DOMAIN, FroniusConfigEntryData
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 DHCP_REQUEST_DELAY: Final = 60
+
+MODBUS_PORT_SELECTOR: Final = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 
 def create_title(info: FroniusConfigEntryData) -> str:
@@ -30,7 +32,7 @@ def create_title(info: FroniusConfigEntryData) -> str:
 
 
 async def validate_host(
-    hass: HomeAssistant, host: str
+    hass: HomeAssistant, host: str, modbus_port: int = DEFAULT_MODBUS_PORT
 ) -> tuple[str, FroniusConfigEntryData]:
     """Validate the user input allows us to connect."""
     fronius = Fronius(async_get_clientsession(hass, verify_ssl=False), host)
@@ -45,6 +47,7 @@ async def validate_host(
         return logger_uid, FroniusConfigEntryData(
             host=host,
             is_logger=True,
+            modbus_port=modbus_port,
         )
     # Gen24 devices don't provide GetLoggerInfo
     try:
@@ -57,6 +60,7 @@ async def validate_host(
     return first_inverter_uid, FroniusConfigEntryData(
         host=host,
         is_logger=False,
+        modbus_port=modbus_port,
     )
 
 
@@ -64,6 +68,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fronius."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -78,7 +83,11 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
+                unique_id, info = await validate_host(
+                    self.hass,
+                    user_input[CONF_HOST],
+                    modbus_port=user_input[CONF_MODBUS_PORT],
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -92,7 +101,14 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(
+                        CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT
+                    ): MODBUS_PORT_SELECTOR,
+                }
+            ),
             errors=errors,
         )
 
@@ -146,7 +162,11 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
+                unique_id, info = await validate_host(
+                    self.hass,
+                    user_input[CONF_HOST],
+                    modbus_port=user_input[CONF_MODBUS_PORT],
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -159,9 +179,17 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(reconfigure_entry, data=info)
 
         host = reconfigure_entry.data[CONF_HOST]
+        modbus_port = reconfigure_entry.data.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT)
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=host): str,
+                    vol.Required(
+                        CONF_MODBUS_PORT, default=modbus_port
+                    ): MODBUS_PORT_SELECTOR,
+                }
+            ),
             description_placeholders={"device": reconfigure_entry.title},
             errors=errors,
         )

@@ -12,7 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -75,6 +80,7 @@ __all__ = [
     "UpdateEntity",
     "UpdateEntityDescription",
     "UpdateEntityFeature",
+    "UpdateEntityStateAttribute",
 ]
 
 # mypy: disallow-any-generics
@@ -95,17 +101,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
+        admin_only=True,
     )
 
     component.async_register_entity_service(
         SERVICE_SKIP,
         None,
         async_skip,
+        admin_only=True,
     )
     component.async_register_entity_service(
         "clear_skipped",
         None,
         async_clear_skipped,
+        admin_only=True,
     )
 
     websocket_api.async_register_command(hass, websocket_release_notes)
@@ -130,7 +139,11 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         entity.installed_version == entity.latest_version
         or entity.latest_version is None
     ):
-        raise HomeAssistantError(f"No update available for {entity.entity_id}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_update_available",
+            translation_placeholders={"entity_id": entity.entity_id},
+        )
 
     # If version is specified, but not supported by the entity.
     if (
@@ -138,19 +151,27 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features
     ):
         raise HomeAssistantError(
-            f"Installing a specific version is not supported for {entity.entity_id}"
+            translation_domain=DOMAIN,
+            translation_key="specific_version_not_supported",
+            translation_placeholders={"entity_id": entity.entity_id},
         )
 
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
     ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
-        raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="backup_not_supported",
+            translation_placeholders={"entity_id": entity.entity_id},
+        )
 
     # Update is already in progress.
     if entity.in_progress is not False:
         raise HomeAssistantError(
-            f"Update installation already in progress for {entity.entity_id}"
+            translation_domain=DOMAIN,
+            translation_key="update_in_progress",
+            translation_placeholders={"entity_id": entity.entity_id},
         )
 
     await entity.async_install_with_progress(version, backup)
@@ -160,7 +181,9 @@ async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to validate the call."""
     if entity.auto_update:
         raise HomeAssistantError(
-            f"Skipping update is not supported for {entity.entity_id}"
+            translation_domain=DOMAIN,
+            translation_key="skip_not_supported",
+            translation_placeholders={"entity_id": entity.entity_id},
         )
     await entity.async_skip()
 
@@ -169,7 +192,9 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     """Service call wrapper to validate the call."""
     if entity.auto_update:
         raise HomeAssistantError(
-            f"Clearing skipped update is not supported for {entity.entity_id}"
+            translation_domain=DOMAIN,
+            translation_key="clear_skipped_not_supported",
+            translation_placeholders={"entity_id": entity.entity_id},
         )
     await entity.async_clear_skipped()
 
@@ -213,7 +238,7 @@ class UpdateEntity(
     _entity_component_unrecorded_attributes = frozenset(
         {
             UpdateEntityStateAttribute.DISPLAY_PRECISION,
-            ATTR_ENTITY_PICTURE,
+            EntityStateAttribute.ENTITY_PICTURE,
             UpdateEntityStateAttribute.IN_PROGRESS,
             UpdateEntityStateAttribute.RELEASE_SUMMARY,
             UpdateEntityStateAttribute.UPDATE_PERCENTAGE,
@@ -353,9 +378,17 @@ class UpdateEntity(
     async def async_skip(self) -> None:
         """Skip the current offered version to update."""
         if (latest_version := self.latest_version) is None:
-            raise HomeAssistantError(f"Cannot skip an unknown version for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_version_to_skip",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
         if self.installed_version == latest_version:
-            raise HomeAssistantError(f"No update available to skip for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_update_available_to_skip",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
         self.__skipped_version = latest_version
         self.async_write_ha_state()
 
@@ -505,8 +538,14 @@ class UpdateEntity(
         """
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
-            self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]
+        if (
+            state is not None
+            and state.attributes.get(UpdateEntityStateAttribute.SKIPPED_VERSION)
+            is not None
+        ):
+            self.__skipped_version = state.attributes[
+                UpdateEntityStateAttribute.SKIPPED_VERSION
+            ]
 
 
 @websocket_api.require_admin

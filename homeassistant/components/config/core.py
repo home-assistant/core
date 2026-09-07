@@ -52,7 +52,7 @@ class CheckConfigView(HomeAssistantView):
         "type": "config/core/update",
         vol.Optional("country"): cv.country,
         vol.Optional("currency"): cv.currency,
-        vol.Optional("elevation"): int,
+        vol.Optional("elevation"): vol.Coerce(int),
         vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("language"): cv.language,

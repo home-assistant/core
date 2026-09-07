@@ -123,6 +123,23 @@ _UV_ENV_PYTHON_VARS = (
 )
 
 
+def _install(args: list[str], env: dict[str, str]) -> str | None:
+    """Run the install command and return stderr output if it failed."""
+    _LOGGER.debug("Running uv pip command: args=%s", args)
+    with Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,  # required for posix_spawn
+    ) as process:
+        _, stderr = process.communicate()
+        if process.returncode != 0:
+            return stderr.decode("utf-8").lstrip().strip()
+    return None
+
+
 def install_package(
     package: str,
     upgrade: bool = True,
@@ -171,25 +188,39 @@ def install_package(
         # https://github.com/astral-sh/uv/issues/2077#issuecomment-2150406001
         args += ["--python", sys.executable, "--target", abs_target]
 
-    _LOGGER.debug("Running uv pip command: args=%s", args)
-    with Popen(
-        args,
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=PIPE,
-        env=env,
-        close_fds=False,  # required for posix_spawn
-    ) as process:
-        _, stderr = process.communicate()
-        if process.returncode != 0:
-            _LOGGER.error(
-                "Unable to install package %s: %s",
-                package,
-                stderr.decode("utf-8").lstrip().strip(),
-            )
-            return False
+    if (stderr := _install(args, env)) is None:
+        return True
 
-    return True
+    # uv treats a failing extra index as fatal, unlike pip which skips it.
+    # If the error came from an extra index host (e.g. the wheels index
+    # being down), retry with only the healthy indexes so PyPI can serve
+    # the package. Match on the host since wheel files may live outside
+    # the index path.
+    extra_urls = env.get("UV_EXTRA_INDEX_URL", "").split()
+    # Log only the hosts since the URLs may contain credentials
+    failing = {
+        url: host
+        for url in extra_urls
+        if (host := urlparse(url).hostname) and host in stderr
+    }
+    if failing:
+        _LOGGER.warning(
+            "Unable to install package %s using extra index host %s: %s; "
+            "retrying without it",
+            package,
+            ", ".join(failing.values()),
+            stderr,
+        )
+        retry_env = env.copy()
+        if remaining := [url for url in extra_urls if url not in failing]:
+            retry_env["UV_EXTRA_INDEX_URL"] = " ".join(remaining)
+        else:
+            del retry_env["UV_EXTRA_INDEX_URL"]
+        if (stderr := _install(args, retry_env)) is None:
+            return True
+
+    _LOGGER.error("Unable to install package %s: %s", package, stderr)
+    return False
 
 
 async def async_get_user_site(deps_dir: str) -> str:

@@ -9,9 +9,16 @@ from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .util import CONFIG, HVAC_MOCK, HVAC_VERSION_MOCK, HVAC_WEBSERVER_MOCK, USER_INPUT
+from .util import (
+    CONFIG,
+    HVAC_MOCK,
+    HVAC_VERSION_MOCK,
+    HVAC_WEBSERVER_MOCK,
+    USER_INPUT,
+    async_init_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -119,6 +126,31 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that child devices link to their registered parent via via_device_id."""
+
+    config_entry = await async_init_integration(hass)
+
+    ws_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_ws"), config_entry.entry_id
+    )
+    assert ws_device is not None
+
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_1"), config_entry.entry_id
+    )
+    assert system_device is not None
+    assert system_device.via_device_id == ws_device.id
+
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_1:1"), config_entry.entry_id
+    )
+    assert zone_device is not None
+    assert zone_device.via_device_id == system_device.id
 
 
 async def test_migrate_entry_v2(hass: HomeAssistant) -> None:

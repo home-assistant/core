@@ -69,7 +69,7 @@
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 5.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.climate0',

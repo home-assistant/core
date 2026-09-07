@@ -1,5 +1,7 @@
 """Tests for Proxmox VE integration."""
 
+from copy import deepcopy
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,17 +43,27 @@ SNAPSHOT_PERMISSIONS = {
     "/vms": {"VM.Snapshot": 1},
     "/vms/101": {"VM.Snapshot": 0},
 }
+SYSMOD_PERMISSIONS = {
+    "/": {"Sys.Modify": 1},
+}
 
 MERGED_PERMISSIONS = {
     key: {
         **AUDIT_PERMISSIONS.get(key, {}),
         **POWER_PERMISSIONS.get(key, {}),
         **SNAPSHOT_PERMISSIONS.get(key, {}),
+        **SYSMOD_PERMISSIONS.get(key, {}),
     }
     for key in set(AUDIT_PERMISSIONS)
     | set(POWER_PERMISSIONS)
     | set(SNAPSHOT_PERMISSIONS)
+    | set(SYSMOD_PERMISSIONS)
 }
+
+PVEVMUSER_PERMISSIONS = deepcopy(MERGED_PERMISSIONS)
+# Remove node-level and root-level scopes entirely
+PVEVMUSER_PERMISSIONS.pop("/", None)
+PVEVMUSER_PERMISSIONS.pop("/nodes", None)
 
 
 async def setup_integration(

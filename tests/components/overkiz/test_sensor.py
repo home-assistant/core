@@ -48,12 +48,19 @@ COZYTOUCH_DHW = FixtureDevice(
     "io://1234-5678-5643/109286#2",
     "sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
+# Hitachi Yutaki heat pump exposing energy and temperature sensors
+YUTAKI = FixtureDevice(
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#1",
+    "sensor.my_house_yutaki_outdoor_ambient_temperature",
+)
 
 SNAPSHOT_FIXTURES = [
     TEMPERATURE_SENSOR,
     TEMPERATURE_SENSOR_LOCAL,
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
+    YUTAKI,
 ]
 
 

@@ -370,7 +370,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         """Set new target HVAC mode."""
         c4_hvac_mode = HA_TO_C4_HVAC_MODE[hvac_mode]
         c4_climate = self._create_api_object()
-        await c4_climate.setHvacMode(c4_hvac_mode)
+        await c4_climate.set_hvac_mode(c4_hvac_mode)
         await self.coordinator.async_request_refresh()
 
     @override
@@ -385,26 +385,26 @@ class Control4Climate(Control4Entity, ClimateEntity):
         if self.hvac_mode == HVACMode.HEAT_COOL:
             if low_temp is not None:
                 if self.temperature_unit == UnitOfTemperature.CELSIUS:
-                    await c4_climate.setHeatSetpointC(low_temp)
+                    await c4_climate.set_heat_setpoint_c(low_temp)
                 else:
-                    await c4_climate.setHeatSetpointF(low_temp)
+                    await c4_climate.set_heat_setpoint_f(low_temp)
             if high_temp is not None:
                 if self.temperature_unit == UnitOfTemperature.CELSIUS:
-                    await c4_climate.setCoolSetpointC(high_temp)
+                    await c4_climate.set_cool_setpoint_c(high_temp)
                 else:
-                    await c4_climate.setCoolSetpointF(high_temp)
+                    await c4_climate.set_cool_setpoint_f(high_temp)
         # Handle single temperature setpoint
         elif temp is not None:
             if self.hvac_mode == HVACMode.COOL:
                 if self.temperature_unit == UnitOfTemperature.CELSIUS:
-                    await c4_climate.setCoolSetpointC(temp)
+                    await c4_climate.set_cool_setpoint_c(temp)
                 else:
-                    await c4_climate.setCoolSetpointF(temp)
+                    await c4_climate.set_cool_setpoint_f(temp)
             elif self.hvac_mode == HVACMode.HEAT:
                 if self.temperature_unit == UnitOfTemperature.CELSIUS:
-                    await c4_climate.setHeatSetpointC(temp)
+                    await c4_climate.set_heat_setpoint_c(temp)
                 else:
-                    await c4_climate.setHeatSetpointF(temp)
+                    await c4_climate.set_heat_setpoint_f(temp)
 
         await self.coordinator.async_request_refresh()
 
@@ -412,5 +412,5 @@ class Control4Climate(Control4Entity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         c4_climate = self._create_api_object()
-        await c4_climate.setFanMode(fan_mode.title())
+        await c4_climate.set_fan_mode(fan_mode.title())
         await self.coordinator.async_request_refresh()

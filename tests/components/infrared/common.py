@@ -33,11 +33,12 @@ class MockInfraredEmitterEntity(InfraredEmitterEntity):
     """Mock infrared emitter entity for testing."""
 
     _attr_has_entity_name = True
-    _attr_name = "Test IR emitter"
 
-    def __init__(self, unique_id: str) -> None:
+    def __init__(self, unique_id: str, name: str | None = "Test IR emitter") -> None:
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
+        if name is not None:
+            self._attr_name = name
         self.send_command_calls: list[InfraredCommand] = []
 
     async def async_send_command(self, command: InfraredCommand) -> None:
@@ -49,11 +50,12 @@ class MockInfraredReceiverEntity(InfraredReceiverEntity):
     """Mock infrared receiver entity for testing."""
 
     _attr_has_entity_name = True
-    _attr_name = "Test IR receiver"
 
-    def __init__(self, unique_id: str) -> None:
+    def __init__(self, unique_id: str, name: str | None = "Test IR receiver") -> None:
         """Initialize mock receiver entity."""
         self._attr_unique_id = unique_id
+        if name is not None:
+            self._attr_name = name
 
 
 async def init_infrared_fixture_helper(hass: HomeAssistant) -> None:

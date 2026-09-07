@@ -142,17 +142,13 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         if removed_zones := previous_zones - current_zones:
             LOGGER.debug("Removed zones: %s", ", ".join(removed_zones))
             for zone_id in removed_zones:
-                device_registry.async_update_device(
-                    device_id=previous_zones_by_id[zone_id].id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                device_registry.async_remove_device(previous_zones_by_id[zone_id].id)
 
         if removed_controllers := previous_controllers - current_controllers:
             LOGGER.debug("Removed controllers: %s", ", ".join(removed_controllers))
             for controller_id in removed_controllers:
-                device_registry.async_update_device(
-                    device_id=previous_controllers_by_id[controller_id].id,
-                    remove_config_entry_id=self.config_entry.entry_id,
+                device_registry.async_remove_device(
+                    previous_controllers_by_id[controller_id].id
                 )
 
         if new_controller_ids := current_controllers - previous_controllers:

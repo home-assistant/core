@@ -4,13 +4,12 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.quality_scale.diagnostics import DiagnosticsChecker
 from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cache
 import pytest
 import yaml
 
-from tests.pylint import assert_adds_messages, assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="diagnostics_checker")
@@ -75,11 +74,8 @@ def test_diagnostics_present(
     root_node = astroid.parse(code, "homeassistant.components.test_int.diagnostics")
     root_node.file = str(integration_dir / "diagnostics.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(diagnostics_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, diagnostics_checker, root_node)
 
 
 def test_diagnostics_missing_fires(
@@ -100,9 +96,6 @@ async def async_setup(hass, config):
     )
     root_node.file = str(integration_dir / "diagnostics.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(diagnostics_checker)
-
     with assert_adds_messages(
         linter,
         MessageTest(
@@ -112,7 +105,7 @@ async def async_setup(hass, config):
             col_offset=0,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, diagnostics_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -165,8 +158,5 @@ async def async_setup(hass, config):
     )
     root_node.file = str(integration_dir / "diagnostics.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(diagnostics_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, diagnostics_checker, root_node)

@@ -74,6 +74,14 @@
           }
         }
       }
+    },
+    "image": {
+      "last_motion": {
+        "name": "[%key:component::doorbird::entity::camera::last_motion::name%]"
+      },
+      "last_ring": {
+        "name": "[%key:component::doorbird::entity::camera::last_ring::name%]"
+      }
     }
   },
   "issues": {

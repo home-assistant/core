@@ -28,7 +28,7 @@ from homeassistant.helpers.entity import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
+from . import DOMAIN, SensorDeviceClass, SensorEntityCapabilityAttribute
 
 DEVICE_CLASS_NONE = "none"
 
@@ -70,6 +70,7 @@ CONF_POWER_FACTOR = "power_factor"
 CONF_PRECIPITATION = "precipitation"
 CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
+CONF_RADON = "radon"
 CONF_REACTIVE_ENERGY = "reactive_energy"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
@@ -133,6 +134,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
+    SensorDeviceClass.RADON: [{CONF_TYPE: CONF_RADON}],
     SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
@@ -203,6 +205,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRECIPITATION,
                     CONF_PRECIPITATION_INTENSITY,
                     CONF_PRESSURE,
+                    CONF_RADON,
                     CONF_REACTIVE_ENERGY,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
@@ -273,7 +276,9 @@ async def async_get_triggers(
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
-        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
+        state_class = get_capability(
+            hass, entry.entity_id, SensorEntityCapabilityAttribute.STATE_CLASS
+        )
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
         if not unit_of_measurement and not state_class:

@@ -33,6 +33,7 @@ HOME_DATA = "netatmo_home_data"
 SIGNAL_NAME = "signal_name"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_camerapro",
     "access_doorbell",
     "read_doorbell",
     "read_mhs1",
@@ -69,13 +70,6 @@ CONF_WEATHER_AREAS = "weather_areas"
 
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
-
-DATA_CAMERAS = "cameras"
-DATA_DEVICE_IDS = "netatmo_device_ids"
-DATA_EVENTS = "netatmo_events"
-DATA_HOMES = "netatmo_homes"
-DATA_PERSONS = "netatmo_persons"
-DATA_SCHEDULES = "netatmo_schedules"
 
 NETATMO_EVENT = "netatmo_event"
 

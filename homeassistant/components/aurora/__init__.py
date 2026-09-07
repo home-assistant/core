@@ -1,4 +1,4 @@
-"""The aurora component."""
+"""The Aurora integration."""
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

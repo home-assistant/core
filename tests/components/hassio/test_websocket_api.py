@@ -375,6 +375,74 @@ async def test_websocket_non_admin_user(
     assert msg["error"]["message"] == "Unauthorized"
 
 
+async def test_store_reloaded_event_refreshes_update_entities(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    addons_list: AsyncMock,
+) -> None:
+    """Test add-on update entities refresh on a Supervisor store_reloaded event."""
+    addons_list.return_value = [
+        replace(
+            addons_list.return_value[0],
+            update_available=False,
+            version_latest="2.0.0",
+        )
+    ]
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").state == "off"
+
+    addons_list.return_value = [
+        replace(
+            addons_list.return_value[0],
+            update_available=True,
+            version_latest="2.0.1",
+        )
+    ]
+
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").state == "on"
+    # Supervisor already reloaded the store, so we must not reload it again.
+    supervisor_client.store.reload.assert_not_called()
+
+
+async def test_store_reloaded_event_ignored_without_listeners(
+    hass: HomeAssistant,
+    addons_list: AsyncMock,
+) -> None:
+    """Test a store_reloaded event does not refresh without add-on entities."""
+    addons_list.return_value = []
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Without add-on entities the coordinator has no listeners,
+    # so the event must not trigger an add-on data fetch.
+    addons_list.reset_mock()
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
+    )
+    await hass.async_block_till_done()
+
+    addons_list.assert_not_called()
+
+
 async def test_update_addon(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -389,7 +457,7 @@ async def test_update_addon(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -492,7 +560,7 @@ async def test_update_addon_with_backup(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -635,7 +703,7 @@ async def test_update_addon_with_backup_removes_old_backups(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -698,7 +766,7 @@ async def test_update_core(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -793,7 +861,7 @@ async def test_update_core_with_backup(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -832,7 +900,7 @@ async def test_update_addon_with_error(
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
     await hass.async_block_till_done()
 
@@ -872,7 +940,7 @@ async def test_update_addon_with_backup_and_error(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -911,7 +979,7 @@ async def test_update_core_with_error(
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
     await hass.async_block_till_done()
 
@@ -939,7 +1007,7 @@ async def test_update_core_with_backup_and_error(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -969,6 +1037,9 @@ async def test_read_update_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test read and update config."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
     assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
 

@@ -1,0 +1,11 @@
+# serializer version: 1
+# name: test_todo_item_fields
+  dict({
+    'completed': 'datetime.datetime | None',
+    'description': 'str | None',
+    'due': 'datetime.date | datetime.datetime | None',
+    'status': 'homeassistant.components.todo.const.TodoItemStatus | None',
+    'summary': 'str | None',
+    'uid': 'str | None',
+  })
+# ---

@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -128,6 +128,15 @@ class SmButton(SmEntity, ButtonEntity):
         self.idx = idx
         button = f"_{idx}" if idx else ""
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}{button}"
+
+        if (
+            idx < len(coordinator.data.info.radios)
+            and coordinator.data.info.radios[idx].zb_type in ZWAVE_TYPES
+        ):
+            if description.key == "zigbee_restart":
+                self._attr_translation_key = "z_wave_restart"
+            elif description.key == "zigbee_flash_mode":
+                self._attr_translation_key = "z_wave_flash_mode"
 
     @override
     async def async_press(self) -> None:

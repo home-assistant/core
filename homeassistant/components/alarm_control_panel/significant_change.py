@@ -4,11 +4,11 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 
-from . import ATTR_CHANGED_BY, ATTR_CODE_ARM_REQUIRED
+from .const import AlarmControlPanelEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_CHANGED_BY,
-    ATTR_CODE_ARM_REQUIRED,
+    AlarmControlPanelEntityStateAttribute.CHANGED_BY,
+    AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED,
 }
 
 

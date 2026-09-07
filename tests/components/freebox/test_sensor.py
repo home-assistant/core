@@ -102,6 +102,13 @@ async def test_temperature(hass: HomeAssistant, router: Mock) -> None:
     assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_b").state == "56"
 
 
+async def test_fan(hass: HomeAssistant, router: Mock) -> None:
+    """Test fan speed sensors expose API names and values."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_server_r2_ventilateur_1").state == "2130"
+
+
 async def test_battery(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:

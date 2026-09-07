@@ -2,15 +2,27 @@
 
 from unittest.mock import Mock, patch
 
-from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
+from deebot_client.exceptions import (
+    DeebotError,
+    DeviceVerificationRequiredError,
+    InvalidAuthenticationError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from .const import (
+    CLOUD_DEVICE_ID,
+    SELF_HOSTED_DEVICE_ID,
+    VALID_ENTRY_DATA_CLOUD,
+    VALID_ENTRY_DATA_SELF_HOSTED,
+)
 
 from tests.common import MockConfigEntry
 
@@ -70,30 +82,87 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_invalid_auth(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        InvalidAuthenticationError,
+        DeviceVerificationRequiredError,
+    ],
+    ids=["invalid_auth", "device_verification_required"],
+)
+async def test_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: Mock,
+    side_effect: type[Exception],
 ) -> None:
-    """Test auth error during setup."""
-    mock_api_client.get_devices.side_effect = InvalidAuthenticationError
+    """Test an auth error during setup triggers reauthentication."""
+    mock_api_client.get_devices.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "device_id"),
+    [
+        (VALID_ENTRY_DATA_CLOUD, CLOUD_DEVICE_ID),
+        (VALID_ENTRY_DATA_SELF_HOSTED, SELF_HOSTED_DEVICE_ID),
+    ],
+    ids=["cloud", "self_hosted"],
+)
+@pytest.mark.usefixtures("mock_authenticator", "mock_mqtt_client", "mock_device_id")
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    entry_data: dict[str, str],
+    device_id: str,
+) -> None:
+    """Test the client device ID is added to an entry created before it was stored."""
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, minor_version=1)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.data == entry_data | {CONF_DEVICE_ID: device_id}
+
+
+@pytest.mark.usefixtures("mock_authenticator", "mock_mqtt_client")
+async def test_migrate_entry_keeps_device_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test an already stored client device ID is not replaced."""
+    entry_data = VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: "STOREDID"}
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, minor_version=1)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.data == entry_data
 
 
 async def test_devices_in_dr(
     device_registry: dr.DeviceRegistry,
     controller: EcovacsController,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all devices are in the device registry."""
     for device in controller.devices:
         assert (
-            device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.device_info["did"])}
+            device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.device_info["did"]), mock_config_entry.entry_id
             )
         )
         assert device_entry == snapshot(name=device.device_info["did"])

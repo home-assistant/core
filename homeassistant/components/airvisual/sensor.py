@@ -9,17 +9,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_STATE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    EntityStateAttribute,
+    UnitOfDensity,
+    UnitOfRatio,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -94,12 +92,12 @@ POLLUTANT_LEVELS = {
 }
 
 POLLUTANT_UNITS = {
-    "co": CONCENTRATION_PARTS_PER_MILLION,
-    "n2": CONCENTRATION_PARTS_PER_BILLION,
-    "o3": CONCENTRATION_PARTS_PER_BILLION,
-    "p1": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "p2": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "s2": CONCENTRATION_PARTS_PER_BILLION,
+    "co": UnitOfRatio.PARTS_PER_MILLION,
+    "n2": UnitOfRatio.PARTS_PER_BILLION,
+    "o3": UnitOfRatio.PARTS_PER_BILLION,
+    "p1": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "p2": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "s2": UnitOfRatio.PARTS_PER_BILLION,
 }
 
 
@@ -192,12 +190,14 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         )
 
         if self.coordinator.config_entry.options[CONF_SHOW_ON_MAP]:
-            self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
-            self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
+            self._attr_extra_state_attributes[EntityStateAttribute.LATITUDE] = latitude
+            self._attr_extra_state_attributes[EntityStateAttribute.LONGITUDE] = (
+                longitude
+            )
             self._attr_extra_state_attributes.pop("lati", None)
             self._attr_extra_state_attributes.pop("long", None)
         else:
             self._attr_extra_state_attributes["lati"] = latitude
             self._attr_extra_state_attributes["long"] = longitude
-            self._attr_extra_state_attributes.pop(ATTR_LATITUDE, None)
-            self._attr_extra_state_attributes.pop(ATTR_LONGITUDE, None)
+            self._attr_extra_state_attributes.pop(EntityStateAttribute.LATITUDE, None)
+            self._attr_extra_state_attributes.pop(EntityStateAttribute.LONGITUDE, None)

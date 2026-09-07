@@ -1,0 +1,269 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device has already been configured with this infrared entity.",
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "missing_infrared_entity": "Select an infrared emitter or receiver."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
+        },
+        "title": "Reconfigure LED Infrared device"
+      },
+      "user": {
+        "data": {
+          "device_type": "[%key:common::generic::device_type%]",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
+          "device_type": "The type of remote control used for the LED light bulb, lamp, or controller.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
+        },
+        "description": "Select the device type and at least one infrared emitter or receiver. You can identify the correct device based on the remote control used. Please refer to the [documentation]({docs_url}).",
+        "title": "Set up LED Infrared device"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "blue_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::blue_down%]"
+      },
+      "blue_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::blue_up%]"
+      },
+      "brightness_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::brightness_down%]"
+      },
+      "brightness_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::brightness_up%]"
+      },
+      "green_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::green_down%]"
+      },
+      "green_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::green_up%]"
+      },
+      "quick": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::quick%]"
+      },
+      "red_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::red_down%]"
+      },
+      "red_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::red_up%]"
+      },
+      "slow": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::slow%]"
+      },
+      "timer": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer%]"
+      },
+      "timer_2h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_2h%]"
+      },
+      "timer_4h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_4h%]"
+      },
+      "timer_6h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_6h%]"
+      },
+      "timer_8h": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_8h%]"
+      },
+      "white_brightness_100": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_100%]"
+      },
+      "white_brightness_25": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_25%]"
+      },
+      "white_brightness_50": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_50%]"
+      },
+      "white_brightness_75": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_75%]"
+      },
+      "white_brightness_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_down%]"
+      },
+      "white_brightness_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_up%]"
+      },
+      "white_off": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_off%]"
+      },
+      "white_on": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_on%]"
+      }
+    },
+    "event": {
+      "received_command": {
+        "name": "Received command",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "aqua": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::aqua%]",
+              "auto": "[%key:common::state::auto%]",
+              "blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::blue%]",
+              "blue_down": "Blue down",
+              "blue_up": "Blue up",
+              "brightness_down": "Brightness down",
+              "brightness_up": "Brightness up",
+              "candle": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::candle%]",
+              "cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::cyan%]",
+              "dark_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::dark_cyan%]",
+              "deep_blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::deep_blue%]",
+              "diy1": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::diy1%]",
+              "diy2": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::diy2%]",
+              "diy3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::diy3%]",
+              "diy4": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::diy4%]",
+              "diy5": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::diy5%]",
+              "diy6": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::diy6%]",
+              "fade": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::fade%]",
+              "fade3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::fade3%]",
+              "fade7": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::fade7%]",
+              "flash": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::flash%]",
+              "floral_white": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::floral_white%]",
+              "ghost_white": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::ghost_white%]",
+              "green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::green%]",
+              "green_down": "Green down",
+              "green_up": "Green up",
+              "jump3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::jump3%]",
+              "jump7": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::jump7%]",
+              "lavender_blush": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::lavender_blush%]",
+              "light": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light%]",
+              "light_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_cyan%]",
+              "light_green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_green%]",
+              "magenta": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::magenta%]",
+              "mode_1": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_1%]",
+              "mode_2": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_2%]",
+              "mode_3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_3%]",
+              "mode_4": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_4%]",
+              "mode_5": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_5%]",
+              "mode_6": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_6%]",
+              "mode_7": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_7%]",
+              "mode_8": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_8%]",
+              "off": "[%key:common::entity::button::power_off::name%]",
+              "on": "[%key:common::entity::button::power_on::name%]",
+              "orange": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::orange%]",
+              "orange_red": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::orange_red%]",
+              "pink": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::pink%]",
+              "plum": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::plum%]",
+              "purple": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::purple%]",
+              "quick": "Quick",
+              "rebecca_purple": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::rebecca_purple%]",
+              "red": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::red%]",
+              "red_down": "Red down",
+              "red_up": "Red up",
+              "sky_blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::sky_blue%]",
+              "slow": "Slow",
+              "smooth": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::smooth%]",
+              "strobe": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::strobe%]",
+              "timer": "Timer",
+              "timer_2h": "Timer 2h",
+              "timer_4h": "Timer 4h",
+              "timer_6h": "Timer 6h",
+              "timer_8h": "Timer 8h",
+              "tomato": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::tomato%]",
+              "turquoise": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::turquoise%]",
+              "white": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::white%]",
+              "white_brightness_100": "White brightness 100%",
+              "white_brightness_25": "White brightness 25%",
+              "white_brightness_50": "White brightness 50%",
+              "white_brightness_75": "White brightness 75%",
+              "white_brightness_down": "White brightness down",
+              "white_brightness_up": "White brightness up",
+              "white_off": "White off",
+              "white_on": "White on",
+              "yellow": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::yellow%]",
+              "yellowish": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::yellowish%]"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "aqua": "Color: Aqua",
+              "auto": "[%key:common::state::auto%]",
+              "blue": "Color: Blue",
+              "candle": "Candle",
+              "cyan": "Color: Cyan",
+              "dark_cyan": "Color: Dark cyan",
+              "deep_blue": "Color: Deep Blue",
+              "diy1": "DIY 1",
+              "diy2": "DIY 2",
+              "diy3": "DIY 3",
+              "diy4": "DIY 4",
+              "diy5": "DIY 5",
+              "diy6": "DIY 6",
+              "fade": "Fade",
+              "fade3": "Fade 3",
+              "fade7": "Fade 7",
+              "flash": "Flash",
+              "floral_white": "Color: Floral White",
+              "ghost_white": "Color: Ghost White",
+              "green": "Color: Green",
+              "jump3": "Jump 3",
+              "jump7": "Jump 7",
+              "lavender_blush": "Color: Lavender Blush",
+              "light": "Steady light",
+              "light_cyan": "Color: Light Cyan",
+              "light_green": "Color: Light green",
+              "magenta": "Color: Magenta",
+              "mode_1": "Mode 1",
+              "mode_2": "Mode 2",
+              "mode_3": "Mode 3",
+              "mode_4": "Mode 4",
+              "mode_5": "Mode 5",
+              "mode_6": "Mode 6",
+              "mode_7": "Mode 7",
+              "mode_8": "Mode 8",
+              "orange": "Color: Orange",
+              "orange_red": "Color: Orange red",
+              "pink": "Color: Pink",
+              "plum": "Color: Plum",
+              "purple": "Color: Purple",
+              "rebecca_purple": "Color: Rebecca purple",
+              "red": "Color: Red",
+              "sky_blue": "Color: Sky blue",
+              "smooth": "Smooth",
+              "strobe": "Strobe",
+              "tomato": "Color: Tomato",
+              "turquoise": "Color: Turquoise",
+              "white": "Color: White",
+              "yellow": "Color: Yellow",
+              "yellowish": "Color: Yellowish"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "generic_10_key": "10-key remote control",
+        "generic_13_key": "13-key remote control",
+        "generic_24_key": "24-key remote control",
+        "generic_40_key": "40-key remote control",
+        "generic_44_key": "44-key remote control"
+      }
+    }
+  }
+}

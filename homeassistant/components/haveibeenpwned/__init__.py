@@ -1,1 +1,1 @@
-"""The haveibeenpwned component."""
+"""The HaveIBeenPwned integration."""

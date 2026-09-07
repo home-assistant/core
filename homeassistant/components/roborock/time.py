@@ -37,7 +37,7 @@ class RoborockTimeDescription(TimeEntityDescription):
     trait: Callable[[Any], Any | None]
     """Function to determine if time entity is supported by the device."""
 
-    get_value: Callable[[Any], datetime.time]
+    get_value: Callable[[Any], datetime.time | None]
     """Function to get the value from the trait."""
 
     update_value: Callable[[Any, datetime.time], Coroutine[Any, Any, None]]
@@ -58,9 +58,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.start_hour, minute=trait.start_minute
-        ),
+        get_value=lambda trait: trait.start_time,
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -76,9 +74,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.end_hour, minute=trait.end_minute
-        ),
+        get_value=lambda trait: trait.end_time,
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -94,9 +90,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.start_hour, minute=trait.start_minute
-        ),
+        get_value=lambda trait: trait.start_time,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -113,9 +107,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.end_hour, minute=trait.end_minute
-        ),
+        get_value=lambda trait: trait.end_time,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),

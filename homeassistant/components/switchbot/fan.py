@@ -1,16 +1,19 @@
 """Support for SwitchBot Fans."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 import switchbot
-from switchbot import AirPurifierMode, FanMode
+from switchbot import AirPurifierMode, FanMode, StandingFanMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -27,6 +30,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
         async_add_entities([SwitchBotAirPurifierEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
+        async_add_entities([SwitchBotStandingFanEntity(coordinator)])
     else:
         async_add_entities([SwitchBotFanEntity(coordinator)])
 
@@ -129,6 +134,98 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
 
         _LOGGER.debug("Switchbot fan to set turn off %s", self._address)
         self._last_run_success = bool(await self._device.turn_off())
+        self.async_write_ha_state()
+
+
+class SwitchBotStandingFanEntity(SwitchBotFanEntity):
+    """Representation of a Switchbot Standing Fan."""
+
+    _device: switchbot.SwitchbotStandingFan
+    _attr_preset_modes = StandingFanMode.get_modes()
+    _attr_translation_key = "standing_fan"
+
+    @property
+    @override
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return the state attributes.
+
+        Failures surface as HomeAssistantError, so last_run_success is not used.
+        """
+        return {}
+
+    @exception_handler
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        _LOGGER.debug(
+            "Switchbot standing fan to set preset mode %s %s",
+            preset_mode,
+            self._address,
+        )
+        if not await self._device.set_preset_mode(preset_mode):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="set_fan_state_failed"
+            )
+        self.async_write_ha_state()
+
+    @exception_handler
+    @override
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        _LOGGER.debug(
+            "Switchbot standing fan to set percentage %d %s", percentage, self._address
+        )
+        if not await self._device.set_percentage(percentage):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="set_fan_state_failed"
+            )
+        self.async_write_ha_state()
+
+    @exception_handler
+    @override
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Oscillate the fan."""
+        _LOGGER.debug(
+            "Switchbot standing fan to set oscillating %s %s",
+            oscillating,
+            self._address,
+        )
+        if not await self._device.set_oscillation(oscillating):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="set_fan_state_failed"
+            )
+        self.async_write_ha_state()
+
+    @exception_handler
+    @override
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn on the fan."""
+        _LOGGER.debug(
+            "Switchbot standing fan to set turn on %s %s %s",
+            percentage,
+            preset_mode,
+            self._address,
+        )
+        if not await self._device.turn_on():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="set_fan_state_failed"
+            )
+        self.async_write_ha_state()
+
+    @exception_handler
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the fan."""
+        _LOGGER.debug("Switchbot standing fan to set turn off %s", self._address)
+        if not await self._device.turn_off():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="set_fan_state_failed"
+            )
         self.async_write_ha_state()
 
 

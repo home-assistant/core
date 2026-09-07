@@ -3,14 +3,33 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -24,6 +43,7 @@ async def test_sensors(
     reolink_host.wifi_connection.return_value = True
     reolink_host.wifi_signal.return_value = -55
     reolink_host.hdd_list = [0]
+    reolink_host.hdd_type.return_value = "SD"
     reolink_host.hdd_storage.return_value = 95
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SENSOR]):

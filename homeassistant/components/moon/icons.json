@@ -1,4 +1,15 @@
 {
+  "conditions": {
+    "is_phase": {
+      "condition": "mdi:moon-full"
+    },
+    "is_waning": {
+      "condition": "mdi:moon-waning-crescent"
+    },
+    "is_waxing": {
+      "condition": "mdi:moon-waxing-crescent"
+    }
+  },
   "entity": {
     "sensor": {
       "phase": {
@@ -14,6 +25,11 @@
           "waxing_gibbous": "mdi:moon-waxing-gibbous"
         }
       }
+    }
+  },
+  "triggers": {
+    "phase_changed": {
+      "trigger": "mdi:moon-waning-crescent"
     }
   }
 }

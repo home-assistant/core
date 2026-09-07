@@ -126,6 +126,7 @@
       }),
       'states': dict({
         '1': dict({
+          'cooling_operating_mode': None,
           'current_temperature': dict({
             'data_type': 0,
             'data_type_family': '',

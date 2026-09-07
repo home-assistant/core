@@ -2162,14 +2162,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("binary_sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     history_stats_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             CONF_NAME: DEFAULT_NAME,
-            CONF_ENTITY_ID: "binary_sensor.test_source",
+            CONF_ENTITY_ID: source_entity.entity_id,
             CONF_STATE: ["on"],
             CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
@@ -2182,9 +2182,57 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    history_stats_entity = entity_registry.async_get("sensor.history_stats")
+    history_stats_entity = entity_registry.async_get("sensor.mock_title_history_stats")
     assert history_stats_entity is not None
     assert history_stats_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured History stats."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "name": "History stats",
+                "entity_id": "binary_sensor.test_source",
+                "state": "on",
+                "type": "count",
+                "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                "end": "{{ utcnow() }}",
+                "unique_id": "history_stats_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    history_stats_entity = entity_registry.async_get("sensor.history_stats")
+    assert history_stats_entity is not None
+    assert history_stats_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 async def test_async_around_min_state_duration(

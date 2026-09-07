@@ -3,6 +3,7 @@
   "name": "Universal Powerline Bus (UPB)",
   "codeowners": ["@gwww"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/upb",
   "iot_class": "local_push",
   "loggers": ["upb_lib"],

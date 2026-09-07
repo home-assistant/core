@@ -51,6 +51,33 @@ async def test_api_list_state_entities(
     assert remote_data == local_data
 
 
+@pytest.mark.parametrize(
+    ("entity_count", "expect_compression"),
+    [
+        pytest.param(1, False, id="small-body-not-compressed"),
+        pytest.param(50, True, id="large-body-compressed"),
+    ],
+)
+async def test_api_states_compression_threshold(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    entity_count: int,
+    expect_compression: bool,
+) -> None:
+    """Test that only state list responses above the size threshold are compressed."""
+    for i in range(entity_count):
+        hass.states.async_set(
+            f"test.entity_{i}", "on", {"friendly_name": f"Entity {i}"}
+        )
+
+    resp = await mock_api_client.get(
+        const.URL_API_STATES, headers={"Accept-Encoding": "gzip, deflate"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert ("Content-Encoding" in resp.headers) is expect_compression
+
+
 async def test_api_get_state(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test if the debug interface allows us to get a state."""
     hass.states.async_set("hello.world", "nice", {"attr": 1})

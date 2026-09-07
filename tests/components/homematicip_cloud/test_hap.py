@@ -91,9 +91,13 @@ async def test_hap_setup_works(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
     )
-    home = Mock()
+    entry.add_to_hass(hass)
+    home = Mock(id="ABC123", label="Home")
     hap = HomematicipHAP(hass, entry)
-    with patch.object(hap, "get_hap", return_value=home):
+    with (
+        patch.object(hap, "get_hap", return_value=home),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+    ):
         async with entry.setup_lock:
             assert await hap.async_setup()
 
@@ -133,11 +137,13 @@ async def test_hap_reset_unloads_entry_if_setup(
     assert config_entries[0].state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("simple_mock_home")
 async def test_hap_create(
-    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(DOMAIN)
+    hmip_config_entry.add_to_hass(hass)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
     with (
@@ -146,6 +152,7 @@ async def test_hap_create(
             return_value=ConnectionContext(),
         ),
         patch.object(hap, "async_connect"),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
     ):
         async with hmip_config_entry.setup_lock:
             assert await hap.async_setup()

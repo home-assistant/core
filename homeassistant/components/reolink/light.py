@@ -75,6 +75,7 @@ LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="status_led",
         cmd_key="GetPowerLed",
+        cmd_id=208,
         translation_key="status_led",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "power_led"),

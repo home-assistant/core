@@ -16,7 +16,7 @@ from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -56,6 +56,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from .coordinator import IcloudCalendarCoordinator
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +98,9 @@ class IcloudAccount:
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
+
+        # Built in async_setup_entry, before the platforms are forwarded.
+        self.calendar_coordinator: IcloudCalendarCoordinator | None = None
 
         self.photo_cache: PhotoCache | None = None
 
@@ -256,8 +260,8 @@ class IcloudAccount:
             for zone_state in zones:
                 if zone_state is None:
                     continue
-                zone_state_lat = zone_state.attributes[DEVICE_LOCATION_LATITUDE]
-                zone_state_long = zone_state.attributes[DEVICE_LOCATION_LONGITUDE]
+                zone_state_lat = zone_state.attributes[EntityStateAttribute.LATITUDE]
+                zone_state_long = zone_state.attributes[EntityStateAttribute.LONGITUDE]
                 zone_distance = distance(
                     device.location[DEVICE_LOCATION_LATITUDE],
                     device.location[DEVICE_LOCATION_LONGITUDE],

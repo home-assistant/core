@@ -3,6 +3,8 @@
 from datetime import timedelta
 import time
 
+import pytest
+
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
@@ -14,6 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -23,6 +26,8 @@ from . import (
     GVH5178_PRIMARY_SERVICE_INFO,
     GVH5178_REMOTE_SERVICE_INFO,
     GVH5178_SERVICE_INFO_ERROR,
+    GVH5184_SERVICE_INFO,
+    GVH5198_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -197,9 +202,105 @@ async def test_gv5140(hass: HomeAssistant) -> None:
     co2_sensor = hass.states.get("sensor.5140eeff_carbon_dioxide")
     co2_sensor_attributes = co2_sensor.attributes
     assert co2_sensor.state == "531"
-    assert co2_sensor_attributes[ATTR_FRIENDLY_NAME] == "5140EEFF Carbon Dioxide"
+    assert co2_sensor_attributes[ATTR_FRIENDLY_NAME] == "5140EEFF Carbon dioxide"
     assert co2_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
     assert co2_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("service_info", "expected_sensors"),
+    [
+        pytest.param(
+            GVH5184_SERVICE_INFO,
+            [
+                (
+                    "sensor.h5184_ac3d_temperature_probe_1",
+                    "31.0",
+                    "H5184 AC3D Temperature probe 1",
+                ),
+                (
+                    "sensor.h5184_ac3d_temperature_alarm_probe_1",
+                    "0.0",
+                    "H5184 AC3D Temperature alarm probe 1",
+                ),
+                (
+                    "sensor.h5184_ac3d_temperature_probe_2",
+                    "28.0",
+                    "H5184 AC3D Temperature probe 2",
+                ),
+                (
+                    "sensor.h5184_ac3d_temperature_alarm_probe_2",
+                    "0.0",
+                    "H5184 AC3D Temperature alarm probe 2",
+                ),
+            ],
+            id="h5184",
+        ),
+        pytest.param(
+            GVH5198_SERVICE_INFO,
+            [
+                (
+                    "sensor.h5198_ac3d_temperature_probe_3",
+                    "36.0",
+                    "H5198 AC3D Temperature probe 3",
+                ),
+                (
+                    "sensor.h5198_ac3d_temperature_alarm_probe_3",
+                    "0.0",
+                    "H5198 AC3D Temperature alarm probe 3",
+                ),
+                (
+                    "sensor.h5198_ac3d_low_temperature_alarm_probe_3",
+                    "0.0",
+                    "H5198 AC3D Low temperature alarm probe 3",
+                ),
+                (
+                    "sensor.h5198_ac3d_temperature_probe_4",
+                    "23.0",
+                    "H5198 AC3D Temperature probe 4",
+                ),
+                (
+                    "sensor.h5198_ac3d_temperature_alarm_probe_4",
+                    "0.0",
+                    "H5198 AC3D Temperature alarm probe 4",
+                ),
+                (
+                    "sensor.h5198_ac3d_low_temperature_alarm_probe_4",
+                    "0.0",
+                    "H5198 AC3D Low temperature alarm probe 4",
+                ),
+            ],
+            id="h5198",
+        ),
+    ],
+)
+async def test_probe_sensors(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfo,
+    expected_sensors: list[tuple[str, str, str]],
+) -> None:
+    """Test grill thermometer probe sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info(hass, service_info)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == len(expected_sensors)
+
+    for entity_id, state, friendly_name in expected_sensors:
+        sensor = hass.states.get(entity_id)
+        assert sensor.state == state
+        assert sensor.attributes[ATTR_FRIENDLY_NAME] == friendly_name
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -221,10 +322,10 @@ async def test_gvh5106(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 3
 
-    pm25_sensor = hass.states.get("sensor.h5106_4e05_pm25")
+    pm25_sensor = hass.states.get("sensor.h5106_4e05_pm2_5")
     pm25_sensor_attributes = pm25_sensor.attributes
     assert pm25_sensor.state == "0"
-    assert pm25_sensor_attributes[ATTR_FRIENDLY_NAME] == "H5106 4E05 Pm25"
+    assert pm25_sensor_attributes[ATTR_FRIENDLY_NAME] == "H5106 4E05 PM2.5"
     assert pm25_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "μg/m³"
     assert pm25_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
 

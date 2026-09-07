@@ -176,7 +176,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         existing = subentry.data
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
             user_input[CONF_MODEL] = existing[CONF_MODEL]
             return self.async_update_and_abort(
@@ -217,11 +217,11 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage conversation agent configuration."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
                 title=user_input[CONF_MODEL], data=user_input
