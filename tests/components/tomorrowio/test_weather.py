@@ -8,17 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tomorrowio.config_flow import (
-    _get_config_schema,
-    _get_unique_id,
-)
-from homeassistant.components.tomorrowio.const import (
-    ATTRIBUTION,
-    CONF_TIMESTEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMESTEP,
-    DOMAIN,
-)
+from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_WEATHER_HUMIDITY,
@@ -36,15 +26,16 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .const import API_V4_ENTRY_DATA
+from . import make_v2_config_entry
+from .const import API_V4_ENTRY_DATA, BASE_UNIQUE_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -58,18 +49,9 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> State:
+async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Set up entry and return entity state."""
-    data = _get_config_schema(hass, SOURCE_USER)(config)
-    data[CONF_NAME] = DEFAULT_NAME
-    config_entry = MockConfigEntry(
-        title=DEFAULT_NAME,
-        domain=DOMAIN,
-        data=data,
-        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
-        unique_id=_get_unique_id(hass, data),
-        version=1,
-    )
+    config_entry = make_v2_config_entry(data=config)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -86,12 +68,11 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
 async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     registry = er.async_get(hass)
-    data = _get_config_schema(hass, SOURCE_USER)(config)
     for entity_name in ("hourly", "nowcast"):
         registry.async_get_or_create(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{_get_unique_id(hass, data)}_{entity_name}",
+            f"{BASE_UNIQUE_ID}_{entity_name}",
             disabled_by=er.RegistryEntryDisabler.INTEGRATION,
             suggested_object_id=f"tomorrow_io_{entity_name}",
         )
@@ -127,12 +108,11 @@ async def test_legacy_config_entry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the expected entities are created."""
-    data = _get_config_schema(hass, SOURCE_USER)(API_V4_ENTRY_DATA)
     for entity_name in ("hourly", "nowcast"):
         entity_registry.async_get_or_create(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{_get_unique_id(hass, data)}_{entity_name}",
+            f"{BASE_UNIQUE_ID}_{entity_name}",
         )
     await _setup(hass, API_V4_ENTRY_DATA)
     assert len(hass.states.async_entity_ids("weather")) == 3

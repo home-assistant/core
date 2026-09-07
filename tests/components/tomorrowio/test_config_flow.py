@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
@@ -9,15 +10,10 @@ from pytomorrowio.exceptions import (
     UnknownException,
 )
 
-from homeassistant.components.tomorrowio.config_flow import (
-    _get_config_schema,
-    _get_unique_id,
-)
 from homeassistant.components.tomorrowio.const import (
     CONF_TIMESTEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMESTEP,
     DOMAIN,
+    SUBENTRY_TYPE_LOCATION,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -26,19 +22,16 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
-    CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
+from . import make_v2_config_entry
 from .const import API_KEY, MIN_CONFIG
 
-from tests.common import MockConfigEntry
 
-
-async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
-    """Test user config flow with minimum fields."""
+async def test_user_flow(hass: HomeAssistant) -> None:
+    """Test user config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -46,32 +39,19 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+        result["flow_id"], user_input=MIN_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_NAME] == DEFAULT_NAME
-    assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
-    assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert result["title"] == "Tomorrow.io"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
+    assert result["result"].unique_id == API_KEY
 
 
-async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
-    """Test user config flow with minimum fields."""
-    assert await async_setup_component(
-        hass,
-        "zone",
-        {
-            "zone": {
-                CONF_NAME: "Home",
-                CONF_LATITUDE: hass.config.latitude,
-                CONF_LONGITUDE: hass.config.longitude,
-                CONF_RADIUS: 100,
-            }
-        },
-    )
+async def test_user_flow_api_key_already_configured(hass: HomeAssistant) -> None:
+    """Test user config flow aborts when the API key is already configured."""
+    make_v2_config_entry().add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -79,132 +59,241 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{DEFAULT_NAME} - Home"
-    assert result["data"][CONF_NAME] == f"{DEFAULT_NAME} - Home"
-    assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
-    assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
-
-
-async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
-    """Test user config flow with the same unique ID as an existing entry."""
-    user_input = _get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG)
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=user_input,
-        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
-        source=SOURCE_USER,
-        unique_id=_get_unique_id(hass, user_input),
-        version=2,
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        result["flow_id"], user_input=MIN_CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user config flow when Tomorrow.io can't connect."""
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            CantConnectException, {"base": "cannot_connect"}, id="cannot_connect"
+        ),
+        pytest.param(
+            InvalidAPIKeyException,
+            {CONF_API_KEY: "invalid_api_key"},
+            id="invalid_api_key",
+        ),
+        pytest.param(
+            RateLimitedException, {CONF_API_KEY: "rate_limited"}, id="rate_limited"
+        ),
+        pytest.param(UnknownException, {"base": "unknown"}, id="unknown"),
+    ],
+)
+async def test_user_flow_errors(
+    hass: HomeAssistant, side_effect: Exception, errors: dict[str, str]
+) -> None:
+    """Test user config flow errors."""
     with patch(
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=CantConnectException,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MIN_CONFIG
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == errors
 
-
-async def test_user_flow_invalid_api(hass: HomeAssistant) -> None:
-    """Test user config flow when API key is invalid."""
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=InvalidAPIKeyException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
-async def test_user_flow_rate_limited(hass: HomeAssistant) -> None:
-    """Test user config flow when API key is rate limited."""
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=RateLimitedException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {CONF_API_KEY: "rate_limited"}
-
-
-async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
-    """Test user config flow when unknown error occurs."""
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=UnknownException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test options config flow for tomorrowio."""
-    user_config = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=user_config,
-        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
-        source=SOURCE_USER,
-        unique_id=_get_unique_id(hass, user_config),
-        version=1,
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.options[CONF_TIMESTEP] == DEFAULT_TIMESTEP
-    assert CONF_TIMESTEP not in entry.data
-
-    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_TIMESTEP: 1}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MIN_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
-    assert result["data"][CONF_TIMESTEP] == 1
-    assert entry.options[CONF_TIMESTEP] == 1
+
+
+async def test_location_subentry_flow(hass: HomeAssistant) -> None:
+    """Test creating a location subentry."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_LOCATION),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {CONF_LATITUDE: 81.0, CONF_LONGITUDE: 81.0},
+            CONF_TIMESTEP: 5,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Work"
+
+    assert len(config_entry.subentries) == 2
+    subentry = next(
+        subentry
+        for subentry in config_entry.subentries.values()
+        if subentry.unique_id == "81.0_81.0"
+    )
+    assert subentry.subentry_type == SUBENTRY_TYPE_LOCATION
+    assert subentry.title == "Work"
+    assert subentry.data == {
+        CONF_NAME: "Work",
+        CONF_LOCATION: {CONF_LATITUDE: 81.0, CONF_LONGITUDE: 81.0},
+        CONF_TIMESTEP: 5,
+    }
+
+
+async def test_location_subentry_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test creating a location subentry for a location that already exists."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_LOCATION),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {CONF_LATITUDE: 80.0, CONF_LONGITUDE: 80.0},
+            CONF_TIMESTEP: 5,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(config_entry.subentries) == 1
+
+
+async def test_location_subentry_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring a location subentry."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(config_entry.subentries.values()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "New name",
+            CONF_LOCATION: {CONF_LATITUDE: 82.0, CONF_LONGITUDE: 82.0},
+            CONF_TIMESTEP: 30,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated_subentry = config_entry.subentries[subentry.subentry_id]
+    assert updated_subentry.title == "New name"
+    assert updated_subentry.unique_id == "82.0_82.0"
+    assert updated_subentry.data == {
+        CONF_NAME: "New name",
+        CONF_LOCATION: {CONF_LATITUDE: 82.0, CONF_LONGITUDE: 82.0},
+        CONF_TIMESTEP: 30,
+    }
+
+
+async def test_location_subentry_reconfigure_same_location(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring a location subentry without changing the location."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(config_entry.subentries.values()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "New name",
+            CONF_LOCATION: {CONF_LATITUDE: 80.0, CONF_LONGITUDE: 80.0},
+            CONF_TIMESTEP: 1,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated_subentry = config_entry.subentries[subentry.subentry_id]
+    assert updated_subentry.title == "New name"
+    assert updated_subentry.unique_id == "80.0_80.0"
+    assert updated_subentry.data[CONF_TIMESTEP] == 1
+
+
+async def test_location_subentry_reconfigure_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring a location subentry to another configured location."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_LOCATION),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {CONF_LATITUDE: 81.0, CONF_LONGITUDE: 81.0},
+            CONF_TIMESTEP: 5,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    subentry = next(
+        subentry
+        for subentry in config_entry.subentries.values()
+        if subentry.unique_id == "81.0_81.0"
+    )
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {CONF_LATITUDE: 80.0, CONF_LONGITUDE: 80.0},
+            CONF_TIMESTEP: 5,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
