@@ -501,7 +501,7 @@ airgradient==0.10.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.9
+airos==0.6.12
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -1109,7 +1109,7 @@ gatus-api==1.2.0
 gazetteer-matcher==1.1.0
 
 # homeassistant.components.google
-gcal-sync==9.1.0
+gcal-sync==9.1.1
 
 # homeassistant.components.aladdin_connect
 genie-partner-sdk==1.0.11
@@ -1324,7 +1324,7 @@ homelink-integration-api==0.1.0
 homematicip==2.16.0
 
 # homeassistant.components.homevolt
-homevolt==0.5.0
+homevolt==0.7.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -2597,7 +2597,7 @@ pyscorpiontrack==0.1.1
 pysensibo==1.2.1
 
 # homeassistant.components.senz
-pysenz==1.0.2
+pysenz==1.1.2
 
 # homeassistant.components.sesame
 pysesame2==1.0.2
@@ -2726,10 +2726,10 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.google_drive
-python-google-drive-api==0.1.0
+python-google-drive-api==0.2.0
 
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.6
+python-google-weather-api==0.0.7
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
@@ -3382,7 +3382,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.8.4
+victron-mqtt==2026.9.2
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12
