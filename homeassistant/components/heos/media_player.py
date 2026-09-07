@@ -9,7 +9,7 @@ from functools import reduce, wraps
 import logging
 import math
 from operator import ior
-from typing import Any, Final, override
+from typing import Any, Final, NoReturn, override
 
 from pyheos import (
     AddCriteriaType,
@@ -150,7 +150,7 @@ def catch_action_error[**P, R](
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             try:
                 return await func(*args, **kwargs)
-            except (HeosError, TypeError, ValueError) as ex:
+            except (HeosError, ValueError) as ex:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="action_error",
@@ -234,6 +234,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_completed = False
             self._announce_restore_state = self._snapshot_state()
             self._announce_restore_state["tts_url"] = media_id
+            self._announce_restore_state["announcement_started"] = False
             _LOGGER.debug(
                 "Saving state for announcement: play_state=%s, volume=%s",
                 self._announce_restore_state["play_state"],
@@ -252,6 +253,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 await self._player.set_volume(volume_percent)
 
             await self._player.play_url(media_id)
+            self._announce_restore_state["announcement_started"] = True
             self._announce_in_progress = True
             self._announce_started = False
             self._announce_media_signature = None
@@ -278,13 +280,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._clear_announcement_state()
                 self._announce_lock.release()
             raise
-        except (HeosError, ValueError, TypeError) as err:
+        except (HeosError, ValueError):
             if self._announce_restore_state:
                 await self._restore_state()
             else:
                 self._announce_lock.release()
-            if isinstance(err, TypeError):
-                raise TypeError("Invalid announcement value") from err
             raise
 
     async def _capture_announcement_signature(self) -> None:
@@ -362,10 +362,18 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if "volume" not in extra:
             return None
 
-        volume = float(extra["volume"])
+        try:
+            volume = float(extra["volume"])
+        except TypeError:
+            return HeosMediaPlayer._raise_invalid_announcement_volume()
         if not math.isfinite(volume) or not 0 <= volume <= 100:
             raise ValueError("Announcement volume must be between 0 and 100")
         return round(volume * 100 if volume <= 1 else volume)
+
+    @staticmethod
+    def _raise_invalid_announcement_volume() -> NoReturn:
+        """Raise the public error for a non-numeric announcement volume."""
+        raise ValueError("Announcement volume must be a number")
 
     def _snapshot_state(self) -> dict[str, Any]:
         """Snapshot the current player state for restoration after announcement."""
@@ -377,6 +385,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             "repeat": self._player.repeat,
             "shuffle": self._player.shuffle,
             "media_id": self._player.now_playing_media.media_id,
+            "queue_id": self._player.now_playing_media.queue_id,
             "tts_url": None,
         }
 
@@ -404,7 +413,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         try:
             # Remove TTS from queue if it was added.
-            if state["tts_url"]:
+            if state["tts_url"] and state.get("announcement_started", False):
                 await asyncio.sleep(0.2)
                 await self._remove_tts_from_queue(
                     state["tts_url"], announcement_queue_id
@@ -432,15 +441,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 )
 
             try:
-                # Restore the playback state from before the announcement.
-                if state["play_state"] == PlayState.PLAY:
-                    current_media = self._player.now_playing_media
-                    is_announcement_media = (
-                        self._announce_media_signature is not None
-                        and self._media_signature(current_media)
-                        == self._announce_media_signature
-                    ) or current_media.media_id == state.get("tts_url")
-                    if is_announcement_media:
+                # Resume playback if it was playing before the announcement.
+                if state["was_playing"]:
+                    current_media_id = self._player.now_playing_media.media_id
+                    if current_media_id == state.get("tts_url"):
                         try:
                             _LOGGER.debug("Still on TTS track, skipping to next")
                             await self._player.play_next()
@@ -450,12 +454,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                     elif self._player.state != PlayState.PLAY:
                         _LOGGER.debug("Not on TTS track, ensuring playback continues")
                         await self._player.play()
-                elif state["play_state"] == PlayState.PAUSE:
-                    if self._player.state != PlayState.PAUSE:
-                        await self._player.pause()
-                elif state["play_state"] == PlayState.STOP:
-                    if self._player.state != PlayState.STOP:
-                        await self._player.stop()
             except HeosError as err:
                 _LOGGER.warning(
                     "Could not restore playback after announcement: %s", err
@@ -499,8 +497,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_start_time = None
 
     async def _remove_tts_from_queue(
-        self,
-        tts_url: str, announcement_queue_id: int | None = None
+        self, tts_url: str, announcement_queue_id: int | None = None
     ) -> None:
         """Remove TTS URL from the queue if it was added."""
         try:
