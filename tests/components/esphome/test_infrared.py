@@ -1,5 +1,7 @@
 """Test ESPHome infrared platform."""
 
+from typing import Any
+
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
@@ -7,23 +9,34 @@ from aioesphomeapi import (
     InfraredInfo,
 )
 from aioesphomeapi.client import InfraredRFReceiveEventModel
+from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components import infrared
+from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
     InfraredDeviceClass,
     InfraredReceivedSignal,
     InfraredReceiverEntity,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
 
+from tests.components.infrared.common import (
+    captured_code,
+    received_signal,
+    seed_commands,
+)
+
 ENTITY_ID = "infrared.test_ir"
+COMMAND_EVENT_ENTITY_ID = "event.test_infrared_command"
 
 
 async def _mock_ir_device(
@@ -263,3 +276,50 @@ async def test_infrared_entity_availability(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_infrared_command_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the receiver reports the known infrared commands it picks up."""
+    command = NECCommand(address=0x04, command=0x08, modulation=38000)
+    seed_commands(
+        hass_storage, [{"id": "power", "name": "Power", "code": captured_code(command)}]
+    )
+
+    await _mock_ir_device(
+        mock_esphome_device, mock_client, capabilities=InfraredCapability.RECEIVER
+    )
+
+    receiver_entry = entity_registry.async_get(ENTITY_ID)
+    assert receiver_entry is not None
+    event_entry = entity_registry.async_get(COMMAND_EVENT_ENTITY_ID)
+    assert event_entry is not None
+    assert event_entry.device_id == receiver_entry.device_id
+
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPES] == ["Power"]
+
+    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+    assert now is not None
+    freezer.move_to(now)
+    on_event = mock_client.subscribe_infrared_rf_receive.call_args[0][0]
+    on_event(
+        InfraredRFReceiveEventModel(
+            key=1, device_id=0, timings=received_signal(command).timings
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == now.isoformat(timespec="milliseconds")
+    assert state.attributes[ATTR_EVENT_TYPE] == "Power"
+    assert state.attributes["command_id"] == "power"

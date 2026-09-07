@@ -3,7 +3,7 @@
   "name": "SMLIGHT SLZB",
   "codeowners": ["@tl-sl"],
   "config_flow": true,
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth", "infrared"],
   "dhcp": [
     {
       "registered_devices": true

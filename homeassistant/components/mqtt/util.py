@@ -153,6 +153,13 @@ def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
     return {key for platform in config for key in platform}
 
 
+# Platforms another platform needs to be set up with. An infrared receiver gets a
+# companion event entity, which only the event platform can add.
+_IMPLIED_PLATFORMS: dict[Platform | str, set[Platform | str]] = {
+    Platform.INFRARED: {Platform.EVENT}
+}
+
+
 async def async_forward_entry_setup_and_setup_discovery(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -161,39 +168,45 @@ async def async_forward_entry_setup_and_setup_discovery(
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
     mqtt_data = hass.data[DATA_MQTT]
-    platforms_loaded = mqtt_data.platforms_loaded
-    new_platforms: set[Platform | str] = platforms - platforms_loaded
-    tasks: list[asyncio.Task] = []
-    if "device_automation" in new_platforms:
-        # Local import to avoid circular dependencies
-        from . import device_automation  # noqa: PLC0415
+    needed_platforms = set(platforms)
+    for platform in platforms & _IMPLIED_PLATFORMS.keys():
+        needed_platforms |= _IMPLIED_PLATFORMS[platform]
+    # A platform is only marked as loaded once it is, so callers have to be
+    # serialized: forwarding the setup of a platform twice raises.
+    async with mqtt_data.platform_setup_lock:
+        platforms_loaded = mqtt_data.platforms_loaded
+        new_platforms: set[Platform | str] = needed_platforms - platforms_loaded
+        tasks: list[asyncio.Task] = []
+        if "device_automation" in new_platforms:
+            # Local import to avoid circular dependencies
+            from . import device_automation  # noqa: PLC0415
 
-        tasks.append(
-            create_eager_task(
-                device_automation.async_setup_mqtt_device_automation_entry(
-                    hass, config_entry
+            tasks.append(
+                create_eager_task(
+                    device_automation.async_setup_mqtt_device_automation_entry(
+                        hass, config_entry
+                    )
                 )
             )
-        )
-    if "tag" in new_platforms:
-        # Local import to avoid circular dependencies
-        from . import tag  # noqa: PLC0415
+        if "tag" in new_platforms:
+            # Local import to avoid circular dependencies
+            from . import tag  # noqa: PLC0415
 
-        tasks.append(
-            create_eager_task(tag.async_setup_mqtt_tag_entry(hass, config_entry))
-        )
-    if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
-        tasks.append(
-            create_eager_task(
-                hass.config_entries.async_forward_entry_setups(
-                    config_entry, new_entity_platforms
+            tasks.append(
+                create_eager_task(tag.async_setup_mqtt_tag_entry(hass, config_entry))
+            )
+        if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
+            tasks.append(
+                create_eager_task(
+                    hass.config_entries.async_forward_entry_setups(
+                        config_entry, new_entity_platforms
+                    )
                 )
             )
-        )
-    if not tasks:
-        return
-    await asyncio.gather(*tasks)
-    platforms_loaded.update(new_platforms)
+        if not tasks:
+            return
+        await asyncio.gather(*tasks)
+        platforms_loaded.update(new_platforms)
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:

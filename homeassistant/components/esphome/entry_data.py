@@ -27,6 +27,7 @@ from aioesphomeapi import (
     Event,
     EventInfo,
     FanInfo,
+    InfraredCapability,
     InfraredInfo,
     LightInfo,
     LockInfo,
@@ -388,6 +389,14 @@ class RuntimeEntryData:
                     "Entity type %s is not supported in this version of Home Assistant",
                     info_type,
                 )
+
+        # Every infrared receiver gets a companion event entity
+        if any(
+            info.capabilities & InfraredCapability.RECEIVER
+            for info in cast(list[InfraredInfo], infos_by_type.get(InfraredInfo, ()))
+        ):
+            needed_platforms.add(Platform.EVENT)
+
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         for type_, callbacks in self.entity_info_callbacks.items():

@@ -1,15 +1,25 @@
 """Support for ESPHome event components."""
 
 from functools import partial
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from aioesphomeapi import EntityInfo, Event, EventInfo
+from aioesphomeapi import (
+    EntityInfo,
+    Event,
+    EventInfo,
+    InfraredCapability,
+    InfraredInfo,
+    build_device_unique_id,
+)
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.core import callback
+from homeassistant.components.infrared import InfraredCommandEventEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import EsphomeEntity, platform_async_setup_entry
+from .entity import EsphomeEntity, async_entity_device_info, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 PARALLEL_UPDATES = 0
 
@@ -48,9 +58,60 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
             self.async_write_ha_state()
 
 
-async_setup_entry = partial(
-    platform_async_setup_entry,
-    info_type=EventInfo,
-    entity_type=EsphomeEvent,
-    state_type=Event,
-)
+@callback
+def _async_add_infrared_command_events(
+    entry_data: RuntimeEntryData,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    added_unique_ids: set[str],
+    infos: list[EntityInfo],
+) -> None:
+    """Add the companion event entity of every infrared receiver."""
+    device_info = entry_data.device_info
+    if TYPE_CHECKING:
+        assert device_info is not None
+    entities: list[InfraredCommandEventEntity] = []
+    for info in infos:
+        if TYPE_CHECKING:
+            assert isinstance(info, InfraredInfo)
+        if not info.capabilities & InfraredCapability.RECEIVER:
+            continue
+        unique_id = build_device_unique_id(device_info.mac_address, info)
+        if unique_id in added_unique_ids:
+            continue
+        added_unique_ids.add(unique_id)
+        entities.append(
+            InfraredCommandEventEntity(
+                unique_id, async_entity_device_info(device_info, info)
+            )
+        )
+    if entities:
+        async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the ESPHome event platform."""
+    await platform_async_setup_entry(
+        hass,
+        entry,
+        async_add_entities,
+        info_type=EventInfo,
+        entity_type=EsphomeEvent,
+        state_type=Event,
+    )
+
+    entry_data = entry.runtime_data
+    entry_data.cleanup_callbacks.append(
+        entry_data.async_register_static_info_callback(
+            InfraredInfo,
+            partial(
+                _async_add_infrared_command_events,
+                entry_data,
+                async_add_entities,
+                set(),
+            ),
+        )
+    )

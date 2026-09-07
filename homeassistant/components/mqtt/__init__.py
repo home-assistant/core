@@ -93,6 +93,7 @@ from .const import (
     TEMPLATE_ERRORS,
     Platform,
 )
+from .entity import MqttEntity
 from .models import (
     DATA_MQTT,
     DATA_MQTT_AVAILABLE,
@@ -448,7 +449,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             create_eager_task(entity.async_remove())
             for mqtt_platform in mqtt_platforms
             for entity in list(mqtt_platform.entities.values())
-            if getattr(entity, "_discovery_data", None) is None
+            # A companion entity of an MQTT entity is not configured in YAML;
+            # it is reloaded with the entity it belongs to
+            if isinstance(entity, MqttEntity)
+            and getattr(entity, "_discovery_data", None) is None
             and mqtt_platform.config_entry
             and mqtt_platform.domain in ENTITY_PLATFORMS
         ]

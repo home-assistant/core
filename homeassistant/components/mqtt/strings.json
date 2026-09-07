@@ -1093,6 +1093,13 @@
       "button_triple_press": "\"{subtype}\" triple clicked"
     }
   },
+  "entity": {
+    "event": {
+      "infrared_command": {
+        "name": "Infrared command"
+      }
+    }
+  },
   "exceptions": {
     "addon_start_failed": {
       "message": "Failed to correctly start {addon} app."

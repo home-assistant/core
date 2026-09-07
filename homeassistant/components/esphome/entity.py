@@ -448,6 +448,22 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | Non
 )
 
 
+@callback
+def async_entity_device_info(
+    device_info: EsphomeDeviceInfo, entity_info: EntityInfo
+) -> DeviceInfo:
+    """Return the device an entity of this static info belongs to."""
+    if entity_info.device_id:
+        # Entity belongs to a sub device
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")}
+        )
+    # Entity belongs to the main device
+    return DeviceInfo(
+        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+    )
+
+
 class EsphomeBaseEntity(Entity):
     """Define a base esphome entity."""
 
@@ -484,20 +500,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         self._key_unsubs: list[CALLBACK_TYPE] = []
         self._on_static_info_update(entity_info)
 
-        # Determine the device connection based on whether this
-        # entity belongs to a sub device
-        if entity_info.device_id:
-            # Entity belongs to a sub device
-            self._attr_device_info = DeviceInfo(
-                identifiers={
-                    (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
-                }
-            )
-        else:
-            # Entity belongs to the main device
-            self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
-            )
+        self._attr_device_info = async_entity_device_info(device_info, entity_info)
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -27,6 +27,7 @@ from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON, PAYLOAD_NONE
 from .entity import MqttEntity, async_setup_entity_entry_helper
+from .infrared import async_setup_command_events
 from .models import (
     DATA_MQTT,
     MqttValueTemplate,
@@ -84,6 +85,9 @@ async def async_setup_entry(
         async_add_entities,
         DISCOVERY_SCHEMA,
         PLATFORM_SCHEMA_MODERN,
+    )
+    hass.data[DATA_MQTT].reload_dispatchers.append(
+        async_setup_command_events(hass, async_add_entities)
     )
 
 

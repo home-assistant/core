@@ -97,42 +97,36 @@ DEFAULT_CONFIG = {
 @pytest.mark.parametrize(
     "hass_config",
     [
-        ({DOMAIN: {light.DOMAIN: {"schema": "template", "name": "test"}}},),
-        (
-            {
-                DOMAIN: {
-                    light.DOMAIN: {
-                        "schema": "template",
-                        "name": "test",
-                        "command_topic": "test_topic",
-                    }
+        {DOMAIN: {light.DOMAIN: {"schema": "template", "name": "test"}}},
+        {
+            DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "template",
+                    "name": "test",
+                    "command_topic": "test_topic",
                 }
-            },
-        ),
-        (
-            {
-                DOMAIN: {
-                    light.DOMAIN: {
-                        "schema": "template",
-                        "name": "test",
-                        "command_topic": "test_topic",
-                        "command_on_template": "on",
-                    }
+            }
+        },
+        {
+            DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "template",
+                    "name": "test",
+                    "command_topic": "test_topic",
+                    "command_on_template": "on",
                 }
-            },
-        ),
-        (
-            {
-                DOMAIN: {
-                    light.DOMAIN: {
-                        "schema": "template",
-                        "name": "test",
-                        "command_topic": "test_topic",
-                        "command_off_template": "off",
-                    }
+            }
+        },
+        {
+            DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "template",
+                    "name": "test",
+                    "command_topic": "test_topic",
+                    "command_off_template": "off",
                 }
-            },
-        ),
+            }
+        },
     ],
 )
 async def test_setup_fails(
@@ -141,9 +135,9 @@ async def test_setup_fails(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that setup fails with missing required configuration items."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config" in caplog.text
+    await mqtt_mock_entry()
+    assert "for manually configured MQTT light item" in caplog.text
+    assert hass.states.get("light.test") is None
 
 
 @pytest.mark.parametrize(

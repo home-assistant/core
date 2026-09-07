@@ -97,6 +97,11 @@
         "name": "Zigbee restart"
       }
     },
+    "event": {
+      "infrared_command": {
+        "name": "Infrared command"
+      }
+    },
     "light": {
       "ambilight": {
         "name": "Ambilight"

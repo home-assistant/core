@@ -1,13 +1,16 @@
 """Tests for SLZB-Ultima infrared entity."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from infrared_protocols.commands import Command
+from infrared_protocols.commands.nec import NECCommand
 from pysmlight.const import Events as SmEvents
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest
 
+from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.components.infrared import (
     async_send_command,
     async_subscribe_receiver,
@@ -15,11 +18,20 @@ from homeassistant.components.infrared import (
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import get_mock_event_function
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
+from tests.components.infrared.common import (
+    captured_code,
+    received_signal,
+    seed_commands,
+)
+
+RECEIVER_ENTITY_ID = "infrared.mock_title_infrared_receiver"
+COMMAND_EVENT_ENTITY_ID = "event.mock_title_infrared_command"
 
 
 class MockCommand(Command):
@@ -37,7 +49,7 @@ class MockCommand(Command):
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Platforms, which should be loaded during the test."""
-    return [Platform.INFRARED]
+    return [Platform.EVENT, Platform.INFRARED]
 
 
 async def test_infrared_setup_ultima(
@@ -187,3 +199,41 @@ async def test_infrared_receiver_event(
 
     assert len(signals) == 1
     assert signals[0].timings == [9000, 4500, 560, 1690]
+
+
+@pytest.mark.freeze_time("2025-09-03T22:00:00+00:00")
+async def test_infrared_command_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    mock_ultima_client: MagicMock,
+) -> None:
+    """Test the receiver reports the known infrared commands it picks up."""
+    command = NECCommand(address=0x04, command=0x08, modulation=38000)
+    seed_commands(
+        hass_storage, [{"id": "power", "name": "Power", "code": captured_code(command)}]
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    receiver_entry = entity_registry.async_get(RECEIVER_ENTITY_ID)
+    assert receiver_entry is not None
+    event_entry = entity_registry.async_get(COMMAND_EVENT_ENTITY_ID)
+    assert event_entry is not None
+    assert event_entry.device_id == receiver_entry.device_id
+
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPES] == ["Power"]
+
+    event_function = get_mock_event_function(mock_ultima_client, SmEvents.IR_CODE)
+    event_function(received_signal(command).timings)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == "2025-09-03T22:00:00.000+00:00"
+    assert state.attributes[ATTR_EVENT_TYPE] == "Power"
+    assert state.attributes["command_id"] == "power"

@@ -9,8 +9,10 @@ import orjson
 import pytest
 
 from homeassistant.components import infrared, mqtt
+from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -37,7 +39,15 @@ from .common import (
 )
 
 from tests.common import async_fire_mqtt_message
+from tests.components.infrared.common import (
+    captured_code,
+    received_signal,
+    seed_commands,
+)
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+
+RECEIVER_ENTITY_ID = "infrared.ir_blaster_test"
+COMMAND_EVENT_ENTITY_ID = "event.ir_blaster_infrared_command"
 
 DEFAULT_CONFIG_EMITTER = {
     mqtt.DOMAIN: {
@@ -713,3 +723,62 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            infrared.DOMAIN,
+            DEFAULT_CONFIG_RECEIVER,
+            (
+                {
+                    "unique_id": "very_unique",
+                    "device": {"identifiers": ["ir_blaster"], "name": "IR blaster"},
+                },
+            ),
+        )
+    ],
+)
+async def test_infrared_command_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the receiver reports the known infrared commands it picks up."""
+    seed_commands(
+        hass_storage,
+        [{"id": "power", "name": "Power", "code": captured_code(TEST_COMMAND)}],
+    )
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+
+    await mqtt_mock_entry()
+
+    receiver_entry = entity_registry.async_get(RECEIVER_ENTITY_ID)
+    assert receiver_entry is not None
+    event_entry = entity_registry.async_get(COMMAND_EVENT_ENTITY_ID)
+    assert event_entry is not None
+    assert event_entry.device_id == receiver_entry.device_id
+
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPES] == ["Power"]
+
+    payload = orjson.dumps(
+        {
+            "timings": received_signal(TEST_COMMAND).timings,
+            "modulation": TEST_COMMAND.modulation,
+        }
+    ).decode()
+    async_fire_mqtt_message(hass, "test-topic", payload, 0, False)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == now.isoformat(timespec="milliseconds")
+    assert state.attributes[ATTR_EVENT_TYPE] == "Power"
+    assert state.attributes["command_id"] == "power"

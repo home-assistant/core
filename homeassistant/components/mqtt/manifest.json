@@ -4,7 +4,7 @@
   "after_dependencies": ["hassio"],
   "codeowners": ["@emontnemery", "@jbouwh", "@bdraco"],
   "config_flow": true,
-  "dependencies": ["file_upload", "http"],
+  "dependencies": ["file_upload", "http", "infrared"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt",
   "integration_type": "service",
   "iot_class": "local_push",

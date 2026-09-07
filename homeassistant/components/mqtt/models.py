@@ -490,6 +490,7 @@ class MqttData:
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
+    platform_setup_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     platforms_loaded: set[Platform | str] = field(default_factory=set)
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)

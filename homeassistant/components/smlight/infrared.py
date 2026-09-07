@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, INFRARED_RECEIVER_UNIQUE_ID_SUFFIX
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -76,7 +76,9 @@ class SmInfraredReceiverEntity(SmEntity, InfraredReceiverEntity):
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared receiver."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}-receiver"
+        self._attr_unique_id = (
+            f"{coordinator.unique_id}{INFRARED_RECEIVER_UNIQUE_ID_SUFFIX}"
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

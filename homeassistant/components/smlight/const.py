@@ -20,6 +20,10 @@ UPTIME_DEVIATION = timedelta(seconds=5)
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
+# Shared with the event platform, which adds the companion event entity of the
+# infrared receiver and identifies it by its unique id.
+INFRARED_RECEIVER_UNIQUE_ID_SUFFIX = "-receiver"
+
 
 class BLEScannerMode(StrEnum):
     """BLE scanner mode."""

@@ -1,6 +1,7 @@
 """Support for MQTT infrared platform."""
 
 from collections.abc import Callable
+from dataclasses import dataclass, field
 import logging
 from typing import Any, override
 
@@ -10,17 +11,19 @@ import voluptuous as vol
 from homeassistant.components import infrared
 from homeassistant.components.infrared import (
     InfraredCommand,
+    InfraredCommandEventEntity,
     InfraredEmitterEntity,
     InfraredReceivedSignal,
     InfraredReceiverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -118,6 +121,55 @@ DISCOVERY_SCHEMA = vol.All(
     INFRARED_BASE_SCHEMA,
     validate_mqtt_infrared_discovery,
 )
+
+
+# A receiver gets a companion event entity, and the entity domain of an entity
+# comes from the platform that adds it, so only the event platform can add one.
+# The two platforms are set up independently of each other, so the companions
+# and the callback that adds them meet here, in whichever order they arrive.
+_DATA_COMMAND_EVENTS: HassKey[_CommandEvents] = HassKey("mqtt_infrared_command_events")
+
+
+@dataclass(slots=True)
+class _CommandEvents:
+    """The companion event entities of the receivers, and who adds them."""
+
+    async_add_entities: AddConfigEntryEntitiesCallback | None = None
+    # Keyed by the unique id of the receiver. A companion outlives a reload of
+    # its receiver, which picks its own back up.
+    entities: dict[str, InfraredCommandEventEntity] = field(default_factory=dict)
+    pending: list[tuple[InfraredCommandEventEntity, str | None]] = field(
+        default_factory=list
+    )
+
+    @callback
+    def async_flush(self) -> None:
+        """Add the companions the event platform has not taken yet."""
+        if (async_add_entities := self.async_add_entities) is None:
+            return
+        for entity, config_subentry_id in self.pending:
+            async_add_entities([entity], config_subentry_id=config_subentry_id)
+        self.pending.clear()
+
+
+@callback
+def async_setup_command_events(
+    hass: HomeAssistant, async_add_entities: AddConfigEntryEntitiesCallback
+) -> CALLBACK_TYPE:
+    """Add the companion event entity of every infrared receiver.
+
+    Called by the event platform, which owns the entity domain of a companion.
+    """
+    command_events = hass.data.setdefault(_DATA_COMMAND_EVENTS, _CommandEvents())
+    command_events.async_add_entities = async_add_entities
+    command_events.async_flush()
+
+    @callback
+    def _async_teardown() -> None:
+        """Forget the companions, whose platform is gone."""
+        hass.data.pop(_DATA_COMMAND_EVENTS, None)
+
+    return _async_teardown
 
 
 async def async_setup_entry(
@@ -261,3 +313,45 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
+
+    @override
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Claim the companion event entity of the receiver."""
+        await super().mqtt_async_added_to_hass()
+        # A companion knows its receiver by unique id and shares its device, so
+        # a receiver without either cannot have one.
+        if (unique_id := self.unique_id) is None or (
+            device_info := self.device_info
+        ) is None:
+            return
+        command_events = self.hass.data.setdefault(
+            _DATA_COMMAND_EVENTS, _CommandEvents()
+        )
+        if unique_id in command_events.entities:
+            return
+        command_event = InfraredCommandEventEntity(unique_id, device_info)
+        command_events.entities[unique_id] = command_event
+        config_subentry_id = (
+            None
+            if self.registry_entry is None
+            else self.registry_entry.config_subentry_id
+        )
+        command_events.pending.append((command_event, config_subentry_id))
+        command_events.async_flush()
+
+    @override
+    async def _async_remove_state_and_registry_entry(self) -> None:
+        """Take the companion event entity down with the receiver.
+
+        Only the config of a receiver going away removes its companion for
+        good; a reload keeps it, so that renaming the companion survives one.
+        """
+        if (
+            (unique_id := self.unique_id) is not None
+            and (command_events := self.hass.data.get(_DATA_COMMAND_EVENTS)) is not None
+            and (command_event := command_events.entities.pop(unique_id, None))
+            is not None
+            and (registry_entry := command_event.registry_entry) is not None
+        ):
+            er.async_get(self.hass).async_remove(registry_entry.entity_id)
+        await super()._async_remove_state_and_registry_entry()
