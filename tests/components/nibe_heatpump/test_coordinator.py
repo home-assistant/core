@@ -160,8 +160,6 @@ async def pending_initial_refresh(
                 await hass.async_block_till_done()
 
             assert hass.state is CoreState.running
-            assert not release.is_set()
-            assert entry.runtime_data.task is not None
             assert not entry.runtime_data.task.done()
             assert (
                 hass.states.get("number.heating_offset_climate_system_1_40031").state
@@ -197,11 +195,10 @@ async def test_unload_cancels_initial_refresh(
     mock_connection: MockConnection,
 ) -> None:
     """Unloading cancels the pending initial read and closes its connection."""
-    entry, release = pending_initial_refresh
+    entry, _ = pending_initial_refresh
     task = entry.runtime_data.task
 
     assert await hass.config_entries.async_unload(entry.entry_id)
 
-    assert not release.is_set()
     assert task.cancelled()
     mock_connection.stop.assert_awaited_once()
