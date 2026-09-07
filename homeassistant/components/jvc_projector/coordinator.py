@@ -32,6 +32,7 @@ CORE_COMMANDS: tuple[type[Command], ...] = (
     cmd.Signal,
     cmd.Input,
     cmd.LightTime,
+    cmd.Version,
 )
 
 TRANSLATIONS = str.maketrans({"+": "p", "%": "p", ":": "x"})
@@ -94,8 +95,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             new_state.get(cmd.Signal) == cmd.Signal.NONE
             and self.state.get(cmd.Signal) != cmd.Signal.NONE
         ):
-            keep_commands = (*CORE_COMMANDS, cmd.LightTime, cmd.Version)
-            self.state = {k: v for k, v in self.state.items() if k in keep_commands}
+            self.state = {k: v for k, v in self.state.items() if k in CORE_COMMANDS}
 
         # Update state with new values
         for k, v in new_state.items():
