@@ -20,6 +20,7 @@ from homeassistant.components.otbr.util import (
     ISSUED_TIMESTAMPS_KEY,
     ISSUED_TIMESTAMPS_STORAGE_KEY,
     async_get_dataset_lock,
+    async_get_issued_timestamps,
 )
 from homeassistant.components.thread import (
     async_add_dataset,
@@ -944,6 +945,69 @@ async def test_a_router_on_another_mesh_keeps_its_repair_issues(
     assert not issue_registry.async_get_issue(
         domain="otbr", issue_id=f"insecure_thread_network_{thread_entry.entry_id}"
     )
+
+
+async def test_a_migrating_mesh_is_not_reported_as_already_on_network(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Targeting the network a migrating mesh is leaving is not a no-op.
+
+    A second border router on the mesh has not learned the pending dataset
+    yet, so it still reports the network being left as its active one.
+    Calling that "already on network" would be wrong within the delay.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    issued = await async_get_issued_timestamps(hass)
+    active = tlv_parser.parse_tlv(DATASET_CH16.hex())
+    source_xpan = str(active[MeshcopTLVType.EXTPANID]).lower()
+    await issued.async_set(
+        source_xpan, (1, 0), until=dt_util.utcnow().timestamp() + 300
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=DATASET_CH16.hex())
+
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert not pending_calls(aioclient_mock)
+
+
+async def test_the_store_is_flushed_before_the_other_routers_are_asked(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Reaching the other routers cannot delay the migration reaching disk.
+
+    Refreshing their repair issues reads each of them over the network,
+    which can block or never answer. The mesh is already migrating by then,
+    so what the store holds must not wait on it.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+    saved_when_asked: list[bool] = []
+
+    async def record_and_answer() -> bytes:
+        saved_when_asked.append(dataset_store.STORAGE_KEY in hass_storage)
+        return DATASET_CH16
+
+    with patch.object(
+        thread_entry.runtime_data,
+        "get_active_dataset_tlvs",
+        side_effect=record_and_answer,
+    ):
+        await call_migrate(
+            hass, dataset=TARGET, config_entry=otbr_config_entry_multipan
+        )
+
+    assert saved_when_asked == [True]
 
 
 async def test_migration_reports_a_discarded_store_write(
