@@ -823,13 +823,13 @@ async def test_flex_tier_retry(
 @pytest.mark.parametrize(
     "subentry_options", [{CONF_CHAT_MODEL: "gpt-5.6-sol", CONF_PRO_MODE: True}]
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_model_args(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
-    subentry_options: dict,
+    subentry_options: dict[str, str | bool],
 ) -> None:
     """Test model arguments for various configuration."""
 
@@ -860,4 +860,5 @@ async def test_model_args(
     model_args = mock_create_stream.call_args.kwargs.copy()
     model_args.pop("input")
     assert model_args.pop("user") == result.conversation_id
+    assert model_args.pop("prompt_cache_key") == subentry.subentry_id
     assert model_args == snapshot
