@@ -52,6 +52,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     config_entry: DucoConfigEntry
     board_info: BoardInfo
     _configured_node_names: dict[int, str]
+    _coordinator_update_version: int
     _node_refresh_versions: dict[int, int]
     _node_update_errors: dict[int, DucoError]
     _node_update_versions: dict[int, int]
@@ -72,19 +73,24 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
+        self._coordinator_update_version = 0
         self._node_refresh_versions = {}
         self._node_update_errors = {}
         self._node_update_versions = {}
 
     async def async_refresh_node(self, node_id: int) -> None:
         """Refresh one node and publish its latest reported state."""
+        coordinator_update_version = self._coordinator_update_version
         refresh_version = self._node_refresh_versions.get(node_id, 0) + 1
         self._node_refresh_versions[node_id] = refresh_version
 
         try:
             node = await self.client.async_get_node_info(node_id)
         except DucoError as err:
-            if self._node_refresh_versions[node_id] == refresh_version:
+            if (
+                self._coordinator_update_version == coordinator_update_version
+                and self._node_refresh_versions[node_id] == refresh_version
+            ):
                 self._node_update_errors[node_id] = err
                 self._node_update_versions[node_id] = (
                     self._node_update_versions.get(node_id, 0) + 1
@@ -94,7 +100,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         # Do not publish stale readbacks or mask a concurrent coordinator failure.
         if (
-            self._node_refresh_versions[node_id] != refresh_version
+            self._coordinator_update_version != coordinator_update_version
+            or self._node_refresh_versions[node_id] != refresh_version
             or not self.last_update_success
         ):
             return
@@ -278,6 +285,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 if node_id in nodes_by_id and node_id in self.data.nodes:
                     nodes_by_id[node_id] = self.data.nodes[node_id]
 
+            self._coordinator_update_version += 1
         return DucoData(
             nodes=nodes_by_id,
             node_actions=node_actions,

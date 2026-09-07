@@ -17,8 +17,10 @@ from duco_connectivity import (
     NodeType,
     VentilationState,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
@@ -41,7 +43,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_platform_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _SELECT_ENTITY = "select.living_ventilation_state"
 _VALVE_SELECT_ENTITY = "select.bedroom_valve_ventilation_state"
@@ -109,6 +111,17 @@ def _assert_select_state(hass: HomeAssistant, expected_state: str) -> None:
     state = hass.states.get(_SELECT_ENTITY)
     assert state is not None
     assert state.state == expected_state
+
+
+async def _async_wait_for_select_state(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Wait for the ventilation select state."""
+    async with asyncio.timeout(1):
+        while (
+            state := hass.states.get(_SELECT_ENTITY)
+        ) is None or state.state != expected_state:
+            await asyncio.sleep(0)
 
 
 async def _async_select_option(hass: HomeAssistant, option: str) -> None:
@@ -332,13 +345,23 @@ async def test_targeted_readback_failure_marks_coordinator_unavailable(
     _assert_select_state(hass, STATE_UNAVAILABLE)
 
 
-async def test_targeted_readback_survives_older_coordinator_poll(
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("readback_error", "expected_state"),
+    [
+        pytest.param(None, "MAN3", id="success"),
+        pytest.param(DucoError("Readback failed"), STATE_UNAVAILABLE, id="failure"),
+    ],
+)
+async def test_targeted_outcome_survives_older_coordinator_poll(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    readback_error: DucoError | None,
+    expected_state: str,
 ) -> None:
-    """Test an older in-flight poll cannot overwrite a targeted node readback."""
+    """Test an older in-flight poll cannot overwrite a targeted outcome."""
     poll_started = asyncio.Event()
     release_poll = asyncio.Event()
 
@@ -348,49 +371,22 @@ async def test_targeted_readback_survives_older_coordinator_poll(
         return mock_nodes
 
     mock_duco_client.async_get_nodes.side_effect = get_nodes
-    mock_duco_client.async_get_node_info.side_effect = None
     mock_duco_client.async_get_node_info.return_value = _replace_node_state(
         mock_nodes[0], "MAN3"
     )
+    mock_duco_client.async_get_node_info.side_effect = readback_error
 
-    poll_task = asyncio.create_task(init_integration.runtime_data.async_refresh())
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await poll_started.wait()
 
     await _async_select_option(hass, "MAN3")
+    _assert_select_state(hass, expected_state)
 
     release_poll.set()
-    await poll_task
+    await hass.async_block_till_done()
 
-    _assert_select_state(hass, "MAN3")
-
-
-async def test_older_coordinator_poll_does_not_recover_failed_targeted_readback(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
-) -> None:
-    """Test an older poll cannot recover a failed targeted readback."""
-    poll_started = asyncio.Event()
-    release_poll = asyncio.Event()
-
-    async def get_nodes() -> list[Node]:
-        poll_started.set()
-        await release_poll.wait()
-        return mock_nodes
-
-    mock_duco_client.async_get_nodes.side_effect = get_nodes
-    poll_task = asyncio.create_task(init_integration.runtime_data.async_refresh())
-    await poll_started.wait()
-
-    mock_duco_client.async_get_node_info.side_effect = DucoError("Readback failed")
-    await _async_select_option(hass, "MAN3")
-    _assert_select_state(hass, STATE_UNAVAILABLE)
-
-    release_poll.set()
-    await poll_task
-
-    _assert_select_state(hass, STATE_UNAVAILABLE)
+    _assert_select_state(hass, expected_state)
 
 
 async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
@@ -436,11 +432,58 @@ async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
     _assert_select_state(hass, "MAN3")
 
 
-async def test_targeted_readback_ignored_when_node_disappears(
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "readback_error",
+    [
+        pytest.param(None, id="success"),
+        pytest.param(DucoError("Readback failed"), id="failure"),
+    ],
+)
+async def test_newer_coordinator_poll_supersedes_targeted_outcome(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    readback_error: DucoError | None,
+) -> None:
+    """Test a newer coordinator poll supersedes an older targeted outcome."""
+    readback_started = asyncio.Event()
+    release_readback = asyncio.Event()
+    readback = AsyncMock(
+        return_value=_replace_node_state(mock_nodes[0], "MAN3"),
+        side_effect=readback_error,
+    )
+
+    async def get_node_info(node_id: int) -> Node:
+        readback_started.set()
+        await release_readback.wait()
+        return await readback(node_id)
+
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await readback_started.wait()
+
+    mock_duco_client.async_get_nodes.return_value = [
+        _replace_node_state(mock_nodes[0], "CNT2"),
+        *mock_nodes[1:],
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await _async_wait_for_select_state(hass, "CNT2")
+
+    release_readback.set()
+    await write_task
+
+    _assert_select_state(hass, "CNT2")
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_targeted_readback_ignored_when_node_disappears(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a readback is ignored when its node disappears during the request."""
     readback_started = asyncio.Event()
@@ -458,8 +501,9 @@ async def test_targeted_readback_ignored_when_node_disappears(
     mock_duco_client.async_get_nodes.return_value = [
         node for node in mock_nodes if node.node_id != 1
     ]
-    await init_integration.runtime_data.async_refresh()
-    _assert_select_state(hass, STATE_UNAVAILABLE)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await _async_wait_for_select_state(hass, STATE_UNAVAILABLE)
 
     release_readback.set()
     await write_task
@@ -467,11 +511,12 @@ async def test_targeted_readback_ignored_when_node_disappears(
     _assert_select_state(hass, STATE_UNAVAILABLE)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_targeted_readback_does_not_recover_failed_coordinator(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a node readback does not recover a failed coordinator."""
     readback_started = asyncio.Event()
@@ -487,9 +532,9 @@ async def test_targeted_readback_does_not_recover_failed_coordinator(
     await readback_started.wait()
 
     mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
-    await init_integration.runtime_data.async_refresh()
-
-    _assert_select_state(hass, STATE_UNAVAILABLE)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await _async_wait_for_select_state(hass, STATE_UNAVAILABLE)
 
     release_readback.set()
     await write_task
@@ -501,6 +546,7 @@ async def test_select_entity_is_added_when_action_discovery_succeeds_later(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test select entities are added when action discovery becomes available later."""
     mock_duco_client.async_get_node_actions.side_effect = [
@@ -510,13 +556,12 @@ async def test_select_entity_is_added_when_action_discovery_succeeds_later(
         ),
     ]
 
-    config_entry = await setup_platform_integration(
-        hass, mock_config_entry, [Platform.SELECT]
-    )
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
     assert hass.states.get(_SELECT_ENTITY) is None
 
-    await config_entry.runtime_data.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(_SELECT_ENTITY)
