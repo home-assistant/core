@@ -232,7 +232,7 @@
           "warming": "Warming"
         }
       },
-    "resolution": {
+      "resolution": {
         "name": "Resolution",
         "state": {
           "480i": "480i",
