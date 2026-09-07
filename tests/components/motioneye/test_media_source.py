@@ -3,7 +3,6 @@
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
-from motioneye_client.client import MotionEyeClientPathError
 import pytest
 
 from homeassistant.components.media_source import (
@@ -439,8 +438,6 @@ async def test_async_resolve_media_failure(
         config_entry_id=config.entry_id,
         identifiers={(DOMAIN, f"{config.entry_id}_NOTINT")},
     )
-    client.get_movie_url = Mock(return_value="http://url")
-
     # URI doesn't contain necessary components.
     with pytest.raises(Unresolvable):
         await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/foo", None)
@@ -485,17 +482,7 @@ async def test_async_resolve_media_failure(
             None,
         )
 
-    # Playback URL raises exception.
-    client.get_movie_url = Mock(side_effect=MotionEyeClientPathError)
-    with pytest.raises(Unresolvable):
-        await async_resolve_media(
-            hass,
-            f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
-            None,
-        )
-
     # Media path does not start with '/'
-    client.get_movie_url = Mock(side_effect=MotionEyeClientPathError)
     with pytest.raises(MediaSourceError):
         await async_resolve_media(
             hass,
