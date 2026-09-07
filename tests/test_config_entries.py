@@ -4290,6 +4290,7 @@ async def test_unique_id_not_update_existing_entry(
 ABORT_IN_PROGRESS = {
     "type": data_entry_flow.FlowResultType.ABORT,
     "reason": "already_in_progress",
+    "translation_domain": HOMEASSISTANT_DOMAIN,
 }
 
 
@@ -5318,6 +5319,8 @@ async def test_default_discovery_in_progress(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
         )
         assert result2["type"] is data_entry_flow.FlowResultType.ABORT
+        assert result2["reason"] == "already_in_progress"
+        assert result2["translation_domain"] == HOMEASSISTANT_DOMAIN
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

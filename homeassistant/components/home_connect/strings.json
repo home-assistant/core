@@ -1589,9 +1589,6 @@
     "no_program_to_start": {
       "message": "No program to start"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "pause_program": {
       "message": "Error pausing program: {error}"
     },
