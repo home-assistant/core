@@ -9,7 +9,12 @@ from typing import override
 
 from thinqconnect import USAGE_DAILY, USAGE_MONTHLY, DeviceType, ThinQAPIException
 from thinqconnect.devices.const import Property as ThinQProperty
-from thinqconnect.integration import ActiveMode, ThinQPropertyEx, TimerProperty
+from thinqconnect.integration import (
+    ActiveMode,
+    OvenTimerPropertyState,
+    ThinQPropertyEx,
+    TimerProperty,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -728,51 +733,16 @@ async def async_setup_entry(
 
 
 class ThinQOvenTimerSensorEntity(ThinQEntity, SensorEntity):
-    """Expose a stable cook-timer deadline without extending cached readings."""
-
-    def __init__(
-        self,
-        coordinator: DeviceDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
-        property_id: str,
-    ) -> None:
-        """Initialize the timer using the existing per-cavity ThinQ identity."""
-        super().__init__(coordinator, entity_description, property_id)
-        self._last_timer_update: int | None = None
-        self._attr_native_value: datetime | None = None
-        self._device_state_id = (
-            f"{self.location}_{ThinQProperty.CURRENT_STATE}"
-            if self.location is not None
-            else ThinQProperty.CURRENT_STATE
-        )
+    """Expose the cook-timer end time maintained by the ThinQ library."""
 
     @override
     def _update_status(self) -> None:
-        """Re-anchor only when LG reports a changed, active cook timer."""
-        timer_update = self.coordinator.oven_timer_updates.get(self.location, 0)
-        previous_update = self._last_timer_update
-        self._last_timer_update = timer_update
-        status = self.coordinator.data.get(self._device_state_id)
-        remaining = self.data.value
-        if (
-            status is None
-            or status.value not in {"preheating", "cooking_in_progress"}
-            or not isinstance(remaining, time)
-            or remaining == time.min
-        ):
-            self._attr_native_value = None
-            return
-
-        # Status-only pushes cannot restart a timer cached from an earlier cook.
-        if timer_update == previous_update:
-            return
-        deadline = dt_util.utcnow() + timedelta(
-            hours=remaining.hour, minutes=remaining.minute, seconds=remaining.second
+        """Read the library's per-cavity timer state."""
+        self._attr_native_value = (
+            self.data.end_time
+            if isinstance(self.data, OvenTimerPropertyState)
+            else None
         )
-        if self._attr_native_value is None or abs(
-            deadline - self._attr_native_value
-        ) > timedelta(seconds=5):
-            self._attr_native_value = deadline
 
 
 class ThinQSensorEntity(ThinQEntity, SensorEntity):
