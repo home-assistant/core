@@ -45,7 +45,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         except ApiException as err:
             self.logger.error("Failed to get user ID from Weheat API: %s", err)
-            return self.async_abort(reason="oauth_failed")
+            return self.async_abort(reason="cannot_connect")
         if user_id is None:
             return self.async_abort(reason="oauth_failed")
         await self.async_set_unique_id(user_id)

@@ -147,14 +147,21 @@ async def test_reauth(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
-    "side_effect",
-    [ApiException(status=500, reason="Internal Server Error"), None],
+    ("side_effect", "expected_reason"),
+    [
+        (
+            ApiException(status=500, reason="Internal Server Error"),
+            "cannot_connect",
+        ),
+        (None, "oauth_failed"),
+    ],
 )
 async def test_api_error_during_create_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     side_effect: Exception | None,
+    expected_reason: str,
 ) -> None:
     """Test config flow aborts when the API call fails or returns no user."""
     result = await hass.config_entries.flow.async_init(
@@ -171,7 +178,7 @@ async def test_api_error_during_create_entry(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_failed"
+    assert result["reason"] == expected_reason
 
 
 async def handle_oauth(
