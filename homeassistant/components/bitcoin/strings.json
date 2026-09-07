@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown_currency": "blockchain.com does not quote Bitcoin in the currency from your YAML configuration."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "currency": "[%key:component::bitcoin::config::step::user::data::currency%]"
+        },
+        "data_description": {
+          "currency": "[%key:component::bitcoin::config::step::user::data_description::currency%]"
+        }
+      },
+      "user": {
+        "data": {
+          "currency": "Currency"
+        },
+        "data_description": {
+          "currency": "The currency the Bitcoin exchange rate is shown in."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nWhile importing your YAML configuration, Home Assistant could not reach blockchain.com. Check your internet connection and restart Home Assistant to try again, or remove the `{domain}` sensor platform from your `configuration.yaml` file and set the integration up from the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_dropped_currency": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\n{integration_title} can only be set up once, so the sensor platform asking for `{currency}` was not imported and its exchange rate sensor is gone. To get the rate in `{currency}` back, remove the `{domain}` sensor platform from your `configuration.yaml` file, then select **Reconfigure** on the {integration_title} integration and pick `{currency}`.",
+      "title": "[%key:component::bitcoin::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown_currency": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nWhile importing your YAML configuration, Home Assistant found that blockchain.com does not quote Bitcoin in `{currency}`. Correct the currency in your `configuration.yaml` file and restart Home Assistant to try again, or remove the `{domain}` sensor platform and set the integration up from the UI.",
+      "title": "[%key:component::bitcoin::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  }
+}
