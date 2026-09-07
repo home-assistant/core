@@ -2762,20 +2762,17 @@ async def test_reader_writer_restore_late_error(
         ),
         pytest.param(
             ["outdated", "available", "restarting", "outdated", "new"],
-            # Supervisor restarts before it answers the update request
             SupervisorConnectionError(),
             1,
             id="update_restarting",
         ),
         pytest.param(
-            # A concurrent Supervisor update finished and Supervisor restarts
             ["outdated", "restarting", "new"],
             None,
             0,
             id="restarting_after_reload",
         ),
         pytest.param(
-            # A concurrent Supervisor update finished and Supervisor is back
             ["outdated", "new"],
             None,
             0,
@@ -2807,14 +2804,12 @@ async def test_reader_writer_restore_updates_supervisor(
     )
     infos = {
         "outdated": outdated,
-        # After reload the new version is known
         "available": replace(
             outdated, version_latest="2026.08.0", update_available=True
         ),
         "restarting": SupervisorConnectionError(),
         "new": replace(outdated, version="2026.08.0", version_latest="2026.08.0"),
     }
-    # Forget the call made when the hassio integration was set up
     supervisor_info.reset_mock()
     supervisor_info.side_effect = [infos[name] for name in info_sequence]
 
@@ -2899,7 +2894,6 @@ async def test_reader_writer_restore_supervisor_up_to_date(
     supervisor_info.return_value = replace(
         supervisor_info.return_value, version=supervisor_version
     )
-    # Forget the call made when the hassio integration was set up
     supervisor_info.reset_mock()
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -2966,7 +2960,6 @@ async def test_reader_writer_restore_no_supervisor_update(
     supervisor_info.return_value = replace(
         supervisor_info.return_value, version="2026.07.5", version_latest=version_latest
     )
-    # Forget the call made when the hassio integration was set up
     supervisor_info.reset_mock()
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -3061,7 +3054,6 @@ async def test_reader_writer_restore_supervisor_update_error(
     outdated = replace(
         supervisor_info.return_value, version="2026.07.5", version_latest="2026.08.0"
     )
-    # Forget the call made when the hassio integration was set up
     supervisor_info.reset_mock()
     supervisor_info.side_effect = [outdated, info_error or outdated]
 
@@ -3183,7 +3175,6 @@ async def test_reader_writer_restore_supervisor_check_error(
     # The agent reads the backup details twice before the update check does
     supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
     supervisor_client.reload_updates.side_effect = reload_side_effect
-    # None means Supervisor answers with the fixture's outdated version
     supervisor_info.side_effect = [
         supervisor_info.return_value if err is None else err for err in info_side_effect
     ]

@@ -595,8 +595,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 f"Error reloading Supervisor update information: {err}"
             ) from err
 
-        # A concurrent Supervisor update may restart Supervisor before it
-        # answers. The version check below decides if the update happened.
+        # A concurrent update can restart Supervisor before it answers
         try:
             info = await self._client.supervisor.info()
         except SupervisorConnectionError, SupervisorTimeoutError:
@@ -612,7 +611,6 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 info.version_latest is None
                 or AwesomeVersion(info.version_latest) < backup_version
             ):
-                # Let Supervisor report why it can't restore the backup
                 return
             _LOGGER.info(
                 "Backup %s was made on Supervisor %s, updating Supervisor %s to %s "
@@ -631,7 +629,6 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                     f"Error updating Supervisor: {err}"
                 ) from err
 
-        # Supervisor restarts after the update, wait until a new enough version answers
         try:
             async with asyncio.timeout(SUPERVISOR_UPDATE_RESTART_TIMEOUT):
                 while True:
