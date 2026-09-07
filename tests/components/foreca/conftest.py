@@ -134,6 +134,10 @@ MINUTELY = [
     MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.2),
 ]
 
+# The day the usage tests freeze the clock to, so that the requests-today sensor
+# has a value: it looks the current date up in the breakdown below.
+USAGE_TODAY = "2026-09-03"
+
 # Built from a real response: a day's total is only available per API product,
 # so parsing it wrong reads as zero requests rather than as an error.
 USAGE = UsageMonth.from_api(
@@ -141,7 +145,7 @@ USAGE = UsageMonth.from_api(
         "hits": 44,
         "daily": [
             {"date": "2026-09-01", "apis": [{"name": "Weather API", "hits": 23}]},
-            {"date": "2026-09-03", "apis": [{"name": "Weather API", "hits": 21}]},
+            {"date": USAGE_TODAY, "apis": [{"name": "Weather API", "hits": 21}]},
         ],
     }
 )

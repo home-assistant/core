@@ -11,10 +11,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
+from .conftest import USAGE_TODAY
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "sensor.helsinki_air_quality_index"
+
+# The requests-today sensor reads the current date, so without this the sensor
+# tests only pass on the day the snapshot was taken.
+pytestmark = pytest.mark.freeze_time(f"{USAGE_TODAY} 12:00:00", tz_offset=0)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_foreca_client")
