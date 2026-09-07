@@ -4,10 +4,18 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any, override
 
-from aiortm import AioRTMError, Auth, AuthError
+from aiortm import AioRTMClient, AioRTMError, Auth, AuthError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -16,7 +24,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_SHARED_SECRET, DOMAIN, LOGGER
+from .const import CONF_LIST_ID, CONF_SHARED_SECRET, DOMAIN, LOGGER, SUBENTRY_TYPE_LIST
+from .coordinator import RememberTheMilkData
 
 TOKEN_TIMEOUT_SEC = 30
 
@@ -36,6 +45,14 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Remember The Milk."""
 
     VERSION = 1
+
+    @classmethod
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {SUBENTRY_TYPE_LIST: ListSubentryFlowHandler}
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -204,4 +221,86 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
             token_data,
             import_info[CONF_API_KEY],
             import_info[CONF_SHARED_SECRET],
+        )
+
+
+class ListSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and reconfiguring RTM lists."""
+
+    @property
+    def _client(self) -> AioRTMClient:
+        """Return the RTM client from the parent entry."""
+        data: RememberTheMilkData = self._get_entry().runtime_data
+        return data.client
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Create a new RTM list."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            name: str = user_input[CONF_NAME]
+            try:
+                timeline_response = await self._client.rtm.timelines.create()
+                list_response = await self._client.rtm.lists.add(
+                    timeline=timeline_response.timeline,
+                    name=name,
+                )
+            except AioRTMError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001 pylint: disable=broad-except
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                new_list_id = list_response.list.id
+                return self.async_create_entry(
+                    title=name,
+                    data={CONF_LIST_ID: new_list_id},
+                    unique_id=str(new_list_id),
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_NAME): TextSelector()}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Rename the RTM list on the server and update the sub-entry title."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            name: str = user_input[CONF_NAME]
+            try:
+                timeline_response = await self._client.rtm.timelines.create()
+                await self._client.rtm.lists.set_name(
+                    timeline=timeline_response.timeline,
+                    list_id=subentry.data[CONF_LIST_ID],
+                    name=name,
+                )
+            except AioRTMError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001 pylint: disable=broad-except
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subentry,
+                    title=name,
+                    data=subentry.data,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_NAME): TextSelector()}),
+                {CONF_NAME: subentry.title},
+            ),
+            errors=errors,
         )

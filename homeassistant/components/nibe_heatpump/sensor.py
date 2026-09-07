@@ -164,6 +164,13 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
     ),
+    "l/min": SensorEntityDescription(
+        key="l/min",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    ),
     "m³/h": SensorEntityDescription(
         key="m³/h",
         entity_category=EntityCategory.DIAGNOSTIC,

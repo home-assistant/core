@@ -7,234 +7,124 @@ from unittest.mock import AsyncMock, patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.collection_image.const import DOMAIN
+from homeassistant.components.collection_image import DOMAIN
 from homeassistant.components.image import Image, async_get_image
-from homeassistant.components.media_player import BrowseMedia, MediaClass
-from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNAVAILABLE
+from homeassistant.components.media_source import PlayMedia, Unresolvable
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STARTED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from .conftest import MediaSourceMocks, MediaSourceState
+from .const import (
+    DEFAULT_ENTITY_ID,
+    MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
+    MOCK_MEDIA_DIR_URI_EMPTY,
+    MOCK_MEDIA_IMAGE_URI_1,
+    TEST_IMAGE,
+)
+from .helpers import config_entry_from_uri
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
+TEST_TIME = "2025-11-08T12:00:00+00:00"
 
+
+async def _verify_path_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+):
+    client = await hass_client()
+
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    expected_data = await hass.async_add_executor_job(TEST_IMAGE.read_bytes)
+    body = await resp.read()
+    assert body == expected_data
+
+
+@pytest.mark.usefixtures("mock_media_source")
 async def test_image(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test loading an image."""
-    with freeze_time("2025-11-08T12:00:00.000"):
-        config_entry = MockConfigEntry(
-            data={
-                "media": {
-                    "media_content_id": "media-source://mymedia",
-                    "media_content_type": "",
-                },
-            },
-            domain=DOMAIN,
-            title="Random Image",
-        )
+    with (
+        freeze_time(TEST_TIME),
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        with (
-            patch(
-                "homeassistant.components.collection_image.image.async_browse_media",
-                return_value=BrowseMediaSource(
-                    domain=None,
-                    identifier=None,
-                    media_class="",
-                    media_content_type="",
-                    title="",
-                    can_play=False,
-                    can_expand=True,
-                    children=[
-                        BrowseMedia(
-                            media_class=MediaClass.MUSIC,
-                            media_content_id="media-source://mymedia/music",
-                            media_content_type="audio/mp3",
-                            title="a music track",
-                            can_play=True,
-                            can_expand=False,
-                        ),
-                        BrowseMedia(
-                            media_class=MediaClass.IMAGE,
-                            media_content_id="media-source://mymedia/photo",
-                            media_content_type="image/png",
-                            title="a picture",
-                            can_play=True,
-                            can_expand=False,
-                        ),
-                    ],
-                ),
-            ),
-            patch(
-                "homeassistant.components.collection_image.image.async_resolve_media",
-                return_value=PlayMedia(
-                    url="",
-                    mime_type="image/png",
-                    path=Path(__file__).parent / "test.png",
-                ),
-            ),
-        ):
-            config_entry.add_to_hass(hass)
-            assert await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
+    state = hass.states.get(DEFAULT_ENTITY_ID)
 
-    state = hass.states.get("image.random_image")
+    assert state and state.state == TEST_TIME
 
-    assert state and state.state == "2025-11-08T12:00:00+00:00"
-
-    client = await hass_client()
-
-    resp = await client.get("/api/image_proxy/image.random_image")
-    assert resp.status == HTTPStatus.OK
-    assert resp.content_type == "image/png"
-    image_path = Path(__file__).parent / "test.png"
-    expected_data = await hass.async_add_executor_job(image_path.read_bytes)
-    body = await resp.read()
-    assert body == expected_data
+    await _verify_path_image(hass, hass_client)
 
 
 async def test_image_during_startup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_media_source: MediaSourceMocks,
 ) -> None:
     """Test loading an image, ensuring that we don't browse until after startup is complete."""
-    with freeze_time("2025-11-08T12:00:00.000"):
+    with freeze_time(TEST_TIME):
         hass.set_state(CoreState.starting)
-        config_entry = MockConfigEntry(
-            data={
-                "media": {
-                    "media_content_id": "media-source://mymedia",
-                    "media_content_type": "",
-                },
-            },
-            domain=DOMAIN,
-            title="Random Image",
-        )
 
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        with (
-            patch(
-                "homeassistant.components.collection_image.image.async_browse_media",
-                return_value=BrowseMediaSource(
-                    domain=None,
-                    identifier=None,
-                    media_class="",
-                    media_content_type="",
-                    title="",
-                    can_play=False,
-                    can_expand=True,
-                    children=[
-                        BrowseMedia(
-                            media_class=MediaClass.MUSIC,
-                            media_content_id="media-source://mymedia/music",
-                            media_content_type="audio/mp3",
-                            title="a music track",
-                            can_play=True,
-                            can_expand=False,
-                        ),
-                        BrowseMedia(
-                            media_class=MediaClass.IMAGE,
-                            media_content_id="media-source://mymedia/photo",
-                            media_content_type="image/png",
-                            title="a picture",
-                            can_play=True,
-                            can_expand=False,
-                        ),
-                    ],
-                ),
-            ),
-            patch(
-                "homeassistant.components.collection_image.image.async_resolve_media",
-                return_value=PlayMedia(
-                    url="",
-                    mime_type="image/png",
-                    path=Path(__file__).parent / "test.png",
-                ),
-            ),
-        ):
-            hass.set_state(CoreState.running)
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-            await hass.async_block_till_done()
+        mock_media_source.image_browse.assert_not_called()
+        mock_media_source.resolve.assert_not_called()
 
-    state = hass.states.get("image.random_image")
+        hass.set_state(CoreState.running)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
-    assert state and state.state == "2025-11-08T12:00:00+00:00"
+    mock_media_source.image_browse.assert_awaited_once()
+    mock_media_source.resolve.assert_awaited_once()
 
-    client = await hass_client()
+    state = hass.states.get(DEFAULT_ENTITY_ID)
 
-    resp = await client.get("/api/image_proxy/image.random_image")
-    assert resp.status == HTTPStatus.OK
-    assert resp.content_type == "image/png"
-    image_path = Path(__file__).parent / "test.png"
-    expected_data = await hass.async_add_executor_job(image_path.read_bytes)
-    body = await resp.read()
-    assert body == expected_data
+    assert state and state.state == TEST_TIME
+
+    await _verify_path_image(hass, hass_client)
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_image_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    media_source_state: MediaSourceState,
 ) -> None:
     """Test loading an image, when media resolves to a URL."""
+    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_1] = PlayMedia(
+        url="http://example.com/test.png",
+        mime_type="image/png",
+    )
 
-    image_path = Path(__file__).parent / "test.png"
-    expected_data = await hass.async_add_executor_job(image_path.read_bytes)
+    expected_data = await hass.async_add_executor_job(TEST_IMAGE.read_bytes)
+    with (
+        freeze_time(TEST_TIME),
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    with freeze_time("2025-11-08T12:00:00.000"):
-        config_entry = MockConfigEntry(
-            data={
-                "media": {
-                    "media_content_id": "media-source://mymedia",
-                    "media_content_type": "",
-                },
-            },
-            domain=DOMAIN,
-            title="Random Image",
-        )
+    state = hass.states.get(DEFAULT_ENTITY_ID)
 
-        with (
-            patch(
-                "homeassistant.components.collection_image.image.async_browse_media",
-                return_value=BrowseMediaSource(
-                    domain=None,
-                    identifier=None,
-                    media_class="",
-                    media_content_type="",
-                    title="",
-                    can_play=False,
-                    can_expand=True,
-                    children=[
-                        BrowseMedia(
-                            media_class=MediaClass.IMAGE,
-                            media_content_id="media-source://mymedia/photo",
-                            media_content_type="image/png",
-                            title="a picture",
-                            can_play=True,
-                            can_expand=False,
-                        ),
-                    ],
-                ),
-            ),
-            patch(
-                "homeassistant.components.collection_image.image.async_resolve_media",
-                return_value=PlayMedia(
-                    url="http://example.com/test.png",
-                    mime_type="image/png",
-                ),
-            ),
-        ):
-            config_entry.add_to_hass(hass)
-            assert await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
-
-    state = hass.states.get("image.random_image")
-
-    assert state and state.state == "2025-11-08T12:00:00+00:00"
+    assert state and state.state == TEST_TIME
 
     client = await hass_client()
 
@@ -246,7 +136,7 @@ async def test_image_url(
             content_type="image/png",
             content=expected_data,
         )
-        resp = await client.get("/api/image_proxy/image.random_image")
+        resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
         mock_load.assert_awaited_once_with("http://example.com/test.png")
 
     assert resp.status == HTTPStatus.OK
@@ -255,207 +145,142 @@ async def test_image_url(
     assert body == expected_data
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_no_images(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when there are no images in the media folder."""
-    config_entry = MockConfigEntry(
-        data={
-            "media": {
-                "media_content_id": "media-source://mymedia/nopictures",
-                "media_content_type": "",
-            },
-        },
-        domain=DOMAIN,
-        title="Random No Image",
-    )
+    config_entry = config_entry_from_uri(MOCK_MEDIA_DIR_URI_EMPTY)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.collection_image.image.async_browse_media",
-        return_value=BrowseMediaSource(
-            domain=None,
-            identifier=None,
-            media_class="",
-            media_content_type="",
-            title="",
-            can_play=False,
-            can_expand=True,
-            children=[],
-        ),
-    ):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("image.random_no_image")
+    state = hass.states.get(DEFAULT_ENTITY_ID)
 
     assert state and state.state == STATE_UNAVAILABLE
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        "image.random_no_image: No valid images in media-source://mymedia/nopictures"
+        f"image.random_image: No valid images in {MOCK_MEDIA_DIR_URI_EMPTY}"
         in caplog.text
     )
 
     client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.random_no_image")
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_media_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when media browse throws an error."""
-    config_entry = MockConfigEntry(
-        data={
-            "media": {
-                "media_content_id": "media-source://badpath",
-                "media_content_type": "",
-            },
-        },
-        domain=DOMAIN,
-        title="Random No Image",
+
+    config_entry = config_entry_from_uri(MOCK_MEDIA_DIR_URI_BROWSE_ERROR)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == STATE_UNAVAILABLE
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "image.random_image: Mock directory failed to browse" in caplog.text
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_unresolvable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    media_source_state: MediaSourceState,
+    mock_media_source: MediaSourceMocks,
+    caplog: pytest.LogCaptureFixture,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test when resolving an image fails."""
+    media_source_state.resolve_exceptions[MOCK_MEDIA_IMAGE_URI_1] = Unresolvable(
+        "Mock image failed to resolve"
     )
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("image.random_no_image")
+    assert mock_media_source.image_browse.call_count == 1
+    assert mock_media_source.resolve.call_count == 1
 
-    assert state and state.state == STATE_UNAVAILABLE
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == STATE_UNKNOWN
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "image.random_no_image: Media Source not loaded" in caplog.text
+    assert "image.random_image: Mock image failed to resolve" in caplog.text
 
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.random_no_image")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    # Test we can recover by calling shuffle again when the image is resolvable
+    del media_source_state.resolve_exceptions[MOCK_MEDIA_IMAGE_URI_1]
+
+    with (
+        freeze_time(TEST_TIME),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "shuffle",
+            {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert mock_media_source.image_browse.call_count == 2
+    assert mock_media_source.resolve.call_count == 2
+
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == TEST_TIME
+
+    await _verify_path_image(hass, hass_client)
 
 
-async def test_unresolvable(
+@pytest.mark.usefixtures("mock_media_source")
+async def test_image_file_read_error(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    config_entry: MockConfigEntry,
+    media_source_state: MediaSourceState,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test when resolving an image fails."""
-    config_entry = MockConfigEntry(
-        data={
-            "media": {
-                "media_content_id": "media-source://mymedia",
-                "media_content_type": "",
-            },
-        },
-        domain=DOMAIN,
-        title="Random Image",
+    """Test that a file read error is surfaced when serving the image."""
+    missing_path = Path(__file__).parent / "does_not_exist.png"
+    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_1] = PlayMedia(
+        url="",
+        mime_type="image/png",
+        path=missing_path,
     )
 
     with (
-        patch(
-            "homeassistant.components.collection_image.image.async_browse_media",
-            return_value=BrowseMediaSource(
-                domain=None,
-                identifier=None,
-                media_class="",
-                media_content_type="",
-                title="",
-                can_play=False,
-                can_expand=True,
-                children=[
-                    BrowseMedia(
-                        media_class=MediaClass.IMAGE,
-                        media_content_id="media-source://mymedia/badphoto",
-                        media_content_type="image/png",
-                        title="a picture",
-                        can_play=True,
-                        can_expand=False,
-                    ),
-                ],
-            ),
-        ),
+        freeze_time(TEST_TIME),
     ):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("image.random_image")
-
-    assert state and state.state == STATE_UNAVAILABLE
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "image.random_image: Media Source not loaded" in caplog.text
-
-
-async def test_image_file_read_error(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-) -> None:
-    """Test that a file read error is surfaced when serving the image."""
-    missing_path = Path(__file__).parent / "does_not_exist.png"
-
-    with freeze_time("2025-11-08T12:00:00.000"):
-        config_entry = MockConfigEntry(
-            data={
-                "media": {
-                    "media_content_id": "media-source://mymedia",
-                    "media_content_type": "",
-                },
-            },
-            domain=DOMAIN,
-            title="Random Image",
-        )
-
-        with (
-            patch(
-                "homeassistant.components.collection_image.image.async_browse_media",
-                return_value=BrowseMediaSource(
-                    domain=None,
-                    identifier=None,
-                    media_class="",
-                    media_content_type="",
-                    title="",
-                    can_play=False,
-                    can_expand=True,
-                    children=[
-                        BrowseMedia(
-                            media_class=MediaClass.IMAGE,
-                            media_content_id="media-source://mymedia/photo",
-                            media_content_type="image/png",
-                            title="a picture",
-                            can_play=True,
-                            can_expand=False,
-                        ),
-                    ],
-                ),
-            ),
-            patch(
-                "homeassistant.components.collection_image.image.async_resolve_media",
-                return_value=PlayMedia(
-                    url="",
-                    mime_type="image/png",
-                    path=missing_path,
-                ),
-            ),
-        ):
-            config_entry.add_to_hass(hass)
-            assert await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
-
     # Browse and resolve succeeded, so the entity is available with an image.
-    state = hass.states.get("image.random_image")
-    assert state and state.state == "2025-11-08T12:00:00+00:00"
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+    assert state and state.state == TEST_TIME
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await async_get_image(hass, "image.random_image")
+        await async_get_image(hass, DEFAULT_ENTITY_ID)
     assert exc_info.value.translation_key == "image_read_error"
     assert exc_info.value.translation_placeholders["path"] == str(missing_path)
 
     client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.random_image")
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR

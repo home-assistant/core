@@ -9,6 +9,7 @@ PLATFORMS: list[Platform] = [
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.REMOTE,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 CONF_SERIAL_NUMBER = "serial_number"

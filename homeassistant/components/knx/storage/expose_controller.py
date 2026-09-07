@@ -26,6 +26,7 @@ class KNXExposeStoreOptionModel(TypedDict):
     attribute: NotRequired[str]
     cooldown: NotRequired[float]
     default: NotRequired[Any]
+    send_on_init: NotRequired[bool]
     periodic_send: NotRequired[float]
     respond_to_read: NotRequired[bool]
     value_template: NotRequired[str]
@@ -73,6 +74,7 @@ EXPOSE_OPTION_SCHEMA = probatio.Schema(
         probatio.Optional(
             "cooldown"
         ): cv.positive_float,  # frontend renders to duration
+        probatio.Optional("send_on_init"): bool,
         probatio.Optional("periodic_send"): cv.positive_float,
         probatio.Optional("respond_to_read"): bool,
         probatio.Optional("value_template"): validate_expose_template_no_coerce,
@@ -113,6 +115,7 @@ def _store_to_expose_option(
         attribute=config.get("attribute"),
         cooldown=config.get("cooldown", 0),
         default=config.get("default"),
+        send_on_init=config.get("send_on_init", False),
         periodic_send=config.get("periodic_send", 0),
         respond_to_read=config.get("respond_to_read", True),
         value_template=value_template,

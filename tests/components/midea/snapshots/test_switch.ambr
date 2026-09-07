@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_anion-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_anion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_anion',
+    'entity_id': 'switch.air_conditioner_anion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_anion-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_anion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Anion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Anion',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_anion',
+    'entity_id': 'switch.air_conditioner_anion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_auxiliary_heating-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_auxiliary_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_auxiliary_heating',
+    'entity_id': 'switch.air_conditioner_auxiliary_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_auxiliary_heating-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_auxiliary_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Auxiliary heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Auxiliary heating',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_auxiliary_heating',
+    'entity_id': 'switch.air_conditioner_auxiliary_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_outdoor_silent_mode-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_outdoor_silent_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_outdoor_silent_mode',
+    'entity_id': 'switch.air_conditioner_outdoor_silent_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,20 +136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_outdoor_silent_mode-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_outdoor_silent_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Outdoor silent mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Outdoor silent mode',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_outdoor_silent_mode',
+    'entity_id': 'switch.air_conditioner_outdoor_silent_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_prompt_tone-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_prompt_tone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -163,7 +163,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_prompt_tone',
+    'entity_id': 'switch.air_conditioner_prompt_tone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -186,20 +186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_prompt_tone-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_prompt_tone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Prompt tone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Prompt tone',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_prompt_tone',
+    'entity_id': 'switch.air_conditioner_prompt_tone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_screen_display-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_screen_display-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -213,7 +213,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_screen_display',
+    'entity_id': 'switch.air_conditioner_screen_display',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -236,20 +236,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_screen_display-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_screen_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Screen display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Screen display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_screen_display',
+    'entity_id': 'switch.air_conditioner_screen_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_self_clean-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_self_clean-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -263,7 +263,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_self_clean',
+    'entity_id': 'switch.air_conditioner_self_clean',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -286,20 +286,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_self_clean-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_self_clean-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Self clean',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Self clean',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_self_clean',
+    'entity_id': 'switch.air_conditioner_self_clean',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_smart_eye-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_smart_eye-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -313,7 +313,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_smart_eye',
+    'entity_id': 'switch.air_conditioner_smart_eye',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -336,20 +336,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_smart_eye-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_smart_eye-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Smart eye',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Smart eye',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_smart_eye',
+    'entity_id': 'switch.air_conditioner_smart_eye',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_sound-entry]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_sound-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +363,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_sound',
+    'entity_id': 'switch.air_conditioner_sound',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -386,20 +386,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ac][switch.bedroom_ac_sound-state]
+# name: test_switch_state_snapshot[ac][switch.air_conditioner_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Sound',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_sound',
+    'entity_id': 'switch.air_conditioner_sound',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_disinfect-entry]
+# name: test_switch_state_snapshot[c2][switch.toilet_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -413,7 +413,57 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_disinfect',
+    'entity_id': 'switch.toilet_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '12345678_child_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_state_snapshot[c2][switch.toilet_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Toilet Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.toilet_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_disinfect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.heat_pump_wi_fi_controller_disinfect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -436,20 +486,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_disinfect-state]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_disinfect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Disinfect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller Disinfect',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_disinfect',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_disinfect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_tbh-entry]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_tbh-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -463,7 +513,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_tbh',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_tbh',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -486,20 +536,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_tbh-state]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_tbh-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC TBH',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller TBH',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_tbh',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_tbh',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_zone_1_curve-entry]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_zone_1_curve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -513,7 +563,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_zone_1_curve',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_zone_1_curve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -536,20 +586,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_zone_1_curve-state]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_zone_1_curve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Zone 1 curve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller Zone 1 curve',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_zone_1_curve',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_zone_1_curve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_zone_2_curve-entry]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_zone_2_curve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +613,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_zone_2_curve',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_zone_2_curve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -586,20 +636,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[c3][switch.bedroom_ac_zone_2_curve-state]
+# name: test_switch_state_snapshot[c3][switch.heat_pump_wi_fi_controller_zone_2_curve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Zone 2 curve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller Zone 2 curve',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_zone_2_curve',
+    'entity_id': 'switch.heat_pump_wi_fi_controller_zone_2_curve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_state_snapshot[cc][switch.bedroom_ac_auxiliary_heating-entry]
+# name: test_switch_state_snapshot[cc][switch.mdv_wi_fi_controller_auxiliary_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -613,7 +663,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_auxiliary_heating',
+    'entity_id': 'switch.mdv_wi_fi_controller_auxiliary_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -636,20 +686,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[cc][switch.bedroom_ac_auxiliary_heating-state]
+# name: test_switch_state_snapshot[cc][switch.mdv_wi_fi_controller_auxiliary_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Auxiliary heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MDV Wi-Fi Controller Auxiliary heating',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_auxiliary_heating',
+    'entity_id': 'switch.mdv_wi_fi_controller_auxiliary_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_state_snapshot[cc][switch.bedroom_ac_night_light-entry]
+# name: test_switch_state_snapshot[cc][switch.mdv_wi_fi_controller_night_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -663,7 +713,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_night_light',
+    'entity_id': 'switch.mdv_wi_fi_controller_night_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -686,20 +736,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[cc][switch.bedroom_ac_night_light-state]
+# name: test_switch_state_snapshot[cc][switch.mdv_wi_fi_controller_night_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Night light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MDV Wi-Fi Controller Night light',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_night_light',
+    'entity_id': 'switch.mdv_wi_fi_controller_night_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[cf][switch.bedroom_ac_auxiliary_heating-entry]
+# name: test_switch_state_snapshot[cf][switch.heat_pump_auxiliary_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -713,7 +763,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_ac_auxiliary_heating',
+    'entity_id': 'switch.heat_pump_auxiliary_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -736,13 +786,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[cf][switch.bedroom_ac_auxiliary_heating-state]
+# name: test_switch_state_snapshot[cf][switch.heat_pump_auxiliary_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Auxiliary heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Auxiliary heating',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_ac_auxiliary_heating',
+    'entity_id': 'switch.heat_pump_auxiliary_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

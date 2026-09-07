@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -689,6 +694,10 @@ ZEROCONF = {
             "properties": {
                 "vendor": "tailwind",
             },
+        },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan_*",
         },
     ],
     "_hue._tcp.local.": [
@@ -956,6 +965,11 @@ ZEROCONF = {
     "_smoip._tcp.local.": [
         {
             "domain": "cambridge_audio",
+        },
+    ],
+    "_solaredge-modbus._tcp.local.": [
+        {
+            "domain": "solaredge_modbus",
         },
     ],
     "_solarman._tcp.local.": [

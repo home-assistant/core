@@ -116,6 +116,30 @@ def json_bytes_strip_null(data: Any) -> bytes:
 json_fragment = orjson.Fragment
 
 
+def cached_json_bytes(data: Any) -> bytes:
+    """Return json bytes right-sized for long-term caching.
+
+    orjson over-allocates the returned bytes buffer and does not shrink it: the
+    logical length is set but the capacity is rounded up to a power of two (at
+    least a few KiB), so bytes cached for the lifetime of a long-lived object
+    retain several KiB of unused buffer. Copy them into a right-sized buffer.
+    """
+    # The empty second join item is load-bearing: it forces a copy into a
+    # right-sized buffer; a single-item join returns the input unchanged.
+    return b"".join((json_bytes(data), b""))
+
+
+def cached_json_fragment(data: Any) -> orjson.Fragment:
+    """Return a json fragment right-sized for long-term caching.
+
+    Wraps the same right-sized bytes as cached_json_bytes; the body is inlined
+    rather than calling it to avoid an extra function call on this hot path.
+    """
+    # The empty second join item is load-bearing: it forces a copy into a
+    # right-sized buffer; a single-item join returns the input unchanged.
+    return orjson.Fragment(b"".join((json_bytes(data), b"")))
+
+
 def json_dumps(data: Any) -> str:
     r"""Dump json string.
 

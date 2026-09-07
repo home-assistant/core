@@ -29,19 +29,32 @@ class VistapoolTimeEntityDescription(TimeEntityDescription):
     """Describes a Vistapool time entity."""
 
     value_path: str
-    translation_placeholders: dict[str, str]
+    # A field the controller only reports when it supports the feature.
+    presence_path: str | None = None
 
 
-TIME_DESCRIPTIONS: tuple[VistapoolTimeEntityDescription, ...] = tuple(
-    VistapoolTimeEntityDescription(
-        key=f"filtration_interval_{interval}_{bound}",
-        translation_key=f"filtration_interval_{bound}",
-        translation_placeholders={"number": str(interval)},
-        entity_category=EntityCategory.CONFIG,
-        value_path=f"filtration.interval{interval}.{api_field}",
-    )
-    for interval in (1, 2, 3)
-    for bound, api_field in (("start", "from"), ("end", "to"))
+TIME_DESCRIPTIONS: tuple[VistapoolTimeEntityDescription, ...] = (
+    *(
+        VistapoolTimeEntityDescription(
+            key=f"filtration_interval_{interval}_{bound}",
+            translation_key=f"filtration_interval_{bound}",
+            translation_placeholders={"number": str(interval)},
+            entity_category=EntityCategory.CONFIG,
+            value_path=f"filtration.interval{interval}.{api_field}",
+        )
+        for interval in (1, 2, 3)
+        for bound, api_field in (("start", "from"), ("end", "to"))
+    ),
+    *(
+        VistapoolTimeEntityDescription(
+            key=f"light_schedule_{bound}",
+            translation_key=f"light_schedule_{bound}",
+            entity_category=EntityCategory.CONFIG,
+            value_path=f"light.{api_field}",
+            presence_path=f"light.{api_field}",
+        )
+        for bound, api_field in (("start", "from"), ("end", "to"))
+    ),
 )
 
 
@@ -50,7 +63,10 @@ def _build_time_entities(
 ) -> list[TimeEntity]:
     """Build the time entities for a single pool."""
     return [
-        VistapoolTime(coordinator, description) for description in TIME_DESCRIPTIONS
+        VistapoolTime(coordinator, description)
+        for description in TIME_DESCRIPTIONS
+        if description.presence_path is None
+        or coordinator.get_value(description.presence_path) is not None
     ]
 
 
@@ -90,7 +106,6 @@ class VistapoolTime(VistapoolEntity, TimeEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = self.build_unique_id(description.key)
-        self._attr_translation_placeholders = description.translation_placeholders
 
     @property
     @override

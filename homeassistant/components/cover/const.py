@@ -1,8 +1,9 @@
 """Constants for cover entity platform."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
-DOMAIN = "cover"
+DOMAIN: Final = "cover"
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"

@@ -148,7 +148,6 @@ NON_MIGRATED_INTEGRATIONS = {
     "device_automation",
     "geo_location",
     "homeassistant",
-    "knx",
     "lg_netcast",
     "litejet",
     "persistent_notification",

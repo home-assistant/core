@@ -1,0 +1,74 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "on_grid": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      }
+    },
+    "number": {
+      "active_power_limit": {
+        "default": "mdi:speedometer"
+      },
+      "backup_reserve": {
+        "default": "mdi:battery-lock"
+      },
+      "charge_limit": {
+        "default": "mdi:battery-plus"
+      },
+      "cos_phi": {
+        "default": "mdi:sine-wave"
+      },
+      "discharge_limit": {
+        "default": "mdi:battery-minus"
+      },
+      "external_production_max": {
+        "default": "mdi:solar-power"
+      },
+      "site_limit": {
+        "default": "mdi:transmission-tower-export"
+      }
+    },
+    "select": {
+      "export_control_limit_type": {
+        "default": "mdi:scale-balance"
+      },
+      "export_control_mode": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "storage_ac_charge_policy": {
+        "default": "mdi:battery-charging"
+      },
+      "storage_command_mode": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "storage_control_mode": {
+        "default": "mdi:battery-sync"
+      },
+      "storage_default_mode": {
+        "default": "mdi:battery-sync-outline"
+      }
+    },
+    "sensor": {
+      "battery_status": {
+        "default": "mdi:home-battery"
+      },
+      "inverter_status": {
+        "default": "mdi:solar-power"
+      },
+      "state_of_health": {
+        "default": "mdi:battery-heart-variant"
+      }
+    },
+    "switch": {
+      "external_production": {
+        "default": "mdi:solar-power-variant"
+      },
+      "negative_site_limit": {
+        "default": "mdi:transmission-tower-import"
+      }
+    }
+  }
+}
