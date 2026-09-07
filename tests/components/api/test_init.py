@@ -20,6 +20,7 @@ from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -941,6 +942,40 @@ async def test_api_call_service_not_found(
     """Test if the API fails 400 if unknown service."""
     resp = await mock_api_client.post("/api/services/test_domain/test_service")
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [
+        pytest.param(
+            ServiceValidationError("Bad input"),
+            HTTPStatus.BAD_REQUEST,
+            id="service_validation_error",
+        ),
+        pytest.param(
+            HomeAssistantError("Something failed"),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            id="home_assistant_error",
+        ),
+    ],
+)
+async def test_api_call_service_raises(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    error: HomeAssistantError,
+    status: HTTPStatus,
+) -> None:
+    """Test the API returns a JSON error if the service raises."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Raise the configured error."""
+        raise error
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == status
+    assert await resp.json() == {"message": str(error)}
 
 
 async def test_api_call_service_bad_data(

@@ -39,9 +39,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
+    HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
@@ -455,6 +457,11 @@ class APIDomainServicesView(HomeAssistantView):
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
+        except ServiceValidationError as ex:
+            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
+        except HomeAssistantError as ex:
+            _LOGGER.error("Error during service call to %s.%s: %s", domain, service, ex)
+            return self.json_message(str(ex), HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             cancel_listen()
 
