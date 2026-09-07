@@ -128,7 +128,7 @@ class NexBlueChargingSwitch(
         self._assumed_state_expires_at = time.monotonic() + ASSUMED_STATE_SECONDS
         self.async_write_ha_state()
         self._schedule_assumed_state_expiry()
-        self.coordinator.async_schedule_command_refreshes()
+        self.coordinator.async_schedule_command_refreshes(self._serial_number)
 
     def _schedule_assumed_state_expiry(self) -> None:
         """Schedule when this switch stops reporting an assumed state."""

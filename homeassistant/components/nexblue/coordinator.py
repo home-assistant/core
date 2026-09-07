@@ -43,7 +43,7 @@ class NexBlueDataUpdateCoordinator(
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
-        self._pending_command_refreshes: set[Callable[[], None]] = set()
+        self._pending_command_refreshes: dict[str, set[Callable[[], None]]] = {}
         entry.async_on_unload(self.async_cancel_pending_command_refreshes)
         super().__init__(
             hass,
@@ -54,9 +54,11 @@ class NexBlueDataUpdateCoordinator(
         )
 
     @callback
-    def async_schedule_command_refreshes(self) -> None:
+    def async_schedule_command_refreshes(self, serial_number: str) -> None:
         """Schedule shared follow-up refreshes after a charger command."""
-        self.async_cancel_pending_command_refreshes()
+        self.async_cancel_pending_command_refreshes(serial_number)
+        pending_refreshes: set[Callable[[], None]] = set()
+        self._pending_command_refreshes[serial_number] = pending_refreshes
 
         def _schedule_refresh(delay: int) -> None:
             cancel: Callable[[], None] | None = None
@@ -65,7 +67,9 @@ class NexBlueDataUpdateCoordinator(
             def _request_refresh(_now: datetime) -> None:
                 """Request coordinator data after a charger command."""
                 if cancel is not None:
-                    self._pending_command_refreshes.discard(cancel)
+                    pending_refreshes.discard(cancel)
+                if not pending_refreshes:
+                    self._pending_command_refreshes.pop(serial_number, None)
                 self.config_entry.async_create_task(
                     self.hass,
                     self.async_request_refresh(),
@@ -73,17 +77,30 @@ class NexBlueDataUpdateCoordinator(
                 )
 
             cancel = async_call_later(self.hass, delay, _request_refresh)
-            self._pending_command_refreshes.add(cancel)
+            pending_refreshes.add(cancel)
 
         for delay in COMMAND_REFRESH_DELAYS:
             _schedule_refresh(delay)
 
     @callback
-    def async_cancel_pending_command_refreshes(self) -> None:
-        """Cancel command refreshes that have not fired."""
-        for cancel in self._pending_command_refreshes:
+    def async_cancel_pending_command_refreshes(
+        self, serial_number: str | None = None
+    ) -> None:
+        """Cancel pending command refreshes for a charger or the whole entry."""
+        if serial_number is None:
+            pending_refreshes = [
+                cancel
+                for refreshes in self._pending_command_refreshes.values()
+                for cancel in refreshes
+            ]
+            self._pending_command_refreshes.clear()
+        else:
+            pending_refreshes = list(
+                self._pending_command_refreshes.pop(serial_number, set())
+            )
+
+        for cancel in pending_refreshes:
             cancel()
-        self._pending_command_refreshes.clear()
 
     @override
     async def _async_update_data(self) -> dict[str, ChargerStatus | None]:

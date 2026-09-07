@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import CHARGER_STATUS
+from .conftest import CHARGER, CHARGER_STATUS
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -242,6 +242,62 @@ async def test_new_command_replaces_pending_command_refreshes(
     await hass.async_block_till_done()
 
     assert mock_client.async_list_chargers.await_count == 1
+
+
+async def test_command_keeps_other_charger_pending_refreshes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a command does not cancel another charger's pending refreshes."""
+    second_charger = replace(CHARGER, serial_number="NB654321")
+    mock_client.async_list_chargers.return_value = [CHARGER, second_charger]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    first_entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB123456_charging"
+    )
+    second_entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB654321_charging"
+    )
+    assert first_entity_id
+    assert second_entity_id
+
+    with patch.object(coordinator, "async_request_refresh") as mock_refresh:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            "turn_on",
+            {"entity_id": first_entity_id},
+            blocking=True,
+        )
+
+        freezer.tick(timedelta(seconds=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_refresh.await_count == 1
+
+        freezer.tick(timedelta(seconds=7))
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            "turn_off",
+            {"entity_id": second_entity_id},
+            blocking=True,
+        )
+
+        freezer.tick(timedelta(seconds=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_refresh.await_count == 2
+
+        freezer.tick(timedelta(seconds=7))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_refresh.await_count == 3
 
 
 async def test_pending_command_refreshes_cancelled_on_unload(
