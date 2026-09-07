@@ -1,6 +1,9 @@
 """Support for Amcrest Switches."""
 
+import logging
 from typing import TYPE_CHECKING, Any, override
+
+from amcrest import AmcrestError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
@@ -9,6 +12,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_AMCREST, DEVICES
+from .helpers import log_update_error
+
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
@@ -62,6 +68,10 @@ class AmcrestSwitch(SwitchEntity):
         self._api = device.api
         self.entity_description = entity_description
         self._attr_name = f"{name} {entity_description.name}"
+        if device.serial_number is not None:
+            self._attr_unique_id = (
+                f"{device.serial_number}-{entity_description.key}-{device.channel}"
+            )
 
     @property
     @override
@@ -88,5 +98,12 @@ class AmcrestSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Update switch."""
-        io_res = (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
-        self._attr_is_on = io_res == "true"
+        if not self.available:
+            return
+        try:
+            io_res = (
+                (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
+            )
+            self._attr_is_on = io_res == "true"
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "update", self.name, "switch", error)

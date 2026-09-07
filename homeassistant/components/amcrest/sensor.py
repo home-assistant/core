@@ -80,6 +80,10 @@ class AmcrestSensor(SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
         self._attr_extra_state_attributes = {}
+        if device.serial_number is not None:
+            self._attr_unique_id = (
+                f"{device.serial_number}-{description.key}-{self._channel}"
+            )
 
     @property
     @override
@@ -96,11 +100,6 @@ class AmcrestSensor(SensorEntity):
         sensor_type = self.entity_description.key
 
         try:
-            if self._attr_unique_id is None and (
-                serial_number := (await self._api.async_serial_number)
-            ):
-                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
-
             if sensor_type == SENSOR_PTZ_PRESET:
                 self._attr_native_value = await self._api.async_ptz_presets_count
 

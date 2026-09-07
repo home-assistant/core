@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import logging
 import threading
 from typing import Any, override
+import uuid
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -29,9 +30,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
@@ -71,6 +77,9 @@ NOTIFICATION_TITLE = "Amcrest Camera Setup"
 SCAN_INTERVAL = timedelta(seconds=10)
 
 AUTHENTICATION_LIST = {"basic": "basic"}
+
+STORAGE_KEY = "amcrest"
+STORAGE_VERSION = 1
 
 
 def _has_unique_names(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -357,18 +366,98 @@ def _start_event_monitor(
     thread.start()
 
 
+def _registered_serial_number(hass: HomeAssistant, name: str) -> str | None:
+    """Return the serial number a previous run assigned to this camera, if any.
+
+    The camera entity's unique_id is "<serial>-<resolution>-<channel>", and the
+    serial itself may contain hyphens, so only the two known trailing fields are
+    split off.
+    """
+    entity_registry = er.async_get(hass)
+    for entry in entity_registry.entities.values():
+        if (
+            entry.platform == DOMAIN
+            and entry.domain == Platform.CAMERA
+            and entry.original_name == name
+        ):
+            return entry.unique_id.rsplit("-", 2)[0]
+    return None
+
+
+async def _async_resolve_serial_number(
+    hass: HomeAssistant, api: AmcrestChecker, name: str
+) -> str:
+    """Determine a stable ID for a camera that has none stored yet."""
+    try:
+        if serial_number := (await api.async_serial_number).strip():
+            return serial_number
+        _LOGGER.warning(
+            "Camera %s returned an empty serial number, generating a stable ID", name
+        )
+    except AmcrestError:
+        _LOGGER.warning(
+            "Could not reach %s camera during initial setup, generating a stable ID; "
+            "the integration will recover when the camera comes online",
+            name,
+        )
+
+    # An earlier run may already have registered entities under a serial number.
+    # Reusing it keeps those entities rather than orphaning them behind a UUID.
+    if registered := _registered_serial_number(hass, name):
+        _LOGGER.debug("Reusing previously registered ID for camera %s", name)
+        return registered
+
+    return str(uuid.uuid4())
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
+
+    store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    stored_data: dict[str, Any] = await store.async_load() or {}
+    serial_numbers: dict[str, str] = stored_data.get("serial_numbers", {})
+    store_updated = False
+
+    # Names are unique per _has_unique_names, so they identify a stored camera.
+    configured_names = {device[CONF_NAME] for device in config[DOMAIN]}
+    for stale_name in serial_numbers.keys() - configured_names:
+        _LOGGER.debug(
+            "Removing stored ID for camera %s, no longer configured", stale_name
+        )
+        del serial_numbers[stale_name]
+        store_updated = True
+
+    apis = {
+        device[CONF_NAME]: AmcrestChecker(
+            hass,
+            device[CONF_NAME],
+            device[CONF_HOST],
+            device[CONF_PORT],
+            device[CONF_USERNAME],
+            device[CONF_PASSWORD],
+        )
+        for device in config[DOMAIN]
+    }
+
+    # Resolve together; an unreachable camera otherwise blocks setup for the
+    # full communication timeout before the next one is even tried.
+    if unresolved := [name for name in apis if name not in serial_numbers]:
+        resolved = await asyncio.gather(
+            *(
+                _async_resolve_serial_number(hass, apis[name], name)
+                for name in unresolved
+            )
+        )
+        serial_numbers.update(zip(unresolved, resolved, strict=True))
+        store_updated = True
 
     for device in config[DOMAIN]:
         name: str = device[CONF_NAME]
         username: str = device[CONF_USERNAME]
         password: str = device[CONF_PASSWORD]
 
-        api = AmcrestChecker(
-            hass, name, device[CONF_HOST], device[CONF_PORT], username, password
-        )
+        api = apis[name]
 
         ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
         resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
@@ -394,6 +483,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream_source,
             resolution,
             control_light,
+            serial_number=serial_numbers[name],
         )
 
         hass.async_create_task(
@@ -446,6 +536,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
+    if store_updated:
+        await store.async_save({"serial_numbers": serial_numbers})
+
     if not hass.data[DATA_AMCREST][DEVICES]:
         return False
 
@@ -465,3 +558,4 @@ class AmcrestDevice:
     resolution: int
     control_light: bool
     channel: int = 0
+    serial_number: str | None = None
