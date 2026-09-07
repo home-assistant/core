@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import AIRCO_ID, HOST, PORT
+from . import AIRCO_ID, ENTRY_DATA, ENTRY_OPTIONS, HOST, PORT
 
 from tests.common import MockConfigEntry
 
@@ -471,3 +471,64 @@ async def test_is_matching_compares_unique_ids(hass: HomeAssistant) -> None:
 
     other.context = {}
     assert flow.is_matching(other) is False
+
+
+async def test_user_flow_refuses_a_unit_that_is_already_configured(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """One unit reached at a second address is not a second airco.
+
+    The manual step has no unique id to abort on, so the identity it matches
+    on is the airco id the module reports - the duplicate-host check the user
+    can override does not see this case at all.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_HOST: "192.168.1.9"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_options_flow_keeps_a_setting_the_form_does_not_show(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """A stored option this form cannot render has to survive a save.
+
+    Entries arrive from the custom component that shares this domain carrying
+    its options, and async_create_entry replaces the options wholesale - so
+    anything the form did not collect is dropped unless it is carried over.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living room",
+        data=ENTRY_DATA,
+        options={**ENTRY_OPTIONS, "external_temperature_source": "sensor.hallway"},
+        unique_id=AIRCO_ID,
+        version=6,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "availability_retry_limit": 3,
+            "setpoint_offsets": {"target_offset": 0.0},
+            "sensor_offsets": {"indoor_offset": 0.0, "outdoor_offset": 0.0},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["external_temperature_source"] == "sensor.hallway"

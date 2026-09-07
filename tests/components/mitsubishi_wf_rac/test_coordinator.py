@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,6 +21,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.mitsubishi_wf_rac.const import DOMAIN
 from homeassistant.components.mitsubishi_wf_rac.coordinator import (
+    WRITE_LOCK_RETRY_DELAY,
     registration_full_issue_id,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
@@ -279,14 +281,16 @@ async def test_unparseable_data_marks_the_airco_unavailable(
 
 async def test_a_poll_that_never_answers_counts_as_a_missed_poll(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """The outer deadline can expire before the request's own does.
 
     That has to stay as quiet as any other missed poll, or a transient outage
-    would mark the airco unavailable ahead of the configured threshold.
+    would mark the airco unavailable ahead of the configured threshold - and
+    it must not become an update failure either, which is the difference
+    between this and any other exception leaving the poll.
     """
 
     async def _never_answers(*args: object, **kwargs: object) -> None:
@@ -294,8 +298,78 @@ async def test_a_poll_that_never_answers_counts_as_a_missed_poll(
 
     mock_repository.get_aircon_stats.side_effect = _never_answers
 
-    freezer.tick(POLL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    caplog.set_level(logging.DEBUG)
 
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator.POLL_TIMEOUT",
+        timedelta(seconds=0),
+    ):
+        await init_integration.runtime_data.device.async_refresh()
+
+    assert "did not answer within 0s" in caplog.text
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+    assert init_integration.runtime_data.device.last_update_success
+
+
+async def test_a_poll_that_fails_unexpectedly_is_an_update_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Only the expected failures are ridden out quietly.
+
+    update() answers the ones this module knows about itself; anything else
+    reaching the poll is a fault rather than the hourly reassociation, and has
+    to be reported as one instead of being swallowed.
+    """
+    mock_repository.get_aircon_stats.side_effect = RuntimeError("boom")
+
+    await _advance(hass, freezer, 1)
+
+    assert not init_integration.runtime_data.device.last_update_success
+
+
+@pytest.mark.parametrize(
+    ("stats", "side_effect"),
+    [
+        pytest.param(None, WfRacError("no answer"), id="unit_does_not_answer"),
+        pytest.param({"airconId": "0011223344aa"}, None, id="no_expires_reported"),
+        pytest.param({"expires": "soon"}, None, id="expires_is_not_a_timestamp"),
+    ],
+)
+async def test_a_refused_write_falls_back_when_the_deadline_is_unreadable(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    stats: dict | None,
+    side_effect: Exception | None,
+) -> None:
+    """Without a readable deadline the retry waits the fixed interval.
+
+    The lock in the way was taken after the last poll, so the only deadline
+    worth having comes from asking again - and when that answer is unusable
+    there is nothing left to compute a wait from.
+    """
+    aircon_stat = mock_repository.get_aircon_stats.return_value
+    mock_repository.send_airco_command.side_effect = [
+        WfRacWriteRefusedError("locked"),
+        aircon_stat["airconStat"],
+    ]
+    mock_repository.get_aircon_stats.return_value = stats
+    mock_repository.get_aircon_stats.side_effect = side_effect
+
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator.asyncio.sleep"
+    ) as sleep:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert WRITE_LOCK_RETRY_DELAY.total_seconds() in [
+        call.args[0] for call in sleep.await_args_list
+    ]

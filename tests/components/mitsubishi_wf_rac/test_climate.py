@@ -5,7 +5,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 import pytest
-from pywfrac import WfRacError
+from pywfrac import Aircon, RacParser, WfRacError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -26,7 +26,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.mitsubishi_wf_rac.const import SWING_3D_AUTO
+from homeassistant.components.mitsubishi_wf_rac.const import (
+    HOME_LEAVE_TEMP_COOL,
+    HOME_LEAVE_TEMP_HEAT,
+    SWING_3D_AUTO,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -41,6 +45,18 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.living_room"
+
+
+def _sent_command(mock_repository: AsyncMock) -> Aircon:
+    """Decode the frame the integration last put on the wire.
+
+    Command and status frames share a layout, so the same parser reads
+    back what was encoded - which is what makes the protocol mapping
+    (mode, setpoint, fan, louvers) assertable at all.
+    """
+    return RacParser().translate_bytes(
+        mock_repository.send_airco_command.await_args.args[1]
+    )
 
 
 async def test_entity(
@@ -134,15 +150,27 @@ async def test_set_temperature_without_a_single_setpoint(
         )
 
 
+@pytest.mark.parametrize(
+    ("operation_mode", "hvac_mode", "away_temp"),
+    [
+        pytest.param(1, HVACMode.COOL, HOME_LEAVE_TEMP_COOL, id="cooling"),
+        pytest.param(2, HVACMode.HEAT, HOME_LEAVE_TEMP_HEAT, id="heating"),
+    ],
+)
 async def test_preset_away_switches_the_unit_to_home_leave(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
+    operation_mode: int,
+    hvac_mode: HVACMode,
+    away_temp: float,
 ) -> None:
     """Hand the away preset to the unit's own Home Leave mode.
 
-    It is the unit's mode rather than a setpoint we invent, so it only means
-    something while the unit is cooling or heating.
+    It is the unit's mode rather than a setpoint we invent: the unit enters it
+    when it is given the away target of the direction it is running in, so the
+    setpoint on the wire is what makes this work at all - and it differs
+    between cooling and heating.
 
     The running state is set on the coordinator rather than driven through a
     command: the mocked module echoes one fixed status frame back, so a write
@@ -150,9 +178,10 @@ async def test_preset_away_switches_the_unit_to_home_leave(
     """
     device = init_integration.runtime_data.device
     device.airco.Operation = True
+    device.airco.OperationMode = operation_mode
     device.async_set_updated_data(device.airco)
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
+    assert hass.states.get(ENTITY_ID).state == hvac_mode
     mock_repository.send_airco_command.reset_mock()
 
     await hass.services.async_call(
@@ -163,7 +192,7 @@ async def test_preset_away_switches_the_unit_to_home_leave(
     )
     await hass.async_block_till_done()
 
-    mock_repository.send_airco_command.assert_awaited()
+    assert _sent_command(mock_repository).PresetTemp == away_temp
 
 
 async def test_preset_away_needs_a_direction(
@@ -473,17 +502,32 @@ async def test_the_wider_range_leaves_cooling_alone(
     assert hass.states.get(ENTITY_ID).attributes["min_temp"] == 16
 
 
-async def test_cooling_tops_out_lower_than_heating(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+@pytest.mark.parametrize(
+    ("operation_mode", "max_temp"),
+    [
+        pytest.param(1, 33, id="cooling"),
+        pytest.param(4, 33, id="drying"),
+        pytest.param(2, 30, id="heating"),
+        pytest.param(0, 30, id="auto"),
+    ],
+)
+async def test_the_wider_range_only_lifts_the_cooling_ceiling(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    operation_mode: int,
+    max_temp: int,
 ) -> None:
-    """The unit takes 30 in cooling where heating and auto take 33."""
+    """PresetTempRange2 models take 33 in cooling and dry, 30 everywhere else."""
     device = init_integration.runtime_data.device
+    device.airco.Capabilities = replace(
+        device.airco.Capabilities, preset_temp_range_2=True
+    )
     device.airco.Operation = True
-    device.airco.OperationMode = 1
+    device.airco.OperationMode = operation_mode
     device.async_set_updated_data(device.airco)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID).attributes["max_temp"] == 30
+    assert hass.states.get(ENTITY_ID).attributes["max_temp"] == max_temp
 
 
 async def test_a_frame_the_entity_cannot_read_marks_it_unavailable(
@@ -501,3 +545,44 @@ async def test_a_frame_the_entity_cannot_read_marks_it_unavailable(
         await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("capability", "temperature", "hvac_mode"),
+    [
+        pytest.param(False, 17.0, HVACMode.HEAT, id="below_the_heating_floor"),
+        pytest.param(True, 32.0, HVACMode.HEAT, id="above_the_heating_ceiling"),
+    ],
+)
+async def test_a_setpoint_is_measured_against_the_mode_being_switched_to(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    capability: bool,
+    temperature: float,
+    hvac_mode: HVACMode,
+) -> None:
+    """One call that sets both is measured against the mode it is switching to.
+
+    While the unit is off the range spans every regulating mode, so these
+    values pass the entity's own min_temp/max_temp - and would arrive at a
+    unit that does not take them. Naming the mode in the refusal is the point:
+    the same value is fine in the mode the automation was leaving (#317).
+    """
+    device = init_integration.runtime_data.device
+    device.airco.Capabilities = replace(
+        device.airco.Capabilities, preset_temp_range_2=capability
+    )
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: temperature,
+                ATTR_HVAC_MODE: hvac_mode,
+            },
+            blocking=True,
+        )

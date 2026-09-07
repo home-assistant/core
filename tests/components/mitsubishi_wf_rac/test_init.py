@@ -1,8 +1,9 @@
 """Test the Mitsubishi WF-RAC setup, unload and migrations."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from pywfrac import WfRacConnectionError
+import pytest
+from pywfrac import WfRacConnectionError, WfRacError
 
 from homeassistant.components.mitsubishi_wf_rac.const import (
     CONF_AIRCO_ID,
@@ -136,3 +137,72 @@ async def test_migration_lifts_a_retry_limit_below_the_floor(
 
     assert entry.version == 6
     assert entry.options["availability_retry_limit"] == 3
+
+
+async def test_migration_lifts_a_retry_limit_the_old_toggle_left_behind(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """A v3 entry that ran with no tolerance at all gets some.
+
+    The v1 -> v2 step set the availability check to False while the flag was
+    dead code, so these entries went unavailable on the first missed poll -
+    which the module's hourly reassociation produces on its own.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living room",
+        data=ENTRY_DATA,
+        options={"availability_retry_limit": 1, "availability_retry": 1},
+        unique_id=AIRCO_ID,
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 6
+    assert entry.options["availability_retry_limit"] == 3
+    # The key nothing ever read is gone with the step that wrote it.
+    assert "availability_retry" not in entry.options
+
+
+async def test_a_failed_platform_unload_keeps_the_coordinator(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Entities that stayed loaded must keep the coordinator that feeds them.
+
+    Shutting it down anyway would leave a loaded entry that never updates
+    again.
+    """
+    device = init_integration.runtime_data.device
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(init_integration.entry_id)
+        await hass.async_block_till_done()
+
+    assert "Failed to unload entry" in caplog.text
+    assert device.last_update_success
+
+
+async def test_removal_says_so_when_the_slot_is_not_released(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The module keeps a small account table, and it can refuse to free ours.
+
+    Nothing here can fix that - the slot has to be freed from the official
+    app - so the removal goes through and says what was left behind.
+    """
+    mock_repository.del_account_info.side_effect = WfRacError("no answer")
+
+    await hass.config_entries.async_remove(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Could not delete operator ID" in caplog.text
