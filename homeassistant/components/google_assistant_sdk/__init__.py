@@ -3,7 +3,7 @@
 import asyncio
 from typing import override
 
-from gassist_text import TextAssistant
+from gassist_text import TextAssistantAsync
 from google.oauth2.credentials import Credentials
 
 from homeassistant.components import conversation
