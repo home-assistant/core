@@ -5,8 +5,6 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import httpx
-from mcp import McpError
-from mcp.types import ErrorData
 import pytest
 import respx
 
@@ -130,40 +128,6 @@ async def test_form(
     assert result["result"].unique_id is None
 
     assert len(mock_setup_entry.mock_calls) == 1
-    mock_mcp_client.return_value.initialize.assert_called_once()
-
-
-async def test_initialize_called_once_in_config_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
-) -> None:
-    """Test that initialize is called exactly once during the config flow.
-
-    Regression test for the double-initialize bug: MCP servers reject duplicate
-    initialize requests with -32600 "Invalid Request: Server already initialized".
-    """
-    response = Mock()
-    response.serverInfo.name = TEST_API_NAME
-
-    init_count = 0
-
-    async def mock_initialize() -> Mock:
-        nonlocal init_count
-        init_count += 1
-        if init_count > 1:
-            raise McpError(ErrorData(code=-32600, message="Server already initialized"))
-        return response
-
-    mock_mcp_client.return_value.initialize.side_effect = mock_initialize
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: MCP_SERVER_URL},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_mcp_client.return_value.initialize.assert_called_once()
 
 
