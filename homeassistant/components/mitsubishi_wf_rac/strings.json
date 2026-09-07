@@ -49,7 +49,7 @@
         },
         "data_description": {
           "force_update": "Add this airco even though another entry already uses this IP address. Meant for re-adding a unit whose old entry went missing: the module accepts one connection at a time, so two entries polling it will produce errors in the log.",
-          "host": "The local IP address of the airco's wireless module. Give the module a fixed address in your router - the integration does not follow a changed one on its own, you would have to reconfigure it here.",
+          "host": "The local IP address of the airco's wireless module. A changed address is picked up when the module announces itself again; give the module a fixed address in your router, or correct it here if it does not.",
           "name": "The name for this airco in Home Assistant. It names the device and prefixes the entities belonging to it.",
           "port": "The port the module's local API listens on. Leave this at 51443 unless your module announces a different one."
         },
@@ -105,20 +105,14 @@
     "command_failed": {
       "message": "Sending the command to the Airco at {device} failed: {error}"
     },
-    "home_leave_mode_not_supported": {
-      "message": "This model does not report the Home Leave Mode capability."
-    },
     "preset_away_needs_cool_or_heat": {
-      "message": "Home Leave mode is only available while cooling or heating, not in {hvac_mode}. Switch the unit to cool or heat first, or use the Home Leave Mode select to name the direction."
+      "message": "Home Leave mode is only available while cooling or heating, not in {hvac_mode}. Switch the unit to cool or heat first, so the direction it should hold is unambiguous."
     },
     "temperature_above_maximum": {
       "message": "{temperature} °C is above the {max_temp} °C maximum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
     },
     "temperature_below_minimum": {
       "message": "{temperature} °C is below the {min_temp} °C minimum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
-    },
-    "temperature_required": {
-      "message": "A target temperature is required."
     },
     "update_failed": {
       "message": "Polling the Airco at {device} failed: {error}"

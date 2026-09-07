@@ -537,7 +537,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         info: DeviceInfo = {
             "sw_version": self._firmware,
             "identifiers": {(DOMAIN, self.airco_id)},
-            "manufacturer": "Mitsubishi (WF-RAC)",
+            "manufacturer": "Mitsubishi Heavy Industries",
             "name": self.device_name,
         }
         # airconId is MAC-derived, and on every module seen so far it is the
@@ -580,16 +580,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
     def auto_heating(self) -> int | None:
         """Return the airco's auto-heating flag."""
         return self._auto_heating
-
-    @property
-    def device_id(self) -> str:
-        """Return Airco device ID."""
-        return self._device_id
-
-    @property
-    def host(self) -> str:
-        """Get Host (IP)."""
-        return self._host
 
     @property
     def port(self) -> int:

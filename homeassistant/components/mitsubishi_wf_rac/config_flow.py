@@ -393,7 +393,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
 
         local_name = discovery_info.hostname.rstrip(".")
-        node_name = local_name[: -len(".local")]
+        node_name = local_name.removesuffix(".local")
         host = discovery_info.host
         port = discovery_info.port
 
