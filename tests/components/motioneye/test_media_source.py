@@ -394,6 +394,7 @@ async def test_media_proxy_image(
     client = create_mock_motioneye_client()
     client.async_get_media = AsyncMock(return_value=b"image")
     config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
 
     client_session = await hass_client()
     response = await client_session.get(
