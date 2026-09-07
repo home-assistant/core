@@ -1,10 +1,10 @@
 """Test the Remember The Milk config flow."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiortm import AioRTMError, AuthError
 import pytest
@@ -12,7 +12,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.remember_the_milk.config_flow import TOKEN_TIMEOUT_SEC
-from homeassistant.components.remember_the_milk.const import DOMAIN
+from homeassistant.components.remember_the_milk.const import (
+    CONF_LIST_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_LIST,
+)
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigSubentryDataWithId,
+)
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,7 +30,21 @@ from .const import CREATE_ENTRY_DATA, PROFILE, TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+SUBENTRY_ID = "test-subentry-id"
+LIST_ID = 99
+NEW_LIST_ID = 42
+
+
+@pytest.fixture
+def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
+    """Ignore per-account service translations for subentry tests that do real setup."""
+    for marker in request.node.iter_markers("usefixtures"):
+        if "storage" in marker.args:
+            return [
+                f"component.{DOMAIN}.services.{PROFILE}_create_task.",
+                f"component.{DOMAIN}.services.{PROFILE}_complete_task.",
+            ]
+    return []
 
 
 def get_suggested_value(data_schema: vol.Schema, key: str) -> Any:
@@ -31,10 +55,32 @@ def get_suggested_value(data_schema: vol.Schema, key: str) -> Any:
     return None
 
 
+@pytest.fixture
+def config_entry_with_subentry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a loaded mock config entry with one list subentry."""
+    entry = MockConfigEntry(
+        data=CREATE_ENTRY_DATA,
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_LIST_ID: LIST_ID},
+                subentry_type=SUBENTRY_TYPE_LIST,
+                title="Shopping",
+                unique_id=str(LIST_ID),
+                subentry_id=SUBENTRY_ID,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.usefixtures("client")
 async def test_successful_flow(
-    hass: HomeAssistant, client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test successful flow."""
+    """Test successful flow creates subentries for existing lists."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -56,6 +102,7 @@ async def test_successful_flow(
     assert result["data"] == CREATE_ENTRY_DATA
     assert result["result"].unique_id == TOKEN_RESPONSE["user"]["id"]
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(result["result"].subentries) == 0
 
 
 @pytest.mark.parametrize(
@@ -66,11 +113,11 @@ async def test_successful_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("client")
 async def test_form_errors(
     hass: HomeAssistant,
-    client: AsyncMock,
     mock_setup_entry: AsyncMock,
-    exception: Exception,
+    exception: type[Exception],
     error: str,
 ) -> None:
     """Test form errors when getting the authentication URL."""
@@ -108,6 +155,7 @@ async def test_form_errors(
     assert result["data"] == CREATE_ENTRY_DATA
     assert result["result"].unique_id == TOKEN_RESPONSE["user"]["id"]
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(result["result"].subentries) == 0
 
 
 async def mock_get_token(*args: Any) -> None:
@@ -115,6 +163,7 @@ async def mock_get_token(*args: Any) -> None:
     await asyncio.Future()
 
 
+@pytest.mark.usefixtures("client", "mock_setup_entry")
 @pytest.mark.parametrize(
     ("side_effect", "reason", "timeout"),
     [
@@ -126,8 +175,7 @@ async def mock_get_token(*args: Any) -> None:
 )
 async def test_token_abort_reasons(
     hass: HomeAssistant,
-    client: AsyncMock,
-    side_effect: Exception | Awaitable[None],
+    side_effect: type[Exception] | Awaitable[None],
     reason: str,
     timeout: int,
 ) -> None:
@@ -160,9 +208,8 @@ async def test_token_abort_reasons(
     assert result["reason"] == reason
 
 
-async def test_abort_if_already_configured(
-    hass: HomeAssistant, client: AsyncMock, config_entry: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("client", "config_entry")
+async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
     """Test abort if the same username is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -184,6 +231,7 @@ async def test_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("client", "mock_setup_entry")
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_IMPORT, config_entries.SOURCE_USER]
 )
@@ -200,7 +248,6 @@ async def test_abort_if_already_configured(
 )
 async def test_reauth(
     hass: HomeAssistant,
-    client: AsyncMock,
     source: str,
     reauth_unique_id: str,
     abort_reason: str,
@@ -248,9 +295,8 @@ async def test_reauth(
     assert mock_entry.unique_id == "test-user-id"
 
 
-async def test_reauth_change_credentials(
-    hass: HomeAssistant, client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("client", "mock_setup_entry")
+async def test_reauth_change_credentials(hass: HomeAssistant) -> None:
     """Test reauth flow where the user changes the stored credentials."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN, unique_id=TOKEN_RESPONSE["user"]["id"], data=CREATE_ENTRY_DATA
@@ -288,6 +334,7 @@ async def test_reauth_change_credentials(
     assert mock_entry.unique_id == TOKEN_RESPONSE["user"]["id"]
 
 
+@pytest.mark.usefixtures("client", "mock_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -298,8 +345,6 @@ async def test_reauth_change_credentials(
 )
 async def test_reauth_form_errors(
     hass: HomeAssistant,
-    client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     error: str,
 ) -> None:
@@ -352,6 +397,7 @@ async def test_reauth_form_errors(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("client")
 @pytest.mark.parametrize(
     ("side_effect", "reason", "timeout"),
     [
@@ -363,7 +409,6 @@ async def test_reauth_form_errors(
 )
 async def test_reauth_token_abort(
     hass: HomeAssistant,
-    client: AsyncMock,
     side_effect: type[Exception | Awaitable[None]],
     reason: str,
     timeout: int,
@@ -402,8 +447,10 @@ async def test_reauth_token_abort(
     assert result["reason"] == reason
 
 
+@pytest.mark.usefixtures("client")
 async def test_import_flow(
-    hass: HomeAssistant, client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test import flow with a valid stored token."""
     result = await hass.config_entries.flow.async_init(
@@ -426,8 +473,10 @@ async def test_import_flow(
     }
     assert result["result"].unique_id == TOKEN_RESPONSE["user"]["id"]
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(result["result"].subentries) == 0
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("token", "side_effect", "reason"),
     [
@@ -462,9 +511,8 @@ async def test_import_flow_abort(
     assert result["reason"] == reason
 
 
-async def test_import_flow_username_mismatch(
-    hass: HomeAssistant, client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("client")
+async def test_import_flow_username_mismatch(hass: HomeAssistant) -> None:
     """Test import flow aborts when the token username doesn't match the name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -480,9 +528,8 @@ async def test_import_flow_username_mismatch(
     assert result["reason"] == "invalid_auth"
 
 
-async def test_import_flow_already_configured(
-    hass: HomeAssistant, client: AsyncMock, config_entry: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("client", "config_entry")
+async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
     """Test import flow aborts when the account name is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -496,3 +543,230 @@ async def test_import_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("storage")
+async def test_create_new_list(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test creating a new RTM list creates a subentry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_LIST),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # After adding the list on the server, reflect it in get_list so the coordinator
+    # sync keeps the newly created subentry rather than removing it on the next refresh.
+    list_add_return = client.rtm.lists.add.return_value
+
+    async def _add_list(*args: object, **kwargs: object) -> MagicMock:
+        rtm_list_mock(NEW_LIST_ID, "Work Tasks")
+        return list_add_return
+
+    client.rtm.lists.add.side_effect = _add_list
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Work Tasks"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Work Tasks"
+    assert result["data"] == {CONF_LIST_ID: NEW_LIST_ID}
+    assert result["unique_id"] == str(NEW_LIST_ID)
+
+    client.rtm.lists.add.assert_called_once_with(
+        timeline=1234,
+        name="Work Tasks",
+    )
+    assert len(config_entry.subentries) == 1
+
+
+@pytest.mark.usefixtures("storage")
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AioRTMError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_create_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test that an API error in the create step shows an error and can recover."""
+    client.rtm.lists.add = AsyncMock(side_effect=exception("server error"))
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_LIST),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_NAME: "Failing List"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Clear the error and verify the flow recovers to success.
+    list_add_response = MagicMock()
+    list_add_response.list.id = NEW_LIST_ID
+
+    async def _add_list(*args: object, **kwargs: object) -> MagicMock:
+        rtm_list_mock(NEW_LIST_ID, "Failing List")
+        return list_add_response
+
+    client.rtm.lists.add.side_effect = _add_list
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_NAME: "Failing List"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Failing List"
+    assert result["data"] == {CONF_LIST_ID: NEW_LIST_ID}
+    assert result["unique_id"] == str(NEW_LIST_ID)
+
+
+async def test_entry_not_loaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test abort when the parent config entry is not loaded."""
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_LIST),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+async def test_reconfigure_entry_not_loaded(
+    hass: HomeAssistant,
+    config_entry_with_subentry: MockConfigEntry,
+) -> None:
+    """Test abort in reconfigure when the parent config entry is not loaded."""
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry_with_subentry.entry_id, SUBENTRY_TYPE_LIST),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("storage")
+async def test_reconfigure_subentry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_subentry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test renaming a subentry via reconfigure."""
+    lst = rtm_list_mock(LIST_ID, "Shopping")
+
+    # Reflect the rename in get_list so the coordinator sync stays idempotent after reload.
+    def _set_name(*args: object, name: str, **kwargs: object) -> MagicMock:
+        lst.name = name
+        return MagicMock()
+
+    client.rtm.lists.set_name.side_effect = _set_name
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+    assert subentry.title == "Shopping"
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry_with_subentry.entry_id, SUBENTRY_TYPE_LIST),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Grocery Shopping"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+    assert subentry.title == "Grocery Shopping"
+    assert subentry.data[CONF_LIST_ID] == LIST_ID
+    client.rtm.lists.set_name.assert_called_once_with(
+        timeline=1234, list_id=LIST_ID, name="Grocery Shopping"
+    )
+
+
+@pytest.mark.usefixtures("storage")
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AioRTMError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_subentry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that an API error in the reconfigure step shows an error and can recover."""
+    lst = rtm_list_mock(LIST_ID, "Shopping")
+    client.rtm.lists.set_name = AsyncMock(side_effect=exception("server error"))
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry_with_subentry.entry_id, SUBENTRY_TYPE_LIST),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Grocery Shopping"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Clear the error and verify the flow recovers to success.
+    def _set_name(*args: object, name: str, **kwargs: object) -> MagicMock:
+        lst.name = name
+        return MagicMock()
+
+    client.rtm.lists.set_name.side_effect = _set_name
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Grocery Shopping"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+    assert subentry.title == "Grocery Shopping"

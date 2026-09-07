@@ -66,6 +66,10 @@ async def test_generate_data(
     assert result.data == "The test data"
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
+    assert (
+        mock_create_stream.call_args.kwargs["prompt_cache_key"]
+        == ai_task_entry.subentry_id
+    )
 
 
 @pytest.mark.usefixtures("mock_init_component")

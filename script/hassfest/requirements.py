@@ -124,11 +124,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "airthings": {"airthings-cloud": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "aseko_pool_live": {"gql": {"backoff"}},
-    "blackbird": {
-        # https://github.com/koolsb/pyblackbird/issues/12
-        # pyblackbird > pyserial-asyncio
-        "pyblackbird": {"pyserial-asyncio"}
-    },
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4

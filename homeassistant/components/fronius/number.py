@@ -8,7 +8,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import FroniusEntity, FroniusEntityDescription
+from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -26,15 +26,15 @@ class FroniusNumberEntityDescription(FroniusEntityDescription, NumberEntityDescr
     ``enable_field`` the one that puts it into effect, where there is one.
     """
 
-    component: str
+    component_fn: ModbusComponentFn
     field: str
     enable_field: str | None = None
 
 
 MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     FroniusNumberEntityDescription(
-        key="power_limit",
-        component="controls",
+        key="ac_power_limit",
+        component_fn=lambda inverter: inverter.controls,
         field="power_limit",
         enable_field="enabled",
         native_unit_of_measurement=PERCENTAGE,
@@ -45,7 +45,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     ),
     FroniusNumberEntityDescription(
         key="battery_charge_power_limit",
-        component="storage",
+        component_fn=lambda inverter: inverter.storage,
         field="charge_limit",
         enable_field="charge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
@@ -56,7 +56,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     ),
     FroniusNumberEntityDescription(
         key="battery_discharge_power_limit",
-        component="storage",
+        component_fn=lambda inverter: inverter.storage,
         field="discharge_limit",
         enable_field="discharge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
@@ -67,7 +67,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     ),
     FroniusNumberEntityDescription(
         key="battery_minimum_reserve",
-        component="storage",
+        component_fn=lambda inverter: inverter.storage,
         field="minimum_reserve",
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=0,
@@ -119,7 +119,7 @@ class ModbusSetpointNumber(FroniusEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Write the setpoint to the device."""
         await self.coordinator.async_write(
-            self.entity_description.component,
+            self.entity_description.component_fn,
             self.entity_description.field,
             value,
             enable_field=self.entity_description.enable_field,

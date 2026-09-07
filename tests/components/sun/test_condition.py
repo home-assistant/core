@@ -1,5 +1,6 @@
 """The tests for sun conditions."""
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 
 from freezegun import freeze_time
@@ -1447,6 +1448,8 @@ async def test_sun_state_conditions(
         "sun.is_ascending",
         "sun.is_descending",
         "sun.is_night",
+        "sun.is_midnight_sun",
+        "sun.is_polar_night",
     ],
 )
 async def test_sun_state_condition_takes_no_options(
@@ -1665,3 +1668,269 @@ async def test_twilight_condition_type(
         await hass.async_block_till_done()
 
     assert {call.data["type"] for call in service_calls} == expected_true
+
+
+_PERIODS = ("any", "morning", "evening")
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "now", "expected_true"),
+    [
+        # San Diego, 2015-09-15/16. Golden hour spans -4°..6°, blue hour -6°..-4°.
+        # A single point in time is checked against every period at once.
+        # Morning golden hour (rising, ~0.2°).
+        (
+            "sun.is_golden_hour",
+            datetime(2015, 9, 15, 13, 35, tzinfo=dt_util.UTC),
+            {"any", "morning"},
+        ),
+        # Evening golden hour (descending, ~4.7°).
+        (
+            "sun.is_golden_hour",
+            datetime(2015, 9, 16, 1, 30, tzinfo=dt_util.UTC),
+            {"any", "evening"},
+        ),
+        # Midday: the sun is far above the golden band.
+        (
+            "sun.is_golden_hour",
+            datetime(2015, 9, 15, 20, 0, tzinfo=dt_util.UTC),
+            set(),
+        ),
+        # A blue-hour elevation (~-5.5°, rising) is below the golden band.
+        (
+            "sun.is_golden_hour",
+            datetime(2015, 9, 15, 13, 10, tzinfo=dt_util.UTC),
+            set(),
+        ),
+        # Morning blue hour (rising, ~-4.4°).
+        (
+            "sun.is_blue_hour",
+            datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
+            {"any", "morning"},
+        ),
+        # Evening blue hour (descending, ~-5.1°).
+        (
+            "sun.is_blue_hour",
+            datetime(2015, 9, 16, 2, 16, tzinfo=dt_util.UTC),
+            {"any", "evening"},
+        ),
+        # A golden-hour elevation (~0.2°) is above the blue band.
+        (
+            "sun.is_blue_hour",
+            datetime(2015, 9, 15, 13, 35, tzinfo=dt_util.UTC),
+            set(),
+        ),
+    ],
+)
+async def test_golden_blue_hour_condition_period(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    now: datetime,
+    expected_true: set[str],
+) -> None:
+    """Test the golden/blue hour conditions honor the elevation band and period."""
+    latitude, longitude, time_zone = _SAN_DIEGO
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": {
+                        "condition": condition_key,
+                        "options": {"period": period},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"period": period},
+                    },
+                }
+                for period in _PERIODS
+            ]
+        },
+    )
+
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert {call.data["period"] for call in service_calls} == expected_true
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "location", "now", "expected"),
+    [
+        # Svalbard: midnight sun in June, polar night in December.
+        (
+            "sun.is_midnight_sun",
+            _SVALBARD,
+            datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_midnight_sun",
+            _SVALBARD,
+            datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_polar_night",
+            _SVALBARD,
+            datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_polar_night",
+            _SVALBARD,
+            datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
+            False,
+        ),
+        # San Diego has neither a midnight sun nor a polar night.
+        (
+            "sun.is_midnight_sun",
+            _SAN_DIEGO,
+            datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_polar_night",
+            _SAN_DIEGO,
+            datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
+            False,
+        ),
+    ],
+)
+async def test_midnight_sun_polar_night_condition(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    location: tuple[float, float, str],
+    now: datetime,
+    expected: bool,
+) -> None:
+    """Test the midnight sun/polar night conditions from the sun's daily extreme."""
+    latitude, longitude, time_zone = location
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": condition_key},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert bool(service_calls) is expected
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "crossing", "before_expected", "after_expected"),
+    [
+        # The condition must flip at the same solar noon/midnight where its
+        # start/end trigger fires (Svalbard crossings, truncated to whole seconds).
+        # Midnight sun starts at this solar midnight (elevation crosses above).
+        (
+            "sun.is_midnight_sun",
+            datetime(2015, 4, 18, 22, 56, 36, tzinfo=dt_util.UTC),
+            False,
+            True,
+        ),
+        # Midnight sun ends at this solar midnight (crosses below).
+        (
+            "sun.is_midnight_sun",
+            datetime(2015, 8, 25, 22, 59, 19, tzinfo=dt_util.UTC),
+            True,
+            False,
+        ),
+        # Polar night ends at this solar noon (crosses above).
+        (
+            "sun.is_polar_night",
+            datetime(2015, 2, 15, 11, 11, 34, tzinfo=dt_util.UTC),
+            True,
+            False,
+        ),
+        # Polar night starts at this solar noon (crosses below).
+        (
+            "sun.is_polar_night",
+            datetime(2015, 10, 28, 10, 41, 13, tzinfo=dt_util.UTC),
+            False,
+            True,
+        ),
+    ],
+)
+async def test_midnight_sun_polar_night_condition_flips_at_crossing(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    crossing: datetime,
+    before_expected: bool,
+    after_expected: bool,
+) -> None:
+    """Test the conditions flip at the same solar extreme as the start/end trigger."""
+    latitude, longitude, time_zone = _SVALBARD
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": condition_key},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # A minute before the crossing the previous cycle's state still holds.
+    with freeze_time(crossing - timedelta(minutes=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert bool(service_calls) is before_expected
+    calls_before = len(service_calls)
+
+    # A minute after the crossing the condition has flipped to the new state.
+    with freeze_time(crossing + timedelta(minutes=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert (len(service_calls) > calls_before) is after_expected
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "period", "expectation"),
+    [
+        ("sun.is_golden_hour", "any", nullcontext()),
+        ("sun.is_golden_hour", "morning", nullcontext()),
+        ("sun.is_golden_hour", "evening", nullcontext()),
+        ("sun.is_golden_hour", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.is_blue_hour", "any", nullcontext()),
+        ("sun.is_blue_hour", "morning", nullcontext()),
+        ("sun.is_blue_hour", "evening", nullcontext()),
+        ("sun.is_blue_hour", "invalid", pytest.raises(vol.Invalid)),
+    ],
+)
+async def test_golden_blue_hour_condition_period_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    period: str,
+    expectation: AbstractContextManager,
+) -> None:
+    """Test the golden/blue hour conditions validate the period option."""
+    config = {"condition": condition_key, "options": {"period": period}}
+    with expectation:
+        await async_validate_condition_config(hass, config)

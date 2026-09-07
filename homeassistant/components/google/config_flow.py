@@ -87,11 +87,21 @@ class OAuth2FlowHandler(
         return logging.getLogger(__name__)
 
     @property
+    def _calendar_access(self) -> FeatureAccess:
+        """Return the access the entry being authorized asks for."""
+        if self.source == SOURCE_REAUTH and (
+            reauth_options := self._get_reauth_entry().options
+        ):
+            return FeatureAccess[reauth_options[CONF_CALENDAR_ACCESS]]
+
+        return DEFAULT_FEATURE_ACCESS
+
+    @property
     @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": DEFAULT_FEATURE_ACCESS.scope,
+            "scope": self._calendar_access.scope,
             # Add params to ensure we get back a refresh token
             "access_type": "offline",
             "prompt": "consent",
@@ -121,17 +131,12 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
-            calendar_access = DEFAULT_FEATURE_ACCESS
-            if self.source == SOURCE_REAUTH and (
-                reauth_options := self._get_reauth_entry().options
-            ):
-                calendar_access = FeatureAccess[reauth_options[CONF_CALENDAR_ACCESS]]
             try:
                 device_flow = await async_create_device_flow(
                     self.hass,
                     self.flow_impl.client_id,
                     self.flow_impl.client_secret,
-                    calendar_access,
+                    self._calendar_access,
                 )
             except TimeoutError as err:
                 _LOGGER.error("Timeout initializing device flow: %s", str(err))

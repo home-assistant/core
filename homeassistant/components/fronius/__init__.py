@@ -49,7 +49,12 @@ from .coordinator import (
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 

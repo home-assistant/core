@@ -342,13 +342,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
-        key="passenger_seat_belt",
-        streaming_listener=lambda vehicle, callback: vehicle.listen_PassengerSeatBelt(
-            callback
-        ),
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
         key="fast_charger_present",
         streaming_listener=lambda vehicle, callback: vehicle.listen_FastChargerPresent(
             callback

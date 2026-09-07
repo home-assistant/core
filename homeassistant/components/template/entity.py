@@ -22,6 +22,7 @@ from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
+from .schemas import BlockedTemplateAttributes
 
 _SENTINEL = object()
 
@@ -45,6 +46,7 @@ class AbstractTemplateEntity(Entity):
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
+    _blocked_attributes: BlockedTemplateAttributes | None = None
 
     # Restore state properties. The state will be restored if set to None.
     # If a tuple is supplied, all properties must be None for the state to restore.
@@ -62,9 +64,14 @@ class AbstractTemplateEntity(Entity):
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
         self._attr_extra_state_attributes = {}
-        self._attribute_templates: dict[str, Template] | None = config.get(
-            CONF_ATTRIBUTES
-        )
+
+        self._attribute_templates: dict[str, Template] | None = None
+        self._attributes_template: Template | None = None
+        if templates := config.get(CONF_ATTRIBUTES):
+            if isinstance(templates, dict):
+                self._attribute_templates = templates
+            elif isinstance(templates, Template):
+                self._attributes_template = templates
 
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)

@@ -178,6 +178,7 @@ def mock_hotspring(device_fixture: Spa) -> Generator[MagicMock]:
     ):
         client = hotspring_mock.return_value
         client.update.return_value = device_fixture
+        client.spa = device_fixture
         yield client
 
 

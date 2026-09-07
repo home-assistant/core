@@ -1,12 +1,15 @@
 """Matter switches."""
 
+from asyncio import Lock
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, override
+from weakref import WeakKeyDictionary
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
+from matter_server.client.models.node import MatterEndpoint
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -27,6 +30,29 @@ EVSE_SUPPLY_STATE_MAP = {
     clusters.EnergyEvse.Enums.SupplyStateEnum.kDischargingEnabled: False,
     clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: False,
 }
+
+ALARM_MODE_VISUAL = clusters.BooleanStateConfiguration.Bitmaps.AlarmModeBitmap.kVisual
+ALARM_MODE_AUDIBLE = clusters.BooleanStateConfiguration.Bitmaps.AlarmModeBitmap.kAudible
+
+BOOLEAN_STATE_CONFIGURATION_FEATURE_VISUAL = (
+    clusters.BooleanStateConfiguration.Bitmaps.Feature.kVisual
+)
+BOOLEAN_STATE_CONFIGURATION_FEATURE_AUDIBLE = (
+    clusters.BooleanStateConfiguration.Bitmaps.Feature.kAudible
+)
+
+
+@dataclass
+class _AlarmEnabledState:
+    """Track pending alarm state for an endpoint."""
+
+    lock: Lock = field(default_factory=Lock)
+    pending_alarms_enabled: int | None = None
+
+
+ALARM_ENABLED_STATES: WeakKeyDictionary[MatterEndpoint, _AlarmEnabledState] = (
+    WeakKeyDictionary()
+)
 
 
 async def async_setup_entry(
@@ -183,6 +209,83 @@ class MatterNumericSwitch(MatterSwitch):
         self._attr_is_on = value
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterAlarmEnabledSwitchEntityDescription(MatterSwitchEntityDescription):
+    """Describe Matter alarm enabled Switch entities."""
+
+    alarm_mode: int
+
+
+class MatterAlarmEnabledSwitch(MatterSwitch):
+    """Representation of a Matter Boolean State Configuration alarm switch."""
+
+    entity_description: MatterAlarmEnabledSwitchEntityDescription
+
+    async def _async_set_alarm_enabled(self, value: bool) -> None:
+        """Set the enabled state for an alarm mode."""
+        state = ALARM_ENABLED_STATES.setdefault(self._endpoint, _AlarmEnabledState())
+        async with state.lock:
+            alarms_enabled = state.pending_alarms_enabled
+            if alarms_enabled is None:
+                alarms_enabled = (
+                    self.get_matter_attribute_value(
+                        clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled
+                    )
+                    or 0
+                )
+            if value:
+                alarms_enabled |= self.entity_description.alarm_mode
+            else:
+                alarms_enabled &= ~self.entity_description.alarm_mode
+
+            state.pending_alarms_enabled = alarms_enabled
+            try:
+                await self.send_device_command(
+                    clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+                        alarmsToEnableDisable=alarms_enabled,
+                    )
+                )
+            except BaseException:
+                if state.pending_alarms_enabled == alarms_enabled:
+                    state.pending_alarms_enabled = None
+                raise
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn alarm mode on."""
+        await self._async_set_alarm_enabled(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn alarm mode off."""
+        await self._async_set_alarm_enabled(False)
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        alarm_mode = self.entity_description.alarm_mode
+        alarms_supported = (
+            self.get_matter_attribute_value(
+                clusters.BooleanStateConfiguration.Attributes.AlarmsSupported
+            )
+            or 0
+        )
+        self._attr_available = self._attr_available and bool(
+            alarms_supported & alarm_mode
+        )
+
+        alarms_enabled = (
+            self.get_matter_attribute_value(
+                clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled
+            )
+            or 0
+        )
+        if state := ALARM_ENABLED_STATES.get(self._endpoint):
+            state.pending_alarms_enabled = alarms_enabled
+        self._attr_is_on = bool(alarms_enabled & alarm_mode)
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -222,6 +325,18 @@ DISCOVERY_SCHEMAS = [
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterSwitchEntityDescription(
+            key="MatterSwitch",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="display",
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        vendor_id=(4476,),  # IKEA of Sweden
+        product_id=(12289,),  # ALPSTUGA air quality monitor
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
@@ -333,5 +448,45 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumericSwitch,
         required_attributes=(clusters.EveCluster.Attributes.ChildLock,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterAlarmEnabledSwitchEntityDescription(
+            key="BooleanStateConfigurationVisualAlarmEnabled",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="visual_alarm_enabled",
+            alarm_mode=ALARM_MODE_VISUAL,
+        ),
+        entity_class=MatterAlarmEnabledSwitch,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
+            clusters.BooleanStateConfiguration.Attributes.AcceptedCommandList,
+            clusters.BooleanStateConfiguration.Attributes.AlarmsSupported,
+        ),
+        secondary_value_contains=(
+            clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm.command_id
+        ),
+        featuremap_contains=BOOLEAN_STATE_CONFIGURATION_FEATURE_VISUAL,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterAlarmEnabledSwitchEntityDescription(
+            key="BooleanStateConfigurationAudibleAlarmEnabled",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="audible_alarm_enabled",
+            alarm_mode=ALARM_MODE_AUDIBLE,
+        ),
+        entity_class=MatterAlarmEnabledSwitch,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
+            clusters.BooleanStateConfiguration.Attributes.AcceptedCommandList,
+            clusters.BooleanStateConfiguration.Attributes.AlarmsSupported,
+        ),
+        secondary_value_contains=(
+            clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm.command_id
+        ),
+        featuremap_contains=BOOLEAN_STATE_CONFIGURATION_FEATURE_AUDIBLE,
+        allow_multi=True,
     ),
 ]

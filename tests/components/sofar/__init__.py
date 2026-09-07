@@ -10,6 +10,9 @@ MOCK_MODEL = "4.4 KTLX-G3"
 MOCK_HYBRID_SERIAL = "SP1XXES100XX"
 MOCK_HYBRID_MODEL = "HYDxxKTL-3P"
 
+MOCK_HW_VERSION = "V100"
+MOCK_SW_VERSION = "V220"
+
 MOCK_USER_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 502,
@@ -17,12 +20,19 @@ MOCK_USER_INPUT = {
 }
 
 
+def _seed_string(unit: MockModbusUnit, address: int, words: int, text: str) -> None:
+    """Encode ASCII across consecutive registers, two characters each."""
+    padded = text.ljust(words * 2, "\x00")
+    for i in range(words):
+        hi, lo = ord(padded[2 * i]), ord(padded[2 * i + 1])
+        unit.holding[address + i] = (hi << 8) | lo
+
+
 def _seed_common(unit: MockModbusUnit, serial: str) -> None:
     """Seed identity, run state and grid frequency: every model has these."""
-    padded = serial.ljust(14, "\x00")
-    for i in range(7):
-        hi, lo = ord(padded[2 * i]), ord(padded[2 * i + 1])
-        unit.holding[0x445 + i] = (hi << 8) | lo
+    _seed_string(unit, 0x0445, 7, serial)
+    _seed_string(unit, 0x044D, 2, MOCK_HW_VERSION)
+    _seed_string(unit, 0x044F, 4, MOCK_SW_VERSION)
     unit.holding[0x0404] = 2  # Running
     unit.holding[0x0484] = 5000  # 50.00 Hz
 
@@ -43,5 +53,9 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
-    """Seed identity registers for a hybrid inverter; the rest read as zero."""
+    """Seed a hybrid inverter with battery packs 1 and 3 wired, 2 absent."""
     _seed_common(unit, serial)
+    unit.holding[0x0604] = 520  # battery_voltage_1 -> 52.0 V
+    unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%
+    unit.holding[0x0612] = 515  # battery_voltage_3 -> 51.5 V
+    unit.holding[0x0616] = 85  # battery_capacity_3 -> 85%

@@ -1,6 +1,5 @@
 """Tests for the yandex transport platform."""
 
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -12,11 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, load_fixture
+from tests.common import assert_setup_component, load_json_object_fixture
 
-BUS_REPLY = json.loads(load_fixture("bus_reply.json", "yandex_transport"))
-SUBURBAN_TRAIN_REPLY = json.loads(
-    load_fixture("suburban_reply.json", "yandex_transport")
+BUS_REPLY = load_json_object_fixture("bus_reply.json", "yandex_transport")
+SUBURBAN_TRAIN_REPLY = load_json_object_fixture(
+    "suburban_reply.json", "yandex_transport"
 )
 
 

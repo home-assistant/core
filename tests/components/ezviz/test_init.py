@@ -87,6 +87,7 @@ async def test_last_alarm_pic_sensor_not_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that last_alarm_pic sensor is not created."""
     # Mock coordinator data with all sensor fields
@@ -115,8 +116,7 @@ async def test_last_alarm_pic_sensor_not_created(
     assert last_alarm_pic_state is None
 
     # But other sensors should be created
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    battery_entity = registry.async_get("sensor.camera_1_battery")
+    battery_entity = entity_registry.async_get("sensor.camera_1_battery")
     assert battery_entity is not None
 
 

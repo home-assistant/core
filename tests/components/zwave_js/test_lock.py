@@ -30,10 +30,12 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
+
+from tests.common import MockConfigEntry, MockUser
 
 
 async def test_door_lock(
@@ -517,3 +519,55 @@ async def test_get_all_lock_usercodes(
                 "2": {"usercode": None, "in_use": False},
             }
         }
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "returns_response"),
+    [
+        pytest.param(
+            SERVICE_GET_LOCK_USERCODE,
+            {ATTR_CODE_SLOT: 1},
+            True,
+            id="get_lock_usercode",
+        ),
+        pytest.param(
+            SERVICE_SET_LOCK_USERCODE,
+            {ATTR_CODE_SLOT: 1, ATTR_USERCODE: "1234"},
+            False,
+            id="set_lock_usercode",
+        ),
+        pytest.param(
+            SERVICE_CLEAR_LOCK_USERCODE,
+            {ATTR_CODE_SLOT: 1},
+            False,
+            id="clear_lock_usercode",
+        ),
+        pytest.param(
+            SERVICE_SET_LOCK_CONFIGURATION,
+            {ATTR_OPERATION_TYPE: "CONSTANT"},
+            False,
+            id="set_lock_configuration",
+        ),
+    ],
+)
+async def test_lock_management_services_require_admin(
+    hass: HomeAssistant,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    hass_read_only_user: MockUser,
+    service: str,
+    service_data: dict[str, int | str],
+    returns_response: bool,
+) -> None:
+    """Sensitive lock services reject non-admin users."""
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, **service_data},
+            blocking=True,
+            return_response=returns_response,
+            context=Context(user_id=hass_read_only_user.id),
+        )
