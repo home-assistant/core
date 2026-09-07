@@ -6,8 +6,7 @@
       "addon_install_failed": "Failed to install the {addon} app.",
       "addon_start_failed": "Failed to start the {addon} app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "bad_birth": "Invalid birth topic",
@@ -1318,14 +1317,6 @@
         "auto": "[%key:common::state::auto%]",
         "custom": "Custom",
         "off": "[%key:common::state::off%]"
-      }
-    },
-    "state_class": {
-      "options": {
-        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
-        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
-        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
-        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     },
     "supported_color_modes": {

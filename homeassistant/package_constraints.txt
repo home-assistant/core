@@ -40,7 +40,7 @@ habluetooth==6.26.11
 hass-nabucasa==2.7.0
 hassil==3.12.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260826.4
+home-assistant-frontend==20260826.6
 home-assistant-intents==2026.8.28
 httpx==0.28.1
 ifaddr==0.2.0
@@ -75,7 +75,7 @@ urllib3>=2.0
 uv==0.12.7
 webrtc-models==0.3.0
 yarl==1.24.5
-zeroconf==0.151.1
+zeroconf==0.151.3
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
