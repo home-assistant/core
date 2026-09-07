@@ -1,7 +1,5 @@
 """Switches for the NexBlue integration."""
 
-from collections.abc import Callable
-from datetime import datetime
 import time
 from typing import Any, override
 
@@ -12,13 +10,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
+from .coordinator import (
+    FINAL_COMMAND_REFRESH_DELAY,
+    NexBlueConfigEntry,
+    NexBlueDataUpdateCoordinator,
+)
 
-ASSUMED_STATE_SECONDS = 22
 PARALLEL_UPDATES = 1
 ACTIVE_CHARGING_STATES = frozenset(
     {
@@ -59,9 +59,7 @@ class NexBlueChargingSwitch(
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._assumed_is_on: bool | None = None
-        self._assumed_state_expires_at = 0.0
-        self._assumed_state_expiry_cancel: Callable[[], None] | None = None
-        self.async_on_remove(self._cancel_assumed_state_expiry)
+        self._assumed_state_confirm_after = 0.0
         self._attr_unique_id = f"{serial_number}_charging"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
@@ -83,20 +81,16 @@ class NexBlueChargingSwitch(
     @override
     def assumed_state(self) -> bool:
         """Return whether the charging state is currently assumed."""
-        return (
-            self._assumed_is_on is not None
-            and time.monotonic() < self._assumed_state_expires_at
-        )
+        return self._assumed_is_on is not None
 
     @property
     @override
     def is_on(self) -> bool:
         """Return whether the charger is actively charging."""
-        if self.assumed_state:
-            assert self._assumed_is_on is not None
-            return self._assumed_is_on
+        assumed_is_on = self._assumed_is_on
+        if assumed_is_on is not None:
+            return assumed_is_on
 
-        self._assumed_is_on = None
         status = self.coordinator.data.get(self._serial_number)
         if status is None:
             return False
@@ -105,15 +99,18 @@ class NexBlueChargingSwitch(
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Clear an assumed state once coordinator data confirms it."""
+        """Clear an assumed state once a successful refresh confirms it."""
         status = self.coordinator.data.get(self._serial_number)
+        assumed_is_on = self._assumed_is_on
         if (
             self.coordinator.last_update_success
             and status is not None
-            and self._assumed_is_on is not None
-            and (status.charging_state in ACTIVE_CHARGING_STATES) == self._assumed_is_on
+            and assumed_is_on is not None
+            and (
+                (status.charging_state in ACTIVE_CHARGING_STATES) == assumed_is_on
+                or time.monotonic() >= self._assumed_state_confirm_after
+            )
         ):
-            self._cancel_assumed_state_expiry()
             self._assumed_is_on = None
 
         super()._handle_coordinator_update()
@@ -142,28 +139,8 @@ class NexBlueChargingSwitch(
             raise HomeAssistantError(str(err)) from err
 
         self._assumed_is_on = should_charge
-        self._assumed_state_expires_at = time.monotonic() + ASSUMED_STATE_SECONDS
-        self.async_write_ha_state()
-        self._schedule_assumed_state_expiry()
-        self.coordinator.async_schedule_command_refreshes(self._serial_number)
-
-    def _schedule_assumed_state_expiry(self) -> None:
-        """Schedule when this switch stops reporting an assumed state."""
-        self._cancel_assumed_state_expiry()
-
-        @callback
-        def _expire_assumed_state(_now: datetime) -> None:
-            """Publish the coordinator state after the assumed state expires."""
-            self._assumed_state_expiry_cancel = None
-            self._assumed_is_on = None
-            self.async_write_ha_state()
-
-        self._assumed_state_expiry_cancel = async_call_later(
-            self.hass, ASSUMED_STATE_SECONDS, _expire_assumed_state
+        self._assumed_state_confirm_after = (
+            time.monotonic() + FINAL_COMMAND_REFRESH_DELAY
         )
-
-    def _cancel_assumed_state_expiry(self) -> None:
-        """Cancel the assumed-state expiry callback if it has not fired."""
-        if self._assumed_state_expiry_cancel is not None:
-            self._assumed_state_expiry_cancel()
-            self._assumed_state_expiry_cancel = None
+        self.async_write_ha_state()
+        self.coordinator.async_schedule_command_refreshes(self._serial_number)
