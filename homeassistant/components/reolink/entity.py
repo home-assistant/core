@@ -182,16 +182,16 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
         self._channel = channel
         self._sub_channel = sub_channel
+        sub_id = f"_sub{sub_channel:02d}" if sub_channel is not None else ""
         if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
             self._attr_unique_id = (
                 f"{self._host.unique_id}"
                 f"_{self._host.api.camera_uid(channel)}"
+                f"{sub_id}"
                 f"_{self.entity_description.key}"
             )
         else:
-            self._attr_unique_id = (
-                f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
-            )
+            self._attr_unique_id = f"{self._host.unique_id}_{channel}{sub_id}_{self.entity_description.key}"
 
         if self._host.api.is_nvr:
             if self._host.api.supported(channel, "UID"):
