@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR
@@ -67,17 +67,14 @@ def _get_color(file_handler: io.BytesIO | str) -> tuple[int, int, int]:
 
 async def _async_extract_color_from_url(
     hass: HomeAssistant, url: str
-) -> tuple[int, int, int] | None:
+) -> tuple[int, int, int]:
     """Handle call for URL based image."""
     if not hass.config.is_allowed_external_url(url):
-        _LOGGER.error(
-            (
-                "External URL '%s' is not allowed, please add to"
-                " 'allowlist_external_urls'"
-            ),
-            url,
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="url_not_allowed",
+            translation_placeholders={"url": url},
         )
-        return None
 
     _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
@@ -87,12 +84,27 @@ async def _async_extract_color_from_url(
 
         async with asyncio.timeout(10):
             response = await session.get(url)
+            response.raise_for_status()
+            content = await response.read()
 
-    except (TimeoutError, aiohttp.ClientError) as err:
-        _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
-        return None
-
-    content = await response.content.read()
+    except aiohttp.ClientResponseError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="http_error",
+            translation_placeholders={"url": url, "status": str(err.status)},
+        ) from err
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={"url": url},
+        ) from err
+    except aiohttp.ClientError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_failed",
+            translation_placeholders={"url": url, "error": str(err)},
+        ) from err
 
     with io.BytesIO(content) as _file:
         _file.name = "color_extractor.jpg"
@@ -103,14 +115,14 @@ async def _async_extract_color_from_url(
 
 def _extract_color_from_path(
     hass: HomeAssistant, file_path: str
-) -> tuple[int, int, int] | None:
+) -> tuple[int, int, int]:
     """Handle call for local file based image."""
     if not hass.config.is_allowed_path(file_path):
-        _LOGGER.error(
-            "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
-            file_path,
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="path_not_allowed",
+            translation_placeholders={"file_path": file_path},
         )
-        return None
 
     _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
@@ -147,12 +159,11 @@ async def async_handle_service(service_call: ServiceCall) -> None:
             },
         ) from ex
 
-    if color:
-        service_data[ATTR_RGB_COLOR] = color
+    service_data[ATTR_RGB_COLOR] = color
 
-        await service_call.hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
-        )
+    await service_call.hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+    )
 
 
 async def async_handle_get_color(
@@ -185,16 +196,6 @@ async def async_handle_get_color(
                 "image_reference": image_reference,
             },
         ) from ex
-
-    if color is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_image",
-            translation_placeholders={
-                "image_type": image_type,
-                "image_reference": image_reference,
-            },
-        )
 
     return {"color": color}
 
