@@ -580,32 +580,47 @@ async def test_async_poll_manual_hosts_6(
     soco_1.renderingControl = Mock()
     soco_1.renderingControl.GetVolume = Mock()
     soco_1.renderingControl.GetVolume.side_effect = SonosUpdateError()
-    speaker_1_activity = SpeakerActivity(hass, soco_1)
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
     soco_2.renderingControl.GetVolume.side_effect = SonosUpdateError()
-    speaker_2_activity = SpeakerActivity(hass, soco_2)
 
-    with patch(
-        "homeassistant.components.sonos.DISCOVERY_INTERVAL"
-    ) as mock_discovery_interval:
-        # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.0, 60])
-        await _setup_hass(hass)
-
-        assert "media_player.bedroom" in entity_registry.entities
-        assert "media_player.living_room" in entity_registry.entities
-
-        with caplog.at_level(logging.DEBUG):
-            caplog.clear()
-            await hass.async_block_till_done()
-            assert "Activity on Living Room" not in caplog.text
-            assert "Activity on Bedroom" not in caplog.text
-            assert speaker_1_activity.call_count == 0
-            assert speaker_2_activity.call_count == 0
-
+    await _setup_hass(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" in entity_registry.entities
+    bedroom_state = hass.states.get("media_player.bedroom")
+    assert bedroom_state is not None
+    assert bedroom_state.state == "unavailable"
+    living_room_state = hass.states.get("media_player.living_room")
+    assert living_room_state is not None
+    assert living_room_state.state == "unavailable"
+
+    speaker_1_activity = SpeakerActivity(hass, soco_1)
+    speaker_2_activity = SpeakerActivity(hass, soco_2)
+    soco_1.renderingControl.GetVolume.reset_mock()
+    soco_2.renderingControl.GetVolume.reset_mock()
+
+    with (
+        caplog.at_level(logging.DEBUG),
+        freeze_time(dt_util.utcnow()) as freezer,
+    ):
+        caplog.clear()
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        soco_1.renderingControl.GetVolume.assert_called_once_with(
+            [("InstanceID", 0), ("Channel", "Master")], timeout=1
+        )
+        soco_2.renderingControl.GetVolume.assert_called_once_with(
+            [("InstanceID", 0), ("Channel", "Master")], timeout=1
+        )
+        assert "Activity on Living Room" not in caplog.text
+        assert "Activity on Bedroom" not in caplog.text
+        assert speaker_1_activity.call_count == 0
+        assert speaker_2_activity.call_count == 0
 
 
 async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(

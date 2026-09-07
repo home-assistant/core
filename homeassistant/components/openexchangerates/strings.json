@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "error": {
