@@ -4,7 +4,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 
 from androidtvremote2 import AndroidTVRemote
-import getmac  # type: ignore[import-untyped]
+import getmac
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
