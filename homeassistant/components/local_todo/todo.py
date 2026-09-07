@@ -7,6 +7,7 @@ from typing import override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
 
@@ -63,6 +64,16 @@ def _migrate_calendar(calendar: Calendar) -> bool:
     return migrated
 
 
+def _repair_legacy_crlf_newlines(content: str) -> str:
+    r"""Repair ICS content corrupted by CRLF newlines from ical <= 12.1.3.
+
+    In ical <= 12.1.3, TextEncoder escaped \n to \\n but left \r unescaped.
+    When read with Python's universal newlines mode (newline=None), any lone \r
+    before \\n was converted into \n\\n, breaking property line parsing.
+    """
+    return content.replace("\r\\n", "\\n").replace("\n\\n", "\\n").replace("\r", "")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LocalTodoConfigEntry,
@@ -70,20 +81,36 @@ async def async_setup_entry(
 ) -> None:
     """Set up the local_todo todo platform."""
 
+    name = config_entry.data[CONF_TODO_LIST_NAME]
     store = config_entry.runtime_data
     ics = await store.async_load()
 
-    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-        # calendar_from_ics will dynamically load packages
-        # the first time it is called, so we need to do it
-        # in a separate thread to avoid blocking the event loop
-        calendar: Calendar = await hass.async_add_import_executor_job(
-            IcsCalendarStream.calendar_from_ics, ics
+    try:
+        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+            # calendar_from_ics will dynamically load packages
+            # the first time it is called, so we need to do it
+            # in a separate thread to avoid blocking the event loop
+            calendar: Calendar = await hass.async_add_import_executor_job(
+                IcsCalendarStream.calendar_from_ics, ics
+            )
+    except CalendarParseError:
+        # Attempt to repair malformed newlines from ical <= 12.1.3 CRLF bug
+        repaired_ics = _repair_legacy_crlf_newlines(ics)
+        if repaired_ics == ics:
+            raise
+        calendar = await hass.async_add_import_executor_job(
+            IcsCalendarStream.calendar_from_ics, repaired_ics
         )
-    migrated = _migrate_calendar(calendar)
+        _LOGGER.warning(
+            "Repaired malformed iCalendar file for to-do list %s",
+            name,
+        )
+        migrated = True
+    else:
+        # File loaded cleanly; check if due date migration is required
+        migrated = _migrate_calendar(calendar)
     calendar.prodid = PRODID
 
-    name = config_entry.data[CONF_TODO_LIST_NAME]
     entity = LocalTodoListEntity(store, calendar, name, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)
 
