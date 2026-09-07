@@ -82,7 +82,7 @@
           "name": "Dataset"
         },
         "delay": {
-          "description": "How long devices wait before switching, giving sleepy devices time to hear about the change.",
+          "description": "How long devices wait before switching, giving sleepy devices time to hear about the change. A network change replaces the network key, and the Thread leader does not accept less than 300 seconds for that, so shorter delays are raised to it.",
           "name": "Delay"
         }
       },

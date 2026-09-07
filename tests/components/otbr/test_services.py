@@ -335,8 +335,8 @@ async def test_migration_window_is_measured_from_the_routers_acceptance(
 
     The router's delay timer starts when it accepts the dataset, so the
     window is re-anchored once the request completes; measured from before
-    the request, a 60s delay behind an 8s request would have ended while the
-    mesh was still counting down.
+    the request, a 600s delay behind an 8s request would have ended while
+    the mesh was still counting down.
     """
     mock_pending_endpoint(aioclient_mock)
     aioclient_mock.clear_requests()
@@ -348,10 +348,10 @@ async def test_migration_window_is_measured_from_the_routers_acceptance(
         return AiohttpClientMockResponse(method, url, status=HTTPStatus.CREATED)
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", side_effect=slow_put)
-    await call_migrate(hass, dataset=TARGET, delay=60)
+    await call_migrate(hass, dataset=TARGET, delay=600)
 
     mock_pending_endpoint(aioclient_mock)
-    freezer.tick(55)
+    freezer.tick(595)
     with pytest.raises(HomeAssistantError) as exc_info:
         await call_migrate(hass, dataset=TARGET)
     assert exc_info.value.translation_key == "migration_in_flight"
@@ -458,12 +458,12 @@ async def test_a_lost_connection_keeps_the_migration_window(
     aioclient_mock.put(f"{BASE_URL}/node/dataset/pending", side_effect=slow_failure)
 
     with pytest.raises(HomeAssistantError):
-        await call_migrate(hass, dataset=TARGET, delay=60)
+        await call_migrate(hass, dataset=TARGET, delay=600)
 
     # The write may have landed as late as the moment the connection died,
     # so the window is measured from there, not from before the request.
     mock_pending_endpoint(aioclient_mock)
-    freezer.tick(55)
+    freezer.tick(595)
     with pytest.raises(HomeAssistantError) as exc_info:
         await call_migrate(hass, dataset=TARGET)
     assert exc_info.value.translation_key == "migration_in_flight"
@@ -475,14 +475,18 @@ async def test_delay_is_applied(
     otbr_config_entry_multipan: str,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A non-default delay reaches the router and the response."""
+    """A non-default delay reaches the router and the response.
+
+    Above the 300s the leader insists on for a network key change, so this
+    is the delay that is sent rather than one that gets raised.
+    """
     mock_pending_endpoint(aioclient_mock)
 
-    response = await call_migrate(hass, dataset=TARGET, delay=60)
+    response = await call_migrate(hass, dataset=TARGET, delay=600)
 
-    assert response["delay"] == 60
+    assert response["delay"] == 600
     puts = pending_calls(aioclient_mock)
-    assert tlv_parser.parse_tlv(puts[0][2]) == expected_pending(TARGET, 1004, 60000)
+    assert tlv_parser.parse_tlv(puts[0][2]) == expected_pending(TARGET, 1004, 600000)
 
 
 async def test_already_on_network(
@@ -733,8 +737,8 @@ async def test_second_migration_of_a_mesh_waits_for_the_first(
         MeshcopTLVType.EXTPANID, bytes.fromhex("3333333344444444")
     )
 
-    await call_migrate(hass, dataset=TARGET, delay=60)
-    freezer.tick(30)
+    await call_migrate(hass, dataset=TARGET, delay=600)
+    freezer.tick(570)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await call_migrate(hass, dataset=tlv_parser.encode_tlv(other_target))
@@ -945,6 +949,53 @@ async def test_a_router_on_another_mesh_keeps_its_repair_issues(
     assert not issue_registry.async_get_issue(
         domain="otbr", issue_id=f"insecure_thread_network_{thread_entry.entry_id}"
     )
+
+
+async def test_a_short_delay_is_raised_to_what_the_leader_accepts(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A network change cannot propagate faster than the leader allows.
+
+    The leader raises a delay below 300 seconds when the dataset replaces
+    the network key, but only on the copy it hands back to the mesh: this
+    router keeps counting down from what was written to it. Sending the
+    short delay would move it ahead of every other device.
+    """
+    mock_pending_endpoint(aioclient_mock)
+
+    response = await call_migrate(hass, dataset=TARGET, delay=60)
+
+    written = tlv_parser.parse_tlv(pending_calls(aioclient_mock)[0][2])
+    assert written[MeshcopTLVType.DELAYTIMER].delay == 300 * 1000
+    # What is reported and what is recorded describe the same migration.
+    assert response["delay"] == 300
+    (record,) = hass_storage[ISSUED_TIMESTAMPS_STORAGE_KEY]["data"].values()
+    assert record["until"] - dt_util.utcnow().timestamp() >= 299
+
+
+async def test_a_short_delay_survives_a_change_that_keeps_the_key(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Only a network key change is held to the longer delay."""
+    mock_pending_endpoint(aioclient_mock)
+    active = tlv_parser.parse_tlv(DATASET_CH16.hex())
+    renamed = dict(active)
+    renamed[MeshcopTLVType.NETWORKNAME] = tlv_parser.NetworkName(
+        MeshcopTLVType.NETWORKNAME, b"renamed"
+    )
+
+    response = await call_migrate(
+        hass, dataset=tlv_parser.encode_tlv(renamed), delay=60
+    )
+
+    written = tlv_parser.parse_tlv(pending_calls(aioclient_mock)[0][2])
+    assert written[MeshcopTLVType.DELAYTIMER].delay == 60 * 1000
+    assert response["delay"] == 60
 
 
 async def test_a_migrating_mesh_is_not_reported_as_already_on_network(
