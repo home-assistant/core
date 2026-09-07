@@ -39,7 +39,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Helsinki"
-    assert result["result"].unique_id == "60.1700-24.9400"
+    assert result["result"].unique_id == "60.17-24.94"
     assert result["data"] == {
         CONF_API_KEY: "test-key",
         CONF_LATITUDE: 60.17,

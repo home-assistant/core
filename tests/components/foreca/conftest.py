@@ -124,7 +124,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Helsinki",
         entry_id="01JZ4Q1F0RECA0000000000000",
-        unique_id="60.1700-24.9400",
+        unique_id="60.17-24.94",
         data={
             CONF_API_KEY: "test-key",
             CONF_LATITUDE: 60.17,
