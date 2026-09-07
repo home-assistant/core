@@ -85,8 +85,8 @@ async def test_electricity_interval(
     )
     assert len(data.energy_today.prices) == hours * 60 // minutes
     diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
-    assert diagnostics["energy"]["next_hour_price"] == expected
-    assert diagnostics["energy"]["current_hour_price"] == prices.current_price
+    assert diagnostics["energy"]["next_price"] == expected
+    assert diagnostics["energy"]["current_price"] == prices.current_price
     assert diagnostics["energy"]["average_price"] == prices.average_price
     assert (
         diagnostics["energy"]["hours_priced_equal_or_lower"]
