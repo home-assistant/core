@@ -380,6 +380,11 @@
       }
     }
   },
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send SMS to {targets}."
+    }
+  },
   "options": {
     "step": {
       "init": {
