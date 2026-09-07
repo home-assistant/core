@@ -39,9 +39,7 @@ async def async_get_config_entry_diagnostics(
         },
         "energy": {
             "current_hour_price": energy_today.current_price,
-            "next_hour_price": energy_today.price_at_time(
-                energy_today.utcnow() + timedelta(hours=1)
-            ),
+            "next_hour_price": coordinator_data.next_energy_price,
             "average_price": energy_today.average_price,
             "max_price": energy_today.extreme_prices[1],
             "min_price": energy_today.extreme_prices[0],
