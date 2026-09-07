@@ -41,9 +41,15 @@ class EnergyZeroData(NamedTuple):
     gas_today: EnergyPrices | None
     electricity_price_step: timedelta
 
-    def next_price(self, prices: EnergyPrices) -> float | None:
-        """Return the price one configured electricity period from now."""
-        return prices.price_at_time(prices.utcnow() + self.electricity_price_step)
+    def next_price(
+        self, prices: EnergyPrices, tomorrow: EnergyPrices | None
+    ) -> float | None:
+        """Return the next period's price, including across midnight."""
+        moment = prices.utcnow() + self.electricity_price_step
+        price = prices.price_at_time(moment)
+        if price is not None:
+            return price
+        return tomorrow.price_at_time(moment) if tomorrow is not None else None
 
 
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):

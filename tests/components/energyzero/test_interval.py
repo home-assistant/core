@@ -6,9 +6,11 @@ from zoneinfo import ZoneInfo
 
 from energyzero import EnergyPrices, EnergyZeroNoDataError, Interval, PriceType
 from energyzero.models import TimeRange
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energyzero.const import CONF_ELECTRICITY_PRICE_INTERVAL
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -159,3 +161,89 @@ async def test_electricity_interval(
         entry.unique_id == f"12345_{entry.entity_id.removeprefix('sensor.energyzero_')}"
         for entry in entries
     )
+
+
+@pytest.mark.freeze_time("2026-04-10 21:50:00")
+@pytest.mark.parametrize(
+    ("selected", "minutes"), [("hourly", 60), ("quarter_hourly", 15)]
+)
+@pytest.mark.parametrize("missing_tomorrow", [False, True])
+async def test_next_price_across_midnight(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_energyzero: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    selected: str,
+    minutes: int,
+    missing_tomorrow: bool,
+) -> None:
+    """Use the matching tomorrow stream before and after midnight without refetching."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    start = dt_util.start_of_local_day().astimezone(UTC)
+    step = timedelta(minutes=minutes)
+    today_prices = EnergyPrices(
+        prices={TimeRange(start, start + timedelta(days=1)): -0.1},
+        average_price=-0.1,
+    )
+    tomorrow_start = start + timedelta(days=1)
+    tomorrow_prices = EnergyPrices(
+        prices={
+            TimeRange(
+                tomorrow_start + index * step, tomorrow_start + (index + 1) * step
+            ): index / 100
+            for index in range(24 * 60 // minutes)
+        },
+        average_price=0.1,
+    )
+    all_in_tomorrow = EnergyPrices(
+        prices={
+            period: price + 0.11 for period, price in tomorrow_prices.prices.items()
+        },
+        average_price=0.21,
+    )
+    mock_energyzero.get_electricity_prices.side_effect = [
+        {PriceType.MARKET_WITH_VAT: today_prices, PriceType.ALL_IN: today_prices},
+        EnergyZeroNoDataError()
+        if missing_tomorrow
+        else {
+            PriceType.MARKET_WITH_VAT: tomorrow_prices,
+            PriceType.ALL_IN: all_in_tomorrow,
+        },
+    ]
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ELECTRICITY_PRICE_INTERVAL: selected}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for moment, market_value, all_in_value in (
+        ("2026-04-10 21:50:00", 0.0, 0.11),
+        ("2026-04-10 22:02:00", 0.01, 0.12),
+    ):
+        freezer.move_to(moment)
+        coordinator = mock_config_entry.runtime_data
+        coordinator.async_set_updated_data(coordinator.data)
+        await hass.async_block_till_done()
+        diagnostics = await get_diagnostics_for_config_entry(
+            hass, hass_client, mock_config_entry
+        )
+        for entity_id, section, value in (
+            (
+                "sensor.energyzero_today_energy_next_hour_price",
+                "electricity_market",
+                market_value,
+            ),
+            (
+                "sensor.energyzero_today_energy_all_in_next_price",
+                "electricity_all_in",
+                all_in_value,
+            ),
+        ):
+            assert (state := hass.states.get(entity_id))
+            assert state.state == (STATE_UNKNOWN if missing_tomorrow else str(value))
+            assert diagnostics[section]["next_price"] == (
+                None if missing_tomorrow else value
+            )
+    assert mock_energyzero.get_electricity_prices.await_count == 2

@@ -37,7 +37,9 @@ async def async_get_config_entry_diagnostics(
     return {
         "electricity_market": {
             "current_price": energy_today.current_price,
-            "next_price": coordinator_data.next_price(energy_today),
+            "next_price": coordinator_data.next_price(
+                energy_today, coordinator_data.electricity_market_tomorrow
+            ),
             "average_price": energy_today.average_price,
             "max_price": energy_today.extreme_prices[1],
             "min_price": energy_today.extreme_prices[0],
@@ -48,7 +50,9 @@ async def async_get_config_entry_diagnostics(
         },
         "electricity_all_in": {
             "current_price": all_in_today.current_price,
-            "next_price": coordinator_data.next_price(all_in_today),
+            "next_price": coordinator_data.next_price(
+                all_in_today, coordinator_data.electricity_all_in_tomorrow
+            ),
             "average_price": all_in_today.average_price,
             "max_price": all_in_today.extreme_prices[1],
             "min_price": all_in_today.extreme_prices[0],

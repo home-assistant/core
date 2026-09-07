@@ -67,7 +67,9 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=3,
-        value_fn=lambda data: data.next_price(data.electricity_market_today),
+        value_fn=lambda data: data.next_price(
+            data.electricity_market_today, data.electricity_market_tomorrow
+        ),
     ),
     EnergyZeroSensorEntityDescription(
         key="average_price",
@@ -141,7 +143,9 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=3,
-        value_fn=lambda data: data.next_price(data.electricity_all_in_today),
+        value_fn=lambda data: data.next_price(
+            data.electricity_all_in_today, data.electricity_all_in_tomorrow
+        ),
     ),
     EnergyZeroSensorEntityDescription(
         key="all_in_average_price",
