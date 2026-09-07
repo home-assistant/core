@@ -205,15 +205,25 @@ class OAuth2FlowHandler(
                     for channel_id in channel_ids
                 ],
             )
-        youtube = YouTube(session=async_get_clientsession(self.hass))
-        await youtube.set_user_authentication(
-            self._data[CONF_TOKEN][CONF_ACCESS_TOKEN], [AuthScope.READ_ONLY]
-        )
-        (
-            selectable_channels,
-            channel_titles,
-            _has_own_channel,
-        ) = await async_get_channel_options(youtube)
+        try:
+            youtube = YouTube(session=async_get_clientsession(self.hass))
+            await youtube.set_user_authentication(
+                self._data[CONF_TOKEN][CONF_ACCESS_TOKEN], [AuthScope.READ_ONLY]
+            )
+            (
+                selectable_channels,
+                channel_titles,
+                _has_own_channel,
+            ) = await async_get_channel_options(youtube)
+        except ForbiddenError as ex:
+            error = ex.args[0]
+            return self.async_abort(
+                reason="access_not_configured",
+                description_placeholders={"message": error},
+            )
+        except Exception as ex:  # noqa: BLE001
+            LOGGER.error("Unknown error occurred: %s", ex.args)
+            return self.async_abort(reason="unknown")
         self._channel_titles = channel_titles
         return self.async_show_form(
             step_id="channels",
@@ -306,8 +316,8 @@ class ChannelFlowHandler(ConfigSubentryFlow):
     async def _async_create_entry(self, channel_id: str) -> SubentryFlowResult:
         """Create a subentry for the selected channel."""
         config_entry: YouTubeConfigEntry = self._get_entry()
-        youtube = await self._async_get_youtube(config_entry)
         try:
+            youtube = await self._async_get_youtube(config_entry)
             channels = [channel async for channel in youtube.get_channels([channel_id])]
         except ForbiddenError as ex:
             error = ex.args[0]

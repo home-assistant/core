@@ -1,5 +1,6 @@
 """Test the YouTube config flow."""
 
+import time
 from unittest.mock import patch
 
 import pytest
@@ -14,6 +15,7 @@ from homeassistant.components.youtube.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import MockYouTube
@@ -447,6 +449,72 @@ async def test_flow_exception(
         assert result["reason"] == "unknown"
 
 
+@pytest.mark.parametrize(
+    ("exception", "abort_reason", "placeholders"),
+    [
+        (
+            ForbiddenError(
+                "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            ),
+            "access_not_configured",
+            {
+                "message": "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            },
+        ),
+        (Exception("Some failure"), "unknown", None),
+    ],
+    ids=["forbidden", "unknown"],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_flow_channel_listing_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    exception: Exception,
+    abort_reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test the initial flow aborts when listing the channels fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    # The account check succeeds, listing the subscriptions afterwards fails
+    mock = MockYouTube(hass)
+    with (
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=mock,
+        ),
+        patch.object(mock, "get_user_subscriptions", side_effect=exception),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == abort_reason
+        assert result.get("description_placeholders") == placeholders
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_own_channel_included(
     hass: HomeAssistant,
@@ -761,3 +829,48 @@ async def test_subentry_flow_api_error_fetching_channel(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert result.get("description_placeholders") == placeholders
+
+
+async def test_subentry_flow_token_refresh_error(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the subentry flow aborts when the token cannot be refreshed."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(hass),
+    ):
+        # Listing channels succeeds with the still valid token
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        # The token expires before the submission and the refresh fails
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                "token": {
+                    **entry.data["token"],
+                    "expires_at": time.time() - 3600,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+        with patch(
+            "homeassistant.components.youtube.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
+        ):
+            result = await hass.config_entries.subentries.async_configure(
+                result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+            )
+            await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
