@@ -26,6 +26,7 @@ from aiohasupervisor.exceptions import (
     SupervisorNotFoundError,
 )
 from aiohasupervisor.models import (
+    SupervisorState,
     backups as supervisor_backups,
     jobs as supervisor_jobs,
     mounts as supervisor_mounts,
@@ -2752,29 +2753,33 @@ async def test_reader_writer_restore_late_error(
 
 
 @pytest.mark.parametrize(
-    ("info_sequence", "update_error", "expected_update_calls"),
+    ("info_sequence", "update_error", "root_info_sequence", "expected_update_calls"),
     [
         pytest.param(
-            ["outdated", "available", "restarting", "outdated", "new"],
+            ["outdated", "available"],
             None,
+            ["restarting", "old", "starting", "new"],
             1,
             id="update_ok",
         ),
         pytest.param(
-            ["outdated", "available", "restarting", "outdated", "new"],
+            ["outdated", "available"],
             SupervisorConnectionError(),
+            ["restarting", "old", "starting", "new"],
             1,
             id="update_restarting",
         ),
         pytest.param(
-            ["outdated", "restarting", "new"],
+            ["outdated", "restarting"],
             None,
+            ["starting", "new"],
             0,
             id="restarting_after_reload",
         ),
         pytest.param(
             ["outdated", "new"],
             None,
+            [],
             0,
             id="updated_after_reload",
         ),
@@ -2786,8 +2791,10 @@ async def test_reader_writer_restore_updates_supervisor(
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
     info_sequence: list[str],
     update_error: Exception | None,
+    root_info_sequence: list[str],
     expected_update_calls: int,
 ) -> None:
     """Test restoring a backup made on a newer Supervisor updates Supervisor first."""
@@ -2812,6 +2819,18 @@ async def test_reader_writer_restore_updates_supervisor(
     }
     supervisor_info.reset_mock()
     supervisor_info.side_effect = [infos[name] for name in info_sequence]
+    root_infos = {
+        "restarting": SupervisorConnectionError(),
+        "old": replace(supervisor_root_info.return_value, supervisor="2026.07.5"),
+        "starting": replace(
+            supervisor_root_info.return_value,
+            supervisor="2026.08.0",
+            state=SupervisorState.STARTUP,
+        ),
+        "new": replace(supervisor_root_info.return_value, supervisor="2026.08.0"),
+    }
+    supervisor_root_info.reset_mock()
+    supervisor_root_info.side_effect = [root_infos[name] for name in root_info_sequence]
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()
@@ -2848,6 +2867,7 @@ async def test_reader_writer_restore_updates_supervisor(
     supervisor_client.reload_updates.assert_awaited_once_with()
     assert supervisor_client.supervisor.update.await_count == expected_update_calls
     assert supervisor_info.await_count == len(info_sequence)
+    assert supervisor_root_info.await_count == len(root_info_sequence)
     supervisor_client.backups.partial_restore.assert_called_once_with(
         "abc123",
         supervisor_backups.PartialRestoreOptions(

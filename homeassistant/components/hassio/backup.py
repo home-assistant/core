@@ -18,6 +18,7 @@ from aiohasupervisor.exceptions import (
     SupervisorTimeoutError,
 )
 from aiohasupervisor.models import (
+    SupervisorState,
     backups as supervisor_backups,
     jobs as supervisor_jobs,
     mounts as supervisor_mounts,
@@ -634,8 +635,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 while True:
                     await asyncio.sleep(SUPERVISOR_UPDATE_POLL_INTERVAL)
                     with suppress(SupervisorError):
-                        info = await self._client.supervisor.info()
-                        if AwesomeVersion(info.version) >= backup_version:
+                        root_info = await self._client.info()
+                        if (
+                            root_info.state == SupervisorState.RUNNING
+                            and AwesomeVersion(root_info.supervisor) >= backup_version
+                        ):
                             break
         except TimeoutError as err:
             raise BackupReaderWriterError(
