@@ -82,5 +82,5 @@ rules:
     status: exempt
     comment: The underlying library does not use HTTP for communication.
   strict-typing:
-    status: exempt
-    comment: getmac requirement does not have a py.typed file.
+    status: todo
+    comment: Requirement 'getmac==0.9.5' appears untyped
