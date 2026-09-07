@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from pylutron import Motor, Output
+from pylutron import Motor, Shade
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -27,16 +27,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Lutron cover platform.
 
-    Adds shades from the Main Repeater associated with the config_entry as
-    cover entities.
+    Adds shades and motors from the Main Repeater associated with the
+    config_entry as cover entities.
     """
     entry_data = config_entry.runtime_data
     async_add_entities(
         [
-            (LutronMotorCover if device.type == "MOTOR" else LutronCover)(
-                hass, area_name, device, entry_data.client, config_entry.entry_id
-            )
-            for area_name, device in entry_data.covers
+            *(
+                LutronCover(
+                    hass, area_name, device, entry_data.client, config_entry.entry_id
+                )
+                for area_name, device in entry_data.covers
+            ),
+            *(
+                LutronMotorCover(
+                    hass, area_name, device, entry_data.client, config_entry.entry_id
+                )
+                for area_name, device in entry_data.motors
+            ),
         ],
         True,
     )
@@ -50,7 +58,7 @@ class LutronCover(LutronDevice, CoverEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
     )
-    _lutron_device: Output
+    _lutron_device: Shade
     _attr_name = None
 
     @override
