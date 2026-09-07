@@ -56,6 +56,13 @@ from .coordinator import HeosConfigEntry, HeosCoordinator
 PARALLEL_UPDATES = 0
 
 BROWSE_ROOT: Final = "heos://media"
+EXTERNAL_SOURCE_IDS: Final = frozenset(
+    {
+        heos_const.MUSIC_SOURCE_CONNECT,
+        heos_const.MUSIC_SOURCE_SPOTIFY,
+        heos_const.MUSIC_SOURCE_AUX_INPUT,
+    }
+)
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -204,7 +211,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
-        
+
         # Check for announcement completion in the background so this event
         # callback does not delay coordinator updates.
         if (
@@ -222,11 +229,18 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_completion_task = self.hass.async_create_task(
                 self._check_announcement_completion()
             )
-        
+
         self._handle_coordinator_update()
 
     async def _play_announcement(self, media_id: str, kwargs: dict[str, Any]) -> None:
         """Play an announcement with pause/resume functionality."""
+        if self._player.now_playing_media.source_id in EXTERNAL_SOURCE_IDS:
+            if queue := await self._player.get_queue():
+                raise HomeAssistantError(
+                    "Announcements are not supported while the HEOS queue "
+                    f"contains {len(queue)} item(s)"
+                )
+
         # Serialize announcements so a new request cannot replace the state
         # being used by an earlier announcement's completion task.
         await self._announce_lock.acquire()
@@ -386,6 +400,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             "shuffle": self._player.shuffle,
             "media_id": self._player.now_playing_media.media_id,
             "queue_id": self._player.now_playing_media.queue_id,
+            "source_id": self._player.now_playing_media.source_id,
             "tts_url": None,
         }
 
@@ -396,6 +411,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         state = self._announce_restore_state
         current_media = self._player.now_playing_media
+        is_external_source = state["source_id"] in EXTERNAL_SOURCE_IDS
         announcement_queue_id = (
             self._announce_media_signature.get("queue_id")
             if self._announce_media_signature
@@ -414,6 +430,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         try:
             # Remove TTS from queue if it was added.
             if state["tts_url"] and state.get("announcement_started", False):
+                if is_external_source and self._player.state == PlayState.PLAY:
+                    # Stop before removing the current URL so HEOS cannot
+                    # automatically advance into its queue.
+                    await self._player.stop()
                 await asyncio.sleep(0.2)
                 await self._remove_tts_from_queue(
                     state["tts_url"], announcement_queue_id
@@ -442,7 +462,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
             try:
                 # Resume playback if it was playing before the announcement.
-                if state["was_playing"]:
+                if is_external_source:
+                    _LOGGER.warning(
+                        "Not resuming external source after announcement"
+                    )
+                elif state["was_playing"]:
                     current_media_id = self._player.now_playing_media.media_id
                     if current_media_id == state.get("tts_url"):
                         try:
@@ -539,7 +563,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                         "Found TTS item by Url Stream metadata: queue_id=%s",
                         item.queue_id,
                     )
-            
+
             # Remove TTS items from queue
             if tts_queue_ids:
                 _LOGGER.debug(
@@ -548,7 +572,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 await self._player.remove_from_queue(tts_queue_ids)
             else:
                 _LOGGER.debug("No TTS Url Stream items found to remove")
-                
+
         except HeosError as err:
             _LOGGER.warning("Could not remove TTS from queue: %s", err)
 
@@ -572,7 +596,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         # cannot be mistaken for a completed announcement.
         if self._announce_start_time:
             elapsed = (utcnow() - self._announce_start_time).total_seconds()
-            if elapsed < 2.0 and not self._announce_started:
+            if elapsed < 2.0:
                 return
 
         await asyncio.sleep(0.5)
@@ -601,10 +625,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             # signature for the URL stream.
             media_changed = not self._is_announcement_media(current_media, tts_url)
 
-        is_completed = media_changed or current_state in (
-            PlayState.STOP,
-            PlayState.PAUSE,
-        )
+        is_external_source = restore_state["source_id"] in EXTERNAL_SOURCE_IDS
+        is_completed = media_changed or current_state == PlayState.STOP
+        if not is_external_source:
+            is_completed = is_completed or current_state == PlayState.PAUSE
         if not is_completed:
             return
 
@@ -621,7 +645,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             is_stable = self._media_signature(current_media) != signature
         else:
             is_stable = not self._is_announcement_media(current_media, tts_url)
-        is_stable = is_stable or current_state in (PlayState.STOP, PlayState.PAUSE)
+        is_stable = is_stable or current_state == PlayState.STOP
+        if not is_external_source:
+            is_stable = is_stable or current_state == PlayState.PAUSE
 
         if is_stable:
             self._announce_completed = True
@@ -743,7 +769,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Play a piece of media."""
         # Handle announce parameter for TTS announcements
         announce = kwargs.get(ATTR_MEDIA_ANNOUNCE, False)
-        
+
         if heos_source.is_media_uri(media_id):
             media, _data = heos_source.from_media_uri(media_id)
             if not isinstance(media, MediaItem):
