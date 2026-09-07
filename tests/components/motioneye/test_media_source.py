@@ -18,14 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.typing import ClientSessionGenerator
-
 from . import (
     TEST_CAMERA_DEVICE_IDENTIFIER,
     TEST_CONFIG_ENTRY_ID,
     create_mock_motioneye_client,
     setup_mock_motioneye_config_entry,
 )
+
+from tests.typing import ClientSessionGenerator
 
 TEST_MOVIES = {
     "mediaList": [
@@ -385,7 +385,6 @@ async def test_async_browse_media_images_success(
         ],
         "not_shown": 0,
     }
-
 
 
 async def test_media_proxy_image(
