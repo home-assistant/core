@@ -117,7 +117,9 @@ async def test_switch_service_calls(
 async def test_switch_updates_optimistically(hass: HomeAssistant) -> None:
     """Test switch state updates before an SSE event arrives."""
     entity_id = "switch.test_fridge_partymode"
-    assert hass.states[entity_id].state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -126,7 +128,9 @@ async def test_switch_updates_optimistically(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert hass.states[entity_id].state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(

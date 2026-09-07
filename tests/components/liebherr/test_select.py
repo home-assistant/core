@@ -151,7 +151,9 @@ async def test_select_updates_optimistically(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert hass.states[entity_id].state == IceMakerMode.ON.value
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == IceMakerMode.ON.value
 
 
 @pytest.mark.parametrize(

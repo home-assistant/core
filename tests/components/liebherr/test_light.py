@@ -112,7 +112,9 @@ async def test_light_updates_optimistically(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert hass.states[entity_id].state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")
