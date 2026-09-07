@@ -1,6 +1,6 @@
 """The Coordinator for EnergyZero."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import NamedTuple, override
 from zoneinfo import ZoneInfo
 
@@ -34,17 +34,16 @@ type EnergyZeroConfigEntry = ConfigEntry[EnergyZeroDataUpdateCoordinator]
 class EnergyZeroData(NamedTuple):
     """Class for defining data in dict."""
 
-    energy_today: EnergyPrices
-    energy_tomorrow: EnergyPrices | None
+    electricity_market_today: EnergyPrices
+    electricity_market_tomorrow: EnergyPrices | None
+    electricity_all_in_today: EnergyPrices
+    electricity_all_in_tomorrow: EnergyPrices | None
     gas_today: EnergyPrices | None
     electricity_price_step: timedelta
 
-    @property
-    def next_energy_price(self) -> float | None:
-        """Return the electricity price one market period from now."""
-        return self.energy_today.price_at_time(
-            self.energy_today.utcnow() + self.electricity_price_step
-        )
+    def next_price(self, prices: EnergyPrices) -> float | None:
+        """Return the price one configured electricity period from now."""
+        return prices.price_at_time(prices.utcnow() + self.electricity_price_step)
 
 
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
@@ -71,21 +70,55 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         )
         self.energyzero = EnergyZero(session=async_get_clientsession(hass))
 
+    async def _async_get_electricity_prices(
+        self,
+        day: date,
+        local_tz: ZoneInfo,
+        *,
+        allow_partial: bool = False,
+    ) -> dict[PriceType, EnergyPrices]:
+        """Fetch both price streams, optionally retaining a partially published day."""
+        price_types = (PriceType.MARKET_WITH_VAT, PriceType.ALL_IN)
+        try:
+            return await self.energyzero.get_electricity_prices(
+                start_date=day,
+                end_date=day,
+                interval=self.electricity_interval,
+                price_type=price_types,
+                local_tz=local_tz,
+            )
+        except EnergyZeroNoDataError:
+            if not allow_partial:
+                raise
+
+        # The library cannot return a partial multi-stream response.
+        electricity = {}
+        for price_type in price_types:
+            try:
+                prices = await self.energyzero.get_electricity_prices(
+                    start_date=day,
+                    end_date=day,
+                    interval=self.electricity_interval,
+                    price_type=price_type,
+                    local_tz=local_tz,
+                )
+            except EnergyZeroNoDataError:
+                LOGGER.debug("No %s electricity prices for %s", price_type, day)
+            else:
+                electricity[price_type] = prices
+        return electricity
+
     @override
     async def _async_update_data(self) -> EnergyZeroData:
         """Fetch data from EnergyZero."""
         today = dt_util.now().date()
         gas_today = None
-        energy_tomorrow = None
+        electricity_tomorrow: dict[PriceType, EnergyPrices] = {}
         local_tz = ZoneInfo(self.hass.config.time_zone)
 
         try:
-            energy_today = await self.energyzero.get_electricity_prices(
-                start_date=today,
-                end_date=today,
-                interval=self.electricity_interval,
-                price_type=PriceType.MARKET_WITH_VAT,
-                local_tz=local_tz,
+            electricity_today = await self._async_get_electricity_prices(
+                today, local_tz
             )
             try:
                 gas_today = await self.energyzero.get_gas_prices(
@@ -98,24 +131,19 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
                 LOGGER.debug("No data for gas prices for EnergyZero integration")
             # Energy for tomorrow only after 14:00 UTC
             if dt_util.utcnow().hour >= THRESHOLD_HOUR:
-                tomorrow = today + timedelta(days=1)
-                try:
-                    energy_tomorrow = await self.energyzero.get_electricity_prices(
-                        start_date=tomorrow,
-                        end_date=tomorrow,
-                        interval=self.electricity_interval,
-                        price_type=PriceType.MARKET_WITH_VAT,
-                        local_tz=local_tz,
-                    )
-                except EnergyZeroNoDataError:
-                    LOGGER.debug("No data for tomorrow for EnergyZero integration")
-
+                electricity_tomorrow = await self._async_get_electricity_prices(
+                    today + timedelta(days=1), local_tz, allow_partial=True
+                )
         except EnergyZeroConnectionError as err:
             raise UpdateFailed("Error communicating with EnergyZero API") from err
 
         return EnergyZeroData(
-            energy_today=energy_today,
-            energy_tomorrow=energy_tomorrow,
+            electricity_market_today=electricity_today[PriceType.MARKET_WITH_VAT],
+            electricity_market_tomorrow=electricity_tomorrow.get(
+                PriceType.MARKET_WITH_VAT
+            ),
+            electricity_all_in_today=electricity_today[PriceType.ALL_IN],
+            electricity_all_in_tomorrow=electricity_tomorrow.get(PriceType.ALL_IN),
             gas_today=gas_today,
             electricity_price_step=self.electricity_price_step,
         )
