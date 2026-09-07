@@ -5,17 +5,12 @@ import logging
 from typing import override
 
 from pyforeca import (
-    AirQualityDailyForecast,
-    AirQualityForecast,
     CurrentWeather,
     DailyForecast,
     ForecaApiClient,
     ForecaAuthError,
     ForecaError,
     HourlyForecast,
-    MinutelyForecast,
-    Observation,
-    UsageMonth,
     format_location,
 )
 
@@ -26,7 +21,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import DAILY_PERIODS, DOMAIN, HOURLY_PERIODS, UPDATE_INTERVAL
 
@@ -37,16 +31,11 @@ type ForecaConfigEntry = ConfigEntry[ForecaUpdateCoordinator]
 
 @dataclass(slots=True)
 class ForecaWeatherData:
-    """Weather and air quality data returned by the Foreca API."""
+    """Weather data returned by the Foreca API."""
 
     current: CurrentWeather
     hourly: list[HourlyForecast]
     daily: list[DailyForecast]
-    air_quality: AirQualityForecast | None
-    air_quality_daily: list[AirQualityDailyForecast]
-    observation: Observation | None
-    minutely: list[MinutelyForecast]
-    usage: UsageMonth | None
 
 
 class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
@@ -69,7 +58,6 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
         self.location = format_location(
             lon=entry.data[CONF_LONGITUDE], lat=entry.data[CONF_LATITUDE]
         )
-        self._air_quality_unavailable_logged = False
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -88,8 +76,6 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             daily = await self.client.forecast_daily(
                 self.location, periods=DAILY_PERIODS, dataset="full"
             )
-            observation = await self.client.observation_latest(self.location)
-            minutely = await self.client.forecast_minutely(self.location)
         except ForecaAuthError as err:
             raise ConfigEntryAuthFailed("API key was rejected") from err
         except ForecaError as err:
@@ -97,41 +83,4 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
                 f"Error communicating with the Foreca API: {err}"
             ) from err
 
-        # Air quality must never fail the weather update: it is a separate
-        # product on the account and can be missing from the plan.
-        air_quality: AirQualityForecast | None = None
-        air_quality_daily: list[AirQualityDailyForecast] = []
-        try:
-            aq_forecast = await self.client.air_quality_hourly(self.location, periods=1)
-            air_quality = aq_forecast[0] if aq_forecast else None
-            air_quality_daily = await self.client.air_quality_daily(
-                self.location, periods=4
-            )
-        except ForecaAuthError as err:
-            raise ConfigEntryAuthFailed("API key was rejected") from err
-        except ForecaError as err:
-            if not self._air_quality_unavailable_logged:
-                _LOGGER.warning("Air quality data unavailable: %s", err)
-                self._air_quality_unavailable_logged = True
-        else:
-            if self._air_quality_unavailable_logged:
-                _LOGGER.info("Air quality data is available again")
-                self._air_quality_unavailable_logged = False
-
-        # Usage counts are account telemetry, not weather: never fail the update.
-        usage: UsageMonth | None = None
-        try:
-            usage = await self.client.usage_month(dt_util.utcnow().strftime("%Y-%m"))
-        except ForecaError as err:
-            _LOGGER.debug("Usage counts unavailable: %s", err)
-
-        return ForecaWeatherData(
-            current=current,
-            hourly=hourly,
-            daily=daily,
-            air_quality=air_quality,
-            air_quality_daily=air_quality_daily,
-            observation=observation,
-            minutely=minutely,
-            usage=usage,
-        )
+        return ForecaWeatherData(current=current, hourly=hourly, daily=daily)

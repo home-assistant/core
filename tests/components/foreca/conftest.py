@@ -3,17 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyforeca import (
-    AirQualityDailyForecast,
-    AirQualityForecast,
-    CurrentWeather,
-    DailyForecast,
-    HourlyForecast,
-    Location,
-    MinutelyForecast,
-    Observation,
-    UsageMonth,
-)
+from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
 import pytest
 
 from homeassistant.components.foreca.const import DOMAIN
@@ -87,69 +77,6 @@ DAILY = [
     ),
 ]
 
-AIR_QUALITY = AirQualityForecast(
-    time="2026-09-01T18:00+03:00",
-    pollutant="Ozone",
-    pollutant_phrase="Ozone",
-    aqi=23,
-    aqi_co=2,
-    aqi_no2=5,
-    aqi_o3=23,
-    aqi_so2=1,
-    aqi_pm10=8,
-    aqi_pm2p5=11,
-)
-
-AIR_QUALITY_DAILY = [
-    AirQualityDailyForecast(date="2026-09-01", aqi=37, pollutant="Ozone"),
-    AirQualityDailyForecast(date="2026-09-02", aqi=34, pollutant="Ozone"),
-    AirQualityDailyForecast(date="2026-09-03", aqi=35, pollutant="Ozone"),
-    AirQualityDailyForecast(date="2026-09-04", aqi=31, pollutant="Ozone"),
-]
-
-OBSERVATION = Observation(
-    time="2026-09-01T16:50+03:00",
-    station="Helsinki Kaisaniemi",
-    distance="1 km N",
-    elevation=4,
-    latitude=60.18,
-    longitude=24.94,
-    symbol="d000",
-    temperature=18.0,
-    feels_like_temp=18.0,
-    rel_humidity=71,
-    pressure=1006.0,
-    visibility=38150,
-    wind_speed=5.0,
-    wind_dir=216,
-    wind_dir_str="SW",
-    wind_gust=9.0,
-    snow_depth=0.0,
-)
-
-MINUTELY = [
-    MinutelyForecast(time="2026-09-01T17:00+03:00", precip_rate=0.0),
-    MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
-    MinutelyForecast(time="2026-09-01T17:02+03:00", precip_rate=0.6),
-    MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.2),
-]
-
-# The day the usage tests freeze the clock to, so that the requests-today sensor
-# has a value: it looks the current date up in the breakdown below.
-USAGE_TODAY = "2026-09-03"
-
-# Built from a real response: a day's total is only available per API product,
-# so parsing it wrong reads as zero requests rather than as an error.
-USAGE = UsageMonth.from_api(
-    {
-        "hits": 44,
-        "daily": [
-            {"date": "2026-09-01", "apis": [{"name": "Weather API", "hits": 23}]},
-            {"date": USAGE_TODAY, "apis": [{"name": "Weather API", "hits": 21}]},
-        ],
-    }
-)
-
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -187,11 +114,6 @@ def mock_foreca_client() -> Generator[MagicMock]:
         client.current = AsyncMock(return_value=CURRENT)
         client.forecast_hourly = AsyncMock(return_value=HOURLY)
         client.forecast_daily = AsyncMock(return_value=DAILY)
-        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
-        client.air_quality_daily = AsyncMock(return_value=AIR_QUALITY_DAILY)
-        client.observation_latest = AsyncMock(return_value=OBSERVATION)
-        client.forecast_minutely = AsyncMock(return_value=MINUTELY)
-        client.usage_month = AsyncMock(return_value=USAGE)
         yield client
 
 

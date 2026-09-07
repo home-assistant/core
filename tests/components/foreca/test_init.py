@@ -1,6 +1,6 @@
 """Test the Foreca integration setup."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from pyforeca import ForecaAuthError, ForecaConnectionError
 import pytest
@@ -51,50 +51,3 @@ async def test_setup_fails_auth_on_rejected_key(
     # have the step: without it the started flow raises in the background.
     flows = hass.config_entries.flow.async_progress()
     assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
-
-
-async def test_setup_fails_auth_when_air_quality_rejects_key(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_foreca_client: MagicMock,
-) -> None:
-    """Test a key rejected by the air quality endpoint fails the entry."""
-    mock_foreca_client.air_quality_hourly.side_effect = ForecaAuthError
-    await init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
-
-
-async def test_documented_request_budget(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_foreca_client: MagicMock,
-) -> None:
-    """Test one update costs the eight requests the documentation promises.
-
-    The docs page and the plan-usage sensors both quote this number against the
-    Freemium daily limit, so a new call added to the coordinator has to be a
-    deliberate change here too.
-    """
-    await init_integration(hass, mock_config_entry)
-
-    awaited = {
-        name: attr.await_count
-        for name in dir(mock_foreca_client)
-        if not name.startswith("_")
-        and isinstance(attr := getattr(mock_foreca_client, name), AsyncMock)
-        and attr.await_count
-    }
-    assert awaited == {
-        "air_quality_daily": 1,
-        "air_quality_hourly": 1,
-        "current": 1,
-        "forecast_daily": 1,
-        "forecast_hourly": 1,
-        "forecast_minutely": 1,
-        "observation_latest": 1,
-        "usage_month": 1,
-    }
-    assert sum(awaited.values()) == 8
