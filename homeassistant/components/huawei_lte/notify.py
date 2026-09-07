@@ -67,5 +67,8 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_failed",
-                translation_placeholders={"targets": ", ".join(targets)},
+                translation_placeholders={
+                    "targets": ", ".join(targets),
+                    "error": str(ex),
+                },
             ) from ex

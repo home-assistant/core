@@ -104,5 +104,6 @@ async def test_send_message_error(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "send_message_failed"
     assert exc_info.value.translation_placeholders == {
-        "targets": ", ".join(expected_targets)
+        "targets": ", ".join(expected_targets),
+        "error": "Send failed",
     }

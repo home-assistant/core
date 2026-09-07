@@ -382,7 +382,7 @@
   },
   "exceptions": {
     "send_message_failed": {
-      "message": "Failed to send SMS to {targets}."
+      "message": "Failed to send SMS to {targets}: {error}"
     }
   },
   "options": {
