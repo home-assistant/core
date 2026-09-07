@@ -279,6 +279,9 @@ async def test_monitoring_start_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.reason == "Failed to start monitoring the alarm panel"
+    assert mock_config_entry.reason == (
+        "Connected to the alarm panel, but the panel did not confirm the request "
+        "to start sending status updates. Home Assistant will retry automatically"
+    )
     mock_satel.start.assert_awaited_once_with(enable_monitoring=True)
     mock_satel.read_panel_info.assert_not_awaited()
