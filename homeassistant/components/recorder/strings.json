@@ -60,7 +60,7 @@
       "description": "Starts purge task - to clean up old data from your database.",
       "fields": {
         "apply_filter": {
-          "description": "Apply `entity_id` and `event_type` filters in addition to time-based purge.",
+          "description": "Apply `entity_id`, `event_type`, and `event_data` filters in addition to time-based purge.",
           "name": "Apply filter"
         },
         "keep_days": {
