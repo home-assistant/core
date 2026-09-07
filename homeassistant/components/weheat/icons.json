@@ -30,6 +30,24 @@
       "compressor_rpm": {
         "default": "mdi:fan"
       },
+      "cooling_blocked_by": {
+        "default": "mdi:snowflake-alert"
+      },
+      "cooling_conditions_met": {
+        "default": "mdi:checkbox-multiple-marked-outline"
+      },
+      "cooling_pause_reason": {
+        "default": "mdi:snowflake-off"
+      },
+      "cooling_state": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "cooling_stop_reason": {
+        "default": "mdi:snowflake-off"
+      },
+      "cooling_wait_until": {
+        "default": "mdi:timer-sand"
+      },
       "cop": {
         "default": "mdi:speedometer"
       },
@@ -74,6 +92,9 @@
       },
       "heat_pump_state": {
         "default": "mdi:state-machine"
+      },
+      "last_cooling_time": {
+        "default": "mdi:snowflake-check"
       },
       "outside_temperature": {
         "default": "mdi:home-thermometer-outline"
