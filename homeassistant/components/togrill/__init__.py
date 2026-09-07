@@ -7,6 +7,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
 _PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.EVENT,
     Platform.NUMBER,
     Platform.SELECT,

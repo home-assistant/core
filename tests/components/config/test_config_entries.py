@@ -1,5 +1,6 @@
 """Test config entries API."""
 
+import asyncio
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
@@ -13,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import DOMAIN, config_entries
+from homeassistant.components.http import KEY_HASS
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
@@ -129,6 +131,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp1",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -149,6 +152,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp2",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -169,6 +173,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": core_ce.ConfigEntryDisabler.USER,
             "domain": "comp3",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -189,6 +194,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp4",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -209,6 +215,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp5",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -267,6 +274,55 @@ async def test_remove_entry(hass: HomeAssistant, client: TestClient) -> None:
     data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 0
+
+
+async def test_remove_entry_survives_client_disconnect(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test a client disconnect does not truncate the removal.
+
+    The HTTP runner is created with handler_cancellation=True, so a disconnect
+    cancels the request handler. Removal deletes the entry from memory before
+    awaiting the integration, so an unshielded cancel leaves the entry on disk
+    and its registry rows behind.
+    """
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    removing = asyncio.Event()
+    disconnected = asyncio.Event()
+    original_async_remove = core_ce.ConfigEntry.async_remove
+
+    async def blocking_async_remove(self: core_ce.ConfigEntry, *args: Any) -> None:
+        """Stall inside the removal, so the cancel lands on this await."""
+        removing.set()
+        await disconnected.wait()
+        await original_async_remove(self, *args)
+
+    view = config_entries.ConfigManagerEntryResourceView()
+    request = Mock()
+    request.__getitem__ = Mock(side_effect={"hass_user": hass_admin_user}.__getitem__)
+    request.app = {KEY_HASS: hass}
+
+    with (
+        patch.object(core_ce.ConfigEntry, "async_remove", blocking_async_remove),
+        patch.object(hass.config_entries, "_async_schedule_save") as mock_schedule_save,
+    ):
+        task = hass.async_create_task(view.delete(request, entry.entry_id))
+        await removing.wait()
+
+        # The client goes away mid-removal.
+        task.cancel()
+        disconnected.set()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        await hass.async_block_till_done()
+
+    # The rest of the removal must still have run.
+    assert mock_schedule_save.called
+    assert hass.config_entries.async_entries() == []
 
 
 async def test_reload_entry(hass: HomeAssistant, client: TestClient) -> None:
@@ -568,6 +624,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -656,6 +713,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "disabled_by": None,
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": timestamp,
@@ -2047,6 +2105,7 @@ async def test_get_single(
         "disabled_by": None,
         "domain": "test",
         "entry_id": entry.entry_id,
+        "error_reason_translation_domain": None,
         "error_reason_translation_key": None,
         "error_reason_translation_placeholders": None,
         "modified_at": timestamp,
@@ -2409,6 +2468,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2430,6 +2490,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2451,6 +2512,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2472,6 +2534,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2493,6 +2556,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2525,6 +2589,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2556,6 +2621,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2577,6 +2643,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2608,6 +2675,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2629,6 +2697,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2666,6 +2735,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2687,6 +2757,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2708,6 +2779,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2729,6 +2801,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2750,6 +2823,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2858,6 +2932,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -2882,6 +2957,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp2",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -2906,6 +2982,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -2936,6 +3013,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -2967,6 +3045,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -2997,6 +3076,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": entry.modified_at.timestamp(),
@@ -3088,6 +3168,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -3112,6 +3193,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -3144,6 +3226,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3172,6 +3255,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3204,6 +3288,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3234,6 +3319,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": entry.modified_at.timestamp(),
@@ -3335,8 +3421,8 @@ async def test_flow_with_multiple_schema_errors_base(
         assert data == {
             "errors": {
                 "base": [
-                    "extra keys not allowed @ data['invalid']",
-                    "extra keys not allowed @ data['invalid_2']",
+                    "not a valid option at 'invalid'",
+                    "not a valid option at 'invalid_2'",
                 ],
                 "latitude": "required key not provided",
             }

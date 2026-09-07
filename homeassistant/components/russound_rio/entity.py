@@ -2,17 +2,22 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, override
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from aiorussound.rio import RussoundRIOClient
 from aiorussound.rio.client import Controller, ZoneControlSurface
 from aiorussound.rio.models import CallbackType
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+
+if TYPE_CHECKING:
+    from . import RussoundConfigEntry
 
 
 def command[_EntityT: RussoundBaseEntity, **_P](
@@ -46,7 +51,9 @@ class RussoundBaseEntity(Entity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         controller: Controller,
+        entry: RussoundConfigEntry,
         zone_id: int | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -73,7 +80,11 @@ class RussoundBaseEntity(Entity):
             model=controller.controller_type,
             sw_version=controller.firmware_version,
             suggested_area=zone.name,
-            via_device=(DOMAIN, self._device_identifier),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, self._device_identifier),
+                config_entry_id=entry.entry_id,
+            ),
         )
 
     @property

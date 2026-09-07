@@ -13,6 +13,7 @@ from aiocomelit.exceptions import (
 )
 from aiohttp import ClientSession, CookieJar
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,7 +47,7 @@ def load_api_data(
     # CLIMATE has a 2 item tuple:
     # - first  for Clima
     # - second for Humidifier
-    return device.val[0] if domain == "climate" else device.val[1]
+    return device.val[0] if domain == CLIMATE_DOMAIN else device.val[1]
 
 
 async def cleanup_stale_entity(

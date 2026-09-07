@@ -321,7 +321,7 @@
       }),
       'device': dict({
         'article_info': '',
-        'article_number': 87654321,
+        'article_number': 86456840,
         'gtin': 192837465,
         'pcb': '2a',
         'production_week': 1,
@@ -335,7 +335,7 @@
         '0': dict({
           'device': dict({
             'article_info': '',
-            'article_number': 87654321,
+            'article_number': 86456840,
             'gtin': 192837465,
             'pcb': '2a',
             'production_week': 1,

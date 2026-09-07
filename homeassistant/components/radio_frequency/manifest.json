@@ -1,6 +1,6 @@
 {
   "domain": "radio_frequency",
-  "name": "Radio Frequency",
+  "name": "Radio frequency",
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/radio_frequency",

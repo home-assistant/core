@@ -65,6 +65,9 @@
         "name": "Completed torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
+      "download_dir_free_space": {
+        "name": "Available disk space"
+      },
       "download_speed": {
         "name": "Download speed"
       },

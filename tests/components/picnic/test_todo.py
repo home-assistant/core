@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from python_picnic_api2.models import Cart, SearchResult, SearchResultItem
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import ATTR_ITEM, DOMAIN as TODO_DOMAIN, TodoServices
@@ -33,7 +34,7 @@ async def test_cart_list_empty_items(
     hass: HomeAssistant, mock_picnic_api: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test loading of shopping cart without items."""
-    mock_picnic_api.get_cart.return_value = {"items": []}
+    mock_picnic_api.get_cart.return_value = Cart(items=[])
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,17 +77,9 @@ async def test_create_todo_list_item(
     assert len(mock_picnic_api.get_cart.mock_calls) == 1
 
     mock_picnic_api.search = Mock()
-    mock_picnic_api.search.return_value = [
-        {
-            "items": [
-                {
-                    "id": 321,
-                    "name": "Picnic Melk",
-                    "unit_quantity": "2 liter",
-                }
-            ]
-        }
-    ]
+    mock_picnic_api.search.return_value = SearchResult(
+        items=[SearchResultItem(id="321", name="Picnic Melk", unit_quantity="2 liter")]
+    )
 
     mock_picnic_api.add_product = Mock()
 
@@ -115,7 +108,7 @@ async def test_create_todo_list_item_not_found(
 ) -> None:
     """Test for creating a picnic cart item when ID is not found."""
     mock_picnic_api.search = Mock()
-    mock_picnic_api.search.return_value = [{"items": []}]
+    mock_picnic_api.search.return_value = SearchResult(items=[])
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(

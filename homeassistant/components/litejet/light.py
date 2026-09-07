@@ -13,6 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,7 +35,7 @@ async def async_setup_entry(
     entities = []
     for index in system.loads():
         name = await system.get_load_name(index)
-        entities.append(LiteJetLight(config_entry, system, index, name))
+        entities.append(LiteJetLight(hass, config_entry, system, index, name))
 
     async_add_entities(entities, True)
 
@@ -50,7 +51,12 @@ class LiteJetLight(LightEntity):
     _attr_name = None
 
     def __init__(
-        self, config_entry: LiteJetConfigEntry, system: LiteJet, index: int, name: str
+        self,
+        hass: HomeAssistant,
+        config_entry: LiteJetConfigEntry,
+        system: LiteJet,
+        index: int,
+        name: str,
     ) -> None:
         """Initialize a LiteJet light."""
         self._config_entry = config_entry
@@ -63,7 +69,11 @@ class LiteJetLight(LightEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{config_entry.entry_id}_light_{index}")},
             name=name,
-            via_device=(DOMAIN, f"{config_entry.entry_id}_mcp"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, f"{config_entry.entry_id}_mcp"),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
 
     @override

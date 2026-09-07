@@ -44,6 +44,9 @@
       "client_supports_upnp": {
         "name": "Supports UPnP"
       },
+      "connected_to_control": {
+        "name": "Connected to control"
+      },
       "key_expiry_disabled": {
         "name": "Key expiry disabled"
       }

@@ -24,10 +24,12 @@ async def async_setup_entry(
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
         if dest.hasAction(ACTION_DESC.Identify):
-            entities.append(WebControlProIdentifyButton(config_entry.entry_id, dest))
+            entities.append(
+                WebControlProIdentifyButton(hass, config_entry.entry_id, dest)
+            )
         if dest.hasAction(ACTION_DESC.SlatRotate):
             entities.append(
-                WebControlProRotationResetButton(config_entry.entry_id, dest)
+                WebControlProRotationResetButton(hass, config_entry.entry_id, dest)
             )
 
     async_add_entities(entities)

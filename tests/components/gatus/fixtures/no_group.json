@@ -2,6 +2,6 @@
   {
     "key": "backend_service",
     "name": "Backend Service",
-    "results": [{ "success": true, "status": 200 }]
+    "results": [{ "success": true, "status": 200, "duration": 12500000 }]
   }
 ]

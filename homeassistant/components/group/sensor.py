@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -401,7 +402,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 states.append(state.state)
                 try:
                     numeric_state = float(state.state)
-                    uom = state.attributes.get("unit_of_measurement")
+                    uom = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
                     # Convert the state to the native unit of
                     # measurement when we have valid units
@@ -455,7 +456,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                             entity_id,
                             state.state,
                             self.device_class,
-                            state.attributes.get("unit_of_measurement"),
+                            state.attributes.get(
+                                EntityStateAttribute.UNIT_OF_MEASUREMENT
+                            ),
                             self.entity_id,
                         )
             else:

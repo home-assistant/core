@@ -57,7 +57,7 @@ from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
+from .device_registry import ChildDeviceInfo, DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -529,7 +529,7 @@ class Entity(
     _removed_from_registry: bool = False
 
     # The device entry for this entity
-    device_entry: dr.DeviceEntry | None = None
+    device_entry: dr.AnyDeviceEntry | None = None
 
     # Cached friendly name as (original_name, computed_friendly_name)
     # Invalidated on relevant registry changes
@@ -575,7 +575,7 @@ class Entity(
     _attr_available: bool = True
     _attr_capability_attributes: dict[str, Any] | None = None
     _attr_device_class: str | None
-    _attr_device_info: DeviceInfo | None = None
+    _attr_device_info: DeviceInfo | ChildDeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
     _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
@@ -828,7 +828,7 @@ class Entity(
         return None
 
     @cached_property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -1466,7 +1466,7 @@ class Entity(
         except BaseException as ex:
             self.__remove_future.set_exception(ex)
             raise
-        finally:
+        else:
             self.__remove_future.set_result(None)
 
     @final
@@ -1497,7 +1497,8 @@ class Entity(
             #
             and not self._removed_from_registry
         ):
-            # Set the entity's state will to unavailable + ATTR_RESTORED: True
+            # Set the entity's state will to unavailable and
+            # EntityStateAttribute.RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)

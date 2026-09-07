@@ -1,5 +1,6 @@
 """Tests for Mikrotik diagnostics platform."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -11,6 +12,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2026-01-01T12:00:00+00:00")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

@@ -20,7 +20,6 @@ from homeassistant.helpers.dispatcher import (
 
 from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
@@ -58,10 +57,6 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     f"|{RE_ADDONS_INFO_ENDPOINT}"
     r")$"
 )
-
-# Endpoint that reloads the add-on store. Afterwards the add-on update
-# entities must be refreshed so they don't report stale update information.
-STORE_RELOAD_ENDPOINT = "/store/reload"
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -163,15 +158,6 @@ async def websocket_supervisor_api(
         # sensitive information and the frontend does not require it for ingress.
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
-        # Await so the frontend only sees the reload finish once the add-on
-        # update entities reflect the reloaded store.
-        if (
-            command == STORE_RELOAD_ENDPOINT
-            and msg[ATTR_METHOD] == "post"
-            and (coordinator := hass.data.get(ADDONS_COORDINATOR))
-        ):
-            await coordinator.async_refresh_after_store_reload()
-
         connection.send_result(msg[WS_ID], data)
 
 

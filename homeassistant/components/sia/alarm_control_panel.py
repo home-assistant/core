@@ -72,7 +72,7 @@ async def async_setup_entry(
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
         SIAAlarmControlPanel(
-            entry, account_data[CONF_ACCOUNT], zone, ENTITY_DESCRIPTION_ALARM
+            hass, entry, account_data[CONF_ACCOUNT], zone, ENTITY_DESCRIPTION_ALARM
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
@@ -89,6 +89,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: ConfigEntry,
         account: str,
         zone: int,
@@ -96,6 +97,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(
+            hass,
             entry,
             account,
             zone,

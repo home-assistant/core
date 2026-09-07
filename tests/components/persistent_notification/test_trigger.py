@@ -100,3 +100,17 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
     assert result["notification"]["notification_id"] == "42"
     assert result["notification"]["message"] == "Forty Two"
     assert result_any[2] == result_id[0]
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "42", "message": "Is the answer to the ultimate question"},
+        blocking=True,
+    )
+
+    result = result_any[3].get("trigger")
+    assert result["platform"] == "persistent_notification"
+    assert result["update_type"] == pn.UpdateType.UPDATED
+    assert result["notification"]["notification_id"] == "42"
+    assert result["notification"]["message"] == "Is the answer to the ultimate question"
+    assert result_any[3] == result_id[1]

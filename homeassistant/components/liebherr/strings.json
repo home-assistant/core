@@ -241,6 +241,9 @@
     "invalid_api_key": {
       "message": "Invalid API key"
     },
+    "invalid_temperature": {
+      "message": "Temperature {temperature} is not supported. Allowed values: {allowed_values}"
+    },
     "open_auto_door_error": {
       "message": "An error occurred while opening the door"
     }

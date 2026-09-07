@@ -26,7 +26,7 @@ class JSONEncoder(json.JSONEncoder):
 
         Hand other objects to the original method.
         """
-        if isinstance(o, datetime.datetime):
+        if isinstance(o, (datetime.date, datetime.time, datetime.datetime)):
             return o.isoformat()
         if isinstance(o, set):
             return list(o)
@@ -51,7 +51,7 @@ def json_encoder_default(obj: Any) -> Any:
         return obj.as_dict()
     if isinstance(obj, Path):
         return obj.as_posix()
-    if isinstance(obj, datetime.datetime):
+    if isinstance(obj, (datetime.date, datetime.time, datetime.datetime)):
         return obj.isoformat()
     raise TypeError
 
@@ -114,6 +114,28 @@ def json_bytes_strip_null(data: Any) -> bytes:
 
 
 json_fragment = orjson.Fragment
+
+
+def cached_json_bytes(data: Any) -> bytes:
+    """Return json bytes right-sized for long-term caching.
+
+    orjson over-allocates the returned bytes buffer and does not shrink it: the
+    logical length is set but the capacity is rounded up to a power of two (at
+    least a few KiB), so bytes cached for the lifetime of a long-lived object
+    retain several KiB of unused buffer.
+    """
+    # Drop orjson's over-allocated slack with help of a memoryview.
+    return bytes(memoryview(json_bytes(data)))
+
+
+def cached_json_fragment(data: Any) -> orjson.Fragment:
+    """Return a json fragment right-sized for long-term caching.
+
+    Wraps the same right-sized bytes as cached_json_bytes; the body is inlined
+    rather than calling it to avoid an extra function call on this hot path.
+    """
+    # Drop orjson's over-allocated slack with help of a memoryview.
+    return orjson.Fragment(bytes(memoryview(json_bytes(data))))
 
 
 def json_dumps(data: Any) -> str:

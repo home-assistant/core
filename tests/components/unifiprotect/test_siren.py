@@ -19,6 +19,7 @@ from homeassistant.components.siren import (
     ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
 )
+from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -30,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .utils import MockUFPFixture, assert_entity_counts, init_entry
@@ -156,6 +157,27 @@ async def test_siren_created_on(
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_siren_device_links_to_nvr_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_with_siren: MockUFPFixture,
+) -> None:
+    """Siren device's via_device_id points at the NVR device."""
+    await init_entry(hass, ufp_with_siren, [])
+
+    nvr = ufp_with_siren.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp_with_siren.entry.entry_id
+    )
+    assert nvr_device is not None
+
+    siren_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SIREN_MAC), ufp_with_siren.entry.entry_id
+    )
+    assert siren_device is not None
+    assert siren_device.via_device_id == nvr_device.id
 
 
 # ---------------------------------------------------------------------------

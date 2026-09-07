@@ -2,7 +2,6 @@
 
 from collections.abc import AsyncGenerator, Callable
 from contextlib import contextmanager
-import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -14,7 +13,11 @@ from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 
 type PatchLockCreationFlow = Callable[[dict[str, Any], loqed.Lock, str], Any]
 
@@ -23,8 +26,9 @@ type PatchLockCreationFlow = Callable[[dict[str, Any], loqed.Lock, str], Any]
 async def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Mock config entry."""
 
-    config = await async_load_fixture(hass, "integration_config.json", DOMAIN)
-    json_config = json.loads(config)
+    json_config = await async_load_json_object_fixture(
+        hass, "integration_config.json", DOMAIN
+    )
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -46,11 +50,12 @@ async def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 async def cloud_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Mock config entry."""
 
-    config = await async_load_fixture(hass, "integration_config.json", DOMAIN)
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    json_config = await async_load_json_object_fixture(
+        hass, "integration_config.json", DOMAIN
     )
-    json_config = json.loads(config)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
+    )
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -72,8 +77,8 @@ async def cloud_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture(name="lock")
 async def lock_fixture(hass: HomeAssistant) -> loqed.Lock:
     """Set up a mock implementation of a Lock."""
-    webhooks_fixture = json.loads(
-        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    webhooks_fixture = await async_load_json_array_fixture(
+        hass, "get_all_webhooks.json", DOMAIN
     )
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo", last_key_id=2)
@@ -92,7 +97,7 @@ async def integration_fixture(
     config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     with (
         patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),

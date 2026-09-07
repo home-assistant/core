@@ -15,6 +15,7 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -26,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import MockUFPFixture, init_entry
 
@@ -124,6 +125,28 @@ async def test_relay_switch_created_with_state(
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_relay_switch_device_links_to_nvr_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Relay device's via_device_id points at the NVR device."""
+    ufp, _relay = ufp_with_relay
+    await init_entry(hass, ufp, [])
+
+    nvr = ufp.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp.entry.entry_id
+    )
+    assert nvr_device is not None
+
+    relay_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, RELAY_MAC), ufp.entry.entry_id
+    )
+    assert relay_device is not None
+    assert relay_device.via_device_id == nvr_device.id
 
 
 async def test_relay_switch_off_otp_is_off(
