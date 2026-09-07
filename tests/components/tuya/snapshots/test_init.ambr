@@ -3269,6 +3269,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[eikafwrmuhdvizruqzktk]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'eikafwrmuhdvizruqzktk',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'VITAL+ (unsupported)',
+    'model_id': 'urzivdhumrwfakie',
+    'name': 'VITAL+',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ej2zsznihehztkzqcaderarfni]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5033,6 +5063,36 @@
     'model': 'Curtain switch',
     'model_id': 'wltqkykhni0papzj',
     'name': 'Roller shutter Living Room',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[kaapnqxkvzaqd6uaqdjnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'kaapnqxkvzaqd6uaqdjnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '63A Smart Circuit Breaker',
+    'model_id': 'au6dqazvkxqnpaak',
+    'name': 'Smart Circuit Breaker',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
@@ -8213,36 +8273,6 @@
     'model': 'WiFi Temperature & Humidity Sensor',
     'model_id': 'yqiqbaldtr0i7mru',
     'name': 'WiFi Temperature & Humidity Sensor',
-    'name_by_user': None,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_device_registry[eikafwrmuhdvizruqzktk]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tuya',
-        'eikafwrmuhdvizruqzktk',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Tuya',
-    'model': 'VITAL+ (unsupported)',
-    'model_id': 'urzivdhumrwfakie',
-    'name': 'VITAL+',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
