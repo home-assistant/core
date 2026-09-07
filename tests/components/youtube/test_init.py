@@ -177,7 +177,8 @@ async def test_migration(
         entry_type=dr.DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, f"{entry.entry_id}_{CHANNEL_ID}")},
         manufacturer="Google, Inc.",
-        name="Google for Developers",
+        # Stale name: the channel was renamed since the device was created
+        name="Google Developers Channel",
     )
     entity_registry.async_get_or_create(
         "sensor",

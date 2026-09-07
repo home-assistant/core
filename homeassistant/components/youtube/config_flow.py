@@ -206,18 +206,11 @@ class OAuth2FlowHandler(
         (
             selectable_channels,
             channel_titles,
-            has_own_channel,
+            _has_own_channel,
         ) = await async_get_channel_options(
             self.hass, self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         )
-        if not has_own_channel:
-            return self.async_abort(
-                reason="no_channel",
-                description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
-            )
         self._channel_titles = channel_titles
-        if not selectable_channels:
-            return self.async_abort(reason="no_subscriptions")
         return self.async_show_form(
             step_id="channels",
             data_schema=vol.Schema(
@@ -298,8 +291,6 @@ class ChannelFlowHandler(ConfigSubentryFlow):
 
     async def _async_create_entry(self, channel_id: str) -> SubentryFlowResult:
         """Create a subentry for the selected channel."""
-        if channel_id in self._async_configured_channel_ids():
-            return self.async_abort(reason="already_configured")
         config_entry: YouTubeConfigEntry = self._get_entry()
         youtube = YouTube(session=async_get_clientsession(self.hass))
         await youtube.set_user_authentication(

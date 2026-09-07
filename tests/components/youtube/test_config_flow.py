@@ -668,3 +668,106 @@ async def test_subentry_flow_unknown_channel(
     assert result["reason"] == "unknown_channel"
     assert not entry.subentries
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "abort_reason", "placeholders"),
+    [
+        (
+            ForbiddenError(
+                "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            ),
+            "access_not_configured",
+            {
+                "message": "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            },
+        ),
+        (Exception("Some failure"), "unknown", None),
+    ],
+    ids=["forbidden", "unknown"],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_subentry_flow_api_error_listing_channels(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    exception: Exception,
+    abort_reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test the subentry flow aborts when listing channels fails."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    mock = MockYouTube(hass)
+    with (
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=mock,
+        ),
+        patch.object(mock, "get_user_channels", side_effect=exception),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert result.get("description_placeholders") == placeholders
+
+
+@pytest.mark.parametrize(
+    ("exception", "abort_reason", "placeholders"),
+    [
+        (
+            ForbiddenError(
+                "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            ),
+            "access_not_configured",
+            {
+                "message": "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            },
+        ),
+        (Exception("Some failure"), "unknown", None),
+    ],
+    ids=["forbidden", "unknown"],
+)
+async def test_subentry_flow_api_error_fetching_channel(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    exception: Exception,
+    abort_reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test the subentry flow aborts when fetching the selected channel fails."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+
+    # Listing channels for the form succeeds, only get_channels raises
+    mock = MockYouTube(hass)
+    mock.set_thrown_exception(exception)
+    with patch(
+        "homeassistant.components.youtube.config_flow.YouTube",
+        return_value=mock,
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert result.get("description_placeholders") == placeholders
