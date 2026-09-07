@@ -41,6 +41,7 @@ class SatelClient:
         """Initialize the client wrapper."""
         self.hass = hass
         self.config_entry = entry
+        self._unsubscribe_connection_status: Callable[[], None] | None = None
 
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
@@ -105,7 +106,11 @@ class SatelClient:
                 translation_key="connection_initialization_failed",
             ) from ex
 
-        self.controller.add_connection_status_callback(self._on_connection_state_change)
+        self._unsubscribe_connection_status = (
+            self.controller.add_connection_status_callback(
+                self._on_connection_state_change
+            )
+        )
         self.controller.register_callbacks(
             alarm_status_callback=partitions_update_callback,
             zone_changed_callback=zones_update_callback,
@@ -123,6 +128,9 @@ class SatelClient:
     async def async_close(self) -> None:
         """Close the connection."""
 
+        if self._unsubscribe_connection_status is not None:
+            self._unsubscribe_connection_status()
+            self._unsubscribe_connection_status = None
         await self.controller.close()
 
     def _on_connection_state_change(self) -> None:
