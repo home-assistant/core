@@ -12,8 +12,10 @@ from uuid import UUID
 from aiohasupervisor import SupervisorClient
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
+    SupervisorConnectionError,
     SupervisorError,
     SupervisorNotFoundError,
+    SupervisorTimeoutError,
 )
 from aiohasupervisor.models import (
     backups as supervisor_backups,
@@ -593,11 +595,17 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 f"Error reloading Supervisor update information: {err}"
             ) from err
 
-        # A concurrent Supervisor update may be running and restart Supervisor
-        # before it answers. The version check below decides if it happened.
-        update_error: SupervisorError | None = None
+        # A concurrent Supervisor update may restart Supervisor before it
+        # answers. The version check below decides if the update happened.
         try:
             info = await self._client.supervisor.info()
+        except SupervisorConnectionError, SupervisorTimeoutError:
+            pass
+        except SupervisorError as err:
+            raise BackupReaderWriterError(
+                f"Error getting Supervisor info: {err}"
+            ) from err
+        else:
             if AwesomeVersion(info.version) >= backup_version:
                 return
             if (
@@ -614,9 +622,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 info.version,
                 info.version_latest,
             )
-            await self._client.supervisor.update()
-        except SupervisorError as err:
-            update_error = err
+            try:
+                await self._client.supervisor.update()
+            except SupervisorConnectionError, SupervisorTimeoutError:
+                pass
+            except SupervisorError as err:
+                raise BackupReaderWriterError(
+                    f"Error updating Supervisor: {err}"
+                ) from err
 
         # Supervisor restarts after the update, wait until a new enough version answers
         try:
@@ -628,10 +641,6 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                         if AwesomeVersion(info.version) >= backup_version:
                             break
         except TimeoutError as err:
-            if update_error:
-                raise BackupReaderWriterError(
-                    f"Error updating Supervisor: {update_error}"
-                ) from update_error
             raise BackupReaderWriterError(
                 "Timeout waiting for Supervisor to restart after update"
             ) from err

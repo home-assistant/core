@@ -2762,10 +2762,10 @@ async def test_reader_writer_restore_late_error(
         ),
         pytest.param(
             ["outdated", "available", "restarting", "outdated", "new"],
-            # Another Supervisor update is already running
-            SupervisorError("Another job is running"),
+            # Supervisor restarts before it answers the update request
+            SupervisorConnectionError(),
             1,
-            id="update_busy",
+            id="update_restarting",
         ),
         pytest.param(
             # A concurrent Supervisor update finished and Supervisor restarts
@@ -3028,8 +3028,15 @@ async def test_reader_writer_restore_no_supervisor_update(
             SupervisorError("Boom!"),
             None,
             0,
-            "Error updating Supervisor: Boom!",
+            "Error getting Supervisor info: Boom!",
             id="info_error_after_reload",
+        ),
+        pytest.param(
+            SupervisorConnectionError(),
+            None,
+            0,
+            "Timeout waiting for Supervisor to restart after update",
+            id="info_connection_error_after_reload",
         ),
     ],
 )
