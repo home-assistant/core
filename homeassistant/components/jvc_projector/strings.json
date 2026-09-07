@@ -58,14 +58,6 @@
           "off": "[%key:common::state::off%]"
         }
       },
-      "motion_enhance": {
-        "name": "Motion Enhance",
-        "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "off": "[%key:common::state::off%]"
-        }
-      },
       "dynamic_control": {
         "name": "Dynamic Control",
         "state": {
@@ -75,6 +67,14 @@
           "mode-1": "Mode 1",
           "mode-2": "Mode 2",
           "mode-3": "Mode 3",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "motion_enhance": {
+        "name": "Motion Enhance",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
           "off": "[%key:common::state::off%]"
         }
       },
@@ -134,7 +134,21 @@
           "user_5": "User 5",
           "user_6": "User 6"
         }
-      }
+      },
+      "colorimetry": {
+        "name": "Colorimetry",
+        "state": {
+          "adobe-rgb": "Adobe RGB",
+          "adobe-ycc-601": "Adobe YCC 601",
+          "bt-2020-constant-luminance": "BT.2020 Constant Luminance",
+          "bt-2020-non-constant-luminance": "BT.2020 Non-Constant Luminance",
+          "bt-601": "BT.601",
+          "bt-709": "BT.709",
+          "no-data": "No Data",
+          "s-ycc-601": "sYCC 601",
+          "xvycc-601": "xvYCC 601",
+          "xvycc-709": "xvYCC 709"
+        }
     },
     "sensor": {
       "color_depth": {
@@ -179,53 +193,14 @@
       "light_time": {
         "name": "Light Time"
       },
-      "software_version": {
-        "name": "Software Version"
-      },
-      "resolution": {
-        "name": "Resolution",
-        "state": {
-          "1080i-3d": "1080i 3D",
-          "1080i": "1080i",
-          "1080p": "1080p",
-          "480i": "480i",
-          "480p": "480p",
-          "576i": "576i",
-          "576p": "576p",
-          "720p": "720p",
-          "fwxga-1366x768": "FWXGA 1366x768",
-          "no-signal": "No Signal",
-          "out-of-range": "Out of Range",
-          "qxga": "QXGA",
-          "svga-800x600": "SVGA 800x600",
-          "sxga-1280x1024": "SXGA 1280x1024",
-          "uxga-1600x1200": "UXGA 1600x1200",
-          "vga-640x480": "VGA 640x480"
-        }
-      },
-      "colorimetry": {
-        "name": "Colorimetry",
-        "state": {
-          "adobe-rgb": "Adobe RGB",
-          "adobe-ycc-601": "Adobe YCC 601",
-          "bt-2020-constant-luminance": "BT.2020 Constant Luminance",
-          "bt-2020-non-constant-luminance": "BT.2020 Non-Constant Luminance",
-          "bt-601": "BT.601",
-          "bt-709": "BT.709",
-          "no-data": "No Data",
-          "s-ycc-601": "sYCC 601",
-          "xvycc-601": "xvYCC 601",
-          "xvycc-709": "xvYCC 709"
-        }
-      },
       "link_rate": {
         "name": "Link Rate",
         "state": {
-          "10-gbps-4-lanes": "10 Gbps 4 Lanes",
           "3-gbps-3-lanes": "3 Gbps 3 Lanes",
           "6-gbps-3-lanes": "6 Gbps 3 Lanes",
           "6-gbps-4-lanes": "6 Gbps 4 Lanes",
           "8-gbps-4-lanes": "8 Gbps 4 Lanes",
+          "10-gbps-4-lanes": "10 Gbps 4 Lanes",
           "disable": "Disabled"
         }
       },
@@ -257,6 +232,30 @@
         }
       }
     },
+      "resolution": {
+        "name": "Resolution",
+        "state": {
+          "1080i-3d": "1080i 3D",
+          "1080i": "1080i",
+          "1080p": "1080p",
+          "480i": "480i",
+          "480p": "480p",
+          "576i": "576i",
+          "576p": "576p",
+          "720p": "720p",
+          "fwxga-1366x768": "FWXGA 1366x768",
+          "no-signal": "No Signal",
+          "out-of-range": "Out of Range",
+          "qxga": "QXGA",
+          "svga-800x600": "SVGA 800x600",
+          "sxga-1280x1024": "SXGA 1280x1024",
+          "uxga-1600x1200": "UXGA 1600x1200",
+          "vga-640x480": "VGA 640x480"
+        }
+      },
+    "software_version": {
+        "name": "Software Version"
+      },
     "switch": {
       "eshift": {
         "name": "E-Shift"
