@@ -1811,6 +1811,9 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 # Power Socket (duplicate of `kg`)
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
+# Circuit breaker (duplicate of `kg`)
+SENSORS[DeviceCategory.ZNJDQ] = SENSORS[DeviceCategory.KG]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
