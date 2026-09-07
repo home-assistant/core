@@ -364,6 +364,35 @@ async def test_targeted_readback_survives_older_coordinator_poll(
     _assert_select_state(hass, "MAN3")
 
 
+async def test_older_coordinator_poll_does_not_recover_failed_targeted_readback(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+) -> None:
+    """Test an older poll cannot recover a failed targeted readback."""
+    poll_started = asyncio.Event()
+    release_poll = asyncio.Event()
+
+    async def get_nodes() -> list[Node]:
+        poll_started.set()
+        await release_poll.wait()
+        return mock_nodes
+
+    mock_duco_client.async_get_nodes.side_effect = get_nodes
+    poll_task = asyncio.create_task(init_integration.runtime_data.async_refresh())
+    await poll_started.wait()
+
+    mock_duco_client.async_get_node_info.side_effect = DucoError("Readback failed")
+    await _async_select_option(hass, "MAN3")
+    _assert_select_state(hass, STATE_UNAVAILABLE)
+
+    release_poll.set()
+    await poll_task
+
+    _assert_select_state(hass, STATE_UNAVAILABLE)
+
+
 async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -405,6 +434,37 @@ async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
     await fan_task
 
     _assert_select_state(hass, "MAN3")
+
+
+async def test_targeted_readback_ignored_when_node_disappears(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+) -> None:
+    """Test a readback is ignored when its node disappears during the request."""
+    readback_started = asyncio.Event()
+    release_readback = asyncio.Event()
+
+    async def get_node_info(node_id: int) -> Node:
+        readback_started.set()
+        await release_readback.wait()
+        return _replace_node_state(mock_nodes[0], "MAN3")
+
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await readback_started.wait()
+
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_nodes if node.node_id != 1
+    ]
+    await init_integration.runtime_data.async_refresh()
+    _assert_select_state(hass, STATE_UNAVAILABLE)
+
+    release_readback.set()
+    await write_task
+
+    _assert_select_state(hass, STATE_UNAVAILABLE)
 
 
 async def test_targeted_readback_does_not_recover_failed_coordinator(

@@ -53,6 +53,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     board_info: BoardInfo
     _configured_node_names: dict[int, str]
     _node_refresh_versions: dict[int, int]
+    _node_update_errors: dict[int, DucoError]
     _node_update_versions: dict[int, int]
 
     def __init__(
@@ -72,6 +73,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         self.client = client
         self._configured_node_names = {}
         self._node_refresh_versions = {}
+        self._node_update_errors = {}
         self._node_update_versions = {}
 
     async def async_refresh_node(self, node_id: int) -> None:
@@ -83,6 +85,10 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             node = await self.client.async_get_node_info(node_id)
         except DucoError as err:
             if self._node_refresh_versions[node_id] == refresh_version:
+                self._node_update_errors[node_id] = err
+                self._node_update_versions[node_id] = (
+                    self._node_update_versions.get(node_id, 0) + 1
+                )
                 self.async_set_update_error(err)
             return
 
@@ -93,16 +99,20 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         ):
             return
 
+        if (current_node := self.data.nodes.get(node_id)) is None:
+            return
+
         node = replace(
             node,
             general=replace(
                 node.general,
-                name=self.data.nodes[node_id].general.name,
+                name=current_node.general.name,
             ),
         )
         self._node_update_versions[node_id] = (
             self._node_update_versions.get(node_id, 0) + 1
         )
+        self._node_update_errors.pop(node_id, None)
         self.async_set_updated_data(
             replace(
                 self.data,
@@ -254,11 +264,18 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         # The bulk node response may predate a write completed during this poll.
         if self.data is not None:
             for node_id, version in self._node_update_versions.items():
-                if (
-                    node_update_versions.get(node_id) != version
-                    and node_id in nodes_by_id
-                    and node_id in self.data.nodes
-                ):
+                if node_update_versions.get(node_id) == version:
+                    continue
+                if node_update_error := self._node_update_errors.get(node_id):
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key=(
+                            "cannot_connect"
+                            if isinstance(node_update_error, DucoConnectionError)
+                            else "api_error"
+                        ),
+                    ) from node_update_error
+                if node_id in nodes_by_id and node_id in self.data.nodes:
                     nodes_by_id[node_id] = self.data.nodes[node_id]
 
         return DucoData(
