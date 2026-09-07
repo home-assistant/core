@@ -53,6 +53,18 @@
     }
   },
   "entity": {
+    "select": {
+      "battery_mode": {
+        "name": "Battery mode",
+        "state": {
+          "frequency_reserve": "Frequency reserve",
+          "idle": "Idle",
+          "inverter_charge": "Inverter charge",
+          "inverter_discharge": "Inverter discharge",
+          "solar_charge": "Solar charge"
+        }
+      }
+    },
     "sensor": {
       "available_charging_energy": {
         "name": "Available charging energy"
