@@ -19,6 +19,11 @@ from duco_connectivity import (
 )
 import pytest
 
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -355,6 +360,49 @@ async def test_targeted_readback_survives_older_coordinator_poll(
 
     release_poll.set()
     await poll_task
+
+    _assert_select_state(hass, "MAN3")
+
+
+async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+) -> None:
+    """Test an older fan readback cannot overwrite a newer select readback."""
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.FAN, Platform.SELECT]
+    )
+    first_readback_started = asyncio.Event()
+    release_first_readback = asyncio.Event()
+    readback_count = 0
+
+    async def get_node_info(node_id: int) -> Node:
+        nonlocal readback_count
+        readback_count += 1
+        if readback_count == 1:
+            first_readback_started.set()
+            await release_first_readback.wait()
+            return _replace_node_state(mock_nodes[0], "CNT1")
+        return _replace_node_state(mock_nodes[0], "MAN3")
+
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    fan_task = asyncio.create_task(
+        hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: "fan.living", ATTR_PERCENTAGE: 33},
+            blocking=True,
+        )
+    )
+    await first_readback_started.wait()
+
+    await _async_select_option(hass, "MAN3")
+    _assert_select_state(hass, "MAN3")
+
+    release_first_readback.set()
+    await fan_task
 
     _assert_select_state(hass, "MAN3")
 

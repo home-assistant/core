@@ -52,6 +52,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     config_entry: DucoConfigEntry
     board_info: BoardInfo
     _configured_node_names: dict[int, str]
+    _node_refresh_versions: dict[int, int]
     _node_update_versions: dict[int, int]
 
     def __init__(
@@ -70,18 +71,26 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
+        self._node_refresh_versions = {}
         self._node_update_versions = {}
 
     async def async_refresh_node(self, node_id: int) -> None:
-        """Refresh one node and publish its authoritative state."""
+        """Refresh one node and publish its latest reported state."""
+        refresh_version = self._node_refresh_versions.get(node_id, 0) + 1
+        self._node_refresh_versions[node_id] = refresh_version
+
         try:
             node = await self.client.async_get_node_info(node_id)
         except DucoError as err:
-            self.async_set_update_error(err)
+            if self._node_refresh_versions[node_id] == refresh_version:
+                self.async_set_update_error(err)
             return
 
-        # Do not let a node readback mask a concurrent coordinator refresh failure.
-        if not self.last_update_success:
+        # Do not publish stale readbacks or mask a concurrent coordinator failure.
+        if (
+            self._node_refresh_versions[node_id] != refresh_version
+            or not self.last_update_success
+        ):
             return
 
         node = replace(

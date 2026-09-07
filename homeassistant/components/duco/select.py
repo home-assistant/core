@@ -145,5 +145,5 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
             ) from err
 
         # Duco may normalize the requested action on readback, such as
-        # MAN1x2 -> MAN1 or AUTO -> CNT1, so refresh the authoritative state.
+        # MAN1x2 -> MAN1 or AUTO -> CNT1, so refresh the latest reported state.
         await self.coordinator.async_refresh_node(self._node_id)
