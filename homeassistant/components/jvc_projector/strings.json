@@ -296,10 +296,10 @@
           "wqhd-120": "WQHD 120 Hz",
           "wqhd-60": "WQHD 60 Hz",
           "wqxga": "WQXGA",
-          "wsxga+1680x1050": "WSXGA+ 1680x1050",
+          "wsxgap1680x1050": "WSXGA+ 1680x1050",
           "wuxga-1920x1200": "WUXGA 1920x1200",
-          "wxga++1600x900": "WXGA++ 1600x900",
-          "wxga+1440x900": "WXGA+ 1440x900",
+          "wxgapp1600x900": "WXGA++ 1600x900",
+          "wxgap1440x900": "WXGA+ 1440x900",
           "wxga-1280x768": "WXGA 1280x768",
           "wxga-1280x800": "WXGA 1280x800",
           "xga-1024x768": "XGA 1024x768"
