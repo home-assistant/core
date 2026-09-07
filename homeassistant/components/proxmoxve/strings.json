@@ -296,6 +296,11 @@
       "vm_uptime": {
         "name": "Uptime"
       }
+    },
+    "update": {
+      "node_update": {
+        "name": "Software update"
+      }
     }
   },
   "exceptions": {

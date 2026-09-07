@@ -49,6 +49,9 @@
       }
     },
     "number": {
+      "ac_power_limit": {
+        "name": "AC power limit"
+      },
       "battery_charge_power_limit": {
         "name": "Battery charge power limit"
       },
@@ -57,9 +60,6 @@
       },
       "battery_minimum_reserve": {
         "name": "Battery minimum reserve"
-      },
-      "power_limit": {
-        "name": "Power limit"
       }
     },
     "sensor": {
@@ -264,8 +264,8 @@
       "modbus_mppt_current_dc": {
         "name": "MPPT {mppt_no} DC current"
       },
-      "modbus_mppt_energy_dc": {
-        "name": "MPPT {mppt_no} DC energy"
+      "modbus_mppt_energy": {
+        "name": "MPPT {mppt_no} energy"
       },
       "modbus_mppt_power_dc": {
         "name": "MPPT {mppt_no} DC power"
@@ -431,6 +431,9 @@
       }
     },
     "switch": {
+      "ac_power_limit_enabled": {
+        "name": "AC power limiting"
+      },
       "battery_charge_power_limit_enabled": {
         "name": "Battery charge power limiting"
       },
@@ -439,9 +442,6 @@
       },
       "battery_grid_charging": {
         "name": "Battery grid charging"
-      },
-      "power_limit_enabled": {
-        "name": "Power limiting"
       }
     }
   },

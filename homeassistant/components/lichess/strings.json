@@ -15,7 +15,8 @@
         },
         "data_description": {
           "api_token": "The Lichess API token of the player."
-        }
+        },
+        "description": "Create a personal API token on the [Lichess API token page]({token_url}). Make sure the **Read preferences** permission is allowed."
       }
     }
   },

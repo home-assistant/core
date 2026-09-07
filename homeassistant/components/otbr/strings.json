@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "The Thread border router is already configured",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

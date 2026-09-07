@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from lyngdorf.device import Receiver
+from lyngdorf import LyngdorfReceiver
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,8 +26,8 @@ PARALLEL_UPDATES = 0
 class LyngdorfSensorEntityDescription(SensorEntityDescription):
     """Describe a Lyngdorf sensor entity."""
 
-    value_fn: Callable[[Receiver], str | None]
-    options_fn: Callable[[Receiver], list[str]] | None = None
+    value_fn: Callable[[LyngdorfReceiver], str | None]
+    options_fn: Callable[[LyngdorfReceiver], list[str]] | None = None
 
 
 def _known(value: str | None, options: list[str]) -> str | None:
@@ -52,24 +52,24 @@ MAIN_ZONE_SENSORS: tuple[LyngdorfSensorEntityDescription, ...] = (
         key="audio_input",
         translation_key="audio_input",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.audio_input, r.available_audio_inputs),
-        options_fn=lambda r: r.available_audio_inputs,
+        value_fn=lambda r: _known(r.audio_input, r.audio_inputs),
+        options_fn=lambda r: r.audio_inputs,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="video_input",
         translation_key="video_input",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.video_input, r.available_video_inputs),
-        options_fn=lambda r: r.available_video_inputs,
+        value_fn=lambda r: _known(r.video_input, r.video_inputs),
+        options_fn=lambda r: r.video_inputs,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="streaming_source",
         translation_key="streaming_source",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.streaming_source, r.available_stream_types),
-        options_fn=lambda r: r.available_stream_types,
+        value_fn=lambda r: _known(r.streaming_source, r.stream_types),
+        options_fn=lambda r: r.stream_types,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -79,16 +79,20 @@ ZONE_B_SENSORS: tuple[LyngdorfSensorEntityDescription, ...] = (
         key="zone_b_audio_input",
         translation_key="zone_b_audio_input",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.zone_b_audio_input, r.available_audio_inputs),
-        options_fn=lambda r: r.available_audio_inputs,
+        value_fn=lambda r: (
+            _known(zb.audio_input, r.audio_inputs) if (zb := r.zone_b) else None
+        ),
+        options_fn=lambda r: r.audio_inputs,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="zone_b_streaming_source",
         translation_key="zone_b_streaming_source",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.zone_b_streaming_source, r.available_stream_types),
-        options_fn=lambda r: r.available_stream_types,
+        value_fn=lambda r: (
+            _known(zb.streaming_source, r.stream_types) if (zb := r.zone_b) else None
+        ),
+        options_fn=lambda r: r.stream_types,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -131,7 +135,7 @@ class LyngdorfSensor(LyngdorfEntity, SensorEntity):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         description: LyngdorfSensorEntityDescription,

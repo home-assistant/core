@@ -8,6 +8,6 @@
   "requirements": [
     "pymodbus==3.13.1",
     "modbus-connection[tmodbus]==4.10.0",
-    "tmodbus==0.6.1"
+    "tmodbus==0.6.2"
   ]
 }

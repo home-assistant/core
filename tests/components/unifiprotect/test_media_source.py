@@ -1127,3 +1127,77 @@ async def test_public_only_entry_skipped(
 
     source = await async_get_media_source(hass)
     assert source.data_sources == {}
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_month_before_recording_started(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test browsing a month that is entirely before recording started."""
+    start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
+    ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:2"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title.endswith("February 2022")
+    assert browse.identifier == base_id
+    # Nothing was recorded that month, so only the whole month selector is
+    # offered, and no days belonging to the month recording started in.
+    assert len(browse.children) == 1
+    assert browse.children[0].title == "Whole Month"
+    assert browse.children[0].identifier == f"{base_id}:all"
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_month_without_recording_start(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test browsing a month when the console reports no recording start."""
+    # Falls back to the earliest camera recording, so clear that as well.
+    doorbell.stats.video.recording_start = None
+    ufp.api.bootstrap._recording_start = None
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:9"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.identifier == base_id
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_recording_started_on_last_local_day(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test the last day of a month is offered across a UTC date boundary."""
+    await hass.config.async_set_time_zone("US/Pacific")
+
+    # 2022-08-31 19:00 local, which is already 2022-09-01 in UTC.
+    ufp.api.bootstrap._recording_start = datetime.fromisoformat(
+        "2022-09-01 02:00:00+00:00"
+    )
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:8"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert [child.identifier for child in browse.children] == [
+        f"{base_id}:all",
+        f"{base_id}:31",
+    ]

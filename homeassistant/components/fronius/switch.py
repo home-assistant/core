@@ -31,7 +31,7 @@ class FroniusSwitchEntityDescription(FroniusEntityDescription, SwitchEntityDescr
 
 MODBUS_SWITCH_ENTITY_DESCRIPTIONS: list[FroniusSwitchEntityDescription] = [
     FroniusSwitchEntityDescription(
-        key="power_limit_enabled",
+        key="ac_power_limit_enabled",
         component_fn=lambda inverter: inverter.controls,
         field="enabled",
         entity_category=EntityCategory.CONFIG,

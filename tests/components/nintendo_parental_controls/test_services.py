@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nintendo_parental_controls.const import (
     ATTR_BONUS_TIME,
@@ -12,12 +13,13 @@ from homeassistant.components.nintendo_parental_controls.const import (
 from homeassistant.components.nintendo_parental_controls.services import (
     NintendoParentalServices,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+from .const import PLAYER_ENTITY_ID
 
 from tests.common import MockConfigEntry, MockUser
 
@@ -48,43 +50,63 @@ async def test_add_bonus_time(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload", "exception_domain", "exception_key"),
+    ("service", "payload", "return_response", "exception_domain", "exception_key"),
     [
         (
             NintendoParentalServices.ADD_BONUS_TIME,
             {ATTR_DEVICE_ID: "invalid_device", ATTR_BONUS_TIME: 15},
+            False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "1234"},
+            False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123"},
+            False,
             DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123456789"},
+            False,
             DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "0000"},
+            False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "abc"},
+            False,
             DOMAIN,
             "invalid_pin_length",
+        ),
+        (
+            NintendoParentalServices.DEVICE_USAGE_REPORT,
+            {ATTR_DEVICE_ID: "invalid_device"},
+            True,
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
+        ),
+        (
+            NintendoParentalServices.PLAYER_USAGE_REPORT,
+            {ATTR_DEVICE_ID: "invalid_device", ATTR_ENTITY_ID: PLAYER_ENTITY_ID},
+            True,
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
     ],
 )
@@ -94,6 +116,7 @@ async def test_service_no_device_exceptions(
     mock_nintendo_client: AsyncMock,
     service: NintendoParentalServices,
     payload: dict[str, Any],
+    return_response: bool,
     exception_domain: str,
     exception_key: str,
 ) -> None:
@@ -101,10 +124,7 @@ async def test_service_no_device_exceptions(
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN,
-            service,
-            payload,
-            blocking=True,
+            DOMAIN, service, payload, blocking=True, return_response=return_response
         )
     assert err.value.translation_domain == exception_domain
     assert err.value.translation_key == exception_key
@@ -202,3 +222,107 @@ async def test_update_pin_code_requires_admin(
             context=Context(user_id=hass_read_only_user.id),
         )
     mock_nintendo_device.set_new_pin.assert_not_called()
+
+
+async def test_get_player_application_report(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device usage report retrieval."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    player_entity = entity_registry.async_get(PLAYER_ENTITY_ID)
+    assert player_entity
+    response = await hass.services.async_call(
+        DOMAIN,
+        NintendoParentalServices.PLAYER_USAGE_REPORT,
+        {ATTR_DEVICE_ID: device_entry.id, ATTR_ENTITY_ID: PLAYER_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+async def test_get_device_application_report(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device usage report retrieval."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    player_entity = entity_registry.async_get(PLAYER_ENTITY_ID)
+    assert player_entity
+    response = await hass.services.async_call(
+        DOMAIN,
+        NintendoParentalServices.DEVICE_USAGE_REPORT,
+        {
+            ATTR_DEVICE_ID: device_entry.id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service", "payload", "return_response", "exception_domain", "exception_key"),
+    [
+        (
+            NintendoParentalServices.PLAYER_USAGE_REPORT,
+            {ATTR_ENTITY_ID: "sensor.not_found"},
+            True,
+            DOMAIN,
+            "invalid_entity",
+        ),
+        (
+            NintendoParentalServices.PLAYER_USAGE_REPORT,
+            {ATTR_ENTITY_ID: "sensor.home_assistant_test_screen_time_remaining"},
+            True,
+            DOMAIN,
+            "invalid_player",
+        ),
+    ],
+)
+async def test_player_service_failures(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    service: NintendoParentalServices,
+    payload: dict[str, Any],
+    return_response: bool,
+    exception_domain: str,
+    exception_key: str,
+) -> None:
+    """Test that player specific services raise expected exceptions."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_DEVICE_ID: device_entry.id, **payload},
+            blocking=True,
+            return_response=return_response,
+        )
+    assert err.value.translation_domain == exception_domain
+    assert err.value.translation_key == exception_key

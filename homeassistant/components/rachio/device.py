@@ -9,7 +9,11 @@ from rachiopy import Rachio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import (
     KEY_BASE_STATIONS,
@@ -36,6 +40,13 @@ _LOGGER = logging.getLogger(__name__)
 PERMISSION_ERROR = "7"
 
 type RachioConfigEntry = ConfigEntry[RachioPerson]
+type RachioResponse = tuple[dict[str, Any], Any]
+
+
+def raise_for_status(response: RachioResponse) -> None:
+    """Raise if a Rachio API response was not successful."""
+    if not HTTPStatus.OK <= int(response[0][KEY_STATUS]) < HTTPStatus.MULTIPLE_CHOICES:
+        raise HomeAssistantError(f"API Error: {response}")
 
 
 class RachioPerson:
@@ -258,9 +269,14 @@ class RachioIro:
         """Return a list of flex schedules."""
         return self._flex_schedules
 
+    def start_zone_watering(self, zone_id: str, duration: int) -> None:
+        """Start watering one zone connected to this controller."""
+        raise_for_status(self.rachio.zone.start(zone_id, duration))
+        _LOGGER.debug("Started watering zone %s on %s", zone_id, self)
+
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
-        self.rachio.device.stop_water(self.controller_id)
+        raise_for_status(self.rachio.device.stop_water(self.controller_id))
         _LOGGER.debug("Stopped watering of all zones on %s", self)
 
     def pause_watering(self, duration) -> None:

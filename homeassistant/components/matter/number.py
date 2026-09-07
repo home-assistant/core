@@ -308,17 +308,22 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Eve temperature offset with higher min/max
+    # Eve temperature offset; shares the bounds of the generic schema below
+    # and will be merged into it under that schema's unique ID (follow-up PR)
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="EveTemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            native_max_value=50,
-            native_min_value=-50,
-            native_step=0.5,
+            # Matter 1.4 raises this to the SignedTemperature type's usable
+            # range (±127 in 0.1°C units; -128 is reserved). Matter 1.3 is
+            # limited to ±2.5°C; that will be enforced via cluster_revision
+            # filtering in a follow-up PR.
+            native_max_value=12.7,
+            native_min_value=-12.7,
+            native_step=0.1,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_to_ha=lambda x: None if x is None else x / 10,
             ha_to_device=lambda x: round(x * 10),
@@ -334,12 +339,16 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="TemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            native_max_value=25,  # Matter 1.3 limit
-            native_min_value=-25,  # Matter 1.3 limit
-            native_step=0.5,
+            # Matter 1.4 raises this to the SignedTemperature type's usable
+            # range (±127 in 0.1°C units; -128 is reserved). Matter 1.3 is
+            # limited to ±2.5°C; that will be enforced via cluster_revision
+            # filtering in a follow-up PR.
+            native_max_value=12.7,
+            native_min_value=-12.7,
+            native_step=0.1,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_to_ha=lambda x: None if x is None else x / 10,
             ha_to_device=lambda x: round(x * 10),
@@ -644,5 +653,67 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.DoorLock.Attributes.UserCodeTemporaryDisableTime,
         ),
+    ),
+    # WAGO specific attributes on the WindowCovering cluster.
+    # The travel times are also re-measured by the device on every full
+    # travel between the end positions, so they can change without a write.
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="WagoTravelTimeUp",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_up",
+            device_class=NumberDeviceClass.DURATION,
+            native_max_value=300,
+            native_min_value=0,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            # device stores the travel times in units of 10 ms
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoTravelTimeUp,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="WagoTravelTimeDown",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_down",
+            device_class=NumberDeviceClass.DURATION,
+            native_max_value=300,
+            native_min_value=0,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoTravelTimeDown,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="WagoSlatRotationTime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="slat_rotation_time",
+            device_class=NumberDeviceClass.DURATION,
+            native_max_value=10,
+            native_min_value=0,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            # device stores the slat rotation time in milliseconds
+            device_to_ha=lambda x: None if x is None else x / 1000,
+            ha_to_device=lambda x: round(x * 1000),
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoSlatRotationTime,),
+        vendor_id=(5428,),
     ),
 ]

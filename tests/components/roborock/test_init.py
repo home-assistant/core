@@ -109,6 +109,34 @@ async def test_stale_device(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_device_serial_number(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test the serial number is taken from home data, where the cloud reports one.
+
+    The docks are separate devices without their own home data entry, and the
+    Dyad Pro is a shared device whose home data carries no serial number.
+    """
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_roborock_entry.entry_id
+    )
+    assert {device.name: device.serial_number for device in devices} == {
+        "Roborock S7 MaxV": "abc123",
+        "Roborock S7 MaxV Dock": None,
+        "Roborock S7 2": "abc123",
+        "Roborock S7 2 Dock": None,
+        "Dyad Pro": None,
+        "Zeo One": "zeo_sn",
+        "Roborock Q7": "q7_sn",
+        "Roborock Q10 S5+": "9FFC112EQAD843",
+    }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_no_stale_device(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
@@ -440,6 +468,7 @@ async def test_update_unavailability_threshold(
 
 async def test_cloud_api_repair(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_roborock_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
@@ -452,7 +481,6 @@ async def test_cloud_api_repair(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
     # Check that both expected device names are present, regardless of order
     assert all(
@@ -479,6 +507,7 @@ async def test_cloud_api_repair(
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_cloud_api_repair_cleared_on_update(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_roborock_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
     freezer: FrozenDateTimeFactory,
@@ -495,7 +524,6 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
 
     # Fake that the device is reachable locally again.
@@ -513,7 +541,6 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
 
     # Verify that the repair issue is cleared
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
     # Fake the device is cloud only again. Refreshing the coordinator
@@ -529,7 +556,6 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
 
     # Verify that the repair issue still does not exist
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
 
