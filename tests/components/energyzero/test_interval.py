@@ -6,18 +6,16 @@ from zoneinfo import ZoneInfo
 
 from energyzero import EnergyPrices, EnergyZeroNoDataError, Interval
 from energyzero.models import TimeRange
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energyzero.const import CONF_ELECTRICITY_PRICE_INTERVAL
-from homeassistant.components.energyzero.diagnostics import (
-    async_get_config_entry_diagnostics,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
@@ -26,29 +24,33 @@ from tests.common import MockConfigEntry
 )
 @pytest.mark.parametrize("missing_tomorrow", [False, True])
 @pytest.mark.parametrize(
-    ("moment", "hours", "requests_tomorrow"),
+    ("hours", "requests_tomorrow"),
     [
-        pytest.param("2026-04-10 20:32:59", 24, True, id="normal"),
-        pytest.param("2026-03-29 00:55:00", 23, False, id="spring"),
-        pytest.param("2026-10-25 00:55:00", 25, False, id="autumn"),
+        pytest.param(
+            24, True, marks=pytest.mark.freeze_time("2026-04-10 20:32:59"), id="normal"
+        ),
+        pytest.param(
+            23, False, marks=pytest.mark.freeze_time("2026-03-29 00:55:00"), id="spring"
+        ),
+        pytest.param(
+            25, False, marks=pytest.mark.freeze_time("2026-10-25 00:55:00"), id="autumn"
+        ),
     ],
 )
 async def test_electricity_interval(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_energyzero: MagicMock,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     selected: str,
     minutes: int,
     interval: Interval,
     missing_tomorrow: bool,
-    moment: str,
     hours: int,
     requests_tomorrow: bool,
 ) -> None:
     """Keep all periods on DST days and use the selected next-price step."""
-    freezer.move_to(moment)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     today = dt_util.now().date()
     start = datetime.combine(
@@ -84,7 +86,9 @@ async def test_electricity_interval(
         requests_tomorrow and not missing_tomorrow
     )
     assert len(data.energy_today.prices) == hours * 60 // minutes
-    diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
     assert diagnostics["energy"]["next_price"] == expected
     assert diagnostics["energy"]["current_price"] == prices.current_price
     assert diagnostics["energy"]["average_price"] == prices.average_price
