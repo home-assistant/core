@@ -44,6 +44,44 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_energyzero")
+@pytest.mark.parametrize(
+    "key",
+    ["current_hour_price", "next_hour_price", "hours_priced_equal_or_lower"],
+)
+async def test_existing_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    key: str,
+) -> None:
+    """Test existing sensors retain their registry entries and customized entity IDs."""
+    mock_config_entry.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "energyzero",
+        f"{mock_config_entry.entry_id}_today_energy_{key}",
+        suggested_object_id=f"custom_{key}",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entry.entity_id) is not None
+    assert (updated_entry := entity_registry.async_get(entry.entity_id))
+    assert updated_entry.id == entry.id
+    assert updated_entry.unique_id == entry.unique_id
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 11
+    )
+
+
 async def test_sensor_ignores_missing_tomorrow_prices(
     hass: HomeAssistant,
     mock_energyzero: MagicMock,
