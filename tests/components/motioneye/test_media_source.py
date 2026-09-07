@@ -1,7 +1,7 @@
 """Test Local Media Source."""
 
 import logging
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from motioneye_client.client import MotionEyeClientPathError
 import pytest
@@ -21,7 +21,6 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA_DEVICE_IDENTIFIER,
-    TEST_CAMERA_ID,
     TEST_CONFIG_ENTRY_ID,
     create_mock_motioneye_client,
     setup_mock_motioneye_config_entry,
