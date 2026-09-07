@@ -5090,7 +5090,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '63A Smart Circuit Breaker (unsupported)',
+    'model': '63A Smart Circuit Breaker',
     'model_id': 'au6dqazvkxqnpaak',
     'name': 'Smart Circuit Breaker',
     'name_by_user': None,
