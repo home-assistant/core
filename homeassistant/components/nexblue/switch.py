@@ -102,6 +102,22 @@ class NexBlueChargingSwitch(
             return False
         return status.charging_state in ACTIVE_CHARGING_STATES
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Clear an assumed state once coordinator data confirms it."""
+        status = self.coordinator.data.get(self._serial_number)
+        if (
+            self.coordinator.last_update_success
+            and status is not None
+            and self._assumed_is_on is not None
+            and (status.charging_state in ACTIVE_CHARGING_STATES) == self._assumed_is_on
+        ):
+            self._cancel_assumed_state_expiry()
+            self._assumed_is_on = None
+
+        super()._handle_coordinator_update()
+
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start charging."""

@@ -165,6 +165,39 @@ async def test_command_error_is_reported(
         )
 
 
+async def test_assumed_state_clears_after_confirmed_refresh(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a confirmed refresh clears the assumed switch state early."""
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "NB123456_charging"
+    )
+    assert entity_id
+    mock_client.async_get_charger_status.return_value = replace(
+        CHARGER_STATUS, charging_state=0
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).attributes[ATTR_ASSUMED_STATE] is True
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def test_command_refreshes_and_assumed_state_expires(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -199,6 +232,7 @@ async def test_command_refreshes_and_assumed_state_expires(
 
         assert mock_client.async_list_chargers.await_count == expected_refreshes
         assert mock_client.async_get_charger_status.await_count == expected_refreshes
+        assert hass.states.get(entity_id).attributes[ATTR_ASSUMED_STATE] is True
 
     freezer.tick(timedelta(seconds=2))
     async_fire_time_changed(hass)
