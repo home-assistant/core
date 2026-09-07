@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -77,14 +77,22 @@ async def test_circuit_sensor_exists_fn(
     assert (entity_id is not None) is expect_entity
 
 
-async def test_sensor_availability_on_component_failure(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ModbusTimeoutError("stuck"), id="timeout"),
+        pytest.param(ModbusConnectionError("dead"), id="connection"),
+    ],
+)
+async def test_sensor_unavailable_on_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
+    error: ModbusError,
 ) -> None:
-    """Test a sensor becomes unavailable when its component fails to refresh."""
+    """Test a sensor becomes unavailable when a poll fails, then recovers."""
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{init_integration.entry_id}_outdoor_temperature"
     )
@@ -93,7 +101,7 @@ async def test_sensor_availability_on_component_failure(
     assert state.state != "unavailable"
 
     unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
-    unit.fail_requests(ModbusTimeoutError("stuck"))
+    unit.fail_requests(error)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

@@ -1,9 +1,6 @@
 """Integrate De Dietrich devices into Home Assistant."""
 
-import logging
-
-from diematic_modbus import Diematic, DiematicISystem
-from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -14,29 +11,11 @@ from .const import CONF_SYSTEM, CONF_UNIT_ID, DOMAIN, MESSAGE_SPACING, MODBUS_FR
 from .coordinator import DeDietrichConfigEntry, DeDietrichDataUpdateCoordinator
 from .device import build_device
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
-_IDENTITY_ATTEMPTS = 3
-
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def _async_read_identity(
-    entry: DeDietrichConfigEntry, device: Diematic | DiematicISystem
-) -> None:
-    """Read identity once, retrying a few times against a transient blip."""
-    for attempt in range(_IDENTITY_ATTEMPTS):
-        try:
-            await device.identity.async_update()
-        except ModbusError as err:
-            if attempt == _IDENTITY_ATTEMPTS - 1:
-                _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
-        else:
-            return
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DeDietrichConfigEntry) -> bool:
@@ -57,9 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeDietrichConfigEntry) -
 
     coordinator = DeDietrichDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
-
-    # Not tied to the coordinator: identity never changes once read.
-    await _async_read_identity(entry, device)
 
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **coordinator.device_info

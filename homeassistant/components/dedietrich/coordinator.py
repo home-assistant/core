@@ -5,7 +5,7 @@ import logging
 from typing import override
 
 from diematic_modbus import Diematic, DiematicISystem, UpdateReport
-from modbus_connection import ModbusConnectionError, ModbusError
+from modbus_connection import ModbusError
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -42,7 +42,21 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.device = device
-        self._consecutive_failures: dict[str, int] = {}
+
+    @override
+    async def _async_setup(self) -> None:
+        """Read the immutable identity once so device info is available.
+
+        A failure here is turned into ConfigEntryNotReady by the first refresh,
+        so the device is only ever registered with a real model.
+        """
+        try:
+            await self.device.identity.async_update()
+        except ModbusError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="modbus_error",
+            ) from err
 
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
@@ -62,56 +76,22 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self.device.async_update()
-            report = await self._retry_failed(report)
-            if not report.updated:
-                errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                    )
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="no_component_answered",
-                ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusError as err:
-            # ModbusConnectionError (dead link) and ModbusTimeoutError reach
-            # here; per-block failures once alive land in report.failed instead.
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
             ) from err
-        else:
-            return report
-
-    async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
-        """Retry failures once; skip if none answered, to avoid doubling timeout."""
-        if report.failed and report.updated:
-            updated: set[str] = set()
-            failed: dict[str, ModbusError] = {}
-            for name in report.failed:
-                try:
-                    await getattr(self.device, name).async_update()
-                except ModbusConnectionError:
-                    raise
-                except ModbusError as err:
-                    failed[name] = err
-                else:
-                    updated.add(name)
-            report = UpdateReport(report.updated | updated, failed)
-
-        for name, cause in report.failed.items():
-            prev = self._consecutive_failures.get(name, 0)
-            self._consecutive_failures[name] = prev + 1
-            if prev == 0:
-                _LOGGER.warning(
-                    "%s: %s failed to refresh and is keeping its previous values: %s",
-                    self.name,
-                    name,
-                    cause,
+        # Failed blocks keep their previous values in the library and are
+        # retried on the next poll, so only a total failure aborts the update.
+        if not report.updated:
+            errors = list(report.failed.values())
+            if not errors:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="no_component_answered",
                 )
-        for name in report.updated:
-            if self._consecutive_failures.pop(name, None) is not None:
-                _LOGGER.info("%s: %s is available again", self.name, name)
-
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_component_answered",
+            ) from ExceptionGroup("all components failed to refresh", errors)
         return report
