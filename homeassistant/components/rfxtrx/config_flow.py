@@ -31,7 +31,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
-from . import DOMAIN, get_device_tuple_from_device, get_rfx_object
+from . import DOMAIN, DeviceTuple, get_device_tuple_from_device, get_rfx_object
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -207,6 +207,22 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                     self._device_object.device,
                     data_bits=user_input.get(CONF_DATA_BITS),
                 )
+
+                # data_bits (applied above) can mask a Lighting4/PT2262 event
+                # into a tuple already used by another subentry, even though
+                # the unmasked event code was validated as free in the
+                # preceding step.
+                exclude_subentry_ids: set[str] = set()
+                if self.source == SOURCE_RECONFIGURE:
+                    exclude_subentry_ids.add(
+                        self._get_reconfigure_subentry().subentry_id
+                    )
+                    if self._replace_subentry_id:
+                        exclude_subentry_ids.add(self._replace_subentry_id)
+                if self._find_conflicting_subentry(device_id, exclude_subentry_ids):
+                    errors[CONF_DATA_BITS] = "already_configured_device"
+
+            if not errors:
                 data: dict[str, Any] = {CONF_EVENT_CODE: self._event_code}
                 if user_input.get(CONF_OFF_DELAY):
                     data[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
@@ -301,14 +317,13 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
         )
 
-    def _can_add_device(
+    def _find_conflicting_subentry(
         self,
-        new_rfx_obj: rfxtrxmod.RFXtrxEvent,
+        device_id: DeviceTuple,
         exclude_subentry_ids: set[str] | None = None,
-    ) -> bool:
-        """Check if device does not already exist."""
+    ) -> str | None:
+        """Return the id of the subentry already using this device tuple, if any."""
         exclude_subentry_ids = exclude_subentry_ids or set()
-        new_device_id = get_device_tuple_from_device(new_rfx_obj.device)
         for subentry in self._get_entry().subentries.values():
             if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
                 continue
@@ -318,13 +333,24 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             if rfx_obj is None:
                 continue
 
-            device_id = get_device_tuple_from_device(
+            existing_device_id = get_device_tuple_from_device(
                 rfx_obj.device, subentry.data.get(CONF_DATA_BITS)
             )
-            if new_device_id == device_id:
-                return False
+            if device_id == existing_device_id:
+                return subentry.subentry_id
 
-        return True
+        return None
+
+    def _can_add_device(
+        self,
+        new_rfx_obj: rfxtrxmod.RFXtrxEvent,
+        exclude_subentry_ids: set[str] | None = None,
+    ) -> bool:
+        """Check if device does not already exist."""
+        new_device_id = get_device_tuple_from_device(new_rfx_obj.device)
+        return (
+            self._find_conflicting_subentry(new_device_id, exclude_subentry_ids) is None
+        )
 
     def _get_replace_devices(
         self, current_device_object: rfxtrxmod.RFXtrxEvent, exclude_subentry_id: str
