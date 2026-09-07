@@ -3,26 +3,19 @@
 import logging
 from typing import Any
 
-from aiohttp import ClientError
 import pyatmo
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import async_unregister as webhook_unregister
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -54,25 +47,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
     """Set up Netatmo from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     # Set unique id if non was set (migration)
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as ex:
-        raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-    except (OAuth2TokenRequestError, ClientError) as ex:
-        raise ConfigEntryNotReady from ex
+    await session.async_ensure_token_valid()
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & set(required_scopes)):

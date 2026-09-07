@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,6 +16,7 @@ from homeassistant.components.imou.camera import (
 )
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -299,9 +300,46 @@ async def test_camera_stream_source_propagates_api_error(
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(
         HomeAssistantError,
-        match="Could not get the live stream URL from Imou: stream failure",
+        match="Could not get the live stream URL from Imou",
     ):
         await async_get_stream_source(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_stream_source_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Rejected credentials while fetching a stream start reauthentication."""
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the App ID and App secret"
+    ):
+        await async_get_stream_source(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(
@@ -333,9 +371,46 @@ async def test_camera_image_propagates_api_error(
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(
         HomeAssistantError,
-        match="Could not get a snapshot from Imou: image failure",
+        match="Could not get a snapshot from Imou",
     ):
         await async_get_image(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_image_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Rejected credentials while fetching a snapshot start reauthentication."""
+    mock_imou_ha_device_manager.async_get_device_image.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the App ID and App secret"
+    ):
+        await async_get_image(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(

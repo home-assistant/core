@@ -6,7 +6,6 @@
       "different_device": "The entered information is for a different Tailwind device.",
       "no_device_id": "The discovered Tailwind device did not provide a device ID.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_firmware": "The firmware of your Tailwind device is not supported. Please update your Tailwind device to the latest firmware version using the Tailwind app."
     },

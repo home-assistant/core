@@ -1,5 +1,6 @@
 """The tests for the notify smtp platform."""
 
+import gzip
 from pathlib import Path
 import re
 from smtplib import SMTPException, SMTPServerDisconnected
@@ -11,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera, image, media_source
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
@@ -682,3 +684,69 @@ async def test_deprecated_legacy_notify_action(
     assert issue_registry.async_get_issue(
         domain=DOMAIN, issue_id="deprecated_notify_action_home_assistant"
     )
+
+
+@pytest.mark.parametrize(
+    ("file_name", "file_bytes", "expected", "not_expected"),
+    [
+        (
+            "doorphone.jpg",
+            bytes.fromhex("ffd8fffe0010")
+            + b"Lavc62.28.102\x00"
+            + bytes.fromhex("ffdb"),
+            "Content-Type: image/jpeg",
+            "application/octet-stream",
+        ),
+        (
+            "diagram.svgz",
+            gzip.compress(b"<svg xmlns='http://www.w3.org/2000/svg'/>"),
+            "application/octet-stream",
+            "Content-Type: image/",
+        ),
+    ],
+    ids=[
+        "Verify a JPEG the stdlib cannot sniff is attached as an image.",
+        "Verify a compressed image is attached as a file.",
+    ],
+)
+@pytest.mark.usefixtures("aiosmtplib")
+async def test_legacy_notify_image_attachment(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    tmp_path: Path,
+    file_name: str,
+    file_bytes: bytes,
+    expected: str,
+    not_expected: str,
+) -> None:
+    """Test the MIME type images are attached with.
+
+    JPEGs written by ffmpeg for camera.snapshot start with an SOI + COM marker
+    instead of JFIF/Exif, which MIMEImage does not recognize, so the file name
+    decides the type. Compressed images stay on the file attachment path.
+    """
+
+    image_file = tmp_path / file_name
+    image_file.write_bytes(file_bytes)
+    hass.config.allowlist_external_dirs.add(tmp_path)
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "home_assistant",
+        {
+            ATTR_MESSAGE: "Test msg",
+            ATTR_DATA: {"images": [str(image_file)]},
+        },
+        blocking=True,
+    )
+
+    sent_message = smtp.sendmail.call_args[0][2]
+    assert expected in sent_message
+    assert not_expected not in sent_message
