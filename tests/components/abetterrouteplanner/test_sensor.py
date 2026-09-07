@@ -97,8 +97,8 @@ async def test_every_garage_vehicle_present_in_registries(
     # Read the sub off the fixture so this survives a parametrized unique_id.
     scope = config_entry_with_vehicles.unique_id
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{scope}_{vehicle_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{scope}_{vehicle_id}"), config_entry_with_vehicles.entry_id
         )
         is not None
     )
@@ -328,8 +328,9 @@ async def test_device_info_name_falls_back_to_typecode_when_unnamed(
 
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)),
+        config_entry_with_vehicles.entry_id,
     )
     assert device is not None
     assert device.name == MOCK_VEHICLE_MODEL
@@ -471,8 +472,8 @@ async def test_per_vehicle_device_anchored_at_setup(
         MOCK_VEHICLE_ID_2: polestar_name,
     }
     for vehicle_id, display in displays.items():
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}")}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}"), entry.entry_id
         )
         assert device is not None
         assert device.manufacturer == display.manufacturer

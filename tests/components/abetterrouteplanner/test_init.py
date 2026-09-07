@@ -326,7 +326,9 @@ async def test_setup_succeeds_with_degraded_device(
     assert config_entry_with_vehicles.state is ConfigEntryState.LOADED
 
     scope = f"{config_entry_with_vehicles.unique_id}_{MOCK_VEHICLE_ID}"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, scope), config_entry_with_vehicles.entry_id
+    )
     assert device is not None
     assert device.model == MOCK_VEHICLE_MODEL
     assert device.manufacturer is None
@@ -515,12 +517,22 @@ async def test_vehicle_added_to_garage_appears_after_reload(
     await hass.async_block_till_done()
 
     scope = config_entry_with_vehicles.unique_id
-    identifiers = {(DOMAIN, f"{scope}_{MOCK_VEHICLE_ID_2}")}
-    assert device_registry.async_get_device(identifiers=identifiers) is None
+    identifier = (DOMAIN, f"{scope}_{MOCK_VEHICLE_ID_2}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier, config_entry_with_vehicles.entry_id
+        )
+        is None
+    )
 
     mock_abrp_client.return_value = mock_abrp_vehicles
     await hass.config_entries.async_reload(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers=identifiers) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier, config_entry_with_vehicles.entry_id
+        )
+        is not None
+    )
     assert fake_stream.stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]
