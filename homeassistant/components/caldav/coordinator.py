@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING, override
 
 import caldav
 
-from homeassistant.components.calendar import CalendarEvent, extract_offset
+from homeassistant.components.calendar import (
+    CalendarEvent,
+    CalendarEventStatus,
+    extract_offset,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -21,6 +25,24 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
+
+
+def _get_status(vevent: caldav.CalendarObjectResource) -> CalendarEventStatus | None:
+    """Return the rfc5545 STATUS of a VEVENT, if a calendar entity reports it.
+
+    Anything outside the supported set is dropped rather than passed on, which
+    covers both the cancelled status a calendar entity does not report and the
+    iana-tokens and x-names that rfc5545 also permits here: reporting no status
+    at all is closer to the truth than reporting one the consumer cannot
+    interpret.
+    """
+    if (value := get_attr_value(vevent, "status")) is None:
+        return None
+    try:
+        return CalendarEventStatus(value.lower())
+    except ValueError:
+        _LOGGER.debug("Ignoring unsupported event status %s", value)
+        return None
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -86,6 +108,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                         if (v := get_attr_value(vevent, "recurrence_id")) is not None
                         else None
                     ),
+                    status=_get_status(vevent),
                 )
             )
 
@@ -194,6 +217,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 if (v := get_attr_value(vevent, "recurrence_id")) is not None
                 else None
             ),
+            status=_get_status(vevent),
         )
         return next_event, offset
 

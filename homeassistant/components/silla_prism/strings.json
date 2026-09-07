@@ -2,11 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_discovery_info": "Invalid discovery information received."
+      "invalid_discovery_info": "Invalid discovery information received.",
+      "mqtt_unavailable": "The MQTT integration is not available. Set it up first."
     },
     "error": {
       "invalid_base_topic": "This is not a valid MQTT topic. Enter the plain topic prefix from the Silla app, without wildcards.",
-      "mqtt_unavailable": "The MQTT integration is not available. Set it up first.",
       "no_device": "No Prism messages were received on this base topic. Check that the topic matches the one configured in the Silla app and that Prism is online."
     },
     "flow_title": "{serial}",

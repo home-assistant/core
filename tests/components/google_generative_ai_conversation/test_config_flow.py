@@ -87,6 +87,26 @@ def get_models_pager():
     return models_pager()
 
 
+def get_prefix_collision_models_pager():
+    """Return a pager of model ids that start with letters from "models/"."""
+    models = []
+    for name in (
+        "models/gemini-2.5-pro",
+        "models/embedding-001",
+        "models/learnlm-2.0-flash-experimental",
+        "models/lyria-realtime-exp",
+    ):
+        model = Mock(supported_actions=["generateContent"])
+        model.name = name
+        models.append(model)
+
+    async def models_pager():
+        for model in models:
+            yield model
+
+    return models_pager()
+
+
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     # Pretend we already set up a config entry.
@@ -793,3 +813,42 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+async def test_subentry_chat_model_labels_keep_the_full_model_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test the chat model selector labels only drop the "models/" prefix."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "set_options"
+
+    # Uncheck recommended so the model selector is built
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            result["data_schema"]({CONF_RECOMMENDED: False}),
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    schema_dict = result["data_schema"].schema
+    chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
+    assert [opt["label"] for opt in schema_dict[chat_model_key].config["options"]] == [
+        "embedding-001",
+        "gemini-2.5-pro",
+        "learnlm-2.0-flash-experimental",
+        "lyria-realtime-exp",
+    ]

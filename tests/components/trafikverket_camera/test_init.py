@@ -24,7 +24,7 @@ async def test_setup_entry(
 ) -> None:
     """Test setup entry."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(
@@ -56,7 +56,7 @@ async def test_unload_entry(
 ) -> None:
     """Test unload an entry."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(
@@ -90,7 +90,7 @@ async def test_migrate_entry(
 ) -> None:
     """Test migrate entry to version 2."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(
@@ -204,17 +204,24 @@ async def test_migrate_entry_fails_no_id(
     _camera = CameraInfoModel(
         camera_name="Test_camera",
         camera_id=None,
+        camera_group="Test Camera Group",
+        camera_type="Road",
         active=True,
         deleted=False,
         description="Test Camera for testing",
         direction="180",
-        fullsizephoto=True,
-        location="Test location",
+        has_fullsizephoto=True,
+        has_sketchimage=True,
+        icon="12",
+        location="Test location2",
         modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         photourl="https://www.testurl.com/test_photo.jpg",
+        photourlfullsize="https://www.testurl.com/test_photo_fullsize.jpg",
+        photourlsketch="https://www.testurl.com/test_photo_sketch.jpg",
+        photourlthumbnail="https://www.testurl.com/test_photo_thumbnail.jpg",
         status="Running",
-        camera_type="Road",
+        wgs84="POINT (12.345678 56.789012)",
     )
 
     with patch(

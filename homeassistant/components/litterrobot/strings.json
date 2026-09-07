@@ -2,9 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The Whisker account does not match the previously configured account. Please re-authenticate using the same account, or remove this integration and set it up again if you want to use a different account."
     },
     "error": {
@@ -130,9 +127,13 @@
           "disabled": "[%key:common::state::disabled%]",
           "empty": "[%key:common::state::empty%]",
           "enabled": "[%key:common::state::enabled%]",
+          "jammed": "Jammed",
+          "litter_low": "Litter low",
           "motor_disconnected": "Motor disconnected",
           "motor_fault_short": "Motor shorted",
-          "motor_ot_amps": "Motor overtorqued"
+          "motor_ot_amps": "Motor overtorqued",
+          "offline": "[%key:component::litterrobot::entity::sensor::status_code::state::offline%]",
+          "ready": "[%key:component::litterrobot::entity::sensor::status_code::state::rdy%]"
         }
       },
       "last_feeding": {

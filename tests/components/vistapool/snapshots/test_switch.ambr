@@ -24,7 +24,7 @@
     'object_id_base': 'Electrolysis boost',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Electrolysis boost',
     'platform': 'vistapool',
@@ -39,6 +39,7 @@
 # name: test_all_entities[switch.my_pool_electrolysis_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Electrolysis boost',
     }),
     'context': <ANY>,
@@ -74,7 +75,7 @@
     'object_id_base': 'Electrolysis cover',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Electrolysis cover',
     'platform': 'vistapool',
@@ -89,6 +90,7 @@
 # name: test_all_entities[switch.my_pool_electrolysis_cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Electrolysis cover',
     }),
     'context': <ANY>,
@@ -124,7 +126,7 @@
     'object_id_base': 'Filtration',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Filtration',
     'platform': 'vistapool',
@@ -139,6 +141,7 @@
 # name: test_all_entities[switch.my_pool_filtration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration',
     }),
     'context': <ANY>,
@@ -174,7 +177,7 @@
     'object_id_base': 'Relay 1',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay 1',
     'platform': 'vistapool',
@@ -189,6 +192,7 @@
 # name: test_all_entities[switch.my_pool_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 1',
     }),
     'context': <ANY>,
@@ -224,7 +228,7 @@
     'object_id_base': 'Relay 2',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay 2',
     'platform': 'vistapool',
@@ -239,6 +243,7 @@
 # name: test_all_entities[switch.my_pool_relay_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 2',
     }),
     'context': <ANY>,
@@ -274,7 +279,7 @@
     'object_id_base': 'Relay 3',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay 3',
     'platform': 'vistapool',
@@ -289,6 +294,7 @@
 # name: test_all_entities[switch.my_pool_relay_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 3',
     }),
     'context': <ANY>,
@@ -324,7 +330,7 @@
     'object_id_base': 'Relay 4',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay 4',
     'platform': 'vistapool',
@@ -339,6 +345,7 @@
 # name: test_all_entities[switch.my_pool_relay_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 4',
     }),
     'context': <ANY>,

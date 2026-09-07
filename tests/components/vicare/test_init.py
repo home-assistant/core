@@ -1,7 +1,7 @@
 """Test ViCare initialization and migration."""
 
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -11,9 +11,10 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
+    PyViCareNotSupportedFeatureError,
 )
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -153,7 +154,9 @@ async def test_migrate_entry_token_failure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
+async def test_migrate_entry_creates_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test migration creates a repair issue for redirect URI update."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -180,7 +183,7 @@ async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(DOMAIN, "update_redirect_uri")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
 
@@ -542,12 +545,12 @@ async def test_coordinator_handles_invalid_data(
         assert "Unexpected error fetching" not in caplog.text
 
 
-async def test_per_device_failure_isolation(
+async def test_per_gateway_failure_isolation(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A transient failure on one device must not affect the other device's sensors."""
+    """A transient failure on one gateway must not affect another gateway's sensors."""
     fixtures: list[Fixture] = [
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
@@ -586,13 +589,63 @@ async def test_per_device_failure_isolation(
         }
     )
 
-    # Coordinator interval scales by device count (60 * 2 = 120s); tick past it.
+    # Coordinator interval scales by gateway count (60 * 2 = 120s); tick past it.
     freezer.tick(timedelta(seconds=300))
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(sensor_device0).state == STATE_UNAVAILABLE
     assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
+
+
+async def test_devices_on_same_gateway_share_coordinator(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Two devices behind one gateway share one coordinator and one fetch."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway_id="gwA"),
+    ]
+    mock_vicare = MockPyViCare(fixtures)
+    service0 = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        sensor_device0 = "sensor.model0_temperature"
+        sensor_device1 = "sensor.model1_temperature"
+        assert hass.states.get(sensor_device0).state != STATE_UNAVAILABLE
+        assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
+
+        # The gateway's single fetch failing takes every device on it offline.
+        service0.fetch_all_features.side_effect = PyViCareInternalServerError(
+            {
+                "statusCode": 500,
+                "errorType": "INTERNAL_SERVER_ERROR",
+                "message": "Internal Server Error",
+                "viErrorId": "0",
+            }
+        )
+        # One gateway -> interval 60s; tick past it.
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass, fire_all=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(sensor_device0).state == STATE_UNAVAILABLE
+        assert hass.states.get(sensor_device1).state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_auth_failure_triggers_reauth(
@@ -698,3 +751,127 @@ async def test_device_via_device_missing_gateway(
     )
     assert channel_device is not None
     assert channel_device.via_device_id is None
+
+
+async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Set up through _setup_vicare_api instead of a prebuilt ViCareData.
+
+    Covers the via-gateway init, the gateway-based cache duration, and one
+    fetch per gateway.
+    """
+    # Two devices behind gwA, one behind gwB: two gateways, three devices.
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway_id="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwB"),
+    ]
+    client = MockPyViCare(fixtures)
+    # viaGateway has to be set before init, the services are wired during init.
+    setup_calls: list[str] = []
+    client.loadViaGateway = Mock(side_effect=lambda _: setup_calls.append("gateway"))
+    client.setCacheDuration = Mock()
+    client.initWithExternalOAuth = Mock(
+        side_effect=lambda _: setup_calls.append("init")
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # viaGateway mode enabled, cache duration scaled to the gateway count.
+    client.loadViaGateway.assert_called_with(True)
+    # Setup re-inits once to apply the gateway-based cache duration.
+    assert setup_calls == ["gateway", "init", "gateway", "init"]
+    assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
+
+    # One refresh per gateway, and the two devices behind gwA share that one
+    # service, so the second device is served without a fetch of its own.
+    assert client.services["gwA"].fetch_all_features.call_count == 1
+    assert client.services["gwB"].fetch_all_features.call_count == 1
+    assert hass.states.get("sensor.model0_temperature").state == "17.5"
+    assert hass.states.get("sensor.model1_temperature").state == "16.9"
+
+
+async def test_offline_gateway_does_not_stretch_the_cache(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An offline gateway is never fetched, so it must not size the cache."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway_id="gwB"),
+        Fixture(
+            {"type:climateSensor"},
+            "vicare/RoomSensor1.json",
+            gateway_id="gwC",
+            online=False,
+        ),
+    ]
+    client = MockPyViCare(fixtures)
+    client.loadViaGateway = Mock()
+    client.setCacheDuration = Mock()
+    client.initWithExternalOAuth = Mock()
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Two online gateways out of three, so the cache matches the coordinator
+    # interval instead of being stretched to 3 x 60s.
+    assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
+    assert (
+        call(DEFAULT_CACHE_DURATION * 3) not in client.setCacheDuration.call_args_list
+    )
+    assert client.services["gwC"].fetch_all_features.call_count == 0
+
+
+async def test_setup_loads_with_unpaid_package_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A gateway whose bulk fetch raises PACKAGE_NOT_PAID_FOR still loads."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json")
+    ]
+    mock_vicare = MockPyViCare(fixtures)
+    mock_vicare.devices[
+        0
+    ].service.fetch_all_features.side_effect = PyViCareNotSupportedFeatureError(
+        "PACKAGE_NOT_PAID_FOR"
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED

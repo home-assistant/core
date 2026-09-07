@@ -28,7 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads
 
 from . import (
     FakeRemoteScanner as FakeScanner,
@@ -39,7 +38,11 @@ from . import (
     patch_bluetooth_time,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.mark.parametrize("name_2", [None, "w"])
@@ -304,8 +307,10 @@ async def test_restore_history_remote_adapter(
 ) -> None:
     """Test we can restore history for a remote adapter."""
 
-    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        await async_load_fixture(hass, "bluetooth.remote_scanners", bluetooth.DOMAIN)
+    data = hass_storage[
+        storage.REMOTE_SCANNER_STORAGE_KEY
+    ] = await async_load_json_object_fixture(
+        hass, "bluetooth.remote_scanners", bluetooth.DOMAIN
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][

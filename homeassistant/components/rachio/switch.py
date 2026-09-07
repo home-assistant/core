@@ -368,7 +368,11 @@ class RachioZone(RachioSwitch):
                 )
             )
         # The API limit is 3 hours, and requires an int be passed
-        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
+        self._controller.start_zone_watering(self.zone_id, manual_run_time.seconds)
+        # Rachio does not send a zone-status webhook for changes made by the
+        # same API client, so reflect a successful command immediately.
+        self._attr_is_on = True
+        self.schedule_update_ha_state()
         _LOGGER.debug(
             "Watering %s on %s for %s",
             self.name,
@@ -380,6 +384,9 @@ class RachioZone(RachioSwitch):
     def turn_off(self, **kwargs: Any) -> None:
         """Stop watering all zones."""
         self._controller.stop_watering()
+        # Rachio does not deliver the stop webhook, so keep the state current.
+        self._attr_is_on = False
+        self.schedule_update_ha_state()
 
     def set_moisture_percent(self, percent) -> None:
         """Set the zone moisture percent."""

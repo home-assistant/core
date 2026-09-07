@@ -1,0 +1,24 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'coordinator': dict({
+      'last_update_success': True,
+    }),
+    'devices': list([
+      dict({
+        'channel_id': None,
+        'device_id': 'd1',
+        'identifier': 'd1',
+        'is_ipc': False,
+        'manufacturer': 'Imou',
+        'model': 'm1',
+        'product_id': None,
+        'sw_version': '1.0',
+      }),
+    ]),
+    'entry': dict({
+      'api_url': 'sg',
+      'app_id': 'test_app_id',
+    }),
+  })
+# ---

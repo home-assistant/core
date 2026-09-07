@@ -154,9 +154,15 @@ async def test_login_error(hass: HomeAssistant) -> None:
         side_effect=LoginError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
                 CONF_USERNAME: CONFIG[CONF_USERNAME],
                 CONF_PASSWORD: CONFIG[CONF_PASSWORD],
             },
