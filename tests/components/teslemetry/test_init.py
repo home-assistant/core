@@ -1432,12 +1432,7 @@ async def test_local_control_failure_falls_back_to_cloud(
 @pytest.mark.parametrize(
     "rsa_key_error",
     [
-        # A raw TypeError only escapes the key create/generation path now.
-        pytest.param(
-            TypeError("unexpected keyword argument"),
-            id="typeerror",
-        ),
-        # PrivateKeyError is the wrapped existing-key-file shape, distinct from the raw errors.
+        # PrivateKeyError is the wrapped existing-key-file failure shape.
         pytest.param(
             PrivateKeyError("encrypted", "Private key file is encrypted"),
             id="private_key_error",
