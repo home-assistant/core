@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
     "step": {
       "user": {
         "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"
