@@ -244,6 +244,11 @@ class OTBRData:
             raise GetBorderAgentIdNotSupported from exc
 
     @_handle_otbr_error
+    async def get_device_role(self) -> python_otbr_api.DeviceRole:
+        """Get the role the router has in its Thread network."""
+        return await self.api.get_device_role()
+
+    @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
         """Enable or disable the router."""
         return await self.api.set_enabled(enabled)

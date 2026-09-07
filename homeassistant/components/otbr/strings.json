@@ -51,6 +51,9 @@
     "router_dataset_invalid": {
       "message": "The border router returned a dataset that could not be parsed or has no extended PAN ID."
     },
+    "router_not_attached": {
+      "message": "The border router is not attached to its Thread network, so a migration would not reach any other device. Check that Thread is enabled and the router has joined, then try again."
+    },
     "timestamp_exhausted": {
       "message": "The network's dataset timestamp cannot be increased any further."
     }

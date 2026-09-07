@@ -407,6 +407,18 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
                 translation_domain=DOMAIN, translation_key="pending_dataset_in_place"
             )
 
+        # A pending dataset is accepted whatever role the router is in, and
+        # its delay timer runs either way -- but a router attached to
+        # nothing reaches no other device, so when the timer expires it
+        # rewrites only its own active dataset and leaves the mesh behind.
+        # Everything below would report a migration that never happened:
+        # the store would hold the new credentials, the preferred pointer
+        # would move, and retries would be refused for the whole window.
+        if not (await data.get_device_role()).is_attached:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="router_not_attached"
+            )
+
         # The leader raises a delay it considers too short, but only on the
         # copy it hands back to the mesh: this router already started its own
         # timer on the value written here, and ignores the re-issued dataset

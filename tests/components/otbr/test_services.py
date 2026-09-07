@@ -1,6 +1,7 @@
 """Test the Open Thread Border Router actions."""
 
 import asyncio
+from collections.abc import Generator
 from http import HTTPStatus
 import re
 from typing import Any
@@ -9,7 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from python_otbr_api import tlv_parser
+from python_otbr_api import DeviceRole, tlv_parser
 from python_otbr_api.tlv_parser import DelayTimer, MeshcopTLVType, Timestamp
 
 from homeassistant.components.otbr import (
@@ -93,6 +94,45 @@ def mock_pending_endpoint(
 def pending_calls(aioclient_mock: AiohttpClientMocker) -> list:
     """Return the PUT calls the router received."""
     return [call for call in aioclient_mock.mock_calls if call[0] == "PUT"]
+
+
+@pytest.fixture(autouse=True)
+def router_is_attached() -> Generator[None]:
+    """Have the router report that it is on its Thread network.
+
+    Every migration asks before writing; the test of a router that is not
+    attached overrides this.
+    """
+    with patch("python_otbr_api.OTBR.get_device_role", return_value=DeviceRole.ROUTER):
+        yield
+
+
+@pytest.mark.parametrize("role", [DeviceRole.DISABLED, DeviceRole.DETACHED])
+async def test_a_router_that_is_not_attached_is_refused(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+    role: DeviceRole,
+) -> None:
+    """A router attached to nothing cannot migrate a mesh it is not on.
+
+    The pending dataset would be accepted and its delay timer would run,
+    but it reaches no other device: when the timer expires it rewrites
+    only this router's own active dataset. Reporting that as a migration
+    would move the preferred dataset and refuse retries for the window.
+    """
+    mock_pending_endpoint(aioclient_mock)
+
+    with (
+        patch("python_otbr_api.OTBR.get_device_role", return_value=role),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await call_migrate(hass, dataset=TARGET)
+
+    assert exc_info.value.translation_key == "router_not_attached"
+    assert not pending_calls(aioclient_mock)
+    assert ISSUED_TIMESTAMPS_STORAGE_KEY not in hass_storage
 
 
 async def test_network_is_migrated(
