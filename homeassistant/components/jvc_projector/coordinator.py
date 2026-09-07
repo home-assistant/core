@@ -144,8 +144,8 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
             new_state[cmd.Signal] = cmd.Signal.NONE
 
-        # Always try to get software version when on (for caching)
-        if power == cmd.Power.ON and cmd.Version not in new_state:
+        # Fetch software version once while on, then use the cached value.
+        if power == cmd.Power.ON and cmd.Version not in self.state:
             await self._update_command_state(cmd.Version, new_state)
 
         return new_state

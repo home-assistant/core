@@ -13,10 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
+from .util import deprecate_entity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -73,6 +75,24 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    # Keep these entities available for existing installations while they are
+    # migrated to the equivalent select entities.
+    JvcProjectorSensorDescription(
+        key="hdr_processing",
+        name="HDR Processing",
+        command=cmd.HdrProcessing,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="picture_mode",
+        name="Picture Mode",
+        command=cmd.PictureMode,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     JvcProjectorSensorDescription(
         key="resolution",
         name="Resolution",
@@ -107,10 +127,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     entities: list[JvcProjectorSensorEntity] = []
     for description in SENSORS:
         if not coordinator.supports(description.command):
+            continue
+        if description.key in (
+            "hdr_processing",
+            "picture_mode",
+        ) and not deprecate_entity(
+            hass,
+            entity_registry,
+            SENSOR_DOMAIN,
+            f"{coordinator.unique_id}_{description.key}",
+            f"deprecated_sensor_{entry.entry_id}_{description.key}",
+            "deprecated_sensor",
+            f"{coordinator.unique_id}_{description.key}",
+            f"select.jvc_projector_{description.key}",
+        ):
             continue
         entities.append(JvcProjectorSensorEntity(coordinator, description))
 
@@ -156,18 +191,14 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         if value is None:
             return None
 
-        # Format software version from 0301 to 3.01
+        # Format the raw four-digit version 0301 as 3.01.
         if self.entity_description.key == "software_version" and value:
             try:
                 # Remove "PJ" suffix if present
                 value = value.removesuffix("PJ")
                 # Pad to 4 digits
                 value = value.zfill(4)
-                # Format as major.minor.patch
-                major = str(int(value[0:2]))
-                minor = str(int(value[2]))
-                patch = str(int(value[3]))
-                return f"{major}.{minor}.{patch}"
+                return f"{int(value[0:2])}.{value[2:]}"
             except (ValueError, IndexError):
                 return value
 
