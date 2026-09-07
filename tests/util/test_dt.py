@@ -296,6 +296,8 @@ def test_time_remaining() -> None:
     ("delta", "precision", "expected"),
     [
         (timedelta(seconds=0), 1, "0 seconds"),
+        (timedelta(milliseconds=400), 1, "0 seconds"),
+        (timedelta(milliseconds=600), 1, "1 second"),
         (timedelta(seconds=1), 1, "1 second"),
         (timedelta(seconds=30), 1, "30 seconds"),
         (timedelta(minutes=1), 1, "1 minute"),
