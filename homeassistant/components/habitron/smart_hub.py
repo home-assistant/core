@@ -185,8 +185,11 @@ class SmartHub:
         router = self.router
 
         # ``via_device`` is deprecated (removal in 2027.8), so link through the
-        # registry id of the hub device registered in ``async_setup``.
-        hub_dev = dev_reg.async_get_device(identifiers={(DOMAIN, self.uid)})
+        # registry id of the hub device registered in ``async_setup``. Looked up
+        # scoped to our entry: identifiers are unique only within a config entry.
+        hub_dev = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, self.uid), self.config.entry_id
+        )
         rt_dev = dev_reg.async_get_or_create(
             config_entry_id=self.config.entry_id,
             configuration_url=f"{self.base_url}/router" if self.host else None,
