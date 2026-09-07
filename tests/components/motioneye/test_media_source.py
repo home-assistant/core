@@ -14,6 +14,7 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.motioneye.const import DOMAIN
+from homeassistant.components.motioneye.media_source import async_get_media_source
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
