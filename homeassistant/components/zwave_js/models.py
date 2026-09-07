@@ -1,5 +1,6 @@
 """Provide models for the Z-Wave integration."""
 
+import asyncio
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -32,6 +33,8 @@ class ZwaveJSData:
     client: ZwaveClient
     driver_events: DriverEvents
     old_server_log_level: LogLevel | None = None
+    # Serializes routing table reads, which require the radio to be off
+    network_neighbors_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 type ZwaveJSConfigEntry = ConfigEntry[ZwaveJSData]

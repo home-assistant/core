@@ -330,6 +330,7 @@ async def test_command_without_command_topic(
 @pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
 async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test setup does not fire repair after segments are received."""
@@ -355,7 +356,6 @@ async def test_clean_segments_initial_setup_without_repair_issue(
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
 
@@ -364,6 +364,7 @@ async def test_clean_segments_command(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test cleaning segments and repair flow."""
@@ -405,7 +406,6 @@ async def test_clean_segments_command(
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     # We do not expect a repair flow as the segments did not change
     assert len(issue_registry.issues) == 0
 

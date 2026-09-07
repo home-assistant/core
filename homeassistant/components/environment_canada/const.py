@@ -15,9 +15,16 @@ CONF_RADAR_RADIUS = "radar_radius"
 CONF_RADAR_DURATION = "radar_duration"
 CONF_RADAR_FPS = "radar_fps"
 CONF_RADAR_COLORS = "radar_colors"
+CONF_RADAR_INTERPOLATION = "radar_interpolation"
+CONF_RADAR_FUTURE_MINUTES = "radar_future_minutes"
 
 RADAR_LAYERS = ["rain", "snow", "precip_type"]
 RADAR_COLOR_OPTIONS = ["8", "14"]
+
+SECTION_MAP = "map"
+SECTION_RADAR = "radar"
+SECTION_TIME = "time"
+SECTION_IMAGE = "image"
 
 # Defaults preserve the radar behaviour from before the options flow existed:
 # the precipitation-type layer with the legend hidden.
@@ -32,3 +39,6 @@ DEFAULT_RADAR_FPS = 5
 # Colour count only affects the rain/snow layers; precip_type always uses the
 # WMS server's single default style.
 DEFAULT_RADAR_COLORS = "14"
+DEFAULT_RADAR_INTERPOLATION = False
+# 0 means no extrapolation frames are added; only affects rain/snow layers.
+DEFAULT_RADAR_FUTURE_MINUTES = 0

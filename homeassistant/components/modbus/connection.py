@@ -1,7 +1,10 @@
 """Hand out Modbus units over connections shared between integrations."""
 
+from collections.abc import AsyncIterator, Callable, Coroutine
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from modbus_connection import (
     ModbusSerialParams,
@@ -41,17 +44,10 @@ class _SharedConnection:
 
 
 @callback
-def async_get_unit(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    params: ModbusParams,
-    unit_id: int,
-) -> ModbusUnit:
-    """Return a unit on the connection these credentials describe.
-
-    Consumers of one device share a connection, so their requests serialize
-    behind its lock. It is closed when the last config entry holding a unit on
-    it unloads.
+def _async_acquire(
+    hass: HomeAssistant, params: ModbusParams
+) -> tuple[ModbusConnection, Callable[[], Coroutine[Any, Any, None]]]:
+    """Take a hold on the connection these credentials describe.
 
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
@@ -70,7 +66,7 @@ def async_get_unit(
 
     shared.consumers += 1
 
-    async def _release() -> None:
+    async def release() -> None:
         """Give up this hold, closing behind the last one."""
         shared.consumers -= 1
         if shared.consumers or connections.get(endpoint) is not shared:
@@ -79,5 +75,47 @@ def async_get_unit(
         _LOGGER.debug("Closing the Modbus connection to %s", endpoint)
         await shared.connection.close()
 
-    entry.async_on_unload(_release)
-    return shared.connection.for_unit(unit_id)
+    return shared.connection, release
+
+
+@callback
+def async_get_unit(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    params: ModbusParams,
+    unit_id: int,
+) -> ModbusUnit:
+    """Return a unit on the connection these credentials describe.
+
+    Consumers of one device share a connection, so their requests serialize
+    behind its lock. It is closed when the last config entry holding a unit on
+    it unloads.
+
+    Raises `HomeAssistantError` if the device is already in use over different
+    link settings, which cannot both be honoured on one connection.
+    """
+    connection, release = _async_acquire(hass, params)
+    entry.async_on_unload(release)
+    return connection.for_unit(unit_id)
+
+
+@asynccontextmanager
+async def async_get_temporary_unit(
+    hass: HomeAssistant,
+    params: ModbusParams,
+    unit_id: int,
+) -> AsyncIterator[ModbusUnit]:
+    """Hold a unit on the connection these credentials describe for the context.
+
+    For config flows, which have no config entry yet to tie a hold to. A
+    connection already held by a config entry is shared and stays up; one
+    opened here is closed on exit.
+
+    Raises `HomeAssistantError` if the device is already in use over different
+    link settings, which cannot both be honoured on one connection.
+    """
+    connection, release = _async_acquire(hass, params)
+    try:
+        yield connection.for_unit(unit_id)
+    finally:
+        await release()

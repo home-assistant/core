@@ -81,15 +81,15 @@ def _get_runtime_data_for_device(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> NutRuntimeData | None:
     """Find the runtime data for device and return None on error."""
-    for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        if (
-            entry
-            and entry.domain == DOMAIN
-            and entry.state is ConfigEntryState.LOADED
-            and hasattr(entry, "runtime_data")
-        ):
-            return cast(NutConfigEntry, entry).runtime_data
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if (
+        config_entry
+        and config_entry.state is ConfigEntryState.LOADED
+        and hasattr(config_entry, "runtime_data")
+    ):
+        return cast(NutConfigEntry, config_entry).runtime_data
 
     return None
 

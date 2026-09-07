@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: >-
+      local_polling; entities rely solely on CoordinatorEntity's built-in
+      lifecycle, with no manual event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: >-
+      Local Modbus TCP; there is no authentication that can expire or be
+      invalidated.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: There is no discovery to carry updated network information.
+  discovery:
+    status: exempt
+    comment: >-
+      The inverter advertises no mDNS service, sends no DHCP hostname, and its
+      MAC OUI is Microchip's rather than KACO's.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: One fixed inverter per config entry; nothing is discovered at runtime.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: >-
+      All three sensors in this initial platform are primary readings that a
+      user adds the integration to get. The follow-up PR adding the full
+      register table is where less popular entities start being disabled.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Entities use device_class-derived icons; no custom icons are needed.
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: One fixed inverter per config entry; nothing to detect as stale.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration communicates over Modbus TCP, not HTTP.
+  strict-typing: done

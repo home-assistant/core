@@ -1,7 +1,7 @@
 """Data update coordinator for shark iq vacuums."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import override
 
 from sharkiq import (
@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
@@ -72,7 +73,9 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         try:
             if (
                 self.ayla_api.token_expiring_soon
-                or datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+                # The Ayla client builds auth_expiration from its own
+                # datetime.now(), so it is a naive local time.
+                or dt_util.naive_now()
                 > self.ayla_api.auth_expiration - timedelta(seconds=600)
             ):
                 await self.ayla_api.async_refresh_auth()

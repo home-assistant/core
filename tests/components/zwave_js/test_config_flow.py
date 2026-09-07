@@ -2707,6 +2707,151 @@ async def test_concurrent_usb_setup_flows(
     hass.config_entries.flow.async_abort(result_a["flow_id"])
     await hass.async_block_till_done()
 
+    # The aborted first flow is no longer in progress, so its ownership
+    # of the add-on config is gone and a new flow can change it.
+    result_c = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_c["step_id"] == "installation_type"
+
+    result_c = await hass.config_entries.flow.async_configure(
+        result_c["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_c["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_c["step_id"] == "start_addon"
+    set_addon_options.assert_called_once()
+
+    hass.config_entries.flow.async_abort(result_c["flow_id"])
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_concurrent_flow_during_addon_config_write(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test a second flow aborts while the first is inside the start add-on step.
+
+    A flow's published step only updates when its step handler returns,
+    so while the first flow is applying the add-on config inside the
+    start add-on step, its published step is still the prompt it was
+    submitted from. A second flow submitted at that moment must still
+    abort, and an entry created by another flow at that moment must not
+    abort the first flow as a redundant prompt.
+    """
+    options_write_started = asyncio.Event()
+    resume_options_write = asyncio.Event()
+
+    async def blocking_set_addon_options(slug: str, options: AddonsOptions) -> None:
+        options_write_started.set()
+        await resume_options_write.wait()
+
+    set_addon_options.side_effect = blocking_set_addon_options
+
+    second_stick = UsbServiceInfo(
+        device="/dev/zwave2",
+        pid="BBBB",
+        vid="BBBB",
+        serial_number="5678",
+        description="zwave radio",
+        manufacturer="test",
+    )
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_a["step_id"] == "installation_type"
+    assert result_b["step_id"] == "installation_type"
+
+    task_a = hass.async_create_task(
+        hass.config_entries.flow.async_configure(
+            result_a["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+    )
+    # Release the blocked first flow also when an assertion fails,
+    # so a regression fails the test instead of hanging it.
+    try:
+        async with asyncio.timeout(5):
+            await options_write_started.wait()
+
+        # The first flow is changing the add-on config, but its published
+        # step is still the safe prompt it was submitted from.
+        flows_in_progress = {
+            flow["flow_id"]: flow for flow in hass.config_entries.flow.async_progress()
+        }
+        assert flows_in_progress[result_a["flow_id"]]["step_id"] == "installation_type"
+
+        result_b = await hass.config_entries.flow.async_configure(
+            result_b["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+
+        assert result_b["type"] is FlowResultType.ABORT
+        assert result_b["reason"] == "already_in_progress"
+
+        # A manual flow that creates an entry supersedes prompt flows,
+        # but must not abort the flow that owns the add-on config, even
+        # though its published step still shows a safe prompt.
+        result_manual = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result_manual["type"] is FlowResultType.MENU
+        assert result_manual["step_id"] == "installation_type"
+
+        result_manual = await hass.config_entries.flow.async_configure(
+            result_manual["flow_id"], {"next_step_id": "intent_custom"}
+        )
+
+        assert result_manual["type"] is FlowResultType.FORM
+        assert result_manual["step_id"] == "on_supervisor"
+
+        result_manual = await hass.config_entries.flow.async_configure(
+            result_manual["flow_id"], {"use_addon": False}
+        )
+
+        assert result_manual["type"] is FlowResultType.FORM
+        assert result_manual["step_id"] == "manual"
+
+        with (
+            patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+            patch(
+                "homeassistant.components.zwave_js.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result_manual = await hass.config_entries.flow.async_configure(
+                result_manual["flow_id"], {"url": "ws://localhost:3000"}
+            )
+
+        assert result_manual["type"] is FlowResultType.CREATE_ENTRY
+        assert any(
+            flow["flow_id"] == result_a["flow_id"]
+            for flow in hass.config_entries.flow.async_progress()
+        )
+    finally:
+        resume_options_write.set()
+
+    result_a = await task_a
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "start_addon"
+    set_addon_options.assert_called_once()
+
+    hass.config_entries.flow.async_abort(result_a["flow_id"])
+    await hass.async_block_till_done()
+
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
@@ -2923,47 +3068,6 @@ async def test_reconfigure_addon_already_configured(
     assert result["reason"] == "addon_already_configured"
     # The other entry's add-on config is untouched.
     set_addon_options.assert_not_called()
-
-
-@pytest.mark.usefixtures("supervisor", "addon_installed")
-async def test_addon_already_configured_at_addon_start(
-    hass: HomeAssistant,
-    set_addon_options: AsyncMock,
-) -> None:
-    """Test the add-on start aborts when an add-on entry appeared late."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "intent_recommended"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure_addon_user"
-
-    # An add-on based entry is configured while the flow shows the form,
-    # e.g. by a concurrent discovery flow.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "url": "ws://localhost:3000",
-            "usb_path": "/other",
-            "use_addon": True,
-        },
-        title=TITLE,
-        unique_id="4321",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"usb_path": "/test"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "addon_already_configured"
-    # The other entry's add-on config is untouched.
-    set_addon_options.assert_not_called()
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -3499,7 +3603,7 @@ async def test_addon_installed_failures(
     "set_addon_options_side_effect",
     [
         SupervisorError(
-            "not a valid value for dictionary value @ data['options']. "
+            "not a valid value at 'options'. "
             f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
         )
     ],
@@ -3586,7 +3690,7 @@ async def test_addon_installed_set_options_failure(
 
     assert start_addon.call_count == 0
     assert "Failed to set the Z-Wave JS app options" in caplog.text
-    assert "not a valid value for dictionary value" in caplog.text
+    assert "not a valid value at" in caplog.text
     assert REDACTED in caplog.text
     assert secret not in caplog.text
 
