@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from typing import override
 
 from weheat.abstractions.heat_pump import HeatPump
@@ -63,18 +64,20 @@ BINARY_SENSORS = [
 ]
 
 
-
-
 COOLING_START_CONDITION_SENSORS = [
     WeHeatBinarySensorEntityDescription(
         translation_key=f"cooling_start_condition_{condition}",
         key=f"cooling_start_condition_{condition}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda status, condition=condition: (
-            status.cooling_start_conditions[condition]
-            if status.cooling_start_conditions is not None
-            else None
+        # partial binds the condition, which a lambda cannot do and stay typed
+        value_fn=partial(
+            lambda condition, status: (
+                status.cooling_start_conditions[condition]
+                if status.cooling_start_conditions is not None
+                else None
+            ),
+            condition,
         ),
     )
     for condition in HeatPump.COOLING_START_CONDITION_BITS
