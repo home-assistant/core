@@ -94,7 +94,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             new_state.get(cmd.Signal) == cmd.Signal.NONE
             and self.state.get(cmd.Signal) != cmd.Signal.NONE
         ):
-            keep_commands = CORE_COMMANDS + (cmd.LightTime, cmd.Version)
+            keep_commands = (*CORE_COMMANDS, cmd.LightTime, cmd.Version)
             self.state = {k: v for k, v in self.state.items() if k in keep_commands}
 
         # Update state with new values
