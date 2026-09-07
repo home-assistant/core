@@ -1,7 +1,7 @@
 {
   "domain": "skoda",
   "name": "\u0160koda",
-  "codeowners": ["@mobility-lab-vsb"],
+  "codeowners": ["@TomVSB", "@DavidMagyarics", "@dvx76"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/skoda",
   "integration_type": "hub",

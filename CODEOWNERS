@@ -1694,8 +1694,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/siren/ @home-assistant/core @raman325
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
-/homeassistant/components/skoda/ @mobility-lab-vsb
-/tests/components/skoda/ @mobility-lab-vsb
+/homeassistant/components/skoda/ @TomVSB @DavidMagyarics @dvx76
+/tests/components/skoda/ @TomVSB @DavidMagyarics @dvx76
 /homeassistant/components/sky_remote/ @dunnmj @saty9
 /tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob
