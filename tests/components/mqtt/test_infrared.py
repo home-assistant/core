@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components import infrared, mqtt
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
@@ -66,6 +66,12 @@ DEFAULT_CONFIG_RECEIVER = {
             "state_topic": "test-topic",
         }
     }
+}
+
+CONFIG_RECEIVER_WITH_DEVICE = {
+    **DEFAULT_CONFIG_RECEIVER[mqtt.DOMAIN][infrared.DOMAIN],
+    "unique_id": "very_unique",
+    "device": {"identifiers": ["ir_blaster"], "name": "IR blaster"},
 }
 
 TEST_COMMAND = NECCommand(address=0x04FB, command=0x0F7, modulation=38000)
@@ -782,3 +788,52 @@ async def test_infrared_command_event(
     assert state.state == now.isoformat(timespec="milliseconds")
     assert state.attributes[ATTR_EVENT_TYPE] == "Power"
     assert state.attributes["command_id"] == "power"
+
+
+async def test_infrared_command_event_removed_with_receiver(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the companion event entity goes away with the discovered receiver."""
+    await mqtt_mock_entry()
+    payload = orjson.dumps(CONFIG_RECEIVER_WITH_DEVICE).decode()
+    async_fire_mqtt_message(hass, "homeassistant/infrared/bla/config", payload)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RECEIVER_ENTITY_ID) is not None
+    assert hass.states.get(COMMAND_EVENT_ENTITY_ID) is not None
+
+    async_fire_mqtt_message(hass, "homeassistant/infrared/bla/config", "")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RECEIVER_ENTITY_ID) is None
+    assert hass.states.get(COMMAND_EVENT_ENTITY_ID) is None
+    assert entity_registry.async_get(COMMAND_EVENT_ENTITY_ID) is None
+
+    async_fire_mqtt_message(hass, "homeassistant/infrared/bla/config", payload)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RECEIVER_ENTITY_ID) is not None
+    assert hass.states.get(COMMAND_EVENT_ENTITY_ID) is not None
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{mqtt.DOMAIN: {infrared.DOMAIN: [CONFIG_RECEIVER_WITH_DEVICE]}}]
+)
+async def test_infrared_command_event_reload(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test a YAML reload keeps the single companion event entity of a receiver."""
+    await mqtt_mock_entry()
+
+    assert hass.states.get(COMMAND_EVENT_ENTITY_ID) is not None
+
+    await hass.services.async_call(mqtt.DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RECEIVER_ENTITY_ID) is not None
+    assert hass.states.async_entity_ids("event") == [COMMAND_EVENT_ENTITY_ID]
+    state = hass.states.get(COMMAND_EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

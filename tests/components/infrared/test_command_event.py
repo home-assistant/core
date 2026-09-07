@@ -160,12 +160,11 @@ async def receiver_entry(hass: HomeAssistant, provider: None) -> MockConfigEntry
     return await setup_platforms(hass, [Platform.INFRARED, Platform.EVENT])
 
 
-@pytest.mark.usefixtures("receiver_entry")
+@pytest.mark.usefixtures("freezer", "receiver_entry")
 async def test_fires_for_a_known_command(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     receiver: MockReceiver,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the event entity fires with the name of the received command."""
     entry = entity_registry.async_get(EVENT_ENTITY_ID)
@@ -280,9 +279,9 @@ async def test_availability_follows_the_receiver(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("event_entry")
+@pytest.mark.usefixtures("event_entry", "freezer")
 async def test_receiver_added_after_the_event_entity(
-    hass: HomeAssistant, receiver: MockReceiver, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, receiver: MockReceiver
 ) -> None:
     """Test the event entity waits for a receiver that is not added yet."""
     assert (state := hass.states.get(EVENT_ENTITY_ID)) is not None

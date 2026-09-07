@@ -109,7 +109,6 @@ async def test_subscribe_receiver_requires_admin(
     assert msg["error"]["code"] == "unauthorized"
 
 
-@pytest.mark.usefixtures("mock_infrared_receiver_entity")
 async def test_subscribe_receiver_reports_a_known_command(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
