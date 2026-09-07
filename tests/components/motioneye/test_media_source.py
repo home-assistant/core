@@ -385,6 +385,27 @@ async def test_async_browse_media_images_success(
     }
 
 
+
+async def test_media_proxy_image(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test fetching saved image media through the Home Assistant proxy."""
+    client = create_mock_motioneye_client()
+    client.async_get_media = AsyncMock(return_value=b"image")
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+
+    response = await hass_client().get(
+        f"/api/motioneye/media/{config.entry_id}/1/images/0/L2Zvby5qcGc="
+    )
+
+    assert response.status == 200
+    assert response.content_type == "image/jpeg"
+    assert await response.read() == b"image"
+    client.async_get_media.assert_awaited_once_with(
+        1, "/foo.jpg", image=True, preview=False
+    )
+
+
 async def test_async_resolve_media_success(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
