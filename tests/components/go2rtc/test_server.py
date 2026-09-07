@@ -435,16 +435,20 @@ async def test_server_restart_error(
                 "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
                 "10:27:02.622 WRN producer.go:170 >"
                 ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
-                " url=rtsp://admin:hunter2@192.168.1.145:554/Preview_01_sub",
+                " url=******192.168.1.145:554/Preview_01_sub",
                 "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
-                "?channel=0&user=admin&password=hunter2",
+                "?auth=token&channel=0&user=admin&******",
+                "10:27:02.624 WRN [streams] url=http://camera.local"
+                "?user=alice@example.com",
             ],
             [
                 "10:27:02.622 WRN producer.go:170 >"
                 ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
                 " url=rtsp://****@192.168.1.145:554/Preview_01_sub",
                 "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
-                "?channel=0&user=****&password=****",
+                "?auth=****&channel=0&user=****&******",
+                "10:27:02.624 WRN [streams] url=http://camera.local"
+                "?user=****",
             ],
         )
     ],
@@ -463,5 +467,8 @@ async def test_credentials_redacted_from_server_output(
 
     assert_server_output_logged(expected_stdout, caplog, logging.WARNING)
     assert "hunter2" not in caplog.text
+    assert "secret" not in caplog.text
+    assert "token" not in caplog.text
+    assert "alice@example.com" not in caplog.text
 
     await server.stop()

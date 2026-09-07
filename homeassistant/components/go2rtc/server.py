@@ -107,7 +107,7 @@ _LOG_LEVEL_MAP = {
 
 
 # go2rtc logs stream urls verbatim, which may embed camera credentials
-_URL_USERINFO = re.compile(r"://[^/\s@]+@")
+_URL_USERINFO = re.compile(r"://[^/?#\s@]+@")
 _URL_CREDENTIAL_QUERY = re.compile(
     r"([?&](?:auth|user|password)=)[^&\s]+", re.IGNORECASE
 )
