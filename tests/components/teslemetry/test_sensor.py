@@ -326,29 +326,41 @@ async def test_hw4_mileage_sensors_gating(
             Signal.TPMS_PRESSURE_FL,
             "sensor.test_tire_pressure_front_left",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(
+                PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.BAR),
+                UnitOfPressure.BAR,
+                UnitOfPressure.PSI,
+            ),
         ),
         (
             Signal.TPMS_PRESSURE_FR,
             "sensor.test_tire_pressure_front_right",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(
+                PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.BAR),
+                UnitOfPressure.BAR,
+                UnitOfPressure.PSI,
+            ),
         ),
         (
             Signal.TPMS_PRESSURE_RL,
             "sensor.test_tire_pressure_rear_left",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(
+                PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.BAR),
+                UnitOfPressure.BAR,
+                UnitOfPressure.PSI,
+            ),
         ),
         (
             Signal.TPMS_PRESSURE_RR,
             "sensor.test_tire_pressure_rear_right",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            PressureConverter.convert(
+                PressureConverter.convert(2.7, UnitOfPressure.ATM, UnitOfPressure.BAR),
+                UnitOfPressure.BAR,
+                UnitOfPressure.PSI,
+            ),
         ),
         (
             Signal.ISOLATION_RESISTANCE,
@@ -384,6 +396,38 @@ async def test_sensors_streaming_unit_conversion(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(expected_state)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_tpms_none_clears_state(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """A None streamed TPMS pressure must clear the entity, not pass through the converter."""
+    entity_id = "sensor.test_tire_pressure_front_left"
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.TPMS_PRESSURE_FL: 2.7},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.TPMS_PRESSURE_FL: None},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
