@@ -256,7 +256,7 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
 
 
 def get_home_and_node_id_from_device_entry(
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> tuple[str, int] | None:
     """Get home ID and node ID for Z-Wave device registry entry.
 

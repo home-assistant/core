@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -81,15 +82,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
 async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
+    # The library raises its own error only for a request the router refused,
+    # and leaves everything the transport can throw to aiohttp
     try:
         await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
-    except HttpRequestError as err:
+        freebox_config = await api.system.get_config()
+        router = FreeboxRouter(hass, entry, api, freebox_config)
+        await router.update_all()
+    except (HttpRequestError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    freebox_config = await api.system.get_config()
-
-    router = FreeboxRouter(hass, entry, api, freebox_config)
-    await router.update_all()
     entry.async_on_unload(
         async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
     )

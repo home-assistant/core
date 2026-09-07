@@ -261,6 +261,7 @@ async def test_device(
 )
 async def test_data_cap_issues(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     mock_drive: Drive,
@@ -274,7 +275,6 @@ async def test_data_cap_issues(
 
     await setup_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, issue_key)
     assert (issue is not None) == issue_exists
 

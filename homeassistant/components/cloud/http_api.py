@@ -71,7 +71,7 @@ from .const import (
     VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
-from .models import PendingAutoLogin, auto_login_failure_key
+from .models import auto_login_failure_key
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
@@ -425,23 +425,15 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        if cloud.is_logged_in:
-            raise auth.AlreadyLoggedIn("Cannot register if already logged in.")
-
         client_metadata = await _async_location_client_metadata(hass)
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
-            controller = await cloud.register_and_auto_login(
+            hass.data[DATA_PENDING_AUTO_LOGIN] = await cloud.register_and_auto_login(
                 data["email"],
                 data["password"],
                 client_metadata=client_metadata,
             )
 
-        hass.data[DATA_PENDING_AUTO_LOGIN] = PendingAutoLogin(
-            # hass_nabucasa registers and logs in with the lowercased address.
-            email=data["email"].lower(),
-            controller=controller,
-        )
         return self.json_message("ok")
 
 
@@ -728,19 +720,18 @@ class DownloadSupportPackageView(HomeAssistantView):
 @callback
 def _async_auto_login_controller(hass: HomeAssistant) -> AutoLoginController | None:
     """Return the controls of a retry loop that is still running."""
-    pending = hass.data[DATA_PENDING_AUTO_LOGIN]
-    return pending.controller if pending is not None else None
+    controller = hass.data[DATA_PENDING_AUTO_LOGIN]
+    return controller if controller is not None and controller.active else None
 
 
 @callback
 def _async_clear_pending_auto_login(hass: HomeAssistant) -> None:
     """Cancel and forget a pending auto-login, telling subscribers it is gone."""
-    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+    if (controller := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
         return
 
     hass.data[DATA_PENDING_AUTO_LOGIN] = None
-    if pending.controller is not None:
-        pending.controller.cancel()
+    controller.cancel()
     async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "auto_login_cancelled"})
 
 
@@ -792,11 +783,11 @@ async def websocket_cloud_status(
     if (
         not cloud.is_logged_in
         and connection.user.is_admin
-        and (pending := hass.data[DATA_PENDING_AUTO_LOGIN])
+        and (controller := hass.data[DATA_PENDING_AUTO_LOGIN])
     ):
         data["auto_login"] = {
-            "email": pending.email,
-            "failed": auto_login_failure_key(pending.failed_reason),
+            "email": controller.email,
+            "failed": auto_login_failure_key(controller.failed_reason),
         }
 
     connection.send_message(websocket_api.result_message(msg["id"], data))

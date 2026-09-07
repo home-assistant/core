@@ -747,13 +747,12 @@ async def test_deep_sleep_added_after_setup(
 
 async def test_entity_assignment_to_sub_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities are assigned to correct sub devices."""
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-
     # Define sub devices
     sub_devices = [
         SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=0),

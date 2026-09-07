@@ -20,7 +20,7 @@ from .const import (
     VEHICLE_NAME,
 )
 from .coordinator import SubaruConfigEntry
-from .entity import SubaruEntity
+from .entity import SubaruCoordinatorEntity
 from .remote_service import async_call_remote_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,10 +32,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru locks by config_entry."""
+    coordinator = config_entry.runtime_data.coordinator
     controller = config_entry.runtime_data.controller
     vehicle_info = config_entry.runtime_data.vehicles
     async_add_entities(
-        SubaruLock(vehicle, controller)
+        SubaruLock(vehicle, controller, coordinator)
         for vehicle in vehicle_info.values()
         if vehicle[VEHICLE_HAS_REMOTE_SERVICE]
     )
@@ -49,7 +50,7 @@ async def async_setup_entry(
     )
 
 
-class SubaruLock(SubaruEntity, LockEntity):
+class SubaruLock(SubaruCoordinatorEntity, LockEntity):
     """Representation of a Subaru door lock.
 
     Note that the Subaru API currently does not support
@@ -59,9 +60,9 @@ class SubaruLock(SubaruEntity, LockEntity):
 
     _attr_translation_key = "door_locks"
 
-    def __init__(self, vehicle_info, controller):
+    def __init__(self, vehicle_info, controller, coordinator):
         """Initialize the locks for the vehicle."""
-        super().__init__(vehicle_info, "door_locks")
+        super().__init__(vehicle_info, coordinator, "door_locks")
         self.controller = controller
         self.car_name = vehicle_info[VEHICLE_NAME]
 
