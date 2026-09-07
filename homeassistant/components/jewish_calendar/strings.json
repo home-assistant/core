@@ -2,7 +2,7 @@
   "common": {
     "descr_diaspora": "Is the location outside of Israel?",
     "descr_elevation": "Elevation in meters above sea level. This is used to calculate the times correctly.",
-    "descr_language": "Language to use when displaying values in the UI. This does not affect the Hebrew date.",
+    "descr_language": "Language to use when displaying values in the UI.",
     "descr_location": "Location to use for the Jewish calendar calculations. By default, the location is set to the Home Assistant location.",
     "descr_time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations",
     "diaspora": "Outside of Israel?",
