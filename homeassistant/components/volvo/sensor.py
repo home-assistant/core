@@ -185,6 +185,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field=DATA_BATTERY_CAPACITY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # fuel & energy state endpoint
