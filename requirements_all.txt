@@ -2726,7 +2726,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.google_drive
-python-google-drive-api==0.1.0
+python-google-drive-api==0.2.0
 
 # homeassistant.components.google_weather
 python-google-weather-api==0.0.7
