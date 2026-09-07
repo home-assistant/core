@@ -236,9 +236,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Play an announcement with pause/resume functionality."""
         if self._player.now_playing_media.source_id in EXTERNAL_SOURCE_IDS:
             if queue := await self._player.get_queue():
-                raise HomeAssistantError(
-                    "Announcements are not supported while the HEOS queue "
-                    f"contains {len(queue)} item(s)"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="external_source_queue",
+                    translation_placeholders={"count": str(len(queue))},
                 )
 
         # Serialize announcements so a new request cannot replace the state
@@ -463,9 +464,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             try:
                 # Resume playback if it was playing before the announcement.
                 if is_external_source:
-                    _LOGGER.warning(
-                        "Not resuming external source after announcement"
-                    )
+                    _LOGGER.warning("Not resuming external source after announcement")
                 elif state["was_playing"]:
                     current_media_id = self._player.now_playing_media.media_id
                     if current_media_id == state.get("tts_url"):

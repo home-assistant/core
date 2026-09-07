@@ -56,6 +56,9 @@
     "action_error": {
       "message": "Unable to {action}: {error}"
     },
+    "external_source_queue": {
+      "message": "Announcements are not supported while the HEOS queue contains {count} item(s)"
+    },
     "entity_not_found": {
       "message": "Entity {entity_id} was not found"
     },
