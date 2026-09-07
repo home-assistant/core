@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from pysnmp.proto.rfc1902 import Integer32
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.snmp.sensor import SCAN_INTERVAL
+from homeassistant.components.snmp.sensor import FAILURES_BEFORE_BACKOFF, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -54,3 +54,38 @@ async def test_entity_recovers_when_device_unreachable(hass: HomeAssistant) -> N
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.snmp").state == "13"
+
+
+async def test_backoff_when_device_stays_unreachable(hass: HomeAssistant) -> None:
+    """Test polling backs off once a device has failed repeatedly."""
+    get_cmd = AsyncMock(
+        return_value=("No SNMP response received before timeout", None, None, None)
+    )
+
+    with patch("homeassistant.components.snmp.sensor.get_cmd", get_cmd):
+        assert await async_setup_component(hass, SENSOR_DOMAIN, CONFIG)
+        await hass.async_block_till_done()
+
+        # The first failures are still retried at the normal scan interval.
+        now = dt_util.utcnow()
+        for _ in range(FAILURES_BEFORE_BACKOFF - 1):
+            now += SCAN_INTERVAL
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+
+        assert get_cmd.call_count == FAILURES_BEFORE_BACKOFF
+
+        # Once the threshold is passed, further scan intervals are skipped.
+        now += SCAN_INTERVAL
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        calls_at_backoff = get_cmd.call_count
+
+        for _ in range(3):
+            now += SCAN_INTERVAL
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+
+        assert get_cmd.call_count == calls_at_backoff
+
+    assert hass.states.get("sensor.snmp").state == "unknown"
