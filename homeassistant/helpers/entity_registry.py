@@ -60,7 +60,7 @@ from .json import (
     find_paths_unserializable_data,
     json_fragment,
 )
-from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .registry import BaseRegistry, BaseRegistryItems, ContextSource, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
@@ -190,6 +190,7 @@ DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id", False),
     ("lb", "labels", True),
     ("di", "device_id", False),
+    ("cs", "context_source", False),
     ("ic", "icon", False),
     ("tk", "translation_key", False),
 )
@@ -213,6 +214,17 @@ def _protect_optional_entity_options(
     if data is None:
         return ReadOnlyDict({})
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
+
+
+def _entity_context_source(
+    area_id: str | None, device_id: str | None
+) -> ContextSource | None:
+    """Compute the kind of node an entity's name context continues to."""
+    if area_id is not None:
+        return ContextSource.AREA
+    if device_id is not None:
+        return ContextSource.DEVICE
+    return None
 
 
 @attr.s(frozen=True, kw_only=True, slots=True)
@@ -279,6 +291,11 @@ class RegistryEntry:
     def hidden(self) -> bool:
         """Return if entry is hidden."""
         return self.hidden_by is not None
+
+    @property
+    def context_source(self) -> ContextSource | None:
+        """Kind of node the entity's name context continues to."""
+        return _entity_context_source(self.area_id, self.device_id)
 
     @property
     def _as_display_dict(self) -> dict[str, Any] | None:
@@ -356,6 +373,7 @@ class RegistryEntry:
             "categories": self.categories,
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
+            "context_source": self.context_source,
             "created_at": self.created_at.timestamp(),
             "device_id": self.device_id,
             "disabled_by": self.disabled_by,
@@ -462,7 +480,7 @@ class RegistryEntry:
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
-        name = async_get_full_entity_name(hass, self)
+        name = async_get_full_entity_name(hass, self, follow_context=False)
         if name:
             attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
@@ -501,8 +519,10 @@ def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
     area_id: str | None,
+    context_source: ContextSource | None,
     device_id: str | None,
     fallback: str,
+    follow_context: bool = True,
     has_entity_name: bool,
     name: str | None,
     original_name: str | None,
@@ -515,32 +535,41 @@ def _async_get_full_entity_name(
     """Get full name for an entity.
 
     This includes the device and area name if appropriate.
+    With follow_context, owners contribute their name part only while
+    they are part of the entity's name context.
     Used for both full entity name and entity ID.
     """
     if name is None and overridden_name is not None:
         full_name = overridden_name
 
     elif not use_legacy_naming or name is None:
+        raw_device_name: str | None = None
         device_name: str | None = None
         parent_device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)
             if (device := device_registry.async_get(device_id)) is not None:
-                device_name = device.name_by_user or device.name
+                raw_device_name = device.name_by_user or device.name
 
-                if (
-                    EntityNamePart.PARENT_DEVICE in parts
-                    and isinstance(device, dr.ChildDeviceEntry)
-                    and (
-                        parent_device := device_registry.async_get(
-                            device.parent_device_id, include_child_devices=False
+                if not follow_context or context_source is ContextSource.DEVICE:
+                    device_name = raw_device_name
+                    if (
+                        EntityNamePart.PARENT_DEVICE in parts
+                        and isinstance(device, dr.ChildDeviceEntry)
+                        and (
+                            not follow_context
+                            or device.context_source is ContextSource.PARENT_DEVICE
                         )
-                    )
-                    is not None
-                ):
-                    parent_device_name = (
-                        parent_device.name_by_user or parent_device.name
-                    )
+                        and (
+                            parent_device := device_registry.async_get(
+                                device.parent_device_id, include_child_devices=False
+                            )
+                        )
+                        is not None
+                    ):
+                        parent_device_name = (
+                            parent_device.name_by_user or parent_device.name
+                        )
 
                 if area_id is None:
                     area_id = dr.async_get_effective_area_id(hass, device)
@@ -565,7 +594,7 @@ def _async_get_full_entity_name(
         if entity_name is None:
             if original_name_unprefixed is UNDEFINED:
                 original_name_unprefixed = (
-                    _async_strip_prefix_from_entity_name(original_name, device_name)
+                    _async_strip_prefix_from_entity_name(original_name, raw_device_name)
                     if not has_entity_name
                     else None
                 )
@@ -576,7 +605,9 @@ def _async_get_full_entity_name(
                 else original_name
             )
         elif unprefix_name:
-            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
+            unprefixed_name = _async_strip_prefix_from_entity_name(
+                name, raw_device_name
+            )
             if unprefixed_name is not None:
                 entity_name = unprefixed_name
 
@@ -605,6 +636,8 @@ def async_get_full_entity_name(
     hass: HomeAssistant,
     entry: RegistryEntry,
     original_name: str | UndefinedType | None = UNDEFINED,
+    *,
+    follow_context: bool = True,
 ) -> str:
     """Get full entity name for an entry."""
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED
@@ -615,8 +648,10 @@ def async_get_full_entity_name(
     return _async_get_full_entity_name(
         hass,
         area_id=entry.area_id,
+        context_source=entry.context_source,
         device_id=entry.device_id,
         fallback="",
+        follow_context=follow_context,
         has_entity_name=entry.has_entity_name,
         name=entry.name,
         original_name=original_name,
@@ -636,7 +671,8 @@ def async_get_entity_aliases(
     """Get all names/aliases for an entity.
 
     Processes entry aliases where COMPUTED_NAME entries are replaced with the
-    computed full entity name. String entries are used as-is.
+    computed full entity name, which follows the entity's name context.
+    String entries are used as-is.
 
     The returned list preserves the order set by the user.
     """
@@ -1386,6 +1422,8 @@ class EntityRegistry(BaseRegistry):
         existing entities, as well as provided `reserved_entity_ids`.
         """
         parts = self.settings.entity_id_parts
+        # Parts set manually by the user compose exactly as specified
+        follow_context = parts is None
         if parts is None:
             parts = (
                 EntityNamePart.AREA,
@@ -1396,8 +1434,10 @@ class EntityRegistry(BaseRegistry):
         object_id = _async_get_full_entity_name(
             self.hass,
             area_id=area_id,
+            context_source=_entity_context_source(area_id, device_id),
             device_id=device_id,
             fallback=f"{platform}_{unique_id}",
+            follow_context=follow_context,
             has_entity_name=has_entity_name,
             name=name,
             original_name=object_id_base,

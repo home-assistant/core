@@ -13,6 +13,7 @@
         'capabilities': None,
         'categories': dict({
         }),
+        'context_source': 'device',
         'device_class': None,
         'disabled_by': None,
         'entity_category': None,
