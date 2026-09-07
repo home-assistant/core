@@ -741,7 +741,7 @@
               'mppt_1_current_dc': dict({
                 'value': 8.2,
               }),
-              'mppt_1_energy_dc': dict({
+              'mppt_1_energy': dict({
                 'value': 1000000,
               }),
               'mppt_1_power_dc': dict({

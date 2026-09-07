@@ -27,14 +27,14 @@ async def test_shuffle_action(
     config_entry: MockConfigEntry,
     mock_media_source,
 ) -> None:
-    """Test that shuffle calls get_next_image on the target entity."""
+    """Test that shuffle calls get_random_image on the target entity."""
     await _setup_integration(hass, config_entry)
 
     with patch.object(
         CollectionImageImageEntity,
-        "get_next_image",
+        "get_random_image",
         new_callable=AsyncMock,
-    ) as mock_get_next_image:
+    ) as mock_get_random_image:
         await hass.services.async_call(
             DOMAIN,
             "shuffle",
@@ -42,4 +42,4 @@ async def test_shuffle_action(
             blocking=True,
         )
 
-    mock_get_next_image.assert_awaited_once()
+    mock_get_random_image.assert_awaited_once()

@@ -62,6 +62,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
             raise ConfigEntryAuthFailed from err
         except InvalidMonzoAPIResponseError as err:
             message = "Invalid Monzo API response."
+            translation_key = "invalid_api_response"
             if err.missing_key:
                 _LOGGER.debug(
                     "%s\nMissing key: %s\nResponse:\n%s",
@@ -69,8 +70,11 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
                     err.missing_key,
                     pformat(err.response),
                 )
-                message += " Enabling debug logging for details."
-            raise UpdateFailed(message) from err
+                translation_key = "invalid_api_response_with_details"
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            ) from err
 
         data = MonzoData(
             accounts={account["id"]: account for account in accounts},
