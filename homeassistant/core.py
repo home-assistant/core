@@ -2476,7 +2476,18 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
-            old_state._cache["last_reported_timestamp"] = timestamp  # type: ignore[union-attr] # noqa: SLF001
+            cache = old_state._cache  # type: ignore[union-attr] # noqa: SLF001
+            cache["last_reported_timestamp"] = timestamp
+            # last_reported is part of the dict and JSON representations, so the
+            # cached ones no longer match the state we just mutated and have to be
+            # rebuilt on the next read. They all go through _as_dict, so nothing
+            # else can be cached while it is not. The compressed representations
+            # carry no last_reported and stay valid.
+            if "_as_dict" in cache:
+                del cache["_as_dict"]
+                cache.pop("_as_read_only_dict", None)
+                cache.pop("as_dict_json", None)
+                cache.pop("json_fragment", None)
             # Avoid creating an EventStateReportedData
             self._bus.async_fire_internal(  # type: ignore[misc]
                 EVENT_STATE_REPORTED,
