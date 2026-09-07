@@ -7,12 +7,16 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage:
-    status: done
+    status: todo
     comment: >-
       All config flow tests should end in CREATE_ENTRY to prove the flow recovers
-      from errors. To be addressed in a follow-up.
+      from errors.
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: todo
+    comment: >-
+      pycoolmasternet-async 0.2.4 was not built and published from a public CI
+      pipeline. Versions 0.2.5 and later are.
   docs-actions:
     status: exempt
     comment: This integration does not provide additional actions.
