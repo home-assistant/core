@@ -3,8 +3,14 @@
 from enum import StrEnum
 import logging
 
+from pynintendoparental.const import DAYS_OF_WEEK
 from pynintendoparental.device import Device
 from pynintendoparental.enum import SafeLaunchSetting
+from pynintendoparental.exceptions import (
+    BedtimeOutOfRangeError,
+    ExtraPlayingTimeActiveError,
+    InvalidDeviceStateError,
+)
 from pynintendoparental.player import Player
 import voluptuous as vol
 
@@ -18,7 +24,18 @@ from homeassistant.helpers import (
 )
 from homeassistant.util.json import JsonValueType
 
-from .const import ATTR_BONUS_TIME, DOMAIN
+from .const import (
+    ATTR_BEDTIME_END,
+    ATTR_BEDTIME_START,
+    ATTR_BONUS_TIME,
+    ATTR_DAY_OF_WEEK,
+    ATTR_MAX_PLAY_TIME,
+    BEDTIME_ALARM_MAX,
+    BEDTIME_ALARM_MIN,
+    BEDTIME_END_TIME_MAX,
+    BEDTIME_END_TIME_MIN,
+    DOMAIN,
+)
 from .coordinator import NintendoParentalControlsConfigEntry
 from .sensor import NintendoParentalControlsSensor
 
@@ -32,6 +49,7 @@ class NintendoParentalServices(StrEnum):
     UPDATE_PIN_CODE = "update_pin_code"
     PLAYER_USAGE_REPORT = "player_usage_report"
     DEVICE_USAGE_REPORT = "device_usage_report"
+    UPDATE_DAILY_RESTRICTIONS = "update_daily_restrictions"
 
 
 @callback
@@ -70,6 +88,23 @@ def async_setup_services(
         schema=vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): cv.string,
+            }
+        ),
+    )
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+        async_set_per_day_controls,
+        vol.Schema(
+            {
+                vol.Required(ATTR_DEVICE_ID): cv.string,
+                vol.Required(ATTR_DAY_OF_WEEK): vol.In(DAYS_OF_WEEK),
+                vol.Inclusive(ATTR_BEDTIME_START, "bedtime"): cv.time,
+                vol.Inclusive(ATTR_BEDTIME_END, "bedtime"): cv.time,
+                vol.Optional(ATTR_MAX_PLAY_TIME): vol.All(
+                    int, vol.Range(min=0, max=360)
+                ),
             }
         ),
     )
@@ -183,3 +218,44 @@ async def async_get_device_usage_report(call: ServiceCall) -> dict:
     return {
         player.nickname: _build_player_app_report(player) for player in device.players
     }
+
+
+async def async_set_per_day_controls(call: ServiceCall) -> None:
+    """Set per-day restrictions for a given device."""
+    data = call.data
+    device_id: str = data[ATTR_DEVICE_ID]
+    device = _get_nintendo_device(call.hass, device_id)
+    restriction_enabled = data.get(ATTR_MAX_PLAY_TIME) is not None
+    bedtime_enabled = (
+        data.get(ATTR_BEDTIME_START) and data.get(ATTR_BEDTIME_END)
+    ) is not None
+    try:
+        await device.set_daily_restrictions(
+            enabled=restriction_enabled,
+            bedtime_enabled=bedtime_enabled,
+            day_of_week=data[ATTR_DAY_OF_WEEK],
+            bedtime_start=data.get(ATTR_BEDTIME_END),
+            bedtime_end=data.get(ATTR_BEDTIME_START),
+            max_daily_playtime=data.get(ATTR_MAX_PLAY_TIME),
+        )
+    except InvalidDeviceStateError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="requires_daily_restrictions",
+        ) from err
+    except ExtraPlayingTimeActiveError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="extra_playing_time_active",
+        ) from err
+    except BedtimeOutOfRangeError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="bedtime_out_of_range",
+            translation_placeholders={
+                "bedtime_alarm_min": BEDTIME_ALARM_MIN,
+                "bedtime_alarm_max": BEDTIME_ALARM_MAX,
+                "bedtime_end_time_min": BEDTIME_END_TIME_MIN,
+                "bedtime_end_time_max": BEDTIME_END_TIME_MAX,
+            },
+        ) from err
