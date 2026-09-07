@@ -1,11 +1,16 @@
 """motionEye Media Source Implementation."""
 
+from base64 import urlsafe_b64decode, urlsafe_b64encode
+from datetime import timedelta
 import logging
 from pathlib import PurePath
 from typing import cast, override
 
+from aiohttp import web
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
@@ -19,7 +24,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from . import get_media_url, split_motioneye_device_identifier
+from . import split_motioneye_device_identifier
 from .const import DOMAIN
 from .coordinator import MotionEyeConfigEntry
 
@@ -35,6 +40,77 @@ MEDIA_CLASS_MAP = {
 
 _LOGGER = logging.getLogger(__name__)
 
+MEDIA_PROXY_URL = (
+    "/api/motioneye/media/{config_id}/{camera_id}/{kind}/{preview}/{path}"
+)
+
+
+def _encode_media_path(path: str) -> str:
+    """Encode a motionEye media path for use in a Home Assistant proxy URL."""
+    return urlsafe_b64encode(path.encode("utf-8")).decode("ascii")
+
+
+def _build_media_proxy_path(
+    config_id: str,
+    camera_id: int,
+    kind: str,
+    path: str,
+    *,
+    preview: bool,
+) -> str:
+    """Build an authenticated Home Assistant proxy path for motionEye media."""
+    return MEDIA_PROXY_URL.format(
+        config_id=config_id,
+        camera_id=camera_id,
+        kind=kind,
+        preview="1" if preview else "0",
+        path=_encode_media_path(path),
+    )
+
+
+class MotionEyeMediaProxyView(HomeAssistantView):
+    """Proxy saved motionEye media through Home Assistant."""
+
+    requires_auth = True
+    url = MEDIA_PROXY_URL
+    name = "api:motioneye_media"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the proxy."""
+        self.hass = hass
+
+    async def get(
+        self,
+        request: web.Request,
+        config_id: str,
+        camera_id: str,
+        kind: str,
+        preview: str,
+        path: str,
+    ) -> web.Response:
+        """Return saved media fetched with the authenticated motionEye session."""
+        entry = self.hass.config_entries.async_get_entry(config_id)
+        if not entry or entry.state is not ConfigEntryState.LOADED:
+            return web.Response(status=404)
+
+        if kind not in MIME_TYPE_MAP:
+            return web.Response(status=400)
+
+        try:
+            media_path = urlsafe_b64decode(path.encode("ascii")).decode("utf-8")
+            camera = int(camera_id)
+        except (ValueError, UnicodeDecodeError):
+            return web.Response(status=400)
+
+        data = await entry.runtime_data.client.async_get_media(
+            camera,
+            media_path,
+            image=kind == "images",
+            preview=preview == "1",
+        )
+
+        return web.Response(body=data, content_type=MIME_TYPE_MAP[kind])
+
 
 # Hierarchy:
 #
@@ -46,6 +122,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_media_source(hass: HomeAssistant) -> MotionEyeMediaSource:
     """Set up motionEye media source."""
+    hass.http.register_view(MotionEyeMediaProxyView(hass))
     return MotionEyeMediaSource(hass)
 
 
@@ -73,15 +150,21 @@ class MotionEyeMediaSource(MediaSource):
         device = self._get_device_or_raise(device_id)
         self._verify_kind_or_raise(kind)
 
-        url = get_media_url(
-            config.runtime_data.client,
-            self._get_camera_id_or_raise(config, device),
-            self._get_path_or_raise(path),
-            kind == "images",
+        camera_id = self._get_camera_id_or_raise(config, device)
+        media_path = self._get_path_or_raise(path)
+        proxy_path = _build_media_proxy_path(
+            config.entry_id,
+            camera_id,
+            kind,
+            media_path,
+            preview=False,
         )
-        if not url:
-            raise Unresolvable(f"Could not resolve media item: {item.identifier}")
-
+        url = async_sign_path(
+            self.hass,
+            proxy_path,
+            timedelta(minutes=5),
+            use_content_user=True,
+        )
         return PlayMedia(url, MIME_TYPE_MAP[kind])
 
     @callback
@@ -312,14 +395,19 @@ class MotionEyeMediaSource(MediaSource):
 
                 # Child is a media file.
                 if len(parts) + 1 == len(parts_media):
-                    if kind == "movies":
-                        thumbnail_url = client.get_movie_url(
-                            camera_id, full_child_path, preview=True
-                        )
-                    else:
-                        thumbnail_url = client.get_image_url(
-                            camera_id, full_child_path, preview=True
-                        )
+                    thumbnail_path = _build_media_proxy_path(
+                        config.entry_id,
+                        camera_id,
+                        kind,
+                        full_child_path,
+                        preview=True,
+                    )
+                    thumbnail_url = async_sign_path(
+                        self.hass,
+                        thumbnail_path,
+                        timedelta(minutes=5),
+                        use_content_user=True,
+                    )
 
                     base.children.append(
                         BrowseMediaSource(
