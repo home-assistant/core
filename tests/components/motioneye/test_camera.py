@@ -227,46 +227,17 @@ async def test_unload_camera(hass: HomeAssistant) -> None:
     assert client.async_client_close.called
 
 
-async def test_get_still_image_from_camera(
-    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
-) -> None:
+async def test_get_still_image_from_camera(hass: HomeAssistant) -> None:
     """Test getting a still image."""
 
-    image_handler = AsyncMock(return_value=web.Response(body=""))
-
-    app = web.Application()
-    app.add_routes(
-        [
-            web.get(
-                "/foo",
-                image_handler,
-            )
-        ]
-    )
-
-    server = await aiohttp_server(app)
     client = create_mock_motioneye_client()
-    client.get_camera_snapshot_url = Mock(
-        return_value=f"http://127.0.0.1:{server.port}/foo"
-    )
-    config_entry = create_mock_motioneye_config_entry(
-        hass,
-        data={
-            CONF_URL: f"http://127.0.0.1:{server.port}",
-            CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
-        },
-    )
-
-    await setup_mock_motioneye_config_entry(
-        hass, config_entry=config_entry, client=client
-    )
+    client.async_get_camera_snapshot = AsyncMock(return_value=b"image")
+    await setup_mock_motioneye_config_entry(hass, client=client)
     await hass.async_block_till_done()
 
-    # It won't actually get a stream from the dummy handler, so just catch
-    # the expected exception, then verify the right handler was called.
-    with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=1)
-    assert image_handler.called
+    image = await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=1)
+    assert image.content == b"image"
+    client.async_get_camera_snapshot.assert_awaited_once_with(TEST_CAMERA_ID)
 
 
 async def test_get_stream_from_camera(
