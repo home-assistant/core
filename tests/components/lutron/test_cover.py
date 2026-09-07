@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from pylutron import Motor, Output
+from pylutron import Motor, Shade
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -129,10 +129,11 @@ def _mock_output(name: str, output_id: int, output_type: str) -> MagicMock:
     """Build a pylutron output mock the way conftest does.
 
     The mock is specced against the class pylutron instantiates for the
-    output type, so calling a method the library does not provide fails the
-    test instead of being silently accepted.
+    output type (Motor for MOTOR, Shade for the shade types), so calling a
+    method the library does not provide fails the test instead of being
+    silently accepted.
     """
-    output = MagicMock(spec=Motor if output_type == "MOTOR" else Output)
+    output = MagicMock(spec=Motor if output_type == "MOTOR" else Shade)
     output.name = name
     output.id = output_id
     output.uuid = f"{name.lower().replace(' ', '_')}_uuid"
@@ -150,7 +151,10 @@ def _mock_output(name: str, output_id: int, output_type: str) -> MagicMock:
 async def test_sivoia_qed_cover_services(
     hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """A SIVOIA_QED output is a position-capable cover, like SYSTEM_SHADE."""
+    """Any output pylutron parses as a Shade is a position-capable cover.
+
+    pylutron classifies SIVOIA_QED outputs as Shade (like SYSTEM_SHADE).
+    """
     mock_config_entry.add_to_hass(hass)
     qed = _mock_output("Test QED Shade", 10, "SIVOIA_QED")
     mock_lutron.areas[0].outputs.append(qed)
