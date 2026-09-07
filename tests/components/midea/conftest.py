@@ -52,7 +52,6 @@ class DummyDevice:
         self.raw_hvac_modes = ["off", "auto", "cool", "dry", "heat", "fan_only"]
         self.raw_fan_modes = ["low", "medium", "high", "auto"]
         self.raw_fan_mode: str | None = "high"
-        self.raw_swing_modes = ["off", "vertical", "horizontal", "both"]
         self.modes = [
             "Auto",
             "ECO",

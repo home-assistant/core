@@ -316,6 +316,12 @@ class MideaACClimate(MideaClimate):
         FAN_AUTO,
     ]
 
+    _attr_swing_modes: list[str] = [
+        SWING_OFF,
+        SWING_VERTICAL,
+        SWING_HORIZONTAL,
+        SWING_BOTH,
+    ]
     _attr_preset_modes = [
         PRESET_NONE,
         PRESET_COMFORT,
@@ -386,30 +392,8 @@ class MideaACClimate(MideaClimate):
 
     @property
     @override
-    def supported_features(self) -> ClimateEntityFeature:
-        """Midea AC Climate supported features.
-
-        AC devices on the BB subprotocol have no swing fields, so the
-        library reports no swing modes and rejects swing commands; hide the
-        swing action for them instead of letting it raise.
-        """
-        features = super().supported_features
-        if not self._device.raw_swing_modes:
-            features &= ~ClimateEntityFeature.SWING_MODE
-        return features
-
-    @property
-    @override
-    def swing_modes(self) -> list[str] | None:
-        """Midea AC Climate swing modes."""
-        return [str(mode) for mode in self._device.raw_swing_modes] or None
-
-    @property
-    @override
     def swing_mode(self) -> str | None:
         """Midea AC Climate swing mode."""
-        if not self._device.raw_swing_modes:
-            return None
         vertical = bool(self._device.get_attribute(ACAttributes.swing_vertical))
         horizontal = bool(self._device.get_attribute(ACAttributes.swing_horizontal))
         return _SWING_STATE_MAP.get((vertical, horizontal))

@@ -22,7 +22,6 @@ from homeassistant.components.climate import (
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
-    ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_STEP,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -43,11 +42,10 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_ON,
     SWING_VERTICAL,
-    ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.midea.climate import FAN_FULL_SPEED, FAN_SILENT
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -743,38 +741,6 @@ async def test_ac_set_hvac_mode_off_calls_power_off(
         [("set_attribute", ACAttributes.power, False)],
         device,
     )
-
-
-async def test_ac_bb_subprotocol_hides_swing(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-) -> None:
-    """Test an AC device with no library swing modes does not advertise swing.
-
-    BB-subprotocol AC devices report an empty ``raw_swing_modes`` and reject
-    ``set_raw_swing_mode``, so the entity must drop the swing feature.
-    """
-    device = DummyDevice(
-        DeviceType.AC,
-        attributes={
-            ACAttributes.power: True,
-            ACAttributes.mode: 1,
-            ACAttributes.target_temperature: 22.0,
-            ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.fan_speed: 103,
-        },
-    )
-    device.raw_swing_modes = []
-    config_entry = mock_config_entry(device)
-    await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
-
-    assert (state := hass.states.get(entity_entry.entity_id))
-    assert (
-        not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.SWING_MODE
-    )
-    assert state.attributes.get(ATTR_SWING_MODE) is None
-    assert ATTR_SWING_MODES not in state.attributes
 
 
 @pytest.mark.parametrize(
