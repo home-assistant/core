@@ -64,12 +64,25 @@ async def test_setting_value(
     mock_airgradient_client.set_led_bar_brightness.assert_called_once()
 
 
-async def test_setting_measurement_interval(
+@pytest.mark.parametrize(
+    ("entity_id", "value", "method"),
+    [
+        (
+            "number.airgradient_measurement_interval",
+            300,
+            "set_measurement_interval",
+        ),
+    ],
+)
+async def test_v1_number_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    value: int,
+    method: str,
 ) -> None:
-    """Test setting the measurement interval."""
+    """Test V1 number writes."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )
@@ -79,15 +92,14 @@ async def test_setting_measurement_interval(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 300},
-        target={ATTR_ENTITY_ID: "number.airgradient_measurement_interval"},
+        service_data={ATTR_VALUE: value},
+        target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    mock_v1_airgradient_client.set_measurement_interval.assert_awaited_once_with(300)
+    getattr(mock_v1_airgradient_client, method).assert_awaited_once_with(value)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_v1_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -102,9 +114,6 @@ async def test_v1_entities(
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("number.airgradient_measurement_interval")
-    assert state is not None
-    assert state.state == "10"
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
