@@ -98,6 +98,10 @@ TEST_BACKUP_DETAILS = supervisor_backups.BackupComplete(
     type=TEST_BACKUP.type,
 )
 
+TEST_BACKUP_DETAILS_NEWER_SUPERVISOR = replace(
+    TEST_BACKUP_DETAILS, supervisor_version="2026.08.0"
+)
+
 TEST_BACKUP_2 = supervisor_backups.Backup(
     compressed=False,
     content=supervisor_backups.BackupContent(
@@ -3063,6 +3067,133 @@ async def test_reader_writer_restore_supervisor_update_error(
     response = await client.receive_json()
     assert response["error"] == {
         "code": "home_assistant_error",
+        "message": expected_message,
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "backup_info_side_effect",
+        "info_side_effect",
+        "reload_side_effect",
+        "expected_error_code",
+        "expected_reason",
+        "expected_message",
+    ),
+    [
+        pytest.param(
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR, SupervisorNotFoundError()],
+            [None],
+            None,
+            "backup_not_found",
+            "backup_not_found",
+            "Backup abc123 not found",
+            id="backup_not_found",
+        ),
+        pytest.param(
+            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR, SupervisorError("Boom!")],
+            [None],
+            None,
+            "home_assistant_error",
+            "backup_reader_writer_error",
+            "Error getting backup details: Boom!",
+            id="backup_info_error",
+        ),
+        pytest.param(
+            [
+                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+            ],
+            [SupervisorError("Boom!")],
+            None,
+            "home_assistant_error",
+            "backup_reader_writer_error",
+            "Error getting Supervisor info: Boom!",
+            id="supervisor_info_error",
+        ),
+        pytest.param(
+            [
+                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+            ],
+            [None],
+            SupervisorError("Boom!"),
+            "home_assistant_error",
+            "backup_reader_writer_error",
+            "Error reloading Supervisor: Boom!",
+            id="supervisor_reload_error",
+        ),
+        pytest.param(
+            [
+                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+                TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+            ],
+            [None, SupervisorError("Boom!")],
+            None,
+            "home_assistant_error",
+            "backup_reader_writer_error",
+            "Error getting Supervisor info: Boom!",
+            id="supervisor_info_error_after_reload",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_supervisor_check_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+    backup_info_side_effect: list[Exception | supervisor_backups.BackupComplete],
+    info_side_effect: list[Exception | None],
+    reload_side_effect: Exception | None,
+    expected_error_code: str,
+    expected_reason: str,
+    expected_message: str,
+) -> None:
+    """Test errors while checking if Supervisor must be updated before a restore."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
+    supervisor_client.supervisor.reload.side_effect = reload_side_effect
+    # None means Supervisor answers with the fixture's outdated version
+    supervisor_info.side_effect = [
+        supervisor_info.return_value if err is None else err for err in info_side_effect
+    ]
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": expected_reason,
+        "stage": None,
+        "state": "failed",
+    }
+
+    supervisor_client.supervisor.update.assert_not_awaited()
+    supervisor_client.backups.partial_restore.assert_not_called()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["error"] == {
+        "code": expected_error_code,
         "message": expected_message,
     }
 
