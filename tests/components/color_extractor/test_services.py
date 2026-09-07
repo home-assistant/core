@@ -215,7 +215,7 @@ async def test_url_exception(
 async def test_url_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_integration
 ) -> None:
-    """Test that a HTTP Error (non 200) doesn't turn light on."""
+    """Test that a HTTP Error (non 200) raises and doesn't turn light on."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
@@ -227,7 +227,14 @@ async def test_url_error(
     # Mock the HTTP Response with a 400 Bad Request error
     aioclient_mock.get(url=service_data[ATTR_URL], status=400)
 
-    await _async_execute_service(hass, service_data)
+    # The empty error body is not an image, so the action raises
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_image"
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -323,6 +330,61 @@ async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
     assert state
 
     # Ensure it's still off due to access error (dir not explicitly allowed)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("image_attr", "image_reference", "image_type"),
+    [
+        pytest.param(ATTR_PATH, "/opt/not_an_image.txt", "file path", id="file_path"),
+        pytest.param(
+            ATTR_URL, "http://example.com/images/not_an_image.txt", "URL", id="url"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_turn_on_invalid_image(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    image_attr: str,
+    image_reference: str,
+    image_type: str,
+) -> None:
+    """Test that the turn_on service raises a ServiceValidationError when given an invalid image."""
+    service_data = {
+        image_attr: image_reference,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
+    }
+
+    hass.config.allowlist_external_dirs.add("/opt/")
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
+    aioclient_mock.get(
+        url="http://example.com/images/not_an_image.txt", content=b"not an image"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.color_extractor.services._get_file",
+            Mock(return_value=io.BytesIO(b"not an image")),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_image"
+    assert exc_info.value.translation_placeholders == {
+        "image_type": image_type,
+        "image_reference": image_reference,
+    }
+
+    # The light must stay untouched when the image cannot be read
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
     assert state.state == STATE_OFF
 
 
