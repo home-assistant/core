@@ -21,6 +21,7 @@ from aiohasupervisor.models import (
     mounts as supervisor_mounts,
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
@@ -63,6 +64,8 @@ from .handler import get_supervisor_client
 
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
+SUPERVISOR_UPDATE_POLL_INTERVAL = 5
+SUPERVISOR_UPDATE_RESTART_TIMEOUT = 300
 # Set on backups automatically created when updating an addon
 TAG_ADDON_UPDATE = "supervisor.addon_update"
 _LOGGER = logging.getLogger(__name__)
@@ -556,6 +559,70 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    async def _async_update_supervisor_for_backup(self, backup_id: str) -> None:
+        """Update Supervisor when the backup was made on a newer Supervisor.
+
+        Supervisor refuses to restore a backup made on a newer version than
+        itself. A fresh install can run an older Supervisor than the one that
+        made the backup, so update it first instead of failing the restore.
+        """
+        try:
+            details = await self._client.backups.backup_info(backup_id)
+        except SupervisorNotFoundError as err:
+            raise BackupNotFound from err
+        except SupervisorError as err:
+            raise BackupReaderWriterError(
+                f"Error getting backup details: {err}"
+            ) from err
+
+        backup_version = AwesomeVersion(details.supervisor_version)
+        try:
+            info = await self._client.supervisor.info()
+            if backup_version <= AwesomeVersion(info.version):
+                return
+            # Supervisor only checks for new versions once a day
+            await self._client.supervisor.reload()
+            info = await self._client.supervisor.info()
+        except SupervisorError as err:
+            raise BackupReaderWriterError(
+                f"Error getting Supervisor info: {err}"
+            ) from err
+
+        if (
+            info.version_latest is None
+            or AwesomeVersion(info.version_latest) < backup_version
+        ):
+            # Let Supervisor report why it can't restore the backup
+            return
+
+        _LOGGER.info(
+            "Backup %s was made on Supervisor %s, updating Supervisor %s to %s "
+            "before restoring",
+            backup_id,
+            details.supervisor_version,
+            info.version,
+            info.version_latest,
+        )
+        try:
+            await self._client.supervisor.update()
+        except SupervisorError as err:
+            raise BackupReaderWriterError(f"Error updating Supervisor: {err}") from err
+
+        # Supervisor restarts after the update, wait until the new version answers
+        try:
+            async with asyncio.timeout(SUPERVISOR_UPDATE_RESTART_TIMEOUT):
+                while True:
+                    await asyncio.sleep(SUPERVISOR_UPDATE_POLL_INTERVAL)
+                    with suppress(SupervisorError):
+                        if (
+                            await self._client.supervisor.info()
+                        ).version != info.version:
+                            break
+        except TimeoutError as err:
+            raise BackupReaderWriterError(
+                "Timeout waiting for Supervisor to restart after update"
+            ) from err
+
     @override
     async def async_restore_backup(
         self,
@@ -605,6 +672,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         else:
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             restore_location = agent.location
+
+        await self._async_update_supervisor_for_backup(backup_id)
 
         try:
             job = await self._client.backups.partial_restore(
