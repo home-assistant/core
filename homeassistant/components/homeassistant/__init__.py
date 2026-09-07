@@ -343,6 +343,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
+        if TargetSelection(call.data).has_any_target:
+            _LOGGER.warning(
+                "Reloading a config entry by target is deprecated and will stop "
+                "working in Home Assistant 2027.4, please specify the config entry "
+                "to reload in the 'entry_id' parameter instead"
+            )
         reload_entries.update(await async_extract_config_entry_ids(call))
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")

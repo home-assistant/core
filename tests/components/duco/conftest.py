@@ -276,6 +276,18 @@ def mock_duco_client(
     mock_ventilation_temperature_info: VentilationTemperatureInfo,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
+
+    def set_bypass_supply_temperature_target(
+        zone_id: int,
+        temperature: float,
+        *,
+        target: BypassSupplyTemperatureTarget,
+    ) -> BypassSupplyTemperatureTarget:
+        target.validate_value(temperature)
+        updated_target = replace(target, zone_id=zone_id, value=temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = updated_target
+        return updated_target
+
     with (
         patch(
             "homeassistant.components.duco.DucoClient",
@@ -301,15 +313,7 @@ def mock_duco_client(
             mock_bypass_supply_temperature_targets.copy
         )
         client.async_set_bypass_supply_temperature_target.side_effect = (
-            lambda zone_id, temperature: (
-                mock_bypass_supply_temperature_targets.__setitem__(
-                    zone_id,
-                    replace(
-                        mock_bypass_supply_temperature_targets[zone_id],
-                        value=temperature,
-                    ),
-                )
-            )
+            set_bypass_supply_temperature_target
         )
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")

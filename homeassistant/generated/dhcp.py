@@ -652,6 +652,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "00D02D*",
     },
     {
+        "domain": "midea",
+        "registered_devices": True,
+    },
+    {
         "domain": "mitsubishi_comfort",
         "registered_devices": True,
     },

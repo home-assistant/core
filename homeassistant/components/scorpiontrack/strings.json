@@ -27,6 +27,11 @@
       "ignition": {
         "name": "Ignition"
       }
+    },
+    "sensor": {
+      "last_reported": {
+        "name": "Last reported"
+      }
     }
   },
   "exceptions": {

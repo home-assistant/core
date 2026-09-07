@@ -65,7 +65,7 @@ _LOGGER = logging.getLogger(__name__)
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+        vol.Optional(CONF_TIMEOUT): vol.All(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1,
@@ -309,7 +309,7 @@ async def validate_input(
             port=user_input[CONF_PORT],
             username=user_input.get(CONF_USERNAME),
             password=user_input.get(CONF_PASSWORD),
-            timeout=options.get(CONF_TIMEOUT),
+            timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             use_tls=user_input[CONF_ENCRYPTION] == "tls",
             start_tls=user_input[CONF_ENCRYPTION] == "starttls",
             tls_context=(

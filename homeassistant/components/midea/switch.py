@@ -28,6 +28,21 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF],
     ),
     MideaSwitchEntityDescription(
+        key="child_lock",
+        translation_key="child_lock",
+        models=[
+            DeviceType.X34,
+            DeviceType.A1,
+            DeviceType.C2,
+            DeviceType.CE,
+            DeviceType.E1,
+            DeviceType.ED,
+            DeviceType.FA,
+            DeviceType.FB,
+            DeviceType.FC,
+        ],
+    ),
+    MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
         models=[DeviceType.AC],

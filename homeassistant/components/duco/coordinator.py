@@ -10,7 +10,6 @@ from duco_connectivity.exceptions import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
-    DucoUnsupportedCapabilityError,
 )
 from duco_connectivity.models import (
     BoardInfo,
@@ -52,9 +51,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
-    _supports_time_filter_remain: bool
-    _supports_ventilation_temperatures: bool
-    _supports_bypass_supply_temperature_targets: bool
     _configured_node_names: dict[int, str]
 
     def __init__(
@@ -73,9 +69,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
-        self._supports_time_filter_remain = True
-        self._supports_ventilation_temperatures = True
-        self._supports_bypass_supply_temperature_targets = True
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -183,48 +176,37 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
-        # node entities unavailable.
+        # node entities unavailable. A None result leaves the sensor absent
+        # but keeps the helper pollable so data can appear on a later refresh.
         time_filter_remain = None
-        if self._supports_time_filter_remain:
-            with suppress(DucoError):
-                time_filter_remain = await self.client.async_get_time_filter_remaining()
-                self._supports_time_filter_remain = time_filter_remain is not None
+        with suppress(DucoError):
+            time_filter_remain = await self.client.async_get_time_filter_remaining()
 
         ventilation_temperatures = (
             self.data.ventilation_temperatures if self.data else None
         )
-        if self._supports_ventilation_temperatures:
-            try:
-                ventilation_temperatures = (
-                    await self.client.async_get_ventilation_temperature_info()
-                )
-            except DucoUnsupportedCapabilityError:
-                ventilation_temperatures = None
-                self._supports_ventilation_temperatures = False
-            except DucoError as err:
-                _LOGGER.debug(
-                    "Could not fetch Duco ventilation temperatures", exc_info=err
-                )
+        try:
+            ventilation_temperatures = (
+                await self.client.async_get_ventilation_temperature_info()
+            )
+        except DucoError as err:
+            _LOGGER.debug("Could not fetch Duco ventilation temperatures", exc_info=err)
 
         bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget] = {}
-        if self._supports_bypass_supply_temperature_targets:
-            try:
-                bypass_supply_temperature_targets = (
-                    await self.client.async_get_bypass_supply_temperature_targets()
-                )
-            except DucoUnsupportedCapabilityError:
-                bypass_supply_temperature_targets = {}
-                self._supports_bypass_supply_temperature_targets = False
-            except DucoConnectionError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                ) from err
-            except DucoError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="api_error",
-                ) from err
+        try:
+            bypass_supply_temperature_targets = (
+                await self.client.async_get_bypass_supply_temperature_targets()
+            )
+        except DucoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except DucoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
