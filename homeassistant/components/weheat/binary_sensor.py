@@ -63,23 +63,20 @@ BINARY_SENSORS = [
 ]
 
 
-def _cooling_start_condition(condition: str) -> WeHeatBinarySensorEntityDescription:
-    """Describe one condition that must be met before cooling can start."""
-    return WeHeatBinarySensorEntityDescription(
+
+
+COOLING_START_CONDITION_SENSORS = [
+    WeHeatBinarySensorEntityDescription(
         translation_key=f"cooling_start_condition_{condition}",
         key=f"cooling_start_condition_{condition}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda status: (
+        value_fn=lambda status, condition=condition: (
             status.cooling_start_conditions[condition]
             if status.cooling_start_conditions is not None
             else None
         ),
     )
-
-
-COOLING_START_CONDITION_SENSORS = [
-    _cooling_start_condition(condition)
     for condition in HeatPump.COOLING_START_CONDITION_BITS
 ]
 
