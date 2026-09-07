@@ -1,5 +1,7 @@
 """Constants for the NeoPool integration."""
 
+from neopool_modbus.capabilities import CAPABILITY_KEYS as LIB_CAPABILITY_KEYS
+
 from homeassistant.const import Platform
 
 DOMAIN = "neopool"
@@ -28,4 +30,30 @@ CONF_USE_AUX2 = "use_aux2"
 CONF_USE_AUX3 = "use_aux3"
 CONF_USE_AUX4 = "use_aux4"
 
+# Winter mode is backed by the native config_entry.pref_disable_polling flag;
+# this constant survives only as the winter-mode switch translation_key.
+CONF_WINTER_MODE = "winter_mode"
+CONF_CAPABILITIES = "_capabilities"
+
 CURRENT_VERSION = 6
+
+# Persisted in entry.options for winter-mode restarts.
+_CUSTOM_CAPABILITY_KEYS: tuple[str, ...] = (
+    "MBF_PAR_HIDRO_NOM",
+    "MBF_PAR_HIDRO_COVER_ENABLE",
+    "MBF_PAR_PH_ACID_RELAY_GPIO",
+    "MBF_PAR_PH_BASE_RELAY_GPIO",
+    "MBF_PAR_RX_RELAY_GPIO",
+    "MBF_PAR_CL_RELAY_GPIO",
+    "MBF_PAR_CD_RELAY_GPIO",
+    "MBF_PAR_UV_RELAY_GPIO",
+    "MBF_PAR_RELAY_PH",
+    "MBF_PAR_FILT_GPIO",
+    "MBF_PAR_LIGHTING_GPIO",
+    "MBF_POWER_MODULE_VERSION",
+    "MBF_PAR_VERSION",
+)
+
+CAPABILITY_KEYS: tuple[str, ...] = tuple(
+    dict.fromkeys((*LIB_CAPABILITY_KEYS, *_CUSTOM_CAPABILITY_KEYS))
+)

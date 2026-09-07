@@ -18,7 +18,14 @@ from neopool_modbus.registers import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
+from homeassistant.components.neopool.const import (
+    CONF_CAPABILITIES,
+    CONF_MODBUS_FRAMER,
+    CONF_UNIT_ID,
+    CURRENT_VERSION,
+    DOMAIN,
+    FOLLOW_UP_REFRESH_DELAY,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -29,7 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_platform as ep, entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
@@ -658,3 +665,74 @@ async def test_all_entities(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_switch.entry_id
     )
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_winter_mode_turn_on_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Toggling the winter_mode switch flips pref_disable_polling."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "switch.neopool_winter_mode"
+    assert hass.states.get(entity_id).state == STATE_OFF
+    assert mock_config_entry.pref_disable_polling is False
+
+    await _turn_on(hass, entity_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.pref_disable_polling is True
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    await _turn_off(hass, entity_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.pref_disable_polling is False
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_io_switch_unavailable_in_winter_mode(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Device switches become unavailable while winter mode is active.
+
+    HA's service layer refuses to dispatch to unavailable entities, so the
+    availability gate on NeoPoolEntity is what actually blocks device writes.
+    Assert that gate directly on the entity instance, and confirm the
+    winter_mode switch itself stays available.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Winter Pool",
+        unique_id="neopool_winter_io",
+        version=CURRENT_VERSION,
+        pref_disable_polling=True,
+        data={
+            "host": "192.0.2.7",
+            "port": 502,
+            "name": "Winter Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={
+            CONF_MODBUS_FRAMER: "tcp",
+            CONF_CAPABILITIES: {"MBF_PAR_FILT_GPIO": 1},
+        },
+    )
+    await setup_integration(hass, entry)
+    platform = next(
+        p for p in ep.async_get_platforms(hass, DOMAIN) if p.domain == "switch"
+    )
+    io_entity = next(
+        e
+        for e in platform.entities.values()
+        if getattr(e.entity_description, "key", None) == "MBF_PAR_FILT_MANUAL_STATE"
+    )
+    winter_entity = next(
+        e
+        for e in platform.entities.values()
+        if getattr(e.entity_description, "key", None) == "WINTER_MODE"
+    )
+    # Device switch inherits the winter-mode availability gate.
+    assert io_entity.available is False
+    # The winter_mode switch itself must stay available so users can toggle it.
+    assert winter_entity.available is True

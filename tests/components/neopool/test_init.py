@@ -7,7 +7,13 @@ from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.registers import MAX_RELAY_GPIO
 import pytest
 
-from homeassistant.components.neopool.const import DOMAIN
+from homeassistant.components.neopool.const import (
+    CONF_CAPABILITIES,
+    CONF_MODBUS_FRAMER,
+    CONF_UNIT_ID,
+    CURRENT_VERSION,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -192,3 +198,34 @@ async def test_corrupt_gpio_updates_issue_on_value_change(
     assert issue is not None
     assert issue.translation_placeholders is not None
     assert str(MAX_RELAY_GPIO + 2) in issue.translation_placeholders["details"]
+
+
+async def test_setup_in_winter_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Winter mode loads the entry from the persisted capability snapshot.
+
+    The integration must finish setup successfully even though the
+    coordinator's update path skips the actual Modbus read in winter mode.
+    """
+    snapshot = {"MBF_PAR_FILT_GPIO": 0, "MBF_PAR_LIGHTING_GPIO": 0}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Winter Pool",
+        unique_id="neopool_winter_serial",
+        version=CURRENT_VERSION,
+        pref_disable_polling=True,
+        data={
+            "host": "192.0.2.2",
+            "port": 502,
+            "name": "Winter Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={
+            CONF_MODBUS_FRAMER: "tcp",
+            CONF_CAPABILITIES: snapshot,
+        },
+    )
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED

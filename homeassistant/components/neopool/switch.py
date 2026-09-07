@@ -40,12 +40,19 @@ from .const import (
     CONF_USE_AUX3,
     CONF_USE_AUX4,
     CONF_USE_COVER_SENSOR,
+    CONF_WINTER_MODE,
     DOMAIN,
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
 
 PARALLEL_UPDATES = 1
+
+# Switch types that are HA-side settings, not device state: they don't need a
+# client, don't participate in the winter-mode guard, and stay available even
+# while winter mode is active.
+_HA_SETTING_WINTER_MODE = CONF_WINTER_MODE
+_HA_SETTING_TYPES = frozenset({_HA_SETTING_WINTER_MODE})
 
 
 type _WriteFn = Callable[
@@ -58,6 +65,7 @@ type _IsOnFn = Callable[[dict[str, Any]], bool]
 class NeoPoolSwitchEntityDescription(SwitchEntityDescription):
     """Describes a NeoPool switch entity."""
 
+    ha_setting: str | None = None
     supported_fn: Callable[[dict[str, Any]], bool] | None = None
     write_fn: _WriteFn | None = None
     is_on_fn: _IsOnFn | None = None
@@ -176,6 +184,12 @@ def _make_is_on_bitmask(data_key: str, mask: int) -> _IsOnFn:
 
 
 SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
+    "WINTER_MODE": NeoPoolSwitchEntityDescription(
+        key="WINTER_MODE",
+        translation_key=CONF_WINTER_MODE,
+        entity_category=EntityCategory.CONFIG,
+        ha_setting=_HA_SETTING_WINTER_MODE,
+    ),
     "MBF_PAR_FILT_MANUAL_STATE": NeoPoolSwitchEntityDescription(
         key="MBF_PAR_FILT_MANUAL_STATE",
         translation_key="filt_manual_state",
@@ -333,6 +347,10 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
             f"{self.coordinator.config_entry.unique_id}_{description.key.lower()}"
         )
 
+        # The winter_mode switch itself must remain available while winter mode is on.
+        if description.ha_setting == _HA_SETTING_WINTER_MODE:
+            self._winter_mode_active = False
+
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch ON."""
@@ -347,7 +365,17 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
         """Dispatch turn_on / turn_off via the description callables."""
         desc = self.entity_description
 
-        if desc.write_fn is None:  # pragma: no cover - all switches wire write_fn
+        # HA-side settings live entirely outside the Modbus client.
+        if desc.ha_setting == _HA_SETTING_WINTER_MODE:
+            # set_winter_mode flips pref_disable_polling and schedules an entry
+            # reload, which rebuilds the coordinator and re-renders this entity,
+            # so there's nothing more to write here.
+            await self.coordinator.set_winter_mode(state)
+            return
+
+        if (
+            desc.write_fn is None
+        ):  # pragma: no cover - all device switches wire write_fn
             return
 
         try:
@@ -381,4 +409,15 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
         desc = self.entity_description
         if desc.is_on_fn is not None:
             return desc.is_on_fn(self.coordinator.data)
+        if desc.ha_setting == _HA_SETTING_WINTER_MODE:
+            return self.coordinator.config_entry.pref_disable_polling
         return False  # pragma: no cover
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the switch is available."""
+        # HA settings are always available (not device state).
+        if self.entity_description.ha_setting in _HA_SETTING_TYPES:
+            return True
+        return super().available

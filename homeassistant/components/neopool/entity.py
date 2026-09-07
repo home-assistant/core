@@ -15,6 +15,18 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
     """Base class for NeoPool entities."""
 
     _attr_has_entity_name = True
+    _winter_mode_active: bool = True
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False for control entities while winter mode is active."""
+        if (
+            self._winter_mode_active
+            and self.coordinator.config_entry.pref_disable_polling
+        ):
+            return False
+        return super().available
 
     @property
     @override
