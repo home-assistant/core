@@ -1,6 +1,7 @@
 """Test Local Media Source."""
 
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -387,7 +388,7 @@ async def test_async_browse_media_images_success(
 
 
 async def test_media_proxy_image(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: Any
 ) -> None:
     """Test fetching saved image media through the Home Assistant proxy."""
     client = create_mock_motioneye_client()
