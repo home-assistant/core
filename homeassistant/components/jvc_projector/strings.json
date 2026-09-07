@@ -235,14 +235,14 @@
     "resolution": {
         "name": "Resolution",
         "state": {
-          "1080i-3d": "1080i 3D",
-          "1080i": "1080i",
-          "1080p": "1080p",
           "480i": "480i",
           "480p": "480p",
           "576i": "576i",
           "576p": "576p",
           "720p": "720p",
+          "1080i": "1080i",
+          "1080i-3d": "1080i 3D",
+          "1080p": "1080p",
           "fwxga-1366x768": "FWXGA 1366x768",
           "no-signal": "No Signal",
           "out-of-range": "Out of Range",
@@ -253,7 +253,7 @@
           "vga-640x480": "VGA 640x480"
         }
       },
-    "software_version": {
+      "software_version": {
         "name": "Software Version"
       }
     },
