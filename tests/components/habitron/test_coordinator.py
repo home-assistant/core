@@ -19,9 +19,6 @@ def _make_comm(hass: HomeAssistant) -> MagicMock:
     comm._config = MagicMock()
     comm.update_suspended = False
     comm.async_system_update = AsyncMock(return_value=4711)  # the status CRC
-    # The coordinator builds a SmartHub around this comm; its ``update`` reads
-    # ``get_smhub_update`` — return no data so the hub-diag refresh is a no-op.
-    comm.get_smhub_update = AsyncMock(return_value=None)
     return comm
 
 

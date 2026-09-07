@@ -17,4 +17,3 @@ CONF_DEFAULT_HOST = "local"  # default host string of SmartCenter, uses own ip
 # parser fires per-member listeners only on an actual change, so a fixed
 # interval is the right shape.
 SCAN_INTERVAL: Final = timedelta(seconds=10)
-RESTART_ALL = 0xFF

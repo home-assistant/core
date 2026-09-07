@@ -86,9 +86,10 @@ rules:
   reconfiguration-flow:
     status: todo
     comment: |
-      A reconfigure flow is not part of this initial PR; host/token changes
-      currently require removing and re-adding the entry. Planned for a
-      follow-up.
+      A reconfigure flow is not part of this initial PR. The entry stores only
+      the host, and a changed address is already adopted by re-running the
+      manual flow or by discovery, so there is nothing else to reconfigure.
+      Planned for a follow-up.
   repair-issues: done
   stale-devices: done
 
