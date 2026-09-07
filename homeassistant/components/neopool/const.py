@@ -27,4 +27,6 @@ CONF_USE_AUX2 = "use_aux2"
 CONF_USE_AUX3 = "use_aux3"
 CONF_USE_AUX4 = "use_aux4"
 
+CONF_AUTO_TIME_SYNC = "auto_time_sync"
+
 CURRENT_VERSION = 6

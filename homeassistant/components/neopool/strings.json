@@ -226,6 +226,7 @@
     "step": {
       "init": {
         "data": {
+          "auto_time_sync": "Automatically sync device clock",
           "use_aux1": "Enable Aux1 Relay",
           "use_aux2": "Enable Aux2 Relay",
           "use_aux3": "Enable Aux3 Relay",
@@ -234,6 +235,7 @@
           "use_light": "Enable pool light relay"
         },
         "data_description": {
+          "auto_time_sync": "When enabled, the controller clock is corrected on each poll if it drifts from Home Assistant time.",
           "use_aux1": "Creates a switch entity for this auxiliary relay output.",
           "use_aux2": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
           "use_aux3": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
