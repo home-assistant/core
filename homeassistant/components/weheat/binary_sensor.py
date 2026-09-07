@@ -70,7 +70,6 @@ COOLING_START_CONDITION_SENSORS = [
         key=f"cooling_start_condition_{condition}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        # partial binds the condition, which a lambda cannot do and stay typed
         value_fn=partial(
             lambda condition, status: (
                 status.cooling_start_conditions[condition]
