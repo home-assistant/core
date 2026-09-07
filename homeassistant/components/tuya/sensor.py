@@ -1727,6 +1727,36 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             wrapper_class=VOLTAGE_WRAPPER,
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT,
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER,
+            translation_key="power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE,
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+    ),
     DeviceCategory.ZNNBQ: (
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
@@ -1801,36 +1831,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
-    ),
-    DeviceCategory.ZNJDQ: (
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_CURRENT,
-            translation_key="current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_POWER,
-            translation_key="power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_VOLTAGE,
-            translation_key="voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.ADD_ELE,
-            translation_key="total_energy",
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        ),
     ),
 }
 
