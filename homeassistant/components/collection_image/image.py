@@ -53,6 +53,7 @@ class CollectionImageImageEntity(ImageEntity):
     """Implement the image entity for Collection Image."""
 
     path: Path | None
+    _current_image_id: str | None = None
 
     def __init__(
         self,
@@ -105,12 +106,23 @@ class CollectionImageImageEntity(ImageEntity):
             self.set_unavailable()
             return
 
+        # Don't allow random shuffle to return the same image we are currently viewing.
+        if self._current_image_id:
+            filtered_new = [
+                item
+                for item in filtered
+                if item.media_content_id != self._current_image_id
+            ]
+            if filtered_new:
+                filtered = filtered_new
+
         child = random.choice(filtered)
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
     async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
+        self._current_image_id = image_id
         self._cached_image = None
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
