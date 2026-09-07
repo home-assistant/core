@@ -83,7 +83,12 @@ from .exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from .helpers.json import json_bytes, json_fragment
+from .helpers.json import (
+    cached_json_bytes,
+    cached_json_fragment,
+    json_bytes,
+    json_fragment,
+)
 from .helpers.typing import VolSchemaType
 from .util import dt as dt_util
 from .util.async_ import (
@@ -1335,7 +1340,7 @@ class Context:
     @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
-        return json_fragment(json_bytes(self._as_dict))
+        return cached_json_fragment(self._as_dict)
 
 
 class EventOrigin(enum.Enum):
@@ -1437,7 +1442,7 @@ class Event(Generic[_DataT]):
     @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return an event as a JSON fragment."""
-        return json_fragment(json_bytes(self._as_dict))
+        return cached_json_fragment(self._as_dict)
 
     @override
     def __repr__(self) -> str:
@@ -2041,7 +2046,7 @@ class State:
     @under_cached_property
     def as_dict_json(self) -> bytes:
         """Return a JSON string of the State."""
-        return json_bytes(self._as_dict)
+        return cached_json_bytes(self._as_dict)
 
     @under_cached_property
     def json_fragment(self) -> json_fragment:
