@@ -139,6 +139,21 @@ async def test_select_service_calls(
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_select_updates_optimistically(hass: HomeAssistant) -> None:
+    """Test select state updates before an SSE event arrives."""
+    entity_id = "select.test_fridge_bottom_zone_icemaker"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: IceMakerMode.ON.value},
+        blocking=True,
+    )
+
+    assert hass.states[entity_id].state == IceMakerMode.ON.value
+
+
 @pytest.mark.parametrize(
     ("entity_id", "method", "option"),
     [

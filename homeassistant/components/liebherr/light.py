@@ -1,5 +1,6 @@
 """Light platform for Liebherr integration."""
 
+from dataclasses import replace
 import math
 from typing import TYPE_CHECKING, Any, override
 
@@ -122,15 +123,20 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
             self.coordinator.client.set_presentation_light(
                 device_id=self.coordinator.device_id,
                 target=target,
-            )
+            ),
+            replace(control, value=target),
         )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
+        control = self._light_control
+        if TYPE_CHECKING:
+            assert control is not None
         await self._async_send_command(
             self.coordinator.client.set_presentation_light(
                 device_id=self.coordinator.device_id,
                 target=0,
-            )
+            ),
+            replace(control, value=0),
         )

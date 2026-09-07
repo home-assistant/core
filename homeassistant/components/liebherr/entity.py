@@ -4,6 +4,7 @@ from collections.abc import Coroutine
 from typing import Any
 
 from pyliebherrhomeapi import (
+    DeviceControl,
     LiebherrConnectionError,
     LiebherrTimeoutError,
     TemperatureControl,
@@ -54,11 +55,9 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
     async def _async_send_command(
         self,
         command: Coroutine[Any, Any, None],
+        optimistic_control: DeviceControl | None = None,
     ) -> None:
-        """Send a command with error handling.
-
-        State updates arrive via the SSE stream — no explicit refresh needed.
-        """
+        """Send a command and optimistically apply its successful result."""
         try:
             await command
         except (LiebherrConnectionError, LiebherrTimeoutError) as err:
@@ -66,6 +65,8 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from err
+        if optimistic_control is not None:
+            self.coordinator.async_apply_control(optimistic_control)
 
 
 class LiebherrZoneEntity(LiebherrEntity):

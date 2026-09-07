@@ -1,7 +1,7 @@
 """Number platform for Liebherr integration."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
 
@@ -214,4 +214,5 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
                 target=target,
                 unit=unit,
             ),
+            replace(temp_control, target=target, unit=unit),
         )

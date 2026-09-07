@@ -132,6 +132,7 @@ async def test_set_temperature(
         target=6,
         unit=TemperatureUnit.CELSIUS,
     )
+    assert hass.states[entity_id].state == "6"
 
 
 @pytest.mark.usefixtures("init_integration")

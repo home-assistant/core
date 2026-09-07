@@ -157,19 +157,29 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
             self._replace_next_event = False
             new_state = replace(self.data, controls=list(controls))
         else:
-            merged: dict[tuple[type[DeviceControl], str, int | None], DeviceControl] = {
-                (
-                    type(control),
-                    control.name,
-                    getattr(control, "zone_id", None),
-                ): control
-                for control in self.data.controls
-            }
-            for control in controls:
-                key = (type(control), control.name, getattr(control, "zone_id", None))
-                merged[key] = control
-            new_state = replace(self.data, controls=list(merged.values()))
+            new_state = self._merged_state(controls)
         self.async_set_updated_data(new_state)
+
+    @callback
+    def async_apply_control(self, control: DeviceControl) -> None:
+        """Optimistically apply a control after a successful command."""
+        self.async_set_updated_data(self._merged_state([control]))
+
+    def _merged_state(self, controls: list[DeviceControl]) -> DeviceState:
+        """Return coordinator state with control updates merged."""
+        assert self.data is not None
+        merged: dict[tuple[type[DeviceControl], str, int | None], DeviceControl] = {
+            (
+                type(control),
+                control.name,
+                getattr(control, "zone_id", None),
+            ): control
+            for control in self.data.controls
+        }
+        for control in controls:
+            key = (type(control), control.name, getattr(control, "zone_id", None))
+            merged[key] = control
+        return replace(self.data, controls=list(merged.values()))
 
     @callback
     def _handle_stream_connected(self) -> None:

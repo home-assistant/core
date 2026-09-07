@@ -1,7 +1,7 @@
 """Switch platform for Liebherr integration."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, override
 
 from pyliebherrhomeapi import ToggleControl, ZonePosition
@@ -212,7 +212,12 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
 
     async def _async_set_value(self, value: bool) -> None:
         """Set the switch value."""
-        await self._async_send_command(self._async_call_set_fn(value))
+        control = self._toggle_control
+        if TYPE_CHECKING:
+            assert control is not None
+        await self._async_send_command(
+            self._async_call_set_fn(value), replace(control, value=value)
+        )
 
 
 class LiebherrZoneSwitch(LiebherrDeviceSwitch):

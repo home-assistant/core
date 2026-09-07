@@ -101,6 +101,21 @@ async def test_light_service_calls(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_light_updates_optimistically(hass: HomeAssistant) -> None:
+    """Test light state updates before an SSE event arrives."""
+    entity_id = "light.test_fridge_presentation_light"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert hass.states[entity_id].state == STATE_OFF
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_light_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,

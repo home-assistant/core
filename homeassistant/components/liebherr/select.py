@@ -1,7 +1,7 @@
 """Select platform for Liebherr integration."""
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, override
 
@@ -233,6 +233,17 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         mode = self.entity_description.mode_enum(option)
+        control = self._select_control
+        if TYPE_CHECKING:
+            assert control is not None
+        optimistic_control: SelectControl
+        if isinstance(control, IceMakerControl):
+            optimistic_control = replace(control, ice_maker_mode=mode)
+        elif isinstance(control, HydroBreezeControl):
+            optimistic_control = replace(control, current_mode=mode)
+        else:
+            optimistic_control = replace(control, current_mode=mode)
         await self._async_send_command(
             self.entity_description.set_fn(self.coordinator, self._zone_id, mode),
+            optimistic_control,
         )
