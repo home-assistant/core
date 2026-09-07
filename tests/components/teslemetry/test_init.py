@@ -1432,9 +1432,10 @@ async def test_local_control_failure_falls_back_to_cloud(
 @pytest.mark.parametrize(
     "rsa_key_error",
     [
+        # A raw TypeError only escapes the key create/generation path now.
         pytest.param(
-            TypeError("Password was not given but private key is encrypted"),
-            id="encrypted_typeerror",
+            TypeError("unexpected keyword argument"),
+            id="typeerror",
         ),
         # PrivateKeyError is the wrapped existing-key-file shape, distinct from the raw errors.
         pytest.param(
@@ -1912,9 +1913,10 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
     [
         pytest.param(OSError("disk gone"), id="os_error"),
         pytest.param(ValueError("bad key"), id="value_error"),
+        # A raw TypeError only escapes the key create/generation path now.
         pytest.param(
-            TypeError("Password was not given but private key is encrypted"),
-            id="encrypted_key",
+            TypeError("unexpected keyword argument"),
+            id="typeerror",
         ),
         # PrivateKeyError is the wrapped existing-key-file shape; it must degrade too.
         pytest.param(

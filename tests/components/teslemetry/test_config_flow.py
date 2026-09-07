@@ -1202,6 +1202,49 @@ async def test_subentry_scan_key_load_fails(
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
+async def test_subentry_scan_key_load_recovers(hass: HomeAssistant) -> None:
+    """A key-load failure aborts the scan, then a fresh attempt with a loadable key pairs."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=True)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            side_effect=[
+                PrivateKeyError("encrypted", "Private key file is encrypted"),
+                _mock_ble_parent(vehicle),
+            ],
+        ) as mock_ble_parent,
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"
+        assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    # Recovery must reach a created subentry, not merely avoid raising.
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    # Both attempts ran the key load; only the second one loaded a usable key.
+    assert mock_ble_parent.call_count == 2
+    vehicle.connect.assert_awaited_once()
+
+
 async def test_subentry_scan_finds_device_after_active_scan(
     hass: HomeAssistant,
 ) -> None:

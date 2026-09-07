@@ -499,8 +499,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             try:
                 await keyholder.get_rsa_private_key(path)
             except TypeError as err:
-                # An encrypted PEM surfaces as TypeError from the cryptography loader.
-                raise ValueError("RSA private key file is encrypted") from err
+                # A raw TypeError only escapes the key create/generation path now;
+                # an encrypted existing key surfaces as PrivateKeyError, caught below.
+                raise ValueError("RSA private key could not be loaded") from err
             self._key_pem = await self.hass.async_add_executor_job(
                 Path(path).read_bytes
             )

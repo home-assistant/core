@@ -415,8 +415,9 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
                 session=async_get_clientsession(hass), access_token=""
             ).get_rsa_private_key(path)
         except TypeError as err:
-            # An encrypted PEM surfaces as TypeError from the cryptography loader.
-            raise ValueError("RSA private key file is encrypted") from err
+            # A raw TypeError only escapes the key create/generation path now;
+            # an encrypted existing key surfaces as PrivateKeyError instead.
+            raise ValueError("RSA private key could not be loaded") from err
         pem = await hass.async_add_executor_job(Path(path).read_bytes)
         hass.data[RSA_PARENT_KEY] = pem
     return pem
