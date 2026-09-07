@@ -2,6 +2,8 @@
   "common": {
     "condition_behavior_description": "Whether any or every targeted node must match.",
     "condition_behavior_name": "Condition passes if",
+    "condition_device_id_description": "The Z-Wave JS devices whose nodes to test.",
+    "condition_device_id_name": "Devices",
     "condition_endpoint_description": "Endpoint of the value.",
     "condition_endpoint_name": "Endpoint",
     "condition_value_description": "The value to compare with, either the raw value or its state label.",
@@ -18,6 +20,10 @@
         "bitmask": {
           "description": "Bitmask of a partial parameter, as a number or hexadecimal string, if the parameter is split into parts.",
           "name": "Bitmask"
+        },
+        "device_id": {
+          "description": "[%key:component::zwave_js::common::condition_device_id_description%]",
+          "name": "[%key:component::zwave_js::common::condition_device_id_name%]"
         },
         "endpoint": {
           "description": "[%key:component::zwave_js::common::condition_endpoint_description%]",
@@ -41,6 +47,10 @@
           "description": "[%key:component::zwave_js::common::condition_behavior_description%]",
           "name": "[%key:component::zwave_js::common::condition_behavior_name%]"
         },
+        "device_id": {
+          "description": "[%key:component::zwave_js::common::condition_device_id_description%]",
+          "name": "[%key:component::zwave_js::common::condition_device_id_name%]"
+        },
         "status": {
           "description": "The node status to test for.",
           "name": "Status"
@@ -58,6 +68,10 @@
         "command_class": {
           "description": "Command class of the value.",
           "name": "Command class"
+        },
+        "device_id": {
+          "description": "[%key:component::zwave_js::common::condition_device_id_description%]",
+          "name": "[%key:component::zwave_js::common::condition_device_id_name%]"
         },
         "endpoint": {
           "description": "[%key:component::zwave_js::common::condition_endpoint_description%]",

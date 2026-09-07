@@ -1,11 +1,13 @@
 # Describes the format for available Z-Wave JS conditions
 
-.target: &target
-  entity:
-    - integration: zwave_js
-  device:
-    - integration: zwave_js
-  primary_entities_only: false
+.device_id: &device_id
+  required: true
+  example: 8f4219cfa57e23f6f669c4616c2205e2
+  selector:
+    device:
+      filter:
+        - integration: zwave_js
+      multiple: true
 
 .behavior: &behavior
   required: true
@@ -21,8 +23,8 @@
     object:
 
 node_status:
-  target: *target
   fields:
+    device_id: *device_id
     behavior: *behavior
     status:
       required: true
@@ -36,8 +38,8 @@ node_status:
             - dead
 
 config_parameter:
-  target: *target
   fields:
+    device_id: *device_id
     behavior: *behavior
     parameter:
       required: true
@@ -61,8 +63,8 @@ config_parameter:
     value: *value
 
 value:
-  target: *target
   fields:
+    device_id: *device_id
     behavior: *behavior
     command_class:
       required: true

@@ -14,16 +14,13 @@ from homeassistant.components.zwave_js.condition import CONDITIONS
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
-    area_registry as ar,
     condition,
     config_validation as cv,
     device_registry as dr,
-    entity_registry as er,
-    label_registry as lr,
 )
 from homeassistant.helpers.translation import async_get_translations
 
-from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
+from .common import COMMAND_CLASS_MARKERS
 
 from tests.common import MockConfigEntry
 
@@ -85,8 +82,7 @@ def _device_id(
         ),
     ],
 )
-@pytest.mark.parametrize("target_kind", ["device", "entity"])
-async def test_condition_by_device_and_entity(
+async def test_condition_by_device(
     hass: HomeAssistant,
     client: MagicMock,
     lock_schlage_be469: Node,
@@ -95,23 +91,18 @@ async def test_condition_by_device_and_entity(
     condition_type: str,
     options: dict[str, Any],
     expected: bool,
-    target_kind: str,
 ) -> None:
-    """Test each condition targeted by device and by entity."""
-    targets = {
-        "device": {
-            "device_id": _device_id(
-                device_registry, client, lock_schlage_be469, integration
-            )
-        },
-        "entity": {"entity_id": SCHLAGE_BE469_LOCK_ENTITY},
-    }
+    """Test each condition targeted by device."""
     checker = await _checker(
         hass,
         {
             "condition": f"{DOMAIN}.{condition_type}",
-            "target": targets[target_kind],
-            "options": options,
+            "options": {
+                "device_id": _device_id(
+                    device_registry, client, lock_schlage_be469, integration
+                ),
+                **options,
+            },
         },
     )
     assert checker.async_check() is expected
@@ -173,12 +164,12 @@ async def test_condition_value_state_labels(
         hass,
         {
             "condition": f"{DOMAIN}.{condition_type}",
-            "target": {
+            "options": {
                 "device_id": _device_id(
                     device_registry, client, nodes[node_name], integration
-                )
+                ),
+                **options,
             },
-            "options": options,
         },
     )
     assert checker.async_check() is expected
@@ -205,24 +196,22 @@ async def test_node_status_behavior(
 ) -> None:
     """Test any/all behavior, including that a node targeted twice is deduplicated."""
     lock_id = _device_id(device_registry, client, lock_schlage_be469, integration)
-    targets = {
-        "two_nodes": {
-            "device_id": [
-                lock_id,
-                _device_id(device_registry, client, multisensor_6, integration),
-            ]
-        },
-        "same_node_twice": {
-            "device_id": [lock_id],
-            "entity_id": [SCHLAGE_BE469_LOCK_ENTITY],
-        },
+    device_ids = {
+        "two_nodes": [
+            lock_id,
+            _device_id(device_registry, client, multisensor_6, integration),
+        ],
+        "same_node_twice": [lock_id, lock_id],
     }
     checker = await _checker(
         hass,
         {
             "condition": f"{DOMAIN}.node_status",
-            "target": targets[target_kind],
-            "options": {"behavior": behavior, "status": "alive"},
+            "options": {
+                "device_id": device_ids[target_kind],
+                "behavior": behavior,
+                "status": "alive",
+            },
         },
     )
     assert checker.async_check() is expected
@@ -240,12 +229,12 @@ async def test_node_status_follows_events(
         hass,
         {
             "condition": f"{DOMAIN}.node_status",
-            "target": {
+            "options": {
                 "device_id": _device_id(
                     device_registry, client, lock_schlage_be469, integration
-                )
+                ),
+                "status": "dead",
             },
-            "options": {"status": "dead"},
         },
     )
     assert checker.async_check() is False
@@ -275,15 +264,16 @@ async def test_node_status_all_two_nodes_match(
         hass,
         {
             "condition": f"{DOMAIN}.node_status",
-            "target": {
+            "options": {
                 "device_id": [
                     _device_id(
                         device_registry, client, lock_schlage_be469, integration
                     ),
                     _device_id(device_registry, client, multisensor_6, integration),
-                ]
+                ],
+                "behavior": "all",
+                "status": "alive",
             },
-            "options": {"behavior": "all", "status": "alive"},
         },
     )
     assert checker.async_check() is False
@@ -296,29 +286,6 @@ async def test_node_status_all_two_nodes_match(
                 "nodeId": multisensor_6.node_id,
             },
         )
-    )
-    assert checker.async_check() is True
-
-
-async def test_target_by_label(
-    hass: HomeAssistant,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test a label target resolves to the labelled device."""
-    device_id = _device_id(device_registry, client, lock_schlage_be469, integration)
-    label = label_registry.async_create("locks")
-    device_registry.async_update_device(device_id, labels={label.label_id})
-    checker = await _checker(
-        hass,
-        {
-            "condition": f"{DOMAIN}.node_status",
-            "target": {"label_id": label.label_id},
-            "options": {"status": "alive"},
-        },
     )
     assert checker.async_check() is True
 
@@ -340,19 +307,21 @@ async def test_value_missing_on_node(
         hass,
         {
             "condition": f"{DOMAIN}.value",
-            "target": {"device_id": [lock_id, sensor_id]},
-            "options": {**options, "behavior": "all"},
+            "options": {
+                "device_id": [lock_id, sensor_id],
+                **options,
+                "behavior": "all",
+            },
         },
     )
     assert checker.async_check() is False
 
-    with pytest.raises(vol.Invalid, match="No node in the target has value"):
+    with pytest.raises(vol.Invalid, match="No targeted node has value"):
         await _checker(
             hass,
             {
                 "condition": f"{DOMAIN}.value",
-                "target": {"device_id": sensor_id},
-                "options": options,
+                "options": {"device_id": sensor_id, **options},
             },
         )
 
@@ -369,12 +338,10 @@ async def test_value_property_key_zero(
         hass,
         {
             "condition": f"{DOMAIN}.value",
-            "target": {
+            "options": {
                 "device_id": _device_id(
                     device_registry, client, bulb_6_multi_color, integration
-                )
-            },
-            "options": {
+                ),
                 "command_class": 51,
                 "property": "currentColor",
                 "property_key": 0,
@@ -390,7 +357,7 @@ async def test_no_nodes_resolved(
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test validation rejects a target that resolves to no Z-Wave nodes."""
+    """Test validation rejects devices that resolve to no Z-Wave nodes."""
     other = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id, identifiers={("other", "1")}
     )
@@ -399,8 +366,7 @@ async def test_no_nodes_resolved(
             hass,
             {
                 "condition": f"{DOMAIN}.node_status",
-                "target": {"device_id": other.id},
-                "options": {"status": "alive"},
+                "options": {"device_id": other.id, "status": "alive"},
             },
         )
 
@@ -420,8 +386,12 @@ async def test_validation_bypassed_when_not_loaded(
         cv.CONDITION_SCHEMA(
             {
                 "condition": f"{DOMAIN}.value",
-                "target": {"device_id": device_id},
-                "options": {"command_class": 98, "property": "nope", "value": 0},
+                "options": {
+                    "device_id": device_id,
+                    "command_class": 98,
+                    "property": "nope",
+                    "value": 0,
+                },
             }
         ),
     )
@@ -440,12 +410,14 @@ async def test_config_parameter_with_bitmask(
         hass,
         {
             "condition": f"{DOMAIN}.config_parameter",
-            "target": {
+            "options": {
                 "device_id": _device_id(
                     device_registry, client, multisensor_6, integration
-                )
+                ),
+                "parameter": 101,
+                "bitmask": "0x1",
+                "value": 1,
             },
-            "options": {"parameter": 101, "bitmask": "0x1", "value": 1},
         },
     )
     assert checker.async_check() is True
@@ -459,72 +431,24 @@ async def test_top_level_fields_moved_to_options(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test top level option fields are moved into the options block."""
+    device_id = _device_id(device_registry, client, lock_schlage_be469, integration)
     validated = await condition.async_validate_condition_config(
         hass,
         cv.CONDITION_SCHEMA(
             {
                 "condition": f"{DOMAIN}.node_status",
-                "target": {
-                    "device_id": _device_id(
-                        device_registry, client, lock_schlage_be469, integration
-                    )
-                },
+                "device_id": device_id,
                 "status": "alive",
                 "behavior": "all",
             }
         ),
     )
-    assert validated["options"] == {"behavior": "all", "status": "alive"}
+    assert validated["options"] == {
+        "device_id": [device_id],
+        "behavior": "all",
+        "status": "alive",
+    }
     assert "status" not in validated
-
-
-async def test_target_by_area(
-    hass: HomeAssistant,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    area_registry: ar.AreaRegistry,
-) -> None:
-    """Test an area target resolves to the devices in that area."""
-    device_id = _device_id(device_registry, client, lock_schlage_be469, integration)
-    area = area_registry.async_create("basement")
-    device_registry.async_update_device(device_id, area_id=area.id)
-    checker = await _checker(
-        hass,
-        {
-            "condition": f"{DOMAIN}.node_status",
-            "target": {"area_id": area.id},
-            "options": {"status": "alive"},
-        },
-    )
-    assert checker.async_check() is True
-
-
-@pytest.mark.usefixtures("client", "lock_schlage_be469", "integration")
-async def test_non_zwave_entity_is_skipped(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test entities from other integrations in the target are ignored."""
-    other_entry = MockConfigEntry(domain="other")
-    other_entry.add_to_hass(hass)
-    other_device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id, identifiers={("other", "dev")}
-    )
-    other = entity_registry.async_get_or_create(
-        "sensor", "other", "1", device_id=other_device.id
-    )
-    checker = await _checker(
-        hass,
-        {
-            "condition": f"{DOMAIN}.node_status",
-            "target": {"entity_id": [SCHLAGE_BE469_LOCK_ENTITY, other.entity_id]},
-            "options": {"status": "alive"},
-        },
-    )
-    assert checker.async_check() is True
 
 
 async def test_check_false_when_nodes_disappear(
@@ -534,17 +458,17 @@ async def test_check_false_when_nodes_disappear(
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test the condition is False once the target no longer resolves to nodes."""
+    """Test the condition is False once the devices no longer resolve to nodes."""
     checker = await _checker(
         hass,
         {
             "condition": f"{DOMAIN}.node_status",
-            "target": {
+            "options": {
                 "device_id": _device_id(
                     device_registry, client, lock_schlage_be469, integration
-                )
+                ),
+                "status": "alive",
             },
-            "options": {"status": "alive"},
         },
     )
     assert checker.async_check() is True
@@ -567,19 +491,20 @@ async def test_partially_unresolved_target(
     expected: bool,
 ) -> None:
     """Test a targeted Z-Wave node that cannot be resolved fails an all behavior."""
-    target = {
-        "device_id": [
-            _device_id(device_registry, client, lock_schlage_be469, integration),
-            _device_id(device_registry, client, multisensor_6, integration),
-        ]
-    }
+    device_ids = [
+        _device_id(device_registry, client, lock_schlage_be469, integration),
+        _device_id(device_registry, client, multisensor_6, integration),
+    ]
     del client.driver.controller.nodes[multisensor_6.node_id]
     checker = await _checker(
         hass,
         {
             "condition": f"{DOMAIN}.node_status",
-            "target": target,
-            "options": {"behavior": behavior, "status": "alive"},
+            "options": {
+                "device_id": device_ids,
+                "behavior": behavior,
+                "status": "alive",
+            },
         },
     )
     assert checker.async_check() is expected
@@ -599,8 +524,11 @@ async def test_config_parameter_missing_on_node(
             hass,
             {
                 "condition": f"{DOMAIN}.config_parameter",
-                "target": {"device_id": device_id},
-                "options": {"parameter": 9999, "value": 1},
+                "options": {
+                    "device_id": device_id,
+                    "parameter": 9999,
+                    "value": 1,
+                },
             },
         )
 
@@ -614,12 +542,27 @@ async def test_condition_description_fields_match_schema(
     schema = CONDITIONS[condition_type].options_schema_dict
     descriptions = await condition.async_get_all_descriptions(hass)
     description = descriptions[f"{DOMAIN}.{condition_type}"]
-    assert description["target"]["primary_entities_only"] is False
+    # Nodes are targeted with a device selector field, not a target selector
+    assert "target" not in description
     fields = description["fields"]
     assert set(fields) == {str(key) for key in schema}
     assert {name for name, field in fields.items() if field["required"]} == {
         str(key) for key in schema if isinstance(key, vol.Required)
     }
+
+
+@pytest.mark.parametrize("condition_type", list(CONDITIONS), ids=list(CONDITIONS))
+@pytest.mark.usefixtures("integration")
+async def test_condition_device_selector(
+    hass: HomeAssistant, condition_type: str
+) -> None:
+    """Test every condition picks nodes with a multiple zwave_js device selector."""
+    descriptions = await condition.async_get_all_descriptions(hass)
+    selector = descriptions[f"{DOMAIN}.{condition_type}"]["fields"]["device_id"][
+        "selector"
+    ]["device"]
+    assert selector["filter"] == [{"integration": DOMAIN}]
+    assert selector["multiple"] is True
 
 
 @pytest.mark.usefixtures("integration")
@@ -644,35 +587,49 @@ async def test_node_status_selector_translations(hass: HomeAssistant) -> None:
     } == {"alive", "asleep", "awake", "dead"}
 
 
-async def test_non_zwave_device_is_skipped(
+async def test_non_zwave_device_is_unresolved(
     hass: HomeAssistant,
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a targeted device from another integration is neither a node nor unresolved."""
+    """Test a device from another integration counts as an unresolved node."""
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
     other_device = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id, identifiers={("other", "dev")}
     )
-    checker = await _checker(
-        hass,
-        {
-            "condition": f"{DOMAIN}.node_status",
-            "target": {
-                "device_id": [
-                    _device_id(
-                        device_registry, client, lock_schlage_be469, integration
-                    ),
-                    other_device.id,
-                ]
+    device_ids = [
+        _device_id(device_registry, client, lock_schlage_be469, integration),
+        other_device.id,
+    ]
+    assert (
+        await _checker(
+            hass,
+            {
+                "condition": f"{DOMAIN}.node_status",
+                "options": {
+                    "device_id": device_ids,
+                    "behavior": "any",
+                    "status": "alive",
+                },
             },
-            "options": {"behavior": "all", "status": "alive"},
-        },
-    )
-    assert checker.async_check() is True
+        )
+    ).async_check() is True
+    assert (
+        await _checker(
+            hass,
+            {
+                "condition": f"{DOMAIN}.node_status",
+                "options": {
+                    "device_id": device_ids,
+                    "behavior": "all",
+                    "status": "alive",
+                },
+            },
+        )
+    ).async_check() is False
 
 
 async def test_value_empty_property_key(
@@ -687,12 +644,10 @@ async def test_value_empty_property_key(
         hass,
         {
             "condition": f"{DOMAIN}.value",
-            "target": {
+            "options": {
                 "device_id": _device_id(
                     device_registry, client, lock_schlage_be469, integration
-                )
-            },
-            "options": {
+                ),
                 "command_class": 112,
                 "property": 3,
                 "property_key": "",
