@@ -76,6 +76,8 @@ async def _async_probe(
         report = await device.async_update()
         if "identity" in report.failed:
             raise report.failed["identity"]
+        if "sensors" in report.failed:
+            raise report.failed["sensors"]
     return device
 
 
@@ -92,6 +94,7 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
+            user_input[CONF_HOST] = user_input[CONF_HOST].lower()
             try:
                 device = await _async_probe(
                     self.hass,
@@ -111,8 +114,13 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_UNIT_ID: user_input[CONF_UNIT_ID],
                     }
                 )
+                title = (
+                    str(device.identity.boiler_type)
+                    if device.identity.boiler_type is not None
+                    else DEFAULT_NAME
+                )
                 return self.async_create_entry(
-                    title=str(device.identity.boiler_type) or DEFAULT_NAME,
+                    title=title,
                     data=user_input,
                 )
 

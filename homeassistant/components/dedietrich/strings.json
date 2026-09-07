@@ -15,7 +15,7 @@
           "unit_id": "Modbus unit ID"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Modbus TCP bridge the boiler is connected through.",
+          "host": "The hostname or IP address of the Modbus TCP bridge the boiler is connected through. This must be a plain RS485-to-TCP bridge that passes through raw Modbus RTU frames, not a gateway that translates between Modbus variants.",
           "port": "The Modbus TCP port to connect on.",
           "system": "The Diematic system used by the boiler's control panel.",
           "unit_id": "The boiler's Modbus unit ID, also called its Modbus device address."
