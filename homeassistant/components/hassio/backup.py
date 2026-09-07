@@ -587,9 +587,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         # Supervisor only checks for new versions once a day
         try:
-            await self._client.supervisor.reload()
+            await self._client.reload_updates()
         except SupervisorError as err:
-            raise BackupReaderWriterError(f"Error reloading Supervisor: {err}") from err
+            raise BackupReaderWriterError(
+                f"Error reloading Supervisor update information: {err}"
+            ) from err
 
         # A concurrent Supervisor update may be running and restart Supervisor
         # before it answers. The version check below decides if it happened.

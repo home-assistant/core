@@ -2850,7 +2850,7 @@ async def test_reader_writer_restore_updates_supervisor(
             "state": "completed",
         }
 
-    supervisor_client.supervisor.reload.assert_awaited_once_with()
+    supervisor_client.reload_updates.assert_awaited_once_with()
     assert supervisor_client.supervisor.update.await_count == expected_update_calls
     assert supervisor_info.await_count == len(info_sequence)
     supervisor_client.backups.partial_restore.assert_called_once_with(
@@ -2927,7 +2927,7 @@ async def test_reader_writer_restore_supervisor_up_to_date(
         "state": "completed",
     }
 
-    supervisor_client.supervisor.reload.assert_not_awaited()
+    supervisor_client.reload_updates.assert_not_awaited()
     supervisor_client.supervisor.update.assert_not_awaited()
     assert supervisor_info.await_count == 1
     supervisor_client.backups.partial_restore.assert_called_once()
@@ -2994,7 +2994,7 @@ async def test_reader_writer_restore_no_supervisor_update(
         "state": "completed",
     }
 
-    supervisor_client.supervisor.reload.assert_awaited_once_with()
+    supervisor_client.reload_updates.assert_awaited_once_with()
     supervisor_client.supervisor.update.assert_not_awaited()
     assert supervisor_info.await_count == 2
     supervisor_client.backups.partial_restore.assert_called_once()
@@ -3152,7 +3152,7 @@ async def test_reader_writer_restore_supervisor_update_error(
             SupervisorError("Boom!"),
             "home_assistant_error",
             "backup_reader_writer_error",
-            "Error reloading Supervisor: Boom!",
+            "Error reloading Supervisor update information: Boom!",
             id="supervisor_reload_error",
         ),
     ],
@@ -3175,7 +3175,7 @@ async def test_reader_writer_restore_supervisor_check_error(
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     # The agent reads the backup details twice before the update check does
     supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
-    supervisor_client.supervisor.reload.side_effect = reload_side_effect
+    supervisor_client.reload_updates.side_effect = reload_side_effect
     # None means Supervisor answers with the fixture's outdated version
     supervisor_info.side_effect = [
         supervisor_info.return_value if err is None else err for err in info_side_effect
