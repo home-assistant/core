@@ -69,6 +69,7 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
         self.location = format_location(
             lon=entry.data[CONF_LONGITUDE], lat=entry.data[CONF_LATITUDE]
         )
+        self._air_quality_unavailable_logged = False
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -109,7 +110,13 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
         except ForecaAuthError as err:
             raise ConfigEntryAuthFailed("API key was rejected") from err
         except ForecaError as err:
-            _LOGGER.warning("Air quality data unavailable: %s", err)
+            if not self._air_quality_unavailable_logged:
+                _LOGGER.warning("Air quality data unavailable: %s", err)
+                self._air_quality_unavailable_logged = True
+        else:
+            if self._air_quality_unavailable_logged:
+                _LOGGER.info("Air quality data is available again")
+                self._air_quality_unavailable_logged = False
 
         # Usage counts are account telemetry, not weather: never fail the update.
         usage: UsageMonth | None = None

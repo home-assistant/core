@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyforeca import ForecaError, MinutelyForecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.foreca.const import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 from . import init_integration
 from .conftest import USAGE_TODAY
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "sensor.helsinki_air_quality_index"
 
@@ -76,6 +78,30 @@ async def test_air_quality_failure_keeps_weather(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_air_quality_unavailable_logs_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test a lasting air quality failure is logged once, and the recovery too."""
+    mock_foreca_client.air_quality_hourly.side_effect = ForecaError("no AQ here")
+    await init_integration(hass, mock_config_entry)
+    assert caplog.text.count("Air quality data unavailable") == 1
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert caplog.text.count("Air quality data unavailable") == 1
+
+    mock_foreca_client.air_quality_hourly.side_effect = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert "Air quality data is available again" in caplog.text
 
 
 async def test_sensors_unavailable_without_forecast_steps(

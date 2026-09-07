@@ -1,7 +1,8 @@
 """Test the Foreca weather platform."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from pyforeca import DailyForecast, HourlyForecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -53,3 +54,33 @@ async def test_forecast(
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "mocked_method", "undated"),
+    [
+        ("daily", "forecast_daily", [DailyForecast(date=None)]),
+        ("hourly", "forecast_hourly", [HourlyForecast(time=None)]),
+    ],
+)
+async def test_forecast_without_a_time_is_dropped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    forecast_type: str,
+    mocked_method: str,
+    undated: list[DailyForecast] | list[HourlyForecast],
+) -> None:
+    """Test an entry the API returns without a date or time is left out."""
+    getattr(mock_foreca_client, mocked_method).return_value = undated
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.WEATHER]):
+        await init_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {ATTR_ENTITY_ID: ENTITY_ID, "type": forecast_type},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {ENTITY_ID: {"forecast": []}}

@@ -1,5 +1,6 @@
 """Weather platform for the Foreca integration."""
 
+from datetime import UTC, datetime, time
 from typing import override
 
 from pyforeca import DailyForecast, HourlyForecast
@@ -18,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import symbol_to_condition
 from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
@@ -42,10 +44,13 @@ def _as_percentage(value: float | None) -> int | None:
     return round(value)
 
 
-def _daily_to_forecast(day: DailyForecast) -> Forecast:
+def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
     """Convert a Foreca daily forecast to a Home Assistant forecast."""
+    # The API dates a day rather than timing it, so anchor it to midnight UTC.
+    if (date := dt_util.parse_date(day.date or "")) is None:
+        return None
     return Forecast(
-        datetime=day.date or "",
+        datetime=datetime.combine(date, time.min, tzinfo=UTC).isoformat(),
         condition=symbol_to_condition(day.symbol),
         native_temperature=day.max_temp,
         native_templow=day.min_temp,
@@ -60,10 +65,12 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast:
     )
 
 
-def _hourly_to_forecast(hour: HourlyForecast) -> Forecast:
+def _hourly_to_forecast(hour: HourlyForecast) -> Forecast | None:
     """Convert a Foreca hourly forecast to a Home Assistant forecast."""
+    if (timestamp := dt_util.parse_datetime(hour.time or "")) is None:
+        return None
     return Forecast(
-        datetime=hour.time or "",
+        datetime=timestamp.isoformat(),
         condition=symbol_to_condition(hour.symbol),
         native_temperature=hour.temperature,
         native_apparent_temperature=hour.feels_like_temp,
@@ -178,10 +185,18 @@ class ForecaWeather(
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
-        return [_daily_to_forecast(day) for day in self.coordinator.data.daily]
+        return [
+            forecast
+            for day in self.coordinator.data.daily
+            if (forecast := _daily_to_forecast(day)) is not None
+        ]
 
     @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
-        return [_hourly_to_forecast(hour) for hour in self.coordinator.data.hourly]
+        return [
+            forecast
+            for hour in self.coordinator.data.hourly
+            if (forecast := _hourly_to_forecast(hour)) is not None
+        ]

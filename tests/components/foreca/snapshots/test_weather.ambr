@@ -5,7 +5,7 @@
       'forecast': list([
         dict({
           'condition': 'rainy',
-          'datetime': '2026-09-02',
+          'datetime': '2026-09-02T00:00:00+00:00',
           'precipitation': 1.2,
           'precipitation_probability': 40,
           'temperature': 18.0,
@@ -17,7 +17,7 @@
         }),
         dict({
           'condition': 'snowy',
-          'datetime': '2026-09-03',
+          'datetime': '2026-09-03T00:00:00+00:00',
           'precipitation': 0.4,
           'precipitation_probability': None,
           'temperature': 12.0,
@@ -38,7 +38,7 @@
           'apparent_temperature': 15.2,
           'cloud_coverage': 60,
           'condition': 'partlycloudy',
-          'datetime': '2026-09-01T18:00+03:00',
+          'datetime': '2026-09-01T18:00:00+03:00',
           'humidity': 70,
           'precipitation': 0.0,
           'precipitation_probability': 10,
