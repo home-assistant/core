@@ -318,31 +318,36 @@ async def test_hw4_mileage_sensors_gating(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("signal", "entity_id", "streamed_value"),
+    ("signal", "entity_id", "streamed_value", "expected_state"),
     [
         (
             Signal.TPMS_PRESSURE_FL,
             "sensor.test_tire_pressure_front_left",
             2.7,
+            39.679063381059,
         ),
         (
             Signal.TPMS_PRESSURE_FR,
             "sensor.test_tire_pressure_front_right",
             2.7,
+            39.679063381059,
         ),
         (
             Signal.TPMS_PRESSURE_RL,
             "sensor.test_tire_pressure_rear_left",
             2.7,
+            39.679063381059,
         ),
         (
             Signal.TPMS_PRESSURE_RR,
             "sensor.test_tire_pressure_rear_right",
             2.7,
+            39.679063381059,
         ),
         (
             Signal.ISOLATION_RESISTANCE,
             "sensor.test_isolation_resistance",
+            2.5,
             2.5,
         ),
     ],
@@ -350,12 +355,12 @@ async def test_hw4_mileage_sensors_gating(
 )
 async def test_sensors_streaming_unit_conversion(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
     signal: Signal,
     entity_id: str,
     streamed_value: float,
+    expected_state: float,
 ) -> None:
     """Test streamed TPMS pressure and isolation resistance are converted to their declared units."""
 
@@ -372,7 +377,7 @@ async def test_sensors_streaming_unit_conversion(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == snapshot
+    assert float(state.state) == pytest.approx(expected_state)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -5584,18 +5584,3 @@
     }),
   ])
 # ---
-# name: test_sensors_streaming_unit_conversion[isolation_resistance]
-  '2.5'
-# ---
-# name: test_sensors_streaming_unit_conversion[tpms_fl]
-  '39.679063381059'
-# ---
-# name: test_sensors_streaming_unit_conversion[tpms_fr]
-  '39.679063381059'
-# ---
-# name: test_sensors_streaming_unit_conversion[tpms_rl]
-  '39.679063381059'
-# ---
-# name: test_sensors_streaming_unit_conversion[tpms_rr]
-  '39.679063381059'
-# ---
