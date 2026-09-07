@@ -612,10 +612,13 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             info.version,
             info.version_latest,
         )
+        update_error: SupervisorError | None = None
         try:
             await self._client.supervisor.update()
         except SupervisorError as err:
-            raise BackupReaderWriterError(f"Error updating Supervisor: {err}") from err
+            # Supervisor may already be updating itself after the reload, or
+            # restart before it answers. The version check below decides.
+            update_error = err
 
         # Supervisor restarts after the update, wait until the new version answers
         try:
@@ -628,6 +631,10 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                         ).version != info.version:
                             break
         except TimeoutError as err:
+            if update_error:
+                raise BackupReaderWriterError(
+                    f"Error updating Supervisor: {update_error}"
+                ) from update_error
             raise BackupReaderWriterError(
                 "Timeout waiting for Supervisor to restart after update"
             ) from err

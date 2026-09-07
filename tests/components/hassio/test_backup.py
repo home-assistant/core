@@ -2747,15 +2747,25 @@ async def test_reader_writer_restore_late_error(
     }
 
 
+@pytest.mark.parametrize(
+    "update_error",
+    [
+        pytest.param(None, id="update_ok"),
+        # Supervisor started the update itself after the reload
+        pytest.param(SupervisorError("Another job is running"), id="update_busy"),
+    ],
+)
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_updates_supervisor(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
+    update_error: Exception | None,
 ) -> None:
     """Test restoring a backup made on a newer Supervisor updates Supervisor first."""
     client = await hass_supervisor_ws_client()
+    supervisor_client.supervisor.update.side_effect = update_error
     supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = replace(
@@ -2972,7 +2982,7 @@ async def test_reader_writer_restore_no_supervisor_update(
     [
         pytest.param(
             SupervisorError("Boom!"),
-            300,
+            0,
             "Error updating Supervisor: Boom!",
             id="update_error",
         ),
