@@ -1,6 +1,7 @@
 """Module for color_extractor (RGB extraction from images) component."""
 
 import asyncio
+from http import HTTPStatus
 import io
 import logging
 from typing import Any
@@ -84,15 +85,8 @@ async def _async_extract_color_from_url(
 
         async with asyncio.timeout(10):
             response = await session.get(url)
-            response.raise_for_status()
             content = await response.read()
 
-    except aiohttp.ClientResponseError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="http_error",
-            translation_placeholders={"url": url, "status": str(err.status)},
-        ) from err
     except TimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -105,6 +99,13 @@ async def _async_extract_color_from_url(
             translation_key="fetch_failed",
             translation_placeholders={"url": url, "error": str(err)},
         ) from err
+
+    if response.status != HTTPStatus.OK:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="http_error",
+            translation_placeholders={"url": url, "status": str(response.status)},
+        )
 
     with io.BytesIO(content) as _file:
         _file.name = "color_extractor.jpg"

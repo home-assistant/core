@@ -244,10 +244,18 @@ async def test_url_exception(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(400, id="bad_request"),
+        pytest.param(304, id="not_modified"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
 async def test_url_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_integration
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, status: int
 ) -> None:
-    """Test that a HTTP Error (non 200) raises and doesn't turn light on."""
+    """Test that a non-OK HTTP status raises and doesn't turn light on."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
@@ -256,8 +264,7 @@ async def test_url_error(
     # Don't let the URL not being allowed sway our exception test
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
-    # Mock the HTTP Response with a 400 Bad Request error
-    aioclient_mock.get(url=service_data[ATTR_URL], status=400)
+    aioclient_mock.get(url=service_data[ATTR_URL], status=status)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -268,7 +275,7 @@ async def test_url_error(
     assert exc_info.value.translation_key == "http_error"
     assert exc_info.value.translation_placeholders == {
         "url": service_data[ATTR_URL],
-        "status": "400",
+        "status": str(status),
     }
 
     # Light has not been modified due to failure
