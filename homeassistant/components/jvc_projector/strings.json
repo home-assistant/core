@@ -70,14 +70,6 @@
           "off": "[%key:common::state::off%]"
         }
       },
-      "motion_enhance": {
-        "name": "Motion Enhance",
-        "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "off": "[%key:common::state::off%]"
-        }
-      },
       "hdr_processing": {
         "name": "HDR Processing",
         "state": {
@@ -118,6 +110,14 @@
           "normal": "[%key:common::state::normal%]"
         }
       },
+      "motion_enhance": {
+        "name": "Motion Enhance",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "picture_mode": {
         "name": "Picture Mode",
         "state": {
@@ -134,21 +134,7 @@
           "user_5": "User 5",
           "user_6": "User 6"
         }
-      },
-      "colorimetry": {
-        "name": "Colorimetry",
-        "state": {
-          "adobe-rgb": "Adobe RGB",
-          "adobe-ycc-601": "Adobe YCC 601",
-          "bt-2020-constant-luminance": "BT.2020 Constant Luminance",
-          "bt-2020-non-constant-luminance": "BT.2020 Non-Constant Luminance",
-          "bt-601": "BT.601",
-          "bt-709": "BT.709",
-          "no-data": "No Data",
-          "s-ycc-601": "sYCC 601",
-          "xvycc-601": "xvYCC 601",
-          "xvycc-709": "xvYCC 709"
-        }
+      }
     },
     "sensor": {
       "color_depth": {
@@ -168,6 +154,21 @@
           "ycbcr-422": "YCbCr 4:2:2",
           "ycbcr-444": "YCbCr 4:4:4",
           "yuv": "YUV"
+        }
+      },
+      "colorimetry": {
+        "name": "Colorimetry",
+        "state": {
+          "adobe-rgb": "Adobe RGB",
+          "adobe-ycc-601": "Adobe YCC 601",
+          "bt-2020-constant-luminance": "BT.2020 Constant Luminance",
+          "bt-2020-non-constant-luminance": "BT.2020 Non-Constant Luminance",
+          "bt-601": "BT.601",
+          "bt-709": "BT.709",
+          "no-data": "No Data",
+          "s-ycc-601": "sYCC 601",
+          "xvycc-601": "xvYCC 601",
+          "xvycc-709": "xvYCC 709"
         }
       },
       "hdr": {
@@ -230,9 +231,8 @@
           "standby": "[%key:common::state::standby%]",
           "warming": "Warming"
         }
-      }
-    },
-      "resolution": {
+      },
+    "resolution": {
         "name": "Resolution",
         "state": {
           "1080i-3d": "1080i 3D",
@@ -255,7 +255,8 @@
       },
     "software_version": {
         "name": "Software Version"
-      },
+      }
+    },
     "switch": {
       "eshift": {
         "name": "E-Shift"
