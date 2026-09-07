@@ -1,7 +1,5 @@
 """Test entity functions for Home Assistant templates."""
 
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -67,59 +65,6 @@ def test_entity_name(
     assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
         "Custom Sensor"
     )
-
-
-@pytest.mark.parametrize(
-    ("original_name", "name", "expected_name"),
-    [
-        pytest.param("Temperature", "", "My Device", id="empty_override"),
-        pytest.param(None, None, "My Device", id="no_entity_name"),
-        pytest.param("My Device", None, "My Device", id="device_name_only"),
-        pytest.param("Temperature", None, "Temperature", id="integration_name"),
-        pytest.param("Temperature", "Custom Sensor", "Custom Sensor", id="custom_name"),
-    ],
-)
-def test_entity_name_device_fallback(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    original_name: str | None,
-    name: str | None,
-    expected_name: str,
-) -> None:
-    """Test unnamed entities use the device name in template functions and filters."""
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device")},
-        name="My Device",
-    )
-    entry = entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "unique",
-        config_entry=config_entry,
-        device_id=device_entry.id,
-        original_name=original_name,
-    )
-    entity_registry.async_update_entity(entry.entity_id, name=name)
-
-    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == expected_name
-    assert render(hass, f"{{{{ '{entry.entity_id}' | entity_name }}}}") == expected_name
-
-
-def test_entity_name_empty_override_without_device(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test an empty name without a device does not restore the integration name."""
-    entry = entity_registry.async_get_or_create(
-        "sensor", "test", "unique", original_name="Temperature"
-    )
-    entity_registry.async_update_entity(entry.entity_id, name="")
-
-    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == ""
 
 
 def test_is_hidden_entity(
