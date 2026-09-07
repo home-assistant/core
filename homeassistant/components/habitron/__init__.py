@@ -8,7 +8,6 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from .communicate import HbtnComm
 from .const import DOMAIN
@@ -105,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: HabitronConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removing only devices whose Habitron member is gone from the bus.
 
