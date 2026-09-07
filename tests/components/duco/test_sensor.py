@@ -98,8 +98,10 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
 @pytest.mark.parametrize(
     ("ventilation_state", "expected_state_end"),
     [
-        pytest.param(VentilationState.AUTO, "2023-11-14T22:20:59+00:00", id="auto"),
-        pytest.param(VentilationState.CNT1, STATE_UNKNOWN, id="continuous"),
+        pytest.param(VentilationState.MAN1, "2023-11-14T22:20:59+00:00", id="timed"),
+        pytest.param(VentilationState.CNT1, STATE_UNKNOWN, id="continuous-1"),
+        pytest.param(VentilationState.CNT2, STATE_UNKNOWN, id="continuous-2"),
+        pytest.param(VentilationState.CNT3, STATE_UNKNOWN, id="continuous-3"),
     ],
 )
 async def test_ventilation_related_sensors_created_for_box_node(
