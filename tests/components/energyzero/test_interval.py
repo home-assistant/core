@@ -77,8 +77,6 @@ async def test_electricity_interval(
     mock_energyzero.get_electricity_prices.side_effect = [
         electricity,
         EnergyZeroNoDataError() if missing_tomorrow else electricity,
-        EnergyZeroNoDataError(),
-        EnergyZeroNoDataError(),
     ]
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -152,6 +150,7 @@ async def test_electricity_interval(
         request.kwargs["interval"] == interval
         for request in mock_energyzero.get_electricity_prices.await_args_list
     )
+    assert mock_energyzero.get_electricity_prices.await_count == 1 + requests_tomorrow
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )

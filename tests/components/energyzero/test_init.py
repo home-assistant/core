@@ -4,13 +4,7 @@ from datetime import date
 from unittest.mock import MagicMock, call, patch
 from zoneinfo import ZoneInfo
 
-from energyzero import (
-    EnergyPrices,
-    EnergyZeroConnectionError,
-    EnergyZeroNoDataError,
-    Interval,
-    PriceType,
-)
+from energyzero import EnergyZeroConnectionError, Interval, PriceType
 import pytest
 
 from homeassistant.components.energyzero.const import (
@@ -115,62 +109,71 @@ async def test_config_flow_entry_not_ready(
 
 
 @pytest.mark.freeze_time("2026-04-10 20:32:59")
+@pytest.mark.parametrize("selected", ["hourly", "quarter_hourly"])
 @pytest.mark.parametrize(
-    "missing_types",
+    "missing_streams",
     [
-        pytest.param((PriceType.MARKET_WITH_VAT,), id="market"),
-        pytest.param((PriceType.ALL_IN,), id="all_in"),
-        pytest.param((PriceType.MARKET_WITH_VAT, PriceType.ALL_IN), id="both"),
+        pytest.param(("base_with_vat",), id="market"),
+        pytest.param(("all_in_with_vat",), id="all_in"),
+        pytest.param(("base_with_vat", "all_in_with_vat"), id="both"),
+        pytest.param(
+            ("base", "base_with_vat", "all_in", "all_in_with_vat"),
+            id="unpublished",
+        ),
     ],
 )
-async def test_partial_tomorrow_prices(
+async def test_missing_tomorrow_prices_do_not_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_energyzero: MagicMock,
-    missing_types: tuple[PriceType, ...],
+    selected: str,
+    missing_streams: tuple[str, ...],
 ) -> None:
-    """Missing optional streams do not discard the available tomorrow stream."""
-    original_side_effect = mock_energyzero.get_electricity_prices.side_effect
-
-    def get_prices(
-        *,
-        start_date: date,
-        end_date: date,
-        interval: Interval,
-        price_type: PriceType | tuple[PriceType, ...],
-        local_tz: ZoneInfo,
-    ) -> EnergyPrices | dict[PriceType, EnergyPrices]:
-        price_types = price_type
-        requested_types = (
-            (price_types,) if isinstance(price_types, PriceType) else price_types
-        )
-        if start_date == date(2026, 4, 11) and set(requested_types) & set(
-            missing_types
-        ):
-            raise EnergyZeroNoDataError
-        return original_side_effect(
-            start_date=start_date,
-            end_date=end_date,
-            interval=interval,
-            price_type=price_type,
-            local_tz=local_tz,
-        )
-
-    mock_energyzero.get_electricity_prices.side_effect = get_prices
+    """Missing tomorrow streams do not cause extra requests or fail today's sensors."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    electricity = await async_load_json_object_fixture(
+        hass, "today_energy.json", DOMAIN
+    )
+    gas = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+    tomorrow = {**electricity, **{stream: [] for stream in missing_streams}}
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ELECTRICITY_PRICE_INTERVAL: selected}
+    )
+    with patch(
+        "energyzero.api.rest.RESTClient._request",
+        side_effect=[electricity, gas, tomorrow] * 2,
+    ) as request:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert request.await_count == 3
+        await mock_config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
 
+    assert request.await_count == 6
+    assert (
+        request.await_args_list[2]
+        == request.await_args_list[5]
+        == call(
+            "public/v1/prices",
+            params={
+                "energyType": "ENERGY_TYPE_ELECTRICITY",
+                "date": "11-04-2026",
+                "interval": ELECTRICITY_INTERVALS[selected].value,
+            },
+        )
+    )
     assert mock_config_entry.state is ConfigEntryState.LOADED
     data = mock_config_entry.runtime_data.data
-    assert (data.electricity_market_tomorrow is None) == (
-        PriceType.MARKET_WITH_VAT in missing_types
+    assert data.electricity_market_tomorrow is None
+    assert data.electricity_all_in_tomorrow is None
+    assert (
+        state := hass.states.get("sensor.energyzero_today_energy_current_hour_price")
     )
-    assert (data.electricity_all_in_tomorrow is None) == (
-        PriceType.ALL_IN in missing_types
+    assert state.state == "0.17191075"
+    assert (
+        state := hass.states.get("sensor.energyzero_today_energy_all_in_current_price")
     )
-    assert hass.states.get("sensor.energyzero_today_energy_current_hour_price")
-    assert hass.states.get("sensor.energyzero_today_energy_all_in_current_price")
+    assert state.state == "0.28275885"
 
 
 @pytest.mark.freeze_time("2026-04-10 20:32:59")

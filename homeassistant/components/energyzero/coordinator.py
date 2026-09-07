@@ -71,42 +71,16 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         self.energyzero = EnergyZero(session=async_get_clientsession(hass))
 
     async def _async_get_electricity_prices(
-        self,
-        day: date,
-        local_tz: ZoneInfo,
-        *,
-        allow_partial: bool = False,
+        self, day: date, local_tz: ZoneInfo
     ) -> dict[PriceType, EnergyPrices]:
-        """Fetch both price streams, optionally retaining a partially published day."""
-        price_types = (PriceType.MARKET_WITH_VAT, PriceType.ALL_IN)
-        try:
-            return await self.energyzero.get_electricity_prices(
-                start_date=day,
-                end_date=day,
-                interval=self.electricity_interval,
-                price_type=price_types,
-                local_tz=local_tz,
-            )
-        except EnergyZeroNoDataError:
-            if not allow_partial:
-                raise
-
-        # The library cannot return a partial multi-stream response.
-        electricity = {}
-        for price_type in price_types:
-            try:
-                prices = await self.energyzero.get_electricity_prices(
-                    start_date=day,
-                    end_date=day,
-                    interval=self.electricity_interval,
-                    price_type=price_type,
-                    local_tz=local_tz,
-                )
-            except EnergyZeroNoDataError:
-                LOGGER.debug("No %s electricity prices for %s", price_type, day)
-            else:
-                electricity[price_type] = prices
-        return electricity
+        """Fetch both electricity price streams in a single request."""
+        return await self.energyzero.get_electricity_prices(
+            start_date=day,
+            end_date=day,
+            interval=self.electricity_interval,
+            price_type=(PriceType.MARKET_WITH_VAT, PriceType.ALL_IN),
+            local_tz=local_tz,
+        )
 
     @override
     async def _async_update_data(self) -> EnergyZeroData:
@@ -131,9 +105,12 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
                 LOGGER.debug("No data for gas prices for EnergyZero integration")
             # Energy for tomorrow only after 14:00 UTC
             if dt_util.utcnow().hour >= THRESHOLD_HOUR:
-                electricity_tomorrow = await self._async_get_electricity_prices(
-                    today + timedelta(days=1), local_tz, allow_partial=True
-                )
+                try:
+                    electricity_tomorrow = await self._async_get_electricity_prices(
+                        today + timedelta(days=1), local_tz
+                    )
+                except EnergyZeroNoDataError:
+                    LOGGER.debug("No electricity prices for tomorrow")
         except EnergyZeroConnectionError as err:
             raise UpdateFailed("Error communicating with EnergyZero API") from err
 
