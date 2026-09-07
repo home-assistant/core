@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, override
+from typing import Any, cast, override
 
 import aiohttp
 from jinja2 import Template
@@ -262,7 +262,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         """Return a still image using the authenticated motionEye client."""
         if not self._camera:
             return None
-        return await self._client.async_get_camera_snapshot(self._camera_id)
+        return await cast(Any, self._client).async_get_camera_snapshot(self._camera_id)
 
     async def async_set_text_overlay(
         self,
