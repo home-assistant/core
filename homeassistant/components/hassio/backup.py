@@ -591,7 +591,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         except SupervisorError as err:
             raise BackupReaderWriterError(f"Error reloading Supervisor: {err}") from err
 
-        # Supervisor may start the update itself after the reload and restart
+        # A concurrent Supervisor update may be running and restart Supervisor
         # before it answers. The version check below decides if it happened.
         update_error: SupervisorError | None = None
         try:

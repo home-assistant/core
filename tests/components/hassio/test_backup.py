@@ -805,7 +805,6 @@ async def test_agent_get_backup_with_error(
     client = await hass_ws_client(hass)
     backup_id = "abc123"
 
-    # The agent reads the backup details twice before the update check does
     supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
     await client.send_json_auto_id(
         {
@@ -2763,20 +2762,20 @@ async def test_reader_writer_restore_late_error(
         ),
         pytest.param(
             ["outdated", "available", "restarting", "outdated", "new"],
-            # Supervisor started the update itself after the reload
+            # Another Supervisor update is already running
             SupervisorError("Another job is running"),
             1,
             id="update_busy",
         ),
         pytest.param(
-            # Supervisor updated itself after the reload and is restarting
+            # A concurrent Supervisor update finished and Supervisor restarts
             ["outdated", "restarting", "new"],
             None,
             0,
             id="restarting_after_reload",
         ),
         pytest.param(
-            # Supervisor updated itself after the reload and is back already
+            # A concurrent Supervisor update finished and Supervisor is back
             ["outdated", "new"],
             None,
             0,
@@ -3174,6 +3173,7 @@ async def test_reader_writer_restore_supervisor_check_error(
     """Test errors while checking if Supervisor must be updated before a restore."""
     client = await hass_ws_client(hass)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    # The agent reads the backup details twice before the update check does
     supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
     supervisor_client.supervisor.reload.side_effect = reload_side_effect
     # None means Supervisor answers with the fixture's outdated version
