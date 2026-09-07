@@ -2753,11 +2753,35 @@ async def test_reader_writer_restore_late_error(
 
 
 @pytest.mark.parametrize(
-    "update_error",
+    ("info_sequence", "update_error", "expected_update_calls"),
     [
-        pytest.param(None, id="update_ok"),
-        # Supervisor started the update itself after the reload
-        pytest.param(SupervisorError("Another job is running"), id="update_busy"),
+        pytest.param(
+            ["outdated", "available", "restarting", "outdated", "new"],
+            None,
+            1,
+            id="update_ok",
+        ),
+        pytest.param(
+            ["outdated", "available", "restarting", "outdated", "new"],
+            # Supervisor started the update itself after the reload
+            SupervisorError("Another job is running"),
+            1,
+            id="update_busy",
+        ),
+        pytest.param(
+            # Supervisor updated itself after the reload and is restarting
+            ["outdated", "restarting", "new"],
+            None,
+            0,
+            id="restarting_after_reload",
+        ),
+        pytest.param(
+            # Supervisor updated itself after the reload and is back already
+            ["outdated", "new"],
+            None,
+            0,
+            id="updated_after_reload",
+        ),
     ],
 )
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
@@ -2766,32 +2790,34 @@ async def test_reader_writer_restore_updates_supervisor(
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
+    info_sequence: list[str],
     update_error: Exception | None,
+    expected_update_calls: int,
 ) -> None:
     """Test restoring a backup made on a newer Supervisor updates Supervisor first."""
     client = await hass_supervisor_ws_client()
     supervisor_client.supervisor.update.side_effect = update_error
     supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
-    supervisor_client.backups.backup_info.return_value = replace(
-        TEST_BACKUP_DETAILS, supervisor_version="2026.08.0"
+    supervisor_client.backups.backup_info.return_value = (
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR
     )
     supervisor_client.jobs.get_job.return_value = TEST_JOB_DONE
     outdated = replace(
         supervisor_info.return_value, version="2026.07.5", version_latest="2026.07.5"
     )
+    infos = {
+        "outdated": outdated,
+        # After reload the new version is known
+        "available": replace(
+            outdated, version_latest="2026.08.0", update_available=True
+        ),
+        "restarting": SupervisorConnectionError(),
+        "new": replace(outdated, version="2026.08.0", version_latest="2026.08.0"),
+    }
     # Forget the call made when the hassio integration was set up
     supervisor_info.reset_mock()
-    supervisor_info.side_effect = [
-        outdated,
-        # After reload the new version is known
-        replace(outdated, version_latest="2026.08.0", update_available=True),
-        # Supervisor is restarting
-        SupervisorConnectionError,
-        # Old Supervisor still answers
-        outdated,
-        replace(outdated, version="2026.08.0", version_latest="2026.08.0"),
-    ]
+    supervisor_info.side_effect = [infos[name] for name in info_sequence]
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()
@@ -2826,8 +2852,8 @@ async def test_reader_writer_restore_updates_supervisor(
         }
 
     supervisor_client.supervisor.reload.assert_awaited_once_with()
-    supervisor_client.supervisor.update.assert_awaited_once_with()
-    assert supervisor_info.await_count == 5
+    assert supervisor_client.supervisor.update.await_count == expected_update_calls
+    assert supervisor_info.await_count == len(info_sequence)
     supervisor_client.backups.partial_restore.assert_called_once_with(
         "abc123",
         supervisor_backups.PartialRestoreOptions(
@@ -2983,19 +3009,28 @@ async def test_reader_writer_restore_no_supervisor_update(
 
 
 @pytest.mark.parametrize(
-    ("update_error", "restart_timeout", "expected_message"),
+    ("info_error", "update_error", "expected_update_calls", "expected_message"),
     [
         pytest.param(
+            None,
             SupervisorError("Boom!"),
-            0,
+            1,
             "Error updating Supervisor: Boom!",
             id="update_error",
         ),
         pytest.param(
             None,
-            0,
+            None,
+            1,
             "Timeout waiting for Supervisor to restart after update",
             id="restart_timeout",
+        ),
+        pytest.param(
+            SupervisorError("Boom!"),
+            None,
+            0,
+            "Error updating Supervisor: Boom!",
+            id="info_error_after_reload",
         ),
     ],
 )
@@ -3005,21 +3040,24 @@ async def test_reader_writer_restore_supervisor_update_error(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
+    info_error: Exception | None,
     update_error: Exception | None,
-    restart_timeout: int,
+    expected_update_calls: int,
     expected_message: str,
 ) -> None:
     """Test restoring a backup when the Supervisor update fails."""
     client = await hass_ws_client(hass)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
-    supervisor_client.backups.backup_info.return_value = replace(
-        TEST_BACKUP_DETAILS, supervisor_version="2026.08.0"
+    supervisor_client.backups.backup_info.return_value = (
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR
     )
     supervisor_client.supervisor.update.side_effect = update_error
     outdated = replace(
         supervisor_info.return_value, version="2026.07.5", version_latest="2026.08.0"
     )
-    supervisor_info.return_value = outdated
+    # Forget the call made when the hassio integration was set up
+    supervisor_info.reset_mock()
+    supervisor_info.side_effect = [outdated, info_error or outdated]
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()
@@ -3033,7 +3071,7 @@ async def test_reader_writer_restore_supervisor_update_error(
         ),
         patch(
             "homeassistant.components.hassio.backup.SUPERVISOR_UPDATE_RESTART_TIMEOUT",
-            restart_timeout,
+            0,
         ),
     ):
         await client.send_json_auto_id(
@@ -3059,7 +3097,7 @@ async def test_reader_writer_restore_supervisor_update_error(
             "state": "failed",
         }
 
-    supervisor_client.supervisor.update.assert_awaited_once_with()
+    assert supervisor_client.supervisor.update.await_count == expected_update_calls
     supervisor_client.backups.partial_restore.assert_not_called()
 
     response = await client.receive_json()
@@ -3117,15 +3155,6 @@ async def test_reader_writer_restore_supervisor_update_error(
             "backup_reader_writer_error",
             "Error reloading Supervisor: Boom!",
             id="supervisor_reload_error",
-        ),
-        pytest.param(
-            [TEST_BACKUP_DETAILS_NEWER_SUPERVISOR] * 3,
-            [None, SupervisorError("Boom!")],
-            None,
-            "home_assistant_error",
-            "backup_reader_writer_error",
-            "Error getting Supervisor info: Boom!",
-            id="supervisor_info_error_after_reload",
         ),
     ],
 )

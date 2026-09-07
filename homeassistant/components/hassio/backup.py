@@ -590,45 +590,40 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             await self._client.supervisor.reload()
         except SupervisorError as err:
             raise BackupReaderWriterError(f"Error reloading Supervisor: {err}") from err
-        try:
-            info = await self._client.supervisor.info()
-        except SupervisorError as err:
-            raise BackupReaderWriterError(
-                f"Error getting Supervisor info: {err}"
-            ) from err
 
-        if (
-            info.version_latest is None
-            or AwesomeVersion(info.version_latest) < backup_version
-        ):
-            # Let Supervisor report why it can't restore the backup
-            return
-
-        _LOGGER.info(
-            "Backup %s was made on Supervisor %s, updating Supervisor %s to %s "
-            "before restoring",
-            backup_id,
-            details.supervisor_version,
-            info.version,
-            info.version_latest,
-        )
+        # Supervisor may start the update itself after the reload and restart
+        # before it answers. The version check below decides if it happened.
         update_error: SupervisorError | None = None
         try:
+            info = await self._client.supervisor.info()
+            if AwesomeVersion(info.version) >= backup_version:
+                return
+            if (
+                info.version_latest is None
+                or AwesomeVersion(info.version_latest) < backup_version
+            ):
+                # Let Supervisor report why it can't restore the backup
+                return
+            _LOGGER.info(
+                "Backup %s was made on Supervisor %s, updating Supervisor %s to %s "
+                "before restoring",
+                backup_id,
+                details.supervisor_version,
+                info.version,
+                info.version_latest,
+            )
             await self._client.supervisor.update()
         except SupervisorError as err:
-            # Supervisor may already be updating itself after the reload, or
-            # restart before it answers. The version check below decides.
             update_error = err
 
-        # Supervisor restarts after the update, wait until the new version answers
+        # Supervisor restarts after the update, wait until a new enough version answers
         try:
             async with asyncio.timeout(SUPERVISOR_UPDATE_RESTART_TIMEOUT):
                 while True:
                     await asyncio.sleep(SUPERVISOR_UPDATE_POLL_INTERVAL)
                     with suppress(SupervisorError):
-                        if (
-                            await self._client.supervisor.info()
-                        ).version != info.version:
+                        info = await self._client.supervisor.info()
+                        if AwesomeVersion(info.version) >= backup_version:
                             break
         except TimeoutError as err:
             if update_error:
