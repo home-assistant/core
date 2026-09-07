@@ -46,8 +46,11 @@ def _build_video_dict(video: Any, is_short: bool) -> dict[str, Any]:
     }
 
 
-class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """A YouTube Data Update Coordinator for a single channel."""
+class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
+    """A YouTube Data Update Coordinator for a single channel.
+
+    The data is None until the first successful refresh.
+    """
 
     config_entry: YouTubeConfigEntry
 

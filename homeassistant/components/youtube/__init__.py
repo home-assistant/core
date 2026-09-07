@@ -47,8 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> b
                 coordinator.last_exception,
             )
         entry.runtime_data[subentry.subentry_id] = coordinator
-        if coordinator.last_update_success and (
-            (title := coordinator.data[ATTR_TITLE]) != subentry.title
+        if (data := coordinator.data) is not None and (
+            (title := data[ATTR_TITLE]) != subentry.title
         ):
             hass.config_entries.async_update_subentry(entry, subentry, title=title)
 
@@ -64,7 +64,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> 
 
 
 async def async_update_listener(hass: HomeAssistant, entry: YouTubeConfigEntry) -> None:
-    """Reload the config entry when it or one of its subentries is updated."""
+    """Reload the config entry when channels are added or removed."""
+    channel_subentry_ids = {
+        subentry.subentry_id
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL)
+    }
+    if channel_subentry_ids == set(entry.runtime_data):
+        # Token refreshes update the entry data only; the coordinators
+        # use the refreshed token without needing a reload.
+        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -77,10 +85,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     subentries: dict[str, ConfigSubentry] = {}
     for channel_id in channel_ids:
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{prefix}{channel_id}"), entry.entry_id
+        )
+        title = channel_id
+        if device is not None and device.name is not None:
+            # Prefer the channel name of the existing device so the title
+            # survives even if the channel can no longer be fetched.
+            title = device.name
         subentry = ConfigSubentry(
             data=MappingProxyType({CONF_CHANNEL_ID: channel_id}),
             subentry_type=SUBENTRY_TYPE_CHANNEL,
-            title=channel_id,
+            title=title,
             unique_id=channel_id,
         )
         hass.config_entries.async_add_subentry(entry, subentry)

@@ -21,7 +21,7 @@ async def async_get_config_entry_diagnostics(
     sensor_data: dict[str, Any] = {}
     for coordinator in entry.runtime_data.values():
         channel_id = coordinator.subentry.data[CONF_CHANNEL_ID]
-        if not coordinator.last_update_success:
+        if coordinator.data is None:
             # The channel could not be fetched and has no data.
             sensor_data[channel_id] = None
             continue

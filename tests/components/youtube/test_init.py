@@ -382,6 +382,71 @@ async def test_missing_channel_does_not_affect_other_channels(
     assert diagnostics[LINUS_CHANNEL_ID] is None
 
 
+async def test_migration_channel_missing_from_api(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test a migrated channel keeps its name when it is not available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=CHANNEL_ID,
+        version=1,
+        data=mock_entry_data(expires_at, scopes),
+        options={CONF_CHANNELS: [CHANNEL_ID]},
+    )
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, f"{entry.entry_id}_{CHANNEL_ID}")},
+        manufacturer="Google, Inc.",
+        name="Google for Developers",
+    )
+
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(hass, channel_fixture="get_no_channel.json"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.title == "Google for Developers"
+    state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state is not None
+    assert state.state == "unavailable"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, CHANNEL_ID), entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Google for Developers"
+
+
+async def test_entry_data_update_does_not_reload(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test token refreshes and other entry data updates do not reload."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinators = entry.runtime_data
+
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            **entry.data,
+            "token": {**entry.data["token"], "access_token": "updated-access-token"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data is coordinators
+
+
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant, setup_integration: ComponentSetup
 ) -> None:
