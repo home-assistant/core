@@ -255,6 +255,15 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
+    @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image using the authenticated motionEye client."""
+        if not self._camera:
+            return None
+        return await self._client.async_get_camera_snapshot(self._camera_id)
+
     async def async_set_text_overlay(
         self,
         left_text: str | None = None,
