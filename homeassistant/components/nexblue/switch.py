@@ -19,6 +19,7 @@ from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
 ASSUMED_STATE_SECONDS = 22
+PARALLEL_UPDATES = 1
 ACTIVE_CHARGING_STATES = frozenset(
     {
         2,  # Charging
