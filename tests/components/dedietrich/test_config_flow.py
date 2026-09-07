@@ -164,6 +164,27 @@ async def test_user_step_identity_read_fails(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_step_sensors_read_fails(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test cannot_connect when the sensors block fails though identity succeeds."""
+    mock_conn = MockModbusConnection()
+    unit = mock_conn.for_unit(10)
+    seed_boiler(unit)
+    unit.fail_read(601, ModbusTimeoutError("no sensors"))
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:
     """Test aborting when the same boiler connection is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
