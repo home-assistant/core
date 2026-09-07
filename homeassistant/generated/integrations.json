@@ -2441,6 +2441,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "gardena_smart_local": {
+      "name": "GARDENA smart local",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "gatus": {
       "name": "Gatus",
       "integration_type": "service",
