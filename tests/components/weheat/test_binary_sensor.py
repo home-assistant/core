@@ -50,7 +50,7 @@ async def test_create_binary_entities(
     assert len(hass.states.async_all()) == 4
 
 
-@pytest.mark.usefixtures("mock_weheat_discover", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("mock_weheat_discover")
 async def test_unreported_start_conditions_create_no_sensors(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
