@@ -44,7 +44,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -68,9 +68,7 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: This integration does not raise translatable Home Assistant exceptions.
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo

@@ -1,8 +1,8 @@
 """Tests for the homeassistant LLM tools platform."""
 
+from probatio import to_openapi
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous_openapi import convert
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant import llm as ha_llm
@@ -44,10 +44,10 @@ def _llm_context() -> llm.LLMContext:
 
 
 async def test_live_context_always_offered(hass: HomeAssistant) -> None:
-    """Test GetLiveContext is offered even when nothing is exposed."""
+    """Test homeassistant__GetLiveContext is offered even when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert "GetLiveContext" in [tool.name for tool in result.tools]
+    assert "homeassistant__GetLiveContext" in [tool.name for tool in result.tools]
 
 
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
@@ -72,27 +72,32 @@ async def test_prompt_no_entities(hass: HomeAssistant) -> None:
 
 
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
-    """Test GetLiveContext reports an error when nothing is exposed."""
+    """Test homeassistant__GetLiveContext reports an error when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next(tool for tool in result.tools if tool.name == "GetLiveContext")
+    tool = next(
+        tool for tool in result.tools if tool.name == "homeassistant__GetLiveContext"
+    )
 
     response = await tool.async_call(
-        hass, llm.ToolInput("GetLiveContext", {}), llm_context
+        hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
     assert response == {"success": False, "error": ha_llm.NO_ENTITIES_PROMPT}
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
-    """Test GetLiveContext returns exposed entity state."""
+    """Test homeassistant__GetLiveContext returns exposed entity state."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next((tool for tool in result.tools if tool.name == "GetLiveContext"), None)
+    tool = next(
+        (tool for tool in result.tools if tool.name == "homeassistant__GetLiveContext"),
+        None,
+    )
     assert tool is not None
 
     response = await tool.async_call(
-        hass, llm.ToolInput("GetLiveContext", {}), llm_context
+        hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
     assert response["success"] is True
     assert "Kitchen Light" in response["result"]
@@ -158,7 +163,7 @@ async def test_get_live_context_tool_filter(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test the filter parameters of the GetLiveContext tool."""
+    """Test the filter parameters of the homeassistant__GetLiveContext tool."""
     # The autouse fixture exposes light.kitchen; drop it for a clean entity set.
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     assert await async_setup_component(hass, "intent", {})
@@ -254,11 +259,11 @@ async def test_get_live_context_tool_filter(
 
     await hass.async_block_till_done()
     tools = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next(t for t in tools.tools if t.name == "GetLiveContext")
+    tool = next(t for t in tools.tools if t.name == "homeassistant__GetLiveContext")
 
     async def _get_live_context(tool_args: dict) -> dict:
         return await tool.async_call(
-            hass, llm.ToolInput("GetLiveContext", tool_args), llm_context
+            hass, llm.ToolInput("homeassistant__GetLiveContext", tool_args), llm_context
         )
 
     # Filter by area and domain (example 1)
@@ -400,11 +405,11 @@ async def test_get_live_context_tool_filter(
 async def test_get_live_context_schema(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
-    """Test that GetLiveContext tool parameters convert to a sane OpenAPI schema."""
+    """Test that homeassistant__GetLiveContext tool parameters convert to a sane OpenAPI schema."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    tool = next(t for t in result.tools if t.name == "GetLiveContext")
+    tool = next(t for t in result.tools if t.name == "homeassistant__GetLiveContext")
 
     api = await llm.async_get_api(hass, "assist", _llm_context())
-    schema = convert(tool.parameters, custom_serializer=api.custom_serializer)
+    schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
 
     assert schema == snapshot

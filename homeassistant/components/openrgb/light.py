@@ -407,7 +407,12 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         if self._supports_off_mode:
             await self._async_apply_mode(OpenRGBMode.OFF)
         else:
-            # If the device does not support Off mode, set color to black
+            # If the device does not support Off mode, set color to black.
+            # Color writes are ignored while a mode without PER_LED color
+            # support (e.g. a firmware effect) is active — switch to the
+            # preferred no-effect mode first so the black actually lands.
+            if self._mode not in self._supports_color_modes:
+                await self._async_apply_mode(self._preferred_no_effect_mode)
             await self._async_apply_color(OFF_COLOR, 0)
 
         await self._async_refresh_data()

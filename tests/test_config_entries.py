@@ -1384,6 +1384,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_setup_lock",
         "update_listeners",
         "reason",
+        "error_reason_translation_domain",
         "error_reason_translation_key",
         "error_reason_translation_placeholders",
         "_async_cancel_retry_setup",
@@ -1789,6 +1790,50 @@ async def test_setup_raise_not_ready(
     await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.reason is None
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected_state"),
+    [
+        (ConfigEntryError, config_entries.ConfigEntryState.SETUP_ERROR),
+        (ConfigEntryAuthFailed, config_entries.ConfigEntryState.SETUP_ERROR),
+        (ConfigEntryNotReady, config_entries.ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["error", "auth_failed", "not_ready"],
+)
+async def test_setup_error_foreign_translation_domain(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    exc: type[Exception],
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test a setup error translated by another integration."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_manager(manager)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=exc(
+            translation_domain="other_domain",
+            translation_key="test_key",
+            translation_placeholders={"item": "42"},
+        )
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    with patch("homeassistant.config_entries.async_call_later"):
+        await manager.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is expected_state
+    assert entry.error_reason_translation_domain == "other_domain"
+    assert entry.error_reason_translation_key == "test_key"
+    assert entry.error_reason_translation_placeholders == {"item": "42"}
+
+    loaded = json_loads(json_dumps(entry.as_json_fragment))
+    assert loaded["error_reason_translation_domain"] == "other_domain"
+    assert loaded["error_reason_translation_key"] == "test_key"
+    assert loaded["error_reason_translation_placeholders"] == {"item": "42"}
 
 
 async def test_setup_not_ready_exponential_backoff(
@@ -3774,6 +3819,98 @@ async def test_reload_entry_entity_registry_works(
     assert len(mock_unload_entry.mock_calls) == 1
 
 
+async def test_reload_entry_entity_registry_removed_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a config entry removed while its reload is scheduled is skipped.
+
+    Reloads are debounced by RELOAD_AFTER_UPDATE_DELAY seconds. An entry removed
+    inside that window is still in the batch when the timer fires, and must not
+    stop the other entries in the batch from being reloaded.
+    """
+    handler = config_entries.EntityRegistryDisabledHandler(hass)
+    handler.async_setup()
+
+    unload_entry_mocks: dict[str, AsyncMock] = {}
+    entries: dict[str, MockConfigEntry] = {}
+    entity_ids: dict[str, str] = {}
+    for domain in ("comp_removed", "comp_kept"):
+        config_entry = MockConfigEntry(
+            domain=domain, state=config_entries.ConfigEntryState.LOADED
+        )
+        config_entry.supports_unload = True
+        config_entry.add_to_hass(hass)
+        unload_entry_mocks[domain] = AsyncMock(return_value=True)
+        mock_integration(
+            hass,
+            MockModule(
+                domain,
+                async_setup_entry=AsyncMock(return_value=True),
+                async_unload_entry=unload_entry_mocks[domain],
+            ),
+        )
+        mock_platform(hass, f"{domain}.config_flow", None)
+        entries[domain] = config_entry
+
+        # Disabling and re-enabling an entity schedules a reload of its entry
+        entity_entry = entity_registry.async_get_or_create(
+            "light", domain, "123", config_entry=config_entry
+        )
+        entity_ids[domain] = entity_entry.entity_id
+        entity_registry.async_update_entity(
+            entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+        entity_registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+
+    assert handler.changed == {
+        entries["comp_removed"].entry_id,
+        entries["comp_kept"].entry_id,
+    }
+    assert handler._remove_call_later is not None
+
+    # The entry is removed before the debounce timer fires
+    await hass.config_entries.async_remove(entries["comp_removed"].entry_id)
+    await hass.async_block_till_done()
+    unload_entry_mocks["comp_removed"].reset_mock()
+
+    freezer.tick(timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "UnknownEntry" not in caplog.text
+    # The entry that still exists is reloaded
+    assert len(unload_entry_mocks["comp_kept"].mock_calls) == 1
+    assert len(unload_entry_mocks["comp_removed"].mock_calls) == 0
+
+    # Nothing is reloaded or logged when every pending entry has been removed
+    entity_registry.async_update_entity(
+        entity_ids["comp_kept"], disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(entity_ids["comp_kept"], disabled_by=None)
+    await hass.async_block_till_done()
+    assert handler.changed == {entries["comp_kept"].entry_id}
+
+    await hass.config_entries.async_remove(entries["comp_kept"].entry_id)
+    await hass.async_block_till_done()
+    unload_entry_mocks["comp_kept"].reset_mock()
+    caplog.clear()
+
+    freezer.tick(timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "UnknownEntry" not in caplog.text
+    assert "Reloading configuration entries" not in caplog.text
+    assert len(unload_entry_mocks["comp_kept"].mock_calls) == 0
+    assert not handler.changed
+
+
 async def test_unique_id_persisted(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -4153,6 +4290,7 @@ async def test_unique_id_not_update_existing_entry(
 ABORT_IN_PROGRESS = {
     "type": data_entry_flow.FlowResultType.ABORT,
     "reason": "already_in_progress",
+    "translation_domain": HOMEASSISTANT_DOMAIN,
 }
 
 
@@ -5181,6 +5319,8 @@ async def test_default_discovery_in_progress(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
         )
         assert result2["type"] is data_entry_flow.FlowResultType.ABORT
+        assert result2["reason"] == "already_in_progress"
+        assert result2["translation_domain"] == HOMEASSISTANT_DOMAIN
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -7166,16 +7306,25 @@ def test_raise_trying_to_add_same_config_entry_twice(
     ],
 )
 @pytest.mark.parametrize(
-    ("source", "reason"),
+    ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful"),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_and_reload(
     hass: HomeAssistant,
     source: str,
     reason: str,
+    translation_domain: str | None,
     expected_title: str,
     expected_unique_id: str,
     expected_data: dict[str, Any],
@@ -7239,6 +7388,7 @@ async def test_update_entry_and_reload(
     else:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
+        assert result.get("translation_domain") == translation_domain
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
@@ -7307,16 +7457,25 @@ async def test_update_entry_and_reload_with_listener_logs(
 
 
 @pytest.mark.parametrize(
-    ("source", "reason"),
+    ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful"),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_without_reload(
     hass: HomeAssistant,
     source: str,
     reason: str,
+    translation_domain: str | None,
 ) -> None:
     """Test updating an entry without reloading."""
     entry = MockConfigEntry(
@@ -7378,9 +7537,71 @@ async def test_update_entry_without_reload(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert result.get("translation_domain") == translation_domain
     # Assert entry is not reloaded
     assert len(comp.async_setup_entry.mock_calls) == 1
     assert len(comp.async_unload_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    "helper",
+    [
+        pytest.param("async_update_and_abort", id="without_reload"),
+        pytest.param("async_update_reload_and_abort", id="with_reload"),
+    ],
+)
+@pytest.mark.parametrize(
+    "start_flow",
+    [
+        pytest.param("start_reauth_flow", id="reauth"),
+        pytest.param("start_reconfigure_flow", id="reconfigure"),
+    ],
+)
+async def test_update_entry_and_abort_with_custom_reason(
+    hass: HomeAssistant,
+    helper: str,
+    start_flow: str,
+) -> None:
+    """Test a custom abort reason is not translated in the homeassistant domain."""
+    entry = MockConfigEntry(domain="comp", data={"vendor": "data"})
+    entry.add_to_hass(hass)
+
+    comp = MockModule(
+        "comp",
+        async_setup_entry=AsyncMock(return_value=True),
+        async_unload_entry=AsyncMock(return_value=True),
+    )
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
+
+        async def async_step_reconfigure(self, data):
+            """Mock Reconfigure."""
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
+
+    with mock_config_flow("comp", MockFlowHandler):
+        result = await getattr(entry, start_flow)(hass)
+
+    await hass.async_block_till_done()
+
+    assert entry.data == {"vendor": "data", "buyer": "me"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "custom_reason"
+    assert "translation_domain" not in result
 
 
 @pytest.mark.parametrize(

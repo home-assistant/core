@@ -12,8 +12,8 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
+from probatio import from_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert_to_voluptuous
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -27,6 +27,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.json import JsonObjectType
+from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
 from .auth import AuthenticateHeader
 from .const import DOMAIN
@@ -37,6 +38,26 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]
+
+
+def _create_sse_httpx_client(
+    headers: dict[str, str] | None = None,
+    timeout: httpx.Timeout | None = None,
+    auth: httpx.Auth | None = None,
+) -> httpx.AsyncClient:
+    """Create the httpx client used by the SSE transport.
+
+    The SSE transport closes the client itself, so it cannot be handed one of
+    the Home Assistant managed clients. Building it here keeps it off the SDK
+    default, which reads the CA bundle from disk inside the event loop.
+    """
+    return httpx.AsyncClient(
+        verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
+        follow_redirects=True,
+        headers=headers,
+        timeout=timeout,
+        auth=auth,
+    )
 
 
 @asynccontextmanager
@@ -81,7 +102,11 @@ async def mcp_client(
             )
             try:
                 async with (
-                    sse_client(url=url, headers=headers) as streams,
+                    sse_client(
+                        url=url,
+                        headers=headers,
+                        httpx_client_factory=_create_sse_httpx_client,
+                    ) as streams,
                     ClientSession(*streams) as session,
                 ):
                     await session.initialize()
@@ -223,7 +248,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = convert_to_voluptuous(tool.inputSchema)
+                parameters = from_openapi(tool.inputSchema)
             except Exception as err:
                 raise UpdateFailed(
                     f"Error converting schema {err}: {tool.inputSchema}"

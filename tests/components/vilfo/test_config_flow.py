@@ -155,9 +155,15 @@ async def test_form_wrong_host(
     """Test we handle wrong host errors."""
     mock_is_valid_host.return_value = False
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "this is an invalid hostname",
             CONF_ACCESS_TOKEN: "test-token",
         },

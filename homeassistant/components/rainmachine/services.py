@@ -8,11 +8,10 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.dt import as_timestamp, utcnow
 
 from .const import CONF_DURATION, DATA_PROGRAMS, DATA_ZONES, DOMAIN
@@ -131,20 +130,11 @@ def async_get_entry_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> RainMachineConfigEntry:
     """Get the controller related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid RainMachine device ID: {device_id}")
-
-    entry: RainMachineConfigEntry | None
-    for entry_id in device_entry.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-            return entry
-
-    raise ValueError(f"No controller for device ID: {device_id}")
+    config_entry: RainMachineConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, call.data[CONF_DEVICE_ID]
+    )
+    return config_entry
 
 
 @callback

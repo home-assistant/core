@@ -1793,6 +1793,786 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_jaloezie_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730044-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_jaloezie_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_jaloezie_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730044-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_jaloezie_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_sheer_screen_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_kitchen_sheer_screen_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16753206-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_sheer_screen_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Sheer Screen My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_kitchen_sheer_screen_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_sheer_screen_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_kitchen_sheer_screen_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16753206-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_sheer_screen_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Sheer Screen Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_kitchen_sheer_screen_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_shutter_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_kitchen_shutter_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16749917-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_shutter_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_kitchen_shutter_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_shutter_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_kitchen_shutter_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16749917-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_kitchen_shutter_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_kitchen_shutter_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_led_strip_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:brightness-3',
+    'original_name': 'Brightness down',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16752757-stepNegative',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Strip Brightness down',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_led_strip_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_led_strip_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:brightness-7',
+    'original_name': 'Brightness up',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16752757-stepPositive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Strip Brightness up',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-7',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_led_strip_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_led_strip_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16752757-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Strip My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_led_strip_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_led_strip_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16752757-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_led_strip_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Strip Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_led_strip_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_living_room_screen_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_living_room_screen_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16718220-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_living_room_screen_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Screen Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_living_room_screen_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_office_venetian_blind_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_office_venetian_blind_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16747291-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_office_venetian_blind_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Venetian Blind My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_office_venetian_blind_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_office_venetian_blind_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_office_venetian_blind_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16747291-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_office_venetian_blind_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Venetian Blind Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_office_venetian_blind_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_patio_shutter_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_patio_shutter_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730022-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_patio_shutter_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_patio_shutter_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_patio_shutter_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.palm_court_patio_shutter_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730022-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_patio_shutter_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_patio_shutter_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.dining_room_studio_shutter_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

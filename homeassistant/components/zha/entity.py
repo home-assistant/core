@@ -14,7 +14,6 @@ from zha.mixins import LogMixin
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
 from homeassistant.core import State, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -129,26 +128,14 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Return a device description for device registry."""
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
-        gateway_proxy = self.entity_data.device_proxy.gateway_proxy
-        zha_gateway = gateway_proxy.gateway
 
-        device_info = DeviceInfo(
+        return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
         )
-        coordinator_ieee = str(zha_gateway.state.node_info.ieee)
-        if ieee != coordinator_ieee:
-            # The coordinator device is registered before platforms are set up,
-            # so it is always present when a child entity's device_info is built.
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
-                gateway_proxy.hass,
-                (DOMAIN, coordinator_ieee),
-                config_entry_id=gateway_proxy.config_entry.entry_id,
-            )
-        return device_info
 
     def _update_capability_attrs(self) -> None:
         """Re-derive capability `_attr_*` attributes from the cached state."""

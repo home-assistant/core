@@ -269,5 +269,9 @@
       'number_of_guest_devices_allowed': 10,
       'number_of_guests_allowed_per_unit': 5,
     }),
+    'energy_coordinator': dict({
+      'ata-unit-uuid-1': 450.5,
+      'atw-unit-uuid-1': 450.5,
+    }),
   })
 # ---

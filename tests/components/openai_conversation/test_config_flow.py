@@ -647,6 +647,25 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
+        (  # Test clearing every llm api is stored as an empty list
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_LLM_HASS_API: [],
+                    CONF_PROMPT: "",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: [],
+                CONF_PROMPT: "",
+            },
+        ),
         (  # Test converting single llm api format to list
             {
                 CONF_RECOMMENDED: True,

@@ -3,6 +3,7 @@
   "name": "Mitsubishi Comfort",
   "codeowners": ["@nikolairahimi"],
   "config_flow": true,
+  "dependencies": ["dhcp"],
   "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/mitsubishi_comfort",
   "integration_type": "hub",
