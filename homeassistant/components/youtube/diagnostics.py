@@ -9,6 +9,7 @@ from .const import (
     ATTR_LATEST_SHORT,
     ATTR_LATEST_VIDEO,
     ATTR_LATEST_VIDEO_NON_SHORT,
+    CONF_CHANNEL_ID,
 )
 from .coordinator import YouTubeConfigEntry
 
@@ -17,10 +18,10 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: YouTubeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
     sensor_data: dict[str, Any] = {}
-    for channel_id, channel_data in coordinator.data.items():
-        channel_copy = dict(channel_data)
+    for coordinator in entry.runtime_data.values():
+        channel_id = coordinator.subentry.data[CONF_CHANNEL_ID]
+        channel_copy = dict(coordinator.data)
         # Strip verbose description field from all video entries.
         for attr in (
             ATTR_LATEST_VIDEO,

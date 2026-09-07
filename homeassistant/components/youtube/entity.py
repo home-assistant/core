@@ -1,4 +1,4 @@
-"""Entity representing a YouTube account."""
+"""Entity representing a YouTube channel."""
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -16,19 +16,16 @@ class YouTubeChannelEntity(CoordinatorEntity[YouTubeDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: YouTubeDataUpdateCoordinator,
-        description: EntityDescription,
         channel_id: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize a YouTube entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{channel_id}_{description.key}"
-        )
-        self._channel_id = channel_id
+        self._attr_unique_id = f"{channel_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{channel_id}")},
+            identifiers={(DOMAIN, channel_id)},
             manufacturer=MANUFACTURER,
-            name=coordinator.data[channel_id][ATTR_TITLE],
+            name=coordinator.data[ATTR_TITLE],
         )

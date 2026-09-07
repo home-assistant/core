@@ -7,8 +7,11 @@ DOMAIN = "youtube"
 MANUFACTURER = "Google, Inc."
 CHANNEL_CREATION_HELP_URL = "https://support.google.com/youtube/answer/1646861"
 
+CONF_CHANNEL_ID = "channel_id"
 CONF_CHANNELS = "channels"
 CONF_UPLOAD_PLAYLIST = "upload_playlist_id"
+
+SUBENTRY_TYPE_CHANNEL = "channel"
 
 LOGGER = logging.getLogger(__package__)
 

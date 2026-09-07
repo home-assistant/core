@@ -85,7 +85,8 @@ async def test_sensor_with_short(
     ):
         # Clear the coordinator's is_short cache so the Short is re-detected.
         entry = hass.config_entries.async_entries(DOMAIN)[0]
-        entry.runtime_data._is_short_cache.clear()
+        coordinator = next(iter(entry.runtime_data.values()))
+        coordinator._is_short_cache.clear()
         future = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

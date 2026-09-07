@@ -25,6 +25,8 @@ from .const import (
     ATTR_TOTAL_VIEWS,
     ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
+    CONF_CHANNEL_ID,
+    SUBENTRY_TYPE_CHANNEL,
 )
 from .coordinator import YouTubeConfigEntry
 from .entity import YouTubeChannelEntity
@@ -116,12 +118,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the YouTube sensor."""
-    coordinator = entry.runtime_data
-    async_add_entities(
-        YouTubeSensor(coordinator, sensor_type, channel_id)
-        for channel_id in coordinator.data
-        for sensor_type in SENSOR_TYPES
-    )
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
+        coordinator = entry.runtime_data[subentry.subentry_id]
+        channel_id = subentry.data[CONF_CHANNEL_ID]
+        async_add_entities(
+            (
+                YouTubeSensor(coordinator, channel_id, sensor_type)
+                for sensor_type in SENSOR_TYPES
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
@@ -134,14 +140,14 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(
-            self.coordinator.data[self._channel_id]
+            self.coordinator.data
         )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     @override
@@ -149,16 +155,12 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         """Return the value reported by the sensor."""
         if not self.available:
             return None
-        return self.entity_description.entity_picture_fn(
-            self.coordinator.data[self._channel_id]
-        )
+        return self.entity_description.entity_picture_fn(self.coordinator.data)
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         if self.entity_description.attributes_fn:
-            return self.entity_description.attributes_fn(
-                self.coordinator.data[self._channel_id]
-            )
+            return self.entity_description.attributes_fn(self.coordinator.data)
         return None

@@ -23,6 +23,7 @@ class MockYouTube:
         playlist_items_fixture: str = "get_playlist_items.json",
         subscriptions_fixture: str = "get_subscriptions.json",
         short_video_ids: set[str] | None = None,
+        extra_channel_fixtures: list[str] | None = None,
     ) -> None:
         """Initialize mock service."""
         self.hass = hass
@@ -30,6 +31,7 @@ class MockYouTube:
         self._playlist_items_fixture = playlist_items_fixture
         self._subscriptions_fixture = subscriptions_fixture
         self._short_video_ids: set[str] = short_video_ids or set()
+        self._extra_channel_fixtures = extra_channel_fixtures or []
 
     async def set_user_authentication(
         self, token: str, scopes: list[AuthScope]
@@ -50,11 +52,11 @@ class MockYouTube:
         """Get channels."""
         if self._thrown_error is not None:
             raise self._thrown_error
-        channels = await async_load_json_object_fixture(
-            self.hass, self._channel_fixture, DOMAIN
-        )
-        for item in channels["items"]:
-            yield YouTubeChannel(**item)
+        for fixture in (self._channel_fixture, *self._extra_channel_fixtures):
+            channels = await async_load_json_object_fixture(self.hass, fixture, DOMAIN)
+            for item in channels["items"]:
+                if item["id"] in channel_ids:
+                    yield YouTubeChannel(**item)
 
     async def get_playlist_items(
         self, playlist_id: str, amount: int
