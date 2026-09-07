@@ -1,0 +1,95 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please reconfigure the same boiler you originally set up."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "[%key:component::dedietrich::config::step::user::data_description::host%]",
+          "port": "[%key:component::dedietrich::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::dedietrich::config::step::user::data_description::unit_id%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "system": "System",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Modbus TCP bridge the boiler is connected through.",
+          "port": "The Modbus TCP port to connect on.",
+          "system": "The Diematic system the boiler's control panel reports.",
+          "unit_id": "The boiler's Modbus unit ID, also called its Modbus device address."
+        },
+        "description": "Connect over Modbus TCP. The boiler's identity and register map are detected automatically."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "boiler_temperature": {
+        "name": "Boiler temperature"
+      },
+      "calc_boiler_temperature": {
+        "name": "Calculated boiler temperature"
+      },
+      "circuit_a_room_temperature": {
+        "name": "Circuit A room temperature"
+      },
+      "circuit_b_room_temperature": {
+        "name": "Circuit B room temperature"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "hot_water_temperature": {
+        "name": "Hot water temperature"
+      },
+      "ionization_current": {
+        "name": "Ionization current"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "return_temperature": {
+        "name": "Return temperature"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "Error communicating with the boiler."
+    },
+    "no_component_answered": {
+      "message": "No component answered."
+    }
+  },
+  "selector": {
+    "system": {
+      "options": {
+        "diematic_3": "Diematic 3 (base)",
+        "diematic_4": "Diematic 4 (base)",
+        "isystem": "iSystem"
+      }
+    }
+  }
+}

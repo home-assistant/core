@@ -153,6 +153,7 @@ FLOWS = {
         "deako",
         "deconz",
         "decora_wifi",
+        "dedietrich",
         "deluge",
         "denon_rs232",
         "denonavr",

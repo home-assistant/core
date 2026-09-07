@@ -370,6 +370,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
 /tests/components/deconz/ @Kane610
+/homeassistant/components/dedietrich/ @DaanVervacke
+/tests/components/dedietrich/ @DaanVervacke
 /homeassistant/components/default_config/ @home-assistant/core
 /tests/components/default_config/ @home-assistant/core
 /homeassistant/components/delijn/ @bollewolle @Emilv2
