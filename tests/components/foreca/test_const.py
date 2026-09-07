@@ -40,7 +40,7 @@ from homeassistant.components.weather import (
         pytest.param("d442", ATTR_CONDITION_SNOWY, id="thunder_snow"),
         pytest.param(None, None, id="missing"),
         pytest.param("", None, id="empty"),
-        pytest.param("bogus", None, id="unparseable"),
+        pytest.param("bogus", None, id="unparsable"),
         pytest.param("x421", None, id="bad_day_night_prefix"),
     ],
 )

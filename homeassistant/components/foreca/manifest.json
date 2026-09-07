@@ -1,19 +1,12 @@
 {
   "domain": "foreca",
   "name": "Foreca",
-  "codeowners": [
-    "@foreca-dev/maintainers",
-    "@EetuPelkonen"
-  ],
+  "codeowners": ["@foreca-dev/maintainers", "@EetuPelkonen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/foreca",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": [
-    "pyforeca"
-  ],
+  "loggers": ["pyforeca"],
   "quality_scale": "bronze",
-  "requirements": [
-    "pyforeca==0.2.1"
-  ]
+  "requirements": ["pyforeca==0.2.1"]
 }
