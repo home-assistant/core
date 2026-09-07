@@ -285,8 +285,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 if node_id in nodes_by_id and node_id in self.data.nodes:
                     nodes_by_id[node_id] = self.data.nodes[node_id]
 
-            self._coordinator_update_version += 1
-        return DucoData(
+        data = DucoData(
             nodes=nodes_by_id,
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
@@ -294,3 +293,5 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             ventilation_temperatures=ventilation_temperatures,
             bypass_supply_temperature_targets=bypass_supply_temperature_targets,
         )
+        self._coordinator_update_version += 1
+        return data
