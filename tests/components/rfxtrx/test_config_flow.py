@@ -1,5 +1,6 @@
 """Test the Rfxtrx config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 from RFXtrx import RFXtrxTransportError
@@ -54,6 +55,13 @@ async def start_add_device_flow(
         (entry.entry_id, "device"),
         context={"source": config_entries.SOURCE_USER},
     )
+
+
+async def async_wait_for_reload(hass: HomeAssistant) -> None:
+    """Wait for the entry's debounced reload to complete."""
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
 
 
 async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
@@ -400,7 +408,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
     assert subentry.data["event_code"] == "0b1100cd0213c7f230010f71"
@@ -447,7 +455,7 @@ async def test_options_replace_device(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
     device_entry = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
@@ -478,7 +486,7 @@ async def test_options_replace_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry = entry.subentries[subentry.subentry_id]
     assert subentry.data["event_code"] == "0b1100100118cdea02010f70"
@@ -663,7 +671,7 @@ async def test_options_replace_device_with_existing(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry_a = next(iter(entry.subentries.values()))
     device_a = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
@@ -686,7 +694,7 @@ async def test_options_replace_device_with_existing(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry_b_id = next(
         s.subentry_id for s in entry.subentries.values() if s != subentry_a
@@ -707,7 +715,7 @@ async def test_options_replace_device_with_existing(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     # A kept its identity and customization, but now has B's event code
     assert entry.subentries.keys() == {subentry_a.subentry_id}
@@ -722,6 +730,84 @@ async def test_options_replace_device_with_existing(
     entity_a = entity_registry.async_get(entity_id_a)
     assert entity_a
     assert entity_a.unique_id == subentry_a.subentry_id
+
+
+async def test_options_replace_device_coalesces_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test replacing a device only reloads the entry once.
+
+    The replace flow both removes the source subentry and updates the
+    target subentry, each of which notifies the entry's update listener;
+    those should be coalesced into a single reload.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+
+    # Add device A
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await async_wait_for_reload(hass)
+
+    subentry_a = next(iter(entry.subentries.values()))
+
+    # Add device B (same protocol/type as A)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await async_wait_for_reload(hass)
+
+    subentry_b_id = next(
+        s.subentry_id for s in entry.subentries.values() if s != subentry_a
+    )
+
+    # Reconfigure A, picking B as the device to take over. This removes B's
+    # subentry and updates A's, each of which notifies the update listener.
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        wraps=hass.config_entries.async_reload,
+    ) as mock_reload:
+        result = await entry.start_subentry_reconfigure_flow(
+            hass, subentry_a.subentry_id
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={"replace_device": subentry_b_id},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        await async_wait_for_reload(hass)
+
+        assert mock_reload.call_count == 1
 
 
 async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
@@ -826,7 +912,7 @@ async def test_options_add_and_configure_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
     assert subentry.data["event_code"] == "0913000022670e013970"
@@ -911,7 +997,7 @@ async def test_options_configure_rfy_cover_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
     assert subentry.data["event_code"] == "0C1a0000010203010000000000"

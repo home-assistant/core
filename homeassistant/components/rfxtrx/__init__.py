@@ -27,6 +27,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -53,6 +54,8 @@ from .services import async_setup_services
 DEFAULT_OFF_DELAY = 2.0
 
 CONNECT_TIMEOUT = 60.0
+
+RELOAD_DEBOUNCE_COOLDOWN = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,13 +180,27 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # `_async_reload_on_update` performs for user-driven subentry changes.
     skip_next_reload = False
 
+    async def _async_do_reload() -> None:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    # Debounced so a flow that updates multiple subentries results in a single
+    # reload reflecting all of them.
+    reload_debouncer = Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=RELOAD_DEBOUNCE_COOLDOWN,
+        immediate=False,
+        function=_async_do_reload,
+    )
+    entry.async_on_unload(reload_debouncer.async_shutdown)
+
     async def _async_reload_on_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Reload the entry when it is updated through a config/subentry flow."""
         nonlocal skip_next_reload
         if skip_next_reload:
             skip_next_reload = False
             return
-        await hass.config_entries.async_reload(entry.entry_id)
+        await reload_debouncer.async_call()
 
     entry.async_on_unload(entry.add_update_listener(_async_reload_on_update))
 
