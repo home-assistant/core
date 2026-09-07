@@ -1972,6 +1972,48 @@ async def test_vehicle_bluetooth_key_load_falls_back_to_cloud(
     )
 
 
+async def test_vehicle_bluetooth_key_load_recovers_on_reload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A vehicle degraded to cloud by a key-load failure regains BLE control on reload."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock(
+            side_effect=OSError("disk gone")
+        )
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert not isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+        assert "falling back to cloud control" in caplog.text
+
+        # The key becomes readable again; a reload must restore local Bluetooth control.
+        mock_parent.return_value.get_private_key = AsyncMock()
+        caplog.clear()
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+    assert "falling back to cloud control" not in caplog.text
+
+
 @asynccontextmanager
 async def _paired_entry(
     hass: HomeAssistant, ble_lookup: MagicMock

@@ -2150,13 +2150,15 @@ async def test_pair_step_second_lookup_errors(
             ValueError,
             id="key_read_valueerror",
         ),
-        # An encrypted key PEM surfaces as TypeError from the cryptography loader.
+        # A raw TypeError only escapes the create/generation path now; the flow
+        # translates it to ValueError, so this covers that inner branch.
         pytest.param(
             "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
             TypeError,
             id="key_fetch_typeerror",
         ),
-        # PrivateKeyError is the wrapped existing-key-file shape, distinct from the raw errors.
+        # An encrypted existing key file surfaces as PrivateKeyError("encrypted")
+        # and aborts via the outer handler, not the TypeError branch above.
         pytest.param(
             "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
             PrivateKeyError("encrypted", "Private key file is encrypted"),

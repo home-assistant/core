@@ -911,7 +911,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
                 try:
                     await vehicle.api.primary.disconnect()
                 except (BleakError, TeslaFleetError, TimeoutError) as err:
-                    LOGGER.debug(
+                    # Swallowed so one stuck link cannot block the unload, but
+                    # warn: a leaked BLE connection can keep the vehicle awake.
+                    LOGGER.warning(
                         "Error disconnecting Bluetooth for %s: %s", vehicle.vin, err
                     )
     return unloaded
