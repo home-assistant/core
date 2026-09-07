@@ -44,6 +44,13 @@ ATTR_DELAY = "delay"
 # same grace for sleepy devices to hear about it.
 DEFAULT_DELAY_S = PENDING_DATASET_DELAY_TIMER // 1000
 
+# What the Thread leader will accept. It raises anything shorter than its
+# default delay when the dataset changes the network key, and anything
+# below its minimum otherwise (OPENTHREAD_CONFIG_TMF_PENDING_DATASET_-
+# DEFAULT_DELAY and _MINIMUM_DELAY).
+_LEADER_KEY_CHANGE_DELAY_S = 300
+_LEADER_MINIMUM_DELAY_S = 30
+
 # How long the write itself can take: the library reads the pending dataset
 # and then writes it, each bounded by the ten second timeout the integration
 # gives its API client.
@@ -401,6 +408,21 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="pending_dataset_in_place"
             )
+
+        # The leader raises a delay it considers too short. A router that
+        # registers the dataset with the leader (ot-br-posix#3582) applies
+        # the raised value like every other device; one that writes it
+        # locally never sees it -- it starts its own timer on the value
+        # written here and ignores the re-issued dataset, which carries the
+        # same pending timestamp, so a shorter delay would move it and its
+        # children ahead of everyone else. Neither reports the raised value,
+        # so the window recorded below and the delay reported to the caller
+        # would both describe a migration that is still running. Send what
+        # the mesh will actually use.
+        if active.get(MeshcopTLVType.NETWORKKEY) != target[MeshcopTLVType.NETWORKKEY]:
+            delay = max(delay, _LEADER_KEY_CHANGE_DELAY_S)
+        else:
+            delay = max(delay, _LEADER_MINIMUM_DELAY_S)
 
         # A newer stamp is not enough while an earlier dataset issued for
         # this mesh is still propagating: a router that has not learned it
