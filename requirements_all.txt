@@ -416,7 +416,7 @@ aiorecollect==2023.09.0
 aioridwell==2025.09.0
 
 # homeassistant.components.remember_the_milk
-aiortm==0.20.0
+aiortm==0.20.1
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.46.3
