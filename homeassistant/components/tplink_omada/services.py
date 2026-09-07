@@ -168,7 +168,7 @@ async def _resolve_client_controller(
         try:
             await controller.omada_client.get_client(controller_mac)
         except RequestFailed as ex:
-            # The controller reports unknown clients with error code -41011.
+            # -41011 is the controller's "client not found" code (no public accessor).
             if getattr(ex, "_error_code", None) == -41011:
                 continue
             raise HomeAssistantError(
