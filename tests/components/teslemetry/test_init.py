@@ -25,6 +25,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite
+from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
@@ -1239,6 +1240,23 @@ async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
     await hass.async_block_till_done()
 
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_stream_rejected_token_starts_reauth(
+    hass: HomeAssistant,
+    mock_stream_listen: AsyncMock,
+) -> None:
+    """Test the stream listener starts reauth when the token is rejected."""
+    mock_stream_listen.side_effect = TeslemetryStreamAuthenticationError
+
+    await setup_platform(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+        for flow in flows
+    )
 
 
 SITE_ID = 123456
