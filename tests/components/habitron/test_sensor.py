@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from habitron_client import Area, SmartController
 import pytest
 
+from homeassistant.components.habitron import sensor as habitron_sensor
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.sensor import (
     AIRQUALITY_DESCRIPTION,
@@ -206,13 +207,63 @@ def test_described_sensor_not_diagnostic_for_normal_type() -> None:
     assert getattr(entity, "_attr_entity_registry_enabled_default", True) is not False
 
 
-def test_described_sensor_unique_id_appends_key() -> None:
-    """The description key keeps otherwise-colliding streams distinct."""
+@pytest.mark.parametrize(
+    ("description", "expected"),
+    [
+        # Per-module sensors: one description per member, so the bare id is
+        # unique and must stay as it is -- an installation coming over from the
+        # custom integration keeps these entity_ids.
+        (HUMIDITY_DESCRIPTION, "Mod_MOD-1_snsr0"),
+        (ILLUMINANCE_DESCRIPTION, "Mod_MOD-1_snsr0"),
+        (WIND_DESCRIPTION, "Mod_MOD-1_snsr0"),
+        (AIRQUALITY_DESCRIPTION, "Mod_MOD-1_snsr0"),
+        (TEMP_DESCRIPTION, "Mod_MOD-1_snsr0"),
+        (TEMP_EXT_DESCRIPTION, "Mod_MOD-1_snsr0"),
+        # Router streams share a number across three lists.
+        (CURRENT_DESCRIPTION, "Mod_MOD-1_snsr0_current"),
+        (VOLTAGE_DESCRIPTION, "Mod_MOD-1_snsr0_voltage"),
+        (TIMEOUT_DESCRIPTION, "Mod_MOD-1_snsr0_timeout"),
+        # The ekey members produce two entities each.
+        (EKEY_ID_DESCRIPTION, "Mod_MOD-1_snsr0_ekey_id"),
+        (EKEY_USER_NAME_DESCRIPTION, "Mod_MOD-1_snsr0_ekey_user_name"),
+        # Numbered in its own list.
+        (ANALOG_DESCRIPTION, "Mod_MOD-1_snsr0_analog"),
+    ],
+)
+def test_described_sensor_unique_id(
+    description: HbtnSensorEntityDescription, expected: str
+) -> None:
+    """Only descriptions that would collide carry the key suffix."""
     module = _make_module()
     sensor_desc = _make_sensor_descriptor(name="Humidity")
     coord = MagicMock(spec=DataUpdateCoordinator)
-    entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, HUMIDITY_DESCRIPTION)
-    assert entity.unique_id == "Mod_MOD-1_snsr0_humidity"
+    entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, description)
+    assert entity.unique_id == expected
+
+
+def test_only_per_module_sensors_keep_the_bare_unique_id() -> None:
+    """Pin which descriptions may go without the key suffix.
+
+    Adding a description that shares a member number with another one, without
+    setting ``disambiguate``, would silently drop an entity (duplicate
+    unique_id). Dropping the flag from a per-module sensor would re-register it
+    under a new id and rewrite its entity_id. Both are caught here.
+    """
+    bare = {
+        name
+        for name, obj in vars(habitron_sensor).items()
+        if isinstance(obj, HbtnSensorEntityDescription) and not obj.disambiguate
+    }
+    assert bare == {
+        "HUMIDITY_DESCRIPTION",
+        "ILLUMINANCE_DESCRIPTION",
+        "WIND_DESCRIPTION",
+        "AIRQUALITY_DESCRIPTION",
+        "TEMP_DESCRIPTION",
+        "TEMP_EXT_DESCRIPTION",
+        # LogicSensor overwrites the unique_id with ``Mod_{uid}_logic{nmbr}``.
+        "LOGIC_DESCRIPTION",
+    }
 
 
 def test_described_sensor_keeps_bus_name_when_not_translated() -> None:
