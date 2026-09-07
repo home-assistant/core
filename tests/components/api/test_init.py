@@ -20,7 +20,11 @@ from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -976,6 +980,21 @@ async def test_api_call_service_raises(
     resp = await mock_api_client.post("/api/services/test_domain/test_service")
     assert resp.status == status
     assert await resp.json() == {"message": str(error)}
+
+
+async def test_api_call_service_unauthorized(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test the API returns 401 if the service denies permission."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Deny the call."""
+        raise Unauthorized
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_api_call_service_bad_data(
