@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING, override
 
 import caldav
 
-from homeassistant.components.calendar import CalendarEvent, extract_offset
+from homeassistant.components.calendar import (
+    CalendarEvent,
+    CalendarEventStatus,
+    extract_offset,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -21,6 +25,24 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
+
+
+def _get_status(vevent: caldav.CalendarObjectResource) -> CalendarEventStatus | None:
+    """Return the rfc5545 STATUS of a VEVENT, if a calendar entity reports it.
+
+    Anything outside the supported set is dropped rather than passed on, which
+    covers both the cancelled status a calendar entity does not report and the
+    iana-tokens and x-names that rfc5545 also permits here: reporting no status
+    at all is closer to the truth than reporting one the consumer cannot
+    interpret.
+    """
+    if (value := get_attr_value(vevent, "status")) is None:
+        return None
+    try:
+        return CalendarEventStatus(value.lower())
+    except ValueError:
+        _LOGGER.debug("Ignoring unsupported event status %s", value)
+        return None
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -67,10 +89,10 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
         event_list = []
         for event in vevent_list:
-            if not hasattr(event.instance, "vevent"):
+            if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
+            vevent = event.vobject_instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
             event_list.append(
@@ -86,6 +108,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                         if (v := get_attr_value(vevent, "recurrence_id")) is not None
                         else None
                     ),
+                    status=_get_status(vevent),
                 )
             )
 
@@ -122,10 +145,10 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
-            if not hasattr(event.instance, "vevent"):
+            if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
+            vevent = event.vobject_instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today: date | datetime
                 _start_of_tomorrow: datetime | date
@@ -138,7 +161,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     _start_of_tomorrow = start_of_tomorrow
                 if _start_of_today <= start_dt < _start_of_tomorrow:
                     new_event = event.copy()
-                    new_vevent = new_event.instance.vevent  # type: ignore[attr-defined]
+                    new_vevent = new_event.vobject_instance.vevent  # type: ignore[attr-defined]
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
@@ -147,9 +170,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 elif _start_of_tomorrow <= start_dt:
                     break
         vevents = [
-            event.instance.vevent
+            event.vobject_instance.vevent
             for event in results + new_events
-            if hasattr(event.instance, "vevent")
+            if hasattr(event.vobject_instance, "vevent")
         ]
 
         # dtstart can be a date or datetime depending if the event lasts a
@@ -194,6 +217,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 if (v := get_attr_value(vevent, "recurrence_id")) is not None
                 else None
             ),
+            status=_get_status(vevent),
         )
         return next_event, offset
 

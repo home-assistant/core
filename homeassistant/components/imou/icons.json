@@ -14,6 +14,22 @@
         "default": "mdi:arrow-up-bold"
       }
     },
+    "select": {
+      "collection_point": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "device_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "low": "mdi:volume-low",
+          "medium": "mdi:volume-medium",
+          "mute": "mdi:volume-off"
+        }
+      },
+      "night_vision_mode": {
+        "default": "mdi:weather-night"
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:lan-connect",

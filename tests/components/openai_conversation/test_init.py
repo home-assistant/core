@@ -1636,7 +1636,7 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = attr.evolve(
         conversation_device, disabled_by=device_disabled_by
     )
-    device_registry.devices[conversation_device.id] = conversation_device
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

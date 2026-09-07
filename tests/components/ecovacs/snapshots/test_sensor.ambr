@@ -213,7 +213,7 @@
     'sensor.e1234567890000000003_filter_lifespan',
   ])
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:entity-registry]
+# name: test_sensors[5xu9h3][sensor.goat_g1_area_mowed:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -227,7 +227,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.goat_g1_area_cleaned',
+    'entity_id': 'sensor.goat_g1_area_mowed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -235,7 +235,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Area cleaned',
+    'object_id_base': 'Area mowed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -246,25 +246,25 @@
     }),
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
-    'original_name': 'Area cleaned',
+    'original_name': 'Area mowed',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'stats_area',
+    'translation_key': 'stats_area_mower',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_area',
     'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
+# name: test_sensors[5xu9h3][sensor.goat_g1_area_mowed:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Area cleaned',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Area mowed',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.goat_g1_area_cleaned',
+    'entity_id': 'sensor.goat_g1_area_mowed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -372,64 +372,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_cleaning_duration:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.goat_g1_cleaning_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Cleaning duration',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Cleaning duration',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stats_time',
-    'unique_id': '8516fbb1-17f1-4194-0000000_stats_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_cleaning_duration:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Cleaning duration',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.goat_g1_cleaning_duration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.0',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_error:entity-registry]
@@ -584,7 +526,65 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:entity-registry]
+# name: test_sensors[5xu9h3][sensor.goat_g1_mowing_duration:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.goat_g1_mowing_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mowing duration',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Mowing duration',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stats_time_mower',
+    'unique_id': '8516fbb1-17f1-4194-0000000_stats_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_mowing_duration:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Mowing duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_mowing_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_area_mowed:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -600,7 +600,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.goat_g1_total_area_cleaned',
+    'entity_id': 'sensor.goat_g1_total_area_mowed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -608,7 +608,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total area cleaned',
+    'object_id_base': 'Total area mowed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -616,33 +616,33 @@
     }),
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
-    'original_name': 'Total area cleaned',
+    'original_name': 'Total area mowed',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_stats_area',
+    'translation_key': 'total_stats_area_mower',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_area',
     'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_area_mowed:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total area cleaned',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total area mowed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.goat_g1_total_area_cleaned',
+    'entity_id': 'sensor.goat_g1_total_area_mowed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:entity-registry]
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_mowing_duration:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -658,7 +658,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.goat_g1_total_cleaning_duration',
+    'entity_id': 'sensor.goat_g1_total_mowing_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -666,7 +666,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total cleaning duration',
+    'object_id_base': 'Total mowing duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -677,33 +677,33 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Total cleaning duration',
+    'original_name': 'Total mowing duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_stats_time',
+    'translation_key': 'total_stats_time_mower',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_time',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:state]
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_mowing_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total cleaning duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total mowing duration',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.goat_g1_total_cleaning_duration',
+    'entity_id': 'sensor.goat_g1_total_mowing_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.0',
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:entity-registry]
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_mowings:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -719,7 +719,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.goat_g1_total_cleanings',
+    'entity_id': 'sensor.goat_g1_total_mowings',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -727,29 +727,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total cleanings',
+    'object_id_base': 'Total mowings',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Total cleanings',
+    'original_name': 'Total mowings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_stats_cleanings',
+    'translation_key': 'total_stats_cleanings_mower',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_cleanings',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:state]
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_mowings:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total cleanings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total mowings',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.goat_g1_total_cleanings',
+    'entity_id': 'sensor.goat_g1_total_mowings',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

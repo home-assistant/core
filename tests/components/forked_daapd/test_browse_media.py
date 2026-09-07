@@ -273,8 +273,13 @@ async def test_async_browse_spotify(
     assert await async_setup_component(hass, spotify.DOMAIN, {})
     await hass.async_block_till_done()
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.spotify_async_browse_media"
     ) as mock_spotify_browse:
@@ -325,8 +330,13 @@ async def test_async_browse_media_source(
     """Test browsing media_source."""
 
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.media_source.async_browse_media"
     ) as mock_media_source_browse:

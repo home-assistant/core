@@ -142,6 +142,7 @@ SENSORS: Final = (
     MikrotikSensorEntityDescription(
         key="uptime",
         device_class=SensorDeviceClass.UPTIME,
+        entity_category=EntityCategory.DIAGNOSTIC,
         type=RESOURCE,
     ),
 )

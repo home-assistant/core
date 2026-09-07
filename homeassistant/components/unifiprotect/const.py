@@ -55,7 +55,7 @@ DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 # the public API devices WebSocket.
 DEVICES_WS_SUBSCRIBED_MODELS: set[ModelType] = set()
 
-MIN_REQUIRED_PROTECT_V = Version("7.1.0")
+MIN_REQUIRED_PROTECT_V = Version("7.2.105")
 OUTDATED_LOG_MESSAGE = (
     "You are running v%s of UniFi Protect. Minimum required version is v%s. Please"
     " upgrade UniFi Protect and then retry"
@@ -79,9 +79,24 @@ PLATFORMS = [
     Platform.TEXT,
 ]
 
+# Platforms forwarded in public-API-only (API-key) mode. Only entities that are
+# fully backed by the public Integration API work without a local user; the
+# rest enumerate from the private bootstrap, which is absent in this mode.
+PUBLIC_ONLY_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.CAMERA,
+    Platform.LIGHT,
+]
+
+# Stored local-user credentials do not imply the mode: they are kept on a
+# switch to API-key-only so switching back is lossless.
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
+
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+DISPATCH_PUBLIC_ADD = "public_add_device"
 
 EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"

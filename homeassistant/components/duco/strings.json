@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device you entered belongs to a different Duco box.",
@@ -46,6 +45,11 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "bypass_supply_target_temperature_zone": {
+        "name": "Bypass target {zone}"
       }
     },
     "select": {
@@ -134,8 +138,14 @@
     "connection_error": {
       "message": "Could not connect to the Duco device."
     },
+    "failed_to_set_bypass_supply_temperature_target": {
+      "message": "Failed to set bypass supply target temperature."
+    },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state."
+    },
+    "invalid_bypass_supply_temperature_target_step": {
+      "message": "The value {value} does not match the supported increment of {increment} starting at {minimum}."
     },
     "rate_limit_exceeded": {
       "message": "The Duco device has reached its daily write limit. Try again tomorrow."

@@ -8,6 +8,8 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.components import sensor
+from homeassistant.components.input_datetime import DOMAIN as INPUT_DATETIME_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AT,
     CONF_ENTITY_ID,
@@ -160,7 +162,7 @@ async def async_attach_trigger(  # noqa: C901
         trigger_dt: datetime | None
 
         # Check state of entity. If valid, set up a listener.
-        if new_state.domain == "input_datetime":
+        if new_state.domain == INPUT_DATETIME_DOMAIN:
             if has_date := new_state.attributes["has_date"]:
                 year = new_state.attributes["year"]
                 month = new_state.attributes["month"]
@@ -223,7 +225,7 @@ async def async_attach_trigger(  # noqa: C901
                     second=second,
                 )
         elif (
-            new_state.domain == "sensor"
+            new_state.domain == SENSOR_DOMAIN
             and new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             in (sensor.SensorDeviceClass.TIMESTAMP, sensor.SensorDeviceClass.UPTIME)
             and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)

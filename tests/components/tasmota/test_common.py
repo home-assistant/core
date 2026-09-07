@@ -22,7 +22,7 @@ from hatasmota.utils import (
 )
 import pytest
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -117,13 +117,10 @@ async def remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_id: str,
-    config_entry_id: str | None = None,
 ) -> None:
-    """Remove config entry from a device."""
-    if config_entry_id is None:
-        config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    """Remove a device."""
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(device_id, config_entry_id)
+    response = await ws_client.remove_device(device_id)
     assert response["success"]
 
 

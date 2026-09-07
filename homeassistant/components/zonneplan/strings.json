@@ -1,0 +1,107 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The one-time password was validated for a different Zonneplan account than the one configured."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "Timeout while communicating with the Zonneplan API",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "otp": {
+        "data": {
+          "otp": "One-time password"
+        },
+        "data_description": {
+          "otp": "Enter the one-time password mailed to {email}."
+        },
+        "description": "Within a few minutes, you will receive an email with a one-time password. Enter the password below to complete the login process."
+      },
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "[%key:component::zonneplan::config::step::user::data_description::email%]"
+        },
+        "description": "The stored credentials for {email} are no longer valid. Confirm your email address to receive a new one-time password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "[%key:component::zonneplan::config::step::user::data_description::email%]"
+        },
+        "description": "Reconfigure the {email} account. Confirm your email address to receive a new one-time password."
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "Email address for your Zonneplan account."
+        },
+        "description": "Log in to Zonneplan with the email address associated with your account. You will be receiving a one-time password via email to complete the login process."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_electricity_price": {
+        "name": "Current electricity price"
+      },
+      "electricity_price_low_today_end_time": {
+        "name": "Electricity price low today end time"
+      },
+      "electricity_price_low_today_start_time": {
+        "name": "Electricity price low today start time"
+      },
+      "electricity_price_low_tomorrow_end_time": {
+        "name": "Electricity price low tomorrow end time"
+      },
+      "electricity_price_low_tomorrow_start_time": {
+        "name": "Electricity price low tomorrow start time"
+      },
+      "electricity_prices_tomorrow_status": {
+        "name": "Electricity prices tomorrow status",
+        "state": {
+          "available": "Available",
+          "incoming": "Incoming"
+        }
+      },
+      "gas_price_today": {
+        "name": "Gas price daily"
+      },
+      "highest_electricity_price_today": {
+        "name": "Highest electricity price today"
+      },
+      "highest_electricity_price_tomorrow": {
+        "name": "Highest electricity price tomorrow"
+      },
+      "lowest_electricity_price_today": {
+        "name": "Lowest electricity price today"
+      },
+      "lowest_electricity_price_tomorrow": {
+        "name": "Lowest electricity price tomorrow"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error communicating with the Zonneplan API"
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying to authenticate"
+    },
+    "timeout_connect": {
+      "message": "Timeout while communicating with the Zonneplan API"
+    }
+  }
+}

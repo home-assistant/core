@@ -153,8 +153,7 @@ async def async_setup_entry(
             )
             model_id = SERVER_MODEL_ID + "/" + model_id if model_id else SERVER_MODEL_ID
             # The player shares the server's device (same MAC), so it resolves to
-            # the server device itself; don't link it to itself. None also clears
-            # the link for devices from before this was fixed.
+            # the server device itself; don't link it to itself.
             via_device_id = None
 
         device = device_registry.async_get_or_create(

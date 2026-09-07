@@ -2,22 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "no_gateways": "No gateways were found for your account.",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "reconfigure_wrong_account": "You can only reconfigure this entry with the same Overkiz account and hub",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "reconfigure_wrong_account": "You can only reconfigure this entry with the same Overkiz account and hub"
     },
     "error": {
       "application_not_allowed": "Your setup cannot be accessed through this application.",

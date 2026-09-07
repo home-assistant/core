@@ -2864,67 +2864,6 @@
     'state': '100.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqwindspeed_avg',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BR 7-in-1 WLAN Wetterstation Anthrazit',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4116,6 +4055,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqwindspeed_avg',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.c30_battery-entry]
@@ -6245,7 +6245,7 @@
     'state': '222.4',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha-entry]
+# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6261,7 +6261,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duan_lu_qi_ha',
+    'entity_id': 'sensor.duan_lu_qi_ha_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6269,7 +6269,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6280,7 +6280,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6290,23 +6290,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha-state]
+# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '断路器HA',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '断路器HA Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duan_lu_qi_ha',
+    'entity_id': 'sensor.duan_lu_qi_ha_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.072',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_2-entry]
+# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6322,7 +6322,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duan_lu_qi_ha_2',
+    'entity_id': 'sensor.duan_lu_qi_ha_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6330,7 +6330,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6341,7 +6341,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6351,23 +6351,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_2-state]
+# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '断路器HA',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '断路器HA Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duan_lu_qi_ha_2',
+    'entity_id': 'sensor.duan_lu_qi_ha_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.008',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_3-entry]
+# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6383,7 +6383,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duan_lu_qi_ha_3',
+    'entity_id': 'sensor.duan_lu_qi_ha_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6391,7 +6391,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6399,7 +6399,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6409,16 +6409,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_3-state]
+# name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '断路器HA',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '断路器HA Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duan_lu_qi_ha_3',
+    'entity_id': 'sensor.duan_lu_qi_ha_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6779,7 +6779,7 @@
     'state': '241.9',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6795,7 +6795,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy',
+    'entity_id': 'sensor.edesanya_energy_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6803,7 +6803,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6814,7 +6814,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6824,23 +6824,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy',
+    'entity_id': 'sensor.edesanya_energy_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.608',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_2-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6856,7 +6856,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_2',
+    'entity_id': 'sensor.edesanya_energy_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6864,7 +6864,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6875,7 +6875,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6885,23 +6885,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_2-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_2',
+    'entity_id': 'sensor.edesanya_energy_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.133',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_3-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6917,7 +6917,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_3',
+    'entity_id': 'sensor.edesanya_energy_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6925,7 +6925,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6933,7 +6933,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6943,23 +6943,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_3-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_3',
+    'entity_id': 'sensor.edesanya_energy_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '236.5',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_4-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6975,7 +6975,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_4',
+    'entity_id': 'sensor.edesanya_energy_phase_b_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6983,7 +6983,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6994,7 +6994,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7004,23 +7004,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_4-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase B current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_4',
+    'entity_id': 'sensor.edesanya_energy_phase_b_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_5-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7036,7 +7036,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_5',
+    'entity_id': 'sensor.edesanya_energy_phase_b_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7044,7 +7044,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7055,7 +7055,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7065,23 +7065,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_5-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase B power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_5',
+    'entity_id': 'sensor.edesanya_energy_phase_b_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_6-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7097,7 +7097,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_6',
+    'entity_id': 'sensor.edesanya_energy_phase_b_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7105,7 +7105,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7113,7 +7113,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7123,23 +7123,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_6-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase B voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_6',
+    'entity_id': 'sensor.edesanya_energy_phase_b_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_7-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7155,7 +7155,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_7',
+    'entity_id': 'sensor.edesanya_energy_phase_c_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7163,7 +7163,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7174,7 +7174,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7184,23 +7184,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_7-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase C current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_7',
+    'entity_id': 'sensor.edesanya_energy_phase_c_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_8-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7216,7 +7216,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_8',
+    'entity_id': 'sensor.edesanya_energy_phase_c_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7224,7 +7224,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7235,7 +7235,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7245,23 +7245,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_8-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase C power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_8',
+    'entity_id': 'sensor.edesanya_energy_phase_c_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_9-entry]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7277,7 +7277,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.edesanya_energy_9',
+    'entity_id': 'sensor.edesanya_energy_phase_c_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7285,7 +7285,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7293,7 +7293,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7303,16 +7303,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.edesanya_energy_9-state]
+# name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edesanya Energy Phase C voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.edesanya_energy_9',
+    'entity_id': 'sensor.edesanya_energy_phase_c_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -9319,64 +9319,6 @@
     'state': '32.2',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.grillhomero-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.grillhomero',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_temperature',
-    'unique_id': 'tuya.yybgnzr3ztwstemp_current_2',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.grillhomero-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Grillhőmérő',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.grillhomero',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
 # name: test_platform_setup_and_discovery[sensor.grillhomero_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -9484,6 +9426,64 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.grillhomero_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.grillhomero_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.grillhomero_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_temperature',
+    'unique_id': 'tuya.yybgnzr3ztwstemp_current_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.grillhomero_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Grillhőmérő Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.grillhomero_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -14143,7 +14143,7 @@
     'state': '-22.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14159,7 +14159,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia',
+    'entity_id': 'sensor.medidor_de_energia_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14167,7 +14167,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14178,7 +14178,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14188,23 +14188,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia',
+    'entity_id': 'sensor.medidor_de_energia_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.641',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_2-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14220,7 +14220,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_2',
+    'entity_id': 'sensor.medidor_de_energia_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14228,7 +14228,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14239,7 +14239,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14249,23 +14249,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_2-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_2',
+    'entity_id': 'sensor.medidor_de_energia_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.183',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_3-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14281,7 +14281,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_3',
+    'entity_id': 'sensor.medidor_de_energia_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14289,7 +14289,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14297,7 +14297,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14307,23 +14307,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_3-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_3',
+    'entity_id': 'sensor.medidor_de_energia_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '232.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_4-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14339,7 +14339,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_4',
+    'entity_id': 'sensor.medidor_de_energia_phase_b_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14347,7 +14347,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14358,7 +14358,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14368,23 +14368,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_4-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase B current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_4',
+    'entity_id': 'sensor.medidor_de_energia_phase_b_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.007',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_5-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14400,7 +14400,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_5',
+    'entity_id': 'sensor.medidor_de_energia_phase_b_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14408,7 +14408,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14419,7 +14419,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14429,23 +14429,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_5-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase B power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_5',
+    'entity_id': 'sensor.medidor_de_energia_phase_b_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.228',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_6-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14461,7 +14461,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_6',
+    'entity_id': 'sensor.medidor_de_energia_phase_b_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14469,7 +14469,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14477,7 +14477,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14487,23 +14487,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_6-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase B voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_6',
+    'entity_id': 'sensor.medidor_de_energia_phase_b_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '235.4',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_7-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14519,7 +14519,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_7',
+    'entity_id': 'sensor.medidor_de_energia_phase_c_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14527,7 +14527,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14538,7 +14538,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14548,23 +14548,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_7-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase C current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_7',
+    'entity_id': 'sensor.medidor_de_energia_phase_c_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.119',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_8-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14580,7 +14580,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_8',
+    'entity_id': 'sensor.medidor_de_energia_phase_c_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14588,7 +14588,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14599,7 +14599,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14609,23 +14609,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_8-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase C power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_8',
+    'entity_id': 'sensor.medidor_de_energia_phase_c_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.064',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_9-entry]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14641,7 +14641,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.medidor_de_energia_9',
+    'entity_id': 'sensor.medidor_de_energia_phase_c_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14649,7 +14649,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14657,7 +14657,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14667,16 +14667,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_9-state]
+# name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Medidor de Energia Phase C voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.medidor_de_energia_9',
+    'entity_id': 'sensor.medidor_de_energia_phase_c_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -14857,7 +14857,7 @@
     'state': '125.52',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.meter-entry]
+# name: test_platform_setup_and_discovery[sensor.meter_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14873,7 +14873,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meter',
+    'entity_id': 'sensor.meter_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14881,7 +14881,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14892,7 +14892,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14902,23 +14902,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.meter-state]
+# name: test_platform_setup_and_discovery[sensor.meter_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Meter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Meter Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meter',
+    'entity_id': 'sensor.meter_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.62',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.meter_2-entry]
+# name: test_platform_setup_and_discovery[sensor.meter_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14934,7 +14934,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meter_2',
+    'entity_id': 'sensor.meter_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14942,7 +14942,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14953,7 +14953,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14963,23 +14963,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.meter_2-state]
+# name: test_platform_setup_and_discovery[sensor.meter_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Meter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Meter Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meter_2',
+    'entity_id': 'sensor.meter_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.185',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.meter_3-entry]
+# name: test_platform_setup_and_discovery[sensor.meter_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14995,7 +14995,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meter_3',
+    'entity_id': 'sensor.meter_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15003,7 +15003,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -15011,7 +15011,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15021,16 +15021,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.meter_3-state]
+# name: test_platform_setup_and_discovery[sensor.meter_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Meter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Meter Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meter_3',
+    'entity_id': 'sensor.meter_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -15153,7 +15153,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15169,7 +15169,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15177,7 +15177,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15188,7 +15188,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15198,23 +15198,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.637',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_2-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15230,7 +15230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_2',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15238,7 +15238,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15249,7 +15249,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15259,23 +15259,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_2-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_2',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.108',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_3-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15291,7 +15291,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_3',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15299,7 +15299,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -15307,7 +15307,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15317,23 +15317,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_3-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_3',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '221.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_4-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15349,7 +15349,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_4',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15357,7 +15357,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15368,7 +15368,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15378,23 +15378,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_4-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase B current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_4',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11.203',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_5-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15410,7 +15410,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_5',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15418,7 +15418,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15429,7 +15429,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15439,23 +15439,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_5-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase B power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_5',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.41',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_6-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15471,7 +15471,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_6',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15479,7 +15479,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -15487,7 +15487,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15497,23 +15497,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_6-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase B voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_6',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '218.7',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_7-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15529,7 +15529,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_7',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15537,7 +15537,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15548,7 +15548,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15558,23 +15558,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_7-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase C current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_7',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.913',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_8-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15590,7 +15590,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_8',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15598,7 +15598,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15609,7 +15609,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15619,23 +15619,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_8-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase C power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_8',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.092',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_9-entry]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15651,7 +15651,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_9',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15659,7 +15659,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -15667,7 +15667,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15677,16 +15677,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_9-state]
+# name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Metering_3PN_WiFi_stable Phase C voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.metering_3pn_wifi_stable_9',
+    'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -17014,7 +17014,7 @@
     'state': '239.6',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17030,7 +17030,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17038,7 +17038,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17049,7 +17049,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17059,23 +17059,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.4',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_2-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17091,7 +17091,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_2',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17099,7 +17099,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17110,7 +17110,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17120,23 +17120,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_2-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_2',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.314',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_3-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17152,7 +17152,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_3',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17160,7 +17160,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17168,7 +17168,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17178,23 +17178,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_3-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_3',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '215.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_4-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17210,7 +17210,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_4',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17218,7 +17218,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17229,7 +17229,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17239,23 +17239,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_4-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase B current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_4',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_5-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17271,7 +17271,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_5',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17279,7 +17279,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17290,7 +17290,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17300,23 +17300,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_5-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase B power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_5',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_6-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17332,7 +17332,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_6',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17340,7 +17340,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17348,7 +17348,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17358,23 +17358,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_6-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase B voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_6',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_7-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17390,7 +17390,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_7',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17398,7 +17398,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17409,7 +17409,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17419,23 +17419,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_7-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase C current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_7',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_8-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17451,7 +17451,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_8',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17459,7 +17459,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17470,7 +17470,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17480,23 +17480,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_8-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase C power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_8',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_9-entry]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17512,7 +17512,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.p1_energia_elettrica_9',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17520,7 +17520,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17528,7 +17528,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17538,16 +17538,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_9-state]
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'P1 Energia Elettrica Phase C voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.p1_energia_elettrica_9',
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22197,7 +22197,7 @@
     'state': '238.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22213,7 +22213,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi',
+    'entity_id': 'sensor.spm02_wifi_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22221,7 +22221,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22232,7 +22232,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22242,23 +22242,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi',
+    'entity_id': 'sensor.spm02_wifi_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.255',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_2-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22274,7 +22274,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_2',
+    'entity_id': 'sensor.spm02_wifi_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22282,7 +22282,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22293,7 +22293,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22303,23 +22303,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_2-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_2',
+    'entity_id': 'sensor.spm02_wifi_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.006',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_3-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22335,7 +22335,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_3',
+    'entity_id': 'sensor.spm02_wifi_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22343,7 +22343,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22351,7 +22351,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22361,23 +22361,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_3-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_3',
+    'entity_id': 'sensor.spm02_wifi_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '227.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_4-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22393,7 +22393,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_4',
+    'entity_id': 'sensor.spm02_wifi_phase_b_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22401,7 +22401,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22412,7 +22412,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22422,23 +22422,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_4-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase B current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_4',
+    'entity_id': 'sensor.spm02_wifi_phase_b_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.952',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_5-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22454,7 +22454,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_5',
+    'entity_id': 'sensor.spm02_wifi_phase_b_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22462,7 +22462,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22473,7 +22473,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22483,23 +22483,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_5-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase B power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_5',
+    'entity_id': 'sensor.spm02_wifi_phase_b_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.16',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_6-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22515,7 +22515,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_6',
+    'entity_id': 'sensor.spm02_wifi_phase_b_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22523,7 +22523,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22531,7 +22531,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase B voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22541,23 +22541,23 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_6-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase B voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_6',
+    'entity_id': 'sensor.spm02_wifi_phase_b_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '232.5',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_7-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22573,7 +22573,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_7',
+    'entity_id': 'sensor.spm02_wifi_phase_c_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22581,7 +22581,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22592,7 +22592,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22602,23 +22602,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_7-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase C current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_7',
+    'entity_id': 'sensor.spm02_wifi_phase_c_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.388',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_8-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22634,7 +22634,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_8',
+    'entity_id': 'sensor.spm02_wifi_phase_c_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22642,7 +22642,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22653,7 +22653,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22663,23 +22663,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_8-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase C power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_8',
+    'entity_id': 'sensor.spm02_wifi_phase_c_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.94',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_9-entry]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22695,7 +22695,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.spm02_wifi_9',
+    'entity_id': 'sensor.spm02_wifi_phase_c_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22703,7 +22703,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22711,7 +22711,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase C voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22721,16 +22721,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.spm02_wifi_9-state]
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SPM02_WiFi Phase C voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.spm02_wifi_9',
+    'entity_id': 'sensor.spm02_wifi_phase_c_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22913,64 +22913,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'high',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.sws_16600_wifi_sh',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.ai9swgb6tyinbwbxjxqwindspeed_avg',
-    'unit_of_measurement': 'km/h',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SWS 16600 WiFi SH',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'km/h',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sws_16600_wifi_sh',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_air_pressure-entry]
@@ -24047,6 +23989,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.5',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sws_16600_wifi_sh_wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.ai9swgb6tyinbwbxjxqwindspeed_avg',
+    'unit_of_measurement': 'km/h',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SWS 16600 WiFi SH Wind speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'km/h',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sws_16600_wifi_sh_wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.temperature_and_humidity_sensor_battery-entry]
@@ -26896,7 +26896,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester-entry]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_conductivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -26912,7 +26912,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_conductivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26920,7 +26920,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Conductivity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -26928,7 +26928,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CONDUCTIVITY: 'conductivity'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Conductivity',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -26938,71 +26938,16 @@
     'unit_of_measurement': <UnitOfConductivity.MICROSIEMENS_PER_CM: 'μS/cm'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester-state]
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_conductivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'conductivity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WiFi smart online 8 in 1 tester',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WiFi smart online 8 in 1 tester Conductivity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfConductivity.MICROSIEMENS_PER_CM: 'μS/cm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.frmfrbds0jixxyaljbngdph_current',
-    'unit_of_measurement': '',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WiFi smart online 8 in 1 tester',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_2',
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_conductivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -27057,6 +27002,61 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_oxydo_reduction_potential',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_ph-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_ph',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'pH',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.frmfrbds0jixxyaljbngdph_current',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_smart_online_8_in_1_tester_ph-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WiFi smart online 8 in 1 tester pH',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wifi_smart_online_8_in_1_tester_ph',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -27461,7 +27461,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1-entry]
+# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27477,7 +27477,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.xoca_dac212xc_v2_s1',
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27485,7 +27485,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -27493,7 +27493,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -27503,23 +27503,23 @@
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1-state]
+# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Phase A current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.xoca_dac212xc_v2_s1',
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '599.552',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_2-entry]
+# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27535,7 +27535,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.xoca_dac212xc_v2_s1_2',
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27543,7 +27543,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -27551,7 +27551,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -27561,23 +27561,23 @@
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_2-state]
+# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Phase A power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.xoca_dac212xc_v2_s1_2',
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.912',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_3-entry]
+# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27593,7 +27593,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.xoca_dac212xc_v2_s1_3',
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27601,7 +27601,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -27609,7 +27609,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Phase A voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -27619,16 +27619,16 @@
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_3-state]
+# name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Phase A voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.xoca_dac212xc_v2_s1_3',
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

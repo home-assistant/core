@@ -1,6 +1,7 @@
 """Tests for the Model Context Protocol component."""
 
 import re
+import ssl
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
@@ -9,8 +10,9 @@ from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, T
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.mcp.const import DOMAIN
+from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -298,7 +300,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided @ data['query']")
+        vol.Invalid, match=re.escape("required key not provided at 'query'")
     ):
         tool.parameters({})
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
@@ -307,7 +309,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided @ data['context']")
+        vol.Invalid, match=re.escape("required key not provided at 'context'")
     ):
         tool.parameters({})
     assert tool.parameters({"context": {"fact": "User was born in February"}}) == {
@@ -394,7 +396,7 @@ async def test_convert_tool_schema_fails(
     )
 
     with patch(
-        "homeassistant.components.mcp.coordinator.convert_to_voluptuous",
+        "homeassistant.components.mcp.coordinator.from_openapi",
         side_effect=ValueError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -705,3 +707,68 @@ async def test_tool_call_http_error(
             ),
             create_llm_context(),
         )
+
+
+async def test_sse_client_does_not_build_ssl_context(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_sse_client: AsyncMock,
+) -> None:
+    """Test the SSE transport does not load certificates in the event loop."""
+    http_405 = httpx.HTTPStatusError(
+        "Method not allowed", request=None, response=httpx.Response(405)
+    )
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Method not allowed", [http_405]
+    )
+    mock_sse_client.side_effect = ExceptionGroup(
+        "Connection error", [httpx.ConnectError("Connection failed")]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    client_factory = mock_sse_client.call_args.kwargs["httpx_client_factory"]
+    with patch.object(ssl.SSLContext, "load_verify_locations") as mock_load_certs:
+        client = client_factory(headers={}, timeout=httpx.Timeout(5))
+
+    assert not mock_load_certs.called
+    await client.aclose()
+
+
+async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
+    """Test the LLM API id of a discovered server survives a reinstall of the app."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL],
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    assert api.id == "mcp-a0d7b954_mcp"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    # Reinstalling the app discovers the server again as a new config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    assert api.id == "mcp-a0d7b954_mcp"
