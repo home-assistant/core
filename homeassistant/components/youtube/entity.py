@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_TITLE, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
@@ -31,5 +31,5 @@ class YouTubeChannelEntity(CoordinatorEntity[YouTubeDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, channel_id)},
             manufacturer=MANUFACTURER,
-            name=coordinator.data[ATTR_TITLE],
+            name=coordinator.subentry.title,
         )

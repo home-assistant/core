@@ -25,6 +25,7 @@ from .const import (
     CONF_CHANNEL_ID,
     CONF_CHANNELS,
     DOMAIN,
+    LOGGER,
     SUBENTRY_TYPE_CHANNEL,
 )
 from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
@@ -49,9 +50,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> b
     entry.runtime_data = {}
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
         coordinator = YouTubeDataUpdateCoordinator(hass, entry, subentry, auth)
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            # Keep the failed coordinator: its entities are set up as
+            # unavailable instead of taking the other channels down.
+            LOGGER.warning(
+                "Failed to set up channel %s: %s",
+                subentry.data[CONF_CHANNEL_ID],
+                coordinator.last_exception,
+            )
         entry.runtime_data[subentry.subentry_id] = coordinator
-        if (title := coordinator.data[ATTR_TITLE]) != subentry.title:
+        if coordinator.last_update_success and (
+            (title := coordinator.data[ATTR_TITLE]) != subentry.title
+        ):
             hass.config_entries.async_update_subentry(entry, subentry, title=title)
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))

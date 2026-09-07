@@ -21,6 +21,10 @@ async def async_get_config_entry_diagnostics(
     sensor_data: dict[str, Any] = {}
     for coordinator in entry.runtime_data.values():
         channel_id = coordinator.subentry.data[CONF_CHANNEL_ID]
+        if not coordinator.last_update_success:
+            # The channel could not be fetched and has no data.
+            sensor_data[channel_id] = None
+            continue
         channel_copy = dict(coordinator.data)
         # Strip verbose description field from all video entries.
         for attr in (

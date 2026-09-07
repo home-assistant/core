@@ -44,6 +44,19 @@ TOKEN = (
 )
 
 
+def mock_entry_data(expires_at: int, scopes: list[str]) -> dict[str, Any]:
+    """Return OAuth data for a YouTube config entry."""
+    return {
+        "auth_implementation": DOMAIN,
+        "token": {
+            "access_token": "mock-access-token",
+            "refresh_token": "mock-refresh-token",
+            "expires_at": expires_at,
+            "scope": " ".join(scopes),
+        },
+    }
+
+
 @pytest.fixture(name="scopes")
 def mock_scopes() -> list[str]:
     """Fixture to set the scopes present in the OAuth token."""
@@ -76,15 +89,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
         title=TITLE,
         unique_id=CHANNEL_ID,
         version=2,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": expires_at,
-                "scope": " ".join(scopes),
-            },
-        },
+        data=mock_entry_data(expires_at, scopes),
         subentries_data=[
             ConfigSubentryData(
                 data={CONF_CHANNEL_ID: CHANNEL_ID},

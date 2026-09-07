@@ -11,8 +11,12 @@ from homeassistant.components.youtube.const import (
     CONF_CHANNEL_ID,
     CONF_CHANNELS,
     DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.youtube.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -26,6 +30,7 @@ from .conftest import (
     LINUS_CHANNEL_ID,
     TITLE,
     ComponentSetup,
+    mock_entry_data,
 )
 
 from tests.common import MockConfigEntry
@@ -155,6 +160,7 @@ async def test_migration(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     expires_at: int,
+    scopes: list[str],
 ) -> None:
     """Test migration of an options based entry to the subentry structure."""
     entry = MockConfigEntry(
@@ -162,15 +168,7 @@ async def test_migration(
         title=TITLE,
         unique_id=CHANNEL_ID,
         version=1,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": expires_at,
-                "scope": "https://www.googleapis.com/auth/youtube.readonly",
-            },
-        },
+        data=mock_entry_data(expires_at, scopes),
         options={CONF_CHANNELS: [CHANNEL_ID]},
     )
     entry.add_to_hass(hass)
@@ -219,7 +217,7 @@ async def test_migration(
     assert entry.options == {}
     assert len(entry.subentries) == 1
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.subentry_type == "channel"
+    assert subentry.subentry_type == SUBENTRY_TYPE_CHANNEL
     assert subentry.unique_id == CHANNEL_ID
     assert subentry.title == "Google for Developers"
     assert subentry.data == {CONF_CHANNEL_ID: CHANNEL_ID}
@@ -286,12 +284,12 @@ async def test_remove_subentry(
     assert hass.states.get("sensor.google_for_developers_subscribers") is None
 
 
-async def test_setup_fails_when_channel_missing_from_api(
+async def test_channel_missing_from_api(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     setup_integration: ComponentSetup,
 ) -> None:
-    """Test the device is kept when the API omits the configured channel."""
+    """Test the channel's entities are unavailable when the API omits it."""
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -307,13 +305,81 @@ async def test_setup_fails_when_channel_missing_from_api(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state is not None
+    assert state.state == "unavailable"
     assert (
         device_registry.async_get_device_by_identifier(
             (DOMAIN, CHANNEL_ID), entry.entry_id
         )
         is not None
     )
+
+
+async def test_missing_channel_does_not_affect_other_channels(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test a channel missing from the API only takes itself down."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=CHANNEL_ID,
+        version=2,
+        data=mock_entry_data(expires_at, scopes),
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_CHANNEL_ID: CHANNEL_ID},
+                subentry_id="channel_1",
+                subentry_type=SUBENTRY_TYPE_CHANNEL,
+                title="Google for Developers",
+                unique_id=CHANNEL_ID,
+            ),
+            ConfigSubentryData(
+                data={CONF_CHANNEL_ID: LINUS_CHANNEL_ID},
+                subentry_id="channel_2",
+                subentry_type=SUBENTRY_TYPE_CHANNEL,
+                title="Linus Tech Tips",
+                unique_id=LINUS_CHANNEL_ID,
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    # The API only returns the Google channel, the Linus channel is missing
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(hass),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state is not None
+    assert state.state == "2290000"
+    state = hass.states.get("sensor.linus_tech_tips_subscribers")
+    assert state is not None
+    assert state.state == "unavailable"
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, CHANNEL_ID), entry.entry_id
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, LINUS_CHANNEL_ID), entry.entry_id
+        )
+        is not None
+    )
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+    assert diagnostics[CHANNEL_ID]["title"] == "Google for Developers"
+    assert diagnostics[LINUS_CHANNEL_ID] is None
 
 
 async def test_oauth_implementation_not_available(
