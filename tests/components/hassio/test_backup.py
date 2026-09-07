@@ -2834,6 +2834,73 @@ async def test_reader_writer_restore_updates_supervisor(
 
 
 @pytest.mark.parametrize(
+    "supervisor_version",
+    [
+        pytest.param("2026.08.0", id="same_as_backup"),
+        pytest.param("2026.09.0", id="newer_than_backup"),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_supervisor_up_to_date(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+    supervisor_version: str,
+) -> None:
+    """Test restoring a backup made on the same or an older Supervisor."""
+    client = await hass_supervisor_ws_client()
+    supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = replace(
+        TEST_BACKUP_DETAILS, supervisor_version="2026.08.0"
+    )
+    supervisor_client.jobs.get_job.return_value = TEST_JOB_DONE
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, version=supervisor_version
+    )
+    # Forget the call made when the hassio integration was set up
+    supervisor_info.reset_mock()
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": None,
+        "stage": None,
+        "state": "completed",
+    }
+
+    supervisor_client.supervisor.reload.assert_not_awaited()
+    supervisor_client.supervisor.update.assert_not_awaited()
+    assert supervisor_info.await_count == 1
+    supervisor_client.backups.partial_restore.assert_called_once()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+
+@pytest.mark.parametrize(
     "version_latest",
     [
         pytest.param(None, id="unknown"),

@@ -578,10 +578,19 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup_version = AwesomeVersion(details.supervisor_version)
         try:
             info = await self._client.supervisor.info()
-            if backup_version <= AwesomeVersion(info.version):
-                return
-            # Supervisor only checks for new versions once a day
+        except SupervisorError as err:
+            raise BackupReaderWriterError(
+                f"Error getting Supervisor info: {err}"
+            ) from err
+        if backup_version <= AwesomeVersion(info.version):
+            return
+
+        # Supervisor only checks for new versions once a day
+        try:
             await self._client.supervisor.reload()
+        except SupervisorError as err:
+            raise BackupReaderWriterError(f"Error reloading Supervisor: {err}") from err
+        try:
             info = await self._client.supervisor.info()
         except SupervisorError as err:
             raise BackupReaderWriterError(
