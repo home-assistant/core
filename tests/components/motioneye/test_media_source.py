@@ -260,7 +260,7 @@ async def test_async_browse_media_success(
         "not_shown": 0,
     }
 
-        media = await async_browse_media(
+    media = await async_browse_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{config.entry_id}#{device.id}#movies#/2021-04-25",
     )
@@ -346,7 +346,7 @@ async def test_async_browse_media_images_success(
     )
 
     client.async_get_images = AsyncMock(return_value=TEST_IMAGES)
-    
+
     media = await async_browse_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{config.entry_id}#{device.id}#images#/2021-04-12",
