@@ -2381,6 +2381,11 @@
       "system_ess_schedule_charge_slot_start": {
         "name": "ESS BatteryLife schedule charge {slot} start"
       }
+    },
+    "update": {
+      "venus_os_firmware": {
+        "name": "Venus OS firmware"
+      }
     }
   },
   "exceptions": {
