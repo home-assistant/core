@@ -738,7 +738,7 @@ class ThinQOvenTimerSensorEntity(ThinQEntity, SensorEntity):
     ) -> None:
         """Initialize the timer using the existing per-cavity ThinQ identity."""
         super().__init__(coordinator, entity_description, property_id)
-        self._last_remaining: time | None = None
+        self._last_timer_update: int | None = None
         self._attr_native_value: datetime | None = None
         self._device_state_id = (
             f"{self.location}_{ThinQProperty.CURRENT_STATE}"
@@ -749,6 +749,9 @@ class ThinQOvenTimerSensorEntity(ThinQEntity, SensorEntity):
     @override
     def _update_status(self) -> None:
         """Re-anchor only when LG reports a changed, active cook timer."""
+        timer_update = self.coordinator.oven_timer_updates.get(self.location, 0)
+        previous_update = self._last_timer_update
+        self._last_timer_update = timer_update
         status = self.coordinator.data.get(self._device_state_id)
         remaining = self.data.value
         if (
@@ -757,14 +760,12 @@ class ThinQOvenTimerSensorEntity(ThinQEntity, SensorEntity):
             or not isinstance(remaining, time)
             or remaining == time.min
         ):
-            self._last_remaining = None
             self._attr_native_value = None
             return
 
-        # Other-cavity updates must not extend a cached timer reading.
-        if remaining == self._last_remaining:
+        # Status-only pushes cannot restart a timer cached from an earlier cook.
+        if timer_update == previous_update:
             return
-        self._last_remaining = remaining
         deadline = dt_util.utcnow() + timedelta(
             hours=remaining.hour, minutes=remaining.minute, seconds=remaining.second
         )

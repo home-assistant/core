@@ -5,8 +5,8 @@ from datetime import time
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from thinqconnect import ThinQAPIException
-from thinqconnect.integration import HABridge
+from thinqconnect import DeviceType, ThinQAPIException
+from thinqconnect.integration import ActiveMode, HABridge, TimerProperty
 
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import Event, HomeAssistant, callback
@@ -38,6 +38,14 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.data = ha_bridge.update_status(None)
         self.api = ha_bridge
+        self.oven_timer_updates: dict[str | None, int] = {}
+        if ha_bridge.device.device_type == DeviceType.OVEN:
+            self.oven_timer_updates = {
+                ha_bridge.get_location_for_idx(property_id): 0
+                for property_id in ha_bridge.get_active_idx(
+                    TimerProperty.REMAIN, ActiveMode.READABLE
+                )
+            }
         self.device_id = ha_bridge.device.device_id
         self.sub_id = ha_bridge.sub_id
 
@@ -98,18 +106,43 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
         try:
-            return await self.api.fetch_data()
+            if not self.oven_timer_updates:
+                return await self.api.fetch_data()
+            status = await self.api.device.thinq_api.async_get_device_status(
+                self.device_id
+            )
         except ThinQAPIException as e:
             raise UpdateFailed(e) from e
+        if status is not None:
+            self.api.device.set_status(status)
+            self._record_oven_timer_updates(status)
+        return self.api.update_status(None) or self.data
+
+    def _record_oven_timer_updates(
+        self, status: dict[str, Any] | list[dict[str, Any]]
+    ) -> None:
+        """Track timer fields present in a response, before considering cached values."""
+        if not self.oven_timer_updates or not isinstance(status, list):
+            return
+        for cavity in status:
+            location = cavity.get("location", {}).get("locationName", "").lower()
+            if location in self.oven_timer_updates and any(
+                field in (cavity.get("timer") or {})
+                for field in ("remainHour", "remainMinute", "remainSecond")
+            ):
+                self.oven_timer_updates[location] += 1
 
     def refresh_status(self) -> None:
         """Refresh current status."""
         self.async_set_updated_data(self.data)
 
-    def handle_update_status(self, status: dict[str, Any]) -> None:
+    def handle_update_status(
+        self, status: dict[str, Any] | list[dict[str, Any]]
+    ) -> None:
         """Handle the status received from the mqtt connection."""
         data = self.api.update_status(status)
         if data is not None:
+            self._record_oven_timer_updates(status)
             self.async_set_updated_data(data)
 
     def handle_notification_message(self, message: str | None) -> None:
