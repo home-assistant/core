@@ -112,6 +112,7 @@ async def test_specific_gravity_velocity_sensor(
         == "RAPT Pill 0666 Specific Gravity Velocity"
     )
     assert velocity_sensor.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert velocity_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "SG points/day"
 
     entity_entry = entity_registry.async_get(VELOCITY_ENTITY_ID)
     assert entity_entry is not None

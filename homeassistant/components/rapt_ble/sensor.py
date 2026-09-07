@@ -45,6 +45,7 @@ SENSOR_DESCRIPTIONS: dict[tuple[str | None, str | None], SensorEntityDescription
     ): SensorEntityDescription(
         key=f"{DeviceClass.SPECIFIC_GRAVITY_VELOCITY}_{Units.SPECIFIC_GRAVITY_POINTS_PER_DAY}",
         translation_key="specific_gravity_velocity",
+        native_unit_of_measurement=Units.SPECIFIC_GRAVITY_POINTS_PER_DAY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
