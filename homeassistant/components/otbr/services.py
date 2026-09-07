@@ -400,10 +400,25 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
                 translation_domain=DOMAIN, translation_key="pending_dataset_in_place"
             )
 
+        # A newer stamp is not enough while an earlier dataset issued for
+        # this mesh is still propagating: a router that has not learned it
+        # yet accepts this one in its place, and devices that only got the
+        # earlier dataset end up on a different network than the rest.
+        # Refuse until that delay has expired.
+        issued = await async_get_issued_timestamps(call.hass)
+        if remaining := issued.seconds_in_flight(source_xpan):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="migration_in_flight",
+                translation_placeholders={"remaining": str(remaining)},
+            )
+
         # Only an identical dataset is a no-op. Comparing the extended PAN
         # ID alone would silently ignore a dataset that keeps the network
         # but replaces its credentials, which is how a network key is
-        # rotated.
+        # rotated. Checked after the window above: this router can still
+        # report an active dataset the mesh is already leaving, and calling
+        # that "already on network" would be wrong in a few minutes.
         if _same_network_settings(active, target):
             return {"status": "already_on_network"}
 
@@ -457,18 +472,6 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         # a different network -- can still read the old active dataset and no
         # pending one, and would otherwise pick the same timestamp. Stamp
         # above what this integration has already handed out for this mesh.
-        issued = await async_get_issued_timestamps(call.hass)
-        # A newer stamp is not enough while the earlier dataset is still
-        # propagating: a router that has not learned it yet accepts this
-        # one in its place, and devices that only got the earlier dataset
-        # end up on a different network than the rest. Refuse until the
-        # earlier migration's delay has expired.
-        if remaining := issued.seconds_in_flight(source_xpan):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="migration_in_flight",
-                translation_placeholders={"remaining": str(remaining)},
-            )
         newest = max(newest, issued.get(source_xpan))
 
         # Always step the seconds, never the ticks: python_otbr_api's channel
@@ -536,21 +539,22 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         await _async_repoint_preferred_dataset(
             call.hass, source_xpan, str(target[MeshcopTLVType.EXTPANID])
         )
-        # The repair issues describe the credentials the network is adopting,
-        # the same way the create and set-network paths report them, and they
-        # describe them for every router the pending dataset reaches, not only
-        # the one it was handed to. Done last: the store is what the rest of
-        # Home Assistant reads, and these calls talk to other routers.
-        await update_issues(call.hass, data, migrated_tlvs)
-        await _async_refresh_issues_on_the_mesh(
-            call.hass, entry, source_xpan, migrated_tlvs
-        )
         # The store saves on a delay, and a normal restart flushes it; a crash
         # inside that delay would not. The mesh is migrating either way, so
         # write now: the dataset entry would be re-imported from the router
         # on the next setup, but the preferred pointer would stay on the
-        # abandoned network until someone noticed.
+        # abandoned network until someone noticed. Before the repair issues
+        # below, which talk to the other routers: what the store holds must
+        # not depend on how long they take to answer, or whether they do.
         await store.async_save()
+        # The repair issues describe the credentials the network is adopting,
+        # the same way the create and set-network paths report them, and they
+        # describe them for every router the pending dataset reaches, not only
+        # the one it was handed to.
+        await update_issues(call.hass, data, migrated_tlvs)
+        await _async_refresh_issues_on_the_mesh(
+            call.hass, entry, source_xpan, migrated_tlvs
+        )
         if result is DatasetAddResult.DISCARDED:
             # Newer credentials for this network were stored while the router
             # was being written to. The mesh is migrating to the dataset above
