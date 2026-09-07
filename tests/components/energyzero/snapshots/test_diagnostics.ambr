@@ -12,9 +12,6 @@
       'next_price': 0.1521212,
       'percentage_of_max': 59.66,
     }),
-    'entry': dict({
-      'title': 'energy',
-    }),
     'gas': dict({
       'current_hour_price': None,
       'next_hour_price': None,
@@ -33,9 +30,6 @@
       'min_price': 0.077503525,
       'next_price': 0.1521212,
       'percentage_of_max': 59.66,
-    }),
-    'entry': dict({
-      'title': 'energy',
     }),
     'gas': dict({
       'current_hour_price': None,

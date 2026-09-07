@@ -34,9 +34,6 @@ async def async_get_config_entry_diagnostics(
     energy_today = coordinator_data.energy_today
 
     return {
-        "entry": {
-            "title": entry.title,
-        },
         "energy": {
             "current_price": energy_today.current_price,
             "next_price": coordinator_data.next_energy_price,
