@@ -122,7 +122,7 @@ class CollectionImageImageEntity(ImageEntity):
 
     async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
-        self._current_image_id = image_id
+
         self._cached_image = None
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
@@ -134,6 +134,8 @@ class CollectionImageImageEntity(ImageEntity):
             self._attr_content_type = DEFAULT_CONTENT_TYPE
             self.async_write_ha_state()
             return
+        finally:
+            self._current_image_id = image_id
 
         if resolved.url:
             self.path = None
