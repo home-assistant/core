@@ -85,6 +85,7 @@ async def async_setup_entry(
     store = config_entry.runtime_data
     ics = await store.async_load()
 
+    migrated = False
     try:
         with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
             # calendar_from_ics will dynamically load packages
@@ -106,9 +107,9 @@ async def async_setup_entry(
             name,
         )
         migrated = True
-    else:
-        # File loaded cleanly; check if due date migration is required
-        migrated = _migrate_calendar(calendar)
+
+    if _migrate_calendar(calendar):
+        migrated = True
     calendar.prodid = PRODID
 
     entity = LocalTodoListEntity(store, calendar, name, unique_id=config_entry.entry_id)
