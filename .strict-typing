@@ -657,6 +657,7 @@ homeassistant.components.web_rtc.*
 homeassistant.components.webhook.*
 homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
+homeassistant.components.weheat.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
 homeassistant.components.wiim.*
