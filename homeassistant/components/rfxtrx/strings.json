@@ -46,6 +46,7 @@
       "entry_type": "Device",
       "error": {
         "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+        "incompatible_device": "The new event code is for a different device type. Remove this device and add the new one instead.",
         "invalid_event_code": "Invalid event code",
         "invalid_input_2262_off": "Invalid input for command off",
         "invalid_input_2262_on": "Invalid input for command on"

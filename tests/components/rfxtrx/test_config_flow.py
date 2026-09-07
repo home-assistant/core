@@ -577,6 +577,14 @@ async def test_options_reconfigure_invalid_and_duplicate_event_code(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["event_code"] == "already_configured_device"
 
+    # Reconfigure A, manually typing an event code for a different protocol
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0716000100900970"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["event_code"] == "incompatible_device"
+
 
 async def test_options_reconfigure_ignores_broken_subentries(
     hass: HomeAssistant,

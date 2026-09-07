@@ -60,6 +60,11 @@ def none_or_int(value: str | None, base: int) -> int | None:
     return int(value, base)
 
 
+def _same_protocol(a: rfxtrxmod.RFXtrxDevice, b: rfxtrxmod.RFXtrxDevice) -> bool:
+    """Return whether two devices use the same packet type and subtype."""
+    return bool(a.packettype == b.packettype and a.subtype == b.subtype)
+
+
 class RfxtrxOptionsFlow(OptionsFlow):
     """Handle Rfxtrx options."""
 
@@ -153,12 +158,12 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                 event_code = user_input[CONF_EVENT_CODE]
 
             device_object = get_rfx_object(event_code)
-            exclude_subentry_ids = {subentry.subentry_id}
-            if replace_subentry_id:
-                exclude_subentry_ids.add(replace_subentry_id)
+            exclude_subentry_ids = self._reconfigure_exclude_ids(replace_subentry_id)
 
             if device_object is None:
                 errors[CONF_EVENT_CODE] = "invalid_event_code"
+            elif not _same_protocol(device_object.device, current_device_object.device):
+                errors[CONF_EVENT_CODE] = "incompatible_device"
             elif not self._can_add_device(
                 device_object, exclude_subentry_ids=exclude_subentry_ids
             ):
@@ -189,7 +194,12 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
 
         current_data: Mapping[str, Any] = {}
         if self.source == SOURCE_RECONFIGURE:
-            current_data = self._get_reconfigure_subentry().data
+            if self._replace_subentry_id:
+                current_data = (
+                    self._get_entry().subentries[self._replace_subentry_id].data
+                )
+            else:
+                current_data = self._get_reconfigure_subentry().data
 
         if user_input is not None:
             try:
@@ -208,17 +218,11 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                     data_bits=user_input.get(CONF_DATA_BITS),
                 )
 
-                # data_bits (applied above) can mask a Lighting4/PT2262 event
-                # into a tuple already used by another subentry, even though
-                # the unmasked event code was validated as free in the
-                # preceding step.
                 exclude_subentry_ids: set[str] = set()
                 if self.source == SOURCE_RECONFIGURE:
-                    exclude_subentry_ids.add(
-                        self._get_reconfigure_subentry().subentry_id
+                    exclude_subentry_ids = self._reconfigure_exclude_ids(
+                        self._replace_subentry_id
                     )
-                    if self._replace_subentry_id:
-                        exclude_subentry_ids.add(self._replace_subentry_id)
                 if self._find_conflicting_subentry(device_id, exclude_subentry_ids):
                     errors[CONF_DATA_BITS] = "already_configured_device"
 
@@ -317,6 +321,13 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
         )
 
+    def _reconfigure_exclude_ids(self, replace_subentry_id: str | None) -> set[str]:
+        """Subentry ids that must not collide with the device being configured."""
+        exclude_subentry_ids = {self._get_reconfigure_subentry().subentry_id}
+        if replace_subentry_id:
+            exclude_subentry_ids.add(replace_subentry_id)
+        return exclude_subentry_ids
+
     def _find_conflicting_subentry(
         self,
         device_id: DeviceTuple,
@@ -365,10 +376,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
             if rfx_obj is None:
                 continue
-            if (
-                rfx_obj.device.packettype == current_device_object.device.packettype
-                and rfx_obj.device.subtype == current_device_object.device.subtype
-            ):
+            if _same_protocol(rfx_obj.device, current_device_object.device):
                 replace_devices[subentry.subentry_id] = subentry.title
 
         return replace_devices
