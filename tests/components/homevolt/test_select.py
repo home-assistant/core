@@ -2,7 +2,14 @@
 
 from unittest.mock import MagicMock
 
-from homevolt import HomevoltConnectionError
+from homevolt import (
+    HomevoltAuthenticationError,
+    HomevoltCommandOutcomeUnknownError,
+    HomevoltCommandRejectedError,
+    HomevoltCommandVerificationError,
+    HomevoltConnectionError,
+    HomevoltError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -109,14 +116,49 @@ async def test_select_unavailable_without_local_mode(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            HomevoltAuthenticationError("authentication failed"),
+            "auth_failed",
+            id="authentication",
+        ),
+        pytest.param(
+            HomevoltCommandRejectedError("command rejected"),
+            "command_rejected",
+            id="command-rejected",
+        ),
+        pytest.param(
+            HomevoltCommandVerificationError("command verification failed"),
+            "command_verification_failed",
+            id="command-verification",
+        ),
+        pytest.param(
+            HomevoltCommandOutcomeUnknownError("command outcome unknown"),
+            "command_outcome_unknown",
+            id="command-outcome-unknown",
+        ),
+        pytest.param(
+            HomevoltConnectionError("connection failed"),
+            "communication_error",
+            id="connection",
+        ),
+        pytest.param(
+            HomevoltError("unknown error"),
+            "unknown_error",
+            id="unknown",
+        ),
+    ],
+)
 async def test_select_option_error(
     hass: HomeAssistant,
     mock_homevolt_client: MagicMock,
+    error: HomevoltError,
+    translation_key: str,
 ) -> None:
     """Test select actions use the shared exception handler."""
-    mock_homevolt_client.set_battery_mode.side_effect = HomevoltConnectionError(
-        "connection failed"
-    )
+    mock_homevolt_client.set_battery_mode.side_effect = error
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -126,4 +168,4 @@ async def test_select_option_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "communication_error"
+    assert exc_info.value.translation_key == translation_key
