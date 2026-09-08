@@ -2790,7 +2790,7 @@ async def test_reader_writer_restore_retries_after_supervisor_update(
     client = await hass_supervisor_ws_client()
     job = Mock(job_id=UUID(TEST_JOB_ID))
     supervisor_info.return_value = replace(
-        supervisor_info.return_value, update_available=True
+        supervisor_info.return_value, update_available=True, version_latest="2026.08.0"
     )
     supervisor_client.backups.partial_restore.side_effect = [supervisor_error, job]
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
@@ -2915,12 +2915,14 @@ async def test_reader_writer_restore_version_error_raises(
 
 
 @pytest.mark.parametrize(
-    "supervisor_info_overrides",
+    ("supervisor_info_overrides", "expected_reload_calls"),
     [
-        pytest.param({"auto_update": False}, id="auto_update_disabled"),
+        pytest.param({"auto_update": False}, 0, id="auto_update_disabled"),
+        pytest.param({"update_available": False}, 1, id="no_update_available"),
         pytest.param(
-            {"update_available": False},
-            id="no_update_available",
+            {"update_available": True, "version_latest": "2024.11.1"},
+            1,
+            id="update_older_than_backup",
         ),
     ],
 )
@@ -2931,6 +2933,7 @@ async def test_reader_writer_restore_legacy_message_no_auto_update(
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
     supervisor_info_overrides: dict[str, Any],
+    expected_reload_calls: int,
 ) -> None:
     """Test a legacy update message is raised immediately when Supervisor can't help."""
     client = await hass_supervisor_ws_client()
@@ -2970,7 +2973,7 @@ async def test_reader_writer_restore_legacy_message_no_auto_update(
         "state": "failed",
     }
 
-    supervisor_client.reload_updates.assert_not_awaited()
+    assert supervisor_client.reload_updates.await_count == expected_reload_calls
     supervisor_client.supervisor.update.assert_not_awaited()
     supervisor_client.backups.partial_restore.assert_called_once()
 
@@ -2982,24 +2985,31 @@ async def test_reader_writer_restore_legacy_message_no_auto_update(
 
 
 @pytest.mark.parametrize(
-    ("info_error", "reload_error", "update_error", "expected_message"),
+    ("info_errors", "reload_error", "update_error", "expected_message"),
     [
         pytest.param(
-            SupervisorError("Boom!"),
+            [SupervisorError("Boom!")],
             None,
             None,
             "Error getting Supervisor info: Boom!",
             id="info_error",
         ),
         pytest.param(
-            None,
+            [None],
             SupervisorError("Boom!"),
             None,
             "Error reloading Supervisor update information: Boom!",
             id="reload_error",
         ),
         pytest.param(
+            [None, SupervisorError("Boom!")],
             None,
+            None,
+            "Error getting Supervisor info: Boom!",
+            id="info_error_after_reload",
+        ),
+        pytest.param(
+            [None, None],
             None,
             SupervisorError("Boom!"),
             "Error updating Supervisor: Boom!",
@@ -3013,17 +3023,17 @@ async def test_reader_writer_restore_should_retry_error(
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
-    info_error: Exception | None,
+    info_errors: list[Exception | None],
     reload_error: Exception | None,
     update_error: Exception | None,
     expected_message: str,
 ) -> None:
     """Test errors while deciding whether to retry a restore after an update."""
     client = await hass_supervisor_ws_client()
-    supervisor_info.return_value = replace(
-        supervisor_info.return_value, update_available=True
+    info = replace(
+        supervisor_info.return_value, update_available=True, version_latest="2026.08.0"
     )
-    supervisor_info.side_effect = info_error
+    supervisor_info.side_effect = [err or info for err in info_errors]
     supervisor_client.reload_updates.side_effect = reload_error
     supervisor_client.supervisor.update.side_effect = update_error
     err = SupervisorBadRequestError(
@@ -3073,7 +3083,7 @@ async def test_reader_writer_restore_should_retry_error(
 
 @pytest.mark.parametrize(
     (
-        "backup_info_error",
+        "backup_info_result",
         "root_info_side_effect",
         "expected_reason",
         "expected_error_code",
@@ -3097,7 +3107,7 @@ async def test_reader_writer_restore_should_retry_error(
             id="backup_info_error",
         ),
         pytest.param(
-            None,
+            TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
             [SupervisorError("Boom!")],
             "backup_reader_writer_error",
             "home_assistant_error",
@@ -3111,7 +3121,7 @@ async def test_reader_writer_restore_wait_for_update_error(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
-    backup_info_error: Exception | None,
+    backup_info_result: Exception | supervisor_backups.BackupComplete,
     root_info_side_effect: list[Exception] | None,
     expected_reason: str,
     expected_error_code: str,
@@ -3126,20 +3136,13 @@ async def test_reader_writer_restore_wait_for_update_error(
     err.error_key = "backup_supervisor_update_in_progress_error"
     supervisor_client.backups.partial_restore.side_effect = err
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
-    if backup_info_error is not None:
-        # The first two backup_info calls are the pre-restore existence checks
-        # done by the backup manager and our own async_restore_backup; only the
-        # third call, made from _async_wait_for_supervisor_update, should fail.
-        supervisor_client.backups.backup_info.side_effect = [
-            TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-            TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
-            backup_info_error,
-        ]
-    else:
-        supervisor_client.backups.backup_info.return_value = (
-            TEST_BACKUP_DETAILS_NEWER_SUPERVISOR
-        )
-        supervisor_client.info.side_effect = root_info_side_effect
+    # The agent reads the backup details twice before the update check does
+    supervisor_client.backups.backup_info.side_effect = [
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+        backup_info_result,
+    ]
+    supervisor_client.info.side_effect = root_info_side_effect
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()
