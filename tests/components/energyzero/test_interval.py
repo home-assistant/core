@@ -216,7 +216,7 @@ async def test_next_price_across_midnight(
 
     freezer.move_to("2026-04-10 21:52:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_energyzero.get_electricity_prices.await_count == 4
     for entity_id, value in (
         ("sensor.energyzero_today_energy_next_hour_price", 0.0),
@@ -227,7 +227,7 @@ async def test_next_price_across_midnight(
 
     freezer.move_to("2026-04-10 22:00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
@@ -241,7 +241,7 @@ async def test_next_price_across_midnight(
 
     freezer.move_to("2026-04-10 22:02:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     for entity_id, value in (
         ("sensor.energyzero_today_energy_next_hour_price", 0.01),
         ("sensor.energyzero_today_energy_all_in_next_price", 0.12),

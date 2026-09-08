@@ -155,7 +155,7 @@ async def test_missing_tomorrow_prices_do_not_retry(
         assert request.await_count == 3
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert request.await_count == 6
     assert (
