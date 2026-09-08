@@ -46,14 +46,18 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsBinarySensorEntityDescription[ErrorEvent](
-        capability_fn=lambda caps: caps.error,
+        capability_fn=lambda caps: (
+            caps.error if caps.station is not None and caps.water is not None else None
+        ),
         value_fn=lambda e: e.code == 322,
         key="clean_water_tank",
         translation_key="clean_water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     EcovacsBinarySensorEntityDescription[ErrorEvent](
-        capability_fn=lambda caps: caps.error,
+        capability_fn=lambda caps: (
+            caps.error if caps.station is not None and caps.water is not None else None
+        ),
         value_fn=lambda e: e.code == 323,
         key="dirty_water_tank",
         translation_key="dirty_water_tank",

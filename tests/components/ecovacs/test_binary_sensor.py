@@ -55,6 +55,7 @@ async def test_mop_attached(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(("device_fixture"), ["9eamof"])
 async def test_water_tank_errors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
