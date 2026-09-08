@@ -206,6 +206,44 @@ async def test_vehicle_first_refresh_timeout(
     never.set()
 
 
+async def test_vehicle_first_refresh_timeout_cancels_energy_site_refresh(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_site_info: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test a timed-out vehicle refresh cancels the concurrent energy site refresh.
+
+    asyncio.gather without return_exceptions only propagates the first
+    exception; it does not cancel the other awaitables. Assert that the
+    sibling energy site refresh is actually cancelled rather than left running.
+    """
+    never = asyncio.Event()
+    site_refresh_cancelled = asyncio.Event()
+
+    async def _hang_vehicle_data(*args: object, **kwargs: object) -> dict[str, Any]:
+        await never.wait()
+        return VEHICLE_DATA_ALT
+
+    async def _hang_site_info(*args: object, **kwargs: object) -> dict[str, Any]:
+        try:
+            await never.wait()
+        except asyncio.CancelledError:
+            site_refresh_cancelled.set()
+            raise
+        return SITE_INFO
+
+    mock_vehicle_data.side_effect = _hang_vehicle_data
+    mock_site_info.side_effect = _hang_site_info
+
+    with patch("homeassistant.components.teslemetry.VEHICLE_FIRST_REFRESH_TIMEOUT", 0):
+        entry = await setup_platform(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert site_refresh_cancelled.is_set()
+    never.set()
+
+
 # Test Energy Live Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), [*ERRORS, *CONNECTION_ERRORS])
 async def test_energy_live_refresh_error(
