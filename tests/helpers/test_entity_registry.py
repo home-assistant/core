@@ -1212,7 +1212,7 @@ def test_generate_entity_id_parts_entity_area(
     entry = entity_registry.async_update_entity(entry.entity_id, area_id=garage.id)
 
     new_entity_id = entity_registry.async_regenerate_entity_id(entry)
-    assert new_entity_id == "sensor.second_floor_garage_lamp_temperature"
+    assert new_entity_id == "sensor.second_floor_garage_temperature"
 
 
 def test_generate_entity_id_parent_device_part(
@@ -1326,7 +1326,7 @@ def test_generate_entity_id_name_context(
     entry = entity_registry.async_update_entity(entry.entity_id, area_id=garage.id)
     assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
 
-    # Parts set manually by the user compose exactly as specified
+    # A manually set format follows the same rule
     entity_registry.async_update_settings(
         entity_id_parts=[
             er.EntityNamePart.AREA,
@@ -1335,10 +1335,7 @@ def test_generate_entity_id_name_context(
             er.EntityNamePart.ENTITY,
         ]
     )
-    assert (
-        entity_registry.async_regenerate_entity_id(entry)
-        == "sensor.garage_power_strip_freezer_power"
-    )
+    assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
 
 
 def test_context_source(

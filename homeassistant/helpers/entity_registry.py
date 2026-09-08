@@ -1422,8 +1422,6 @@ class EntityRegistry(BaseRegistry):
         existing entities, as well as provided `reserved_entity_ids`.
         """
         parts = self.settings.entity_id_parts
-        # Parts set manually by the user compose exactly as specified
-        follow_context = parts is None
         if parts is None:
             parts = (
                 EntityNamePart.AREA,
@@ -1437,7 +1435,6 @@ class EntityRegistry(BaseRegistry):
             context_source=_entity_context_source(area_id, device_id),
             device_id=device_id,
             fallback=f"{platform}_{unique_id}",
-            follow_context=follow_context,
             has_entity_name=has_entity_name,
             name=name,
             original_name=object_id_base,
