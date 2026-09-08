@@ -9,6 +9,7 @@ from pythonxbox.api.provider.smartglass.models import ConsoleType, SmartglassCon
 from pythonxbox.api.provider.titlehub.models import Title
 from yarl import URL
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -18,6 +19,7 @@ from .coordinator import (
     ConsoleData,
     XboxConsoleStatusCoordinator,
     XboxPresenceCoordinator,
+    XboxTitleHistoryCoordinator,
 )
 
 MAP_MODEL = {
@@ -144,6 +146,57 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.data.get(self._console.id) is not None
+
+
+class XboxGameBaseEntity(CoordinatorEntity[XboxTitleHistoryCoordinator]):
+    """Representation of a Xbox game title entity."""
+
+    _attr_has_entity_name = True
+    entity_description: EntityDescription
+
+    def __init__(
+        self,
+        coordinator: XboxTitleHistoryCoordinator,
+        title_id: str,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize Xbox entity."""
+        super().__init__(coordinator)
+        self.xuid = coordinator.client.xuid
+        self.title_id = title_id
+        self.entity_description = entity_description
+
+        self._attr_unique_id = (
+            f"{coordinator.client.xuid}_{title_id}_{entity_description.key}"
+        )
+
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{coordinator.client.xuid}_{title_id}")},
+            manufacturer=(
+                (self.data.detail.developer_name or self.data.detail.publisher_name)
+                if self.data.detail
+                else None
+            ),
+            model=self.data.name,
+            name=self.data.name,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.client.xuid),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
+        )
+
+    @property
+    def data(self) -> Title:
+        """Return coordinator data for this game title."""
+        return self.coordinator.data[self.title_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.title_id in self.coordinator.data
 
 
 def to_https(image_url: str) -> str:

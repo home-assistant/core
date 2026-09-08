@@ -19,6 +19,7 @@ TO_REDACT = {
     "real_name",
     "unique_modern_gamertag",
     "xuid",
+    "friends_who_played",
 }
 
 
@@ -45,13 +46,18 @@ async def async_get_config_entry_diagnostics(
         for console in config_entry.runtime_data.consoles.data.values()
     ]
     title_info = [
-        title.model_dump()
+        async_redact_data(title.model_dump(), TO_REDACT)
         for title in config_entry.runtime_data.presence.data.title_info.values()
     ]
+    title_history = {
+        title_id: async_redact_data(title.model_dump(), TO_REDACT)
+        for title_id, title in config_entry.runtime_data.title_history.data.items()
+    }
 
     return {
         "consoles_status": consoles_status,
         "consoles_list": consoles_list,
         "presence": presence,
         "title_info": title_info,
+        "title_history": title_history,
     }
