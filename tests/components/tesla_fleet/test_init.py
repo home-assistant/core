@@ -387,7 +387,7 @@ async def test_vehicle_refresh_ratelimited(
 
     assert mock_vehicle_data.call_count == 2
     assert (state := hass.states.get("sensor.test_battery_level"))
-    assert state.state != "unavailable"
+    assert state.state == "77"
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
@@ -401,6 +401,22 @@ async def test_vehicle_refresh_ratelimited(
     await hass.async_block_till_done()
 
     assert mock_vehicle_data.call_count == 3
+
+
+async def test_vehicle_refresh_ratelimited_on_first_refresh(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test coordinator handles 429 on the first refresh, before any data exists."""
+
+    mock_vehicle_data.side_effect = RateLimited(
+        {"after": VEHICLE_INTERVAL_SECONDS + 10}
+    )
+    await setup_platform(hass, normal_config_entry)
+
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "unknown"
 
 
 async def test_vehicle_refresh_ratelimited_no_after(
