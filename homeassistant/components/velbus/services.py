@@ -32,6 +32,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def scan(call: ServiceCall) -> None:
         """Handle a scan service call."""
+        from . import _update_devices_and_issues  # noqa: PLC0415
+
         entry: VelbusConfigEntry = service.async_get_config_entry(
             call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
         )
@@ -43,6 +45,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="scan_failed",
                 translation_placeholders={"error": str(exc)},
             ) from exc
+        _update_devices_and_issues(hass, entry.runtime_data.controller, entry.entry_id)
 
     async def syn_clock(call: ServiceCall) -> None:
         """Handle a sync clock service call."""
