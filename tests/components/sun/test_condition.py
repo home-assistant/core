@@ -1845,14 +1845,14 @@ async def test_midnight_sun_polar_night_condition(
         # Midnight sun starts at this solar midnight (elevation crosses above).
         (
             "sun.is_midnight_sun",
-            datetime(2015, 4, 18, 22, 56, 36, tzinfo=dt_util.UTC),
+            datetime(2015, 4, 19, 22, 56, 23, tzinfo=dt_util.UTC),
             False,
             True,
         ),
         # Midnight sun ends at this solar midnight (crosses below).
         (
             "sun.is_midnight_sun",
-            datetime(2015, 8, 25, 22, 59, 19, tzinfo=dt_util.UTC),
+            datetime(2015, 8, 24, 22, 59, 36, tzinfo=dt_util.UTC),
             True,
             False,
         ),
@@ -1934,3 +1934,36 @@ async def test_golden_blue_hour_condition_period_validation(
     config = {"condition": condition_key, "options": {"period": period}}
     with expectation:
         await async_validate_condition_config(hass, config)
+
+
+async def test_midnight_sun_condition_uses_geometric_elevation(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test is_midnight_sun uses the geometric elevation at the onset boundary.
+
+    At Kotzebue on 2015-06-02 the solar-midnight geometric elevation is still
+    below the horizon (~-0.93 deg) - not yet midnight sun - though the apparent
+    elevation (~-0.57 deg) is above it, so the condition must be false here.
+    """
+    latitude, longitude, time_zone = _KOTZEBUE
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": "sun.is_midnight_sun"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # 1 h after the 2015-06-02 solar midnight (that extreme is the most recent).
+    with freeze_time(datetime(2015, 6, 2, 11, 48, 24, tzinfo=dt_util.UTC)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 0

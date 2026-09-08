@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ELEVATION_ASTRONOMICAL,
     ELEVATION_CIVIL,
-    ELEVATION_HORIZON,
+    ELEVATION_GEOMETRIC_HORIZON,
     ELEVATION_NAUTICAL,
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
@@ -163,9 +163,10 @@ class Sun(Entity):
     @override
     def state(self) -> str:
         """Return the state of the sun."""
-        # Compare the geometric (refraction-free) elevation: ELEVATION_HORIZON
-        # already accounts for refraction.
-        if self._solar_elevation_geometric > ELEVATION_HORIZON:
+        # Geometric elevation vs astral's geometric sunrise/sunset horizon, so the
+        # state flips exactly when those events fire (the apparent elevation would
+        # double-count refraction and report the sun up ~2-3 min too long).
+        if self._solar_elevation_geometric > ELEVATION_GEOMETRIC_HORIZON:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
@@ -252,11 +253,10 @@ class Sun(Entity):
         # even in the day at the poles, so we can't rely on it.
         # Need to calculate phase if next is noon or midnight
         if self.phase is None:
-            # Geometric elevation (without refraction): the phase bands below are
-            # geometric depressions, so astral's refraction must not be applied.
-            elevation = astral.sun.elevation(
-                self.observer, self._next_change, with_refraction=False
-            )
+            # Apparent (refraction-included) elevation to match the phase
+            # boundaries scheduled above via astral dawn/dusk, which resolve on
+            # apparent elevation. Only the horizon state (see `state`) is geometric.
+            elevation = astral.sun.elevation(self.observer, self._next_change)
             if elevation >= 10:
                 self.phase = PHASE_DAY
             elif elevation >= 0:

@@ -53,9 +53,9 @@ from .const import (
     ELEVATION_BLUE_HOUR_HIGH,
     ELEVATION_BLUE_HOUR_LOW,
     ELEVATION_CIVIL,
+    ELEVATION_GEOMETRIC_HORIZON,
     ELEVATION_GOLDEN_HOUR_HIGH,
     ELEVATION_GOLDEN_HOUR_LOW,
-    ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
     STATE_ATTR_ELEVATION,
 )
@@ -430,10 +430,10 @@ class BlueHourEndedTrigger(_GoldenBlueHourTrigger):
 
 # A midnight sun or polar night - the sun's daily extreme staying above / below
 # the horizon - only happens inside the polar circles. Testing the geometric
-# elevation against ELEVATION_HORIZON, a midnight sun first becomes possible at
-# ~65.7° of latitude (90 - 23.44 - 0.833; a polar night higher still), so below
-# this the scan never finds a crossing and is skipped. 65.0° stays a safe margin
-# under that minimum.
+# elevation against ELEVATION_GEOMETRIC_HORIZON, a midnight sun first becomes
+# possible at ~65.8° of latitude (90 - 23.44 - 0.79; a polar night higher still),
+# so below this the scan never finds a crossing and is skipped. 65.0° stays a safe
+# margin under that minimum.
 _MIN_POLAR_LATITUDE = 65.0
 
 
@@ -477,11 +477,11 @@ def _next_polar_transition(
     # crossing is always reached (e.g. when rescheduling from inside a period).
     for _ in range(400):
         event_time: datetime = event_func(observer, local_date)
-        # Geometric elevation (without refraction): ELEVATION_HORIZON already
-        # accounts for refraction, so applying it here too would double-count it.
+        # Geometric elevation vs astral's geometric sunrise/sunset horizon, so the
+        # period boundary matches when the sun actually stops/starts setting.
         above = (
             astral.sun.elevation(observer, event_time, with_refraction=False)
-            > ELEVATION_HORIZON
+            > ELEVATION_GEOMETRIC_HORIZON
         )
         if (
             prev_above is not None
