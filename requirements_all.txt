@@ -1223,7 +1223,7 @@ gridnet==5.0.1
 growattServer==2.2.0
 
 # homeassistant.components.google_sheets
-gspread==5.5.0
+gspread==6.2.1
 
 # homeassistant.components.guntamatic
 guntamatic==1.12.0
