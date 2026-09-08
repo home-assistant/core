@@ -1402,8 +1402,7 @@ async def test_thermostat_fan_becomes_supported_after_update(
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
     assert not (
-        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
-        & ClimateEntityFeature.FAN_MODE
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.FAN_MODE
     )
 
     # The fan trait later reports a real timer_mode value
@@ -1416,8 +1415,7 @@ async def test_thermostat_fan_becomes_supported_after_update(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert (
-        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
-        & ClimateEntityFeature.FAN_MODE
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.FAN_MODE
     )
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
