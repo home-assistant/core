@@ -51,7 +51,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.256940348958333',
+    'state': '0.141981021875',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_current_hour_price-entry]
@@ -86,12 +86,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current hour',
+    'original_name': 'Current price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_current_hour_price',
     'supported_features': 0,
-    'translation_key': 'current_hour_price',
+    'translation_key': 'current_price',
     'unique_id': '12345_today_energy_current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
@@ -100,7 +100,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current price',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
@@ -109,7 +109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.28275885',
+    'state': '0.17191075',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_highest_price_time-entry]
@@ -191,22 +191,21 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hours priced equal or lower than current - today',
+    'original_name': 'Periods priced equal or lower',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_hours_priced_equal_or_lower',
     'supported_features': 0,
     'translation_key': 'hours_priced_equal_or_lower',
     'unique_id': '12345_today_energy_hours_priced_equal_or_lower',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_hours_priced_equal_or_lower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Hours priced equal or lower than current - today',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Periods priced equal or lower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_hours_priced_equal_or_lower',
@@ -265,7 +264,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2026-04-11T06:00:00+00:00',
+    'state': '2026-04-10T01:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_max_price-entry]
@@ -320,7 +319,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.399000525',
+    'state': '0.288152425',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_min_price-entry]
@@ -375,7 +374,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.188351625',
+    'state': '0.08713815',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_next_hour_price-entry]
@@ -408,12 +407,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Next hour',
+    'original_name': 'Next price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_next_hour_price',
     'supported_features': 0,
-    'translation_key': 'next_hour_price',
+    'translation_key': 'next_price',
     'unique_id': '12345_today_energy_next_hour_price',
     'unit_of_measurement': '€/kWh',
   })
@@ -422,7 +421,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Next hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Next price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
@@ -430,7 +429,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.2629693',
+    'state': '0.1521212',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_percentage_of_max-entry]
@@ -482,7 +481,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.87',
+    'state': '59.66',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_current_hour_price-entry]
@@ -540,7 +539,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.5468407201224',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_next_hour_price-entry]
@@ -595,6 +594,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.5468407201224',
   })
 # ---

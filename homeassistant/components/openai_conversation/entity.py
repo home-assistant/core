@@ -517,6 +517,7 @@ class OpenAIBaseLLMEntity(Entity):
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
+            prompt_cache_key=self.subentry.subentry_id,
             service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
             store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
             stream=True,
