@@ -39,6 +39,7 @@ class WhirlpoolEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register attribute updates callback."""
         self._appliance.register_attr_callback(self._async_attr_callback)
+        self._async_attr_callback()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
