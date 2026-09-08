@@ -90,8 +90,8 @@
     },
     "interval": {
       "options": {
-        "hour": "Hourly",
-        "quarter": "Quarter-hourly"
+        "hour": "[%key:component::energyzero::selector::electricity_price_interval::options::hourly%]",
+        "quarter": "[%key:component::energyzero::selector::electricity_price_interval::options::quarter_hourly%]"
       }
     },
     "price_type": {
