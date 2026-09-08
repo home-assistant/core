@@ -5,7 +5,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_channel": "Please create a YouTube channel to be able to use the integration. Instructions can be found at {support_url}.",
       "no_subscriptions": "You need to be subscribed to YouTube channels in order to add them.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: please authenticate with the right account."
     },

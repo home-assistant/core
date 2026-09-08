@@ -108,6 +108,7 @@ async def test_offline_device(
 
 async def test_service_select_option(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -118,6 +119,9 @@ async def test_service_select_option(
     }
 
     await setup_integration(hass, mock_config_entry)
+
+    # A single account-wide entity is created regardless of the number of devices
+    assert "does not generate unique IDs" not in caplog.text
 
     assert (state := hass.states.get(ENTITY_ID_2))
     assert state.state == TEST_DEVICE_1.account_name
