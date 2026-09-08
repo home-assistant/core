@@ -142,22 +142,41 @@ def mock_meshtastic_client(
     node_fixtures: dict[str, Any],
     mock_pubsub: FakePubSub,
 ) -> Generator[MagicMock]:
-    """Mock ``TCPInterface`` and yield the connected interface instance.
+    """Mock the interface class and yield the connected instance.
 
     ``autospec=True`` means the mock only answers to the library's real public
     API, so a typo or a call into a private method fails the test.  Instance
     attributes the constructor would have created are set explicitly.
     """
     with patch(
-        "homeassistant.components.meshtastic.client.TCPInterface", autospec=True
+        "homeassistant.components.meshtastic.client.MeshtasticInterface", autospec=True
     ) as mock_interface:
         interface = mock_interface.return_value
         interface.myInfo = gateway_my_info
         interface.metadata = gateway_metadata
         interface.localNode = gateway_local_node
-        interface.nodes = dict(node_fixtures)
-        interface.nodesByNum = {node["num"]: node for node in node_fixtures.values()}
         interface.queueStatus = mesh_pb2.QueueStatus(free=16, maxlen=16)
+
+        def _connect(*_args: Any, noNodes: bool = False, **_kwargs: Any) -> MagicMock:
+            """Fill the node table the way the handshake does.
+
+            ``_startConfig()`` empties ``nodes``/``nodesByNum`` and the node
+            streams them back before the constructor returns.  Under the
+            nodeless nonce 69420 the firmware skips everyone else's
+            ``NodeInfo`` but still sends its own, which is exactly the
+            difference the ``download_node_db`` option makes.
+            """
+            table = (
+                {GATEWAY_ID: node_fixtures[GATEWAY_ID]}
+                if noNodes
+                else dict(node_fixtures)
+            )
+            interface.nodes = table
+            interface.nodesByNum = {node["num"]: node for node in table.values()}
+            return interface
+
+        mock_interface.side_effect = _connect
+        _connect(noNodes=True)
         interface.getMyNodeInfo.return_value = node_fixtures[GATEWAY_ID]
         interface.sendText.side_effect = lambda *args, **kwargs: mesh_pb2.MeshPacket(
             id=111222333

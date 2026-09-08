@@ -55,7 +55,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ServiceValidationError
 
-from .client import MeshtasticRequestError, raise_for_result
+from .client import MeshtasticError, MeshtasticRequestError, raise_for_result
 from .const import DOMAIN, LOGGER, PORTNUM_ADMIN_APP, PORTNUM_UNKNOWN_APP
 from .coordinator import MeshtasticConfigEntry, MeshtasticCoordinator
 from .entity import MeshtasticEntity
@@ -134,9 +134,12 @@ class SentPacket(NamedTuple):
     """The packet id of an admin message the library did not hand back.
 
     ``Node.writeConfig()`` sends the ``AdminMessage`` but returns ``None``, so
-    the id has to be read from the interface's own counter, which is the value
-    ``MeshInterface._generatePacketId()`` just assigned to that packet.  The
-    client only needs an object with an ``id``.
+    the id has to come from somewhere else, and it is the only key the node's
+    answer can be correlated on.  ``MeshtasticInterface`` records the id of
+    every mesh packet it frames as ``last_packet_id`` for exactly this; the
+    library's own ``currentPacketId`` is a counter that any caller on any
+    thread advances, so it names the packet just sent only by luck.  The client
+    only needs an object with an ``id``.
     """
 
     id: int
@@ -192,11 +195,21 @@ class MeshtasticConfigSnapshot:
         return _remove
 
     async def async_load(self) -> None:
-        """Read the configuration once, however many platforms ask for it."""
+        """Read the configuration once, however many platforms ask for it.
+
+        Only a read that worked counts as loaded.  Ten platforms are forwarded
+        at once and the link can be gone by the time the first of them asks,
+        so a failed read has to leave the next one free to try again instead
+        of parking every configuration entity without a value.
+        """
         async with self._lock:
             if self._loaded:
                 return
-            self._loaded = True
+            await self._async_read()
+
+    async def async_reload(self) -> None:
+        """Read the configuration again, whether or not it was ever read."""
+        async with self._lock:
             await self._async_read()
 
     @callback
@@ -205,14 +218,15 @@ class MeshtasticConfigSnapshot:
 
         A rebooting write made elsewhere (an action, the phone app) can leave
         the node with clamped values, so the cached copy is refetched rather
-        than trusted across a reconnect.
+        than trusted across a reconnect.  This is also what fills a snapshot
+        whose first read ran into a link that had just gone away.
         """
         connected = self.coordinator.client.connected
         was_connected, self._connected = self._connected, connected
-        if not connected or was_connected or not self._loaded:
+        if not connected or was_connected:
             return
         self.coordinator.config_entry.async_create_task(
-            self.coordinator.hass, self._async_read(), f"{DOMAIN} read config"
+            self.coordinator.hass, self.async_reload(), f"{DOMAIN} read config"
         )
 
     async def async_write(self, section: str, field: str, value: ConfigValue) -> None:
@@ -238,7 +252,7 @@ class MeshtasticConfigSnapshot:
                 return None
             setattr(current, field, value)
             local_node.writeConfig(section)
-            return SentPacket(id=interface.currentPacketId)
+            return SentPacket(id=int(getattr(interface, "last_packet_id", 0) or 0))
 
         result = await client.async_request(
             kind=RequestKind.ADMIN_LOCAL_SET,
@@ -282,10 +296,15 @@ class MeshtasticConfigSnapshot:
                 send=_read,
                 want_ack=False,
             )
-        except (MeshtasticRequestError, ServiceValidationError) as err:
+        except MeshtasticError as err:
+            # The base class, so that a link that went away between the
+            # connectivity check and this read is caught as well: this runs
+            # once from a platform's setup, where it would fail the platform,
+            # and again from a detached task, where it has nowhere to report.
             LOGGER.debug("Could not read the node configuration: %s", err)
             return
         self._values = values
+        self._loaded = True
         self._async_notify()
 
     @callback
@@ -295,24 +314,19 @@ class MeshtasticConfigSnapshot:
             listener()
 
 
-_SNAPSHOTS: Final[dict[str, MeshtasticConfigSnapshot]] = {}
-
-
 async def async_get_config_snapshot(
     entry: MeshtasticConfigEntry,
 ) -> MeshtasticConfigSnapshot:
-    """Return the configuration snapshot shared by one entry's platforms."""
-    if (snapshot := _SNAPSHOTS.get(entry.entry_id)) is None:
-        coordinator = entry.runtime_data.coordinator
-        snapshot = _SNAPSHOTS[entry.entry_id] = MeshtasticConfigSnapshot(coordinator)
-        entry_id = entry.entry_id
+    """Return the configuration snapshot shared by one entry's platforms.
 
-        @callback
-        def _forget() -> None:
-            """Drop the snapshot when the entry unloads."""
-            _SNAPSHOTS.pop(entry_id, None)
-
-        entry.async_on_unload(_forget)
+    It holds the coordinator, the client and a lock, so it lives on the entry's
+    runtime data and goes away with it rather than in a module-level table that
+    a teardown could forget to clear.
+    """
+    runtime_data = entry.runtime_data
+    if (snapshot := runtime_data.config_snapshot) is None:
+        coordinator = runtime_data.coordinator
+        snapshot = runtime_data.config_snapshot = MeshtasticConfigSnapshot(coordinator)
         entry.async_on_unload(
             coordinator.async_add_listener(snapshot.async_handle_coordinator_update)
         )

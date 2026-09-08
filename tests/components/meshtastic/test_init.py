@@ -118,6 +118,18 @@ def _armed_timers(hass: HomeAssistant, needle: str = "Meshtastic") -> list[str]:
         ]
 
 
+def _registry_save_timer(hass: HomeAssistant) -> asyncio.TimerHandle:
+    """Return the node registry's one armed save timer."""
+    with _full_reprs():
+        handles = [
+            handle
+            for handle in get_scheduled_timer_handles(hass.loop)
+            if not handle.cancelled() and "MeshtasticNodeRegistry" in repr(handle)
+        ]
+    assert len(handles) == 1
+    return handles[0]
+
+
 def _running_tasks() -> list[str]:
     """Return the names of the integration's still running asyncio tasks."""
     return [
@@ -412,6 +424,44 @@ async def test_nodes_survive_a_restart(
     assert nodes[REMOTE_ID].long_name == "Remote One"
     assert nodes[REMOTE_ID].position is not None
     assert not nodes[REMOTE_ID].presumptive
+
+
+@pytest.mark.usefixtures("mock_meshtastic_client")
+async def test_a_busy_mesh_cannot_starve_the_node_table_save(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pubsub: FakePubSub,
+    mock_meshtastic_client: MagicMock,
+    node_fixtures: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that a steady stream of updates cannot postpone the save forever.
+
+    ``Store.async_delay_save`` is a trailing-edge debounce: every further
+    update pushes the write out again, so a mesh that is never quiet for
+    ``STORAGE_SAVE_DELAY`` seconds would never be persisted at all.  The
+    registry arms its own timer once and leaves it alone, which is only
+    visible as the deadline not moving while the updates keep coming.
+    """
+    await setup_integration(hass, mock_config_entry)
+    key = STORAGE_KEY_FORMAT.format(entry_id=mock_config_entry.entry_id)
+    node = dict(node_fixtures[REMOTE_ID])
+
+    await inject_node_info(hass, mock_pubsub, mock_meshtastic_client, node)
+    deadline = _registry_save_timer(hass).when()
+
+    # A busy mesh: every one of these is a change worth persisting.
+    for last_heard in range(1757300701, 1757300706):
+        await inject_node_info(
+            hass, mock_pubsub, mock_meshtastic_client, node | {"lastHeard": last_heard}
+        )
+        assert key not in hass_storage
+        assert _registry_save_timer(hass).when() == deadline
+
+    await _advance(hass, STORAGE_SAVE_DELAY + 1)
+
+    stored = hass_storage[key]["data"]["nodes"]
+    assert stored[REMOTE_ID]["last_heard_device"] == 1757300705
 
 
 @pytest.mark.usefixtures("mock_meshtastic_client")

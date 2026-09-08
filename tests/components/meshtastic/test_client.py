@@ -9,9 +9,10 @@ event loop, which is where the pubsub listeners hand everything over.
 
 import asyncio
 from datetime import timedelta
+import threading
 import time
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from meshtastic.mesh_interface import MeshInterface
 from meshtastic.protobuf import mesh_pb2
@@ -23,6 +24,7 @@ from homeassistant.components.meshtastic.client import (
     MeshtasticClientCallbacks,
     MeshtasticConnectionError,
     MeshtasticError,
+    MeshtasticInterface,
     MeshtasticRequestError,
     PendingRequest,
     RequestTracker,
@@ -38,6 +40,8 @@ from homeassistant.components.meshtastic.client import (
 )
 from homeassistant.components.meshtastic.const import (
     BROADCAST_NUM,
+    CLOSE_TIMEOUT,
+    CONNECT_TIMEOUT,
     HEARTBEAT_INTERVAL,
     HEARTBEAT_RESPONSE_TIMEOUT,
     LIVENESS_TIMEOUT,
@@ -45,7 +49,14 @@ from homeassistant.components.meshtastic.const import (
     MAX_SEND_GATE_WAIT,
     MAX_TEXT_PAYLOAD_BYTES,
     PORTNUM_TEXT_MESSAGE_APP,
+    PORTNUM_TRACEROUTE_APP,
+    QUEUE_REFUSED_TX_DISABLED,
+    REBOOT_GRACE,
     RECONNECT_MAX_DELAY,
+    REQUEST_TIMEOUTS,
+    SEND_SPACING,
+    SOCKET_CONNECT_TIMEOUT,
+    TX_QUEUE_TIMEOUT,
 )
 from homeassistant.components.meshtastic.models import (
     ConnectionState,
@@ -61,7 +72,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from . import GATEWAY_ID, GATEWAY_NUM, REMOTE_ID, REMOTE_NUM
+from . import (
+    GATEWAY_ID,
+    GATEWAY_NUM,
+    REMOTE_ID,
+    REMOTE_NUM,
+    TOPIC_CLIENT_NOTIFICATION,
+    TOPIC_CONNECTION_ESTABLISHED,
+    TOPIC_CONNECTION_LOST,
+    TOPIC_NODE_UPDATED,
+    TOPIC_RECEIVE,
+    FakePubSub,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -454,6 +476,40 @@ async def test_tracker_response_completes_a_want_response_request() -> None:
     assert request.response is answer
 
 
+async def test_tracker_a_late_implicit_ack_never_unsays_a_real_one() -> None:
+    """Test that a second, weaker acknowledgement cannot move a request back.
+
+    Our own node emits an implicit acknowledgement for every rebroadcast of our
+    packet that it overhears, with no ordering against the destination's real
+    one.  If the later one won, a request that was acknowledged and then went
+    unanswered would be explained as never having been acknowledged, which is
+    the opposite of what happened and the wrong advice for the user.
+    """
+    tracker = _tracker()
+    request = PendingRequest(
+        packet_id=20,
+        kind=RequestKind.DIRECT_REQUEST,
+        destination=REMOTE_NUM,
+        want_response=True,
+    )
+    tracker.async_register(request)
+
+    tracker.async_handle_packet(_routing(20, from_num=REMOTE_NUM))
+    assert request.state is RequestState.ACKED
+    # A relay rebroadcasts the request; our node confirms it overheard it.
+    tracker.async_handle_packet(_routing(20, from_num=GATEWAY_NUM))
+
+    assert request.state is RequestState.ACKED
+    assert request.reached is RequestState.ACKED
+
+    # The destination throttles the answer, so the request runs out of time.
+    result = await tracker.async_wait(request, 0)
+
+    with pytest.raises(MeshtasticRequestError) as err:
+        raise_for_result(result, node=REMOTE_ID)
+    assert err.value.translation_key == "timeout_no_response"
+
+
 async def test_tracker_nak_is_terminal() -> None:
     """Test that a refusal ends the request and later packets are ignored."""
     tracker = _tracker()
@@ -611,6 +667,26 @@ def test_resolve_destination_refuses_a_name(client: MeshtasticClient) -> None:
     assert err.value.translation_key == "unknown_node"
 
 
+@pytest.mark.parametrize(
+    "destination", ["!-1234567", "!+1234567", "!12_34567", "! 1234567", "0x-1234567"]
+)
+def test_resolve_destination_refuses_a_signed_node_id(
+    client: MeshtasticClient, destination: str
+) -> None:
+    """Test that a node id has to be eight hexadecimal digits and nothing else.
+
+    ``int(candidate, 16)`` also accepts a sign, whitespace and underscore
+    separators, so an id like ``!-1234567`` used to resolve to a negative node
+    number that no later check rejects.  It is assigned straight to ``uint32``
+    protobuf fields, which raises a bare ``ValueError`` out of an executor job
+    instead of the translated message every other malformed id produces.
+    """
+    with pytest.raises(ServiceValidationError) as err:
+        client.resolve_destination(destination)
+
+    assert err.value.translation_key == "unknown_node"
+
+
 async def test_sending_without_a_link_is_an_error(client: MeshtasticClient) -> None:
     """Test that every send refuses while the link is down."""
     with pytest.raises(MeshtasticConnectionError) as err:
@@ -677,24 +753,108 @@ async def test_reboot_grace_keeps_the_client_available(
     assert client.stats()["reboot_grace_active"] is True
 
 
+async def test_the_reboot_grace_covers_the_delay_the_node_was_given(
+    client: MeshtasticClient,
+) -> None:
+    """Test that a reboot scheduled for later keeps its grace window open.
+
+    The ``reboot`` action passes a delay of up to five minutes to the node,
+    which then carries on as normal until it expires.  A window measured only
+    from now closes while the node is still running, so every entity flaps to
+    unavailable at exactly the moment the window exists to cover, and the
+    duplicate-reboot guard reopens while the first reboot is still pending.
+    """
+    with patch("homeassistant.components.meshtastic.client.time.monotonic") as clock:
+        clock.return_value = 0.0
+        client.async_note_reboot_expected(delay=120.0)
+
+        clock.return_value = REBOOT_GRACE + 1.0
+        assert client.reboot_grace_active is True
+        assert client.available is True
+
+        clock.return_value = 120.0 + REBOOT_GRACE + 1.0
+        assert client.reboot_grace_active is False
+
+
 async def test_pubsub_listeners_ignore_a_foreign_interface(
-    client: MeshtasticClient, packet_fixtures: dict[str, Any]
+    hass: HomeAssistant,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    packet_fixtures: dict[str, Any],
 ) -> None:
     """Test that traffic from a previous connection is dropped.
 
     A reconnect builds a new interface; the old one's reader thread can still
-    publish for a moment and must not be mistaken for the live link.
+    publish for a moment.  pypubsub delivers to every subscriber of a topic,
+    so the only thing that keeps a stale reader out is the identity check on
+    the interface each listener starts with.  The client has to be connected
+    for that check to mean anything, and every callback has to be watched:
+    a packet from a dead link would be merged into the node table, and a
+    ``connection.lost`` from it would tear the live link down.
     """
-    other = MagicMock(spec=MeshInterface)
+    seen: dict[str, list[Any]] = {
+        "packet": [],
+        "node": [],
+        "notification": [],
+        "disconnected": [],
+    }
+    client = MeshtasticClient(
+        hass,
+        "192.0.2.10",
+        4403,
+        callbacks=MeshtasticClientCallbacks(
+            packet=seen["packet"].append,
+            node_updated=seen["node"].append,
+            notification=seen["notification"].append,
+            disconnected=seen["disconnected"].append,
+        ),
+    )
+    await client.async_start()
+    # The handshake seeds the node table, so only what arrives after this
+    # point can have come from the stale interface.
+    seen["node"].clear()
+    stale = MagicMock(spec=MeshInterface)
 
-    client._on_receive(packet_fixtures["packet_text"], other)
-    client._on_node_updated({"num": REMOTE_NUM}, other)
-    client._on_connection_established(other)
-    client._on_connection_lost(other)
-    client._on_client_notification(mesh_pb2.ClientNotification(), other)
-    await asyncio.sleep(0)
+    mock_pubsub.sendMessage(
+        TOPIC_RECEIVE, packet=packet_fixtures["packet_text"], interface=stale
+    )
+    mock_pubsub.sendMessage(
+        TOPIC_NODE_UPDATED, node={"num": REMOTE_NUM}, interface=stale
+    )
+    mock_pubsub.sendMessage(
+        TOPIC_CLIENT_NOTIFICATION,
+        notification=mesh_pb2.ClientNotification(),
+        interface=stale,
+    )
+    mock_pubsub.sendMessage(TOPIC_CONNECTION_LOST, interface=stale)
+    mock_pubsub.sendMessage(TOPIC_CONNECTION_ESTABLISHED, interface=stale)
+    await hass.async_block_till_done()
 
-    assert client.connection_state.value == "disconnected"
+    assert seen == {
+        "packet": [],
+        "node": [],
+        "notification": [],
+        "disconnected": [],
+    }
+    assert client.connection_state is ConnectionState.CONNECTED
+
+    # The live interface is still heard, so the filter is not simply off.
+    client._last_rx = time.monotonic() - HEARTBEAT_INTERVAL
+    mock_pubsub.sendMessage(
+        TOPIC_RECEIVE,
+        packet=packet_fixtures["packet_text"],
+        interface=mock_meshtastic_client,
+    )
+    mock_pubsub.sendMessage(
+        TOPIC_CONNECTION_ESTABLISHED, interface=mock_meshtastic_client
+    )
+    await hass.async_block_till_done()
+
+    assert len(seen["packet"]) == 1
+    # Both handlers count as the link having produced traffic.
+    assert time.monotonic() - client._last_rx < HEARTBEAT_INTERVAL
+
+    await client.async_stop()
 
 
 async def test_refresh_nodes_uses_the_nodes_only_nonce(
@@ -879,23 +1039,80 @@ async def test_a_node_past_the_liveness_timeout_is_declared_dead(
 async def test_an_answered_heartbeat_resets_the_counter(
     hass: HomeAssistant, mock_meshtastic_client: MagicMock
 ) -> None:
-    """Test that a node whose queue status moves is treated as alive."""
+    """Test that a node whose queue status moves is treated as alive.
+
+    The firmware answers every heartbeat with a ``FromRadio.queueStatus``
+    frame, and the library replaces ``interface.queueStatus`` with the new
+    message.  On a quiet mesh nothing else arrives, so that replacement is the
+    only evidence that the link still works - which is why the answer has to
+    land *between* the probe and the check, exactly as the node produces it.
+
+    The link must survive more than ``MAX_MISSED_HEARTBEATS`` such rounds
+    without being declared dead: a reconnect would also leave the client
+    connected with the counter back at zero, so the number of connection
+    attempts is what tells the two apart.
+    """
     client = MeshtasticClient(hass, "192.0.2.10", 4403)
     await client.async_start()
+    free = 16
 
-    for index in range(3):
+    def _answer_with_a_queue_status() -> None:
+        """Reply to the heartbeat the way the node does."""
+        nonlocal free
+        free -= 1
+        mock_meshtastic_client.queueStatus = mesh_pb2.QueueStatus(free=free, maxlen=16)
+
+    mock_meshtastic_client.sendHeartbeat.side_effect = _answer_with_a_queue_status
+    rounds = MAX_MISSED_HEARTBEATS + 2
+
+    for _ in range(rounds):
+        # Nothing else is received, so the last frame keeps receding.
         client._last_rx = time.monotonic() - HEARTBEAT_INTERVAL - 5
-        # The firmware bumps its queue status for every heartbeat it handles.
-        mock_meshtastic_client.queueStatus = mesh_pb2.QueueStatus(
-            free=16 - index, maxlen=16
-        )
         await _heartbeat_cycle(hass)
 
     assert client.connected is True
     assert client.stats()["missed_heartbeats"] == 0
-    assert mock_meshtastic_client.sendHeartbeat.call_count == 3
+    assert mock_meshtastic_client.sendHeartbeat.call_count == rounds
+    # Still the very first connection: the link was never dropped and rebuilt.
+    assert client.stats()["reconnect_attempts"] == 1
 
     await client.async_stop()
+
+
+async def test_a_close_that_hangs_cannot_hold_up_the_stop(
+    hass: HomeAssistant,
+    mock_meshtastic_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a wedged ``close()`` does not block unloading the entry.
+
+    ``TCPInterface.close()`` joins the library's reader thread with no
+    timeout, so a reader stuck inside a subscriber never comes back.  The
+    close therefore runs in the executor under ``CLOSE_TIMEOUT``; past that
+    the interface is abandoned and the stop completes anyway.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+
+    release = threading.Event()
+    mock_meshtastic_client.close.side_effect = lambda: release.wait(10)
+
+    try:
+        stopping = hass.async_create_task(client.async_stop())
+        for _ in range(20):
+            await asyncio.sleep(0)
+            if stopping.done():
+                break
+            async_fire_time_changed(
+                hass, dt_util.utcnow() + timedelta(seconds=CLOSE_TIMEOUT + 1)
+            )
+        await stopping
+    finally:
+        release.set()
+
+    assert mock_meshtastic_client.close.call_count == 1
+    assert client.connection_state is ConnectionState.DISCONNECTED
+    assert "Timed out closing the connection" in caplog.text
 
 
 async def test_a_failed_reconnect_is_retried(
@@ -917,5 +1134,636 @@ async def test_a_failed_reconnect_is_retried(
 
     assert client.connected is True
     assert client.stats()["reconnect_attempts"] >= 3
+
+    await client.async_stop()
+
+
+# ---------------------------------------------------------------------------
+# The interface subclass, driven for real
+#
+# These tests deliberately build a real ``MeshtasticInterface``.  Everything
+# else in this package mocks the library at the class boundary, which is
+# exactly why the library's own unbounded waits and in-place reconnect went
+# unnoticed: no mock can reproduce them.  ``connectNow=False`` opens no socket
+# and starts no thread, so nothing here touches the network.
+# ---------------------------------------------------------------------------
+
+
+def _offline_interface() -> MeshtasticInterface:
+    """Return an interface that has never been connected."""
+    return MeshtasticInterface("192.0.2.10", connectNow=False)
+
+
+def test_every_library_hook_the_interface_overrides_still_exists() -> None:
+    """Test that the pinned library still has the private methods we replace.
+
+    ``MeshtasticInterface`` exists because three of the library's blocking or
+    self-healing behaviours have no public switch, and ``async_refresh_nodes``
+    frames its own ``ToRadio`` for ``_sendToRadio``.  A rename in a library
+    update would leave every override in place, overriding nothing, and the
+    failure would surface as an untranslated ``AttributeError`` from inside an
+    executor job.  Fail the version bump here instead.
+    """
+    bases = MeshtasticInterface.__mro__[1:]
+
+    for name in (
+        "myConnect",
+        "close",
+        "_reconnect",
+        "_socket_shutdown",
+        "_sendToRadio",
+        "_queueHasFreeSpace",
+    ):
+        assert any(name in base.__dict__ for base in bases), (
+            f"meshtastic no longer defines {name}"
+        )
+
+
+def test_the_connect_is_bounded_and_reads_stay_blocking() -> None:
+    """Test that the socket connect cannot outlive the client's own timeout.
+
+    ``TCPInterface.myConnect`` hands no timeout to ``socket.create_connection``,
+    so an unreachable node holds an executor thread for the operating system's
+    SYN timeout - minutes - while the supervisor is already opening the next
+    connection.
+    """
+    interface = _offline_interface()
+    with patch(
+        "homeassistant.components.meshtastic.client.socket.create_connection"
+    ) as create_connection:
+        interface.myConnect()
+
+    assert create_connection.call_args.args[0] == ("192.0.2.10", 4403)
+    assert create_connection.call_args.kwargs["timeout"] == SOCKET_CONNECT_TIMEOUT
+    # A connect timeout must not become a read timeout: the reader thread
+    # blocks on a quiet but healthy link, and would tear it down otherwise.
+    create_connection.return_value.settimeout.assert_called_once_with(None)
+    assert interface.socket is create_connection.return_value
+
+
+def test_a_dropped_socket_ends_the_interface_instead_of_reconnecting() -> None:
+    """Test that the library never re-handshakes behind the client's back.
+
+    ``TCPInterface._readBytes`` calls ``_reconnect()`` on end-of-stream, which
+    sleeps a second and opens a new socket on the reader thread without
+    publishing ``meshtastic.connection.lost``.  The client's supervisor,
+    backoff and circuit breaker would never see the drop.
+    """
+    interface = _offline_interface()
+    interface.socket = MagicMock()
+    interface.socket.recv.return_value = b""
+
+    assert interface._readBytes(1) == b""
+
+    # _wantExit is what makes the reader fall out of its loop, and its
+    # ``finally`` is what publishes meshtastic.connection.lost.
+    assert interface._wantExit is True
+    interface.socket.shutdown.assert_called_once()
+
+
+def test_the_transmit_queue_wait_reports_what_the_radio_said() -> None:
+    """Test the three answers the bounded transmit-queue wait can give."""
+    interface = _offline_interface()
+
+    # Nothing reported yet: the library sends and finds out.
+    assert interface._queueHasFreeSpace() is True
+
+    interface.queueStatus = mesh_pb2.QueueStatus(free=0, maxlen=16)
+    interface._tx_deadline = time.monotonic() + TX_QUEUE_TIMEOUT
+    # Full, but still within the deadline: wait, exactly as the library does.
+    assert interface._queueHasFreeSpace() is False
+
+    # Closing: never wait.  Nothing written now can reach the node anyway.
+    interface._closing_down = True
+    assert interface._queueHasFreeSpace() is True
+
+
+def test_a_full_transmit_queue_cannot_wedge_the_close() -> None:
+    """Test that closing a node with a full transmit queue always returns.
+
+    ``MeshInterface.close()`` sends a disconnect frame, and ``_sendToRadio``
+    waits for transmit-queue space in an unbounded ``time.sleep(0.5)`` loop.
+    ``TCPInterface.close()`` has already dropped the socket and joined the
+    reader by then, so ``queueStatus.free`` can never be refreshed and the
+    executor thread is lost for the life of the process.
+    """
+    interface = _offline_interface()
+    # The firmware answers every packet with a QueueStatus, and the library
+    # leaves a ``False`` marker behind for each one it did not expect.
+    interface.queue[0x1234] = False
+    interface.queueStatus = mesh_pb2.QueueStatus(free=0, maxlen=16)
+
+    # Daemon, so that a regression fails the test instead of hanging pytest.
+    closing = threading.Thread(
+        target=interface.close, name="close under test", daemon=True
+    )
+    closing.start()
+    closing.join(timeout=10)
+
+    assert not closing.is_alive()
+    assert interface.queue == {}
+
+
+def test_a_full_transmit_queue_fails_the_send_instead_of_waiting() -> None:
+    """Test that a congested radio fails a send rather than parking a thread."""
+    interface = _offline_interface()
+    interface.queue[0x1234] = mesh_pb2.ToRadio()
+    interface.queueStatus = mesh_pb2.QueueStatus(free=0, maxlen=16)
+
+    with (
+        patch("homeassistant.components.meshtastic.client.TX_QUEUE_TIMEOUT", 0.0),
+        pytest.raises(MeshInterface.MeshInterfaceError),
+    ):
+        interface.sendHeartbeat()
+
+    assert interface.queue == {}
+
+
+def test_the_interface_records_the_packet_id_it_framed() -> None:
+    """Test the id a library helper that returns nothing leaves behind.
+
+    ``Node.writeConfig()`` sends its ``AdminMessage`` and returns ``None``, and
+    the library offers only ``currentPacketId`` - a counter
+    ``_generatePacketId()`` advances for every caller on every thread.  Every
+    mesh packet passes through ``_sendToRadio``, so the id of the one that was
+    really framed is recorded there instead.
+    """
+    interface = _offline_interface()
+    # No socket: _writeBytes returns without writing, so nothing leaves here.
+    assert interface.socket is None
+    assert interface.last_packet_id == 0
+
+    interface._sendToRadio(mesh_pb2.ToRadio(packet=mesh_pb2.MeshPacket(id=0xABCDEF01)))
+    assert interface.last_packet_id == 0xABCDEF01
+
+    # A frame with no packet carries no id: the heartbeat the library's own
+    # timer thread sends must not erase the last one.
+    interface.sendHeartbeat()
+    assert interface.last_packet_id == 0xABCDEF01
+
+
+# ---------------------------------------------------------------------------
+# Connect
+# ---------------------------------------------------------------------------
+
+
+def _stream_the_node_db(interface_class: MagicMock, pubsub: FakePubSub) -> None:
+    """Publish every node record from inside the constructor, as the node does.
+
+    The whole database arrives while ``StreamInterface.__init__`` is still
+    blocked in ``waitForConfig()``, which is the reason none of it can be
+    picked up from the pubsub topic.
+    """
+    build = interface_class.side_effect
+
+    def _construct(*args: Any, **kwargs: Any) -> MagicMock:
+        interface = build(*args, **kwargs)
+        for node in list(interface.nodesByNum.values()):
+            pubsub.sendMessage(TOPIC_NODE_UPDATED, node=node, interface=interface)
+        return interface
+
+    interface_class.side_effect = _construct
+
+
+async def test_the_node_database_the_handshake_streamed_is_kept(
+    hass: HomeAssistant,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that turning the node database on actually produces nodes.
+
+    Every ``meshtastic.node.updated`` the handshake publishes arrives before
+    the client owns the interface, so the identity check in the listener drops
+    all of them; nothing else read the library's table.  The option shipped as
+    a complete no-op.
+    """
+    seen: list[Any] = []
+    _stream_the_node_db(mock_meshtastic_client.interface_class, mock_pubsub)
+    client = MeshtasticClient(
+        hass,
+        "192.0.2.10",
+        4403,
+        download_node_db=True,
+        callbacks=MeshtasticClientCallbacks(node_updated=seen.append),
+    )
+
+    await client.async_start()
+
+    assert {node.node_id for node in seen} == set(node_fixtures)
+    assert mock_meshtastic_client.interface_class.call_args.kwargs["noNodes"] is False
+
+    await client.async_stop()
+
+
+async def test_the_gateway_node_info_survives_a_nodeless_connect(
+    hass: HomeAssistant,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+) -> None:
+    """Test that the node's own record is kept even without the database.
+
+    The nodeless nonce still streams the gateway's own ``NodeInfo`` - its
+    position, its device metrics and its favourite/ignored flags - and it was
+    being discarded on every single connect.
+    """
+    seen: list[Any] = []
+    _stream_the_node_db(mock_meshtastic_client.interface_class, mock_pubsub)
+    client = MeshtasticClient(
+        hass,
+        "192.0.2.10",
+        4403,
+        callbacks=MeshtasticClientCallbacks(node_updated=seen.append),
+    )
+
+    await client.async_start()
+
+    assert [node.node_id for node in seen] == [GATEWAY_ID]
+    assert mock_meshtastic_client.interface_class.call_args.kwargs["noNodes"] is True
+
+    await client.async_stop()
+
+
+async def test_a_connection_that_arrives_too_late_is_closed(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that a handshake finishing after the timeout is not abandoned.
+
+    An executor job cannot be cancelled.  When the connect overruns
+    ``CONNECT_TIMEOUT`` - a node mid-reboot, or a large node database over a
+    congested link - the interface the worker eventually returns owns a live
+    socket, a reader thread and the library's own heartbeat timer, and nothing
+    would ever close it.
+    """
+    release = threading.Event()
+    build = mock_meshtastic_client.interface_class.side_effect
+
+    def _slow_handshake(*args: Any, **kwargs: Any) -> MagicMock:
+        release.wait(10)
+        return build(*args, **kwargs)
+
+    mock_meshtastic_client.interface_class.side_effect = _slow_handshake
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+
+    try:
+        starting = hass.async_create_task(client.async_start())
+        for _ in range(20):
+            await asyncio.sleep(0)
+            if starting.done():
+                break
+            await _advance(hass, CONNECT_TIMEOUT + 1)
+        with pytest.raises(MeshtasticConnectionError) as err:
+            await starting
+    finally:
+        release.set()
+    await _settle(hass)
+
+    assert err.value.translation_key == "timeout"
+    assert mock_meshtastic_client.close.call_count == 1
+
+
+async def test_a_connect_cancelled_mid_handshake_is_closed_when_it_lands(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that a cancelled connect does not abandon a live interface either.
+
+    Nothing cancels an executor thread, and the config flow's own validation
+    timeout and an entry being unloaded both cancel the awaiting task rather
+    than letting the connect time out.  The handshake finishes anyway, and the
+    firmware serves one API client at a time: an abandoned session goes on
+    kicking every later attempt until Home Assistant is restarted.
+    """
+    release = threading.Event()
+    build = mock_meshtastic_client.interface_class.side_effect
+
+    def _slow_handshake(*args: Any, **kwargs: Any) -> MagicMock:
+        release.wait(10)
+        return build(*args, **kwargs)
+
+    mock_meshtastic_client.interface_class.side_effect = _slow_handshake
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+
+    try:
+        starting = hass.async_create_task(client.async_start())
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not starting.done()
+
+        starting.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await starting
+        # Everything the client knows about is closed, and it knows about
+        # nothing: the interface has not been handed over yet.
+        await client.async_stop()
+        assert client._interface is None
+    finally:
+        release.set()
+    await _settle(hass)
+
+    assert mock_meshtastic_client.close.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Sending
+# ---------------------------------------------------------------------------
+
+
+async def test_a_send_that_waited_out_the_gate_rechecks_the_link(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock, mock_pubsub: FakePubSub
+) -> None:
+    """Test that a queued send never runs against a closed interface.
+
+    ``async_request`` waits for the send lock and then for the per-portnum
+    pacing gate, together up to about a minute for a traceroute.  A drop in
+    that window replaces the interface, but a send on the old one writes into
+    a closed socket, which the library reports as a success: the request then
+    waits out its whole deadline and reports that nothing acknowledged it.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+    # A packet id of zero is the library's "nothing to correlate on", so each
+    # send reports as soon as it is out and only the gate is under test here.
+    mock_meshtastic_client.sendData.side_effect = lambda *args, **kwargs: (
+        mesh_pb2.MeshPacket(id=0)
+    )
+    await client.async_send_data(
+        b"first", portnum=PORTNUM_TRACEROUTE_APP, destination=REMOTE_NUM
+    )
+
+    queued = hass.async_create_task(
+        client.async_send_data(
+            b"second", portnum=PORTNUM_TRACEROUTE_APP, destination=REMOTE_NUM
+        )
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert not queued.done()
+
+    # The node goes away while the second send is still waiting on the gate,
+    # and stays away, so nothing can put an interface back.
+    mock_meshtastic_client.interface_class.side_effect = OSError("unreachable")
+    mock_pubsub.sendMessage(TOPIC_CONNECTION_LOST, interface=mock_meshtastic_client)
+    for _ in range(10):
+        await asyncio.sleep(0)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=SEND_SPACING[PORTNUM_TRACEROUTE_APP] + 1),
+    )
+
+    with pytest.raises(MeshtasticConnectionError) as err:
+        await queued
+    assert err.value.translation_key == "not_connected"
+    assert mock_meshtastic_client.sendData.call_count == 1
+
+    await client.async_stop()
+
+
+async def test_a_message_sent_without_acknowledgment_reports_success(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that turning acknowledgement off does not fail every send.
+
+    Nothing on the mesh answers a packet the firmware was not asked to track:
+    it writes no retransmission record for one, so neither a real nor an
+    implicit acknowledgement can arrive.  Waiting the acknowledgement deadline
+    out would block the action for half a minute and then report that nobody
+    relayed the message - unconditionally, for everyone who turns the option
+    off, which is the default for a broadcast.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+
+    sending = hass.async_create_task(
+        client.async_send_text("fire and forget", want_ack=False)
+    )
+    # Nothing is injected: this is what the mesh really sends back, which is
+    # nothing at all.  The short grace for a refusal generated before the
+    # packet went out is the whole wait.
+    await _advance(hass, REQUEST_TIMEOUTS[RequestKind.FIRE_AND_FORGET] + 1)
+    assert sending.done()
+    result = await sending
+
+    assert mock_meshtastic_client.sendText.call_args.kwargs["wantAck"] is False
+    assert result.kind is RequestKind.FIRE_AND_FORGET
+    assert result.state is RequestState.SENT
+    # The action reports success rather than blaming the mesh.
+    raise_for_result(result, node="^all")
+
+    await client.async_stop()
+
+
+async def test_a_message_the_radio_refused_still_fails_without_an_ack(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that the grace is what a send without acknowledgement is for.
+
+    A node whose transmitter is off answers with a ``QueueStatus`` and no
+    routing packet at all.  Reporting every unacknowledged send as a success
+    without looking would hide the one failure that is still knowable.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+    mock_meshtastic_client.queueStatus = mesh_pb2.QueueStatus(
+        res=34, free=16, maxlen=16, mesh_packet_id=111222333
+    )
+
+    sending = hass.async_create_task(
+        client.async_send_text("fire and forget", want_ack=False)
+    )
+    await _advance(hass, REQUEST_TIMEOUTS[RequestKind.FIRE_AND_FORGET] + 1)
+    assert sending.done()
+    result = await sending
+
+    assert result.state is RequestState.NACKED
+    assert result.error_reason == QUEUE_REFUSED_TX_DISABLED
+    with pytest.raises(MeshtasticRequestError) as err:
+        raise_for_result(result, node="^all")
+    assert err.value.translation_key == "tx_disabled"
+
+    await client.async_stop()
+
+
+async def test_one_portnums_spacing_does_not_stall_the_others(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that the pacing gate is not waited out under the global send lock.
+
+    The gate belongs to one portnum, the lock to the whole link.  Holding the
+    lock across the wait makes a traceroute's 31 seconds of spacing stall every
+    unrelated send behind it, and each request only ever measures the wait that
+    is left once the one in front has finished, so a queue can grow past the
+    cap that is supposed to bound it without anybody being told.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+    # A packet id of zero is the library's "nothing to correlate on", so each
+    # send reports as soon as it is out and only the pacing is under test.
+    mock_meshtastic_client.sendData.side_effect = lambda *args, **kwargs: (
+        mesh_pb2.MeshPacket(id=0)
+    )
+    mock_meshtastic_client.sendText.side_effect = lambda *args, **kwargs: (
+        mesh_pb2.MeshPacket(id=0)
+    )
+    await client.async_send_data(
+        b"first", portnum=PORTNUM_TRACEROUTE_APP, destination=REMOTE_NUM
+    )
+
+    queued = hass.async_create_task(
+        client.async_send_data(
+            b"second", portnum=PORTNUM_TRACEROUTE_APP, destination=REMOTE_NUM
+        )
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert not queued.done()
+
+    # A text message is paced on its own clock and has to go out straight away.
+    texting = hass.async_create_task(
+        client.async_send_text("hello", destination=REMOTE_NUM)
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert texting.done()
+    await texting
+    assert mock_meshtastic_client.sendText.call_count == 1
+
+    # A third traceroute would have to sit through both of the waits ahead of
+    # it, which is longer than the cap: it is told so now, not in a minute.
+    with pytest.raises(MeshtasticRequestError) as err:
+        await client.async_send_data(
+            b"third", portnum=PORTNUM_TRACEROUTE_APP, destination=REMOTE_NUM
+        )
+    assert err.value.translation_key == "rate_limited"
+
+    await _advance(hass, SEND_SPACING[PORTNUM_TRACEROUTE_APP] + 1)
+    await queued
+    assert mock_meshtastic_client.sendData.call_count == 2
+
+    await client.async_stop()
+
+
+async def test_a_node_refresh_that_waited_for_the_lock_rechecks_the_link(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock, mock_pubsub: FakePubSub
+) -> None:
+    """Test that a queued node refresh never runs against a closed interface.
+
+    ``async_refresh_nodes`` queues behind every other send, and the library
+    writes into a closed socket without complaining, so a refresh that lost the
+    link while it waited would look like it had worked.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+    mock_meshtastic_client._sendToRadio.reset_mock()
+
+    # Stand in for a long send already in flight.
+    await client._send_lock.acquire()
+    refreshing = hass.async_create_task(client.async_refresh_nodes())
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert not refreshing.done()
+
+    # The node goes away while the refresh waits, and stays away, so nothing
+    # can put an interface back.
+    mock_meshtastic_client.interface_class.side_effect = OSError("unreachable")
+    mock_pubsub.sendMessage(TOPIC_CONNECTION_LOST, interface=mock_meshtastic_client)
+    for _ in range(10):
+        await asyncio.sleep(0)
+    client._send_lock.release()
+
+    with pytest.raises(MeshtasticConnectionError) as err:
+        await refreshing
+    assert err.value.translation_key == "not_connected"
+    mock_meshtastic_client._sendToRadio.assert_not_called()
+
+    await client.async_stop()
+
+
+async def test_a_packet_the_radio_refused_names_the_reason(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that a silent firmware drop is reported as what it is.
+
+    A node whose LoRa region is unset, or whose transmitter is off, answers
+    with ``QueueStatus.res = 34`` and no routing packet at all.  Without
+    reading it every send waits out its full deadline and then blames the
+    mesh for not relaying the message, forever, with nothing pointing at the
+    setting that is actually wrong.
+    """
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+    mock_meshtastic_client.queueStatus = mesh_pb2.QueueStatus(
+        res=34, free=16, maxlen=16, mesh_packet_id=111222333
+    )
+
+    sending = hass.async_create_task(
+        client.async_send_text("hello", destination=REMOTE_NUM)
+    )
+    await _advance(hass, REQUEST_TIMEOUTS[RequestKind.TEXT_DIRECT] + 1)
+    result = await sending
+
+    assert result.state is RequestState.NACKED
+    assert result.error_reason == QUEUE_REFUSED_TX_DISABLED
+    with pytest.raises(MeshtasticRequestError) as err:
+        raise_for_result(result, node=REMOTE_ID)
+    assert err.value.translation_key == "tx_disabled"
+
+    await client.async_stop()
+
+
+async def test_a_queue_status_for_another_packet_is_ignored(
+    hass: HomeAssistant, mock_meshtastic_client: MagicMock
+) -> None:
+    """Test that only the answer to our own packet can explain its timeout."""
+    client = MeshtasticClient(hass, "192.0.2.10", 4403)
+    await client.async_start()
+    mock_meshtastic_client.queueStatus = mesh_pb2.QueueStatus(
+        res=34, free=16, maxlen=16, mesh_packet_id=999
+    )
+
+    sending = hass.async_create_task(
+        client.async_send_text("hello", destination=REMOTE_NUM)
+    )
+    await _advance(hass, REQUEST_TIMEOUTS[RequestKind.TEXT_DIRECT] + 1)
+    result = await sending
+
+    assert result.state is RequestState.TIMED_OUT
+    assert result.error_reason is None
+
+    await client.async_stop()
+
+
+async def test_the_node_table_is_only_delivered_for_the_live_link(
+    hass: HomeAssistant,
+    mock_meshtastic_client: MagicMock,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that a node table read for a link that has since died is dropped."""
+    seen: list[Any] = []
+    client = MeshtasticClient(
+        hass,
+        "192.0.2.10",
+        4403,
+        callbacks=MeshtasticClientCallbacks(node_updated=seen.append),
+    )
+    await client.async_start()
+    seen.clear()
+    live = client._interface
+    assert live is not None
+
+    with patch(
+        "homeassistant.components.meshtastic.client._snapshot_nodes",
+        return_value=[dict(node_fixtures[REMOTE_ID])],
+    ):
+        await client._async_seed_nodes(MagicMock(spec=MeshInterface))
+    assert seen == []
+
+    # A table that cannot be read at all is not worth failing the connect for.
+    with patch(
+        "homeassistant.components.meshtastic.client._snapshot_nodes",
+        side_effect=OSError("the node went away"),
+    ):
+        await client._async_seed_nodes(live)
+    assert seen == []
+    assert client.connected is True
 
     await client.async_stop()

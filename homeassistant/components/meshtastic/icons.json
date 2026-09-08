@@ -160,32 +160,17 @@
     "export_config": {
       "service": "mdi:file-export"
     },
-    "reboot": {
-      "service": "mdi:restart"
-    },
     "refresh_nodes": {
       "service": "mdi:database-refresh"
     },
     "remove_node": {
       "service": "mdi:database-remove"
     },
-    "request_position": {
-      "service": "mdi:crosshairs-gps"
-    },
-    "request_telemetry": {
-      "service": "mdi:chart-line"
-    },
     "request_traceroute": {
       "service": "mdi:transit-connection-variant"
     },
     "send_message": {
       "service": "mdi:message-arrow-right"
-    },
-    "set_favorite": {
-      "service": "mdi:star"
-    },
-    "set_ignored": {
-      "service": "mdi:account-cancel"
     }
   }
 }

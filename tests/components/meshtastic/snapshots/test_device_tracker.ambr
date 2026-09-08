@@ -105,13 +105,13 @@
     'attributes': ReadOnlyDict({
       'altitude': 42,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote One Position',
-      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 364,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
       <EntityStateAttribute.LATITUDE: 'latitude'>: 52.1111111,
       'location_source': None,
       <EntityStateAttribute.LONGITUDE: 'longitude'>: 13.1111111,
-      'precision_bits': 16,
+      'precision_bits': None,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

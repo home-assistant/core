@@ -78,10 +78,12 @@ def admin_writes(mock_meshtastic_client: MagicMock) -> list[admin_pb2.AdminMessa
             getattr(local_node.localConfig, name)
         )
         sent.append(message)
-        mock_meshtastic_client.currentPacketId = ADMIN_PACKET_ID
+        # ``MeshtasticInterface`` records the id of every packet it frames,
+        # which is where the write reads back the id of the one it just sent.
+        mock_meshtastic_client.last_packet_id = ADMIN_PACKET_ID
 
     local_node.writeConfig = MagicMock(side_effect=_write_config)
-    mock_meshtastic_client.currentPacketId = 0
+    mock_meshtastic_client.last_packet_id = 0
     return sent
 
 

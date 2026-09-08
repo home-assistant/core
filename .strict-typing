@@ -387,6 +387,7 @@ homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.meshtastic.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
 homeassistant.components.miele.*

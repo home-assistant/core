@@ -7,11 +7,15 @@ compromise the mesh once the file is attached to a bug report.  Channel
 pre-shared keys, the node's private and admin keys, administration session
 passkeys and the Wi-Fi and MQTT credentials are redacted wherever they appear,
 and so are the coordinates of every node unless the user asked for them.
+
+Redaction is by key, but the node's address also turns up in the *text* of the
+errors this integration reports, so the finished dump is scrubbed of it as
+well.
 """
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -106,6 +110,30 @@ def _errors(
     }
 
 
+def _redact_host_text(value: Any, host: str) -> Any:
+    """Return ``value`` with every literal occurrence of ``host`` redacted."""
+    if isinstance(value, str):
+        return value.replace(host, REDACTED)
+    if isinstance(value, dict):
+        return {key: _redact_host_text(item, host) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_redact_host_text(item, host) for item in value]
+    return value
+
+
+def _redacted_dump(dump: dict[str, Any], host: str) -> dict[str, Any]:
+    """Return the finished dump with the node's address taken back out.
+
+    ``async_redact_data`` matches keys, and that is not enough here: every
+    connection error the client raises carries the address as a translation
+    placeholder, so the rendered message ends up inside ``dead_reason`` and
+    inside the coordinator's last exception, where no key names it.  Redacting
+    ``host`` and leaving those would publish the address anyway.
+    """
+    redacted: dict[str, Any] = _redact_host_text(dump, host) if host else dump
+    return redacted
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: MeshtasticConfigEntry
 ) -> dict[str, Any]:
@@ -116,16 +144,22 @@ async def async_get_config_entry_diagnostics(
     gateway = coordinator.gateway_or_none
     stats = client.stats()
 
-    return {
-        "entry": _entry_info(entry, to_redact),
-        "gateway": None if gateway is None else gateway.as_dict(),
-        "connection": async_redact_data(stats, to_redact),
-        "errors": _errors(coordinator, stats),
-        "nodes": async_redact_data(
-            {node_id: node.as_dict() for node_id, node in coordinator.nodes.items()},
-            to_redact,
-        ),
-    }
+    return _redacted_dump(
+        {
+            "entry": _entry_info(entry, to_redact),
+            "gateway": None if gateway is None else gateway.as_dict(),
+            "connection": async_redact_data(stats, to_redact),
+            "errors": _errors(coordinator, stats),
+            "nodes": async_redact_data(
+                {
+                    node_id: node.as_dict()
+                    for node_id, node in coordinator.nodes.items()
+                },
+                to_redact,
+            ),
+        },
+        client.host,
+    )
 
 
 async def async_get_device_diagnostics(
@@ -148,12 +182,17 @@ async def async_get_device_diagnostics(
     )
     node = None if node_id is None else coordinator.get_node(node_id)
 
-    return {
-        "identifier": identifier,
-        "is_gateway": is_gateway,
-        "gateway": None if gateway is None or not is_gateway else gateway.as_dict(),
-        "connection": (
-            async_redact_data(client.stats(), to_redact) if is_gateway else None
-        ),
-        "node": None if node is None else async_redact_data(node.as_dict(), to_redact),
-    }
+    return _redacted_dump(
+        {
+            "identifier": identifier,
+            "is_gateway": is_gateway,
+            "gateway": None if gateway is None or not is_gateway else gateway.as_dict(),
+            "connection": (
+                async_redact_data(client.stats(), to_redact) if is_gateway else None
+            ),
+            "node": (
+                None if node is None else async_redact_data(node.as_dict(), to_redact)
+            ),
+        },
+        client.host,
+    )

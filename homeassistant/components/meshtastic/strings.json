@@ -46,12 +46,12 @@
         "title": "Meshtastic options",
         "data": {
           "download_node_db": "[%key:component::meshtastic::config::step::user::data::download_node_db%]",
-          "include_location": "Include exact coordinates in diagnostics",
+          "include_location": "Include exact coordinates in diagnostics and exports",
           "track_position": "Track node positions"
         },
         "data_description": {
           "download_node_db": "[%key:component::meshtastic::config::step::user::data_description::download_node_db%]",
-          "include_location": "Put the coordinates of every node in the diagnostics download instead of redacting them. Leave this off unless you are about to attach the download to a bug report you have read.",
+          "include_location": "Put the coordinates of every node in the diagnostics download, and the coordinates of the connected node in the response of the \"Export configuration\" action, instead of redacting them. Leave this off unless you are about to attach the download to a bug report you have read.",
           "track_position": "Create a device tracker for every node that reports a position. Turn this off to keep node positions out of the state machine entirely."
         }
       }
@@ -136,6 +136,9 @@
     "reboot_in_progress": {
       "message": "{node} is already rebooting. Wait for it to come back."
     },
+    "refresh_too_soon": {
+      "message": "The node database was refreshed less than a minute ago. Wait {seconds} seconds and try again."
+    },
     "rejected_bad_request": {
       "message": "{node} rejected the request as invalid."
     },
@@ -156,6 +159,12 @@
     },
     "timeout_not_acknowledged": {
       "message": "The message to {node} was relayed but never acknowledged."
+    },
+    "tx_disabled": {
+      "message": "The node did not transmit the message for {node}: its radio is switched off, or its LoRa region is not set."
+    },
+    "tx_queue_full": {
+      "message": "The node's transmit queue was full, so the message for {node} was dropped. Try again in a moment."
     },
     "unknown_node": {
       "message": "{node} is not a Meshtastic node identifier."
@@ -425,44 +434,22 @@
           }
         }
       }
-    },
-    "node_unresponsive": {
-      "title": "{name} did not come back after rebooting",
-      "description": "A configuration change was written to {name} ({node_id}) that makes the node reboot, but {gateway} has not heard from it since.\n\nCheck that the node still has power and is in range. This issue disappears on its own as soon as the node is heard again."
     }
   },
   "services": {
     "export_config": {
       "name": "Export configuration",
-      "description": "Returns the configuration of the connected Meshtastic node, in the shape the Meshtastic command line exports it. The response contains the channel URL, which carries the channel keys, so treat it as a secret. The node's private and administration keys are redacted.",
+      "description": "Returns the configuration of the connected Meshtastic node, in the shape the Meshtastic command line exports it. Every secret is redacted: the node's private and administration keys, the Wi-Fi password, the MQTT credentials and the Bluetooth PIN. The channel URL is not part of the response, because the keys of all channels are what it carries. The response is stored in the trace of whatever called the action, so only administrators can run it, and the coordinates of the node are only included when \"Include exact coordinates in diagnostics and exports\" is turned on.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
           "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
-        }
-      }
-    },
-    "reboot": {
-      "name": "Reboot node",
-      "description": "Restarts the Meshtastic node Home Assistant is connected to. The node stops relaying and receiving mesh traffic while it comes back up, which takes about half a minute.",
-      "fields": {
-        "config_entry_id": {
-          "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
-          "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
-        },
-        "delay": {
-          "name": "Delay",
-          "description": "How long the node waits before it restarts."
-        },
-        "confirm": {
-          "name": "Confirm",
-          "description": "Must be enabled. Restarting the node interrupts the mesh."
         }
       }
     },
     "refresh_nodes": {
       "name": "Refresh node database",
-      "description": "Asks the connected node to send its whole list of known nodes. Use this sparingly: while the list streams, the node can drop received mesh packets, and on a memory-constrained node such as a T-Beam without PSRAM the transfer itself can crash it. Home Assistant learns nodes from live traffic without this.",
+      "description": "Asks the connected node to send its whole list of known nodes. Use this sparingly: while the list streams, the node can drop received mesh packets, and on a memory-constrained node such as a T-Beam without PSRAM the transfer itself can crash it. Home Assistant learns nodes from live traffic without this. Only administrators can run the action, and at most once a minute.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
@@ -479,44 +466,12 @@
           "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
         },
         "node": {
-          "name": "[%key:component::meshtastic::services::request_position::fields::node::name%]",
-          "description": "[%key:component::meshtastic::services::request_position::fields::node::description%]"
-        },
-        "confirm": {
-          "name": "[%key:component::meshtastic::services::reboot::fields::confirm::name%]",
-          "description": "Must be enabled. The node is deleted from the node database."
-        }
-      }
-    },
-    "request_position": {
-      "name": "Request position",
-      "description": "Asks one mesh node to report where it is and returns the position it answers with. A node answers a position request at most once every three minutes.",
-      "fields": {
-        "config_entry_id": {
-          "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
-          "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
-        },
-        "node": {
           "name": "Node",
           "description": "The mesh node to address, as a node ID such as !aabbccdd, a node number, or a Home Assistant device."
-        }
-      }
-    },
-    "request_telemetry": {
-      "name": "Request telemetry",
-      "description": "Asks one mesh node for a telemetry reading and returns the values it answers with.",
-      "fields": {
-        "config_entry_id": {
-          "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
-          "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
         },
-        "node": {
-          "name": "[%key:component::meshtastic::services::request_position::fields::node::name%]",
-          "description": "[%key:component::meshtastic::services::request_position::fields::node::description%]"
-        },
-        "telemetry_type": {
-          "name": "Telemetry type",
-          "description": "Which family of readings to ask for. A node only answers for the sensors it actually has."
+        "confirm": {
+          "name": "Confirm",
+          "description": "Must be enabled. The node is deleted from the node database."
         }
       }
     },
@@ -529,8 +484,8 @@
           "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
         },
         "node": {
-          "name": "[%key:component::meshtastic::services::request_position::fields::node::name%]",
-          "description": "[%key:component::meshtastic::services::request_position::fields::node::description%]"
+          "name": "[%key:component::meshtastic::services::remove_node::fields::node::name%]",
+          "description": "[%key:component::meshtastic::services::remove_node::fields::node::description%]"
         }
       }
     },
@@ -547,8 +502,8 @@
           "description": "The text to send. A Meshtastic packet holds 233 bytes, or 200 bytes for a direct message."
         },
         "node": {
-          "name": "[%key:component::meshtastic::services::request_position::fields::node::name%]",
-          "description": "[%key:component::meshtastic::services::request_position::fields::node::description%]"
+          "name": "[%key:component::meshtastic::services::remove_node::fields::node::name%]",
+          "description": "[%key:component::meshtastic::services::remove_node::fields::node::description%]"
         },
         "channel": {
           "name": "Channel",
@@ -558,53 +513,6 @@
           "name": "Request acknowledgment",
           "description": "Ask the mesh to confirm delivery. Turning this off saves airtime but the action can then no longer tell whether the message arrived."
         }
-      }
-    },
-    "set_favorite": {
-      "name": "Set favorite",
-      "description": "Marks a node as a favorite in the node database of the connected node, so that it is never evicted to make room for another one.",
-      "fields": {
-        "config_entry_id": {
-          "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
-          "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
-        },
-        "node": {
-          "name": "[%key:component::meshtastic::services::request_position::fields::node::name%]",
-          "description": "[%key:component::meshtastic::services::request_position::fields::node::description%]"
-        },
-        "enabled": {
-          "name": "Enabled",
-          "description": "Turn off to remove the node from the favorites again."
-        }
-      }
-    },
-    "set_ignored": {
-      "name": "Set ignored",
-      "description": "Makes the connected node drop every packet it hears from a node, without relaying it.",
-      "fields": {
-        "config_entry_id": {
-          "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
-          "description": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::description%]"
-        },
-        "node": {
-          "name": "[%key:component::meshtastic::services::request_position::fields::node::name%]",
-          "description": "[%key:component::meshtastic::services::request_position::fields::node::description%]"
-        },
-        "enabled": {
-          "name": "[%key:component::meshtastic::services::set_favorite::fields::enabled::name%]",
-          "description": "Turn off to stop ignoring the node again."
-        }
-      }
-    }
-  },
-  "selector": {
-    "telemetry_type": {
-      "options": {
-        "air_quality": "Air quality",
-        "device": "Device",
-        "environment": "Environment",
-        "local_stats": "Local statistics",
-        "power": "Power"
       }
     }
   }

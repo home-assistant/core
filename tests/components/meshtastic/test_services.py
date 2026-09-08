@@ -2,14 +2,23 @@
 
 import asyncio
 import copy
+from datetime import timedelta
+import json
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+from meshtastic.protobuf import mesh_pb2
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.meshtastic.const import (
+    CONF_DOWNLOAD_NODE_DB,
+    CONF_INCLUDE_LOCATION,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
+    DEFAULT_PORT,
     DOMAIN,
     NOTIFICATION_REJECTED,
     ROUTING_ERROR_TRANSLATION_KEYS,
@@ -17,25 +26,23 @@ from homeassistant.components.meshtastic.const import (
 )
 from homeassistant.components.meshtastic.services import (
     ATTR_CONFIRM,
-    ATTR_DELAY,
-    ATTR_ENABLED,
     ATTR_MESSAGE,
     ATTR_NODE,
-    ATTR_TELEMETRY_TYPE,
     ATTR_WANT_ACK,
+    REDACTED,
+    REFRESH_NODES_SPACING,
     SERVICE_EXPORT_CONFIG,
-    SERVICE_REBOOT,
     SERVICE_REFRESH_NODES,
     SERVICE_REMOVE_NODE,
-    SERVICE_REQUEST_POSITION,
-    SERVICE_REQUEST_TELEMETRY,
     SERVICE_REQUEST_TRACEROUTE,
     SERVICE_SEND_MESSAGE,
-    SERVICE_SET_FAVORITE,
-    SERVICE_SET_IGNORED,
-    TELEMETRY_REQUESTS,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DEVICE_ID
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    CONF_HOST,
+    CONF_PORT,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -51,13 +58,14 @@ from . import (
     REMOTE_NUM,
     SENSOR_NODE_NUM,
     FakePubSub,
+    inject_connection_lost,
     inject_node_info,
     inject_notification,
     inject_packet,
     setup_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Just after the newest packet fixture, so none of them counts as backlog.
 FROZEN_TIME = "2025-09-08 02:57:10+00:00"
@@ -75,6 +83,25 @@ pytestmark = pytest.mark.freeze_time(FROZEN_TIME)
 # ---------------------------------------------------------------------------
 
 
+def _entry(
+    *, options: dict[str, Any] | None = None, download_node_db: bool = False
+) -> MockConfigEntry:
+    """Return a config entry with the options a test needs."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="HA Gateway",
+        unique_id=GATEWAY_ID,
+        data={
+            CONF_HOST: "192.0.2.10",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_DOWNLOAD_NODE_DB: download_node_db,
+        },
+        options=options or {},
+        version=CONFIG_ENTRY_VERSION,
+        minor_version=CONFIG_ENTRY_MINOR_VERSION,
+    )
+
+
 async def _setup(
     hass: HomeAssistant,
     entry: MockConfigEntry,
@@ -87,20 +114,10 @@ async def _setup(
     await inject_node_info(hass, pubsub, interface, node_fixtures[GATEWAY_ID])
     await inject_node_info(hass, pubsub, interface, node_fixtures[REMOTE_ID])
     # The library returns the admin packet from Node._sendAdmin; the fixture's
-    # localNode is a stand-in, so give it the methods the actions reach for.
-    for name in (
-        "setFavorite",
-        "removeFavorite",
-        "setIgnored",
-        "removeIgnored",
-        "removeNode",
-        "reboot",
-    ):
-        setattr(
-            interface.localNode,
-            name,
-            MagicMock(return_value=SimpleNamespace(id=ADMIN_PACKET_ID)),
-        )
+    # localNode is a stand-in, so give it the method the action reaches for.
+    interface.localNode.removeNode = MagicMock(
+        return_value=SimpleNamespace(id=ADMIN_PACKET_ID)
+    )
 
 
 async def _start(
@@ -158,35 +175,37 @@ def _answer(packet: dict[str, Any], request_id: int) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-async def test_actions_are_registered_in_async_setup(
+async def test_only_the_actions_no_entity_can_replace_are_registered(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_meshtastic_client: MagicMock,
     mock_pubsub: FakePubSub,
     node_fixtures: dict[str, Any],
 ) -> None:
-    """Test that every action exists and survives unloading the entry."""
+    """Test the exact set of actions, and that unloading the entry keeps them.
+
+    Anything an entity can express is an entity: the node request buttons, the
+    favourite and ignored switches and the gateway's restart button.  What is
+    left over either takes a parameter no entity has, answers with a payload or
+    is node-database maintenance, so every operation has one implementation and
+    therefore one authorisation model.
+    """
     actions = {
         SERVICE_EXPORT_CONFIG,
-        SERVICE_REBOOT,
         SERVICE_REFRESH_NODES,
         SERVICE_REMOVE_NODE,
-        SERVICE_REQUEST_POSITION,
-        SERVICE_REQUEST_TELEMETRY,
         SERVICE_REQUEST_TRACEROUTE,
         SERVICE_SEND_MESSAGE,
-        SERVICE_SET_FAVORITE,
-        SERVICE_SET_IGNORED,
     }
     await _setup(
         hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
     )
-    assert actions <= set(hass.services.async_services_for_domain(DOMAIN))
+    assert set(hass.services.async_services_for_domain(DOMAIN)) == actions
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     # Registered in async_setup, so an automation still validates with no entry.
-    assert actions <= set(hass.services.async_services_for_domain(DOMAIN))
+    assert set(hass.services.async_services_for_domain(DOMAIN)) == actions
 
 
 # ---------------------------------------------------------------------------
@@ -556,227 +575,6 @@ async def test_action_on_a_foreign_device(
 
 
 # ---------------------------------------------------------------------------
-# request_telemetry
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "family", ["device", "environment", "power", "air_quality", "local_stats"]
-)
-async def test_request_telemetry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    packet_fixtures: dict[str, dict[str, Any]],
-    family: str,
-) -> None:
-    """Test that every telemetry family can be asked for and comes back."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    task = await _start(
-        hass,
-        SERVICE_REQUEST_TELEMETRY,
-        {ATTR_NODE: REMOTE_ID, ATTR_TELEMETRY_TYPE: family},
-        return_response=True,
-    )
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _answer(packet_fixtures["packet_telemetry_device"], DATA_PACKET_ID),
-    )
-    response = await task
-
-    call = mock_meshtastic_client.sendData.call_args
-    assert call.args[0] == TELEMETRY_REQUESTS[family]
-    assert call.kwargs["portNum"] == 67
-    assert call.kwargs["destinationId"] == REMOTE_NUM
-    assert call.kwargs["wantResponse"] is True
-    assert response is not None
-    assert response["node_id"] == REMOTE_ID
-    assert response["node"] == "Remote One"
-    assert response["telemetry"]["family"] == "device"
-    assert response["telemetry"]["values"]["battery_level"] == 55
-
-
-async def test_request_telemetry_broadcast_is_refused(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a telemetry request needs a single node."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN, SERVICE_REQUEST_TELEMETRY, {ATTR_NODE: "^all"}, blocking=True
-        )
-    assert err.value.translation_key == "broadcast_not_supported"
-    mock_meshtastic_client.sendData.assert_not_called()
-
-
-async def test_request_telemetry_unknown_family(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a family the firmware never answers is refused."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_REQUEST_TELEMETRY,
-            {ATTR_NODE: REMOTE_ID, ATTR_TELEMETRY_TYPE: "health"},
-            blocking=True,
-        )
-
-
-async def test_request_telemetry_answered_without_a_payload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    packet_fixtures: dict[str, dict[str, Any]],
-) -> None:
-    """Test the node answering on the right port but with nothing in it."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-    empty = _answer(packet_fixtures["packet_telemetry_device"], DATA_PACKET_ID)
-    del empty["decoded"]["telemetry"]
-
-    task = await _start(
-        hass, SERVICE_REQUEST_TELEMETRY, {ATTR_NODE: REMOTE_ID}, return_response=True
-    )
-    await inject_packet(hass, mock_pubsub, mock_meshtastic_client, empty)
-
-    with pytest.raises(HomeAssistantError) as err:
-        await task
-    assert err.value.translation_key == "no_response"
-
-
-async def test_request_telemetry_nak(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a refused telemetry request raises a translated error."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    task = await _start(hass, SERVICE_REQUEST_TELEMETRY, {ATTR_NODE: REMOTE_ID})
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _routing(DATA_PACKET_ID, "NO_RESPONSE"),
-    )
-
-    with pytest.raises(HomeAssistantError) as err:
-        await task
-    assert err.value.translation_key == "no_response"
-
-
-# ---------------------------------------------------------------------------
-# request_position
-# ---------------------------------------------------------------------------
-
-
-async def test_request_position(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    packet_fixtures: dict[str, dict[str, Any]],
-) -> None:
-    """Test that a position request returns the position the node answers."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    task = await _start(
-        hass, SERVICE_REQUEST_POSITION, {ATTR_NODE: REMOTE_ID}, return_response=True
-    )
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _answer(packet_fixtures["packet_position"], DATA_PACKET_ID),
-    )
-    response = await task
-
-    call = mock_meshtastic_client.sendData.call_args
-    assert call.args[0] == b""
-    assert call.kwargs["portNum"] == 3
-    assert call.kwargs["wantResponse"] is True
-    assert response is not None
-    assert response["node_id"] == REMOTE_ID
-    assert response["position"]["latitude"] == pytest.approx(52.1111111)
-    assert response["position"]["longitude"] == pytest.approx(13.1111111)
-    assert response["position"]["altitude"] == 42
-
-
-async def test_request_position_answered_without_a_payload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    packet_fixtures: dict[str, dict[str, Any]],
-) -> None:
-    """Test a position answer that carries no position."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-    empty = _answer(packet_fixtures["packet_position"], DATA_PACKET_ID)
-    del empty["decoded"]["position"]
-
-    task = await _start(hass, SERVICE_REQUEST_POSITION, {ATTR_NODE: REMOTE_ID})
-    await inject_packet(hass, mock_pubsub, mock_meshtastic_client, empty)
-
-    with pytest.raises(HomeAssistantError) as err:
-        await task
-    assert err.value.translation_key == "no_response"
-
-
-async def test_request_position_broadcast_is_refused(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a position request needs a single node."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN, SERVICE_REQUEST_POSITION, {ATTR_NODE: "broadcast"}, blocking=True
-        )
-    assert err.value.translation_key == "broadcast_not_supported"
-
-
-# ---------------------------------------------------------------------------
 # request_traceroute
 # ---------------------------------------------------------------------------
 
@@ -800,10 +598,8 @@ async def test_request_traceroute(
     task = await _start(
         hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: REMOTE_ID}, return_response=True
     )
-    # The library hands the route to the response handler while it decodes the
-    # packet, and only then publishes it.
-    on_response = mock_meshtastic_client.sendData.call_args.kwargs["onResponse"]
-    on_response(answer)
+    # The answer is an ordinary packet quoting the request id, correlated from
+    # pubsub like every other response.
     await inject_packet(hass, mock_pubsub, mock_meshtastic_client, answer)
     response = await task
 
@@ -812,6 +608,8 @@ async def test_request_traceroute(
     assert call.kwargs["portNum"] == 70
     assert call.kwargs["destinationId"] == REMOTE_NUM
     assert call.kwargs["wantAck"] is True
+    # No one-shot handler is filed, so none can be left behind.
+    assert "onResponse" not in call.kwargs
     assert response == {
         "node_id": REMOTE_ID,
         "node": "Remote One",
@@ -838,12 +636,65 @@ async def test_request_traceroute_without_a_route(
     del answer["decoded"]["traceroute"]
 
     task = await _start(hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: REMOTE_ID})
-    mock_meshtastic_client.sendData.call_args.kwargs["onResponse"](answer)
     await inject_packet(hass, mock_pubsub, mock_meshtastic_client, answer)
 
     with pytest.raises(HomeAssistantError) as err:
         await task
     assert err.value.translation_key == "no_response"
+
+
+async def test_a_traceroute_answer_without_snr_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+    packet_fixtures: dict[str, dict[str, Any]],
+) -> None:
+    """Test an answer that carries the route but no SNR measurements."""
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+    answer = _answer(packet_fixtures["packet_traceroute"], DATA_PACKET_ID)
+    del answer["decoded"]["traceroute"]["snrTowards"]
+    del answer["decoded"]["traceroute"]["snrBack"]
+
+    task = await _start(
+        hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: REMOTE_ID}, return_response=True
+    )
+    await inject_packet(hass, mock_pubsub, mock_meshtastic_client, answer)
+    response = await task
+
+    assert response is not None
+    assert response["route_towards"] == [GATEWAY_ID, "!deadbeef", REMOTE_ID]
+    assert response["snr_towards"] == []
+    assert response["snr_back"] == []
+
+
+async def test_a_traceroute_that_loses_the_link_still_reports_the_link(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that a link lost mid-traceroute reports the traceroute's verdict.
+
+    The request is already in flight when the interface goes away; what the
+    caller has to see is why the traceroute failed, not an error from anything
+    the action does afterwards.
+    """
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    task = await _start(hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: REMOTE_ID})
+    await inject_connection_lost(hass, mock_pubsub, mock_meshtastic_client)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await task
+    # The traceroute's own verdict, not "not connected" from somewhere else.
+    assert err.value.translation_key == "timeout_no_ack"
 
 
 async def test_request_traceroute_rate_limited(
@@ -892,6 +743,48 @@ async def test_request_traceroute_broadcast_is_refused(
             DOMAIN, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: "^all"}, blocking=True
         )
     assert err.value.translation_key == "broadcast_not_supported"
+
+
+async def test_an_unanswered_traceroute_leaves_no_response_handler(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that the traceroute never files the library's one-shot handler.
+
+    ``MeshInterface._addResponseHandler`` files a callback under the packet id
+    and removes it only when it fires; its own ``FIXME`` says nothing ages the
+    entries out.  An automation tracing a node that never answers would leave
+    one dead handler, and everything its closure holds, behind on every
+    attempt.  The route comes back through the tracker instead, so no handler
+    is ever registered and there is nothing to leak.
+    """
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+    handlers: dict[int, Any] = {}
+    mock_meshtastic_client.responseHandlers = handlers
+
+    def _send_data(*args: Any, **kwargs: Any) -> mesh_pb2.MeshPacket:
+        """File the response handler the way the library would."""
+        if (on_response := kwargs.get("onResponse")) is not None:
+            handlers[DATA_PACKET_ID] = on_response
+        return mesh_pb2.MeshPacket(id=DATA_PACKET_ID)
+
+    mock_meshtastic_client.sendData.side_effect = _send_data
+
+    task = await _start(hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: REMOTE_ID})
+    assert handlers == {}
+    freezer.tick(timedelta(seconds=91))
+    async_fire_time_changed(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await task
+
+    assert handlers == {}
 
 
 # ---------------------------------------------------------------------------
@@ -948,6 +841,119 @@ async def test_refresh_nodes_merges_the_records_it_streams(
     assert node.num == SENSOR_NODE_NUM
 
 
+async def test_refresh_nodes_requires_an_administrator(
+    hass: HomeAssistant,
+    hass_read_only_user: Any,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that a non-administrator cannot restart the node-info stream.
+
+    While the database streams, the node is out of its packet-forwarding state
+    and drops what it receives, so this is not something every user may trigger.
+    """
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_NODES,
+            {},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    mock_meshtastic_client._sendToRadio.assert_not_called()
+
+
+async def test_refresh_nodes_is_paced(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that refreshes cannot follow each other without a pause.
+
+    Nothing else limits this send, so an automation on a short interval would
+    restart the node-info stream over and over and the node would stop serving
+    the packets it receives.
+    """
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    await hass.services.async_call(DOMAIN, SERVICE_REFRESH_NODES, {}, blocking=True)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(DOMAIN, SERVICE_REFRESH_NODES, {}, blocking=True)
+
+    assert err.value.translation_key == "refresh_too_soon"
+    assert mock_meshtastic_client._sendToRadio.call_count == 1
+
+    freezer.tick(timedelta(seconds=REFRESH_NODES_SPACING + 1))
+    await hass.services.async_call(DOMAIN, SERVICE_REFRESH_NODES, {}, blocking=True)
+
+    assert mock_meshtastic_client._sendToRadio.call_count == 2
+
+
+async def test_a_refresh_that_never_reached_the_node_keeps_no_pause(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that a refused refresh does not use up the pause.
+
+    The pause exists to spare the node; a call that never got as far as the
+    node has nothing to spare it from, and the user must be able to try again
+    as soon as the link is back.
+    """
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+    await inject_connection_lost(hass, mock_pubsub, mock_meshtastic_client)
+
+    with pytest.raises(HomeAssistantError) as first:
+        await hass.services.async_call(DOMAIN, SERVICE_REFRESH_NODES, {}, blocking=True)
+    with pytest.raises(HomeAssistantError) as second:
+        await hass.services.async_call(DOMAIN, SERVICE_REFRESH_NODES, {}, blocking=True)
+
+    assert first.value.translation_key == "not_connected"
+    assert second.value.translation_key == "not_connected"
+    mock_meshtastic_client._sendToRadio.assert_not_called()
+
+
+@pytest.mark.parametrize("download_node_db", [True, False])
+async def test_refresh_nodes_notes_the_dump_the_option_avoids(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+    download_node_db: bool,
+) -> None:
+    """Test that a refresh on an entry that avoids the dump says so.
+
+    ``download_node_db`` is off by default because a node without PSRAM can run
+    out of memory over a full dump.  The action performs exactly that dump, so
+    a node that dies right afterwards can be explained from the log.
+    """
+    entry = _entry(download_node_db=download_node_db)
+    await _setup(hass, entry, mock_pubsub, mock_meshtastic_client, node_fixtures)
+
+    await hass.services.async_call(DOMAIN, SERVICE_REFRESH_NODES, {}, blocking=True)
+
+    mock_meshtastic_client._sendToRadio.assert_called_once()
+    assert (
+        "node database download switched off" in caplog.text
+    ) is not download_node_db
+
+
 # ---------------------------------------------------------------------------
 # export_config
 # ---------------------------------------------------------------------------
@@ -965,7 +971,6 @@ async def test_export_config(
     local_node.localConfig.security.private_key = b"\x01" * 32
     local_node.localConfig.security.public_key = b"\x02" * 32
     local_node.localConfig.security.admin_key.append(b"\x03" * 32)
-    local_node.getURL = MagicMock(return_value="https://meshtastic.org/e/#Ck0SIA")
     await _setup(
         hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
     )
@@ -981,11 +986,10 @@ async def test_export_config(
     assert response is not None
     assert response["owner"] == "HA Gateway"
     assert response["owner_short"] == "HAGW"
-    assert response["channel_url"] == "https://meshtastic.org/e/#Ck0SIA"
     assert response["config"]["lora"]["region"] == "EU_868"
     assert response["config"]["lora"]["hop_limit"] == 3
-    assert response["config"]["security"]["private_key"] == "**REDACTED**"
-    assert response["config"]["security"]["admin_key"] == "**REDACTED**"
+    assert response["config"]["security"]["private_key"] == REDACTED
+    assert response["config"]["security"]["admin_key"] == REDACTED
     # The public key is not a secret and is what identifies the node.
     assert (
         response["config"]["security"]["public_key"]
@@ -998,18 +1002,149 @@ async def test_export_config(
     mock_meshtastic_client.sendText.assert_not_called()
 
 
-async def test_export_config_with_a_fixed_position(
+async def test_export_config_redacts_every_credential(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_meshtastic_client: MagicMock,
     mock_pubsub: FakePubSub,
     node_fixtures: dict[str, Any],
 ) -> None:
-    """Test that a fixed position is exported the way the CLI exports it."""
+    """Test that no password, key or PIN the node holds reaches the response.
+
+    Whoever may run the action sees the whole response, and it is stored in the
+    trace of the automation that asked for it, so it must not carry anything
+    that lets a reader onto the node's Wi-Fi, its MQTT broker or the node.
+    """
+    config = mock_meshtastic_client.localNode.localConfig
+    config.network.wifi_enabled = True
+    config.network.wifi_ssid = "HomeWiFi"
+    config.network.wifi_psk = "correct-horse-battery-staple"
+    config.bluetooth.enabled = True
+    config.bluetooth.fixed_pin = 123456
+    config.security.private_key = b"\x01" * 32
+    config.security.admin_key.append(b"\x03" * 32)
+    module_config = mock_meshtastic_client.localNode.moduleConfig
+    module_config.mqtt.enabled = True
+    module_config.mqtt.address = "mqtt.example.invalid"
+    module_config.mqtt.username = "meshdev"
+    module_config.mqtt.password = "S3cret!"
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN, SERVICE_EXPORT_CONFIG, {}, blocking=True, return_response=True
+    )
+
+    assert response is not None
+    network = response["config"]["network"]
+    mqtt = response["module_config"]["mqtt"]
+    assert network["wifi_psk"] == REDACTED
+    assert mqtt["username"] == REDACTED
+    assert mqtt["password"] == REDACTED
+    assert response["config"]["bluetooth"]["fixed_pin"] == REDACTED
+    assert response["config"]["security"]["private_key"] == REDACTED
+    assert response["config"]["security"]["admin_key"] == REDACTED
+    # Everything that is not a credential is still exported.
+    assert network["wifi_ssid"] == "HomeWiFi"
+    assert mqtt["address"] == "mqtt.example.invalid"
+    rendered = json.dumps(response)
+    assert "correct-horse-battery-staple" not in rendered
+    assert "S3cret!" not in rendered
+    assert "meshdev" not in rendered
+
+
+async def test_export_config_never_returns_the_channel_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that the mesh's channel keys are not part of the response.
+
+    ``Node.getURL()`` serialises the ``ChannelSettings`` of every channel, and
+    the pre-shared key is part of that: whoever holds the URL can decrypt the
+    mesh and transmit on it.  The key is the payload of that URL, so there is
+    no partial redaction to do -- it is not read at all.
+    """
+    local_node = mock_meshtastic_client.localNode
+    local_node.getURL = MagicMock(return_value="https://meshtastic.org/e/#Ck0SIA")
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN, SERVICE_EXPORT_CONFIG, {}, blocking=True, return_response=True
+    )
+
+    assert response is not None
+    assert "channel_url" not in response
+    assert "meshtastic.org/e/" not in json.dumps(response)
+    local_node.getURL.assert_not_called()
+
+
+async def test_export_config_requires_an_administrator(
+    hass: HomeAssistant,
+    hass_read_only_user: Any,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that a non-administrator cannot read the node's configuration."""
+    await _setup(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EXPORT_CONFIG,
+            {},
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+async def test_export_config_omits_the_gateway_location_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that the coordinates need the same opt-in as the diagnostics.
+
+    A response outlives the call in an automation trace, and the position of a
+    fixed node is the position of somebody's home.
+    """
     mock_meshtastic_client.localNode.localConfig.position.fixed_position = True
     await _setup(
         hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
     )
+
+    response = await hass.services.async_call(
+        DOMAIN, SERVICE_EXPORT_CONFIG, {}, blocking=True, return_response=True
+    )
+
+    assert response is not None
+    # That the node has a fixed position is not the same as where it is.
+    assert response["config"]["position"]["fixed_position"] is True
+    assert "location" not in response
+
+
+async def test_export_config_with_a_fixed_position(
+    hass: HomeAssistant,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that an opted-in fixed position is exported as the CLI does it."""
+    mock_meshtastic_client.localNode.localConfig.position.fixed_position = True
+    entry = _entry(options={CONF_INCLUDE_LOCATION: True})
+    await _setup(hass, entry, mock_pubsub, mock_meshtastic_client, node_fixtures)
 
     response = await hass.services.async_call(
         DOMAIN, SERVICE_EXPORT_CONFIG, {}, blocking=True, return_response=True
@@ -1103,76 +1238,6 @@ async def test_export_config_without_a_module_configuration(
 
     assert response is not None
     assert response["module_config"] == {}
-    # A node that cannot produce a channel URL is still exportable.
-    assert response["channel_url"] is None
-
-
-# ---------------------------------------------------------------------------
-# set_favorite / set_ignored
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("action", "enabled", "method"),
-    [
-        (SERVICE_SET_FAVORITE, True, "setFavorite"),
-        (SERVICE_SET_FAVORITE, False, "removeFavorite"),
-        (SERVICE_SET_IGNORED, True, "setIgnored"),
-        (SERVICE_SET_IGNORED, False, "removeIgnored"),
-    ],
-)
-async def test_node_flags(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    action: str,
-    enabled: bool,
-    method: str,
-) -> None:
-    """Test that each node flag is written with the right admin call."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    task = await _start(hass, action, {ATTR_NODE: REMOTE_ID, ATTR_ENABLED: enabled})
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _routing(ADMIN_PACKET_ID, from_num=GATEWAY_NUM),
-    )
-    await task
-
-    getattr(mock_meshtastic_client.localNode, method).assert_called_once_with(
-        REMOTE_NUM
-    )
-
-
-async def test_set_favorite_not_acknowledged(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a refused node-database write raises a translated error."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    task = await _start(hass, SERVICE_SET_FAVORITE, {ATTR_NODE: REMOTE_ID})
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _routing(ADMIN_PACKET_ID, "NOT_AUTHORIZED", from_num=GATEWAY_NUM),
-    )
-
-    with pytest.raises(HomeAssistantError) as err:
-        await task
-    assert err.value.translation_key == "admin_not_authorized"
 
 
 # ---------------------------------------------------------------------------
@@ -1277,105 +1342,6 @@ async def test_remove_node_requires_an_administrator(
 
 
 # ---------------------------------------------------------------------------
-# reboot
-# ---------------------------------------------------------------------------
-
-
-async def test_reboot(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a confirmed reboot opens the grace window."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-    client = mock_config_entry.runtime_data.client
-    assert client.reboot_grace_active is False
-
-    task = await _start(hass, SERVICE_REBOOT, {ATTR_CONFIRM: True, ATTR_DELAY: 5})
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _routing(ADMIN_PACKET_ID, from_num=GATEWAY_NUM),
-    )
-    await task
-
-    mock_meshtastic_client.localNode.reboot.assert_called_once_with(5)
-    # The node keeps answering for a few seconds and then drops off; entities
-    # must not flap to unavailable in the meantime.
-    assert client.reboot_grace_active is True
-
-
-async def test_reboot_while_already_rebooting(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a second reboot while the node is on its way down is refused."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-    mock_config_entry.runtime_data.client.async_note_reboot_expected()
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN, SERVICE_REBOOT, {ATTR_CONFIRM: True}, blocking=True
-        )
-    assert err.value.translation_key == "reboot_in_progress"
-    mock_meshtastic_client.localNode.reboot.assert_not_called()
-
-
-async def test_reboot_without_confirmation(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that an unconfirmed reboot changes nothing."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN, SERVICE_REBOOT, {ATTR_CONFIRM: False}, blocking=True
-        )
-    assert err.value.translation_key == "confirmation_required"
-    mock_meshtastic_client.localNode.reboot.assert_not_called()
-
-
-async def test_reboot_requires_an_administrator(
-    hass: HomeAssistant,
-    hass_read_only_user: Any,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test that a non-administrator cannot reboot the node."""
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    with pytest.raises(Unauthorized):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_REBOOT,
-            {ATTR_CONFIRM: True},
-            blocking=True,
-            context=Context(user_id=hass_read_only_user.id),
-        )
-    mock_meshtastic_client.localNode.reboot.assert_not_called()
-
-
-# ---------------------------------------------------------------------------
 # Scope resolution
 # ---------------------------------------------------------------------------
 
@@ -1475,43 +1441,6 @@ async def test_device_id_is_not_a_field(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("action", "answer"),
-    [
-        (SERVICE_REQUEST_TELEMETRY, "packet_telemetry_device"),
-        (SERVICE_REQUEST_POSITION, "packet_position"),
-    ],
-)
-async def test_requests_without_a_response(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    packet_fixtures: dict[str, dict[str, Any]],
-    action: str,
-    answer: str,
-) -> None:
-    """Test that an action called for its side effect returns nothing.
-
-    Every request action supports a response but does not require one, so an
-    automation can simply ask a node to report and let the entities update.
-    """
-    await _setup(
-        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
-    )
-
-    task = await _start(hass, action, {ATTR_NODE: REMOTE_ID})
-    await inject_packet(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        _answer(packet_fixtures[answer], DATA_PACKET_ID),
-    )
-
-    assert await task is None
-
-
 async def test_traceroute_without_a_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -1526,8 +1455,6 @@ async def test_traceroute_without_a_response(
     )
 
     task = await _start(hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: REMOTE_ID})
-    on_response = mock_meshtastic_client.sendData.call_args.kwargs["onResponse"]
-    on_response(packet_fixtures["packet_traceroute"])
     await inject_packet(
         hass,
         mock_pubsub,
@@ -1589,7 +1516,7 @@ async def test_destination_is_validated_by_the_schema(
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            DOMAIN, SERVICE_REQUEST_POSITION, {ATTR_NODE: node}, blocking=True
+            DOMAIN, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: node}, blocking=True
         )
 
     mock_meshtastic_client.sendData.assert_not_called()
@@ -1607,7 +1534,7 @@ async def test_a_node_the_mesh_has_not_named_is_labelled_by_id(
         hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
     )
 
-    task = await _start(hass, SERVICE_REQUEST_POSITION, {ATTR_NODE: "!00c0ffee"})
+    task = await _start(hass, SERVICE_REQUEST_TRACEROUTE, {ATTR_NODE: "!00c0ffee"})
     await inject_packet(
         hass,
         mock_pubsub,

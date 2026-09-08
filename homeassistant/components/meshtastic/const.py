@@ -7,6 +7,7 @@ other module can talk about them without pulling in protobufs.
 
 from collections.abc import Mapping
 import logging
+import string
 from typing import Final
 
 from homeassistant.const import Platform
@@ -75,6 +76,14 @@ LIBRARY_TIMEOUT: Final = 45
 CLOSE_TIMEOUT: Final = 5.0
 #: Upper bound on any other single library call in the executor.
 EXECUTOR_JOB_TIMEOUT: Final = 20.0
+#: Upper bound on the TCP connect itself.  The library hands no timeout to
+#: ``socket.create_connection``, so an unreachable node would hold an executor
+#: thread for the operating system's SYN timeout instead.
+SOCKET_CONNECT_TIMEOUT: Final = 10.0
+#: Upper bound on waiting for room in the radio's transmit queue.  The library
+#: waits for it in an unbounded ``time.sleep(0.5)`` loop on an executor thread,
+#: which no timeout on the event loop side can interrupt.
+TX_QUEUE_TIMEOUT: Final = 10.0
 
 #: Heartbeat cadence.  The firmware drops idle TCP clients after 15 minutes.
 HEARTBEAT_INTERVAL: Final = 90.0
@@ -116,53 +125,23 @@ CIRCUIT_BREAKER_COOLDOWN: Final = 300.0
 
 # ---------------------------------------------------------------------------
 # Port numbers (``meshtastic.protobuf.portnums_pb2.PortNum``)
+#
+# Only the ports this integration sends on, paces or reads a payload from.
+# Received packets carry the port as the library's own enum *name*, so nothing
+# needs a number to recognise one.
 # ---------------------------------------------------------------------------
 
 PORTNUM_UNKNOWN_APP: Final = 0
 PORTNUM_TEXT_MESSAGE_APP: Final = 1
-PORTNUM_REMOTE_HARDWARE_APP: Final = 2
 PORTNUM_POSITION_APP: Final = 3
 PORTNUM_NODEINFO_APP: Final = 4
-PORTNUM_ROUTING_APP: Final = 5
 PORTNUM_ADMIN_APP: Final = 6
 PORTNUM_WAYPOINT_APP: Final = 8
 PORTNUM_DETECTION_SENSOR_APP: Final = 10
 PORTNUM_ALERT_APP: Final = 11
-PORTNUM_PAXCOUNTER_APP: Final = 34
-PORTNUM_STORE_FORWARD_APP: Final = 65
 PORTNUM_RANGE_TEST_APP: Final = 66
 PORTNUM_TELEMETRY_APP: Final = 67
 PORTNUM_TRACEROUTE_APP: Final = 70
-PORTNUM_NEIGHBORINFO_APP: Final = 71
-PORTNUM_MAP_REPORT_APP: Final = 73
-PORTNUM_PRIVATE_APP: Final = 256
-
-#: Portnum number to the library's enum name, as it appears in packet dicts.
-PORTNUM_NAMES: Final[Mapping[int, str]] = {
-    PORTNUM_UNKNOWN_APP: "UNKNOWN_APP",
-    PORTNUM_TEXT_MESSAGE_APP: "TEXT_MESSAGE_APP",
-    PORTNUM_REMOTE_HARDWARE_APP: "REMOTE_HARDWARE_APP",
-    PORTNUM_POSITION_APP: "POSITION_APP",
-    PORTNUM_NODEINFO_APP: "NODEINFO_APP",
-    PORTNUM_ROUTING_APP: "ROUTING_APP",
-    PORTNUM_ADMIN_APP: "ADMIN_APP",
-    PORTNUM_WAYPOINT_APP: "WAYPOINT_APP",
-    PORTNUM_DETECTION_SENSOR_APP: "DETECTION_SENSOR_APP",
-    PORTNUM_ALERT_APP: "ALERT_APP",
-    PORTNUM_PAXCOUNTER_APP: "PAXCOUNTER_APP",
-    PORTNUM_STORE_FORWARD_APP: "STORE_FORWARD_APP",
-    PORTNUM_RANGE_TEST_APP: "RANGE_TEST_APP",
-    PORTNUM_TELEMETRY_APP: "TELEMETRY_APP",
-    PORTNUM_TRACEROUTE_APP: "TRACEROUTE_APP",
-    PORTNUM_NEIGHBORINFO_APP: "NEIGHBORINFO_APP",
-    PORTNUM_MAP_REPORT_APP: "MAP_REPORT_APP",
-    PORTNUM_PRIVATE_APP: "PRIVATE_APP",
-}
-
-#: Library enum name back to the portnum number.
-PORTNUM_VALUES: Final[Mapping[str, int]] = {
-    name: value for value, name in PORTNUM_NAMES.items()
-}
 
 #: Portnums whose packets carry a text payload.
 TEXT_PORTNUMS: Final[frozenset[int]] = frozenset(
@@ -245,6 +224,22 @@ ROUTING_ERROR_PKI_SEND_FAIL_PUBLIC_KEY: Final = "PKI_SEND_FAIL_PUBLIC_KEY"
 #: instead of a routing packet (traceroute rate limit, duty cycle).
 NOTIFICATION_REJECTED: Final = "CLIENT_NOTIFICATION"
 
+#: Pseudo reasons for a packet the radio refused outright.  The firmware
+#: answers every packet a client sends with a ``QueueStatus``, and a non-zero
+#: ``res`` is the only sign of a refusal that produces no routing packet at
+#: all: an unset LoRa region or a disabled transmitter, no radio interface, and
+#: a full hardware queue.  Values are ``ErrorCode`` from the firmware's
+#: ``MeshService::sendToMesh``.
+QUEUE_REFUSED_TX_QUEUE_FULL: Final = "TX_QUEUE_FULL"
+QUEUE_REFUSED_NO_INTERFACE: Final = "TX_NO_INTERFACE"
+QUEUE_REFUSED_TX_DISABLED: Final = "TX_DISABLED"
+
+QUEUE_REFUSED_REASONS: Final[Mapping[int, str]] = {
+    32: QUEUE_REFUSED_TX_QUEUE_FULL,
+    33: QUEUE_REFUSED_NO_INTERFACE,
+    34: QUEUE_REFUSED_TX_DISABLED,
+}
+
 #: ``Routing.Error`` name to the ``exceptions`` translation key in strings.json.
 ROUTING_ERROR_TRANSLATION_KEYS: Final[Mapping[str, str]] = {
     ROUTING_ERROR_NO_ROUTE: "delivery_failed",
@@ -265,6 +260,13 @@ ROUTING_ERROR_TRANSLATION_KEYS: Final[Mapping[str, str]] = {
     ROUTING_ERROR_RATE_LIMIT_EXCEEDED: "sending_too_fast",
     ROUTING_ERROR_PKI_SEND_FAIL_PUBLIC_KEY: "peer_key_unknown",
     NOTIFICATION_REJECTED: "client_rejected",
+}
+
+#: Queue-refusal reason to the ``exceptions`` translation key in strings.json.
+QUEUE_REFUSED_TRANSLATION_KEYS: Final[Mapping[str, str]] = {
+    QUEUE_REFUSED_TX_QUEUE_FULL: "tx_queue_full",
+    QUEUE_REFUSED_NO_INTERFACE: "no_radio",
+    QUEUE_REFUSED_TX_DISABLED: "tx_disabled",
 }
 
 #: Routing errors that are the user's fault and must raise
@@ -300,35 +302,14 @@ STORAGE_SAVE_DELAY: Final = 45.0
 MAX_STORED_NODES: Final = 500
 
 # ---------------------------------------------------------------------------
-# Bus event and attribute names
+# Attribute and action field names
 # ---------------------------------------------------------------------------
-
-EVENT_MESHTASTIC: Final = "meshtastic_event"
 
 ATTR_BACKLOG: Final = "backlog"
 ATTR_CHANNEL: Final = "channel"
 ATTR_ENTRY_ID: Final = "entry_id"
-ATTR_EVENT_TYPE: Final = "event_type"
-ATTR_FROM_ID: Final = "from_id"
-ATTR_FROM_NUM: Final = "from_num"
-ATTR_GATEWAY_ID: Final = "gateway_id"
-ATTR_HOPS_AWAY: Final = "hops_away"
-ATTR_HOP_LIMIT: Final = "hop_limit"
-ATTR_HOP_START: Final = "hop_start"
 ATTR_LOCATION_SOURCE: Final = "location_source"
-ATTR_NODE_ID: Final = "node_id"
-ATTR_NODE_NUM: Final = "node_num"
-ATTR_PACKET_ID: Final = "packet_id"
-ATTR_PORTNUM: Final = "portnum"
 ATTR_PRECISION_BITS: Final = "precision_bits"
-ATTR_PRIORITY: Final = "priority"
-ATTR_REQUEST_ID: Final = "request_id"
-ATTR_RSSI: Final = "rssi"
-ATTR_SNR: Final = "snr"
-ATTR_TEXT: Final = "text"
-ATTR_TO_ID: Final = "to_id"
-ATTR_TO_NUM: Final = "to_num"
-ATTR_VIA_MQTT: Final = "via_mqtt"
 
 # ---------------------------------------------------------------------------
 # Identifier helpers
@@ -346,14 +327,20 @@ def format_node_id(node_num: int) -> str:
 def parse_node_id(node_id: str) -> int:
     """Return the node number of a ``!xxxxxxxx``/``0x``/hex node id.
 
-    Raises ``ValueError`` when the id is not parseable.
+    Raises ``ValueError`` when the id is not parseable.  Every character has to
+    be a hexadecimal digit: ``int(candidate, 16)`` on its own also accepts a
+    sign and underscore separators, so ``!-1234567`` would resolve to a
+    negative node number, and a node number is a ``uint32`` in every protobuf
+    it is ever assigned to.
     """
     candidate = node_id.strip()
     if candidate.startswith("!"):
         candidate = candidate[1:]
     elif candidate.lower().startswith("0x"):
         candidate = candidate[2:]
-    if len(candidate) != 8:
+    if len(candidate) != 8 or not all(
+        character in string.hexdigits for character in candidate
+    ):
         raise ValueError(f"Not a Meshtastic node id: {node_id}")
     return int(candidate, 16)
 

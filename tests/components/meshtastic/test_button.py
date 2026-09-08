@@ -22,6 +22,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.meshtastic.button import NODE_BUTTONS
 from homeassistant.components.meshtastic.config_entity import REBOOT_DELAY_SECONDS
 from homeassistant.components.meshtastic.const import (
+    DOMAIN as MESHTASTIC_DOMAIN,
     PORTNUM_NODEINFO_APP,
     PORTNUM_POSITION_APP,
     PORTNUM_TELEMETRY_APP,
@@ -330,6 +331,30 @@ async def test_restart_button(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_the_restart_button_is_the_only_way_to_reboot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that rebooting the gateway has exactly one implementation.
+
+    An action beside this button would give the same operation two different
+    authorisation models -- the action administrator-only and confirmed, the
+    button pressable by anybody who may press buttons -- and neither the user
+    nor a reviewer could tell which one the integration means.  A restart is
+    something an entity expresses, so the entity is the one that stays.
+    """
+    await setup_button_platform(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    assert hass.states.get(RESTART) is not None
+    assert "reboot" not in hass.services.async_services_for_domain(MESHTASTIC_DOMAIN)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_the_grace_window_keeps_the_entities_available(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -364,7 +389,7 @@ async def test_the_grace_window_keeps_the_entities_available(
     assert (state := hass.states.get(REQUEST_POSITION))
     assert state.state != STATE_UNAVAILABLE
 
-    freezer.tick(timedelta(seconds=REBOOT_GRACE + 10))
+    freezer.tick(timedelta(seconds=REBOOT_DELAY_SECONDS + REBOOT_GRACE + 10))
     assert client.reboot_grace_active is False
 
     # Nothing announces that the window closed, so the entities find out on
@@ -374,6 +399,45 @@ async def test_the_grace_window_keeps_the_entities_available(
 
     assert (state := hass.states.get(RESTART))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_the_grace_window_covers_the_delay_the_node_was_given(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+    restart_calls: MagicMock,
+) -> None:
+    """Test that the window covers the wait as well as the reboot itself.
+
+    ``localNode.reboot(REBOOT_DELAY_SECONDS)`` only schedules the restart: the
+    node answers, keeps running for the delay it was given and reboots after
+    it.  A window that started at the acknowledgement and lasted a fixed
+    ``REBOOT_GRACE`` would close first, so every entity would flap to
+    unavailable at exactly the moment the window exists to cover, and the
+    duplicate-press guard would reopen with the reboot still pending.
+    """
+    await setup_button_platform(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    task = await start_press(hass, RESTART)
+    await inject_packet(
+        hass, mock_pubsub, mock_meshtastic_client, routing_packet(ADMIN_PACKET_ID)
+    )
+    await task
+    restart_calls.assert_called_once_with(REBOOT_DELAY_SECONDS)
+
+    client = mock_config_entry.runtime_data.client
+    freezer.tick(timedelta(seconds=REBOOT_GRACE + 1))
+    # The bare grace has run out, and the node has only just started rebooting.
+    assert client.reboot_grace_active is True
+
+    freezer.tick(timedelta(seconds=REBOOT_DELAY_SECONDS))
+    assert client.reboot_grace_active is False
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

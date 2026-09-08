@@ -1,5 +1,12 @@
-"""Tests for the Meshtastic diagnostics."""
+"""Tests for the Meshtastic diagnostics.
 
+The download is one of the two support artefacts a user is asked for, and
+the log is the other, so the tests for what may leave the mesh live
+together here.
+"""
+
+import asyncio
+from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -7,6 +14,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.logger.helpers import get_integration_loggers
 from homeassistant.components.meshtastic.const import (
     CONF_DOWNLOAD_NODE_DB,
     CONF_INCLUDE_LOCATION,
@@ -14,6 +22,7 @@ from homeassistant.components.meshtastic.const import (
     CONFIG_ENTRY_VERSION,
     DEFAULT_PORT,
     DOMAIN,
+    HEARTBEAT_INTERVAL,
     gateway_device_id,
     node_device_id,
 )
@@ -24,6 +33,7 @@ from homeassistant.components.meshtastic.diagnostics import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from . import (
     GATEWAY_ID,
@@ -36,7 +46,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -46,6 +56,9 @@ from tests.typing import ClientSessionGenerator
 # Just after the newest node fixture, so the node table is fully populated and
 # every timestamp in the dump is deterministic.
 FROZEN_TIME = "2025-09-08 02:57:10+00:00"
+
+#: The address of the node under test.  Documentation range, never routable.
+HOST = "192.0.2.10"
 
 pytestmark = pytest.mark.freeze_time(FROZEN_TIME)
 
@@ -76,7 +89,7 @@ def _entry(options: dict[str, Any] | None = None) -> MockConfigEntry:
         title="HA Gateway",
         unique_id=GATEWAY_ID,
         data={
-            CONF_HOST: "192.0.2.10",
+            CONF_HOST: HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_DOWNLOAD_NODE_DB: False,
             "node_config": SECRET_RECORD,
@@ -241,7 +254,7 @@ async def test_config_entry_diagnostics_redacts_host(
 
     assert result["entry"]["data"][CONF_HOST] == REDACTED
     assert result["connection"]["host"] == REDACTED
-    assert "192.0.2.10" not in str(result)
+    assert HOST not in str(result)
 
 
 @pytest.mark.parametrize("key", sorted(TO_REDACT_LOCATION))
@@ -355,3 +368,96 @@ async def test_diagnostics_include_location_option(
     assert device is not None
     device_result = await get_diagnostics_for_device(hass, hass_client, entry, device)
     assert device_result["node"]["position"]["latitude"] == REMOTE_LATITUDE
+
+
+async def _advance(hass: HomeAssistant, seconds: float) -> None:
+    """Fire every timer due within ``seconds`` and let the tasks run.
+
+    The client's heartbeat is a background task, which
+    ``async_block_till_done`` deliberately does not wait for.
+    """
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+    for _ in range(5):
+        await asyncio.sleep(0)
+    await hass.async_block_till_done()
+
+
+async def test_diagnostics_redacts_the_host_in_the_text_of_errors(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that a dead link does not spell the node's address out in prose.
+
+    Every connection error the client raises carries the address as a
+    translation placeholder, so the rendered message ends up inside
+    ``dead_reason`` and inside the coordinator's last exception - values that
+    no key-based redaction can reach.
+    """
+    entry = _entry()
+    await _setup_with_nodes(
+        hass, entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    # The ordinary way a Meshtastic link dies: the node stops answering.
+    mock_meshtastic_client.sendHeartbeat.side_effect = OSError("broken pipe")
+    await _advance(hass, HEARTBEAT_INTERVAL + 1)
+
+    # The address really is in the text the dump reports; that is the point.
+    assert HOST in entry.runtime_data.client.stats()["dead_reason"]
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert HOST not in str(result)
+    assert REDACTED in result["errors"]["dead_reason"]
+    assert REDACTED in result["errors"]["last_exception"]
+    assert REDACTED in result["connection"]["dead_reason"]
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_device_id(GATEWAY_NUM)), entry.entry_id
+    )
+    assert device is not None
+    device_result = await get_diagnostics_for_device(hass, hass_client, entry, device)
+
+    assert HOST not in str(device_result)
+    assert REDACTED in device_result["connection"]["dead_reason"]
+
+
+#: The library modules that write key material or message plaintext to the log
+#: at ``DEBUG``: ``mesh_interface`` dumps every ``FromRadio`` frame raw and
+#: parsed and every decoded packet dict, ``stream_interface`` dumps every frame
+#: it writes, ``node`` dumps the channel list, and the package root dumps the
+#: decoded text and admin payloads.  The config handshake carries the channel
+#: pre-shared keys, the node's private and admin keys, the Wi-Fi PSK and the
+#: MQTT password, so none of these may be reachable from the manifest.
+UNSAFE_LIBRARY_LOGGERS = (
+    "meshtastic",
+    "meshtastic.mesh_interface",
+    "meshtastic.node",
+    "meshtastic.stream_interface",
+)
+
+
+async def test_debug_logging_cannot_dump_key_material(hass: HomeAssistant) -> None:
+    """Test that enabling debug logging cannot write secrets to the log.
+
+    "Enable debug logging" sets every logger the manifest declares to DEBUG,
+    and a child logger inherits the level of any declared ancestor, so
+    declaring the library's root logger would put the channel pre-shared keys,
+    the node's private key and the plaintext of every message into the file
+    the user then attaches to a bug report.
+    """
+    loggers = await get_integration_loggers(hass, DOMAIN)
+
+    for unsafe in UNSAFE_LIBRARY_LOGGERS:
+        assert not any(
+            unsafe == logger or unsafe.startswith(f"{logger}.") for logger in loggers
+        ), f"debug logging would raise {unsafe} to DEBUG"
+
+    # What is left is still enough to debug a link: the integration's own
+    # logger, and the library's socket-level one, which logs no payload.
+    assert f"homeassistant.components.{DOMAIN}" in loggers
+    assert "meshtastic.tcp_interface" in loggers

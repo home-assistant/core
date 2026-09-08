@@ -47,17 +47,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Meshtastic device trackers from a config entry."""
-    entity_registry = er.async_get(hass)
     if not entry.options.get(CONF_TRACK_POSITION, DEFAULT_TRACK_POSITION):
-        # Tracking was switched off, so take the trackers an earlier run
-        # created with it instead of leaving unavailable entities behind.
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        ):
-            if entity.domain == DEVICE_TRACKER_DOMAIN:
-                entity_registry.async_remove(entity.entity_id)
+        # Tracking is off, so no tracker is created.  The registry entries an
+        # earlier run left behind are deliberately kept: they carry the entity
+        # ids, names and areas the user gave them, and the option flow reloads
+        # the entry the moment the box is unticked, so removing them here would
+        # break every automation and dashboard that names one, for good, on a
+        # toggle.  They read as unavailable until tracking is turned back on.
         return
 
+    entity_registry = er.async_get(hass)
     coordinator = entry.runtime_data.coordinator
     gateway = coordinator.gateway
     # Node number of every node that already has a tracker, keyed by node id,

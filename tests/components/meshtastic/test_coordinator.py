@@ -29,6 +29,7 @@ from homeassistant.components.meshtastic.models import (
     MeshtasticNotification,
     MeshtasticPacket,
     Position,
+    PositionSource,
     TelemetryFamily,
     TelemetrySample,
 )
@@ -111,8 +112,9 @@ async def test_an_unchanged_packet_publishes_nothing(
 ) -> None:
     """Test that a repeat of what we already know is not a new snapshot.
 
-    ``always_update=False`` only helps if the coordinator does not publish an
-    identical table; every publish walks every entity.
+    Every publish walks every entity, so this is the only dampening a push
+    coordinator has: the merge decides, because it is the only place that
+    knows whether anything changed.
     """
     packet = _packet(rx_time=1757300000, rx_snr=5.5, rx_rssi=-90)
     coordinator.async_handle_packet(packet)
@@ -121,6 +123,30 @@ async def test_an_unchanged_packet_publishes_nothing(
     coordinator.async_handle_packet(packet)
 
     assert coordinator.data is first
+    await coordinator.async_shutdown()
+
+
+async def test_publishing_always_notifies_every_listener(
+    coordinator: MeshtasticCoordinator,
+) -> None:
+    """Test that a snapshot equal to the last one still reaches the listeners.
+
+    ``always_update`` is read in exactly one place in Home Assistant, inside
+    ``DataUpdateCoordinator._async_refresh``, which a coordinator with no
+    ``update_interval`` and no ``_async_update_data`` never runs.  Passing it
+    here would document a dampening that ``async_set_updated_data`` does not
+    do, so it is left at its default.
+    """
+    calls: list[None] = []
+    remove = coordinator.async_add_listener(lambda: calls.append(None))
+
+    coordinator.async_handle_packet(_packet(rx_time=1757300000))
+    coordinator.async_set_updated_data(coordinator.data)
+    remove()
+    coordinator.async_set_updated_data(coordinator.data)
+
+    assert len(calls) == 2
+    assert coordinator.always_update is True
     await coordinator.async_shutdown()
 
 
@@ -221,6 +247,103 @@ async def test_older_position_and_telemetry_are_not_applied(
     sample = node.sample(TelemetryFamily.DEVICE)
     assert sample is not None
     assert sample.value("battery_level") == 90
+
+    await coordinator.async_shutdown()
+
+
+async def test_a_node_record_does_not_blur_a_position_from_a_packet(
+    coordinator: MeshtasticCoordinator,
+) -> None:
+    """Test that a node-DB push of the same fix keeps the packet's precision.
+
+    The firmware's ``ConvertToNodeInfo`` copies only the coordinates, the
+    altitude, the location source and the time into the ``NodeInfoLite`` it
+    keeps, so the record the gateway pushes for a node it just heard carries
+    the same ``device_time`` and none of ``precision_bits``, ``sats_in_view``
+    or the ground speed.  Letting it replace the position the packet carried
+    would render a deliberately blurred fix as a full precision one, and flip
+    it back on the node's next broadcast.
+    """
+    heard = Position(
+        latitude=52.1111111,
+        longitude=13.1111111,
+        altitude=42,
+        precision_bits=16,
+        sats_in_view=9,
+        ground_speed=1,
+        location_source="LOC_EXTERNAL",
+        device_time=1757300299,
+        source=PositionSource.PACKET,
+    )
+    coordinator.async_handle_packet(
+        _packet(portnum="POSITION_APP", rx_time=1757300300, position=heard)
+    )
+
+    coordinator.async_handle_node_updated(
+        MeshtasticNode(
+            num=REMOTE_NUM,
+            node_id=REMOTE_ID,
+            presumptive=False,
+            position=Position(
+                latitude=52.1111111,
+                longitude=13.1111111,
+                altitude=42,
+                location_source="LOC_EXTERNAL",
+                device_time=1757300299,
+                source=PositionSource.NODE_INFO,
+            ),
+        )
+    )
+
+    node = coordinator.get_node(REMOTE_ID)
+    assert node is not None
+    assert node.position == heard
+    assert node.position.location_accuracy == 364
+
+    await coordinator.async_shutdown()
+
+
+async def test_a_node_record_with_a_newer_fix_still_wins(
+    coordinator: MeshtasticCoordinator,
+) -> None:
+    """Test that a genuinely newer node-DB position replaces the stored one.
+
+    The precision is only kept for the record that describes the same fix; a
+    later one is the node's own newer report, whatever it left out.
+    """
+    coordinator.async_handle_packet(
+        _packet(
+            portnum="POSITION_APP",
+            rx_time=1757300300,
+            position=Position(
+                latitude=52.1111111,
+                longitude=13.1111111,
+                precision_bits=16,
+                device_time=1757300299,
+                source=PositionSource.PACKET,
+            ),
+        )
+    )
+
+    coordinator.async_handle_node_updated(
+        MeshtasticNode(
+            num=REMOTE_NUM,
+            node_id=REMOTE_ID,
+            presumptive=False,
+            position=Position(
+                latitude=53.0,
+                longitude=14.0,
+                device_time=1757300999,
+                source=PositionSource.NODE_INFO,
+            ),
+        )
+    )
+
+    node = coordinator.get_node(REMOTE_ID)
+    assert node is not None
+    assert node.position is not None
+    assert node.position.latitude == 53.0
+    assert node.position.precision_bits is None
 
     await coordinator.async_shutdown()
 

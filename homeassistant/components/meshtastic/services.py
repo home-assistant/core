@@ -3,28 +3,42 @@
 Everything here is registered from ``async_setup`` so that an automation that
 calls one of these actions still validates while no config entry is loaded.
 
-The actions cover the mesh operations that are not a *state* and therefore have
-no entity: sending one message, asking a node for something it already knows,
-and the node-database writes.  Node settings are configuration entities, not
-actions, and there is deliberately no generic "send an admin message" escape
-hatch.
+An action exists only where an entity cannot do the job.  Sending a message,
+tracing a route and reading the configuration all take parameters or answer
+with a payload, and the two node-database operations are maintenance rather
+than state.  Everything else the mesh can be asked for is an entity -- the node
+request buttons, the favourite and ignored switches and the gateway's restart
+button -- so every operation has exactly one implementation and one
+authorisation model.  Node settings are configuration entities, and there is
+deliberately no generic "send an admin message" escape hatch.
 
-Two rules shape every handler below:
+``refresh_nodes``, ``remove_node`` and ``export_config`` are administrator-only:
+the first two disturb or change the gateway, and the export answers with the
+node's whole configuration, which lands in the trace of every automation that
+captures the response.
 
-* Nothing here talks to the ``meshtastic`` library.  Sends go through the
+Three rules shape every handler below:
+
+* No module here imports the ``meshtastic`` library.  Sends go through the
   client, which owns the executor, the send lock and the per-portnum pacing
   gates that keep us outside the firmware's client-side rate limits (2 s for
-  text, 10 s for position and telemetry, 30 s for traceroute).
+  text, 10 s for position and telemetry, 30 s for traceroute).  The handlers
+  that need the interface itself -- the traceroute's send and the configuration
+  read -- are handed it by the client, in that executor and behind that lock.
 * Everything is validated before anything goes on the air, and every failure
   carries a ``translation_key``: ``ServiceValidationError`` when the user can
   fix it, ``HomeAssistantError`` when the mesh refused or never answered.
   :func:`~.client.raise_for_result` is the only thing that turns a failed
   request into an error, which is what maps every ``Routing.Error`` value onto
   its own translated message.
+* Nothing secret leaves in a response.  ``export_config`` redacts the node's
+  credentials and never exports the channel URL, whose payload is the
+  pre-shared key of every channel.
 """
 
 import base64
-from collections.abc import Mapping
+import math
+import time
 from typing import Any, Final
 
 import voluptuous as vol
@@ -37,12 +51,13 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     service,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonValueType
 
 from .client import MeshtasticRequestError, raise_for_result
@@ -51,72 +66,56 @@ from .const import (
     ATTR_CHANNEL,
     BROADCAST_ID,
     BROADCAST_NUM,
+    CONF_INCLUDE_LOCATION,
+    DEFAULT_INCLUDE_LOCATION,
     DOMAIN,
     LOGGER,
-    PORTNUM_POSITION_APP,
-    PORTNUM_TELEMETRY_APP,
     PORTNUM_TRACEROUTE_APP,
     PORTNUM_UNKNOWN_APP,
     format_node_id,
     parse_node_id,
 )
 from .coordinator import MeshtasticConfigEntry
-from .models import RequestKind, RequestResult, TelemetryFamily
+from .models import RequestKind, RequestResult
 
 SERVICE_EXPORT_CONFIG: Final = "export_config"
-SERVICE_REBOOT: Final = "reboot"
 SERVICE_REFRESH_NODES: Final = "refresh_nodes"
 SERVICE_REMOVE_NODE: Final = "remove_node"
-SERVICE_REQUEST_POSITION: Final = "request_position"
-SERVICE_REQUEST_TELEMETRY: Final = "request_telemetry"
 SERVICE_REQUEST_TRACEROUTE: Final = "request_traceroute"
 SERVICE_SEND_MESSAGE: Final = "send_message"
-SERVICE_SET_FAVORITE: Final = "set_favorite"
-SERVICE_SET_IGNORED: Final = "set_ignored"
 
 ATTR_CONFIRM: Final = "confirm"
-ATTR_DELAY: Final = "delay"
-ATTR_ENABLED: Final = "enabled"
 ATTR_MESSAGE: Final = "message"
 ATTR_NODE: Final = "node"
-ATTR_TELEMETRY_TYPE: Final = "telemetry_type"
 ATTR_WANT_ACK: Final = "want_ack"
-
-#: The telemetry families a node answers a request for.  ``health`` and ``host``
-#: are left out: the firmware only ever publishes those unsolicited.
-TELEMETRY_TYPES: Final[tuple[str, ...]] = (
-    str(TelemetryFamily.DEVICE),
-    str(TelemetryFamily.ENVIRONMENT),
-    str(TelemetryFamily.POWER),
-    str(TelemetryFamily.AIR_QUALITY),
-    str(TelemetryFamily.LOCAL_STATS),
-)
-
-#: Request payloads: a ``Telemetry`` message with the wanted variant present but
-#: empty, which is what the firmware looks at to decide what to answer with.
-#: Each is the two-byte header of an empty length-delimited field --
-#: ``(field_number << 3) | 2`` followed by a zero length.
-TELEMETRY_REQUESTS: Final[Mapping[str, bytes]] = {
-    str(TelemetryFamily.DEVICE): b"\x12\x00",
-    str(TelemetryFamily.ENVIRONMENT): b"\x1a\x00",
-    str(TelemetryFamily.AIR_QUALITY): b'"\x00',
-    str(TelemetryFamily.POWER): b"*\x00",
-    str(TelemetryFamily.LOCAL_STATS): b"2\x00",
-}
 
 #: Traceroute SNR travels as ``int8`` decibels times four, with ``INT8_MIN``
 #: meaning "not measured".
 SNR_SCALE: Final = 4.0
 SNR_UNKNOWN: Final = -128
 
-#: ``Node.reboot()`` takes a delay in seconds; the firmware's own default is 10.
-DEFAULT_REBOOT_DELAY: Final = 10
-MAX_REBOOT_DELAY: Final = 300
+#: A node-database refresh restarts the firmware's phone-API state machine, and
+#: for as long as it streams, the node's eight-slot to-phone queue drops the
+#: packets it receives.  Once a minute per entry is more than a person watching
+#: for a node ever needs, and it stops an automation from turning the gateway
+#: deaf by asking on a short interval.
+REFRESH_NODES_SPACING: Final = 60.0
+_REFRESH_NODES_GATE: HassKey[dict[str, float]] = HassKey(f"{DOMAIN}_refresh_nodes")
 
-#: Only ``security.public_key`` is safe to hand out; the private and admin keys
-#: would let whoever reads the response take the node over.
-REDACTED_CONFIG_FIELDS: Final[frozenset[tuple[str, str]]] = frozenset(
-    {("security", "private_key"), ("security", "admin_key")}
+#: Field names the export replaces with :data:`REDACTED`, wherever they appear
+#: and however deeply nested: the node's own credentials and the keys that would
+#: let whoever reads the response take it over.  ``security.public_key`` is not
+#: one of them -- it is what identifies the node and is meant to be shared.
+REDACTED_CONFIG_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "admin_key",
+        "fixed_pin",
+        "password",
+        "private_key",
+        "psk",
+        "username",
+        "wifi_psk",
+    }
 )
 REDACTED: Final = "**REDACTED**"
 
@@ -139,7 +138,6 @@ _NODE_FIELDS = {
     vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
     vol.Required(ATTR_NODE): _destination,
 }
-_CONFIRM_FIELD = {vol.Required(ATTR_CONFIRM): cv.boolean}
 
 SERVICE_SEND_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -151,17 +149,6 @@ SERVICE_SEND_MESSAGE_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_REQUEST_TELEMETRY_SCHEMA = vol.Schema(
-    {
-        **_NODE_FIELDS,
-        vol.Optional(ATTR_TELEMETRY_TYPE, default=str(TelemetryFamily.DEVICE)): vol.In(
-            TELEMETRY_TYPES
-        ),
-    }
-)
-
-SERVICE_REQUEST_POSITION_SCHEMA = vol.Schema(dict(_NODE_FIELDS))
-
 SERVICE_REQUEST_TRACEROUTE_SCHEMA = vol.Schema(dict(_NODE_FIELDS))
 
 SERVICE_REFRESH_NODES_SCHEMA = vol.Schema(
@@ -172,24 +159,8 @@ SERVICE_EXPORT_CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string}
 )
 
-SERVICE_SET_FAVORITE_SCHEMA = vol.Schema(
-    {**_NODE_FIELDS, vol.Optional(ATTR_ENABLED, default=True): cv.boolean}
-)
-
-SERVICE_SET_IGNORED_SCHEMA = vol.Schema(
-    {**_NODE_FIELDS, vol.Optional(ATTR_ENABLED, default=True): cv.boolean}
-)
-
-SERVICE_REMOVE_NODE_SCHEMA = vol.Schema({**_NODE_FIELDS, **_CONFIRM_FIELD})
-
-SERVICE_REBOOT_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_DELAY, default=DEFAULT_REBOOT_DELAY): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=MAX_REBOOT_DELAY)
-        ),
-        **_CONFIRM_FIELD,
-    }
+SERVICE_REMOVE_NODE_SCHEMA = vol.Schema(
+    {**_NODE_FIELDS, vol.Required(ATTR_CONFIRM): cv.boolean}
 )
 
 
@@ -330,135 +301,50 @@ async def _async_send_message(call: ServiceCall) -> ServiceResponse:
 # ---------------------------------------------------------------------------
 
 
-async def _async_request_telemetry(call: ServiceCall) -> ServiceResponse:
-    """Ask one node for a telemetry sample and wait for its answer."""
-    entry, node_num = _async_resolve(call)
-    node_num = _async_require_unicast(node_num, SERVICE_REQUEST_TELEMETRY)
-    label = _async_label(entry, node_num)
-
-    result = await entry.runtime_data.client.async_send_data(
-        TELEMETRY_REQUESTS[call.data[ATTR_TELEMETRY_TYPE]],
-        portnum=PORTNUM_TELEMETRY_APP,
-        destination=node_num,
-        kind=RequestKind.DIRECT_REQUEST,
-        want_ack=True,
-        want_response=True,
-    )
-    raise_for_result(result, node=label)
-    response = result.response
-    if response is None or response.telemetry is None:
-        raise MeshtasticRequestError(
-            translation_domain=DOMAIN,
-            translation_key="no_response",
-            translation_placeholders={"node": label},
-        )
-    if call.return_response:
-        return {
-            "node_id": format_node_id(node_num),
-            "node": label,
-            "telemetry": response.telemetry.as_dict(),
-        }
-    return None
-
-
-async def _async_request_position(call: ServiceCall) -> ServiceResponse:
-    """Ask one node for its position and wait for its answer."""
-    entry, node_num = _async_resolve(call)
-    node_num = _async_require_unicast(node_num, SERVICE_REQUEST_POSITION)
-    label = _async_label(entry, node_num)
-
-    # An empty payload is a valid empty Position message; the node answers with
-    # its own because the packet asks for a response.
-    result = await entry.runtime_data.client.async_send_data(
-        b"",
-        portnum=PORTNUM_POSITION_APP,
-        destination=node_num,
-        kind=RequestKind.DIRECT_REQUEST,
-        want_ack=True,
-        want_response=True,
-    )
-    raise_for_result(result, node=label)
-    response = result.response
-    if response is None or response.position is None:
-        raise MeshtasticRequestError(
-            translation_domain=DOMAIN,
-            translation_key="no_response",
-            translation_placeholders={"node": label},
-        )
-    if call.return_response:
-        return {
-            "node_id": format_node_id(node_num),
-            "node": label,
-            "position": response.position.as_dict(),
-        }
-    return None
-
-
-def _snr_list(values: Any) -> list[JsonValueType]:
+def _snr_list(values: tuple[int, ...]) -> list[JsonValueType]:
     """Return traceroute SNRs in decibels, with unmeasured hops as null."""
-    if not isinstance(values, list):
-        return []
     return [
         None if value == SNR_UNKNOWN else round(value / SNR_SCALE, 2)
         for value in values
-        if isinstance(value, int) and not isinstance(value, bool)
     ]
 
 
-def _route_list(values: Any, *, first: int, last: int) -> list[JsonValueType]:
+def _route_list(
+    relays: tuple[int, ...], *, first: int, last: int
+) -> list[JsonValueType]:
     """Return a whole traceroute leg, endpoints included, as node ids."""
-    relays = values if isinstance(values, list) else []
-    hops = [first, *(hop for hop in relays if isinstance(hop, int)), last]
-    return [format_node_id(hop) for hop in hops]
+    return [format_node_id(hop) for hop in (first, *relays, last)]
 
 
 async def _async_request_traceroute(call: ServiceCall) -> ServiceResponse:
-    """Trace the path to one node and back, with the SNR of every hop."""
+    """Trace the path to one node and back, with the SNR of every hop.
+
+    The library offers the route through ``sendData(onResponse=...)``, a
+    one-shot callback it files under the packet id and - by its own standing
+    ``FIXME`` - only ever removes when it fires.  An answer that never came
+    would leave the entry and everything its closure holds in the interface
+    for the life of the connection, one per attempt.  It also runs on the
+    reader thread, which nothing else in this integration does.  The answer is
+    an ordinary packet on the traceroute port quoting our request id, so the
+    client correlates it from pubsub like every other response and hands it
+    back on the result.
+    """
     entry, node_num = _async_resolve(call)
     node_num = _async_require_unicast(node_num, SERVICE_REQUEST_TRACEROUTE)
     coordinator = entry.runtime_data.coordinator
     gateway_num = coordinator.gateway.node_num
     label = _async_label(entry, node_num)
 
-    route: dict[str, Any] = {}
-
-    def _on_traceroute(packet: dict[str, Any]) -> None:
-        """Keep the route out of one traceroute answer.
-
-        The library calls this on its reader thread while it decodes the
-        packet, which is before it hands the same packet to pubsub and
-        therefore before the request being awaited here can complete: the value
-        is in place by the time the await returns.  Only plain numbers are
-        copied out, so the protobuf the library parks beside them never leaves
-        this function.  It must not raise -- an exception here would take the
-        reader thread down with it.
-        """
-        try:
-            decoded = packet.get("decoded") or {}
-            raw = decoded.get("traceroute")
-            if isinstance(raw, dict):
-                route.update(
-                    {
-                        key: raw.get(key)
-                        for key in ("route", "snrTowards", "routeBack", "snrBack")
-                    }
-                )
-        except (AttributeError, TypeError) as err:  # pragma: no cover - defensive
-            LOGGER.debug("Could not read the traceroute answer: %s", err)
-
     def _send(interface: Any) -> Any:
-        # An empty payload is a valid empty RouteDiscovery.  The route itself is
-        # only offered through this callback, which is why the request does not
-        # go through the client's own send helper.  The library drops the
-        # handler again as soon as it fires, and one belonging to an answer that
-        # never came goes away with the interface on the next reconnect.
+        # An empty payload is a valid empty RouteDiscovery; the firmware fills
+        # it in on the way and sends it back because the packet asks for a
+        # response.
         return interface.sendData(
             b"",
             destinationId=node_num,
             portNum=PORTNUM_TRACEROUTE_APP,
             wantAck=True,
             wantResponse=True,
-            onResponse=_on_traceroute,
             channelIndex=0,
         )
 
@@ -471,7 +357,8 @@ async def _async_request_traceroute(call: ServiceCall) -> ServiceResponse:
         want_response=True,
     )
     raise_for_result(result, node=label)
-    if not route:
+    route = None if result.response is None else result.response.traceroute
+    if route is None:
         raise MeshtasticRequestError(
             translation_domain=DOMAIN,
             translation_key="no_response",
@@ -481,14 +368,12 @@ async def _async_request_traceroute(call: ServiceCall) -> ServiceResponse:
         return {
             "node_id": format_node_id(node_num),
             "node": label,
-            "route_towards": _route_list(
-                route.get("route"), first=gateway_num, last=node_num
-            ),
-            "snr_towards": _snr_list(route.get("snrTowards")),
+            "route_towards": _route_list(route.route, first=gateway_num, last=node_num),
+            "snr_towards": _snr_list(route.snr_towards),
             "route_back": _route_list(
-                route.get("routeBack"), first=node_num, last=gateway_num
+                route.route_back, first=node_num, last=gateway_num
             ),
-            "snr_back": _snr_list(route.get("snrBack")),
+            "snr_back": _snr_list(route.snr_back),
         }
     return None
 
@@ -499,33 +384,44 @@ async def _async_request_traceroute(call: ServiceCall) -> ServiceResponse:
 
 
 async def _async_refresh_nodes(call: ServiceCall) -> None:
-    """Ask the gateway to stream its node database again."""
+    """Ask the gateway to stream its node database again.
+
+    The dump is the one operation a user can trigger that makes the firmware
+    leave its packet-forwarding state, so it is paced per config entry and
+    refused while the previous one is still recent.
+    """
     entry: MeshtasticConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data.get(ATTR_CONFIG_ENTRY_ID)
     )
-    await entry.runtime_data.client.async_refresh_nodes()
+    gate = call.hass.data.setdefault(_REFRESH_NODES_GATE, {})
+    now = time.monotonic()
+    if now < (ready_at := gate.get(entry.entry_id, 0.0)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="refresh_too_soon",
+            translation_placeholders={"seconds": str(math.ceil(ready_at - now))},
+        )
+    gate[entry.entry_id] = now + REFRESH_NODES_SPACING
 
-
-async def _async_set_flag(call: ServiceCall, *, set_to: str, clear_to: str) -> None:
-    """Set or clear one per-node flag in the gateway's node database."""
-    entry, node_num = _async_resolve(call)
-    node_num = _async_require_unicast(node_num, call.service)
-    method = set_to if call.data[ATTR_ENABLED] else clear_to
-
-    def _send(interface: Any) -> Any:
-        return getattr(interface.localNode, method)(node_num)
-
-    await async_send_admin(entry.runtime_data.coordinator, _send)
-
-
-async def _async_set_favorite(call: ServiceCall) -> None:
-    """Mark a node as a favourite, or stop doing so."""
-    await _async_set_flag(call, set_to="setFavorite", clear_to="removeFavorite")
-
-
-async def _async_set_ignored(call: ServiceCall) -> None:
-    """Drop every packet from a node, or stop doing so."""
-    await _async_set_flag(call, set_to="setIgnored", clear_to="removeIgnored")
+    client = entry.runtime_data.client
+    if not client.download_node_db:
+        # The option is off by default because a node without PSRAM can run out
+        # of memory over a full dump.  The action is the user asking for that
+        # dump anyway, so it runs -- but a crash right afterwards should be
+        # explainable from the log.
+        LOGGER.warning(
+            "Refreshing the node database of %s although this entry has the"
+            " node database download switched off: this is the same full dump,"
+            " and a memory-constrained node can fail over it",
+            entry.runtime_data.coordinator.gateway.name,
+        )
+    try:
+        await client.async_refresh_nodes()
+    except HomeAssistantError:
+        # Nothing reached the node, so the next attempt need not sit out the
+        # pause that is there to spare the node.
+        gate.pop(entry.entry_id, None)
+        raise
 
 
 async def _async_remove_node(call: ServiceCall) -> None:
@@ -547,32 +443,6 @@ async def _async_remove_node(call: ServiceCall) -> None:
     await async_send_admin(entry.runtime_data.coordinator, _send)
 
 
-async def _async_reboot(call: ServiceCall) -> None:
-    """Reboot the gateway node."""
-    _async_require_confirmation(call, SERVICE_REBOOT)
-    entry: MeshtasticConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data.get(ATTR_CONFIG_ENTRY_ID)
-    )
-    client = entry.runtime_data.client
-    gateway = entry.runtime_data.coordinator.gateway
-    if client.reboot_grace_active:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="reboot_in_progress",
-            translation_placeholders={"node": gateway.name},
-        )
-    delay = call.data[ATTR_DELAY]
-
-    def _send(interface: Any) -> Any:
-        return interface.localNode.reboot(delay)
-
-    await async_send_admin(entry.runtime_data.coordinator, _send)
-    # The acknowledgement means the reboot is scheduled, not done: the node
-    # keeps talking for a few more seconds and then drops off without closing
-    # the socket, so hold the entities available across the gap.
-    client.async_note_reboot_expected()
-
-
 # ---------------------------------------------------------------------------
 # Configuration export
 # ---------------------------------------------------------------------------
@@ -590,16 +460,17 @@ def _proto_scalar(descriptor: Any, value: Any) -> Any:
     return value
 
 
-def _proto_dict(message: Any, *, section: str | None = None) -> dict[str, Any]:
+def _proto_dict(message: Any) -> dict[str, Any]:
     """Return the fields a protobuf message actually set, as a plain dict.
 
     ``ListFields`` skips defaults, which is what the CLI's ``--export-config``
     does too, and keeps the response to what the node really carries.  Keys are
-    the protobuf field names.
+    the protobuf field names, and a field named in
+    :data:`REDACTED_CONFIG_FIELDS` is replaced at whatever depth it appears.
     """
     result: dict[str, Any] = {}
     for descriptor, value in message.ListFields():
-        if section is not None and (section, descriptor.name) in REDACTED_CONFIG_FIELDS:
+        if descriptor.name in REDACTED_CONFIG_FIELDS:
             result[descriptor.name] = REDACTED
         elif descriptor.is_repeated:
             result[descriptor.name] = [
@@ -615,20 +486,27 @@ def _proto_sections(message: Any) -> dict[str, Any]:
     if message is None:
         return {}
     return {
-        descriptor.name: _proto_dict(value, section=descriptor.name)
+        descriptor.name: _proto_dict(value)
         for descriptor, value in message.ListFields()
         if descriptor.type == descriptor.TYPE_MESSAGE
     }
 
 
 async def _async_export_config(call: ServiceCall) -> ServiceResponse:
-    """Return the gateway's configuration, in the shape the CLI exports.
+    """Return the gateway's configuration, in the shape the CLI exports it.
 
     Nothing is transmitted: the library downloaded the whole configuration when
     it connected, so this only reads back what it already holds.  The canned
     messages and the ringtone the CLI also exports are left out on purpose --
     the library only offers those through a helper that busy-waits on the reader
     thread with no timeout.
+
+    The response is not a backup, and it is deliberately incomplete.  Every
+    credential in it is redacted, and the channel URL the CLI prints is not part
+    of it at all: that URL's payload is the pre-shared key of every channel, so
+    whoever reads one can decrypt the mesh and transmit on it.  The gateway's
+    own coordinates follow the same opt-in as the diagnostics download, because
+    a response is kept in the trace of whatever asked for it.
     """
     entry: MeshtasticConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data.get(ATTR_CONFIG_ENTRY_ID)
@@ -648,8 +526,6 @@ async def _async_export_config(call: ServiceCall) -> ServiceResponse:
         export["module_config"] = _proto_sections(
             getattr(local_node, "moduleConfig", None)
         )
-        if (get_url := getattr(local_node, "getURL", None)) is not None:
-            export["channel_url"] = get_url()
 
     await coordinator.client.async_request(
         kind=RequestKind.ADMIN_LOCAL_GET,
@@ -664,14 +540,14 @@ async def _async_export_config(call: ServiceCall) -> ServiceResponse:
     response: dict[str, Any] = {
         "owner": gateway.long_name,
         "owner_short": gateway.short_name,
-        "channel_url": export.get("channel_url"),
         "config": export.get("config", {}),
         "module_config": export.get("module_config", {}),
     }
     position = response["config"].get("position", {})
     node = coordinator.get_node(gateway.node_id)
     if (
-        position.get("fixed_position")
+        entry.options.get(CONF_INCLUDE_LOCATION, DEFAULT_INCLUDE_LOCATION)
+        and position.get("fixed_position")
         and node is not None
         and node.position is not None
         and node.position.valid
@@ -701,52 +577,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REQUEST_TELEMETRY,
-        _async_request_telemetry,
-        schema=SERVICE_REQUEST_TELEMETRY_SCHEMA,
-        supports_response=SupportsResponse.OPTIONAL,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REQUEST_POSITION,
-        _async_request_position,
-        schema=SERVICE_REQUEST_POSITION_SCHEMA,
-        supports_response=SupportsResponse.OPTIONAL,
-    )
-    hass.services.async_register(
-        DOMAIN,
         SERVICE_REQUEST_TRACEROUTE,
         _async_request_traceroute,
         schema=SERVICE_REQUEST_TRACEROUTE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
-    hass.services.async_register(
+    # Administrator-only, for three different reasons: the refresh makes the
+    # gateway restart its node-info stream and drop packets while it runs,
+    # removing a node changes the node database, and the export answers with
+    # the whole configuration of the node.  The one that cannot be undone also
+    # wants an explicit confirmation.
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_REFRESH_NODES,
         _async_refresh_nodes,
         schema=SERVICE_REFRESH_NODES_SCHEMA,
     )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_EXPORT_CONFIG,
-        _async_export_config,
-        schema=SERVICE_EXPORT_CONFIG_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_FAVORITE,
-        _async_set_favorite,
-        schema=SERVICE_SET_FAVORITE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_IGNORED,
-        _async_set_ignored,
-        schema=SERVICE_SET_IGNORED_SCHEMA,
-    )
-    # Removing a node and rebooting the radio are destructive, so they are
-    # offered to administrators only, on top of the explicit confirmation field.
     service.async_register_admin_service(
         hass,
         DOMAIN,
@@ -757,7 +604,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_REBOOT,
-        _async_reboot,
-        schema=SERVICE_REBOOT_SCHEMA,
+        SERVICE_EXPORT_CONFIG,
+        _async_export_config,
+        schema=SERVICE_EXPORT_CONFIG_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )

@@ -2,15 +2,12 @@
 
 import asyncio
 from datetime import timedelta
-from typing import Any
 from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.meshtastic.const import (
     ATTR_ENTRY_ID,
-    ATTR_NODE_ID,
     CIRCUIT_BREAKER_COOLDOWN,
     CIRCUIT_BREAKER_TRIPS,
     DOMAIN,
@@ -18,16 +15,13 @@ from homeassistant.components.meshtastic.const import (
 )
 from homeassistant.components.meshtastic.models import ConnectionState
 from homeassistant.components.meshtastic.repairs import (
-    ATTR_NOTICED_AT,
     ISSUE_CIRCUIT_BREAKER_OPEN,
     ISSUE_MIGRATED_FROM_CUSTOM_INTEGRATION,
-    ISSUE_NODE_UNRESPONSIVE,
     MeshtasticReconnectRepairFlow,
     async_check_issues,
     async_create_fix_flow,
     async_create_migration_issue,
     async_delete_issues,
-    async_report_unresponsive_node,
 )
 from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.config_entries import ConfigEntryState
@@ -36,14 +30,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import (
-    REMOTE_ID,
-    SENSOR_NODE_ID,
-    FakePubSub,
-    inject_connection_lost,
-    inject_node_info,
-    setup_integration,
-)
+from . import FakePubSub, inject_connection_lost, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
@@ -93,11 +80,6 @@ async def _trip_circuit_breaker(
 def _breaker_issue_id(entry: MockConfigEntry) -> str:
     """Return the circuit-breaker issue id of an entry."""
     return f"{ISSUE_CIRCUIT_BREAKER_OPEN}_{entry.entry_id}"
-
-
-def _node_issue_id(entry: MockConfigEntry, node_id: str) -> str:
-    """Return the unresponsive-node issue id of one node."""
-    return f"{ISSUE_NODE_UNRESPONSIVE}_{entry.entry_id}_{node_id}"
 
 
 def _migration_issue_id(entry: MockConfigEntry) -> str:
@@ -263,147 +245,6 @@ async def test_circuit_breaker_fix_flow_survives_a_removed_entry(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_unresponsive_node_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-) -> None:
-    """Test the issue raised when a node never comes back from a reboot."""
-    await setup_integration(hass, mock_config_entry)
-    await inject_node_info(
-        hass, mock_pubsub, mock_meshtastic_client, node_fixtures[REMOTE_ID]
-    )
-
-    async_report_unresponsive_node(hass, mock_config_entry, REMOTE_ID)
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, _node_issue_id(mock_config_entry, REMOTE_ID)
-    )
-    assert issue is not None
-    assert issue.is_fixable is False
-    assert issue.issue_domain == DOMAIN
-    assert issue.severity is ir.IssueSeverity.WARNING
-    assert issue.translation_key == ISSUE_NODE_UNRESPONSIVE
-    assert issue.translation_placeholders == {
-        "name": "Remote One",
-        "node_id": REMOTE_ID,
-        "gateway": "HA Gateway",
-    }
-    assert issue.data == {
-        ATTR_ENTRY_ID: mock_config_entry.entry_id,
-        ATTR_NODE_ID: REMOTE_ID,
-        ATTR_NOTICED_AT: dt_util.utcnow().isoformat(),
-    }
-
-
-async def test_unresponsive_node_issue_for_an_unknown_node(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-) -> None:
-    """Test that a node the table has forgotten is named by its id."""
-    await setup_integration(hass, mock_config_entry)
-
-    async_report_unresponsive_node(hass, mock_config_entry, REMOTE_ID)
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, _node_issue_id(mock_config_entry, REMOTE_ID)
-    )
-    assert issue is not None
-    assert issue.translation_placeholders == {
-        "name": REMOTE_ID,
-        "node_id": REMOTE_ID,
-        "gateway": "HA Gateway",
-    }
-
-
-async def test_unresponsive_node_issue_clears_when_the_node_is_heard(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that hearing from the node again withdraws the issue."""
-    await setup_integration(hass, mock_config_entry)
-    await inject_node_info(
-        hass, mock_pubsub, mock_meshtastic_client, node_fixtures[REMOTE_ID]
-    )
-    async_report_unresponsive_node(hass, mock_config_entry, REMOTE_ID)
-    issue_id = _node_issue_id(mock_config_entry, REMOTE_ID)
-
-    # Still silent: the last time the node was heard predates the report.
-    async_check_issues(hass, mock_config_entry)
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
-
-    freezer.tick(timedelta(seconds=30))
-    await inject_node_info(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        {
-            **node_fixtures[REMOTE_ID],
-            "lastHeard": int(dt_util.utcnow().timestamp()),
-        },
-    )
-
-    async_check_issues(hass, mock_config_entry)
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-
-
-async def test_unresponsive_node_issue_left_alone_for_other_nodes(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_meshtastic_client: MagicMock,
-    mock_pubsub: FakePubSub,
-    node_fixtures: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that hearing one node does not clear the issue of another."""
-    await setup_integration(hass, mock_config_entry)
-    for node_id in (REMOTE_ID, SENSOR_NODE_ID):
-        await inject_node_info(
-            hass, mock_pubsub, mock_meshtastic_client, node_fixtures[node_id]
-        )
-    async_report_unresponsive_node(hass, mock_config_entry, REMOTE_ID)
-    async_report_unresponsive_node(hass, mock_config_entry, SENSOR_NODE_ID)
-
-    freezer.tick(timedelta(seconds=30))
-    await inject_node_info(
-        hass,
-        mock_pubsub,
-        mock_meshtastic_client,
-        {
-            **node_fixtures[SENSOR_NODE_ID],
-            "lastHeard": int(dt_util.utcnow().timestamp()),
-        },
-    )
-
-    async_check_issues(hass, mock_config_entry)
-
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, _node_issue_id(mock_config_entry, REMOTE_ID)
-        )
-        is not None
-    )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, _node_issue_id(mock_config_entry, SENSOR_NODE_ID)
-        )
-        is None
-    )
-
-
 async def test_migration_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -449,19 +290,12 @@ async def test_async_delete_issues(
     await setup_integration(hass, mock_config_entry)
     await _trip_circuit_breaker(hass, mock_pubsub, mock_meshtastic_client)
     async_check_issues(hass, mock_config_entry)
-    async_report_unresponsive_node(hass, mock_config_entry, REMOTE_ID)
     async_create_migration_issue(hass, mock_config_entry)
 
     async_delete_issues(hass, mock_config_entry)
 
     assert (
         issue_registry.async_get_issue(DOMAIN, _breaker_issue_id(mock_config_entry))
-        is None
-    )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, _node_issue_id(mock_config_entry, REMOTE_ID)
-        )
         is None
     )
     assert (

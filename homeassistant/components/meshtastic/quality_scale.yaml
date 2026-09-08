@@ -21,12 +21,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
-  entity-event-setup:
-    status: exempt
-    comment: |
-      Entities subscribe to the coordinator through CoordinatorEntity, which
-      handles subscription and teardown. The only subscriptions to the library
-      are owned by the client and torn down when the entry unloads.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -71,11 +66,12 @@ rules:
     status: todo
     comment: |
       Every exception this integration raises carries a translation key, and a
-      parametrized test walks all of them. The two administrator-only actions
-      also raise Home Assistant's own Unauthorized, from
-      async_register_admin_service, which has no translation key; the rule's
-      test helper counts that against the integration, so the rule cannot be
-      claimed while those actions are tested for it.
+      parametrized test walks all of them. The three administrator-only actions
+      (export_config, refresh_nodes and remove_node) also raise Home
+      Assistant's own Unauthorized, from async_register_admin_service, which
+      has no translation key; the rule's test helper counts that against the
+      integration, so the rule cannot be claimed while those actions are tested
+      for it.
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
@@ -93,4 +89,9 @@ rules:
     comment: |
       The integration talks to the node over a raw TCP socket owned by the
       library; there is no HTTP session to inject.
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: |
+      The integration is listed in .strict-typing, but meshtastic==2.7.11 ships
+      no py.typed and there is no stubs-only package, so the rule's own
+      validator rejects it.

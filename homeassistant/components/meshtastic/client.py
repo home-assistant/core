@@ -10,24 +10,29 @@ Rules this module keeps, and that the rest of the integration relies on:
   with a bounded timeout and a guard that turns a stray ``SystemExit`` (the
   library uses ``sys.exit()`` for input validation) into a
   :class:`MeshtasticError`.
-* Only the library's public API is used.  None of the blocking helpers that can
-  call ``our_exit()`` on the reader thread are ever called: no
-  ``waitForAckNak``, ``sendTelemetry``, ``sendPosition(wantResponse=True)``,
-  ``sendTraceRoute``, ``getNode`` for remote nodes.  Answers are correlated from
-  pubsub by ``decoded.requestId`` instead.
+* None of the library's blocking helpers that can call ``our_exit()`` on the
+  reader thread are ever called: no ``waitForAckNak``, ``sendTelemetry``,
+  ``sendPosition(wantResponse=True)``, ``sendTraceRoute``, ``getNode`` for
+  remote nodes.  Answers are correlated from pubsub by ``decoded.requestId``
+  instead.
 * pubsub listeners are bound methods, filter on interface identity, never raise
   and do nothing but hop to the event loop with ``call_soon_threadsafe``.
 * Reconnection is owned here: jittered exponential backoff, a circuit breaker
-  for the firmware's "one API client at a time" kick, and a reboot grace window.
+  for the firmware's "one API client at a time" kick, and a reboot grace
+  window.  :class:`MeshtasticInterface` exists to make that true - the stock
+  ``TCPInterface`` re-handshakes on its own, without telling anybody - and to
+  keep the library's unbounded waits off Home Assistant's executor.
 """
 
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable
-from dataclasses import dataclass
+import contextlib
+from dataclasses import dataclass, replace
 from datetime import datetime
 import functools
 import random
+import socket
 import time
 from typing import Any, Final
 
@@ -68,6 +73,8 @@ from .const import (
     MAX_TEXT_PAYLOAD_BYTES,
     NOTIFICATION_REJECTED,
     PORTNUM_TEXT_MESSAGE_APP,
+    QUEUE_REFUSED_REASONS,
+    QUEUE_REFUSED_TRANSLATION_KEYS,
     REBOOT_GRACE,
     RECONNECT_BACKOFF_FACTOR,
     RECONNECT_MAX_DELAY,
@@ -78,7 +85,9 @@ from .const import (
     ROUTING_ERROR_TRANSLATION_KEYS,
     ROUTING_ERROR_VALIDATION,
     SEND_SPACING,
+    SOCKET_CONNECT_TIMEOUT,
     TIMEOUT_TRANSLATION_KEYS,
+    TX_QUEUE_TIMEOUT,
     format_node_id,
     parse_node_id,
 )
@@ -98,6 +107,7 @@ from .models import (
     TelemetryFamily,
     TelemetrySample,
     TelemetryValue,
+    TracerouteRoute,
 )
 
 # pubsub topics published by meshtastic 2.7.11.
@@ -262,6 +272,32 @@ def parse_telemetry(raw: dict[str, Any], *, now: datetime) -> TelemetrySample | 
     return None
 
 
+def _int_tuple(values: Any) -> tuple[int, ...]:
+    """Return the integers of a library list, dropping anything else."""
+    if not isinstance(values, list):
+        return ()
+    return tuple(
+        value
+        for value in values
+        if isinstance(value, int) and not isinstance(value, bool)
+    )
+
+
+def parse_traceroute(raw: dict[str, Any]) -> TracerouteRoute:
+    """Build a :class:`TracerouteRoute` from a decoded ``traceroute`` dict.
+
+    Present but empty is a real answer - a direct neighbour has no relays to
+    list - so the caller distinguishes "no route" by the absence of the dict,
+    not by an empty one.
+    """
+    return TracerouteRoute(
+        route=_int_tuple(raw.get("route")),
+        snr_towards=_int_tuple(raw.get("snrTowards")),
+        route_back=_int_tuple(raw.get("routeBack")),
+        snr_back=_int_tuple(raw.get("snrBack")),
+    )
+
+
 def parse_packet(
     raw: dict[str, Any], *, now: datetime, backlog: bool = False
 ) -> MeshtasticPacket | None:
@@ -284,6 +320,7 @@ def parse_packet(
     user_raw = decoded.get("user")
     position_raw = decoded.get("position")
     telemetry_raw = decoded.get("telemetry")
+    traceroute_raw = decoded.get("traceroute")
     return MeshtasticPacket(
         packet_id=_int(raw.get("id")) or 0,
         from_num=from_num,
@@ -313,6 +350,11 @@ def parse_packet(
         telemetry=(
             parse_telemetry(telemetry_raw, now=now)
             if isinstance(telemetry_raw, dict)
+            else None
+        ),
+        traceroute=(
+            parse_traceroute(traceroute_raw)
+            if isinstance(traceroute_raw, dict)
             else None
         ),
         received_at=now,
@@ -614,6 +656,14 @@ class RequestTracker:
                 and packet.from_num == self.my_node_num
                 and request.destination != self.my_node_num
             ):
+                if request.state is RequestState.ACKED:
+                    # Our node emits one of these for every rebroadcast of our
+                    # packet it overhears, with no ordering against the
+                    # destination's own answer.  A second, weaker confirmation
+                    # must not undo the first: the outcome only moves forward,
+                    # or a request that was acknowledged and then went
+                    # unanswered would be reported as never acknowledged.
+                    return
                 request.state = RequestState.ACKED_IMPLICIT
             else:
                 request.state = RequestState.ACKED
@@ -639,13 +689,21 @@ def raise_for_result(result: RequestResult, *, node: str) -> None:
     """Raise a translated error unless the request was delivered."""
     if result.delivered:
         return
+    if result.kind is RequestKind.FIRE_AND_FORGET and result.state is RequestState.SENT:
+        # Nothing ever acknowledges a packet the firmware was not asked to
+        # track: it keeps no retransmission record for one, so neither a real
+        # nor an implicit acknowledgement can arrive.  Reaching the radio with
+        # nothing refusing it is the whole outcome, and it is a success.
+        return
     if result.state is RequestState.TIMED_OUT:
         translation_key = TIMEOUT_TRANSLATION_KEYS.get(
             str(result.reached), DEFAULT_ERROR_TRANSLATION_KEY
         )
     else:
+        reason = result.error_reason or ""
         translation_key = ROUTING_ERROR_TRANSLATION_KEYS.get(
-            result.error_reason or "", DEFAULT_ERROR_TRANSLATION_KEY
+            reason,
+            QUEUE_REFUSED_TRANSLATION_KEYS.get(reason, DEFAULT_ERROR_TRANSLATION_KEY),
         )
     error: type[HomeAssistantError] = (
         ServiceValidationError
@@ -686,25 +744,161 @@ def _guarded[_T](func: Callable[[], _T]) -> _T:
         ) from err
 
 
+class MeshtasticInterface(TCPInterface):  # type: ignore[misc]
+    """A ``TCPInterface`` that never blocks forever and never self-heals.
+
+    Three things the library does are unusable from Home Assistant's shared
+    executor, and none of them can be switched off through its public API:
+
+    * ``MeshInterface._sendToRadio`` waits for room in the radio's transmit
+      queue with ``while not self._queueHasFreeSpace(): time.sleep(0.5)`` and
+      no bound.  ``TCPInterface.close()`` drops the socket and joins the reader
+      thread *before* ``_sendDisconnect()`` runs, so once a node has reported a
+      full queue nothing can ever refresh ``queueStatus.free`` again and the
+      worker thread is lost for the life of the process.
+    * ``_writeBytes`` and ``_readBytes`` re-handshake in place through
+      ``_reconnect()``, on whatever thread hit the error, with another blocking
+      connect and without publishing ``meshtastic.connection.lost``.
+      Reconnection is owned by :class:`MeshtasticClient`, which cannot
+      supervise a link that silently heals itself.
+    * ``myConnect()`` hands no timeout to ``socket.create_connection``, so an
+      unreachable node holds an executor thread for the operating system's SYN
+      timeout, long after the client gave up and started the next attempt.
+
+    Those three problems are the whole reason this class exists; everything
+    else is the library's.
+    """
+
+    #: Set by :meth:`close` so a send already waiting for transmit-queue space
+    #: gives up instead of waiting for an answer that can no longer arrive.
+    _closing_down = False
+    #: Monotonic deadline of the ``_sendToRadio`` call currently in progress.
+    _tx_deadline: float | None = None
+    #: Id of the last mesh packet framed through this interface.  Several
+    #: library helpers - ``Node.writeConfig()`` above all - send a packet and
+    #: return nothing, and the id is the only key an answer can be correlated
+    #: on.  The library's own ``currentPacketId`` is not that id: it is a
+    #: counter ``_generatePacketId()`` advances for every caller on every
+    #: thread, so reading it after a send is only right while nothing else
+    #: sent.  This is the packet that was actually handed over.
+    last_packet_id: int = 0
+
+    def myConnect(self) -> None:
+        """Open the socket, bounded by ``SOCKET_CONNECT_TIMEOUT``."""
+        sock = socket.create_connection(
+            (self.hostname, self.portNumber), timeout=SOCKET_CONNECT_TIMEOUT
+        )
+        # create_connection leaves the socket in timeout mode.  Reads have to
+        # go back to blocking, or the reader thread would raise on every quiet
+        # stretch and tear a perfectly healthy link down.
+        sock.settimeout(None)
+        self.socket = sock
+
+    def close(self) -> None:
+        """Close the link without ever waiting on the radio."""
+        self._closing_down = True
+        super().close()
+
+    def _reconnect(self) -> None:
+        """Let the reader thread exit instead of re-handshaking in place.
+
+        A plain no-op would not do: ``_readBytes`` returns ``b""`` right after
+        calling this and the reader would spin on a dead socket.  Setting
+        ``_wantExit`` makes it fall out of its loop, and the ``finally`` there
+        publishes ``meshtastic.connection.lost`` - the topic this integration
+        listens on, and the one the library's own reconnect never sends.
+        """
+        self._wantExit = True
+        with contextlib.suppress(OSError):
+            self._socket_shutdown()
+
+    def _sendToRadio(self, toRadio: mesh_pb2.ToRadio) -> None:
+        """Send one frame, dropping stale queue markers first."""
+        # Every mesh packet the library sends is framed here, whichever helper
+        # built it, so this is the one place its id can be recorded.  Frames
+        # without a packet - the heartbeat, the disconnect, a want_config_id -
+        # carry no id and must not overwrite the last one.
+        if toRadio.HasField("packet"):
+            self.last_packet_id = int(toRadio.packet.id)
+        # ``_handleQueueStatusFromRadio`` leaves a ``False`` marker in the
+        # queue for every packet the radio has already confirmed.  They need no
+        # transmit slot, but they keep the queue non-empty, which is the only
+        # reason a disconnect or a heartbeat ever waits for one at all.
+        for packet_id in [key for key, value in self.queue.items() if value is False]:
+            del self.queue[packet_id]
+        # Stamped, never cleared: the library's own 300 s heartbeat timer can
+        # be inside this method on another thread, and clearing the deadline
+        # under it would take the bound away again.  Every call stamps a fresh
+        # one on the way in, so nobody can inherit an expired deadline.
+        self._tx_deadline = time.monotonic() + TX_QUEUE_TIMEOUT
+        super()._sendToRadio(toRadio)
+
+    def _queueHasFreeSpace(self) -> bool:
+        """Report free transmit space, giving up rather than hanging."""
+        if self._closing_down:
+            # Nothing written from here can reach the node any more: close()
+            # has already dropped the socket.  Say yes so the library drains
+            # its queue and returns.
+            return True
+        if super()._queueHasFreeSpace():
+            return True
+        if self._tx_deadline is not None and time.monotonic() > self._tx_deadline:
+            self.queue.clear()
+            raise MeshInterface.MeshInterfaceError(
+                f"the radio transmit queue stayed full for {TX_QUEUE_TIMEOUT:.0f}"
+                " seconds"
+            )
+        return False
+
+
 def _close_interface(interface: TCPInterface) -> None:
     """Close an interface, swallowing anything it throws on the way out."""
     try:
         interface.close()
     except SystemExit as err:
         LOGGER.debug("Library exited while closing the connection: %s", err)
-    except OSError as err:
+    except (OSError, MeshInterface.MeshInterfaceError) as err:
         LOGGER.debug("Error while closing the connection: %s", err)
 
 
 def _create_interface(host: str, port: int, *, no_nodes: bool) -> TCPInterface:
     """Construct and connect a TCP interface.  Blocking; executor only."""
-    return TCPInterface(
+    return MeshtasticInterface(
         hostname=host,
         portNumber=port,
         noNodes=no_nodes,
         connectNow=True,
         timeout=LIBRARY_TIMEOUT,
     )
+
+
+def _refused_reason(interface: TCPInterface, packet_id: int) -> str | None:
+    """Return why the radio refused a packet, when it said so.
+
+    The firmware answers every packet a client sends with a ``QueueStatus``,
+    and a non-zero ``res`` is the only signal for a refusal that produces no
+    routing packet at all - a factory-fresh node whose LoRa region is still
+    unset simply drops everything.  Reading it once the request has run out of
+    time is race-free (the answer arrives milliseconds after the send, the
+    deadline is tens of seconds later) and cannot mask a real NAK, which would
+    have finished the request long before.
+    """
+    status = getattr(interface, "queueStatus", None)
+    if status is None or int(getattr(status, "mesh_packet_id", 0) or 0) != packet_id:
+        return None
+    return QUEUE_REFUSED_REASONS.get(int(getattr(status, "res", 0) or 0))
+
+
+def _snapshot_nodes(interface: TCPInterface) -> list[dict[str, Any]]:
+    """Copy the node table the library built.  Blocking; executor only.
+
+    The whole node database is streamed inside the ``TCPInterface``
+    constructor, so every ``meshtastic.node.updated`` it publishes arrives
+    before the client owns the interface and is dropped by the identity check
+    in the listener.  This table is the only surviving copy, and it holds the
+    gateway's own ``NodeInfo`` even when the database was not downloaded.
+    """
+    return [dict(node) for node in (interface.nodesByNum or {}).values()]
 
 
 @dataclass(slots=True)
@@ -793,9 +987,17 @@ class MeshtasticClient:
         return time.monotonic() < self._reboot_grace_until
 
     @callback
-    def async_note_reboot_expected(self) -> None:
-        """Open the reboot grace window and probe the link faster."""
-        self._reboot_grace_until = time.monotonic() + REBOOT_GRACE
+    def async_note_reboot_expected(self, delay: float = 0.0) -> None:
+        """Open the reboot grace window and probe the link faster.
+
+        ``delay`` is what the node was told to wait before rebooting - the
+        firmware takes it in seconds and keeps running until it elapses.  It
+        has to be part of the window: a fixed one closes while the node is
+        still running normally, so every entity flaps to unavailable at
+        exactly the moment the window exists to cover, and the duplicate-reboot
+        guard reopens while the first reboot is still pending.
+        """
+        self._reboot_grace_until = time.monotonic() + delay + REBOOT_GRACE
 
     def stats(self) -> dict[str, Any]:
         """Return link statistics for the diagnostics download."""
@@ -867,6 +1069,7 @@ class MeshtasticClient:
             ),
             timeout=CONNECT_TIMEOUT,
             connect=True,
+            dispose=self._async_close_late_interface,
         )
         # Own the interface from the moment the executor hands it over.  A
         # cancellation between here and the handshake - which is exactly what
@@ -881,7 +1084,7 @@ class MeshtasticClient:
             )
         except BaseException:
             self._interface = None
-            await self.hass.async_add_executor_job(_close_interface, interface)
+            await self._async_close(interface)
             raise
         self._gateway = gateway
         self.tracker.my_node_num = gateway.node_num
@@ -893,12 +1096,35 @@ class MeshtasticClient:
         self._dead.clear()
         self._state = ConnectionState.CONNECTED
         self.callbacks.connected(gateway)
+        await self._async_seed_nodes(interface)
 
-    async def _async_teardown(self) -> None:
-        """Close the current interface within a bounded time."""
-        interface, self._interface = self._interface, None
-        if interface is None:
+    async def _async_seed_nodes(self, interface: TCPInterface) -> None:
+        """Deliver the node records the handshake already collected.
+
+        The library streams the node database from inside the ``TCPInterface``
+        constructor, so every ``meshtastic.node.updated`` it publishes is
+        rejected by the identity check in ``_on_node_updated``: the client does
+        not own the interface yet.  Read its table instead - the dicts are
+        exactly the payloads that topic carries.  This runs after
+        ``callbacks.connected`` so the coordinator has its gateway, and on
+        every reconnect, because ``_startConfig()`` rebuilds the table each
+        time.  Without it the ``download_node_db`` option does nothing at all,
+        and the gateway's own ``NodeInfo`` is lost on every connect.
+        """
+        try:
+            records = await self._async_run(
+                functools.partial(_snapshot_nodes, interface)
+            )
+        except MeshtasticError as err:
+            LOGGER.debug("Could not read the node table of %s: %s", self.host, err)
             return
+        for raw in records:
+            if interface is not self._interface:
+                return
+            self._async_handle_raw_node(raw)
+
+    async def _async_close(self, interface: TCPInterface) -> None:
+        """Close one interface in the executor, within a bounded time."""
         try:
             async with asyncio.timeout(CLOSE_TIMEOUT):
                 await self.hass.async_add_executor_job(_close_interface, interface)
@@ -906,6 +1132,22 @@ class MeshtasticClient:
             LOGGER.warning(
                 "Timed out closing the connection to %s; abandoning it", self.host
             )
+
+    @callback
+    def _async_close_late_interface(self, interface: TCPInterface) -> None:
+        """Close a connection that completed after we stopped waiting for it."""
+        LOGGER.debug(
+            "Closing a connection to %s that completed after it was abandoned",
+            self.host,
+        )
+        self.hass.async_add_executor_job(_close_interface, interface)
+
+    async def _async_teardown(self) -> None:
+        """Close the current interface within a bounded time."""
+        interface, self._interface = self._interface, None
+        if interface is None:
+            return
+        await self._async_close(interface)
 
     @callback
     def _async_mark_dead(self, reason: str) -> None:
@@ -1047,14 +1289,25 @@ class MeshtasticClient:
         *,
         timeout: float = EXECUTOR_JOB_TIMEOUT,
         connect: bool = False,
+        dispose: Callable[[_T], None] | None = None,
     ) -> _T:
-        """Run one library call in the executor, bounded and guarded."""
+        """Run one library call in the executor, bounded and guarded.
+
+        The timeout bounds only the await: an executor thread cannot be
+        cancelled and runs to completion whatever happens here.  When the call
+        produces something that owns resources - a connected interface owns a
+        socket, a reader thread and the library's own heartbeat timer - pass
+        ``dispose``.  The job is then shielded, so its result stays reachable
+        instead of being thrown away with the cancelled wrapper, and whatever
+        turns up after nobody is waiting for it any more is handed over to be
+        cleaned up.
+        """
+        job = self.hass.async_add_executor_job(functools.partial(_guarded, func))
         try:
             async with asyncio.timeout(timeout):
-                return await self.hass.async_add_executor_job(
-                    functools.partial(_guarded, func)
-                )
+                return await (job if dispose is None else asyncio.shield(job))
         except TimeoutError as err:
+            self._async_dispose_late(job, dispose)
             raise MeshtasticConnectionError(
                 translation_domain=DOMAIN,
                 translation_key="timeout",
@@ -1066,6 +1319,29 @@ class MeshtasticClient:
                 translation_key="cannot_connect" if connect else "connection_lost",
                 translation_placeholders={"host": self.host, "error": str(err)},
             ) from err
+        except BaseException:
+            # A cancellation - the config flow's validation timeout, or the
+            # entry being unloaded - leaves the executor running too.
+            self._async_dispose_late(job, dispose)
+            raise
+
+    @callback
+    def _async_dispose_late[_T](
+        self,
+        job: asyncio.Future[_T],
+        dispose: Callable[[_T], None] | None,
+    ) -> None:
+        """Hand a result that arrives after the await gave up to ``dispose``."""
+        if dispose is None:
+            return
+
+        @callback
+        def _finished(done: asyncio.Future[_T]) -> None:
+            if done.cancelled() or done.exception() is not None:
+                return
+            dispose(done.result())
+
+        job.add_done_callback(_finished)
 
     def _require_interface(self) -> TCPInterface:
         """Return the live interface, or raise if the link is down."""
@@ -1106,11 +1382,17 @@ class MeshtasticClient:
                     "limit": str(limit),
                 },
             )
-        kind = (
-            RequestKind.TEXT_BROADCAST
-            if node_num == BROADCAST_NUM
-            else RequestKind.TEXT_DIRECT
-        )
+        if not want_ack:
+            # Waiting out the acknowledgement deadline would block the action
+            # for half a minute and then always report a delivery failure:
+            # without ``wantAck`` there is nothing on the mesh that could
+            # answer.  Only a refusal the node generates before the packet
+            # goes out can still arrive, which is what the short grace is for.
+            kind = RequestKind.FIRE_AND_FORGET
+        elif node_num == BROADCAST_NUM:
+            kind = RequestKind.TEXT_BROADCAST
+        else:
+            kind = RequestKind.TEXT_DIRECT
 
         def _send(interface: TCPInterface) -> Any:
             return interface.sendText(
@@ -1182,12 +1464,24 @@ class MeshtasticClient:
         return the ``MeshPacket`` the library produced; its ``id`` is the
         correlation key.
         """
-        interface = self._require_interface()
+        # Fail fast, so a doomed send does not first sit out a pacing gate.
+        self._require_interface()
+        # The pacing gate belongs to one portnum; the send lock is global.
+        # Waiting the gate out while holding the lock would make a traceroute's
+        # 31 seconds of spacing stall every unrelated send behind it.
+        await self._async_wait_for_gate(portnum)
         async with self._send_lock:
-            await self._async_wait_for_gate(portnum)
+            # Waiting for the gate and for the lock can take half a minute
+            # between them, and a reconnect in that window replaces the
+            # interface.  Sending on the old one writes into a closed socket,
+            # which the library reports as success.
+            interface = self._require_interface()
             packet = await self._async_run(functools.partial(send, interface))
-            self._port_gate[portnum] = time.monotonic() + SEND_SPACING.get(
-                portnum, DEFAULT_SEND_SPACING
+            # Spacing is measured from the write that actually happened, which
+            # can be later than the slot this send reserved.
+            self._port_gate[portnum] = max(
+                self._port_gate.get(portnum, 0.0),
+                time.monotonic() + SEND_SPACING.get(portnum, DEFAULT_SEND_SPACING),
             )
         request = PendingRequest(
             packet_id=int(getattr(packet, "id", 0) or 0),
@@ -1201,9 +1495,20 @@ class MeshtasticClient:
             # correlate on, so the send is all we can report.
             return request.result()
         self.tracker.async_register(request)
-        return await self.tracker.async_wait(
+        result = await self.tracker.async_wait(
             request, REQUEST_TIMEOUTS.get(kind, DEFAULT_REQUEST_TIMEOUT)
         )
+        if result.state is not RequestState.TIMED_OUT:
+            return result
+        reason = _refused_reason(interface, request.packet_id)
+        if reason is not None:
+            return replace(result, state=RequestState.NACKED, error_reason=reason)
+        if not want_ack and not want_response:
+            # The grace ran out with nothing arriving, which for a packet sent
+            # without ``wantAck`` is the expected end of the story rather than
+            # a timeout: it reached the radio and nothing refused it.
+            return replace(result, state=RequestState.SENT)
+        return result
 
     async def async_refresh_nodes(self) -> None:
         """Ask the node to stream its node database again.
@@ -1221,9 +1526,9 @@ class MeshtasticClient:
         packets, which is why this is only ever triggered by an explicit user
         action.
         """
-        interface = self._require_interface()
+        self._require_interface()
 
-        def _send() -> None:
+        def _send(interface: TCPInterface) -> None:
             request = mesh_pb2.ToRadio()
             request.want_config_id = NODES_ONLY_WANT_CONFIG_ID
             # The library has no public call for this; ``_sendToRadio`` only
@@ -1232,20 +1537,38 @@ class MeshtasticClient:
             interface._sendToRadio(request)  # noqa: SLF001
 
         async with self._send_lock:
-            await self._async_run(_send)
+            # Take the interface inside the lock: a send queued ahead of this
+            # one may have been waiting long enough for a reconnect to have
+            # replaced it.
+            await self._async_run(functools.partial(_send, self._require_interface()))
 
     async def _async_wait_for_gate(self, portnum: int) -> None:
-        """Respect the per-portnum send spacing the firmware enforces."""
-        wait = self._port_gate.get(portnum, 0.0) - time.monotonic()
-        if wait <= 0:
+        """Claim the next send slot of a portnum and wait until it opens.
+
+        The firmware silently drops packets that break its own per-portnum
+        client rate limits, so sends on one portnum are spaced out.  The slot
+        is claimed before the wait, not after the send: there is no await
+        between reading the gate and writing it back, so the reservation is
+        atomic on the event loop, queued sends keep their order, and each of
+        them sees the whole queue ahead of it.  Measuring only what is left
+        after the send in front has finished would let a queue grow without
+        bound, one ``MAX_SEND_GATE_WAIT`` at a time.
+        """
+        spacing = SEND_SPACING.get(portnum, DEFAULT_SEND_SPACING)
+        if not spacing:
             return
+        now = time.monotonic()
+        opens = self._port_gate.get(portnum, 0.0)
+        wait = opens - now
         if wait > MAX_SEND_GATE_WAIT:
             raise MeshtasticRequestError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limited",
                 translation_placeholders={"seconds": str(int(wait))},
             )
-        await self._async_delay(wait)
+        self._port_gate[portnum] = max(now, opens) + spacing
+        if wait > 0:
+            await self._async_delay(wait)
 
     def resolve_destination(self, destination: int | str) -> int:
         """Return the node number for a destination.

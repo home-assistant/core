@@ -22,6 +22,7 @@ from homeassistant.components.meshtastic.models import (
     RequestState,
     TelemetryFamily,
     TelemetrySample,
+    TracerouteRoute,
 )
 from homeassistant.util import dt as dt_util
 
@@ -246,7 +247,13 @@ def test_message_from_packet_needs_text() -> None:
 def test_request_result_delivery_and_dict() -> None:
     """Test the delivery verdict and the JSON shape of a request result."""
     response = MeshtasticPacket(
-        packet_id=2, from_num=REMOTE_NUM, to_num=GATEWAY_NUM, portnum="POSITION_APP"
+        packet_id=2,
+        from_num=REMOTE_NUM,
+        to_num=GATEWAY_NUM,
+        portnum="TRACEROUTE_APP",
+        traceroute=TracerouteRoute(
+            route=(REMOTE_NUM,), snr_towards=(20, -128), route_back=(), snr_back=(12,)
+        ),
     )
     result = RequestResult(
         packet_id=1,
@@ -261,6 +268,13 @@ def test_request_result_delivery_and_dict() -> None:
     assert as_dict["delivered"] is True
     assert as_dict["kind"] == "direct_request"
     assert as_dict["response"]["packet_id"] == 2
+    # Tuples, so the model stays hashable and immutable; lists once rendered.
+    assert as_dict["response"]["traceroute"] == {
+        "route": [REMOTE_NUM],
+        "snr_towards": [20, -128],
+        "route_back": [],
+        "snr_back": [12],
+    }
 
     nacked = RequestResult(
         packet_id=1,

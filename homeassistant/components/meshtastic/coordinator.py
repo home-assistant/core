@@ -2,8 +2,10 @@
 
 The coordinator runs in push mode: there is no polling, the client feeds it from
 the radio and it republishes an immutable :class:`MeshtasticData` snapshot with
-``async_set_updated_data``.  ``always_update=False`` means entities are only
-told about changes that actually changed something.
+``async_set_updated_data``, which always notifies every listener.  Dampening is
+therefore done where the change is known: the merge helpers below return False
+when a packet or a node record left the table exactly as it was, and only a
+real change is published.
 
 Nodes are persisted in a per-entry ``Store`` so that node devices and their
 entities survive a restart.  The save is debounced but cannot be starved: the
@@ -14,7 +16,7 @@ timer is armed once and never pushed out, and it is flushed on unload and on
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -42,8 +44,12 @@ from .models import (
     MeshtasticNotification,
     MeshtasticPacket,
     Position,
+    PositionSource,
     TelemetrySample,
 )
+
+if TYPE_CHECKING:
+    from .config_entity import MeshtasticConfigSnapshot
 
 
 @dataclass(slots=True)
@@ -52,6 +58,11 @@ class MeshtasticRuntimeData:
 
     client: MeshtasticClient
     coordinator: MeshtasticCoordinator
+    #: The gateway's configuration, shared by the platforms that expose it and
+    #: created by whichever of them sets up first.  It holds the coordinator,
+    #: the client and a lock, so it belongs to the entry: ``runtime_data`` is
+    #: dropped on unload, and the snapshot goes with it.
+    config_snapshot: MeshtasticConfigSnapshot | None = None
 
 
 #: The config entry type, defined here rather than in ``__init__`` so that a
@@ -230,7 +241,6 @@ class MeshtasticCoordinator(DataUpdateCoordinator[MeshtasticData]):
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=None,
-            always_update=False,
         )
         self.client = client
         self.registry = MeshtasticNodeRegistry(hass, config_entry.entry_id)
@@ -487,9 +497,16 @@ def _is_newer(candidate: Position, current: Position | None) -> bool:
     """Return True when a position should replace the stored one."""
     if current is None:
         return True
-    if candidate.device_time is not None and current.device_time is not None:
-        return candidate.device_time >= current.device_time
-    return True
+    if (
+        candidate.device_time is not None
+        and current.device_time is not None
+        and candidate.device_time != current.device_time
+    ):
+        return candidate.device_time > current.device_time
+    return not (
+        candidate.source is PositionSource.NODE_INFO
+        and current.source is PositionSource.PACKET
+    )
 
 
 def _is_newer_sample(

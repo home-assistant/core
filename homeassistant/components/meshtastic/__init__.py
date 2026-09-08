@@ -90,8 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeshtasticConfigEntry) -
     )
 
     # Repair issues follow from live state, so they are reconciled on every
-    # coordinator update: a link that keeps being kicked raises one, a node
-    # that is heard again withdraws one.  The check is cheap and idempotent.
+    # coordinator update: a link that keeps being kicked raises the circuit
+    # breaker issue, and a link that settles withdraws it again.  The check is
+    # cheap and idempotent.
     @callback
     def _check_issues() -> None:
         repairs.async_check_issues(hass, entry)

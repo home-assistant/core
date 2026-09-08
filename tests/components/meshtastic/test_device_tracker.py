@@ -38,6 +38,7 @@ from . import (
     FakePubSub,
     inject_connection_lost,
     inject_node_info,
+    inject_packet,
     setup_integration,
 )
 
@@ -50,6 +51,8 @@ FROZEN_TIME = "2025-09-08T03:06:00+00:00"
 GATEWAY_TRACKER = "device_tracker.ha_gateway_position"
 REMOTE_TRACKER = "device_tracker.remote_one_position"
 SENSOR_NODE_TRACKER = "device_tracker.weather_shed_position"
+#: What a user who renamed a tracker and pointed automations at it would have.
+RENAMED_TRACKER = "device_tracker.alice"
 
 
 @pytest.fixture(autouse=True)
@@ -110,10 +113,13 @@ async def test_position_attributes(
     assert state.attributes["latitude"] == pytest.approx(52.1111111)
     assert state.attributes["longitude"] == pytest.approx(13.1111111)
     assert state.attributes["source_type"] is SourceType.GPS
-    # precision_bits 16 blurs the position to a cell of roughly 728 m across.
-    assert state.attributes["gps_accuracy"] == 364
     assert state.attributes["altitude"] == 42
-    assert state.attributes["precision_bits"] == 16
+    # This position came from the gateway's node database, and
+    # ``ConvertToNodeInfo`` copies the coordinates, the altitude, the location
+    # source and the time out of ``NodeInfoLite`` and nothing else.  There is
+    # no blur radius to report until the node broadcasts a position itself.
+    assert state.attributes["gps_accuracy"] == 0
+    assert state.attributes["precision_bits"] is None
 
     # The gateway reported a manual position, which carries no precision bits.
     assert (state := hass.states.get(GATEWAY_TRACKER))
@@ -247,7 +253,7 @@ async def test_tracking_disabled_by_option(
 
 
 @pytest.mark.usefixtures("mock_meshtastic_client")
-async def test_disabling_the_option_removes_trackers(
+async def test_disabling_the_option_keeps_the_registry_entries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pubsub: FakePubSub,
@@ -255,11 +261,19 @@ async def test_disabling_the_option_removes_trackers(
     node_fixtures: dict[str, Any],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that switching tracking off cleans up the trackers it created."""
+    """Test that unticking the option does not destroy the user's trackers.
+
+    The option lives in an ``OptionsFlowWithReload``, so it takes effect the
+    moment it is saved.  Removing the registry entries there would take the
+    entity ids, names and areas the user gave them with it, and every
+    automation, script and dashboard card that names one would break on a
+    toggle - silently, and for good.
+    """
     await _setup_with_nodes(
         hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
     )
-    assert entity_registry.async_get(REMOTE_TRACKER) is not None
+    entity_registry.async_update_entity(REMOTE_TRACKER, new_entity_id=RENAMED_TRACKER)
+    assert entity_registry.async_get(RENAMED_TRACKER) is not None
 
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_TRACK_POSITION: False}
@@ -270,7 +284,77 @@ async def test_disabling_the_option_removes_trackers(
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entity_registry.async_get(REMOTE_TRACKER) is None
+    entry = entity_registry.async_get(RENAMED_TRACKER)
+    assert entry is not None
+    # Nothing backs it while tracking is off, so it reads as restored.
+    assert (state := hass.states.get(RENAMED_TRACKER))
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["restored"] is True
+
+    # Ticking it again brings that same entity back, not a new one beside it.
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_TRACK_POSITION: True}
+    )
+    with patch(
+        "homeassistant.components.meshtastic.PLATFORMS", [Platform.DEVICE_TRACKER]
+    ):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    await inject_node_info(
+        hass, mock_pubsub, mock_meshtastic_client, node_fixtures[REMOTE_ID]
+    )
+
+    assert entity_registry.async_get(RENAMED_TRACKER) is entry
+    assert (state := hass.states.get(RENAMED_TRACKER))
+    assert state.state == STATE_NOT_HOME
+    assert hass.states.get(REMOTE_TRACKER) is None
+
+
+@pytest.mark.usefixtures("mock_meshtastic_client")
+async def test_a_node_database_push_does_not_sharpen_a_blurred_position(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pubsub: FakePubSub,
+    mock_meshtastic_client: MagicMock,
+    node_fixtures: dict[str, Any],
+    packet_fixtures: dict[str, dict[str, Any]],
+) -> None:
+    """Test that the gateway's own record does not drop the blur radius.
+
+    Every connect and every ``meshtastic.refresh_nodes`` replays the node
+    database, and the record the firmware keeps carries no ``precisionBits``:
+    ``ConvertToNodeInfo`` copies the coordinates, the altitude, the location
+    source and the time, and nothing else.  Applying it over the position the
+    node broadcast would turn a deliberate 728 m cell into a full precision
+    fix, and flip it back on the node's next broadcast.
+    """
+    with patch(
+        "homeassistant.components.meshtastic.PLATFORMS", [Platform.DEVICE_TRACKER]
+    ):
+        await setup_integration(hass, mock_config_entry)
+    # The node introduces itself, then broadcasts where it is.
+    known = {k: v for k, v in node_fixtures[REMOTE_ID].items() if k != "position"}
+    await inject_node_info(hass, mock_pubsub, mock_meshtastic_client, known)
+    await inject_packet(
+        hass, mock_pubsub, mock_meshtastic_client, packet_fixtures["packet_position"]
+    )
+
+    assert (state := hass.states.get(REMOTE_TRACKER))
+    assert state.attributes["gps_accuracy"] == 364
+    assert state.attributes["precision_bits"] == 16
+
+    # The gateway pushes its record of that very fix: same time, no blur.
+    record = dict(node_fixtures[REMOTE_ID])
+    record["position"] = {
+        key: value
+        for key, value in record["position"].items()
+        if key != "precisionBits"
+    }
+    await inject_node_info(hass, mock_pubsub, mock_meshtastic_client, record)
+
+    assert (state := hass.states.get(REMOTE_TRACKER))
+    assert state.attributes["gps_accuracy"] == 364
+    assert state.attributes["precision_bits"] == 16
 
 
 @pytest.mark.usefixtures("mock_meshtastic_client")
@@ -339,6 +423,10 @@ async def test_gateway_without_position_is_unknown(
     node_fixtures: dict[str, Any],
 ) -> None:
     """Test that the gateway tracker only appears once it knows where it is."""
+    # The node streams its own NodeInfo during the handshake; make that one a
+    # node that has never had a fix, so there is nothing to place yet.
+    gateway = dict(node_fixtures[GATEWAY_ID])
+    node_fixtures[GATEWAY_ID].pop("position", None)
     with patch(
         "homeassistant.components.meshtastic.PLATFORMS", [Platform.DEVICE_TRACKER]
     ):
@@ -346,9 +434,7 @@ async def test_gateway_without_position_is_unknown(
 
     assert hass.states.get(GATEWAY_TRACKER) is None
 
-    await inject_node_info(
-        hass, mock_pubsub, mock_meshtastic_client, dict(node_fixtures[GATEWAY_ID])
-    )
+    await inject_node_info(hass, mock_pubsub, mock_meshtastic_client, gateway)
 
     assert (state := hass.states.get(GATEWAY_TRACKER))
     assert state.state != STATE_UNKNOWN

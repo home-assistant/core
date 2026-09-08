@@ -137,9 +137,9 @@ class MeshtasticRestartButton(MeshtasticEntity, ButtonEntity):
 
         await async_send_admin(self.coordinator, _send)
         # The acknowledgement means the reboot is scheduled, not done: the node
-        # keeps talking for a few more seconds and then drops off without
-        # closing the socket.
-        client.async_note_reboot_expected()
+        # keeps talking for the delay it was given and then drops off without
+        # closing the socket, so the grace window has to cover that wait too.
+        client.async_note_reboot_expected(REBOOT_DELAY_SECONDS)
 
 
 class MeshtasticNodeRequestButton(MeshtasticNodeEntity, ButtonEntity):

@@ -6,10 +6,10 @@ the library's dictionaries into them before anything else in the integration
 sees them.
 
 The dataclasses use the default (field based) ``__eq__`` so that the
-coordinator can run with ``always_update=False`` and only notify listeners when
-something actually changed.  Timestamps are timezone-aware ``datetime`` objects
-for entity use; :meth:`as_dict` renders them as ISO-8601 strings for the node
-store and for diagnostics.
+coordinator can compare a new record against the one it holds and publish
+nothing when they are the same.  Timestamps are timezone-aware ``datetime``
+objects for entity use; :meth:`as_dict` renders them as ISO-8601 strings for
+the node store and for diagnostics.
 """
 
 from dataclasses import dataclass, field, replace
@@ -451,6 +451,32 @@ class MeshtasticNode:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
+class TracerouteRoute:
+    """Both legs of one traceroute answer, as the firmware reported them.
+
+    The node numbers are the relays only; the two endpoints are known from the
+    request that asked for the route.  The SNRs are the firmware's own
+    quarter-decibel integers, one per hop, with ``-128`` for a hop it could not
+    measure.  A direct neighbour answers with no relays and one SNR, so an
+    empty ``route`` is a complete answer rather than a missing one.
+    """
+
+    route: tuple[int, ...] = ()
+    snr_towards: tuple[int, ...] = ()
+    route_back: tuple[int, ...] = ()
+    snr_back: tuple[int, ...] = ()
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serialisable representation."""
+        return {
+            "route": list(self.route),
+            "snr_towards": list(self.snr_towards),
+            "route_back": list(self.route_back),
+            "snr_back": list(self.snr_back),
+        }
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
 class MeshtasticPacket:
     """A decoded packet, sanitised of protobufs and raw payload bytes."""
 
@@ -476,6 +502,7 @@ class MeshtasticPacket:
     user: NodeUser | None = None
     position: Position | None = None
     telemetry: TelemetrySample | None = None
+    traceroute: TracerouteRoute | None = None
     received_at: datetime | None = None
     backlog: bool = False
 
@@ -516,6 +543,9 @@ class MeshtasticPacket:
             "text": self.text,
             "position": None if self.position is None else self.position.as_dict(),
             "telemetry": None if self.telemetry is None else self.telemetry.as_dict(),
+            "traceroute": (
+                None if self.traceroute is None else self.traceroute.as_dict()
+            ),
             "received_at": _iso(self.received_at),
             "backlog": self.backlog,
         }

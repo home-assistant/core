@@ -11,6 +11,8 @@ shared snapshot to write one has to be refused.
 """
 
 import asyncio
+from datetime import timedelta
+import logging
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -19,6 +21,7 @@ from meshtastic.protobuf import admin_pb2, config_pb2, mesh_pb2
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.meshtastic.client import MeshtasticConnectionError
 from homeassistant.components.meshtastic.config_entity import (
     LIVE_FIELDS,
     REBOOTING_FIELDS,
@@ -26,12 +29,14 @@ from homeassistant.components.meshtastic.config_entity import (
     SECTION_LORA,
     async_get_config_snapshot,
 )
+from homeassistant.components.meshtastic.const import DOMAIN, RECONNECT_MAX_DELAY
 from homeassistant.components.meshtastic.switch import GATEWAY_SWITCHES, NODE_SWITCHES
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
@@ -43,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import (
     GATEWAY_ID,
@@ -56,13 +62,16 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # Six minutes after the newest timestamp in ``nodes.json``.
 FROZEN_TIME = "2025-09-08 03:06:00+00:00"
 
 #: The packet id the library assigns to the admin message a write produces.
 ADMIN_PACKET_ID = 222333444
+#: A packet id belonging to somebody else's send, to prove the write does not
+#: correlate on the library's shared counter.
+OTHER_PACKET_ID = 555666777
 
 TX_ENABLED = "switch.ha_gateway_transmitter_enabled"
 IGNORE_MQTT = "switch.ha_gateway_ignore_mqtt_traffic"
@@ -70,6 +79,15 @@ CONFIG_OK_TO_MQTT = "switch.ha_gateway_allow_configuration_over_mqtt"
 LED_HEARTBEAT = "switch.ha_gateway_led_heartbeat_disabled"
 REMOTE_FAVORITE = "switch.remote_one_favorite"
 REMOTE_IGNORED = "switch.remote_one_ignored"
+
+#: One entity from each of the other three platforms that read the same
+#: configuration snapshot the switches do.
+HOP_LIMIT = "number.ha_gateway_hop_limit"
+BUZZER_MODE = "select.ha_gateway_buzzer_mode"
+TZDEF = "text.ha_gateway_time_zone"
+
+#: Every platform that asks for the shared configuration snapshot.
+CONFIG_PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SWITCH, Platform.TEXT]
 
 pytestmark = pytest.mark.freeze_time(FROZEN_TIME)
 
@@ -96,8 +114,8 @@ def admin_writes(mock_meshtastic_client: MagicMock) -> list[admin_pb2.AdminMessa
 
     ``meshtastic.node.Node.writeConfig()`` copies the whole section out of the
     configuration the node reported, sends it and returns nothing, leaving the
-    packet id on the interface.  The stand-in does the same, so the recorded
-    message is exactly what would go on the wire.
+    id of the packet it framed on the interface.  The stand-in does the same,
+    so the recorded message is exactly what would go on the wire.
     """
     local_node = mock_meshtastic_client.localNode
     sent: list[admin_pb2.AdminMessage] = []
@@ -108,7 +126,9 @@ def admin_writes(mock_meshtastic_client: MagicMock) -> list[admin_pb2.AdminMessa
             getattr(local_node.localConfig, name)
         )
         sent.append(message)
-        mock_meshtastic_client.currentPacketId = ADMIN_PACKET_ID
+        # ``MeshtasticInterface`` records the id of every packet it frames,
+        # which is where the write reads back the id of the one it just sent.
+        mock_meshtastic_client.last_packet_id = ADMIN_PACKET_ID
 
     local_node.writeConfig = MagicMock(side_effect=_write_config)
     for method in ("setFavorite", "removeFavorite", "setIgnored", "removeIgnored"):
@@ -117,7 +137,7 @@ def admin_writes(mock_meshtastic_client: MagicMock) -> list[admin_pb2.AdminMessa
             method,
             MagicMock(return_value=mesh_pb2.MeshPacket(id=ADMIN_PACKET_ID)),
         )
-    mock_meshtastic_client.currentPacketId = 0
+    mock_meshtastic_client.last_packet_id = 0
     return sent
 
 
@@ -167,6 +187,68 @@ async def start_call(
     for _ in range(10):
         await asyncio.sleep(0)
     return task
+
+
+async def settle(hass: HomeAssistant) -> None:
+    """Let the client's background tasks make progress.
+
+    The reconnect supervisor is a background task, which
+    ``async_block_till_done`` deliberately does not wait for.
+    """
+    for _ in range(5):
+        await asyncio.sleep(0)
+    await hass.async_block_till_done()
+
+
+async def reconnect(hass: HomeAssistant) -> None:
+    """Wait out the reconnect backoff, whatever step it has reached."""
+    await settle(hass)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_MAX_DELAY + 1)
+    )
+    await settle(hass)
+
+
+def errors(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
+    """Return the error records, minus the coordinator's own link failure.
+
+    ``async_set_update_error`` logs a lost link once, at error level.  That is
+    the update coordinator reporting the very thing a test arranges, not the
+    configuration read failing.
+    """
+    return [
+        record
+        for record in caplog.records
+        if record.levelno >= logging.ERROR
+        and not record.getMessage().startswith("Error requesting meshtastic data")
+    ]
+
+
+class LocalNodeThatLosesTheLink:
+    """A ``localNode`` whose configuration is unreadable after the handshake.
+
+    ``build_gateway_info`` reads it once while connecting; every read after
+    that raises the ``OSError`` a socket that has gone away produces, which is
+    what the platforms run into when the node drops the link in the window
+    between the connectivity check and the forwarding of the platforms.
+    """
+
+    def __init__(self, local_node: SimpleNamespace) -> None:
+        """Wrap the node stand-in the fixtures built."""
+        self._local_node = local_node
+        self.reads = 0
+
+    def __getattr__(self, name: str) -> Any:
+        """Answer everything else as the wrapped node would."""
+        return getattr(self._local_node, name)
+
+    @property
+    def localConfig(self) -> Any:
+        """Return the downloaded configuration, until the link is gone."""
+        self.reads += 1
+        if self.reads > 1:
+            raise OSError("Connection reset by peer")
+        return self._local_node.localConfig
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -283,6 +365,52 @@ async def test_a_device_switch_writes_only_the_device_section(
         led_heartbeat_disabled=True,
     )
     assert admin_writes[0].set_config.WhichOneof("payload_variant") == "device"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "admin_writes")
+async def test_a_write_correlates_on_the_packet_it_sent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that another sender's packet id is never taken for this write's.
+
+    ``Node.writeConfig()`` sends the ``AdminMessage`` and returns nothing, so
+    the id the node's answer will quote has to come from the interface.
+    ``MeshInterface.currentPacketId`` is not that id: ``_generatePacketId()``
+    advances the same counter for every caller on every thread, so a write that
+    correlates on it waits out the whole ``ADMIN_LOCAL_SET`` deadline and is
+    reported as ``timeout_no_ack`` even though the node applied it.
+    ``MeshtasticInterface`` records the packet it actually framed instead.
+    """
+    await setup_switch_platform(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+    # Somebody else's send moves the library's shared counter on between the
+    # write and the read: the heartbeat timer, another entity, the CLI.
+    mock_meshtastic_client.currentPacketId = OTHER_PACKET_ID
+
+    task = await start_call(hass, SERVICE_TURN_ON, CONFIG_OK_TO_MQTT)
+    assert mock_meshtastic_client.currentPacketId == OTHER_PACKET_ID
+    # The node acknowledges the packet the write framed.
+    await inject_packet(
+        hass, mock_pubsub, mock_meshtastic_client, routing_packet(ADMIN_PACKET_ID)
+    )
+    # The other sender's packet is answered too, and its answer is a failure.
+    # It belongs to a packet this entity never sent, so it is an orphan and the
+    # write that has already succeeded must not notice it.
+    await inject_packet(
+        hass,
+        mock_pubsub,
+        mock_meshtastic_client,
+        routing_packet(OTHER_PACKET_ID, "NO_ROUTE"),
+    )
+    await task
+
+    assert (state := hass.states.get(CONFIG_OK_TO_MQTT))
+    assert state.state == STATE_ON
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -648,3 +776,105 @@ async def test_switches_go_unavailable_with_the_link(
     assert state.state == STATE_UNAVAILABLE
     assert (state := hass.states.get(REMOTE_FAVORITE))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_a_link_lost_during_setup_still_creates_every_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a node that drops the link while the platforms are being set up.
+
+    Four platforms share one configuration snapshot and the first of them to
+    set up is the one that reads it.  A read that fails there must not fail
+    that platform - and must not leave the other three registering entities
+    against a snapshot that will never be filled either.  Every configuration
+    entity is created, with no value, and the next reconnect fills them in.
+    """
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.meshtastic")
+    mock_meshtastic_client.localNode = LocalNodeThatLosesTheLink(
+        mock_meshtastic_client.localNode
+    )
+
+    with patch("homeassistant.components.meshtastic.PLATFORMS", CONFIG_PLATFORMS):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for entity_id in (TX_ENABLED, IGNORE_MQTT, HOP_LIMIT, BUZZER_MODE, TZDEF):
+        assert (state := hass.states.get(entity_id)), entity_id
+        assert state.state == STATE_UNKNOWN, entity_id
+    assert "Could not read the node configuration" in caplog.text
+    assert not errors(caplog)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_a_re_read_that_loses_the_link_keeps_the_last_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a re-read that runs into a link that went away again.
+
+    The snapshot is refetched on every reconnect, from a detached task that
+    has nowhere to report a failure to.  A link that flaps once more while
+    that read is in flight has to leave the values that are on screen alone
+    and say so in the debug log, not raise out of the task.
+    """
+    await setup_switch_platform(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+    assert (state := hass.states.get(TX_ENABLED))
+    assert state.state == STATE_ON
+
+    client = mock_config_entry.runtime_data.client
+    caplog.clear()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.meshtastic")
+    with patch.object(
+        client,
+        "async_request",
+        side_effect=MeshtasticConnectionError(
+            translation_domain=DOMAIN, translation_key="not_connected"
+        ),
+    ) as request:
+        await inject_connection_lost(hass, mock_pubsub, mock_meshtastic_client)
+        await reconnect(hass)
+
+    assert request.await_count == 1
+    assert (state := hass.states.get(TX_ENABLED))
+    assert state.state == STATE_ON
+    assert "Could not read the node configuration" in caplog.text
+    assert not errors(caplog)
+
+
+async def test_the_configuration_snapshot_belongs_to_the_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meshtastic_client: MagicMock,
+    mock_pubsub: FakePubSub,
+    node_fixtures: dict[str, Any],
+) -> None:
+    """Test that the snapshot the platforms share is the entry's runtime data.
+
+    It holds the coordinator, the client and a lock, so its lifetime has to be
+    the entry's: ``runtime_data`` is dropped when the entry unloads, which a
+    module-level table keyed by entry id would not be.
+    """
+    await setup_switch_platform(
+        hass, mock_config_entry, mock_pubsub, mock_meshtastic_client, node_fixtures
+    )
+
+    config_snapshot = mock_config_entry.runtime_data.config_snapshot
+    assert config_snapshot is not None
+    # Every platform gets the same one.
+    assert await async_get_config_snapshot(mock_config_entry) is config_snapshot
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(AttributeError):
+        _ = mock_config_entry.runtime_data

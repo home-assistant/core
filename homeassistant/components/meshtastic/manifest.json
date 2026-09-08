@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/meshtastic",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "loggers": ["meshtastic", "pubsub"],
+  "loggers": ["meshtastic.tcp_interface"],
   "quality_scale": "bronze",
   "requirements": ["meshtastic==2.7.11"]
 }
