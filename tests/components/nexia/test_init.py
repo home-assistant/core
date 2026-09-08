@@ -1,12 +1,13 @@
 """The init tests for the nexia platform."""
 
-from unittest.mock import NonCallableMock, patch
+from unittest.mock import AsyncMock, NonCallableMock, patch
 
 import aiohttp
 from nexia.home import NexiaHome
 import pytest
 
 from homeassistant.components.nexia import _preregister_devices
+from homeassistant.components.nexia.config_flow import NexiaConfigFlow
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -68,7 +69,7 @@ async def test_device_remove_devices(
 
 
 async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
-    """Test migrating a 1.1 config entry to 1.2."""
+    """Test migrating a 1.1 config entry."""
     with patch("homeassistant.components.nexia.async_setup_entry", return_value=True):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -79,8 +80,9 @@ async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.version == 1
-        assert entry.minor_version == 2
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.version == NexiaConfigFlow.VERSION
+        assert entry.minor_version == NexiaConfigFlow.MINOR_VERSION
         assert entry.unique_id == "123456"
 
 
@@ -90,7 +92,10 @@ async def test_migrate_entity_identifiers(
 ) -> None:
     """Test migrating config entity identifiers to string."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
+        domain=DOMAIN,
+        data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -108,7 +113,6 @@ async def test_migrate_entity_identifiers(
     )
     modified_before = str_entry.modified_at
     assert await hass.config_entries.async_setup(entry.entry_id) is True
-    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
     migrated_entry = entity_registry.async_get(int_entry.entity_id)
@@ -128,7 +132,10 @@ async def test_migrate_device_identifiers(
 ) -> None:
     """Test migrating config device identifiers to string."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
+        domain=DOMAIN,
+        data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -144,7 +151,6 @@ async def test_migrate_device_identifiers(
     )
     modified_before = str_device.modified_at
     assert await hass.config_entries.async_setup(entry.entry_id) is True
-    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
     migrated_device = device_registry.async_get(int_device.id)
@@ -161,7 +167,9 @@ async def test_migrate_device_identifiers(
     assert unchanged_device.modified_at == modified_before
 
 
+@patch("homeassistant.components.nexia.async_migrate_entry")
 async def test_string_identifiers(
+    mock_migrate_entry: AsyncMock,
     hass: HomeAssistant,
     patch_nexia_home: NexiaHome,
     entity_registry: er.EntityRegistry,
@@ -169,6 +177,9 @@ async def test_string_identifiers(
 ) -> None:
     """Test the identifiers are strings."""
     entry = await setup_integration(hass, patch_nexia_home)
+
+    # verify migration was not called
+    mock_migrate_entry.assert_not_awaited()
 
     entities = entity_registry.entities
     entity_entries = entities.get_entries_for_config_entry_id(entry.entry_id)
@@ -192,7 +203,7 @@ async def test_device_preregistration(
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
-    _preregister_devices(device_registry, entry, mock_nexia_home)
+    _preregister_devices(hass, entry, mock_nexia_home)
 
     thermostat_ids = mock_nexia_home.get_thermostat_ids()
     assert len(thermostat_ids) > 0

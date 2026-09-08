@@ -63,10 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
-    device_registry = dr.async_get(hass)
-    _migrate_device_identifiers(device_registry, entry.entry_id)
-    _preregister_devices(device_registry, entry, nexia_home)
+    _preregister_devices(hass, entry, nexia_home)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     if nexia_home.any_room_iq_monitors():
@@ -76,37 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
     return True
 
 
-@callback
-def _migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-    """Migrate int unique_ids to strings."""
-    if isinstance(entity_entry.unique_id, str):
-        return None
-    return {"new_unique_id": str(entity_entry.unique_id)}
-
-
-def _migrate_device_identifiers(
-    device_registry: dr.DeviceRegistry, entry_id: str
-) -> None:
-    """Migrate int device identifiers to strings."""
-    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
-        new_ids: set[tuple[str, str]] = set()
-        needs_update = False
-        for domain, identifier in device_entry.identifiers:
-            if domain == DOMAIN and not isinstance(identifier, str):
-                new_ids.add((domain, str(identifier)))
-                needs_update = True
-            else:
-                new_ids.add((domain, identifier))
-        if needs_update:
-            device_registry.async_update_device(
-                device_entry.id, new_identifiers=new_ids
-            )
-
-
 def _preregister_devices(
-    device_registry: dr.DeviceRegistry, entry: NexiaConfigEntry, nexia_home: NexiaHome
+    hass: HomeAssistant, entry: NexiaConfigEntry, nexia_home: NexiaHome
 ) -> None:
     """Register devices before forwarding platforms so sub-devices resolve via_device_id regardless of setup order."""
+    device_registry = dr.async_get(hass)
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         device_registry.async_get_or_create(
@@ -154,13 +125,45 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> b
     _LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
-        # 1 -> 2: Unique ID from integer to string
+        # 1.1 -> 1.2: Unique ID from integer to string
         if entry.minor_version == 1:
-            minor_version = 2
             hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+                entry, unique_id=str(entry.unique_id)
             )
+
+        # 1.2 -> 2.1: Make nexia entity and device unique ids strings
+        await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
+        _migrate_device_identifiers(dr.async_get(hass), entry.entry_id)
+
+        hass.config_entries.async_update_entry(entry, version=2, minor_version=1)
 
     _LOGGER.debug("Migration successful")
 
     return True
+
+
+@callback
+def _migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+    """Migrate int entity unique_ids to strings."""
+    if isinstance(entity_entry.unique_id, str):
+        return None
+    return {"new_unique_id": str(entity_entry.unique_id)}
+
+
+def _migrate_device_identifiers(
+    device_registry: dr.DeviceRegistry, entry_id: str
+) -> None:
+    """Migrate int device identifiers to strings."""
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
+        new_ids: set[tuple[str, str]] = set()
+        needs_update = False
+        for domain, identifier in device_entry.identifiers:
+            if domain == DOMAIN and not isinstance(identifier, str):
+                new_ids.add((domain, str(identifier)))
+                needs_update = True
+            else:
+                new_ids.add((domain, identifier))
+        if needs_update:
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers=new_ids
+            )
