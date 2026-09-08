@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass, field as dc_field, replace
+from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
 from probatio import UNSUPPORTED, to_openapi
@@ -41,8 +41,6 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
 LLM_API_ASSIST = "assist"
-
-_INTENT_TARGET_SLOTS = {"area", "floor", "name"}
 
 DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
@@ -205,27 +203,6 @@ class APIInstance:
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-        intent_tool = tool
-        while isinstance(intent_tool, NamespacedTool):
-            intent_tool = intent_tool.tool
-
-        if isinstance(intent_tool, IntentTool) and any(
-            key in _INTENT_TARGET_SLOTS and isinstance(value, str) and value == ""
-            for key, value in tool_input.tool_args.items()
-        ):
-            tool_input = replace(
-                tool_input,
-                tool_args={
-                    key: value
-                    for key, value in tool_input.tool_args.items()
-                    if not (
-                        key in _INTENT_TARGET_SLOTS
-                        and isinstance(value, str)
-                        and value == ""
-                    )
-                },
-            )
-
         return await tool.async_call(self.api.hass, tool_input, self.llm_context)
 
 
@@ -279,7 +256,11 @@ class IntentTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Handle the intent."""
-        slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
+        slots = {
+            key: {"value": val}
+            for key, val in tool_input.tool_args.items()
+            if val is not None and not (isinstance(val, str) and not val.strip())
+        }
 
         if self.extra_slots and llm_context.device_id:
             device_reg = dr.async_get(hass)

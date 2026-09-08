@@ -64,8 +64,13 @@ async def test_set_temperature_omits_empty_optional_targets(
     with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
         response = await api.async_call_tool(
             llm.ToolInput(
-                "HassClimateSetTemperature",
-                {"area": "", "floor": "", "name": "", "temperature": 25},
+                "climate__HassClimateSetTemperature",
+                {
+                    "area": "",
+                    "floor": "",
+                    "name": "Test climate",
+                    "temperature": 25,
+                },
             )
         )
 

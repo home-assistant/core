@@ -60,11 +60,11 @@ async def test_turn_on_omits_empty_unused_targets(hass: HomeAssistant) -> None:
 
     await api.async_call_tool(
         llm.ToolInput(
-            "HassTurnOn",
+            "intent__HassTurnOn",
             {
                 "area": "",
                 "domain": "light",
-                "floor": "",
+                "floor": " ",
                 "name": "Test Light",
             },
         )
@@ -75,21 +75,16 @@ async def test_turn_on_omits_empty_unused_targets(hass: HomeAssistant) -> None:
     assert calls[0].data == {"entity_id": ["light.test_light"]}
 
 
-@pytest.mark.parametrize(
-    "tool_args",
-    [
-        pytest.param({"area": "", "floor": "", "name": ""}, id="all-empty"),
-        pytest.param({"area": "", "floor": "", "name": " "}, id="whitespace-name"),
-    ],
-)
-async def test_turn_on_rejects_invalid_targets(
-    hass: HomeAssistant, tool_args: dict[str, str]
-) -> None:
-    """Test HassTurnOn still rejects missing and whitespace-only targets."""
+async def test_turn_on_rejects_all_blank_targets(hass: HomeAssistant) -> None:
+    """Test HassTurnOn still requires a target after omitting blank values."""
     api = await llm.async_get_api(hass, "assist", _llm_context())
 
     with pytest.raises(intent.IntentError):
-        await api.async_call_tool(llm.ToolInput("HassTurnOn", tool_args))
+        await api.async_call_tool(
+            llm.ToolInput(
+                "intent__HassTurnOn", {"area": "", "floor": " ", "name": None}
+            )
+        )
 
 
 async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
