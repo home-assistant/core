@@ -1629,50 +1629,24 @@ async def test_energy_subentry_pairing_requires_key_approval(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_lookup_failure_recovers(hass: HomeAssistant) -> None:
-    """A malformed authorized-clients read re-shows the site form; retrying then pairs."""
+async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) -> None:
+    """A malformed authorized-clients read aborts rather than registering."""
     entry = await _setup_account_no_subentry(hass)
 
-    client = _mock_powerwall_client()
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(
-                side_effect=[
-                    InvalidResponse(),
-                    _own_key_clients(AuthorizedClientState.VERIFIED),
-                ]
-            ),
+            new=AsyncMock(side_effect=InvalidResponse),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
             new=AsyncMock(),
         ) as mock_add,
-        patch(
-            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
-            return_value=client,
-        ),
-        patch.object(hass.config_entries, "async_schedule_reload"),
     ):
         result = await _start_add_flow_select_site(hass, entry)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
 
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_SITE_ID: str(SITE_ID)}
-        )
-        assert result["step_id"] == "credentials"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
-    assert subentry.data[CONF_HOST] == HOST
-    # A verified key never re-registers, so the failed read never reached add.
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
     mock_add.assert_not_awaited()
 
 
@@ -2114,101 +2088,46 @@ async def test_timed_out_key_reregisters_for_a_fresh_window(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_unrecognized_state_recovers(hass: HomeAssistant) -> None:
-    """An unrecognized authorized-client state re-shows the site form; retrying then pairs."""
+async def test_unrecognized_state_aborts_pairing(hass: HomeAssistant) -> None:
+    """An unrecognized authorized-client state aborts rather than re-registering."""
     entry = await _setup_account_no_subentry(hass)
 
-    client = _mock_powerwall_client()
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(
-                side_effect=[
-                    _own_key_clients("gremlin"),
-                    _own_key_clients(AuthorizedClientState.VERIFIED),
-                ]
-            ),
+            new=AsyncMock(return_value=_own_key_clients("gremlin")),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
             new=AsyncMock(),
         ) as mock_add,
-        patch(
-            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
-            return_value=client,
-        ),
-        patch.object(hass.config_entries, "async_schedule_reload"),
     ):
         result = await _start_add_flow_select_site(hass, entry)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
 
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_SITE_ID: str(SITE_ID)}
-        )
-        assert result["step_id"] == "credentials"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    # A verified key never re-registers, so neither attempt reached add.
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
     mock_add.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_add_authorized_client_failure_recovers(hass: HomeAssistant) -> None:
-    """A failure registering the key re-shows the site form; retrying registers and pairs."""
+async def test_add_authorized_client_failure_aborts(hass: HomeAssistant) -> None:
+    """A failure while registering the key aborts the flow."""
     entry = await _setup_account_no_subentry(hass)
 
-    client = _mock_powerwall_client()
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(
-                side_effect=[
-                    _empty_clients(),
-                    _empty_clients(),
-                    _own_key_clients(AuthorizedClientState.VERIFIED),
-                ]
-            ),
+            new=AsyncMock(return_value=_empty_clients()),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(side_effect=[ClientError, None]),
-        ) as mock_add,
-        patch(
-            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
-            return_value=client,
+            new=AsyncMock(side_effect=ClientError),
         ),
-        patch.object(hass.config_entries, "async_schedule_reload"),
     ):
         result = await _start_add_flow_select_site(hass, entry)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
 
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_SITE_ID: str(SITE_ID)}
-        )
-        assert result["step_id"] == "pair"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-        assert result["step_id"] == "credentials"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    # The first register failed and the retry succeeded: two attempts, no more.
-    assert mock_add.await_count == 2
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
@@ -2252,68 +2171,36 @@ async def test_pair_step_second_lookup_errors(
 
 @pytest.mark.usefixtures("mock_rsa_key")
 @pytest.mark.parametrize(
-    ("patch_target", "error", "recovered"),
+    ("patch_target", "error"),
     [
         pytest.param(
             "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
             OSError,
-            None,
             id="key_fetch_oserror",
         ),
         pytest.param(
             "homeassistant.components.teslemetry.config_flow.Path.read_bytes",
             ValueError,
-            _TEST_RSA_KEY_PEM,
             id="key_read_valueerror",
         ),
         # An encrypted existing key file surfaces as PrivateKeyError("encrypted").
         pytest.param(
             "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
             PrivateKeyError("encrypted", "Private key file is encrypted"),
-            None,
             id="key_fetch_private_key_error",
         ),
     ],
 )
-async def test_rsa_key_load_failure_recovers(
+async def test_rsa_key_load_failure_aborts(
     hass: HomeAssistant,
     patch_target: str,
     error: type[Exception] | Exception,
-    recovered: bytes | None,
 ) -> None:
-    """A failure loading the RSA key re-shows the site form; retrying prepares and pairs."""
+    """A failure loading the integration's RSA key aborts site preparation."""
     entry = await _setup_account_no_subentry(hass)
 
-    client = _mock_powerwall_client()
-    with (
-        patch(patch_target, side_effect=[error, recovered]),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(
-                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
-            ),
-        ),
-        patch(
-            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
-            return_value=client,
-        ),
-        patch.object(hass.config_entries, "async_schedule_reload"),
-    ):
+    with patch(patch_target, side_effect=error):
         result = await _start_add_flow_select_site(hass, entry)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
 
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_SITE_ID: str(SITE_ID)}
-        )
-        assert result["step_id"] == "credentials"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
-    assert subentry.data[CONF_HOST] == HOST
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
