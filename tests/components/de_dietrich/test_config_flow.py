@@ -168,6 +168,25 @@ async def test_user_step_sensors_read_fails(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_step_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test unexpected errors are logged and shown as unknown."""
+    with patch(
+        "homeassistant.components.de_dietrich.config_flow._async_probe",
+        side_effect=Exception("boom"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
+
+
 @pytest.mark.parametrize(
     ("host", "system"),
     [

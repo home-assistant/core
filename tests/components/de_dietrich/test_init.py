@@ -13,6 +13,7 @@ from homeassistant.components.de_dietrich.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_ENTRY_ID, MOCK_TITLE, MOCK_USER_INPUT, seed_boiler
@@ -38,6 +39,26 @@ async def test_setup_retry_when_identity_unavailable(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_error_when_link_settings_conflict(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup reports incompatible shared Modbus link settings."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=HomeAssistantError("different framing"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.reason
+        == "The boiler cannot be set up with these link settings: different framing"
+    )
 
 
 async def test_base_layout_device_info(

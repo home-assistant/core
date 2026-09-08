@@ -5,6 +5,7 @@ from modbus_connection import ModbusTcpParams
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import CONF_SYSTEM, CONF_UNIT_ID, DOMAIN, MESSAGE_SPACING, MODBUS_FRAMER
@@ -20,16 +21,23 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: DeDietrichConfigEntry) -> bool:
     """Set up De Dietrich from a config entry."""
-    unit = async_get_unit(
-        hass,
-        entry,
-        ModbusTcpParams(
-            host=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            framer=MODBUS_FRAMER,
-        ),
-        entry.data[CONF_UNIT_ID],
-    )
+    try:
+        unit = async_get_unit(
+            hass,
+            entry,
+            ModbusTcpParams(
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+                framer=MODBUS_FRAMER,
+            ),
+            entry.data[CONF_UNIT_ID],
+        )
+    except HomeAssistantError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="link_settings_in_use",
+            translation_placeholders={"error": str(err)},
+        ) from err
     unit.set_message_spacing(MESSAGE_SPACING)
 
     device = build_device(unit, entry.data[CONF_SYSTEM])

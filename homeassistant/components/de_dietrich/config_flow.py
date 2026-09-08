@@ -112,6 +112,9 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
             except (ModbusError, HomeAssistantError) as err:
                 errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(err)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
