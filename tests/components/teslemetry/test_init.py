@@ -1,9 +1,11 @@
 """Test the Teslemetry init."""
 
+import asyncio
 from copy import deepcopy
 import logging
 import time
 from types import MappingProxyType
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
@@ -154,6 +156,27 @@ async def test_vehicle_refresh_error(
     mock_vehicle_data.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
+
+
+async def test_vehicle_first_refresh_timeout(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test a slow first vehicle refresh retries instead of blocking setup."""
+    never = asyncio.Event()
+
+    async def _hang(*args: object, **kwargs: object) -> dict[str, Any]:
+        await never.wait()
+        return VEHICLE_DATA_ALT
+
+    mock_vehicle_data.side_effect = _hang
+
+    with patch("homeassistant.components.teslemetry.VEHICLE_FIRST_REFRESH_TIMEOUT", 0):
+        entry = await setup_platform(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    never.set()
 
 
 # Test Energy Live Coordinator

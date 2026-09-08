@@ -1247,6 +1247,9 @@
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"
     },
+    "vehicle_first_refresh_timeout": {
+      "message": "Timed out waiting for vehicle {vin} to respond"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
