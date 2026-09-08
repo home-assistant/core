@@ -70,9 +70,7 @@ rules:
   icon-translations:
     status: exempt
     comment: There are no entities that require icons.
-  reconfiguration-flow:
-    status: exempt
-    comment: The integration does not have anything to reconfigure that is not covered by the reauthentication flow.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.
