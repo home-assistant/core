@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_all_appliances[700series_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900402068224000950000000',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'HYGENIC600',
+    'model_id': None,
+    'name': '700series vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '22400095',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[ayran_fridge]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -26,6 +57,37 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '20220412',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[cybele_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900402423524000511139298',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'ER81UW3SW',
+    'model_id': None,
+    'name': 'Cybele vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '52400051',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -185,6 +247,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_all_appliances[gordias_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900402278332000201139298',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'ULTIMATE700',
+    'model_id': None,
+    'name': 'Gordias vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '33200020',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[hood]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -243,6 +336,37 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '99907833',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[purei9_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900277470043000491100106',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'i92',
+    'model_id': None,
+    'name': 'Pure i9 vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '04300049',
     'sw_version': None,
     'via_device_id': None,
   })

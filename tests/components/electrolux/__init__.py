@@ -1,6 +1,7 @@
 """Tests for the electrolux integration."""
 
 from functools import cache
+import json
 from typing import Any
 
 from electrolux_group_developer_sdk.client.dto.appliance import Appliance
@@ -24,6 +25,10 @@ APPLIANCE_FIXTURES = [
     "electrolux_dehumidifier",
     "electrolux_ac",
     "electrolux_dam_ac",
+    "purei9_vacuum",
+    "700series_vacuum",
+    "gordias_vacuum",
+    "cybele_vacuum",
 ]
 
 
@@ -69,6 +74,18 @@ def load_appliance_state(appliance_name: str) -> ApplianceState:
     """Load an ApplianceState object from a fixture for the given appliance name."""
     json_string = load_fixture(f"appliance_states/{appliance_name}.json", DOMAIN)
     return ApplianceState.model_validate_json(json_string)
+
+
+def load_interactive_maps(appliance_name: str) -> list[dict[str, Any]]:
+    """Load interactive maps object from a fixture for the given appliance name."""
+    json_string = load_fixture(f"maps/interactive_maps/{appliance_name}.json", DOMAIN)
+    return json.loads(json_string)
+
+
+def load_memory_maps(appliance_name: str) -> list[dict[str, Any]]:
+    """Load memory maps object from a fixture for the given appliance name."""
+    json_string = load_fixture(f"maps/memory_maps/{appliance_name}.json", DOMAIN)
+    return json.loads(json_string)
 
 
 def merge_dict_recursive(
