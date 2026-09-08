@@ -427,8 +427,9 @@ async def test_unload_entry_tolerates_never_loaded(
 
     assert await component.async_unload_entry(entry)
     assert (
-        f"Config entry Mock Title ({entry.entry_id}) for "
-        f"entry_domain.{DOMAIN} was never loaded"
+        f"Ignored unload request for config entry Mock Title ({entry.entry_id}) "
+        f"in entry_domain.{DOMAIN}; no platform is loaded, it was never set up " 
+        "or has already been unloaded"                                           
     ) in caplog.text
 
 

@@ -200,9 +200,9 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         if (platform := self._platforms.pop(key, None)) is None:
             self.logger.warning(
                 (
-                    "Config entry %s (%s) for %s.%s was never loaded, "
-                    "possibly because its platform setup never completed; "
-                    "there is nothing to unload"
+                    "Ignored unload request for config entry %s (%s) in %s.%s; "
+                    "no platform is loaded, it was never set up "               
+                    "or has already been unloaded"                              
                 ),
                 config_entry.title,
                 key,
