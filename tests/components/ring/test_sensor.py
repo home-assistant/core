@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 import logging
 from typing import cast
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -228,13 +228,14 @@ async def test_history_sensor(
     assert sensor_state.state == expected_value
 
 
-async def test_last_recording_sensor_skips_non_ready_history(
+async def test_last_recording_sensor_handles_non_ready_history(
     hass: HomeAssistant,
     mock_ring_client: Ring,
     mock_config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the last recording sensor skips non-ready history entries."""
+    """Test the last recording sensor handles non-ready history entries."""
     front_door = cast(Mock, mock_ring_client.devices().get_device(FRONT_DOOR_DEVICE_ID))
     front_door.configure_mock(
         last_history=[
@@ -259,6 +260,23 @@ async def test_last_recording_sensor_skips_non_ready_history(
 
     with patch("homeassistant.components.ring.PLATFORMS", [Platform.SENSOR]):
         assert await async_setup_component(hass, DOMAIN, {})
+
+    sensor_state = hass.states.get("sensor.front_door_last_recording")
+    assert sensor_state is not None
+    assert sensor_state.state == "2018-03-05T15:03:40+00:00"
+
+    front_door.configure_mock(
+        async_history=AsyncMock(),
+        last_history=[
+            {
+                "created_at": datetime(2020, 3, 5, 15, 3, 40, tzinfo=UTC),
+                "recording": {"status": "processing"},
+            }
+        ],
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     sensor_state = hass.states.get("sensor.front_door_last_recording")
     assert sensor_state is not None
