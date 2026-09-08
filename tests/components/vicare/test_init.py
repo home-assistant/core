@@ -43,6 +43,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 # From a real rate limit response: 2026-09-09T00:00:04.144Z.
 QUOTA_RESET_MS = 1788912004144
 
+SENSOR_ID = "sensor.model0_outside_temperature"
+
 # 16-character zigbee IEEE address shared by the FHT fixtures.
 ZIGBEE_IEEE = "#" * 16
 
@@ -321,7 +323,7 @@ async def test_coordinator_backs_off_until_the_quota_resets(
 ) -> None:
     """Test a rate limited refresh defers the next one to the reset time."""
     freezer.move_to("2026-09-08 20:00:04+00:00")
-    fixtures: list[Fixture] = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     mock_vicare = MockPyViCare(fixtures)
     service = mock_vicare.devices[0].service
 
@@ -336,9 +338,6 @@ async def test_coordinator_backs_off_until_the_quota_resets(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data.devices[0].coordinator
-    assert coordinator is not None
-
     service.fetch_all_features.side_effect = PyViCareRateLimitError(
         {
             "extendedPayload": {
@@ -348,21 +347,23 @@ async def test_coordinator_backs_off_until_the_quota_resets(
             }
         }
     )
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator.last_update_success is False
-    assert coordinator.last_exception.retry_after == pytest.approx(4 * 3600, abs=5)
-
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
     calls = service.fetch_all_features.call_count
+
+    # The quota resets four hours out, so nothing may go out at the ordinary
+    # interval in between.
     freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    # Asserting on retry_after alone would pass even if scheduling ignored it.
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert service.fetch_all_features.call_count == calls
 
     freezer.tick(timedelta(hours=4))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert service.fetch_all_features.call_count > calls
 
 
@@ -373,7 +374,7 @@ async def test_coordinator_backs_off_when_the_reset_has_passed(
 ) -> None:
     """Test a reset time in the past still defers, instead of retrying at once."""
     freezer.move_to("2026-09-09 01:00:04+00:00")
-    fixtures: list[Fixture] = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     mock_vicare = MockPyViCare(fixtures)
     service = mock_vicare.devices[0].service
 
@@ -388,9 +389,6 @@ async def test_coordinator_backs_off_when_the_reset_has_passed(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data.devices[0].coordinator
-    assert coordinator is not None
-
     service.fetch_all_features.side_effect = PyViCareRateLimitError(
         {
             "extendedPayload": {
@@ -400,15 +398,24 @@ async def test_coordinator_backs_off_when_the_reset_has_passed(
             }
         }
     )
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    # A zero delay would make the coordinator reschedule immediately and hammer
-    # a quota that is still spent.
-    assert coordinator.update_interval is not None
-    assert (
-        coordinator.last_exception.retry_after
-        >= coordinator.update_interval.total_seconds()
-    )
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    # A zero delay would reschedule at once and hammer a quota that is still
+    # spent, so the wait stays at the ordinary interval.
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count > calls
 
 
 async def test_setup_entry_invalid_credentials(
