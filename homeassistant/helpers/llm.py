@@ -221,15 +221,9 @@ class API(ABC):
 
 
 def _match_failed_result(err: intent.MatchFailedError) -> JsonObjectType:
-    """Describe a failed target match so the model can correct its own call.
-
-    Structured rather than prose: the model has to work out which argument to
-    change, and it is told the response language separately, so a sentence here
-    would be both less reliable and in the wrong language.
-    """
+    """Describe a failed target match so the model can correct its own call."""
     constraints = err.constraints
-    # Keyed by slot name rather than by constraint field, so the model can tell
-    # which of its own arguments to drop or change.
+    # Keyed by actual slot name, so the model has a chance to repair the call.
     provided: dict[str, Any] = {}
     for slot, value in (
         ("name", constraints.name),
