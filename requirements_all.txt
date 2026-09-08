@@ -1824,7 +1824,7 @@ openai==2.45.0
 openerz-api==0.3.0
 
 # homeassistant.components.openhome
-openhomedevice==2.2.0
+openhomedevice==2.5
 
 # homeassistant.components.openrgb
 openrgb-python==0.3.6
