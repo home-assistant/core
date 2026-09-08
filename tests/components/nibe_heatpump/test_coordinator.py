@@ -1,6 +1,7 @@
 """Test the Nibe Heat Pump config flow."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import patch
 
@@ -9,10 +10,12 @@ from nibe.heatpump import Model
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.core import CoreState, HomeAssistant
 
 from . import MockConnection, async_add_model
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -129,3 +132,73 @@ async def test_shutdown(
 
     assert done.is_set()
     mock_connection.stop.assert_called_once()
+
+
+@pytest.fixture
+async def pending_initial_refresh(
+    hass: HomeAssistant,
+    coils: dict[int, Any],
+    mock_connection: MockConnection,
+) -> AsyncGenerator[tuple[MockConfigEntry, asyncio.Event]]:
+    """Start HA while the initial register read remains pending."""
+    coils[40031] = 10
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read_coil(coil: Coil, timeout: float = 0) -> CoilData:
+        started.set()
+        await release.wait()
+        return CoilData(coil, 10)
+
+    with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        try:
+            # Bound the wait so a startup-blocking refresh fails instead of hanging.
+            async with asyncio.timeout(5):
+                entry = await async_add_model(hass, Model.S320)
+                await started.wait()
+                await hass.async_start()
+                await hass.async_block_till_done()
+
+            assert hass.state is CoreState.running
+            assert not entry.runtime_data.task.done()
+            assert (
+                hass.states.get("number.heating_offset_climate_system_1_40031").state
+                == STATE_UNAVAILABLE
+            )
+            yield entry, release
+        finally:
+            release.set()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_initial_refresh_completes_after_startup(
+    hass: HomeAssistant,
+    pending_initial_refresh: tuple[MockConfigEntry, asyncio.Event],
+) -> None:
+    """Initial readings update entities after HA has finished starting."""
+    entry, release = pending_initial_refresh
+    task = entry.runtime_data.task
+    release.set()
+    await task
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.task is None
+    assert (
+        hass.states.get("number.heating_offset_climate_system_1_40031").state == "10.0"
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unload_cancels_initial_refresh(
+    hass: HomeAssistant,
+    pending_initial_refresh: tuple[MockConfigEntry, asyncio.Event],
+    mock_connection: MockConnection,
+) -> None:
+    """Unloading cancels the pending initial read and closes its connection."""
+    entry, _ = pending_initial_refresh
+    task = entry.runtime_data.task
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert task.cancelled()
+    mock_connection.stop.assert_awaited_once()
