@@ -3005,6 +3005,7 @@ rxv==0.7.0
 
 # homeassistant.components.ryse
 ryseble==1.9.0
+
 # homeassistant.components.samsung_exlink
 samsung-exlink==1.1.0
 
