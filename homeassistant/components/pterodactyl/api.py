@@ -22,19 +22,30 @@ class PterodactylConnectionError(Exception):
 
 
 @dataclass
-class PterodactylData:
-    """Data for the Pterodactyl server."""
+class PterodactylGameServer:
+    """Pterodactyl game server."""
 
+    identifier: str
+    is_suspended: bool
+
+
+@dataclass
+class PterodactylGameServerData:
+    """Data of a Pterodactyl game server."""
+
+    # Server data
     name: str
     uuid: str
     identifier: str
     state: str
-    cpu_utilization: float
     cpu_limit: int
-    disk_usage: int
     disk_limit: int
-    memory_usage: int
     memory_limit: int
+
+    # Utilization data
+    cpu_utilization: float | None
+    disk_usage: int | None
+    memory_usage: int | None
     network_inbound: int
     network_outbound: int
     uptime: int
@@ -53,7 +64,7 @@ class PterodactylAPI:
     """Wrapper for Pterodactyl's API."""
 
     pterodactyl: PterodactylClient | None
-    identifiers: list[str]
+    game_servers: list[PterodactylGameServer]
 
     def __init__(self, hass: HomeAssistant, host: str, api_key: str) -> None:
         """Initialize the Pterodactyl API."""
@@ -61,7 +72,7 @@ class PterodactylAPI:
         self.host = host
         self.api_key = api_key
         self.pterodactyl = None
-        self.identifiers = []
+        self.game_servers = []
 
     def get_game_servers(self) -> list[str]:
         """Get all game servers."""
@@ -89,27 +100,38 @@ class PterodactylAPI:
             raise PterodactylConnectionError(error) from error
         else:
             for game_server in game_servers:
-                self.identifiers.append(game_server["attributes"]["identifier"])
+                self.game_servers.append(
+                    PterodactylGameServer(
+                        identifier=game_server["attributes"]["identifier"],
+                        is_suspended=game_server["attributes"]["is_suspended"],
+                    )
+                )
 
-            _LOGGER.debug("Identifiers of Pterodactyl servers: %s", self.identifiers)
+            _LOGGER.debug("Pterodactyl game servers: %s", self.game_servers)
 
-    def get_server_data(self, identifier: str) -> tuple[dict, dict]:
-        """Get all data from the Pterodactyl server."""
-        server = self.pterodactyl.client.servers.get_server(identifier)  # type: ignore[union-attr]
-        utilization = self.pterodactyl.client.servers.get_server_utilization(  # type: ignore[union-attr]
-            identifier
-        )
+    def get_server_data(
+        self, game_server: PterodactylGameServer
+    ) -> tuple[dict, dict | None]:
+        """Get all data from the Pterodactyl game server."""
+        server = self.pterodactyl.client.servers.get_server(game_server.identifier)  # type: ignore[union-attr]
+
+        if not game_server.is_suspended:
+            utilization = self.pterodactyl.client.servers.get_server_utilization(  # type: ignore[union-attr]
+                game_server.identifier
+            )
+        else:
+            utilization = None
 
         return server, utilization
 
-    async def async_get_data(self) -> dict[str, PterodactylData]:
-        """Update the data from all Pterodactyl servers."""
+    async def async_get_data(self) -> dict[str, PterodactylGameServerData]:
+        """Update the data from all Pterodactyl game servers."""
         data = {}
 
-        for identifier in self.identifiers:
+        for game_server in self.game_servers:
             try:
                 server, utilization = await self.hass.async_add_executor_job(
-                    self.get_server_data, identifier
+                    self.get_server_data, game_server
                 )
             except (BadRequestError, PterodactylApiError, ConnectionError) as error:
                 raise PterodactylConnectionError(error) from error
@@ -119,30 +141,53 @@ class PterodactylAPI:
 
                 raise PterodactylConnectionError(error) from error
             else:
-                data[identifier] = PterodactylData(
-                    name=server["name"],
-                    uuid=server["uuid"],
-                    identifier=identifier,
-                    state=utilization["current_state"],
-                    cpu_utilization=utilization["resources"]["cpu_absolute"],
-                    cpu_limit=server["limits"]["cpu"],
-                    memory_usage=utilization["resources"]["memory_bytes"],
-                    memory_limit=server["limits"]["memory"],
-                    disk_usage=utilization["resources"]["disk_bytes"],
-                    disk_limit=server["limits"]["disk"],
-                    network_inbound=utilization["resources"]["network_rx_bytes"],
-                    network_outbound=utilization["resources"]["network_tx_bytes"],
-                    uptime=utilization["resources"]["uptime"],
-                )
+                name = server["name"]
+                uuid = server["uuid"]
+                identifier = game_server.identifier
+                cpu_limit = server["limits"]["cpu"]
+                memory_limit = server["limits"]["memory"]
+                disk_limit = server["limits"]["disk"]
 
-                _LOGGER.debug("%s", data[identifier])
+                if utilization is None:
+                    state = "suspended"
+                    cpu_utilization = None
+                    memory_usage = None
+                    disk_usage = None
+                    network_inbound = 0
+                    network_outbound = 0
+                    uptime = 0
+                else:
+                    state = utilization["current_state"]
+                    cpu_utilization = utilization["resources"]["cpu_absolute"]
+                    memory_usage = utilization["resources"]["memory_bytes"]
+                    disk_usage = utilization["resources"]["disk_bytes"]
+                    network_inbound = utilization["resources"]["network_rx_bytes"]
+                    network_outbound = utilization["resources"]["network_tx_bytes"]
+                    uptime = utilization["resources"]["uptime"]
+
+                data[game_server.identifier] = PterodactylGameServerData(
+                    name=name,
+                    uuid=uuid,
+                    identifier=identifier,
+                    state=state,
+                    cpu_utilization=cpu_utilization,
+                    cpu_limit=cpu_limit,
+                    disk_usage=disk_usage,
+                    disk_limit=disk_limit,
+                    memory_usage=memory_usage,
+                    memory_limit=memory_limit,
+                    network_inbound=network_inbound,
+                    network_outbound=network_outbound,
+                    uptime=uptime,
+                )
+                _LOGGER.debug("%s", data[game_server.identifier])
 
         return data
 
     async def async_send_command(
         self, identifier: str, command: PterodactylCommand
     ) -> None:
-        """Send a command to the Pterodactyl server."""
+        """Send a command to the Pterodactyl game server."""
         try:
             await self.hass.async_add_executor_job(
                 self.pterodactyl.client.servers.send_power_action,  # type: ignore[union-attr]
