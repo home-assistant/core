@@ -9,22 +9,22 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
-    ATTR_PARAMS,
     DOMAIN as VACUUM_DOMAIN,
+    SERVICE_CLEAN_AREA,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
 )
-from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_appliance_id, merge_dict_recursive, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -218,26 +218,6 @@ async def test_vacuum(
             {ATTR_FAN_SPEED: "max"},
             [{"vacuumMode": "max"}],
         ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SEND_COMMAND,
-            {
-                ATTR_COMMAND: "clean_zones",
-                ATTR_PARAMS: {
-                    "map_id": "mocked-map-id",
-                },
-            },
-            [
-                {
-                    "mapCommand": "selectRoomsClean",
-                    "mapId": "mocked-map-id",
-                    "type": 0,
-                    "roomInfo": [],
-                }
-            ],
-        ),
         # gordias RVC command tests
         (
             "gordias_vacuum",
@@ -311,26 +291,6 @@ async def test_vacuum(
             {ATTR_FAN_SPEED: "powerful"},
             [{"vacuumMode": "powerful"}],
         ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_SEND_COMMAND,
-            {
-                ATTR_COMMAND: "clean_zones",
-                ATTR_PARAMS: {
-                    "map_id": "mocked-map-id",
-                },
-            },
-            [
-                {
-                    "mapCommand": "selectRoomsClean",
-                    "mapId": "mocked-map-id",
-                    "type": 1,
-                    "roomInfo": [],
-                }
-            ],
-        ),
         # pure i9 RVC command tests
         (
             "purei9_vacuum",
@@ -395,28 +355,6 @@ async def test_vacuum(
             SERVICE_SET_FAN_SPEED,
             {ATTR_FAN_SPEED: "power"},
             [{"powerMode": 3}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_SEND_COMMAND,
-            {
-                ATTR_COMMAND: "clean_zones",
-                ATTR_PARAMS: {
-                    "map_id": "mocked-map-id",
-                    "zone_ids": ["mocked-zone-id"],
-                    "power_mode": 3,
-                },
-            },
-            [
-                {
-                    "CustomPlay": {
-                        "persistentMapId": "mocked-map-id",
-                        "zones": [{"zoneId": "mocked-zone-id", "powerMode": 3}],
-                    }
-                }
-            ],
         ),
     ],
 )
@@ -629,26 +567,6 @@ async def test_commands(
             {ATTR_FAN_SPEED: "max"},
             [{"vacuumMode": "max"}],
         ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SEND_COMMAND,
-            {
-                ATTR_COMMAND: "clean_zones",
-                ATTR_PARAMS: {
-                    "map_id": "mocked-map-id",
-                },
-            },
-            [
-                {
-                    "mapCommand": "selectRoomsClean",
-                    "mapId": "mocked-map-id",
-                    "type": 0,
-                    "roomInfo": [],
-                }
-            ],
-        ),
         # gordias RVC command tests
         (
             "gordias_vacuum",
@@ -722,26 +640,6 @@ async def test_commands(
             {ATTR_FAN_SPEED: "powerful"},
             [{"vacuumMode": "powerful"}],
         ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_SEND_COMMAND,
-            {
-                ATTR_COMMAND: "clean_zones",
-                ATTR_PARAMS: {
-                    "map_id": "mocked-map-id",
-                },
-            },
-            [
-                {
-                    "mapCommand": "selectRoomsClean",
-                    "mapId": "mocked-map-id",
-                    "type": 1,
-                    "roomInfo": [],
-                }
-            ],
-        ),
         # pure i9 RVC command tests
         (
             "purei9_vacuum",
@@ -807,28 +705,6 @@ async def test_commands(
             {ATTR_FAN_SPEED: "power"},
             [{"powerMode": 3}],
         ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_SEND_COMMAND,
-            {
-                ATTR_COMMAND: "clean_zones",
-                ATTR_PARAMS: {
-                    "map_id": "mocked-map-id",
-                    "zone_ids": ["mocked-zone-id"],
-                    "power_mode": 3,
-                },
-            },
-            [
-                {
-                    "CustomPlay": {
-                        "persistentMapId": "mocked-map-id",
-                        "zones": [{"zoneId": "mocked-zone-id", "powerMode": 3}],
-                    }
-                }
-            ],
-        ),
     ],
 )
 async def test_command_errors(
@@ -865,3 +741,229 @@ async def test_command_errors(
     assert appliances.send_command.mock_calls == [
         call(appliance_id, command) for command in commands
     ]
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_fixture",
+        "entity_id",
+        "expected_segments",
+    ),
+    [
+        # cybele RVC
+        (
+            "cybele_vacuum",
+            "vacuum.cybele_vacuum",
+            [
+                {"id": "1_11", "name": "Map 1: Storage", "group": None},
+                {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+            ],
+        ),
+        # gordias RVC
+        (
+            "gordias_vacuum",
+            "vacuum.gordias_vacuum",
+            [
+                {"id": "1_11", "name": "Map 1: Storage", "group": None},
+                {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+            ],
+        ),
+        # pure i9 RVC
+        (
+            "purei9_vacuum",
+            "vacuum.pure_i9_vacuum",
+            [
+                {"id": "map-id-1_zone-id-1", "name": "Map 1: Bathroom", "group": None},
+                {"id": "map-id-1_zone-id-3", "name": "Map 1: Kitchen", "group": None},
+            ],
+        ),
+    ],
+)
+async def test_get_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    appliances: AsyncMock,
+    appliance_fixture: str,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    expected_segments: list[dict[str, str]],
+) -> None:
+    """Test vacuum get_segments service."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"segments": expected_segments}
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_fixture",
+        "entity_id",
+        "commands",
+    ),
+    [
+        # cybele RVC
+        (
+            "cybele_vacuum",
+            "vacuum.cybele_vacuum",
+            [
+                {
+                    "mapCommand": "selectRoomsClean",
+                    "mapId": 18,
+                    "type": 0,
+                    "roomInfo": [{"roomId": 42}, {"roomId": 48}],
+                }
+            ],
+        ),
+        # gordias RVC
+        (
+            "gordias_vacuum",
+            "vacuum.gordias_vacuum",
+            [
+                {
+                    "mapCommand": "selectRoomsClean",
+                    "mapId": 18,
+                    "type": 1,
+                    "roomInfo": [
+                        {
+                            "roomId": 42,
+                            "sweepMode": 0,
+                            "vacuumMode": "standard",
+                            "waterPumpRate": "off",
+                            "numberOfCleaningRepetitions": 1,
+                        },
+                        {
+                            "roomId": 48,
+                            "sweepMode": 0,
+                            "vacuumMode": "standard",
+                            "waterPumpRate": "off",
+                            "numberOfCleaningRepetitions": 1,
+                        },
+                    ],
+                }
+            ],
+        ),
+        # pure i9 RVC
+        (
+            "purei9_vacuum",
+            "vacuum.pure_i9_vacuum",
+            [
+                {
+                    "CustomPlay": {
+                        "persistentMapId": "18",
+                        "zones": [
+                            {"zoneId": "42", "powerMode": 2},
+                            {"zoneId": "48", "powerMode": 2},
+                        ],
+                    }
+                }
+            ],
+        ),
+    ],
+)
+async def test_clean_area(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    appliances: AsyncMock,
+    appliance_fixture: str,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    commands: list[dict[str, Any]],
+) -> None:
+    """Test vacuum commands."""
+
+    appliance_id = get_appliance_id(appliance_fixture)
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_id_1": ["18_42", "18_48"]},
+            "last_seen_segments": [
+                {"id": "18_42", "name": "Example room 1", "group": "Floor 1"},
+                {"id": "18_48", "name": "Example room 2", "group": "Floor 1"},
+                {"id": "19_42", "name": "Example room 1", "group": "Floor 2"},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: entity_id, "cleaning_area_id": ["area_id_1"]},
+        blocking=True,
+    )
+    assert appliances.send_command.mock_calls == [
+        call(appliance_id, command) for command in commands
+    ]
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_fixture",
+        "entity_id",
+        "error_reason",
+    ),
+    [
+        # cybele RVC
+        (
+            "cybele_vacuum",
+            "vacuum.cybele_vacuum",
+            "multiple_map_ids",
+        ),
+        # gordias RVC
+        (
+            "gordias_vacuum",
+            "vacuum.gordias_vacuum",
+            "multiple_map_ids",
+        ),
+        # pure i9 RVC
+        (
+            "purei9_vacuum",
+            "vacuum.pure_i9_vacuum",
+            "multiple_map_ids",
+        ),
+    ],
+)
+async def test_clean_area_errors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    appliances: AsyncMock,
+    appliance_fixture: str,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    error_reason: str,
+) -> None:
+    """Test vacuum commands."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_id_1": ["18_42", "19_42"]},
+            "last_seen_segments": [
+                {"id": "18_42", "name": "Example room 1", "group": "Floor 1"},
+                {"id": "18_48", "name": "Example room 2", "group": "Floor 1"},
+                {"id": "19_42", "name": "Example room 1", "group": "Floor 2"},
+            ],
+        },
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {ATTR_ENTITY_ID: entity_id, "cleaning_area_id": ["area_id_1"]},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == error_reason
+    appliances.send_command.assert_not_called()
