@@ -58,6 +58,10 @@ def _build_ice_servers(session: CameraSession) -> list[RTCIceServer]:
             turn_urls = cred.get("turnUrl") or []
             if isinstance(turn_urls, str):
                 turn_urls = [turn_urls]
+            else:
+                # copy: the STUN url appended below must not be pushed onto
+                # the cached session's own list, which is reused per offer
+                turn_urls = list(turn_urls)
             stun_url = cred.get("stunUrl")
             if stun_url:
                 turn_urls.append(stun_url)
