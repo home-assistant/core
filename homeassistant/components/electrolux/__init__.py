@@ -79,9 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     async def check_for_new_devices_callback() -> None:
         """Trigger _check_for_new_devices asynchronously."""
-        await _check_for_new_devices(
-            hass, entry, client, on_livestream_opening_callback_list
-        )
+        await _check_for_new_devices(hass, entry, client)
 
     on_livestream_opening_callback_list.append(check_for_new_devices_callback)
 
@@ -111,6 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
         appliances=appliances,
         coordinators=coordinators,
         sse_task=sse_task,
+        on_livestream_opening_callback_list=on_livestream_opening_callback_list,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -166,12 +165,14 @@ async def _check_for_new_devices(
     hass: HomeAssistant,
     entry: ElectroluxConfigEntry,
     client: ApplianceClient,
-    on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]],
 ) -> None:
     """Fetch appliances from API and trigger discovery for any new ones."""
     _LOGGER.info("Checking for new devices")
 
     coordinators = entry.runtime_data.coordinators
+    on_livestream_opening_callback_list = (
+        entry.runtime_data.on_livestream_opening_callback_list
+    )
     appliances = await fetch_appliance_data(client)
     entry.runtime_data.appliances = appliances
 

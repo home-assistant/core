@@ -674,6 +674,9 @@
     }
   },
   "exceptions": {
+    "multiple_map_ids": {
+      "message": "Can't perform cleaning command: segments from multiple maps selected. Please select segments from a single map."
+    },
     "read_only_option": {
       "message": "The selected option is read-only and the entity cannot be set to it."
     },

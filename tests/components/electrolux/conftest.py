@@ -20,6 +20,8 @@ from . import (
     load_appliance,
     load_appliance_details,
     load_appliance_state,
+    load_interactive_maps,
+    load_memory_maps,
     setup_integration,
 )
 
@@ -134,6 +136,17 @@ def appliances(
         )
 
         appliance_data_list.append(appliance_data)
+
+        if appliance.applianceType == "PUREi9":
+            mock_appliance_client.get_interactive_maps.side_effect = (
+                lambda appliance_id: load_interactive_maps(
+                    get_fixture_name(appliance_id)
+                )
+            )
+        elif appliance.applianceType in ("Gordias", "Cybele"):
+            mock_appliance_client.get_memory_maps.side_effect = lambda appliance_id: (
+                load_memory_maps(get_fixture_name(appliance_id))
+            )
 
     mock_appliance_client.get_appliance_data.return_value = appliance_data_list
 
