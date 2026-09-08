@@ -174,6 +174,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         """Listen with the client."""
         try:
             await automower_client.auth.websocket_connect()
+            # Reset reconnect time after successful connection
             self.reconnect_time = DEFAULT_RECONNECT_TIME
             await automower_client.start_listening()
         except (HusqvarnaWSServerHandshakeError, HusqvarnaWSClientError) as err:
@@ -218,6 +219,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         """Add new devices and remove orphaned devices from the registry."""
         current_devices = set(self.data)
         device_registry = dr.async_get(self.hass)
+
         registered_devices: set[str] = {
             str(mower_id)
             for device in dr.async_entries_for_config_entry(
@@ -226,15 +228,18 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             for domain, mower_id in device.identifiers
             if domain == DOMAIN
         }
+
         orphaned_devices = registered_devices - current_devices
         if orphaned_devices:
             _LOGGER.debug("Removing orphaned devices: %s", orphaned_devices)
+
             for mower_id in orphaned_devices:
                 dev = device_registry.async_get_device_by_identifier(
                     (DOMAIN, mower_id), self.config_entry.entry_id
                 )
                 if dev is not None:
                     device_registry.async_remove_device(dev.id)
+
         new_devices = current_devices - registered_devices
         if new_devices:
             _LOGGER.debug("New devices found: %s", new_devices)
@@ -250,10 +255,12 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             and mower_data.stay_out_zones is not None
             and mower_data.stay_out_zones.zones is not None
         }
+
         entity_registry = er.async_get(self.hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         )
+
         registered_zones: dict[str, set[str]] = {}
         for mower_id in self.data:
             registered_zones[mower_id] = set()
@@ -264,14 +271,18 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                         "_stay_out_zones"
                     )
                     registered_zones[mower_id].add(zone_id)
+
         for mower_id, current_ids in current_zones.items():
             known_ids = registered_zones.get(mower_id, set())
+
             new_zones = current_ids - known_ids
             removed_zones = known_ids - current_ids
+
             if new_zones:
                 _LOGGER.debug("New stay-out zones: %s", new_zones)
                 for zone_callback in self.new_zones_callbacks:
                     zone_callback(mower_id, new_zones)
+
             if removed_zones:
                 _LOGGER.debug("Removing stay-out zones: %s", removed_zones)
                 for entry in entries:
@@ -286,10 +297,12 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None
         }
+
         entity_registry = er.async_get(self.hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         )
+
         registered_areas: dict[str, set[int]] = {}
         for mower_id in self.data:
             registered_areas[mower_id] = set()
@@ -300,14 +313,18 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     area_id_str = parts[0] if parts else None
                     if area_id_str and area_id_str.isdigit():
                         registered_areas[mower_id].add(int(area_id_str))
+
         for mower_id, current_ids in current_areas.items():
             known_ids = registered_areas.get(mower_id, set())
+
             new_areas = current_ids - known_ids
             removed_areas = known_ids - current_ids
+
             if new_areas:
                 _LOGGER.debug("New work areas: %s", new_areas)
                 for area_callback in self.new_areas_callbacks:
                     area_callback(mower_id, new_areas)
+
             if removed_areas:
                 _LOGGER.debug("Removing work areas: %s", removed_areas)
                 for entry in entries:
@@ -340,4 +357,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     cutting_height_disabled,
                 )
                 for callback_fn in self.work_area_cutting_height_callbacks:
-                    callback_fn(mower_id, cutting_height_enabled, cutting_height_disabled)
+                    callback_fn(
+                        mower_id, cutting_height_enabled, cutting_height_disabled
+                    )
