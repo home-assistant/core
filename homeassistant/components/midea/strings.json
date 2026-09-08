@@ -1,11 +1,16 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "account_locked": "Too many failed sign-in attempts. Wait about five minutes before trying again. (err {error_code})",
+      "cloud_error": "The Midea cloud returned an error. Check the logs for details and try again. (err {error_code})",
+      "cloud_session_expired": "The Midea cloud sign-in session is no longer valid. Try again. (err {error_code})",
       "device_auth_failed": "Could not connect with the provided configuration",
+      "device_not_registered": "This Midea cloud account is not authorized for this device. The device is registered to a different account. (err {error_code})",
+      "invalid_auth": "Invalid authentication (err {error_code})",
+      "invalid_cloud_server": "This account is not registered on the selected cloud server. Choose the server where the account was created. (err {error_code})",
       "invalid_device_id_for_ip": "The device ID does not match the selected IP address",
       "invalid_device_ip": "Could not find a supported device at this IP address",
       "invalid_token": "Token and key must be valid hexadecimal strings",
@@ -15,6 +20,7 @@
       "preset_login_failed": "Could not log in with the preset account",
       "protocol_mismatch": "The protocol does not match the discovered device",
       "token_unavailable": "Could not get a valid token and key from the cloud",
+      "too_many_logged_in_devices": "The Midea cloud account has too many active sign-ins. Sign out of the Midea app on other devices and try again. (err {error_code})",
       "type_mismatch": "The type does not match the discovered device"
     },
     "step": {
@@ -670,6 +676,9 @@
       },
       "aux_heating": {
         "name": "Auxiliary heating"
+      },
+      "child_lock": {
+        "name": "Child lock"
       },
       "disinfect": {
         "name": "Disinfect"

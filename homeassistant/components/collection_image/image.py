@@ -106,6 +106,16 @@ class CollectionImageImageEntity(ImageEntity):
             self.set_unavailable()
             return
 
+        # Don't allow random shuffle to return the same image we are currently viewing.
+        if self._current_image_id:
+            filtered_new = [
+                item
+                for item in filtered
+                if item.media_content_id != self._current_image_id
+            ]
+            if filtered_new:
+                filtered = filtered_new
+
         child = random.choice(filtered)
         self._attr_available = True
         await self.update_image(child.media_content_id)
@@ -171,7 +181,7 @@ class CollectionImageImageEntity(ImageEntity):
 
     async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
-        self._current_image_id = image_id
+
         self._cached_image = None
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
@@ -183,6 +193,8 @@ class CollectionImageImageEntity(ImageEntity):
             self._attr_content_type = DEFAULT_CONTENT_TYPE
             self.async_write_ha_state()
             return
+        finally:
+            self._current_image_id = image_id
 
         if resolved.url:
             self.path = None

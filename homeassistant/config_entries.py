@@ -66,7 +66,11 @@ from .helpers.event import (
     async_call_later,
 )
 from .helpers.frame import ReportBehavior, report_usage
-from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
+from .helpers.json import (
+    cached_json_fragment,
+    cached_json_fragment_sorted,
+    json_fragment,
+)
 from .helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -682,7 +686,7 @@ class ConfigEntry[_DataT = Any]:
             ),
             "num_subentries": len(self.subentries),
         }
-        return json_fragment(json_bytes(json_repr))
+        return cached_json_fragment(json_repr)
 
     def clear_storage_cache(self) -> None:
         """Clear cached properties that are included in as_storage_fragment."""
@@ -691,7 +695,7 @@ class ConfigEntry[_DataT = Any]:
     @cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a storage fragment for this entry."""
-        return json_fragment(json_bytes_sorted(self.as_dict()))
+        return cached_json_fragment_sorted(self.as_dict())
 
     async def async_setup(
         self,
@@ -3210,7 +3214,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
                     include_uninitialized=True, match_context={"unique_id": unique_id}
                 )
             ):
-                raise data_entry_flow.AbortFlow("already_in_progress")
+                raise data_entry_flow.AbortFlow(
+                    "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+                )
 
         self.context["unique_id"] = unique_id
 
@@ -3308,8 +3314,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         It ensures that the discovery can be ignored by the user.
 
-        Requires `already_configured` and `already_in_progress` in strings.json
-        in user visible flows.
+        Requires `already_configured` in strings.json in user visible flows.
         """
         if self.unique_id is not None:
             return
@@ -3324,7 +3329,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         # Abort if any other flow for this handler is already in progress
         if self._async_in_progress(include_uninitialized=True):
-            raise data_entry_flow.AbortFlow("already_in_progress")
+            raise data_entry_flow.AbortFlow(
+                "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
     async def _async_step_discovery_without_unique_id(
         self,
@@ -3524,7 +3531,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 are overridden
             options: replace the entry options with new options
             reason: set the reason for the abort, defaults to
-                `reauth_successful` or `reconfigure_successful` based on flow source
+                `reauth_successful` or `reconfigure_successful` based on flow source.
+                A custom reason requires a matching strings.json entry
 
         Returns:
             ConfigFlowResult: The result of the config flow.
@@ -3537,11 +3545,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
             data_updates=data_updates,
             options=options,
         )
+        translation_domain: str | None = None
         if reason is UNDEFINED:
-            reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
-        return self.async_abort(reason=reason)
+            else:
+                reason = "reauth_successful"
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
     def async_update_reload_and_abort(
@@ -3567,7 +3578,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 are overridden
             options: replace the entry options with new options
             reason: set the reason for the abort, defaults to
-                `reauth_successful` or `reconfigure_successful` based on flow source
+                `reauth_successful` or `reconfigure_successful` based on flow source.
+                A custom reason requires a matching strings.json entry
             reload_even_if_entry_is_unchanged: set this to `False` if the entry
                 should not be reloaded if it is unchanged
 
@@ -3591,11 +3603,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
                     integration_domain=self.handler,
                 )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        translation_domain: str | None = None
         if reason is UNDEFINED:
-            reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
-        return self.async_abort(reason=reason)
+            else:
+                reason = "reauth_successful"
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
     @override

@@ -3950,7 +3950,7 @@
       "name": "Liebherr",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "lifx": {
       "name": "LIFX",
@@ -4723,6 +4723,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "my_pv": {
+      "name": "my-PV",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "myneomitis": {
       "name": "MyNeomitis",
@@ -7032,6 +7038,11 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "steinway_lyngdorf": {
+      "name": "Steinway & Lyngdorf",
+      "integration_type": "virtual",
+      "supported_by": "lyngdorf"
     },
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",

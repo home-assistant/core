@@ -7,6 +7,7 @@ from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -1439,6 +1440,77 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
             "operation_failed_input_parameters_incorrect",
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SofarSensorDescription(
+        key="feedin_limitation_mode",
+        component="feed_in",
+        translation_key="feedin_limitation_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[mode.name.lower() for mode in FeedinLimitationMode],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="feedin_max_power",
+        component="feed_in",
+        translation_key="feedin_max_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="active_power_export_limit",
+        component="active_power_control",
+        translation_key="active_power_export_limit",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_timeout",
+        component="passive",
+        translation_key="passive_mode_timeout",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_timeout_action",
+        component="passive",
+        translation_key="passive_mode_timeout_action",
+        device_class=SensorDeviceClass.ENUM,
+        options=[action.name.lower() for action in PassiveModeTimeoutAction],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_grid_power",
+        component="passive",
+        translation_key="passive_mode_grid_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_battery_power_min",
+        component="passive",
+        translation_key="passive_mode_battery_power_min",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_battery_power_max",
+        component="passive",
+        translation_key="passive_mode_battery_power_max",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
