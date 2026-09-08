@@ -30,7 +30,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_ADDRESS,
@@ -51,6 +50,7 @@ from .const import (
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_STOPBITS,
+    DATA_MODBUS_HUBS,
     DEFAULT_HUB,
     DEVICE_ID,
     DOMAIN,
@@ -66,8 +66,6 @@ from .const import (
     UDP,
 )
 from .validators import check_config
-
-DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 PRIMARY_RECONNECT_DELAY = 60
 
@@ -348,13 +346,6 @@ class ModbusHub:
             self.async_pb_connect(), "modbus-connect"
         )
         return True
-
-    async def async_restart(self) -> None:
-        """Reconnect client."""
-        if self._client:
-            await self.async_close()
-
-        await self.async_setup()
 
     async def async_close(self) -> None:
         """Disconnect client."""

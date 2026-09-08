@@ -31,6 +31,7 @@ from .const import (
     MOCK_MEDIA_IMAGE_URI_3,
     MOCK_MEDIA_IMAGE_URI_4,
     TEST_IMAGE,
+    TEST_IMAGE_2,
 )
 from .helpers import config_entry_from_uri
 
@@ -38,6 +39,7 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 TEST_TIME = "2025-11-08T12:00:00+00:00"
+TEST_TIME_NEXT = "2025-11-08T13:00:00+00:00"
 
 
 async def _verify_path_image(
@@ -340,3 +342,83 @@ async def test_image_file_read_error(
     client = await hass_client()
     resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@pytest.mark.usefixtures("mock_media_source")
+async def test_multi_shuffle(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    media_source_state: MediaSourceState,
+) -> None:
+    """Check that shuffling random image does not return the same image."""
+    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_4] = PlayMedia(
+        url="",
+        mime_type="image/png",
+        path=TEST_IMAGE_2,
+    )
+
+    config_entry = config_entry_from_uri(MOCK_MEDIA_DIR_URI_2)
+    with (
+        freeze_time(TEST_TIME),
+        patch(
+            "homeassistant.components.collection_image.image.random.choice",
+            return_value=media_source_state.browse_results[
+                MOCK_MEDIA_DIR_URI_2
+            ].children[1],
+        ) as mock_choice,
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
+        MOCK_MEDIA_IMAGE_URI_2,
+        MOCK_MEDIA_IMAGE_URI_3,
+        MOCK_MEDIA_IMAGE_URI_4,
+    ]
+
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == TEST_TIME
+
+    client = await hass_client()
+
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    expected_data = await hass.async_add_executor_job(TEST_IMAGE.read_bytes)
+    body = await resp.read()
+    assert body == expected_data
+
+    with (
+        freeze_time(TEST_TIME_NEXT),
+        patch(
+            "homeassistant.components.collection_image.image.random.choice",
+            return_value=media_source_state.browse_results[
+                MOCK_MEDIA_DIR_URI_2
+            ].children[2],
+        ) as mock_choice,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "shuffle",
+            {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
+            blocking=True,
+        )
+
+    # On the second call, URI_3 will not be included as it is the current image.
+    assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
+        MOCK_MEDIA_IMAGE_URI_2,
+        MOCK_MEDIA_IMAGE_URI_4,
+    ]
+
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == TEST_TIME_NEXT
+
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    expected_data = await hass.async_add_executor_job(TEST_IMAGE_2.read_bytes)
+    body = await resp.read()
+    assert body == expected_data

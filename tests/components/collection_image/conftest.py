@@ -64,6 +64,11 @@ def config_entry() -> MockConfigEntry:
 @pytest.fixture
 def media_source_state() -> MediaSourceState:
     """Return default configurable responses for the media-source mock."""
+    generic_resolve = PlayMedia(
+        url="",
+        mime_type="image/png",
+        path=TEST_IMAGE,
+    )
     return MediaSourceState(
         browse_results={
             MOCK_MEDIA_DIR_URI_1: directory(
@@ -92,11 +97,10 @@ def media_source_state() -> MediaSourceState:
             )
         },
         resolve_results={
-            MOCK_MEDIA_IMAGE_URI_1: PlayMedia(
-                url="",
-                mime_type="image/png",
-                path=TEST_IMAGE,
-            ),
+            MOCK_MEDIA_IMAGE_URI_1: generic_resolve,
+            MOCK_MEDIA_IMAGE_URI_2: generic_resolve,
+            MOCK_MEDIA_IMAGE_URI_3: generic_resolve,
+            MOCK_MEDIA_IMAGE_URI_4: generic_resolve,
         },
     )
 

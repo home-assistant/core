@@ -3,6 +3,7 @@
 from pathlib import Path
 
 TEST_IMAGE = Path(__file__).parent / "test.png"
+TEST_IMAGE_2 = Path(__file__).parent / "test2.png"
 DEFAULT_ENTITY_ID = "image.random_image"
 
 MOCK_MEDIA_DIR_URI_1 = "media-source://mymedia"
