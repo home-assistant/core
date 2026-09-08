@@ -346,10 +346,10 @@ async def test_number_state_returns_raw_register_value(
 
 
 @pytest.mark.parametrize(
-    ("visual_style", "expected_unit", "expected_step"),
+    ("visual_style", "expected_unit", "expected_step", "expected_max"),
     [
-        pytest.param(0x4000, PERCENTAGE, "1.0", id="percent"),
-        pytest.param(0x2000, "g/h", "0.1", id="grh"),
+        pytest.param(0x4000, PERCENTAGE, "1.0", 100, id="percent"),
+        pytest.param(0x2000, "g/h", "0.1", 85, id="grh"),
     ],
 )
 async def test_hidro_units_follow_visual_style(
@@ -360,13 +360,14 @@ async def test_hidro_units_follow_visual_style(
     visual_style: int,
     expected_unit: str,
     expected_step: str,
+    expected_max: int,
 ) -> None:
     """MBF_PAR_HIDRO unit, step and max follow the reported percent/g-h mode.
 
-    ``MBF_PAR_UICFG_MACH_VISUAL_STYLE`` forces percentage (0x4000) or g/h
-    (0x2000); the nominal (``MBF_PAR_HIDRO_NOM``) drives the maximum in both
-    modes. The nominal is a non-default value so the assertion fails if the
-    dynamic maximum falls back to the description's static 100.
+    MBF_PAR_UICFG_MACH_VISUAL_STYLE forces percentage (0x4000) or g/h (0x2000).
+    Percent mode caps at 100; g/h mode uses the reported nominal
+    (MBF_PAR_HIDRO_NOM). The nominal is a non-100 value so percent fails if the
+    maximum falls back to reading it.
     """
     await setup_integration(hass, mock_config_entry_number)
     await _poll(
@@ -386,7 +387,7 @@ async def test_hidro_units_follow_visual_style(
     assert state is not None
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
     assert state.attributes["step"] == float(expected_step)
-    assert state.attributes["max"] == 85
+    assert state.attributes["max"] == expected_max
 
 
 async def test_masked_number_state_decodes_field(

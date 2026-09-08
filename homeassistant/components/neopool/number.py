@@ -95,7 +95,13 @@ def _hidro_unit(data: dict[str, Any]) -> str:
 
 
 def _hidro_max(data: dict[str, Any]) -> float | None:
-    """Use the device-reported nominal as the hidro maximum, or fall back to the static default."""
+    """Cap at 100 in percent mode; use the g/h nominal otherwise.
+
+    Percent mode is decided independently of MBF_PAR_HIDRO_NOM, so gate on it
+    explicitly. Falls back to the static default when the nominal is missing.
+    """
+    if is_hydrolysis_in_percent(data):
+        return 100.0
     hidro_nom = data.get("MBF_PAR_HIDRO_NOM")
     return float(hidro_nom) if hidro_nom is not None else None
 
