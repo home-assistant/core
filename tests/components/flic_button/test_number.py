@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, PERCENTAGE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, PERCENTAGE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -113,7 +113,7 @@ async def test_rotate_event_updates_own_mode_only(
     await hass.async_block_till_done()
 
     assert hass.states.get(SLOT_3_ENTITY_ID).state == "42"
-    assert hass.states.get(SLOT_1_ENTITY_ID).state == "0"
+    assert hass.states.get(SLOT_1_ENTITY_ID).state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures(
@@ -163,7 +163,7 @@ async def test_set_value_error(
         )
 
     assert err.value.translation_key == "set_position_failed"
-    assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == "0"
+    assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == STATE_UNKNOWN
 
 
 def _restore(entity_id: str, value: float) -> tuple[State, dict[str, Any]]:

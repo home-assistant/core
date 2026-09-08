@@ -92,7 +92,7 @@ class FlicTwistNumberEntity(FlicButtonEntity, RestoreNumber):
     _attr_native_step = 1
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_mode = NumberMode.SLIDER
-    _attr_native_value: float = 0
+    _attr_native_value: float | None = None
     _pending_restore: float | None = None
 
     def __init__(

@@ -56,7 +56,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[continuous-twist][number.flic_twist_t12345_twist_position-entry]
@@ -116,7 +116,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[default-twist][number.flic_twist_t12345_push_twist_position-entry]
@@ -176,7 +176,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[default-twist][number.flic_twist_t12345_twist_position-entry]
@@ -236,7 +236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_1-entry]
@@ -296,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_10-entry]
@@ -356,7 +356,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_11-entry]
@@ -416,7 +416,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_12-entry]
@@ -476,7 +476,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_2-entry]
@@ -536,7 +536,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_3-entry]
@@ -596,7 +596,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_4-entry]
@@ -656,7 +656,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_5-entry]
@@ -716,7 +716,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_6-entry]
@@ -776,7 +776,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_7-entry]
@@ -836,7 +836,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_8-entry]
@@ -896,7 +896,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_number_entities[selector-twist][number.flic_twist_t12345_slot_9-entry]
@@ -956,6 +956,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
