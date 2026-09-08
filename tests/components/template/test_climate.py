@@ -50,7 +50,7 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.typing import WebSocketGenerator
 
-TEST_STATE_ENTITY_ID = "climate.test_state"
+TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
@@ -1088,7 +1088,7 @@ async def test_bad_temperature_unit(
     ("extra_config", "attribute_template"),
     [
         (
-            {"hvac_mode": "{{ states('climate.test_state') }}", **MINIMUM_REQUIREMENTS},
+            {"hvac_mode": "{{ states('sensor.test_state') }}", **MINIMUM_REQUIREMENTS},
             "{{ is_state('binary_sensor.availability', 'on') }}",
         )
     ],
@@ -1126,7 +1126,7 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     ("extra_config", "attribute_template"),
     [
         (
-            {"hvac_mode": "{{ states('climate.test_state') }}", **MINIMUM_REQUIREMENTS},
+            {"hvac_mode": "{{ states('sensor.test_state') }}", **MINIMUM_REQUIREMENTS},
             "{{ x - 12 }}",
         )
     ],
@@ -1256,7 +1256,6 @@ async def test_flow_preview(
                 "fan_mode": None,
                 "fan_modes": None,
                 "hvac_action": HVACAction.IDLE,
-                "hvac_mode": HVACMode.COOL,
                 "hvac_modes": [HVACMode.COOL],
                 "preset_mode": None,
                 "preset_modes": None,
@@ -1415,25 +1414,7 @@ async def test_flow_preview(
                 "target_temperature": None,
             },
             STATE_UNKNOWN,
-            {
-                "current_humidity": None,
-                "current_temperature": 35.0,
-                "fan_mode": None,
-                "fan_modes": None,
-                "hvac_action": HVACAction.IDLE,
-                "hvac_mode": None,
-                "hvac_modes": [HVACMode.COOL],
-                "preset_mode": None,
-                "preset_modes": None,
-                "swing_mode": None,
-                "swing_modes": None,
-                "swing_horizontal_mode": None,
-                "swing_horizontal_modes": None,
-                "humidity": None,
-                "target_temp_high": None,
-                "target_temp_low": None,
-                "temperature": None,
-            },
+            {},
         ),
     ],
 )
@@ -1488,7 +1469,7 @@ async def test_restore_state(
             "target_temperature_low": "{{ state_attr('sensor.test_state', 'target_temperature_low') }}",
             "set_temperature": [],
         },
-        "state_attr('sensor.test_state', 'is_on') is true",
+        "is_state_attr('sensor.test_state', 'hvac_mode', 'heat')",
     )
 
     assert_state_and_attributes(
@@ -1498,18 +1479,12 @@ async def test_restore_state(
         initial_attributes,
     )
 
+    await async_trigger(hass, "sensor.test_state", "x", {"hvac_modes": ["heat"]})
     await async_trigger(
         hass,
         "sensor.test_state",
-        "anything",
-        {"hvac_modes": [HVACMode.HEAT]},
-    )
-
-    await async_trigger(
-        hass,
-        "sensor.test_state",
-        "anything",
-        {"hvac_modes": [HVACMode.HEAT], "hvac_mode": HVACMode.HEAT},
+        "x",
+        {"hvac_modes": ["heat"], "hvac_mode": HVACMode.HEAT},
     )
 
     assert_state_and_attributes(hass, TEST_CLIMATE, HVACMode.HEAT)
@@ -1531,7 +1506,7 @@ async def test_saving_state(
         style,
         1,
         config={
-            "hvac_mode": "{{ state_attr('climate.test_state', 'hvac_mode') }}",
+            "hvac_mode": "{{ state_attr('sensor.test_state', 'hvac_mode') }}",
             **MINIMUM_REQUIREMENTS,
         },
     )
@@ -1560,7 +1535,7 @@ async def test_saving_state(
         "fan_mode": None,
         "fan_modes": None,
         "hvac_action": None,
-        "hvac_mode": HVACMode.COOL,
+        "hvac_mode": "cool",
         "hvac_modes": EXPECTED_HVAC_MODES,
         "preset_mode": None,
         "preset_modes": None,
@@ -1568,10 +1543,10 @@ async def test_saving_state(
         "swing_modes": None,
         "swing_horizontal_mode": None,
         "swing_horizontal_modes": None,
-        "humidity": None,
-        "target_temp_high": None,
-        "target_temp_low": None,
-        "temperature": None,
+        "target_humidity": None,
+        "target_temperature_high": None,
+        "target_temperature_low": None,
+        "target_temperature": None,
     }
 
 

@@ -450,6 +450,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             tcv.item_in_list(
                 self, "_attr_hvac_mode", "_attr_hvac_modes", CONF_HVAC_MODES
             ),
+            self._update_hvac_mode,
         )
         self.setup_template(
             CONF_HVAC_ACTION,
@@ -587,6 +588,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+
+    def _update_hvac_mode(self, render) -> None:
+        if render is None:
+            self._attr_hvac_mode = None
+            return
+
+        self._attr_hvac_mode = HVACMode(render)
 
     def _update_hvac_modes(self, render) -> None:
 
