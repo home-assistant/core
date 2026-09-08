@@ -1,7 +1,7 @@
 """Teslemetry integration."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from functools import partial
 from pathlib import Path
 from typing import Any, Final, cast
@@ -421,6 +421,32 @@ async def _async_vehicle_first_refresh(vehicle: TeslemetryVehicleData) -> None:
         ) from err
 
 
+async def _async_gather_first_refreshes(
+    *coros: Coroutine[Any, Any, Any],
+) -> None:
+    """Run first-refresh coroutines concurrently, cancelling siblings on failure.
+
+    asyncio.gather without return_exceptions propagates the first exception but
+    leaves the other awaitables running. A timed-out vehicle refresh must not
+    leave a sleeping vehicle's stream get_config() or an energy site refresh
+    running in the background, so this cancels and awaits the rest before the
+    failure propagates.
+    """
+    tasks = [asyncio.ensure_future(coro) for coro in coros]
+    if not tasks:
+        return
+    try:
+        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+    finally:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+    for task in tasks:
+        if task in done and not task.cancelled() and (exc := task.exception()):
+            raise exc
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -632,7 +658,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
 
     # Run all first refreshes
-    await asyncio.gather(
+    await _async_gather_first_refreshes(
         *(async_setup_stream(hass, entry, vehicle) for vehicle in vehicles),
         *(
             _async_vehicle_first_refresh(vehicle)
