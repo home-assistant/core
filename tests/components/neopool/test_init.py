@@ -200,6 +200,7 @@ async def test_corrupt_gpio_updates_issue_on_value_change(
     assert str(MAX_RELAY_GPIO + 2) in issue.translation_placeholders["details"]
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_setup_in_winter_mode(
     hass: HomeAssistant,
 ) -> None:
