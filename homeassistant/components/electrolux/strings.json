@@ -244,6 +244,9 @@
     }
   },
   "exceptions": {
+    "multiple_map_ids": {
+      "message": "Can't perform cleaning command: segments from multiple maps selected. Please select segments from a single map."
+    },
     "remote_control_disabled": {
       "message": "Remote control is disabled for this appliance. Please enable it on the appliance and try again."
     },
