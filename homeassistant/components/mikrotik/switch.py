@@ -47,6 +47,7 @@ async def async_setup_entry(
         for switch_desc in SENSORS
         for interface in coordinator.api.interfaces
         if interface.get("type") == switch_desc.key
+        or (switch_desc.key == "wlan" and interface.get("type") == "wifi")
     ]
 
     async_add_entities(switch_list)
