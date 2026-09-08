@@ -19,12 +19,7 @@ from uiprotect.data.public_devices import PublicCamera
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform,
-    issue_registry as ir,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import entity_platform, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -35,7 +30,6 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DEFAULT_BRAND,
     DOMAIN,
 )
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -302,26 +296,6 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             source = streams.get_stream_url(quality, srtp=False)
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
         self._stream_source = source
-
-    @callback
-    @override
-    def _async_set_device_info(self) -> None:
-        if self._private is not None:
-            super()._async_set_device_info()
-            return
-        # public-only: no market_name/firmware_version/protect_url, so device
-        # identity is limited. The NVR link uses the device id registered at
-        # setup — an API-key-only client has no private bootstrap to read the
-        # NVR mac from.
-        public = self._public
-        self._attr_device_info = DeviceInfo(
-            name=public.display_name,
-            model=public.type,
-            model_id=public.type,
-            manufacturer=DEFAULT_BRAND,
-            connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
-            via_device_id=self.data.nvr_device_id,
-        )
 
     @callback
     @override

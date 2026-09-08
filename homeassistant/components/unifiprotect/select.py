@@ -28,6 +28,7 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import (
     PublicCamera,
     PublicDeviceModel,
+    PublicLight,
     SensorFeatureCapability,
 )
 from uiprotect.exceptions import GlobalAlarmManagerError
@@ -173,9 +174,9 @@ def _get_doorbell_current(obj: Camera) -> str | None:
     return obj.lcd_message.text
 
 
-async def _set_light_mode(obj: Light, mode: str) -> None:
+async def _set_light_mode(obj: PublicLight, mode: str) -> None:
     lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
-    await obj.set_light_mode_public(
+    await obj.set_light_mode(
         LightModeType(lightmode),
         enable_at=None if timing is None else LightModeEnableType(timing),
     )
@@ -235,9 +236,9 @@ def _get_hdr_mode_public(obj: PublicDeviceModel) -> str | None:
     return _HDR_MODE_MAP_INVERSE.get(cast(PublicCamera, obj).hdr_type)
 
 
-async def _set_hdr_mode(obj: Camera, mode: str) -> None:
+async def _set_hdr_mode(obj: PublicCamera, mode: str) -> None:
     """Set HDR mode via the public API."""
-    await obj.set_hdr_mode_public(_HDR_MODE_MAP[mode])
+    await obj.set_hdr_mode(_HDR_MODE_MAP[mode])
 
 
 PTZ_PATROL_DESCRIPTION = ProtectSelectEntityDescription[Camera](
@@ -476,13 +477,15 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         # Light Motion is a bit different
         if self.entity_description.key == _KEY_LIGHT_MOTION:
             assert self.entity_description.ufp_set_method_fn is not None
-            await self.entity_description.ufp_set_method_fn(self.device, option)
+            await self.entity_description.ufp_set_method_fn(
+                self._ufp_set_target(), option
+            )
             return
 
         unifi_value = self._hass_to_unifi_options[option]
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
-        await self.entity_description.ufp_set(self.device, unifi_value)
+        await self.entity_description.ufp_set(self._ufp_set_target(), unifi_value)
 
 
 class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):

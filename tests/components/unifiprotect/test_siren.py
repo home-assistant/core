@@ -4,13 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import (
-    ModelType,
-    PublicBootstrap,
-    PublicSirenStatus,
-    Siren,
-    SirenDuration,
-)
+from uiprotect.data import ModelType, PublicSirenStatus, Siren, SirenDuration
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -34,7 +28,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .utils import MockUFPFixture, assert_entity_counts, init_entry
+from .utils import (
+    MockUFPFixture,
+    assert_entity_counts,
+    init_entry,
+    make_public_bootstrap,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -68,12 +67,7 @@ def _make_siren(*, is_active: bool = False) -> Mock:
 
 def _make_public_bootstrap(siren: Mock | None) -> Mock:
     """Build a public bootstrap mock with the given siren."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.sirens = {siren.id: siren} if siren is not None else {}
-    pb.relays = {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
-    return pb
+    return make_public_bootstrap(sirens={siren.id: siren} if siren is not None else {})
 
 
 def _make_ws_msg(siren: Mock, *, deleted: bool = False) -> Mock:
