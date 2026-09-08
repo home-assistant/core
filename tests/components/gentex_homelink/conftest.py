@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
+from time import time
 from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
@@ -62,7 +63,7 @@ def mock_config_entry() -> MockConfigEntry:
                 "refresh_token": "refresh",
                 "expires_in": 3600,
                 "token_type": "bearer",
-                "expires_at": 1234567890,
+                "expires_at": time() + 3600,
             },
         },
     )
