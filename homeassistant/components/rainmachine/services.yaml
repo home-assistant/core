@@ -34,7 +34,9 @@ start_zone:
   target:
     entity:
       integration: rainmachine
-      domain: valve
+      domain:
+        - switch
+        - valve
   fields:
     zone_run_time:
       default: 600
@@ -59,7 +61,9 @@ stop_zone:
   target:
     entity:
       integration: rainmachine
-      domain: valve
+      domain:
+        - switch
+        - valve
 unpause_watering:
   fields:
     device_id:
