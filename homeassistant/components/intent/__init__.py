@@ -283,15 +283,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
 def _async_register_onoff_aliases(hass: HomeAssistant) -> None:
     """Register constrained aliases of turn on and turn off.
 
-    HassTurnOn and HassTurnOff already reach locks, covers, valves and buttons,
-    but for those domains on and off are not what the user says, and a caller
-    picking a tool by name can invert the mapping: asked to lock a door, an LLM
-    reaches for HassTurnOff. These aliases name the action instead, and pin the
-    domains they can target so the mapping cannot be inverted.
-
-    device_class is only offered where the constrained domains can carry one.
-    Locks never have a device class, so HassLock and HassUnlock do not accept
-    the slot at all rather than fail matching on a value that cannot apply.
+    This lets smaller LLMs pick the right tools more effectively.
     """
     aliases: tuple[tuple[str, str, set[str], set[type[StrEnum]] | None, str], ...] = (
         (
