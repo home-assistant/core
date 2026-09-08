@@ -19,12 +19,6 @@ from .const import DOMAIN, IMPLAUSIBLE_WATER_TEMP_F, LOGGER
 type FloConfigEntry = ConfigEntry[FloRuntimeData]
 
 
-def _event_sort_key(event: dict[str, Any]) -> datetime:
-    """Return a comparable timestamp for a Flo Detect event."""
-    parsed = dt_util.parse_datetime(event.get("endAt") or event.get("startAt") or "")
-    return parsed or dt_util.utc_from_timestamp(0)
-
-
 @dataclass
 class FloRuntimeData:
     """Flo runtime data."""
@@ -176,7 +170,12 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         events = self.api_client.flodetect.parse_events(self._events)
         if not events:
             return None
-        return max(events, key=_event_sort_key)
+        return max(
+            events,
+            key=lambda event: dt_util.parse_datetime(
+                event.get("endAt") or event["startAt"], raise_on_error=True
+            ),
+        )
 
     @property
     def firmware_version(self) -> str:
