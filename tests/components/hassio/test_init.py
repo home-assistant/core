@@ -233,7 +233,6 @@ async def test_setup_onboarding_supervisor_update(
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
     supervisor_client.supervisor.update.assert_called_once()
-    supervisor_client.reload_updates.assert_called_once()
 
 
 async def test_setup_onboarding_supervisor_no_update(
@@ -255,7 +254,6 @@ async def test_setup_onboarding_supervisor_no_update(
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.LOADED
     supervisor_client.supervisor.update.assert_called_once()
-    supervisor_client.reload_updates.assert_called_once()
 
 
 async def test_setup_onboarding_supervisor_update_error(
@@ -277,29 +275,6 @@ async def test_setup_onboarding_supervisor_update_error(
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
     supervisor_client.supervisor.update.assert_called_once()
-    supervisor_client.reload_updates.assert_called_once()
-
-
-async def test_setup_onboarding_supervisor_reload_error(
-    hass: HomeAssistant,
-    supervisor_client: AsyncMock,
-) -> None:
-    """Test that during onboarding, a failed version reload causes retry."""
-    supervisor_client.reload_updates.side_effect = SupervisorError
-
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
-    ):
-        result = await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
-
-    assert result
-    assert is_hassio(hass)
-    entry = hass.config_entries.async_entries("hassio")[0]
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    supervisor_client.reload_updates.assert_called_once()
-    supervisor_client.supervisor.update.assert_not_called()
 
 
 async def test_setup_app_panel(hass: HomeAssistant) -> None:
