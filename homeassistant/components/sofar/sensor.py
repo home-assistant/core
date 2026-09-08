@@ -1153,7 +1153,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     ),
     SofarSensorDescription(
         key="load_consumption_today",
-        component="meter_energy",
+        component="energy",
         translation_key="load_consumption_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1163,7 +1163,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     ),
     SofarSensorDescription(
         key="load_consumption_total",
-        component="meter_energy",
+        component="energy",
         translation_key="load_consumption_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1172,7 +1172,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     ),
     SofarSensorDescription(
         key="import_energy_today",
-        component="meter_energy",
+        component="energy",
         translation_key="import_energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1182,7 +1182,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     ),
     SofarSensorDescription(
         key="import_energy_total",
-        component="meter_energy",
+        component="energy",
         translation_key="import_energy_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1191,7 +1191,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     ),
     SofarSensorDescription(
         key="export_energy_today",
-        component="meter_energy",
+        component="energy",
         translation_key="export_energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1201,7 +1201,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     ),
     SofarSensorDescription(
         key="export_energy_total",
-        component="meter_energy",
+        component="energy",
         translation_key="export_energy_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
