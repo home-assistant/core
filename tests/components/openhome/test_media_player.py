@@ -1,10 +1,11 @@
 """Tests for the Openhome media player platform."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from openhomedevice.device import Device
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
 
@@ -53,44 +54,121 @@ SOURCES = [
     {"index": 1, "name": "Radio", "type": "Radio"},
 ]
 
-# Each action, the device coroutine it drives, and a source type that exposes
-# the supported feature it is gated behind.
+# The device coroutines the actions drive, referenced from the library so a
+# rename upstream fails the test rather than silently skipping an action.
+ACTION_METHODS = (
+    Device.set_standby,
+    Device.play,
+    Device.pause,
+    Device.stop,
+    Device.skip,
+    Device.increase_volume,
+    Device.decrease_volume,
+    Device.set_volume,
+    Device.set_mute,
+    Device.set_source,
+    Device.play_media,
+    Device.invoke_pin,
+)
+
+# Each action, the coroutine it drives, and a source type that exposes the
+# supported feature it is gated behind.
 ACTIONS = [
-    pytest.param(MEDIA_PLAYER_DOMAIN, SERVICE_TURN_ON, {}, "set_standby", "Playlist"),
-    pytest.param(MEDIA_PLAYER_DOMAIN, SERVICE_TURN_OFF, {}, "set_standby", "Playlist"),
-    pytest.param(MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PLAY, {}, "play", "Playlist"),
-    pytest.param(MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PAUSE, {}, "pause", "Playlist"),
-    pytest.param(MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_STOP, {}, "stop", "Radio"),
-    pytest.param(MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {}, "skip", "Playlist"),
     pytest.param(
-        MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {}, "skip", "Playlist"
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {},
+        Device.set_standby,
+        "Playlist",
+        id="turn_on",
     ),
     pytest.param(
-        MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_UP, {}, "increase_volume", "Playlist"
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {},
+        Device.set_standby,
+        "Playlist",
+        id="turn_off",
     ),
     pytest.param(
-        MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_DOWN, {}, "decrease_volume", "Playlist"
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {},
+        Device.play,
+        "Playlist",
+        id="media_play",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {},
+        Device.pause,
+        "Playlist",
+        id="media_pause",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_STOP,
+        {},
+        Device.stop,
+        "Radio",
+        id="media_stop",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_NEXT_TRACK,
+        {},
+        Device.skip,
+        "Playlist",
+        id="media_next_track",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PREVIOUS_TRACK,
+        {},
+        Device.skip,
+        "Playlist",
+        id="media_previous_track",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {},
+        Device.increase_volume,
+        "Playlist",
+        id="volume_up",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {},
+        Device.decrease_volume,
+        "Playlist",
+        id="volume_down",
     ),
     pytest.param(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_SET,
         {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
-        "set_volume",
+        Device.set_volume,
         "Playlist",
+        id="volume_set",
     ),
     pytest.param(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_MUTE,
         {ATTR_MEDIA_VOLUME_MUTED: True},
-        "set_mute",
+        Device.set_mute,
         "Playlist",
+        id="volume_mute",
     ),
     pytest.param(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {ATTR_INPUT_SOURCE: "Playlist"},
-        "set_source",
+        Device.set_source,
         "Playlist",
+        id="select_source",
     ),
     pytest.param(
         MEDIA_PLAYER_DOMAIN,
@@ -99,11 +177,17 @@ ACTIONS = [
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://localhost/track.flac",
         },
-        "play_media",
+        Device.play_media,
         "Playlist",
+        id="play_media",
     ),
     pytest.param(
-        DOMAIN, SERVICE_INVOKE_PIN, {ATTR_PIN_INDEX: 1}, "invoke_pin", "Playlist"
+        DOMAIN,
+        SERVICE_INVOKE_PIN,
+        {ATTR_PIN_INDEX: 1},
+        Device.invoke_pin,
+        "Playlist",
+        id="invoke_pin",
     ),
 ]
 
@@ -127,21 +211,8 @@ def mock_device() -> Generator[MagicMock]:
         device.sources = AsyncMock(return_value=SOURCES)
         device.is_in_standby = AsyncMock(return_value=False)
         device.transport_state = AsyncMock(return_value="Playing")
-        for action in (
-            "set_standby",
-            "play",
-            "pause",
-            "stop",
-            "skip",
-            "increase_volume",
-            "decrease_volume",
-            "set_volume",
-            "set_mute",
-            "set_source",
-            "play_media",
-            "invoke_pin",
-        ):
-            setattr(device, action, AsyncMock())
+        for method in ACTION_METHODS:
+            setattr(device, method.__name__, AsyncMock())
         yield device
 
 
@@ -175,19 +246,18 @@ async def test_action_error_is_raised(
     domain: str,
     service: str,
     data: dict[str, Any],
-    method: str,
+    method: Callable[..., Any],
     source_type: str,
 ) -> None:
     """Test every action raises when the device rejects the request."""
     await setup_platform(hass, mock_device, source_type)
 
-    getattr(mock_device, method).side_effect = OpenhomeConnectionError(
-        "no route to host"
-    )
+    mocked = getattr(mock_device, method.__name__)
+    mocked.side_effect = OpenhomeConnectionError("no route to host")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             domain, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
         )
 
-    getattr(mock_device, method).assert_awaited()
+    mocked.assert_awaited()
