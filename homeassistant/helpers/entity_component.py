@@ -201,8 +201,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             self.logger.warning(
                 (
                     "Ignored unload request for config entry %s (%s) in %s.%s; "
-                    "no platform is loaded, it was never set up "               
-                    "or has already been unloaded"                              
+                    "no platform is loaded, it was never set up "
+                    "or has already been unloaded"
                 ),
                 config_entry.title,
                 key,
