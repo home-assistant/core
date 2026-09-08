@@ -165,7 +165,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the thermostat."""
-        super().__init__(coordinator, zone, zone.zone_id)  # type: ignore[arg-type] # until fix issue #139773
+        super().__init__(coordinator, zone, str(zone.zone_id))
         thermostat = self._thermostat
         unit = thermostat.get_unit()
         min_humidity, max_humidity = thermostat.get_humidity_setpoint_limits()
