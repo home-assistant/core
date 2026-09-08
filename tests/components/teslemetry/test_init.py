@@ -199,10 +199,6 @@ async def test_vehicle_stream(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get("binary_sensor.test_user_present")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
     mock_add_listener.send(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
@@ -214,10 +210,6 @@ async def test_vehicle_stream(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
-    assert state is not None
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.test_user_present")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -922,6 +914,97 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
     await hass.async_block_till_done()
 
     assert (mock_vehicle_data.call_count > 0) is expected_polled
+
+
+@pytest.mark.parametrize(
+    ("polling", "has_polling_only"),
+    [
+        (True, True),
+        (None, True),
+        (False, False),
+    ],
+    ids=["polling", "unknown_polling", "streaming"],
+)
+async def test_polling_only_entities_require_metadata(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    polling: bool | None,
+    has_polling_only: bool,
+) -> None:
+    """Create a polling-only entity unless the vehicle is explicitly stream-only.
+
+    A null polling flag is unknown, not stream-only, so its entities are kept.
+    """
+    vin = "LRW3F7EK4NC700000"
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][vin]["polling"] = polling
+    mock_metadata.return_value = metadata
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    # is_user_present is a polling-only binary sensor (no streaming source).
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-vehicle_state_is_user_present"
+        )
+        is not None
+    ) is has_polling_only
+    # A feature with a streaming source exists regardless of the polling flags.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-state"
+        )
+        is not None
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_streaming_vehicle_coordinator_never_polls(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A plain streaming vehicle is never polled."""
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 0
+
+
+async def test_stale_polling_only_entity_removed_on_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Prune a polling-only entity when its vehicle no longer qualifies."""
+    vin = "LRW3F7EK4NC700000"
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Left over from before the vehicle stopped qualifying for polling.
+    stale = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{vin}-vehicle_state_is_user_present",
+        config_entry=entry,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Default metadata is a plain streaming vehicle, which no longer qualifies.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, stale.unique_id
+        )
+        is None
+    )
 
 
 async def test_energy_site_version_update(
