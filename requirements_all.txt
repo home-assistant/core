@@ -1132,6 +1132,7 @@ georss-ign-sismologia-client==0.8
 # homeassistant.components.qld_bushfire
 georss-qld-bushfire-alert-client==0.8
 
+# homeassistant.components.androidtv_remote
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
 # homeassistant.components.nmap_tracker
