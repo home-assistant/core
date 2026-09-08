@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
 
 from homeassistant.components.openhome.const import DOMAIN
@@ -156,6 +157,22 @@ async def test_update_available(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     update_firmware.assert_called_once()
+
+
+async def test_firmware_update_error(hass: HomeAssistant) -> None:
+    """Ensure a failed firmware install is raised to the user."""
+
+    update_firmware = AsyncMock(side_effect=OpenhomeConnectionError("no route to host"))
+    await setup_integration(hass, FIRMWARE_UPDATE_AVAILABLE, update_firmware)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.friendly_name"},
+            blocking=True,
+        )
+    update_firmware.assert_awaited_once()
 
 
 async def test_firmware_update_not_required(hass: HomeAssistant) -> None:
