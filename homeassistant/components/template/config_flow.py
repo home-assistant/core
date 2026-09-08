@@ -197,7 +197,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             }
 
     if domain == Platform.COVER:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
             vol.Optional(STOP_ACTION): selector.ActionSelector(),
