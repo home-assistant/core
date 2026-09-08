@@ -82,19 +82,19 @@ async def test_binary_sensor_suspended_server(
     mock_pterodactyl: Generator[AsyncMock],
 ) -> None:
     """Test a suspended server does not fetch utilization data."""
-    server_list_data = await async_load_json_object_fixture(
-        hass, "suspended_server_list_data.json", "pterodactyl"
+    server_list_data_suspended = await async_load_json_object_fixture(
+        hass, "server_list_data_suspended.json", "pterodactyl"
     )
-    server_1_data = await async_load_json_object_fixture(
-        hass, "suspended_server_data.json", "pterodactyl"
+    server_1_data_suspended = await async_load_json_object_fixture(
+        hass, "server_1_data_suspended.json", "pterodactyl"
     )
 
     mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
         mock_pterodactyl,
         "client",
-        server_list_data,
+        server_list_data_suspended,
     )
-    server_data = {"1": server_1_data}
+    server_data = {"1": server_1_data_suspended}
     mock_pterodactyl.client.servers.get_server.side_effect = lambda identifier: (
         server_data[identifier]
     )
@@ -109,6 +109,77 @@ async def test_binary_sensor_suspended_server(
         == STATE_ON
     )
     mock_pterodactyl.client.servers.get_server_utilization.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_pterodactyl")
+async def test_binary_sensor_suspended_server_transition_runtime(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pterodactyl: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test suspended state can change during runtime and skips utilization when suspended."""
+    server_list_data_suspended = await async_load_json_object_fixture(
+        hass, "server_list_data_suspended.json", "pterodactyl"
+    )
+    server_1_data = await async_load_json_object_fixture(
+        hass, "server_1_data.json", "pterodactyl"
+    )
+    server_1_data_suspended = await async_load_json_object_fixture(
+        hass, "server_1_data_suspended.json", "pterodactyl"
+    )
+
+    mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
+        mock_pterodactyl,
+        "client",
+        server_list_data_suspended,
+    )
+    server_data = {"1": server_1_data}
+    mock_pterodactyl.client.servers.get_server.side_effect = lambda identifier: (
+        server_data[identifier]
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
+        == STATE_ON
+    )
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_suspended").state
+        == "off"
+    )
+
+    mock_pterodactyl.client.servers.get_server_utilization.reset_mock()
+    server_data["1"] = server_1_data_suspended
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state == "off"
+    )
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_suspended").state
+        == STATE_ON
+    )
+    mock_pterodactyl.client.servers.get_server_utilization.assert_not_called()
+
+    mock_pterodactyl.client.servers.get_server_utilization.reset_mock()
+    server_data["1"] = server_1_data
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
+        == STATE_ON
+    )
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_suspended").state
+        == "off"
+    )
+    mock_pterodactyl.client.servers.get_server_utilization.assert_called_once()
 
 
 async def test_binary_sensor_update_failure(

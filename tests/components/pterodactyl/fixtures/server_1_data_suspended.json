@@ -10,13 +10,13 @@
     "ip": "192.168.0.1",
     "port": 2022
   },
-  "description": "Description of Test Server 1",
+  "description": "",
   "limits": {
-    "memory": 1024,
-    "swap": 512,
+    "memory": 2048,
+    "swap": 1024,
     "disk": 10240,
     "io": 500,
-    "cpu": 50,
+    "cpu": 100,
     "threads": null,
     "oom_disabled": true
   },
