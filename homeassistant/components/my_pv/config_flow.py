@@ -8,7 +8,7 @@ from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -44,8 +44,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str
     _device_model: str
     _device_serial_number: str
-
-    _reauth_entry: ConfigEntry | None = None
 
     @override
     async def async_step_zeroconf(
@@ -199,13 +197,13 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not errors:
                     await self.async_set_unique_id(device.serial_number)
-                    if self._reauth_entry:
+                    if self.source == SOURCE_REAUTH:
                         self._abort_if_unique_id_mismatch()
                         data = {
                             CONF_PASSWORD: password,
                         }
                         return self.async_update_reload_and_abort(
-                            self._reauth_entry, data_updates=data
+                            self._get_reauth_entry(), data_updates=data
                         )
                     self._abort_if_unique_id_configured()
 
@@ -229,11 +227,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an authentication error."""
-        if user_input and CONF_HOST in user_input:
+        if CONF_HOST in user_input:
             _LOGGER.debug("Reauthentication needed for my-PV device")
             self._host = user_input[CONF_HOST]
-            self._reauth_entry = self.hass.config_entries.async_get_entry(
-                self.context["entry_id"]
-            )
+            return await self.async_step_auth(step_id="reauth")
 
         return await self.async_step_auth(user_input, "reauth")
