@@ -859,7 +859,6 @@ class DPCode(StrEnum):
     SENSOR_TEMPERATURE = "sensor_temperature"
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
-    SIGLE_PHASE_POWER = "sigle_phase_power"  # Single-phase power (Tuya's spelling)
     SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
     SLEEP = "sleep"  # Sleep function

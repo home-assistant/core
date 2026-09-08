@@ -942,9 +942,6 @@
       "side_brush_life": {
         "name": "Side brush lifetime"
       },
-      "single_phase_power": {
-        "name": "Single-phase power"
-      },
       "smoke_amount": {
         "name": "Smoke amount"
       },
