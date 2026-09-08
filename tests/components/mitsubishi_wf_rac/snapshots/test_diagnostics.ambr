@@ -80,7 +80,7 @@
       'led_status': 1,
       'num_accounts': 2,
       'port': 51443,
-      'updated_by': 'local',
+      'updated_by': '**REDACTED**',
     }),
     'result_codes': dict({
     }),

@@ -38,7 +38,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -532,28 +532,30 @@ async def test_the_wider_range_only_lifts_the_cooling_ceiling(
     assert hass.states.get(ENTITY_ID).attributes["max_temp"] == max_temp
 
 
-async def test_a_frame_the_entity_cannot_read_marks_it_unavailable(
+async def test_a_frame_the_entity_cannot_read_makes_its_state_unknown(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """A frame the entity cannot read ends at the entity.
 
-    It reads the coordinator's state directly, so a shape it does not expect
-    has to become unavailability rather than a traceback.
+    Unknown rather than unavailable: the unit answered and still takes
+    commands, and Home Assistant leaves unavailable entities out of entity
+    service calls - so reporting unavailable would take the controls away
+    from a unit that is right there.
     """
     device = init_integration.runtime_data.device
     device.airco.OperationMode = 99
     device.async_set_updated_data(device.airco)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
     # And back, without waiting out anything: the next frame it can read is
-    # all it needs. The unit answered throughout.
+    # all it needs.
     device.airco.OperationMode = 1
     device.async_set_updated_data(device.airco)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
 
 
 @pytest.mark.parametrize(

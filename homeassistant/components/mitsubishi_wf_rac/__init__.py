@@ -1,9 +1,7 @@
 """The Mitsubishi WF-RAC integration."""
 
-from dataclasses import dataclass
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -26,22 +24,14 @@ from .const import (
 from .coordinator import (
     AVAILABILITY_FAILURE_LIMIT_MIN,
     Device,
+    MitsubishiWfRacConfigEntry,
+    MitsubishiWfRacData,
     registration_full_issue_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE]
-
-
-@dataclass
-class MitsubishiWfRacData:
-    """Class for storing runtime data."""
-
-    device: Device
-
-
-type MitsubishiWfRacConfigEntry = ConfigEntry[MitsubishiWfRacData]
 
 
 async def async_migrate_entry(

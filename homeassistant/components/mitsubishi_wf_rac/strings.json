@@ -1,9 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "another_airco": "That address belongs to a different airco. Add it as its own device instead.",
-      "existing_instance_updated": "Updated existing configuration.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {

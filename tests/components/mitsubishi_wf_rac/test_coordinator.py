@@ -29,13 +29,14 @@ from homeassistant.components.mitsubishi_wf_rac.coordinator import (
     WRITE_LOCK_RETRY_DELAY,
     registration_full_issue_id,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+DOMAIN_LOGGER = "homeassistant.components.mitsubishi_wf_rac"
 ENTITY_ID = "climate.living_room"
 POLL = timedelta(seconds=60)
 
@@ -428,8 +429,8 @@ async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
 
     So it resets the device's missed-poll counter before the entities read
     the frame. An entity that counted its own decoding failure into that
-    counter could never reach the threshold, and would stay available with
-    stale state however long the condition lasted.
+    counter could never reach the threshold, and would keep reporting stale
+    state as current however long the condition lasted.
     """
     device = init_integration.runtime_data.device
     decode = device._parser.translate_bytes
@@ -443,7 +444,7 @@ async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
         await _advance(hass, freezer, 3)
 
     assert device.available
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
 
 async def test_an_unexpected_poll_failure_takes_the_entities_with_it(
@@ -600,3 +601,30 @@ async def test_a_command_issued_during_a_poll_waits_for_what_it_brings(
         mock_repository.send_airco_command.await_args.args[1]
     )
     assert sent.PresetTemp == 27.0
+
+
+async def test_an_evicted_account_is_reported_once_not_every_minute(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Being dropped from the account table is one outage, not one per poll.
+
+    The unit answers throughout, so re-registration is attempted on every
+    poll - and if the table is full it cannot succeed. Saying so once a
+    minute for as long as that lasts buries the line that matters.
+    """
+    mock_repository.get_aircon_stats.side_effect = WfRacError("result 2")
+    mock_repository.update_account_info.side_effect = WfRacError("table full")
+    caplog.set_level(logging.INFO)
+
+    await _advance(hass, freezer, 6)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    outage = [r for r in caplog.records if "is unavailable after" in r.message]
+    assert len(outage) == 1
+    assert outage[0].levelno == logging.INFO
+    ours = [r for r in caplog.records if r.name.startswith(DOMAIN_LOGGER)]
+    assert not [r for r in ours if r.levelno >= logging.WARNING]

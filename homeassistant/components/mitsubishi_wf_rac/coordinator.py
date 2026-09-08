@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import re
@@ -98,13 +99,25 @@ WRITE_LOCK_RETRY_DELAY = timedelta(seconds=10)
 WRITE_LOCK_MAX_WAIT = timedelta(seconds=61)
 
 
+@dataclass
+class MitsubishiWfRacData:
+    """Runtime data of a configured airco."""
+
+    device: Device
+
+
+type MitsubishiWfRacConfigEntry = ConfigEntry[MitsubishiWfRacData]
+
+
 class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instance-attributes
     """Device Class."""
+
+    config_entry: MitsubishiWfRacConfigEntry
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: MitsubishiWfRacConfigEntry,
         name: str,
         hostname: str,
         port: int,
@@ -174,19 +187,12 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
 
     @property
     def options(self) -> Mapping[str, Any]:
-        """Options of the config entry that owns this device.
-
-        DataUpdateCoordinator.config_entry is typed as optional because a
-        coordinator need not have one - this integration always constructs a
-        Device with one, passed to super().__init__() above.
-        """
-        assert self.config_entry is not None
+        """Options of the config entry that owns this device."""
         return self.config_entry.options
 
     @property
     def entry_id(self) -> str:
-        """Id of the config entry that owns this device - see options above."""
-        assert self.config_entry is not None
+        """Id of the config entry that owns this device."""
         return self.config_entry.entry_id
 
     @override
@@ -241,15 +247,10 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             response = await self._api.get_aircon_stats(self._airco_id)
 
         except WfRacConnectionError as ex:
-            self._record_connection_failure(ex)
+            self._record_failed_poll(ex)
             return False
         except (WfRacError, KeyError) as ex:
-            self._set_availability(False)
-            _LOGGER.warning(
-                "Error: something went wrong updating the airco [%s] values",
-                self.device_name,
-                exc_info=ex,
-            )
+            self._record_failed_poll(ex)
             # The WF-RAC module keeps only a small, fixed-size table of registered
             # accounts (operator ids). Opening the official app or adding phones can
             # silently evict Home Assistant from that table, after which polls fail
@@ -277,8 +278,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             if became_available:
                 _LOGGER.info("Airco [%s] is available again", self.device_name)
         except (KeyError, TypeError, ValueError) as ex:
-            _LOGGER.warning("Could not parse airco data", exc_info=ex)
-            self._set_availability(False)
+            self._record_failed_poll(ex)
             return False
 
         # Cosmetic (diagnostic sensor only). Some firmware revisions omit the
@@ -355,7 +355,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
                 self._airco_id, self._hass.config.time_zone
             )
         except WfRacError, KeyError, TypeError:
-            _LOGGER.warning("Could not add account from airco %s", self._airco_id)
+            _LOGGER.debug("Could not add account from airco %s", self._airco_id)
             return None
 
         # On updateAccountInfo specifically, result:2 does mean the account
@@ -522,19 +522,23 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             <= self._consecutive_failures
         )
 
-    def _record_connection_failure(self, error: BaseException) -> None:
+    def _record_failed_poll(self, error: BaseException) -> None:
         """Count one failed poll, and log it at the level it deserves.
 
         Every poll still reaches entities (_async_update_data returns the last
         data on an expected failure), so crossing the threshold needs no
-        notification of its own - only the line that says it happened.
+        notification of its own - only the line that says it happened, once.
+        The condition holds until the unit answers again, and these modules
+        drop off for a minute or so every hour on their own, so a line per
+        poll would bury the one that matters.
         """
         became_unavailable = self._set_availability(False)
         if became_unavailable:
-            _LOGGER.warning(
-                "Airco [%s] is unavailable after %s failed polls",
+            _LOGGER.info(
+                "Airco [%s] is unavailable after %s failed polls: %s",
                 self.device_name,
                 self._availability_failure_limit,
+                error,
             )
             _LOGGER.debug("Update of [%s] failed", self.device_name, exc_info=error)
         else:
@@ -654,7 +658,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             # connection attempts do. Treat that exactly like any other missed
             # poll so transient outages stay quiet and the entity only becomes
             # unavailable at the configured threshold.
-            self._record_connection_failure(
+            self._record_failed_poll(
                 WfRacConnectionError(
                     f"did not answer within {POLL_TIMEOUT.total_seconds():.0f}s"
                 )

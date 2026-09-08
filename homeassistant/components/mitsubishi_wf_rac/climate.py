@@ -64,7 +64,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the climate entity."""
     device: Device = entry.runtime_data.device
-    _LOGGER.info("Setup climate for: %s, %s", device.device_name, device.airco_id)
     async_add_entities([AircoClimate(device)])
 
 
@@ -75,7 +74,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_modes: list[HVACMode] = SUPPORTED_HVAC_MODES
     _attr_fan_modes: list[str] = SUPPORTED_FAN_MODES
-    _attr_hvac_mode: HVACMode = HVACMode.OFF
     _attr_hvac_action: HVACAction | None = None
     _attr_fan_mode: str = FAN_AUTO
     _attr_swing_mode: str | None = SWING_VERTICAL_AUTO
@@ -158,10 +156,13 @@ class AircoClimate(WfRacEntity, ClimateEntity):
             return 33
         return 30
 
-    def _setpoint_range_for_mode(self, hvac_mode: HVACMode) -> tuple[float, float]:
+    def _setpoint_range_for_mode(
+        self, hvac_mode: HVACMode | None
+    ) -> tuple[float, float]:
         """The range a setpoint is held to, for display and before sending.
 
-        A regulating mode is held to its own range. Off and fan-only have none:
+        A regulating mode is held to its own range. Off, fan-only and a mode
+        we could not read have none:
         the value applies to whichever regulating mode is turned on next, often
         in the very next step of the same automation. Holding it to the default
         18C floor there rejects a cooling setpoint the unit takes happily once
@@ -363,6 +364,10 @@ class AircoClimate(WfRacEntity, ClimateEntity):
                 AirconCommands.PresetTemp: away_temp,
             }
         )
+
+    @override
+    def _mark_state_unknown(self) -> None:
+        self._attr_hvac_mode = None
 
     @override
     def _update_state(self) -> None:

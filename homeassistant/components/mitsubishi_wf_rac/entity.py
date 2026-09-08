@@ -67,15 +67,23 @@ class WfRacEntity(CoordinatorEntity[Device]):
     @override
     @property
     def available(self) -> bool:
-        """Return whether the airco is currently reachable and readable."""
+        """Return whether the airco is currently reachable."""
         # Device tracks its own retry-tolerant availability (see
         # Device._set_availability()): an expected missed poll leaves the
         # coordinator successful on purpose, so last_update_success alone
         # would not hold the entity up. It still has to be honoured, though -
         # an unexpected failure raises UpdateFailed and only shows there.
-        return (
-            super().available and self._device.available and not self._state_unreadable
-        )
+        return super().available and self._device.available
+
+    def _mark_state_unknown(self) -> None:
+        """Drop the attributes that carry this entity's state.
+
+        Overridden per platform. Called when a frame arrives that the entity
+        cannot read: the unit answered and still takes commands, so it is not
+        unavailable - its state is merely unknown until a frame it can read
+        comes along.
+        """
+        raise NotImplementedError
 
     def _update_state(self) -> None:
         """Refresh entity state from the coordinator.
@@ -91,15 +99,13 @@ class WfRacEntity(CoordinatorEntity[Device]):
         try:
             self._update_state()
         except IndexError, KeyError, AttributeError, ValueError:
-            # With the traceback: which field of the device state was missing
-            # is the whole diagnosis.
-            _LOGGER.warning("Could not update %s", self.entity_id, exc_info=True)
-            # Held on the entity, not counted into the device's missed-poll
-            # tolerance: the unit answered, this entity just cannot read what
-            # it said. Feeding it into that counter would never reach the
-            # threshold either, since the successful poll carrying the frame
-            # resets it first.
+            # Once, with the traceback: which field was missing is the whole
+            # diagnosis, and the condition holds until the unit sends
+            # something else - a line per poll would say nothing more.
+            if not self._state_unreadable:
+                _LOGGER.warning("Could not update %s", self.entity_id, exc_info=True)
             self._state_unreadable = True
+            self._mark_state_unknown()
         else:
             self._state_unreadable = False
         self.async_write_ha_state()
