@@ -27,6 +27,9 @@ from .conftest import TEST_STATION
 
 from tests.common import MockConfigEntry
 
+# The legacy YAML product default, expressed as current transport types.
+LEGACY_DEFAULT_AS_TRANSPORT_TYPES = ["S-Bahn", "U-Bahn", "Tram", "Bus"]
+
 
 @pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
 async def test_full_user_flow(hass: HomeAssistant) -> None:
@@ -169,7 +172,7 @@ async def test_import_flow_cannot_connect(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == TEST_STATION["id"]
+    assert result["result"].unique_id.startswith(TEST_STATION["id"])
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
@@ -211,7 +214,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_STATION["name"]
-    assert result["result"].unique_id == TEST_STATION["id"]
+    assert result["result"].unique_id.startswith(TEST_STATION["id"])
     assert result["data"] == {
         CONF_STATION_ID: TEST_STATION["id"],
         CONF_STATION_NAME: TEST_STATION["name"],
@@ -219,7 +222,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_DESTINATIONS: ["Feldmoching"],
         CONF_LINES: ["U2"],
-        CONF_PRODUCTS: None,
+        CONF_PRODUCTS: LEGACY_DEFAULT_AS_TRANSPORT_TYPES,
         CONF_TIMEOFFSET: 5,
         CONF_NUMBER: 3,
     }
@@ -266,6 +269,76 @@ async def test_import_flow_multiple_entries_same_station(hass: HomeAssistant) ->
     assert second["result"].unique_id != first["result"].unique_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
+async def test_import_flow_unnamed_entries_same_station(hass: HomeAssistant) -> None:
+    """Test importing two unnamed `nextdeparture` entries for the same station."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION: "Hauptbahnhof", CONF_LINES: ["U2"]},
+    )
+    await hass.async_block_till_done()
+    assert first["type"] is FlowResultType.CREATE_ENTRY
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION: "Hauptbahnhof", CONF_LINES: ["U5"]},
+    )
+    await hass.async_block_till_done()
+
+    assert second["type"] is FlowResultType.CREATE_ENTRY
+    assert second["result"].unique_id != first["result"].unique_id
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
+async def test_import_flow_identical_entry_is_not_duplicated(
+    hass: HomeAssistant,
+) -> None:
+    """Test that re-importing the same unnamed YAML entry aborts."""
+    data = {CONF_STATION: "Hauptbahnhof", CONF_LINES: ["U2"]}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(data)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("products", "expected"),
+    [
+        pytest.param(None, LEGACY_DEFAULT_AS_TRANSPORT_TYPES, id="omitted"),
+        pytest.param(["ExpressBus"], ["Bus"], id="expressbus"),
+        pytest.param(["Nachteule"], ["Bus"], id="nachteule"),
+        pytest.param(["U-Bahn", "Nachteule"], ["U-Bahn", "Bus"], id="mixed"),
+        pytest.param(["Unknown"], [], id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
+async def test_import_flow_legacy_products(
+    hass: HomeAssistant, products: list[str] | None, expected: list[str]
+) -> None:
+    """Test that legacy YAML product names are mapped onto transport types."""
+    data = {CONF_STATION: "Hauptbahnhof"}
+    if products is not None:
+        data[CONF_PRODUCTS] = products
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_PRODUCTS] == expected
+
+
 async def test_import_flow_invalid_station(
     hass: HomeAssistant, mvg_api: dict[str, AsyncMock]
 ) -> None:
@@ -284,12 +357,21 @@ async def test_import_flow_invalid_station(
 
 @pytest.mark.usefixtures("mvg_api")
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Test the options flow."""
+    """Test the options flow, pre-filled with the current options."""
     await setup_integration(hass, config_entry)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_LINES: ["U1"], CONF_NUMBER: 7}
+    )
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    suggested = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+        if key.description
+    }
+    assert suggested == {CONF_LINES: ["U1"], CONF_NUMBER: 7}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

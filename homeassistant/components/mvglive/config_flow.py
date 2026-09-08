@@ -1,5 +1,7 @@
 """Config flow for the MVG integration."""
 
+import hashlib
+import json
 from typing import Any, override
 
 from mvg import MvgApi, MvgApiError, TransportType
@@ -31,14 +33,69 @@ from .const import (
     DEFAULT_DESTINATIONS,
     DEFAULT_LINES,
     DEFAULT_NUMBER,
-    DEFAULT_PRODUCTS,
     DEFAULT_TIMEOFFSET,
     DOMAIN,
 )
 
 ALL_PRODUCTS = [product.value[0] for product in TransportType.all()]
 
+# Product names the legacy YAML accepted but mvg no longer knows.
+LEGACY_PRODUCTS = {
+    "ExpressBus": TransportType.BUS.value[0],
+    "Nachteule": TransportType.BUS.value[0],
+}
+LEGACY_DEFAULT_PRODUCTS = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
+
+# Filters that tell unnamed legacy entries for one station apart.
+IMPORT_FILTER_KEYS = (
+    CONF_DESTINATIONS,
+    CONF_DIRECTIONS,
+    CONF_LINES,
+    CONF_PRODUCTS,
+    CONF_TIMEOFFSET,
+    CONF_NUMBER,
+)
+
 MAX_STATION_MATCHES = 25
+
+PRODUCTS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(options=ALL_PRODUCTS, multiple=True)
+)
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATION): str,
+        vol.Optional(CONF_PRODUCTS, default=list): PRODUCTS_SELECTOR,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DESTINATIONS, default=DEFAULT_DESTINATIONS): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
+        vol.Optional(CONF_LINES, default=DEFAULT_LINES): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
+        vol.Optional(CONF_PRODUCTS, default=list): PRODUCTS_SELECTOR,
+        vol.Optional(CONF_TIMEOFFSET, default=DEFAULT_TIMEOFFSET): cv.positive_int,
+        vol.Optional(CONF_NUMBER, default=DEFAULT_NUMBER): cv.positive_int,
+    }
+)
+
+
+def _filter_digest(import_data: dict[str, Any]) -> str:
+    """Return a stable digest of the filters of one legacy YAML entry."""
+    filters = {key: import_data.get(key) for key in IMPORT_FILTER_KEYS}
+    payload = json.dumps(filters, sort_keys=True)
+    return hashlib.sha256(payload.encode()).hexdigest()[:8]
+
+
+def _migrate_products(products: list[str] | None) -> list[str]:
+    """Map the product names of a legacy YAML entry onto transport types."""
+    legacy = LEGACY_DEFAULT_PRODUCTS if products is None else products
+    migrated = {LEGACY_PRODUCTS.get(product, product) for product in legacy}
+    return [product for product in ALL_PRODUCTS if product in migrated]
 
 
 class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -79,15 +136,9 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._products = user_input[CONF_PRODUCTS]
                     return await self.async_step_select()
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_STATION): str,
-                vol.Optional(CONF_PRODUCTS, default=[]): SelectSelector(
-                    SelectSelectorConfig(options=ALL_PRODUCTS, multiple=True)
-                ),
-            }
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_select(
         self, user_input: dict[str, Any] | None = None
@@ -106,25 +157,27 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options={CONF_PRODUCTS: self._products},
             )
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_STATION_ID): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            SelectOptionDict(
-                                value=station["id"],
-                                label=f"{station['name']} ({station['place']})"
-                                if station.get("place")
-                                else station["name"],
-                            )
-                            for station in self._matches.values()
-                        ],
-                        mode=SelectSelectorMode.DROPDOWN,
+        return self.async_show_form(
+            step_id="select",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_STATION_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=station["id"],
+                                    label=f"{station['name']} ({station['place']})"
+                                    if station.get("place")
+                                    else station["name"],
+                                )
+                                for station in self._matches.values()
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
                     )
-                )
-            }
+                }
+            ),
         )
-        return self.async_show_form(step_id="select", data_schema=schema)
 
     async def async_step_import(
         self, import_data: dict[str, Any]
@@ -137,10 +190,11 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if station is None:
             return self.async_abort(reason="invalid_station")
 
-        # `name` disambiguates multiple legacy entries for the same station.
+        # Legacy YAML allows several entries per station, so the optional
+        # name or else the filter set has to keep them apart.
         name = import_data.get(CONF_NAME)
-        unique_id = f"{station['id']}_{name}" if name else station["id"]
-        await self.async_set_unique_id(unique_id)
+        suffix = name or _filter_digest(import_data)
+        await self.async_set_unique_id(f"{station['id']}_{suffix}")
         self._abort_if_unique_id_configured()
 
         # `directions` is a fallback: only used if `destinations` wasn't set.
@@ -157,7 +211,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options={
                 CONF_DESTINATIONS: destinations,
                 CONF_LINES: import_data.get(CONF_LINES, DEFAULT_LINES),
-                CONF_PRODUCTS: import_data.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
+                CONF_PRODUCTS: _migrate_products(import_data.get(CONF_PRODUCTS)),
                 CONF_TIMEOFFSET: import_data.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
                 CONF_NUMBER: import_data.get(CONF_NUMBER, DEFAULT_NUMBER),
             },
@@ -181,40 +235,20 @@ class MvgOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            options = {
-                CONF_DESTINATIONS: user_input[CONF_DESTINATIONS] or [""],
-                CONF_LINES: user_input[CONF_LINES] or [""],
-                CONF_PRODUCTS: user_input[CONF_PRODUCTS],
-                CONF_TIMEOFFSET: user_input[CONF_TIMEOFFSET],
-                CONF_NUMBER: user_input[CONF_NUMBER],
-            }
-            return self.async_create_entry(data=options)
+            return self.async_create_entry(
+                data={
+                    CONF_DESTINATIONS: user_input[CONF_DESTINATIONS]
+                    or DEFAULT_DESTINATIONS,
+                    CONF_LINES: user_input[CONF_LINES] or DEFAULT_LINES,
+                    CONF_PRODUCTS: user_input[CONF_PRODUCTS],
+                    CONF_TIMEOFFSET: user_input[CONF_TIMEOFFSET],
+                    CONF_NUMBER: user_input[CONF_NUMBER],
+                }
+            )
 
-        current = self.config_entry.options
-        schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_DESTINATIONS,
-                    default=current.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS),
-                ): TextSelector(TextSelectorConfig(multiple=True)),
-                vol.Optional(
-                    CONF_LINES,
-                    default=current.get(CONF_LINES, DEFAULT_LINES),
-                ): TextSelector(TextSelectorConfig(multiple=True)),
-                vol.Optional(
-                    CONF_PRODUCTS,
-                    default=current.get(CONF_PRODUCTS) or [],
-                ): SelectSelector(
-                    SelectSelectorConfig(options=ALL_PRODUCTS, multiple=True)
-                ),
-                vol.Optional(
-                    CONF_TIMEOFFSET,
-                    default=current.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
-                ): cv.positive_int,
-                vol.Optional(
-                    CONF_NUMBER,
-                    default=current.get(CONF_NUMBER, DEFAULT_NUMBER),
-                ): cv.positive_int,
-            }
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
         )
-        return self.async_show_form(step_id="init", data_schema=schema)

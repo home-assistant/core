@@ -14,6 +14,5 @@ CONF_NUMBER = "number"
 
 DEFAULT_DESTINATIONS: list[str] = [""]
 DEFAULT_LINES: list[str] = [""]
-DEFAULT_PRODUCTS: list[str] | None = None
 DEFAULT_TIMEOFFSET = 0
 DEFAULT_NUMBER = 5
