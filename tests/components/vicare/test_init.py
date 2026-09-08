@@ -401,7 +401,11 @@ async def test_coordinator_backs_off_when_the_reset_has_passed(
 
     # A zero delay would make the coordinator reschedule immediately and hammer
     # a quota that is still spent.
-    assert coordinator.last_exception.retry_after >= DEFAULT_CACHE_DURATION
+    assert coordinator.update_interval is not None
+    assert (
+        coordinator.last_exception.retry_after
+        >= coordinator.update_interval.total_seconds()
+    )
 
 
 async def test_setup_entry_invalid_credentials(

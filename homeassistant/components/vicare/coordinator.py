@@ -82,10 +82,11 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             # time would otherwise retry at once against a quota that is still spent.
             reset = err.limitResetDate.replace(tzinfo=UTC)
             delay = (reset - dt_util.utcnow()).total_seconds()
+            floor = self.update_interval or timedelta(seconds=DEFAULT_CACHE_DURATION)
             raise UpdateFailed(
                 str(err),
                 retry_after=min(
-                    max(delay, DEFAULT_CACHE_DURATION), MAX_RATE_LIMIT_BACKOFF
+                    max(delay, floor.total_seconds()), MAX_RATE_LIMIT_BACKOFF
                 ),
             ) from err
         except (
