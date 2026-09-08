@@ -152,6 +152,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._children = config.get(CONF_CHILDREN)
         self._active_child_template = config.get(CONF_ACTIVE_CHILD_TEMPLATE)
         self._active_child_template_result = None
+        self._active_child_change_tracker_cancel = None
         self._cmds = config.get(CONF_COMMANDS)
         self._attrs = {}
         for key, val in config.get(CONF_ATTRS).items():
@@ -197,6 +198,16 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                     self._active_child_template_result = (
                         None if isinstance(result, TemplateError) else result
                     )
+                    self._clean_up_active_child_change_tracker()
+                    if (_ac := self._active_child_template_result) and _ac not in (
+                        self._children
+                        + [entity[0] for entity in self._attrs.values()]
+                    ):
+                        self._active_child_change_tracker_cancel = (
+                            async_track_state_change_event(
+                                self.hass, _ac, _async_on_dependency_update
+                            )
+                        )
 
             if event:
                 self.async_set_context(event.context)
@@ -231,6 +242,14 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                 self.hass, list(set(depend)), _async_on_dependency_update
             )
         )
+        self.async_on_remove(self._clean_up_active_child_change_tracker)
+
+    @callback
+    def _clean_up_active_child_change_tracker(self) -> None:
+        """Remove active child change tracker."""
+        if self._active_child_change_tracker_cancel:
+            self._active_child_change_tracker_cancel()
+            self._active_child_change_tracker_cancel = None
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
