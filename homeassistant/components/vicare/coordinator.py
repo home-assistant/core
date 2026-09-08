@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_CACHE_DURATION, DOMAIN
 from .types import ViCareConfigEntry
+from .utils import retry_after_from
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,11 +74,18 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             )
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
+        except PyViCareRateLimitError as err:
+            raise UpdateFailed(
+                str(err),
+                retry_after=retry_after_from(
+                    err,
+                    self.update_interval or timedelta(seconds=DEFAULT_CACHE_DURATION),
+                ),
+            ) from err
         except (
             PyViCareDeviceCommunicationError,
             PyViCareInternalServerError,
             PyViCareInvalidDataError,
-            PyViCareRateLimitError,
             requests.RequestException,
         ) as err:
             raise UpdateFailed(str(err)) from err
