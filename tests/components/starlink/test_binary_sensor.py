@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType
 
 from .patchers import (
     HISTORY_STATS_SUCCESS_PATCHER,
@@ -29,7 +30,9 @@ MISSING_ALERTS = (
 )
 
 
-async def setup_integration(hass: HomeAssistant, status_data) -> MockConfigEntry:
+async def setup_integration(
+    hass: HomeAssistant, status_data: JsonArrayType
+) -> MockConfigEntry:
     """Set up the Starlink integration with the given status data."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4:0000"})
 
