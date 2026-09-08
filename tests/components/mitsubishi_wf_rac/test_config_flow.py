@@ -574,6 +574,9 @@ async def test_reconfigure_refuses_an_address_that_answers_as_another_airco(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "another_airco"
     assert mock_config_entry.data[CONF_AIRCO_ID] == AIRCO_ID
+    # Registration is what takes one of the other unit's four account slots,
+    # and it never frees one by itself - so the flow has to stop before it.
+    mock_repository.update_account_info.assert_not_awaited()
 
 
 async def test_the_port_can_be_cleared_and_falls_back_to_the_fixed_one(

@@ -4,12 +4,15 @@ import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import logging
+import time
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pywfrac import (
     Aircon,
+    AirconStat,
+    RacParser,
     WfRacConnectionError,
     WfRacError,
     WfRacRegistrationError,
@@ -337,7 +340,6 @@ async def test_a_poll_that_fails_unexpectedly_is_an_update_failure(
     [
         pytest.param(None, WfRacError("no answer"), id="unit_does_not_answer"),
         pytest.param({"airconId": "0011223344aa"}, None, id="no_expires_reported"),
-        pytest.param({"expires": "soon"}, None, id="expires_is_not_a_timestamp"),
     ],
 )
 async def test_a_refused_write_falls_back_when_the_deadline_is_unreadable(
@@ -462,3 +464,75 @@ async def test_an_unexpected_poll_failure_takes_the_entities_with_it(
 
     assert not init_integration.runtime_data.device.last_update_success
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_a_retried_write_does_not_revert_the_client_it_waited_for(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The frame is a full state block, not a delta.
+
+    A refusal means another client holds the write lock, and by the time it
+    lapses that client has changed something. Re-sending the block encoded
+    before the refusal would send every one of those fields back as it was.
+    """
+    aircon_stat = mock_repository.get_aircon_stats.return_value
+    theirs = RacParser().translate_bytes(aircon_stat["airconStat"])
+    theirs.PresetTemp = 27.0
+    mock_repository.get_aircon_stats.return_value = {
+        **aircon_stat,
+        "airconStat": RacParser().to_base64(AirconStat.from_aircon(theirs)),
+        "expires": int(time.time()),
+    }
+    mock_repository.send_airco_command.side_effect = [
+        WfRacWriteRefusedError("locked"),
+        aircon_stat["airconStat"],
+    ]
+
+    with patch("homeassistant.components.mitsubishi_wf_rac.coordinator.asyncio.sleep"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    retried = RacParser().translate_bytes(
+        mock_repository.send_airco_command.await_args.args[1]
+    )
+    assert retried.PresetTemp == 27.0
+
+
+async def test_a_deadline_that_is_not_a_timestamp_falls_back_too(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The answer is usable, its deadline is not.
+
+    Split from the cases above because this one needs a frame the retry can
+    still be encoded from - only the deadline is unreadable.
+    """
+    aircon_stat = mock_repository.get_aircon_stats.return_value
+    mock_repository.get_aircon_stats.return_value = {**aircon_stat, "expires": "soon"}
+    mock_repository.send_airco_command.side_effect = [
+        WfRacWriteRefusedError("locked"),
+        aircon_stat["airconStat"],
+    ]
+
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator.asyncio.sleep"
+    ) as sleep:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert WRITE_LOCK_RETRY_DELAY.total_seconds() in [
+        call.args[0] for call in sleep.await_args_list
+    ]

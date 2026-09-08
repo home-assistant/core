@@ -277,6 +277,17 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
 
         return True
 
+    def _encode_command(self, params: dict[AirconCommands, Any]) -> str:
+        """Build the frame for a command.
+
+        The module takes a full state block, not a delta, so every field the
+        caller did not name is sent back as we last saw it.
+        """
+        airco_stat = AirconStat.from_aircon(self._airco)
+        for key, value in params.items():
+            setattr(airco_stat, key, value)
+        return self._parser.to_base64(airco_stat)
+
     async def _async_write_lock_delay(self) -> float:
         """Seconds to wait before retrying a write the unit just refused.
 
@@ -292,11 +303,17 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         the answer is measured against. What that cannot fix is a deadline
         stamped by a client whose own clock was off - hence the cap.
 
+        The answer is kept, not just its deadline: it carries what the other
+        client wrote under the lock we are waiting out, and the retry sends a
+        full state block. Encoding that block from what we held before the
+        refusal would hand their changes straight back.
+
         Falls back to WRITE_LOCK_RETRY_DELAY when the unit does not answer or
         reports no `expires` at all.
         """
         try:
             response = await self._api.get_aircon_stats(self._airco_id)
+            self._airco = self._parser.translate_bytes(response["airconStat"])
             expires = response["expires"]
         except WfRacError, KeyError, TypeError, ValueError:
             return WRITE_LOCK_RETRY_DELAY.total_seconds()
@@ -372,13 +389,8 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         # from before a concurrent call's response landed and, once sent,
         # silently revert whatever that call had just changed.
         async with self._send_lock:
-            airco_stat = AirconStat.from_aircon(self._airco)
-
-            for key, value in params.items():
-                setattr(airco_stat, key, value)
-
             try:
-                command = self._parser.to_base64(airco_stat)
+                command = self._encode_command(params)
                 try:
                     response = await self._api.send_airco_command(
                         self._airco_id, command
@@ -392,8 +404,11 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
                     # guessed interval - a retry that lands inside the same
                     # lock is a request spent on a refusal that was certain.
                     await asyncio.sleep(await self._async_write_lock_delay())
+                    # Re-encoded, because that wait refreshed the state: the
+                    # frame is a full block, and the one built before the
+                    # refusal would revert what the other client wrote.
                     response = await self._api.send_airco_command(
-                        self._airco_id, command
+                        self._airco_id, self._encode_command(params)
                     )
                 except WfRacRegistrationError:
                     # Our operator id is not in the airco's account table.
@@ -537,11 +552,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         if model_nr is not None:
             info["model_id"] = str(model_nr)
         return info
-
-    @property
-    def operator_id(self) -> str:
-        """Return Airco Operator ID."""
-        return self._operator_id
 
     @property
     def num_accounts(self) -> int:

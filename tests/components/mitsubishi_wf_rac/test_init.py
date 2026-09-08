@@ -205,7 +205,10 @@ async def test_removal_says_so_when_the_slot_is_not_released(
     await hass.config_entries.async_remove(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert "Could not delete operator ID" in caplog.text
+    assert "Could not release the controller slot" in caplog.text
+    # It is redacted in diagnostics for the same reason: a log this ends up in
+    # is usually attached to an issue report.
+    assert ENTRY_DATA[CONF_OPERATOR_ID] not in caplog.text
 
 
 async def test_migration_gives_a_hand_added_entry_the_identity_discovery_uses(

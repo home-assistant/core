@@ -235,15 +235,11 @@ async def async_remove_entry(
     # and the "Deleted" log below used to fire unconditionally even on failure.
     result = await temp_device.delete_account()
     if result is not None:
-        _LOGGER.info(
-            "Deleted operator ID [%s] from airco [%s]",
-            temp_device.operator_id,
-            temp_device.airco_id,
-        )
+        _LOGGER.info("Released the controller slot on airco [%s]", temp_device.airco_id)
     else:
         _LOGGER.warning(
-            "Could not delete operator ID [%s] from airco [%s]",
-            temp_device.operator_id,
+            "Could not release the controller slot on airco [%s]. Free it in "
+            "the manufacturer's app if you want it back",
             temp_device.airco_id,
         )
 

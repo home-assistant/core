@@ -86,11 +86,18 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data: dict[str, Any],
         exclude_entry_id: str | None = None,
         allow_port_fallback: bool = False,
+        expect_airco_id: str | None = None,
     ) -> dict[str, Any]:
         """Validate the user input allows us to connect, and register with the airco device.
 
         allow_port_fallback belongs to discovery only: a port the module
         announced may be wrong (#290), a port a person typed is their decision.
+
+        expect_airco_id ends the flow before registering when the address
+        answers as a different unit. Registration is what takes one of the
+        module's four account slots, and it never frees one by itself - so
+        checking afterwards would leave a slot spent on a unit the user did
+        not mean to touch.
         """
         if len(data[CONF_HOST]) < 3:
             raise InvalidHost
@@ -153,6 +160,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data[CONF_AIRCO_ID] = airco_id
         if not airco_id:
             raise CannotConnect(reason="unknown reason")
+
+        if expect_airco_id is not None and airco_id != expect_airco_id:
+            raise AbortFlow("another_airco")
 
         _LOGGER.debug("Registering with airco [%s]", data[CONF_AIRCO_ID])
         try:
@@ -386,20 +396,20 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_OPERATOR_ID] = reconfigure_entry.data[CONF_OPERATOR_ID]
                 data[CONF_DEVICE_ID] = reconfigure_entry.data[CONF_DEVICE_ID]
 
-                info = await self._async_register_airco(
-                    self.hass, data, exclude_entry_id=reconfigure_entry.entry_id
-                )
-
-                # Compared against the stored airco id rather than through
+                # Checked against the stored airco id rather than through
                 # _abort_if_unique_id_mismatch(): entries added before the
-                # manual step registered one carry the airco id in data alone
-                # until the migration reaches them, and this check has to hold
-                # for those too. Merging a different unit's id would keep the
-                # entry but re-point it, and the entities - whose unique ids
-                # are built from that id - would be replaced and the old ones
-                # orphaned.
-                if info[CONF_AIRCO_ID] != reconfigure_entry.data[CONF_AIRCO_ID]:
-                    return self.async_abort(reason="another_airco")
+                # manual step registered a unique id carry the airco id in
+                # data alone until the migration reaches them, and this has to
+                # hold for those too. Merging a different unit's id would keep
+                # the entry but re-point it, and the entities - whose unique
+                # ids are built from that id - would be replaced and the
+                # originals orphaned.
+                info = await self._async_register_airco(
+                    self.hass,
+                    data,
+                    exclude_entry_id=reconfigure_entry.entry_id,
+                    expect_airco_id=reconfigure_entry.data[CONF_AIRCO_ID],
+                )
 
                 new_data = {**reconfigure_entry.data, **data}
 
@@ -415,6 +425,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders.update(
                     {k: str(v) for k, v in placeholders.items()}
                 )
+            except AbortFlow:
+                # The flow working, not a fault - see _async_create_common.
+                raise
             except Exception:  # pylint: disable=broad-except
                 # Same outermost boundary as _async_create_common: a bug here
                 # should surface as "unexpected_error", not crash the flow.
