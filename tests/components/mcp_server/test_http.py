@@ -457,12 +457,38 @@ async def test_mcp_tool_call_failed(
     mcp_client: Any,
     hass_supervisor_access_token: str,
 ) -> None:
-    """Test the tool call endpoint with a failure."""
+    """Test a tool that describes its own failure is still reported as an error."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="intent__HassTurnOn",
             arguments={"name": "backyard"},
+        )
+
+    assert result.isError
+    assert len(result.content) == 1
+    assert result.content[0].type == "text"
+    # Described as data, so the caller can tell which argument to correct.
+    assert json.loads(result.content[0].text) == {
+        "error": "MatchFailedError",
+        "reason": "name",
+        "constraints": {"name": "backyard"},
+    }
+
+
+async def test_mcp_tool_call_raised(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test a tool that raises is reported as an error."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="intent__NotATool",
+            arguments={"name": "kitchen"},
         )
 
     assert result.isError
