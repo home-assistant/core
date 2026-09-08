@@ -304,7 +304,6 @@ async def test_invoke_pin(
     """Test invoking a pin on a device with and without pin support."""
     mock_device.pins_enabled = pins_enabled
     await setup_platform(hass, mock_device)
-    # Only reached when the device supports pins; the other case raises first.
     mock_device.invoke_pin.side_effect = OpenhomeConnectionError("no route to host")
 
     with pytest.raises(HomeAssistantError) as err:
