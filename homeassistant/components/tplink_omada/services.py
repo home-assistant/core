@@ -20,9 +20,6 @@ from homeassistant.helpers.service import async_register_admin_service
 from .const import DOMAIN
 from .controller import OmadaSiteController
 
-SERVICE_RECONNECT_CLIENT = "reconnect_client"
-SERVICE_SET_CLIENT_NAME = "set_client_name"
-
 ATTR_MAC = "mac"
 
 
@@ -57,18 +54,6 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
     return entry.runtime_data
 
 
-SCHEMA_RECONNECT_CLIENT = vol.Schema(
-    {
-        vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
-            {
-                "integration": DOMAIN,
-            }
-        ),
-        vol.Required(ATTR_MAC): cv.string,
-    }
-)
-
-
 async def _handle_reconnect_client(call: ServiceCall) -> None:
     """Handle the service action to force reconnection of a network client."""
     controller = _get_controller(call)
@@ -85,19 +70,6 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
         ) from ex
 
 
-SCHEMA_SET_CLIENT_NAME = vol.Schema(
-    {
-        vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
-            {
-                "integration": DOMAIN,
-            }
-        ),
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(),
-        vol.Required(ATTR_NAME): vol.All(cv.string, vol.Length(min=1)),
-    }
-)
-
-
 def _controller_mac(mac: str) -> str:
     """Normalize a registry MAC to the controller's canonical format."""
     return mac.upper().replace(":", "-")
@@ -109,39 +81,18 @@ async def _resolve_client_controller(
     """Resolve the controller and MAC of the client referenced by the call."""
     hass = call.hass
 
-    omada_entries = hass.config_entries.async_entries(DOMAIN)
-    if not omada_entries:
+    entry = hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY_ID])
+    if not entry or entry.domain != DOMAIN:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="no_controllers",
+            translation_key="controller_not_found",
         )
-
-    if entry_id := call.data.get(ATTR_CONFIG_ENTRY_ID):
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if not entry or entry.domain != DOMAIN:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="controller_not_found",
-            )
-        if entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="controller_unavailable",
-            )
-        controller = cast(ConfigEntry[OmadaSiteController], entry).runtime_data
-    else:
-        if len(omada_entries) > 1:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="controller_ambiguous",
-            )
-        entry = omada_entries[0]
-        if entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="controller_unavailable",
-            )
-        controller = cast(ConfigEntry[OmadaSiteController], entry).runtime_data
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_unavailable",
+        )
+    controller = cast(ConfigEntry[OmadaSiteController], entry).runtime_data
 
     device = dr.async_get(hass).async_get(call.data[ATTR_DEVICE_ID])
     if device is None or not isinstance(device, dr.DeviceEntry):
@@ -212,30 +163,39 @@ async def _handle_set_client_name(call: ServiceCall) -> None:
         ) from ex
 
 
-SERVICES = [
-    (
-        SERVICE_RECONNECT_CLIENT,
-        SCHEMA_RECONNECT_CLIENT,
-        _handle_reconnect_client,
-        False,
-    ),
-    (
-        SERVICE_SET_CLIENT_NAME,
-        SCHEMA_SET_CLIENT_NAME,
-        _handle_set_client_name,
-        True,
-    ),
-]
-
-
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the TP-Link Omada integration."""
 
-    for service_name, schema, handler, admin_only in SERVICES:
-        if admin_only:
-            async_register_admin_service(
-                hass, DOMAIN, service_name, handler, schema=schema
-            )
-        else:
-            hass.services.async_register(DOMAIN, service_name, handler, schema=schema)
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        "set_client_name",
+        _handle_set_client_name,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+                vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(),
+                vol.Required(ATTR_NAME): vol.All(cv.string, vol.Length(min=1)),
+            }
+        ),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "reconnect_client",
+        _handle_reconnect_client,
+        schema=vol.Schema(
+            {
+                vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+                vol.Required(ATTR_MAC): cv.string,
+            }
+        ),
+    )

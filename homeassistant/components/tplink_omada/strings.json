@@ -127,9 +127,6 @@
     "client_query_failed": {
       "message": "Failed to query client with MAC {mac} from the Omada controller."
     },
-    "controller_ambiguous": {
-      "message": "Multiple Omada controllers found. Specify the controller to use."
-    },
     "controller_not_found": {
       "message": "Specified TP-Link Omada controller not found"
     },

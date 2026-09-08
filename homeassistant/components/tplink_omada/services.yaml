@@ -12,6 +12,7 @@ reconnect_client:
 set_client_name:
   fields:
     config_entry_id:
+      required: true
       selector:
         config_entry:
           integration: tplink_omada

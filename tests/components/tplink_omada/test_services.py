@@ -207,23 +207,6 @@ def _add_device_without_mac(hass: HomeAssistant, config_entry: MockConfigEntry) 
     return device.id
 
 
-async def test_service_set_client_name_no_config_entries(
-    hass: HomeAssistant,
-) -> None:
-    """Test set client name service raises error when no config entries exist."""
-    async_setup_services(hass)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            "set_client_name",
-            {"device_id": "device1", "name": "Ting sensor"},
-            blocking=True,
-        )
-    assert err.value.translation_key == "no_controllers"
-    assert err.value.translation_domain == DOMAIN
-
-
 async def test_service_set_client_name(
     hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
@@ -246,33 +229,6 @@ async def test_service_set_client_name(
             "device_id": device_id,
             "name": "Ting sensor",
         },
-        blocking=True,
-    )
-
-    mock_omada_site_client.update_client.assert_awaited_once_with(
-        mac.upper().replace(":", "-"),
-        OmadaClientSettings(name="Ting sensor"),
-    )
-
-
-async def test_service_set_client_name_without_config_entry_id(
-    hass: HomeAssistant,
-    mock_omada_site_client: MagicMock,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test set client name without config_entry_id uses first loaded entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mac = "aa:bb:cc:dd:ee:ff"
-    device_id = _add_client_device(hass, mock_config_entry, mac)
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_client_name",
-        {"device_id": device_id, "name": "Ting sensor"},
         blocking=True,
     )
 
@@ -356,7 +312,11 @@ async def test_service_set_client_name_unknown_device(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": "nonexistent_device", "name": "Ting sensor"},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": "nonexistent_device",
+                "name": "Ting sensor",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "client_device_not_found"
@@ -380,7 +340,11 @@ async def test_service_set_client_name_device_without_mac(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": device_id, "name": "Ting sensor"},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": device_id,
+                "name": "Ting sensor",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "client_device_no_mac"
@@ -407,7 +371,11 @@ async def test_service_set_client_name_failed_raises_homeassistanterror(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": device_id, "name": "Ting sensor"},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": device_id,
+                "name": "Ting sensor",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "set_client_name_failed"
@@ -464,43 +432,14 @@ async def test_service_set_client_name_non_client_device(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": device_id, "name": "Ting sensor"},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": device_id,
+                "name": "Ting sensor",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "client_device_not_tracked"
-    assert err.value.translation_domain == DOMAIN
-
-    mock_omada_site_client.update_client.assert_not_awaited()
-
-
-async def test_service_set_client_name_controller_ambiguous(
-    hass: HomeAssistant,
-    mock_omada_site_client: MagicMock,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test set client name without a controller raises an error with multiple entries."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    other_entry = MockConfigEntry(
-        title="Other Omada Controller",
-        domain=DOMAIN,
-        unique_id="54321",
-    )
-    other_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(other_entry.entry_id)
-    await hass.async_block_till_done()
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            "set_client_name",
-            {"device_id": "device1", "name": "Ting sensor"},
-            blocking=True,
-        )
-    assert err.value.translation_key == "controller_ambiguous"
     assert err.value.translation_domain == DOMAIN
 
     mock_omada_site_client.update_client.assert_not_awaited()
@@ -596,7 +535,11 @@ async def test_service_set_client_name_single_known_mac(
     await hass.services.async_call(
         DOMAIN,
         "set_client_name",
-        {"device_id": device_id, "name": "Ting sensor"},
+        {
+            "config_entry_id": mock_config_entry.entry_id,
+            "device_id": device_id,
+            "name": "Ting sensor",
+        },
         blocking=True,
     )
 
@@ -625,7 +568,11 @@ async def test_service_set_client_name_multiple_known_macs(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": device_id, "name": "Ting sensor"},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": device_id,
+                "name": "Ting sensor",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "client_mac_ambiguous"
@@ -653,7 +600,11 @@ async def test_service_set_client_name_query_failed_raises_homeassistanterror(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": device_id, "name": "Ting sensor"},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": device_id,
+                "name": "Ting sensor",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "client_query_failed"
