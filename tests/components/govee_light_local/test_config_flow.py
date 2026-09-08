@@ -11,7 +11,11 @@ from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DEFAULT_CAPABILITIES, EXPECTED_LISTENING_ADDRESSES
+from .conftest import (
+    DEFAULT_CAPABILITIES,
+    DISABLED_NETWORK_ADAPTERS,
+    EXPECTED_LISTENING_ADDRESSES,
+)
 
 
 def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
@@ -114,3 +118,32 @@ async def test_creating_entry_errno(
 
     assert mock_govee_api.start.call_count == 1
     mock_setup_entry.assert_not_awaited()
+
+
+async def test_creating_entry_no_listening_addresses(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_govee_api: AsyncMock,
+) -> None:
+    """Test aborting when no enabled adapter provides an IPv4 address."""
+
+    mock_govee_api.devices = _get_devices(mock_govee_api)
+
+    with patch(
+        "homeassistant.components.network.async_get_adapters",
+        return_value=DISABLED_NETWORK_ADAPTERS,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        # Confirmation form
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.ABORT
+
+        await hass.async_block_till_done()
+
+    mock_govee_api.start.assert_not_awaited()
+    mock_setup_entry.assert_not_called()
