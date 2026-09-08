@@ -132,6 +132,7 @@ async def test_doorbell_setup(
 
 async def test_first_active_quality_is_default(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     camera_all: ProtectCamera,
     issue_registry: ir.IssueRegistry,
@@ -152,7 +153,6 @@ async def test_first_active_quality_is_default(
         == camera_all.channels[1].rtsps_no_srtp_url
     )
 
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert entity_registry.async_get(_channel_entity_id(camera_all, 0)) is None
     assert entity_registry.async_get(_channel_entity_id(camera_all, 2)) is None
     assert (
@@ -408,7 +408,10 @@ async def test_aiport_no_camera_entities(
 
 
 async def test_public_only_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
 ) -> None:
     """A public-only camera builds a working entity with degraded diagnostics."""
     # This camera is intentionally kept out of the private bootstrap; wire the
@@ -439,7 +442,6 @@ async def test_public_only_camera(
 
     # device identity degrades to name-only, but the NVR link still resolves
     # from the public bootstrap
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, public.mac), ufp.entry.entry_id
     )

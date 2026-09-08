@@ -72,6 +72,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+# Audio is read from the request body in chunks of at most 4096 bytes because
+# line-based iteration raises LineTooLong on binary audio without newline bytes.
+# At 16 kHz/16-bit/mono, 4096 bytes represents up to 128 ms of audio.
+AUDIO_CHUNK_SIZE = 4096
+
 
 @callback
 def async_default_engine(hass: HomeAssistant) -> str | None:
@@ -291,7 +296,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Process audio stream
             result = await stt_provider.async_process_audio_stream(
-                metadata, request.content
+                metadata, request.content.iter_chunked(AUDIO_CHUNK_SIZE)
             )
         else:
             # Check format
@@ -300,7 +305,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Process audio stream
             result = await provider_entity.internal_async_process_audio_stream(
-                metadata, request.content
+                metadata, request.content.iter_chunked(AUDIO_CHUNK_SIZE)
             )
 
         # Return result

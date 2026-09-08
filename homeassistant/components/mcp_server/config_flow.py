@@ -15,12 +15,13 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
 )
 
-from .const import DOMAIN
+from .const import CONF_REQUIRE_ADMIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +69,22 @@ def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> vol.Schema:
     )
 
 
+def _options_schema(
+    llm_apis: dict[str, str], default: list[str], require_admin: bool
+) -> vol.Schema:
+    """Return the schema for the options flow."""
+    return _llm_api_schema(llm_apis, default).extend(
+        {
+            vol.Required(CONF_REQUIRE_ADMIN, default=require_admin): BooleanSelector(),
+        }
+    )
+
+
 class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Model Context Protocol Server."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -95,7 +108,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=_llm_api_title(llm_apis, user_input[CONF_LLM_HASS_API]),
-                    data=user_input,
+                    data={**user_input, CONF_REQUIRE_ADMIN: True},
                 )
 
         return self.async_show_form(
@@ -137,7 +150,12 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_llm_api_schema(llm_apis, current),
+            data_schema=_options_schema(
+                llm_apis,
+                current,
+                # A disabled config entry has not migrated yet
+                self.config_entry.data.get(CONF_REQUIRE_ADMIN, False),
+            ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,
         )

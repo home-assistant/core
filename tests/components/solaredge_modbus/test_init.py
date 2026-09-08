@@ -1,24 +1,38 @@
 """Tests for the SolarEdge Modbus config-entry setup."""
 
+import asyncio
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     IllegalDataAddressError,
     ModbusTimeoutError,
+    ModbusUnit,
     ServerDeviceFailureError,
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
-from solaredged import SolarEdgeConnectionError
+from solaredged import SolarEdge, SolarEdgeConnectionError
 
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.solaredge_modbus.const import (
+    ATTACHMENT_SCAN_INTERVAL,
     DOMAIN,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -45,6 +59,12 @@ METER_MODEL_REGISTER = 40188
 
 # An address inside the pooled storage and export control read.
 SITE_CONTROL_REGISTER = 57348
+
+# Where the first meter's serial number lives.
+METER_SERIAL_REGISTER = 40171
+
+EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
+EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -552,6 +572,256 @@ async def test_settings_failure_does_not_block_setup(
     state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_concurrent_control_writes_keep_both_changes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Two writes to the same control register do not clobber each other.
+
+    The export mode and its flags live in one register, which the library
+    changes by taking its cached value, flipping bits and writing it back.
+    Select and switch have separate parallel-update semaphores, so without
+    serialization the second write undoes the first.
+    """
+    await _setup(hass, mock_config_entry)
+
+    write_register = mock_modbus_unit.write_register
+
+    async def write_register_slowly(address: int, value: int) -> None:
+        """Write with a suspension point, which a real link has and a mock lacks."""
+        await asyncio.sleep(0)
+        await write_register(address, value)
+
+    mock_modbus_unit.write_register = write_register_slowly
+
+    await asyncio.gather(
+        hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: EXPORT_LIMITATION_ENTITY,
+                ATTR_OPTION: "production_control",
+            },
+            blocking=True,
+        ),
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
+            blocking=True,
+        ),
+    )
+
+    state = hass.states.get(EXPORT_LIMITATION_ENTITY)
+    assert state is not None
+    assert state.state == "production_control"
+
+    state = hass.states.get(EXTERNAL_PRODUCTION_ENTITY)
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def _tick_attachment_check(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> int:
+    """Let the check for changed hardware run, and report what it cost.
+
+    Setting up probes the device, so a check that reloads the entry probes
+    twice: once to look, once to build the entry again.
+    """
+    probes = 0
+    probe = SolarEdge.async_probe
+
+    async def counting_probe(unit: ModbusUnit) -> SolarEdge:
+        nonlocal probes
+        probes += 1
+        return await probe(unit)
+
+    with patch.object(SolarEdge, "async_probe", counting_probe):
+        freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    return probes
+
+
+async def test_meter_added_later_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter wired to a running installation appears without being asked.
+
+    What is attached is read while the entry is set up, so the entry loads
+    again once a probe finds something that was not there before.
+    """
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, IllegalDataAddressError())
+    await _setup(hass, mock_config_entry)
+
+    meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    # The meter is wired in and answers from now on.
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, None)
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_battery_removed_later_is_dropped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A battery taken out of a running installation stops being a device."""
+    await _setup(hass, mock_config_entry)
+
+    battery = (DOMAIN, f"{SERIAL_NUMBER}_battery_{BATTERY_SERIAL_NUMBERS[0]}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            battery, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            battery, mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
+async def test_replaced_meter_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Another meter in the same place is another device, while running too.
+
+    Swapping one meter for another leaves the count alone, so what gives it
+    away is the serial number the polls have been reading all along.
+    """
+    await _setup(hass, mock_config_entry)
+
+    replacement = "7E9C55A6"
+    padded = replacement.ljust(32, "\0").encode()
+    mock_modbus_unit.holding.update(
+        {
+            METER_SERIAL_REGISTER + index: (padded[index * 2] << 8)
+            | padded[index * 2 + 1]
+            for index in range(16)
+        }
+    )
+
+    # The swap is seen without probing, so the only probe here is the reload's.
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}"),
+            mock_config_entry.entry_id,
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_meter_{replacement}"),
+            mock_config_entry.entry_id,
+        )
+        is not None
+    )
+
+
+async def test_silent_attachment_does_not_trigger_a_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter that did not answer the probe is not a meter that was removed.
+
+    Silence is taken for absence while probing, so reloading on it would drop a
+    device, and its history, over a single timeout.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, ModbusTimeoutError("timed out"))
+
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_unchanged_attachments_leave_the_entry_alone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Nothing changed means nothing happens, however often it is checked."""
+    await _setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.readings
+
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # A reload would have built new coordinators.
+    assert mock_config_entry.runtime_data.readings is coordinator
+
+
+async def test_a_dead_probe_leaves_the_entry_where_it_is(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An inverter that stops answering says nothing about what is wired to it.
+
+    The coordinators already report an inverter gone quiet; reloading on top of
+    that would only take the entry down with it.
+    """
+    await _setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.readings
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.readings is coordinator
 
 
 async def test_setup_retry_when_device_unresponsive(

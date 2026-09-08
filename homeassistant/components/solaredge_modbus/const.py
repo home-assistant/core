@@ -39,3 +39,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 # The control blocks hold what the site was told to do; they only move when
 # something writes them, so they do not need a live measurement's cadence.
 SETTINGS_SCAN_INTERVAL: Final = timedelta(minutes=5)
+
+# Meters and batteries are wired to an inverter by hand, usually with the power
+# off, so looking for a change now and then is often enough.
+ATTACHMENT_SCAN_INTERVAL: Final = timedelta(minutes=15)

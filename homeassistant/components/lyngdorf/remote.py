@@ -3,8 +3,7 @@
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, override
 
-from lyngdorf.device import Receiver
-from lyngdorf.exceptions import LyngdorfUnsupportedError
+from lyngdorf import LyngdorfReceiver, LyngdorfUnsupportedError, Remote
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
@@ -29,7 +28,7 @@ async def async_setup_entry(
     receiver = runtime_data.receiver
 
     # The TDAI family has no remote keys at all, so it gets no remote entity.
-    if not receiver.has_remote_keys:
+    if receiver.remote is None:
         return
 
     async_add_entities(
@@ -44,7 +43,7 @@ class LyngdorfRemote(LyngdorfEntity, RemoteEntity):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
     ) -> None:
@@ -53,6 +52,14 @@ class LyngdorfRemote(LyngdorfEntity, RemoteEntity):
         if TYPE_CHECKING:
             assert config_entry.unique_id
         self._attr_unique_id = config_entry.unique_id
+
+    @property
+    def _remote(self) -> Remote:
+        """Return the remote; this entity exists only when the model has one."""
+        remote = self._receiver.remote
+        if TYPE_CHECKING:
+            assert remote is not None
+        return remote
 
     @override
     @property
@@ -63,24 +70,22 @@ class LyngdorfRemote(LyngdorfEntity, RemoteEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self._receiver.power_on = True
+        await self._receiver.set_power(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._receiver.power_on = False
+        await self._receiver.set_power(False)
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a sequence of remote keys to the device."""
         # delay_secs is dropped: the library already paces its own writes.
         try:
-            self._receiver.send_remote_commands(
-                command, num_repeats=kwargs[ATTR_NUM_REPEATS]
-            )
+            await self._remote.send(command, num_repeats=kwargs[ATTR_NUM_REPEATS])
         except LyngdorfUnsupportedError as err:
             # The member value is what a caller sends: DIGIT_0 is "0", not "digit_0".
-            keys = sorted(key.value for key in self._receiver.available_remote_keys)
+            keys = sorted(key.value for key in self._remote.keys)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="unsupported_remote_key",
