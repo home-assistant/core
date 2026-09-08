@@ -16,12 +16,14 @@ class WeatherKitEntity(Entity):
         self, coordinator: WeatherKitDataUpdateCoordinator, unique_id_suffix: str | None
     ) -> None:
         """Initialize the entity with device info and unique ID."""
-        self._attr_unique_id = coordinator.config_entry.entry_id
+        entry_id = coordinator.config_entry.entry_id
+
+        self._attr_unique_id = entry_id
         if unique_id_suffix is not None:
             self._attr_unique_id += f"_{unique_id_suffix}"
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, entry_id)},
             manufacturer=MANUFACTURER,
         )
