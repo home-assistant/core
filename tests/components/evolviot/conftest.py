@@ -16,10 +16,8 @@ import pytest
 
 from homeassistant.components.evolviot.const import (
     CONF_ACCESS_TOKEN,
-    CONF_API_BASE_URL,
     CONF_REFRESH_TOKEN,
     CONF_VERIFY_SSL,
-    DEFAULT_API_BASE_URL,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -27,10 +25,16 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.evolviot_switch"
-UNIQUE_ID = "SWITCH123/power"
+UNIQUE_ID = "user-123/SWITCH123/power"
 
 
-def evolviot_data(state: str = "off") -> EvolvIOTData:
+def evolviot_data(
+    state: str = "off",
+    *,
+    domain: str = "switch",
+    model: str = "Switch",
+    control_key: str = "power",
+) -> EvolvIOTData:
     """Return typed EvolvIOT data."""
     return EvolvIOTData.from_payload(
         {
@@ -39,15 +43,15 @@ def evolviot_data(state: str = "off") -> EvolvIOTData:
                 {
                     "entity_id": ENTITY_ID,
                     "unique_id": UNIQUE_ID,
-                    "domain": "switch",
+                    "domain": domain,
                     "name": "Living Room Switch",
                     "device": {
                         "id": "SWITCH123",
                         "name": "Living Room",
                         "manufacturer": "EvolvIOT",
-                        "model": "Switch",
+                        "model": model,
                     },
-                    "control": {"key": "power"},
+                    "control": {"key": control_key},
                 }
             ],
             "states": [
@@ -72,6 +76,11 @@ class MockEvolvIOTWebSocket:
         self.closed = False
         self._close_event = asyncio.Event()
         self._listeners: list[Callable[[EvolvIOTEvent], Any]] = []
+
+    @property
+    def connected(self) -> bool:
+        """Return whether the WebSocket is connected."""
+        return not self.closed
 
     def async_add_listener(
         self, callback: Callable[[EvolvIOTEvent], Any]
@@ -159,7 +168,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_BASE_URL: DEFAULT_API_BASE_URL,
             CONF_ACCESS_TOKEN: "mock-access-token",
             CONF_REFRESH_TOKEN: "mock-refresh-token",
             CONF_VERIFY_SSL: True,

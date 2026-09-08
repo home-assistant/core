@@ -1,6 +1,5 @@
 """Data coordinator for EvolvIOT."""
 
-from collections.abc import Callable
 import logging
 from typing import override
 
@@ -39,33 +38,30 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
             update_interval=None,
         )
         self.api = api
-        self._entry = entry
         self.websocket: EvolvIOTWebSocket | None = None
-        self._unsub_websocket_listener: Callable[[], None] | None = None
 
     async def async_setup(self) -> None:
         """Connect the EvolvIOT WebSocket and load initial data."""
         self.websocket = await self.api.async_connect_websocket()
-        self._unsub_websocket_listener = self.websocket.async_add_listener(
-            self._async_handle_event
+        entry = self.config_entry
+        assert entry is not None
+        entry.async_on_unload(
+            self.websocket.async_add_listener(self._async_handle_event)
         )
         self.async_set_updated_data(self.websocket.data)
-        self._entry.async_create_background_task(
+        entry.async_create_background_task(
             self.hass,
             self.websocket.async_run_forever(),
             f"{DOMAIN}-websocket",
         )
-        self._entry.async_on_unload(self.async_close)
 
-    async def async_close(self) -> None:
+    @override
+    async def async_shutdown(self) -> None:
         """Close the WebSocket connection."""
-        if self._unsub_websocket_listener is not None:
-            self._unsub_websocket_listener()
-            self._unsub_websocket_listener = None
-
         if self.websocket is not None:
             await self.websocket.async_close()
             self.websocket = None
+        await super().async_shutdown()
 
     @property
     def entities(self) -> dict[str, EvolvIOTEntity]:
@@ -77,13 +73,9 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
         """Return states keyed by backend entity id."""
         return self.data.states if self.data is not None else {}
 
-    def entities_for_domain(self, domain: str) -> list[EvolvIOTEntity]:
-        """Return entities for one Home Assistant platform domain."""
-        return [entity for entity in self.entities.values() if entity.domain == domain]
-
     async def async_command(self, entity_id: str, command: str) -> None:
         """Send a command to an EvolvIOT entity."""
-        if self.websocket is None:
+        if self.websocket is None or not self.websocket.connected:
             await self.api.async_send_command(entity_id, command)
             return
 
@@ -98,9 +90,8 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
 
     async def _async_handle_event(self, event: EvolvIOTEvent) -> None:
         """Handle an EvolvIOT WebSocket event."""
-        if isinstance(event, EvolvIOTReadyEvent):
-            self.async_set_updated_data(event.data)
-            return
-
-        if isinstance(event, EvolvIOTStateChangedEvent) and self.data is not None:
-            self.async_set_updated_data(self.data.with_state(event.state))
+        match event:
+            case EvolvIOTReadyEvent(data):
+                self.async_set_updated_data(data)
+            case EvolvIOTStateChangedEvent(state) if self.data is not None:
+                self.async_set_updated_data(self.data.with_state(state))

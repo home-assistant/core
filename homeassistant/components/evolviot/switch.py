@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import EvolvIOTDataUpdateCoordinator
 from .entity import EvolvIOTEntity
 
-PLATFORM_DOMAIN = "switch"
+SUPPORTED_SWITCHES = {("switch", "power")}
 
 
 async def async_setup_entry(
@@ -22,7 +22,9 @@ async def async_setup_entry(
     coordinator: EvolvIOTDataUpdateCoordinator = entry.runtime_data
     async_add_entities(
         EvolvIOTSwitch(coordinator, entity)
-        for entity in coordinator.entities_for_domain(PLATFORM_DOMAIN)
+        for entity in coordinator.entities.values()
+        if (entity.device.model.casefold(), entity.control.key.casefold())
+        in SUPPORTED_SWITCHES
     )
 
 

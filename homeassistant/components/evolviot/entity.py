@@ -28,15 +28,19 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        config_entry = coordinator.config_entry
+        assert config_entry is not None
+        entry_unique_id = config_entry.unique_id
+        assert entry_unique_id is not None
         self._backend_entity_id = entity.entity_id
         self._fallback_entity = entity
-        self._attr_unique_id = entity.unique_id or entity.entity_id
+        self._attr_unique_id = f"{entry_unique_id}/{entity.unique_id}"
         self._attr_name = entity.name
 
         device = entity.device
-        device_id = device.id or self._attr_unique_id
+        device_id = device.id or entity.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
+            identifiers={(DOMAIN, f"{entry_unique_id}/{device_id}")},
             name=device.name or "EvolvIOT Device",
             manufacturer=device.manufacturer or "EvolvIOT",
             model=device.model or None,
@@ -59,7 +63,10 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return availability from EvolvIOT."""
         state = self.backend_state
-        return bool(state and state.available)
+        websocket = self.coordinator.websocket
+        return super().available and bool(
+            websocket and websocket.connected and state and state.available
+        )
 
     async def _async_send_command(self, command: str) -> None:
         """Send a command to EvolvIOT."""

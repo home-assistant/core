@@ -6,7 +6,6 @@ from pyevolviot import (
     EvolvIOTApi,
     EvolvIOTApiError,
     EvolvIOTAuthError,
-    normalize_api_base_url,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,9 +15,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_ACCESS_TOKEN,
-    CONF_API_BASE_URL,
     CONF_REFRESH_TOKEN,
     CONF_VERIFY_SSL,
+    DEFAULT_API_BASE_URL,
     PLATFORMS,
 )
 from .coordinator import EvolvIOTDataUpdateCoordinator
@@ -35,17 +34,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EvolvIOTConfigEntry) -> 
             data={
                 **entry.data,
                 CONF_ACCESS_TOKEN: token_data[CONF_ACCESS_TOKEN],
-                CONF_REFRESH_TOKEN: token_data.get(CONF_REFRESH_TOKEN, ""),
+                CONF_REFRESH_TOKEN: token_data[CONF_REFRESH_TOKEN],
             },
         )
 
-    verify_ssl = bool(entry.data.get(CONF_VERIFY_SSL, True))
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     api = EvolvIOTApi(
         session,
-        normalize_api_base_url(entry.data[CONF_API_BASE_URL]),
+        DEFAULT_API_BASE_URL,
         entry.data[CONF_ACCESS_TOKEN],
-        refresh_token=entry.data.get(CONF_REFRESH_TOKEN),
+        refresh_token=entry.data[CONF_REFRESH_TOKEN],
         verify_ssl=verify_ssl,
         token_update_callback=async_token_updated,
     )

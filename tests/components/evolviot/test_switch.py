@@ -8,7 +8,9 @@ from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, ST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import UNIQUE_ID, MockEvolvIOTWebSocket
+from tests.common import MockConfigEntry
+
+from .conftest import UNIQUE_ID, MockEvolvIOTWebSocket, evolviot_data
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -77,3 +79,37 @@ async def test_switch_sends_commands(
 
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_connect_websocket")
+async def test_switch_classified_by_device_context(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: MockEvolvIOTWebSocket,
+) -> None:
+    """Test Home Assistant classifies a supported control as a switch."""
+    mock_websocket.data = evolviot_data(domain="light")
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, UNIQUE_ID)
+
+
+@pytest.mark.usefixtures("mock_connect_websocket")
+async def test_unsupported_control_not_added(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: MockEvolvIOTWebSocket,
+) -> None:
+    """Test an unsupported device control is not added as a switch."""
+    mock_websocket.data = evolviot_data(model="Light")
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, UNIQUE_ID)
