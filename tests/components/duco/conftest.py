@@ -16,6 +16,7 @@ from duco_connectivity import (
     ConfigNodeOverview,
     ConfigValueString,
     DiagComponent,
+    DiagInfo,
     KnownActionName,
     LanInfo,
     Node,
@@ -282,11 +283,11 @@ def mock_duco_client(
         temperature: float,
         *,
         target: BypassSupplyTemperatureTarget,
-    ) -> None:
+    ) -> BypassSupplyTemperatureTarget:
         target.validate_value(temperature)
-        mock_bypass_supply_temperature_targets[zone_id] = replace(
-            target, value=temperature
-        )
+        updated_target = replace(target, zone_id=zone_id, value=temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = updated_target
+        return updated_target
 
     with (
         patch(
@@ -299,10 +300,19 @@ def mock_duco_client(
         ),
     ):
         client = mock_class.return_value
+
+        def get_node_info(node_id: int) -> Node:
+            return next(
+                node
+                for node in client.async_get_nodes.return_value
+                if node.node_id == node_id
+            )
+
         client.async_get_api_info.return_value = mock_api_info
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_info.side_effect = get_node_info
         client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
         client.async_get_node_actions.return_value = mock_node_actions
         client.async_get_time_filter_remaining.return_value = 180
@@ -318,6 +328,9 @@ def mock_duco_client(
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]
+        client.async_get_diagnostics_info.return_value = DiagInfo(
+            diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Ok"),)
+        )
         client.async_get_write_requests_remaining.return_value = 100
         yield client
 
