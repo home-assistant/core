@@ -217,7 +217,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
 
             await live_coordinator.async_config_entry_first_refresh()
-            entry.async_on_unload(history_coordinator.async_add_listener(lambda: None))
+            if info_coordinator.data.get(
+                "components_battery"
+            ) or info_coordinator.data.get("components_solar"):
+                entry.async_on_unload(
+                    history_coordinator.async_add_listener(lambda: None)
+                )
 
             # Create energy site model
             model = None

@@ -968,14 +968,36 @@ async def test_energy_history_refresh_ratelimited(
     assert mock_energy_history.call_count == 4
 
 
+@pytest.mark.parametrize(
+    ("battery", "solar", "expected_calls"),
+    [
+        pytest.param(False, False, 0, id="wall-connector-only"),
+        pytest.param(True, False, 1, id="battery-only"),
+        pytest.param(False, True, 1, id="solar-only"),
+        pytest.param(True, True, 1, id="battery-and-solar"),
+    ],
+)
 async def test_energy_history_refresh_without_sensor_entities(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_energy_history: AsyncMock,
+    mock_products: AsyncMock,
+    mock_site_info: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    battery: bool,
+    solar: bool,
+    expected_calls: int,
 ) -> None:
-    """Test energy history refreshes without enabled sensor entities."""
+    """Test only battery and solar sites poll history without sensor entities."""
+    components = {"battery": battery, "solar": solar}
+    products = deepcopy(mock_products.return_value)
+    products["response"][1]["components"].update(components)
+    mock_products.return_value = products
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"].update(components)
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
     for key in ENERGY_HISTORY_FIELDS:
         entity_registry.async_get_or_create(
             Platform.SENSOR,
@@ -985,18 +1007,20 @@ async def test_energy_history_refresh_without_sensor_entities(
         )
 
     await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.wall_connector_power") is not None
     assert mock_energy_history.call_count == 0
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_energy_history.call_count == 1
+    assert mock_energy_history.call_count == expected_calls
 
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_energy_history.call_count == 1
+    assert mock_energy_history.call_count == expected_calls
 
 
 async def test_init_region_issue(
