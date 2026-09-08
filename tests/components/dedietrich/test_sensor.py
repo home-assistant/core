@@ -16,7 +16,7 @@ from homeassistant.components.dedietrich.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -25,10 +25,19 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test all sensors match their snapshot."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, init_integration.entry_id), init_integration.entry_id
+    )
+    assert device is not None
+    assert device.name == "De Dietrich"
+    assert device.model is None
+    assert device.manufacturer == "De Dietrich"
+    assert device.sw_version == "100"
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 

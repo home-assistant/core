@@ -95,8 +95,14 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             user_input[CONF_HOST] = user_input[CONF_HOST].lower()
+            connection = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_UNIT_ID: user_input[CONF_UNIT_ID],
+            }
+            self._async_abort_entries_match(connection)
             try:
-                device = await _async_probe(
+                await _async_probe(
                     self.hass,
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
@@ -107,20 +113,9 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(err)
             else:
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                        CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-                    }
-                )
-                title = (
-                    str(device.identity.boiler_type)
-                    if device.identity.boiler_type is not None
-                    else DEFAULT_NAME
-                )
+                self._async_abort_entries_match(connection)
                 return self.async_create_entry(
-                    title=title,
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
 

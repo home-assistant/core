@@ -18,6 +18,7 @@ from homeassistant.components.dedietrich.const import (
     SYSTEM_ISYSTEM,
 )
 from homeassistant.components.dedietrich.device import build_device
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -53,11 +54,11 @@ async def test_user_step_shows_form(hass: HomeAssistant) -> None:
 
 
 async def _run_user_flow(
-    hass: HomeAssistant, system: str
+    hass: HomeAssistant, system: str, boiler_type: int = 24
 ) -> tuple[config_entries.ConfigFlowResult, list[Diematic | DiematicISystem]]:
     """Drive the user step for one system and capture the built device."""
     mock_conn = MockModbusConnection()
-    seed_boiler(mock_conn.for_unit(10))
+    seed_boiler(mock_conn.for_unit(10), boiler_type)
     built: list[Diematic | DiematicISystem] = []
 
     def _capture(unit: object, system_arg: str) -> Diematic | DiematicISystem:
@@ -97,19 +98,25 @@ async def test_user_step_base_success(
     result, built = await _run_user_flow(hass, system)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "De Dietrich"
     assert result["data"][CONF_SYSTEM] == system
     assert len(built) == 1
     assert isinstance(built[0], Diematic)
     assert built[0].variant is expected_variant
 
 
+@pytest.mark.parametrize(
+    "boiler_type",
+    [pytest.param(24, id="known_type"), pytest.param(999, id="unknown_type")],
+)
 async def test_user_step_isystem_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, boiler_type: int
 ) -> None:
     """Test an iSystem flow builds a DiematicISystem."""
-    result, built = await _run_user_flow(hass, SYSTEM_ISYSTEM)
+    result, built = await _run_user_flow(hass, SYSTEM_ISYSTEM, boiler_type)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "De Dietrich"
     assert result["data"][CONF_SYSTEM] == SYSTEM_ISYSTEM
     assert len(built) == 1
     assert isinstance(built[0], DiematicISystem)
@@ -185,15 +192,54 @@ async def test_user_step_sensors_read_fails(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_step_already_configured(hass: HomeAssistant) -> None:
-    """Test aborting when the same boiler connection is already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+@pytest.mark.parametrize(
+    ("host", "system"),
+    [
+        pytest.param("boiler.local", SYSTEM_ISYSTEM, id="same_connection"),
+        pytest.param("BOILER.LOCAL", SYSTEM_ISYSTEM, id="host_case"),
+        pytest.param("boiler.local", SYSTEM_DIEMATIC_3, id="different_system"),
+    ],
+)
+async def test_user_step_already_configured(
+    hass: HomeAssistant, host: str, system: str
+) -> None:
+    """Test duplicates are rejected without connecting to the boiler."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_INPUT, CONF_HOST: "boiler.local"}
+    )
     entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.dedietrich.config_flow.async_get_temporary_unit",
+        side_effect=ModbusConnectionError("offline"),
+    ) as mock_get_unit:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={**MOCK_USER_INPUT, CONF_HOST: host, CONF_SYSTEM: system},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_get_unit.assert_not_called()
+
+
+async def test_user_step_duplicate_added_during_probe(hass: HomeAssistant) -> None:
+    """Test an entry added during the probe is rejected by the final check."""
     mock_conn = MockModbusConnection()
     seed_boiler(mock_conn.for_unit(10))
 
-    with _patch_temporary_unit(mock_conn):
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant, params: ModbusTcpParams, unit_id: int
+    ) -> AsyncIterator[MockModbusUnit]:
+        MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT).add_to_hass(hass)
+        yield mock_conn.for_unit(unit_id)
+
+    with patch(
+        "homeassistant.components.dedietrich.config_flow.async_get_temporary_unit",
+        side_effect=_get_temporary_unit,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

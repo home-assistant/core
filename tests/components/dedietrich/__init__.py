@@ -10,7 +10,7 @@ from homeassistant.components.dedietrich.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-MOCK_TITLE = "D4"
+MOCK_TITLE = "De Dietrich"
 MOCK_ENTRY_ID = "01K5G6X6VZXZ9GJ2YFVZ2VE9RB"
 
 MOCK_USER_INPUT = {

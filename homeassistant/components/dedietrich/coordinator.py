@@ -45,11 +45,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @override
     async def _async_setup(self) -> None:
-        """Read the immutable identity once so device info is available.
-
-        A failure here is turned into ConfigEntryNotReady by the first refresh,
-        so the device is only ever registered with a real model.
-        """
+        """Read the identity before registering device information."""
         try:
             await self.device.identity.async_update()
         except ModbusError as err:
@@ -67,7 +63,6 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         return dr.DeviceInfo(
             identifiers={(DOMAIN, self.config_entry.entry_id)},
             manufacturer=ATTR_MANUFACTURER,
-            model=str(identity.boiler_type),
             serial_number=None,
             sw_version=str(sw_version) if sw_version is not None else None,
         )
