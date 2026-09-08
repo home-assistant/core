@@ -108,9 +108,9 @@ class LutronMotorCover(LutronDevice, CoverEntity):
     """Representation of a Lutron MOTOR output (drapery / screen motor module).
 
     MOTOR outputs honor only the raise / lower / stop actions of the OUTPUT
-    command; the repeater ignores "set level" for them and pylutron >= 0.4.2
-    refuses it, so no position control is offered. The repeater still reports
-    the position while the motor travels, which drives is_closed.
+    command; the repeater ignores "set level" for them, so no position control
+    is offered. The repeater still reports the position while the motor
+    travels, which drives is_closed.
     """
 
     _attr_supported_features = (
