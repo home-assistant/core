@@ -135,10 +135,9 @@ def _get_last_event_attrs(
 
 
 def _get_last_recording(history_data: list[dict[str, Any]]) -> dict[str, Any] | None:
-    if (last_event := _get_last_event(history_data, None)) and last_event.get(
-        "recording", {}
-    ).get("status") == "ready":
-        return last_event
+    for entry in history_data:
+        if entry.get("recording", {}).get("status") == "ready":
+            return entry
     return None
 
 

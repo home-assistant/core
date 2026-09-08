@@ -1,6 +1,8 @@
 """The tests for the Ring sensor platform."""
 
+from datetime import UTC, datetime
 import logging
+from typing import cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -224,6 +226,43 @@ async def test_history_sensor(
     sensor_state = hass.states.get(entity_id)
     assert sensor_state is not None
     assert sensor_state.state == expected_value
+
+
+async def test_last_recording_sensor_skips_non_ready_history(
+    hass: HomeAssistant,
+    mock_ring_client: Ring,
+    mock_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the last recording sensor skips non-ready history entries."""
+    front_door = cast(Mock, mock_ring_client.devices().get_device(FRONT_DOOR_DEVICE_ID))
+    front_door.configure_mock(
+        last_history=[
+            {
+                "created_at": datetime(2019, 3, 5, 15, 3, 40, tzinfo=UTC),
+                "recording": {"status": "processing"},
+            },
+            {
+                "created_at": datetime(2018, 3, 5, 15, 3, 40, tzinfo=UTC),
+                "recording": {"status": "ready"},
+            },
+        ]
+    )
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{FRONT_DOOR_DEVICE_ID}-last_recording",
+        suggested_object_id="front_door_last_recording",
+        config_entry=mock_config_entry,
+    )
+
+    with patch("homeassistant.components.ring.PLATFORMS", [Platform.SENSOR]):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    sensor_state = hass.states.get("sensor.front_door_last_recording")
+    assert sensor_state is not None
+    assert sensor_state.state == "2018-03-05T15:03:40+00:00"
 
 
 async def test_only_chime_devices(
