@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.evolviot_switch"
+BACKEND_UNIQUE_ID = "SWITCH123/power"
 UNIQUE_ID = "user-123/SWITCH123/power"
 
 
@@ -42,7 +43,7 @@ def evolviot_data(
             "entities": [
                 {
                     "entity_id": ENTITY_ID,
-                    "unique_id": UNIQUE_ID,
+                    "unique_id": BACKEND_UNIQUE_ID,
                     "domain": domain,
                     "name": "Living Room Switch",
                     "device": {

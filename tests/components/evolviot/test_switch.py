@@ -8,9 +8,9 @@ from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, ST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
 from .conftest import UNIQUE_ID, MockEvolvIOTWebSocket, evolviot_data
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -43,6 +43,24 @@ async def test_switch_push_update(
 
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_switch_available_during_websocket_reconnect(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MockConfigEntry,
+    mock_websocket: MockEvolvIOTWebSocket,
+) -> None:
+    """Test a switch remains available while its WebSocket reconnects."""
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, UNIQUE_ID)
+    mock_websocket.closed = True
+    setup_integration.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("setup_integration")

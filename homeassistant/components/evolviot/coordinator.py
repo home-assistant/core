@@ -76,7 +76,9 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
     async def async_command(self, entity_id: str, command: str) -> None:
         """Send a command to an EvolvIOT entity."""
         if self.websocket is None or not self.websocket.connected:
-            await self.api.async_send_command(entity_id, command)
+            result = await self.api.async_send_command(entity_id, command)
+            if result.state is not None and self.data is not None:
+                self.async_set_updated_data(self.data.with_state(result.state))
             return
 
         await self.websocket.async_command(entity_id, command)

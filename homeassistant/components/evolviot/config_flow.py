@@ -71,7 +71,7 @@ class EvolvIOTConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "unknown"},
             )
 
-        if not self._pairing:
+        if not self._pairing.get("device_code") or not self._pairing.get("user_code"):
             return self.async_show_form(
                 step_id="user",
                 data_schema=_pair_schema(),

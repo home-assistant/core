@@ -138,11 +138,21 @@ async def test_pairing_start_unknown_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_pairing_start_empty_response(hass: HomeAssistant) -> None:
-    """Test an empty response while starting pairing."""
+@pytest.mark.parametrize(
+    "pairing_payload",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"user_code": "MOCK-CODE"}, id="missing-device-code"),
+        pytest.param({"device_code": "mock-device-code"}, id="missing-user-code"),
+    ],
+)
+async def test_pairing_start_invalid_response(
+    hass: HomeAssistant, pairing_payload: dict[str, str]
+) -> None:
+    """Test an invalid response while starting pairing."""
     with patch(
         "pyevolviot.EvolvIOTApi.async_start_device_authorization",
-        AsyncMock(return_value={}),
+        AsyncMock(return_value=pairing_payload),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

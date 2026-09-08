@@ -63,10 +63,7 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return availability from EvolvIOT."""
         state = self.backend_state
-        websocket = self.coordinator.websocket
-        return super().available and bool(
-            websocket and websocket.connected and state and state.available
-        )
+        return super().available and bool(state and state.available)
 
     async def _async_send_command(self, command: str) -> None:
         """Send a command to EvolvIOT."""
