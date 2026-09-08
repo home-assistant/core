@@ -127,7 +127,7 @@ class UkraineAlarmSensor(
     @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.active.get(self.entity_description.key)
+        return self.coordinator.data.active[self.entity_description.key]
 
     @property
     @override
