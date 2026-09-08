@@ -478,8 +478,7 @@ def _get_media_event_data(
     }
     encoded_path = urlsafe_b64encode(file_path.encode("utf-8")).decode("ascii")
     proxy_path = (
-        f"/api/motioneye/media/{config_entry_id}/{camera_id}/"
-        f"{kind}/0/{encoded_path}"
+        f"/api/motioneye/media/{config_entry_id}/{camera_id}/{kind}/0/{encoded_path}"
     )
     output[EVENT_FILE_URL] = async_sign_path(
         hass,
