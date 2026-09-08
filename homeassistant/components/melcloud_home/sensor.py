@@ -45,11 +45,6 @@ ENERGY_CONSUMED_DESCRIPTION = SensorEntityDescription(
 )
 
 
-def _has_energy_meter(unit: ATAUnit | ATWUnit) -> bool:
-    """Return whether a unit reports an energy consumption meter."""
-    return bool(unit.capabilities and unit.capabilities.has_energy_consumed_meter)
-
-
 @dataclass(frozen=True, kw_only=True)
 class MelCloudHomeSensorEntityDescription[_UnitT: ATAUnit | ATWUnit](
     SensorEntityDescription
@@ -148,7 +143,9 @@ async def async_setup_entry(
             (
                 ATAEnergySensor(coordinator, energy_coordinator, unit)
                 for unit in units
-                if _has_energy_meter(unit)
+                if bool(
+                    unit.capabilities and unit.capabilities.has_energy_consumed_meter
+                )
             ),
         ),
         lambda units: chain(
@@ -161,7 +158,9 @@ async def async_setup_entry(
             (
                 ATWEnergySensor(coordinator, energy_coordinator, unit)
                 for unit in units
-                if _has_energy_meter(unit)
+                if bool(
+                    unit.capabilities and unit.capabilities.has_energy_consumed_meter
+                )
             ),
         ),
     )

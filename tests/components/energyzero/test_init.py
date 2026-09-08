@@ -1,14 +1,74 @@
 """Tests for the EnergyZero integration."""
 
-from unittest.mock import MagicMock, patch
+from datetime import date
+from unittest.mock import MagicMock, call, patch
+from zoneinfo import ZoneInfo
 
-from energyzero import EnergyZeroConnectionError
+from energyzero import EnergyZeroConnectionError, Interval, PriceType
 import pytest
 
+from homeassistant.components.energyzero.const import CONF_ELECTRICITY_PRICE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    ("options", "interval"),
+    [
+        pytest.param({}, Interval.HOUR, id="existing"),
+        pytest.param(
+            {CONF_ELECTRICITY_PRICE_INTERVAL: "hourly"}, Interval.HOUR, id="hourly"
+        ),
+        pytest.param(
+            {CONF_ELECTRICITY_PRICE_INTERVAL: "quarter_hourly"},
+            Interval.QUARTER,
+            id="quarter_hourly",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2026-04-10 20:32:59")
+async def test_coordinator_requests_market_prices_with_vat(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energyzero: MagicMock,
+    options: dict[str, str],
+    interval: Interval,
+) -> None:
+    """Test the coordinator requests the backwards-compatible price stream."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=options)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    local_tz = ZoneInfo(hass.config.time_zone)
+    today = date(2026, 4, 10)
+    tomorrow = date(2026, 4, 11)
+    mock_energyzero.get_electricity_prices.assert_has_awaits(
+        [
+            call(
+                start_date=today,
+                end_date=today,
+                interval=interval,
+                price_type=PriceType.MARKET_WITH_VAT,
+                local_tz=local_tz,
+            ),
+            call(
+                start_date=tomorrow,
+                end_date=tomorrow,
+                interval=interval,
+                price_type=PriceType.MARKET_WITH_VAT,
+                local_tz=local_tz,
+            ),
+        ]
+    )
+    mock_energyzero.get_gas_prices.assert_awaited_once_with(
+        start_date=today,
+        end_date=today,
+        price_type=PriceType.MARKET_WITH_VAT,
+        local_tz=local_tz,
+    )
 
 
 @pytest.mark.usefixtures("mock_energyzero")
