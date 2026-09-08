@@ -374,24 +374,33 @@ async def test_vehicle_refresh_ratelimited(
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator refresh handles 429."""
+    """Test coordinator refresh handles 429 and backs off using the after hint."""
+
+    await setup_platform(hass, normal_config_entry)
 
     mock_vehicle_data.side_effect = RateLimited(
         {"after": VEHICLE_INTERVAL_SECONDS + 10}
     )
-    await setup_platform(hass, normal_config_entry)
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
+    assert mock_vehicle_data.call_count == 2
     assert (state := hass.states.get("sensor.test_battery_level"))
-    assert state.state == "unknown"
-
-    mock_vehicle_data.reset_mock()
+    assert state.state != "unavailable"
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.test_battery_level"))
-    assert state.state == "unknown"
+    # Should not call for another 10 seconds
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 3
 
 
 async def test_vehicle_refresh_ratelimited_no_after(
