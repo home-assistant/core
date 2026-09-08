@@ -26,6 +26,9 @@
       "dc_2_short_circuit_error_status": {
         "name": "DC 2 short circuit error status"
       },
+      "inverter_connection_status": {
+        "name": "Inverter connection status"
+      },
       "off_grid_status": {
         "name": "Off-grid status"
       },

@@ -14,10 +14,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
-from .entity import ApSystemsEntity
+from .coordinator import ApSystemsConfigEntry, ApSystemsData
+from .entity import ApSystemsCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,17 +66,19 @@ async def async_setup_entry(
     """Set up the binary sensor platform."""
     config = config_entry.runtime_data
 
-    add_entities(
+    entities: list[BinarySensorEntity] = [
         ApSystemsBinarySensorWithDescription(
             data=config,
             entity_description=desc,
         )
         for desc in BINARY_SENSORS
-    )
+    ]
+    entities.append(ApSystemsConnectionBinarySensor(data=config))
+    add_entities(entities)
 
 
 class ApSystemsBinarySensorWithDescription(
-    CoordinatorEntity[ApSystemsDataCoordinator], ApSystemsEntity, BinarySensorEntity
+    ApSystemsCoordinatorEntity, BinarySensorEntity
 ):
     """Base binary sensor to be used with description."""
 
@@ -89,8 +90,7 @@ class ApSystemsBinarySensorWithDescription(
         entity_description: ApsystemsLocalApiBinarySensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(data.coordinator)
-        ApSystemsEntity.__init__(self, data)
+        super().__init__(data)
         self.entity_description = entity_description
         self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
 
@@ -99,3 +99,22 @@ class ApSystemsBinarySensorWithDescription(
     def is_on(self) -> bool | None:
         """Return value of sensor."""
         return self.entity_description.is_on(self.coordinator.data.alarm_info)
+
+
+class ApSystemsConnectionBinarySensor(ApSystemsCoordinatorEntity, BinarySensorEntity):
+    """Binary sensor indicating whether the inverter is reachable."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "inverter_connection_status"
+
+    def __init__(self, data: ApSystemsData) -> None:
+        """Initialize the sensor."""
+        super().__init__(data)
+        self._attr_unique_id = f"{data.device_id}_inverter_connection_status"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the inverter is connected."""
+        return self.coordinator.inverter_connected
