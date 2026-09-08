@@ -33,21 +33,18 @@ class PterodactylGameServer:
 class PterodactylGameServerData:
     """Data of a Pterodactyl game server."""
 
-    # Server data
     name: str
     uuid: str
     identifier: str
     state: str
-    cpu_limit: int
-    disk_limit: int
-    memory_limit: int
-
-    # Utilization data
     cpu_utilization: float | None
+    cpu_limit: int
     disk_usage: int | None
+    disk_limit: int
     memory_usage: int | None
-    network_inbound: int
-    network_outbound: int
+    memory_limit: int
+    network_inbound: int | None
+    network_outbound: int | None
     uptime: int
 
 
@@ -115,6 +112,8 @@ class PterodactylAPI:
         """Get all data from the Pterodactyl game server."""
         server = self.pterodactyl.client.servers.get_server(game_server.identifier)  # type: ignore[union-attr]
 
+        game_server.is_suspended = server["is_suspended"]
+
         if not game_server.is_suspended:
             utilization = self.pterodactyl.client.servers.get_server_utilization(  # type: ignore[union-attr]
                 game_server.identifier
@@ -153,8 +152,8 @@ class PterodactylAPI:
                     cpu_utilization = None
                     memory_usage = None
                     disk_usage = None
-                    network_inbound = 0
-                    network_outbound = 0
+                    network_inbound = None
+                    network_outbound = None
                     uptime = 0
                 else:
                     state = utilization["current_state"]
