@@ -49,9 +49,9 @@ def _build_data_schema(*, key_pem_required: bool) -> vol.Schema:
                 LocationSelectorConfig(radius=False, icon="")
             ),
             # Auth
-            vol.Required(CONF_KEY_ID): str,
-            vol.Required(CONF_SERVICE_ID): str,
-            vol.Required(CONF_TEAM_ID): str,
+            vol.Required(CONF_KEY_ID): TextSelector(),
+            vol.Required(CONF_SERVICE_ID): TextSelector(),
+            vol.Required(CONF_TEAM_ID): TextSelector(),
             key_pem_marker: TextSelector(
                 TextSelectorConfig(
                     multiline=True,
