@@ -49,7 +49,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._manufacturer: str = "Flo by Moen"
         self._device_information: dict[str, Any] = {}
         self._water_usage: dict[str, Any] = {}
-        self._events: dict[str, Any] = {}
+        self._last_water_event: dict[str, Any] | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -164,15 +164,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def last_water_event(self) -> dict[str, Any] | None:
         """Return the most recent Flo Detect water-flow event, if any."""
-        events = self.api_client.flodetect.parse_events(self._events)
-        if not events:
-            return None
-        return max(
-            events,
-            key=lambda event: dt_util.parse_datetime(
-                event.get("endAt") or event["startAt"], raise_on_error=True
-            ),
-        )
+        return self._last_water_event
 
     @property
     def firmware_version(self) -> str:
@@ -272,7 +264,15 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _update_flodetect_events(self) -> None:
         """Update Flo Detect water-flow events from the API."""
-        self._events = await self.api_client.flodetect.get_events(
-            self.mac_address, limit=20
-        )
-        LOGGER.debug("Updated Flo Detect events: %s", self._events)
+        payload = await self.api_client.flodetect.get_events(self.mac_address, limit=20)
+        events = self.api_client.flodetect.parse_events(payload)
+        if events:
+            self._last_water_event = max(
+                events,
+                key=lambda event: dt_util.parse_datetime(
+                    event.get("endAt") or event["startAt"], raise_on_error=True
+                ),
+            )
+        else:
+            self._last_water_event = None
+        LOGGER.debug("Updated Flo Detect events: %s", payload)
