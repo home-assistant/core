@@ -46,7 +46,7 @@ async def async_get_config_entry_diagnostics(
             "highest_price_time": energy_today.highest_price_time_range.start_including,
             "lowest_price_time": energy_today.lowest_price_time_range.start_including,
             "percentage_of_max": energy_today.pct_of_max_price,
-            "hours_priced_equal_or_lower": energy_today.time_ranges_priced_equal_or_lower,
+            "periods_priced_equal_or_lower": energy_today.time_ranges_priced_equal_or_lower,
         },
         "electricity_all_in": {
             "current_price": all_in_today.current_price,

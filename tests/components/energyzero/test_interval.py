@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -91,15 +91,6 @@ async def test_electricity_interval(
     assert expected != prices.current_price
     assert (state := hass.states.get("sensor.energyzero_today_energy_next_hour_price"))
     assert state.state == str(expected)
-    data = mock_config_entry.runtime_data.data
-    assert (data.electricity_market_tomorrow is not None) == (
-        requests_tomorrow and not missing_tomorrow
-    )
-    assert len(data.electricity_market_today.prices) == hours * 60 // minutes
-    assert (data.electricity_all_in_tomorrow is not None) == (
-        requests_tomorrow and not missing_tomorrow
-    )
-    assert len(data.electricity_all_in_today.prices) == hours * 60 // minutes
     assert (
         all_in_state := hass.states.get(
             "sensor.energyzero_today_energy_all_in_next_price"
@@ -128,7 +119,7 @@ async def test_electricity_interval(
     assert diagnostics["electricity_market"]["current_price"] == prices.current_price
     assert diagnostics["electricity_market"]["average_price"] == prices.average_price
     assert (
-        diagnostics["electricity_market"]["hours_priced_equal_or_lower"]
+        diagnostics["electricity_market"]["periods_priced_equal_or_lower"]
         == prices.time_ranges_priced_equal_or_lower
     )
     assert diagnostics["electricity_all_in"]["next_price"] == expected + 100
@@ -163,7 +154,7 @@ async def test_electricity_interval(
     )
 
 
-@pytest.mark.freeze_time("2026-04-10 21:50:00")
+@pytest.mark.freeze_time("2026-04-10 21:42:00")
 @pytest.mark.parametrize(
     ("selected", "minutes"), [("hourly", 60), ("quarter_hourly", 15)]
 )
@@ -178,7 +169,7 @@ async def test_next_price_across_midnight(
     minutes: int,
     missing_tomorrow: bool,
 ) -> None:
-    """Use the matching tomorrow stream before and after midnight without refetching."""
+    """Use tomorrow prices until the first scheduled refresh after midnight."""
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     start = dt_util.start_of_local_day().astimezone(UTC)
     step = timedelta(minutes=minutes)
@@ -202,14 +193,19 @@ async def test_next_price_across_midnight(
         },
         average_price=0.21,
     )
+    today = {PriceType.MARKET_WITH_VAT: today_prices, PriceType.ALL_IN: today_prices}
+    tomorrow = {
+        PriceType.MARKET_WITH_VAT: tomorrow_prices,
+        PriceType.ALL_IN: all_in_tomorrow,
+    }
+    tomorrow_result = EnergyZeroNoDataError() if missing_tomorrow else tomorrow
     mock_energyzero.get_electricity_prices.side_effect = [
-        {PriceType.MARKET_WITH_VAT: today_prices, PriceType.ALL_IN: today_prices},
-        EnergyZeroNoDataError()
-        if missing_tomorrow
-        else {
-            PriceType.MARKET_WITH_VAT: tomorrow_prices,
-            PriceType.ALL_IN: all_in_tomorrow,
-        },
+        today,
+        tomorrow_result,
+        today,
+        tomorrow_result,
+        tomorrow,
+        EnergyZeroNoDataError(),
     ]
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -218,32 +214,38 @@ async def test_next_price_across_midnight(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for moment, market_value, all_in_value in (
-        ("2026-04-10 21:50:00", 0.0, 0.11),
-        ("2026-04-10 22:02:00", 0.01, 0.12),
+    freezer.move_to("2026-04-10 21:52:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_energyzero.get_electricity_prices.await_count == 4
+    for entity_id, value in (
+        ("sensor.energyzero_today_energy_next_hour_price", 0.0),
+        ("sensor.energyzero_today_energy_all_in_next_price", 0.11),
     ):
-        freezer.move_to(moment)
-        coordinator = mock_config_entry.runtime_data
-        coordinator.async_set_updated_data(coordinator.data)
-        await hass.async_block_till_done()
-        diagnostics = await get_diagnostics_for_config_entry(
-            hass, hass_client, mock_config_entry
-        )
-        for entity_id, section, value in (
-            (
-                "sensor.energyzero_today_energy_next_hour_price",
-                "electricity_market",
-                market_value,
-            ),
-            (
-                "sensor.energyzero_today_energy_all_in_next_price",
-                "electricity_all_in",
-                all_in_value,
-            ),
-        ):
-            assert (state := hass.states.get(entity_id))
-            assert state.state == (STATE_UNKNOWN if missing_tomorrow else str(value))
-            assert diagnostics[section]["next_price"] == (
-                None if missing_tomorrow else value
-            )
-    assert mock_energyzero.get_electricity_prices.await_count == 2
+        assert (state := hass.states.get(entity_id))
+        assert state.state == (STATE_UNKNOWN if missing_tomorrow else str(value))
+
+    freezer.move_to("2026-04-10 22:00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+    assert diagnostics["electricity_market"]["next_price"] == (
+        None if missing_tomorrow else 0.01
+    )
+    assert diagnostics["electricity_all_in"]["next_price"] == (
+        None if missing_tomorrow else 0.12
+    )
+    assert mock_energyzero.get_electricity_prices.await_count == 4
+
+    freezer.move_to("2026-04-10 22:02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    for entity_id, value in (
+        ("sensor.energyzero_today_energy_next_hour_price", 0.01),
+        ("sensor.energyzero_today_energy_all_in_next_price", 0.12),
+    ):
+        assert (state := hass.states.get(entity_id))
+        assert state.state == str(value)
+    assert mock_energyzero.get_electricity_prices.await_count == 6

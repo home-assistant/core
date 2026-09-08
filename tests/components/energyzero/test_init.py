@@ -5,17 +5,23 @@ from unittest.mock import MagicMock, call, patch
 from zoneinfo import ZoneInfo
 
 from energyzero import EnergyZeroConnectionError, Interval, PriceType
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energyzero.const import (
     CONF_ELECTRICITY_PRICE_INTERVAL,
     DOMAIN,
     ELECTRICITY_INTERVALS,
+    SCAN_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.mark.parametrize(
@@ -127,6 +133,7 @@ async def test_missing_tomorrow_prices_do_not_retry(
     mock_config_entry: MockConfigEntry,
     selected: str,
     missing_streams: tuple[str, ...],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Missing tomorrow streams do not cause extra requests or fail today's sensors."""
     await hass.config.async_set_time_zone("Europe/Amsterdam")
@@ -146,7 +153,8 @@ async def test_missing_tomorrow_prices_do_not_retry(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert request.await_count == 3
-        await mock_config_entry.runtime_data.async_refresh()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert request.await_count == 6
@@ -163,9 +171,6 @@ async def test_missing_tomorrow_prices_do_not_retry(
         )
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    data = mock_config_entry.runtime_data.data
-    assert data.electricity_market_tomorrow is None
-    assert data.electricity_all_in_tomorrow is None
     assert (
         state := hass.states.get("sensor.energyzero_today_energy_current_hour_price")
     )
