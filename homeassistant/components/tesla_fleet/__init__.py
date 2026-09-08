@@ -27,7 +27,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -108,27 +107,10 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
 async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Set up TeslaFleet config."""
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
-    except ValueError as e:
-        # Remove invalid implementation from config entry then raise AuthFailed
-        hass.config_entries.async_update_entry(
-            entry, data={"auth_implementation": None}
-        )
-        raise ConfigEntryAuthFailed from e
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     oauth_session = OAuth2Session(hass, entry, implementation)
-    try:
-        await oauth_session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
+    await oauth_session.async_ensure_token_valid()
 
     access_token = oauth_session.token[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)

@@ -27,7 +27,9 @@ from homeassistant.util import dt as dt_util
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
     assert_extra_template_attributes,
+    async_trigger,
     make_test_trigger,
     setup_entity,
 )
@@ -643,3 +645,51 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_IMAGE,
+        style,
+        {
+            "url": "{{ 'http://example.com' }}",
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize("attribute", list(image.ImageEntityStateAttribute))
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: image.ImageEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        {
+            "url": "{{ 'http://example.com' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_IMAGE.entity_id}: {attribute}"
+    assert error in caplog.text

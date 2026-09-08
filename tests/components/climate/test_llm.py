@@ -52,7 +52,7 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed climate entity."""
-    assert "HassClimateSetTemperature" in await _tool_names(hass)
+    assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
 
 
 async def test_set_temperature_omits_empty_optional_targets(
@@ -76,7 +76,7 @@ async def test_set_temperature_omits_empty_optional_targets(
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no climate entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    assert "HassClimateSetTemperature" not in await _tool_names(hass)
+    assert "climate__HassClimateSetTemperature" not in await _tool_names(hass)
     assert climate_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 

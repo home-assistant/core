@@ -355,8 +355,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             )
             if self.last_update_success:
                 return
-        ex = ConfigEntryNotReady()
-        ex.__cause__ = self.last_exception
+        cause = self.last_exception
+        ex = ConfigEntryNotReady(
+            translation_domain=getattr(cause, "translation_domain", None),
+            translation_key=getattr(cause, "translation_key", None),
+            translation_placeholders=getattr(cause, "translation_placeholders", None),
+        )
+        ex.__cause__ = cause
         raise ex
 
     async def __wrap_async_setup(self) -> bool:
@@ -378,6 +383,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             requests.exceptions.RequestException,
             urllib.error.URLError,
             UpdateFailed,
+            ConfigEntryNotReady,
         ) as err:
             self.last_exception = err
 
@@ -501,6 +507,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     err.retry_after,
                 )
 
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
+                self.last_update_success = False
+
+        except ConfigEntryNotReady as err:
+            self.last_exception = err
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)

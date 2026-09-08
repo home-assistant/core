@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import camera, conversation, image, media_source
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.core import Context, HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
@@ -119,6 +119,7 @@ async def async_generate_data(
     structure: vol.Schema | None = None,
     attachments: list[dict] | None = None,
     llm_api: llm.API | None = None,
+    context: Context | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
     if entity_id is None:
@@ -156,6 +157,7 @@ async def async_generate_data(
                 attachments=resolved_attachments or None,
                 llm_api=llm_api,
             ),
+            context,
         )
 
 
@@ -166,6 +168,7 @@ async def async_generate_image(
     entity_id: str | None = None,
     instructions: str,
     attachments: list[dict] | None = None,
+    context: Context | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
     if entity_id is None:
@@ -201,6 +204,7 @@ async def async_generate_image(
                 instructions=instructions,
                 attachments=resolved_attachments or None,
             ),
+            context,
         )
 
     service_result = task_result.as_dict()

@@ -5,11 +5,17 @@ from astroid import nodes
 from .ast_utils import extended_ancestors
 
 ENTITY_QNAME = "homeassistant.helpers.entity.Entity"
+LIGHT_ENTITY_QNAME = "homeassistant.components.light.LightEntity"
 
 
 def inherits_from_entity(class_node: nodes.ClassDef) -> bool:
     """Return True if class inherits from ``homeassistant.helpers.entity.Entity``."""
     return any(a.qname() == ENTITY_QNAME for a in extended_ancestors(class_node))
+
+
+def inherits_from_light_entity(class_node: nodes.ClassDef) -> bool:
+    """Return True if class inherits from ``LightEntity``."""
+    return any(a.qname() == LIGHT_ENTITY_QNAME for a in extended_ancestors(class_node))
 
 
 def collect_same_module_ancestor_qnames(module: nodes.Module) -> set[str]:
