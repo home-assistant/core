@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: This integration only provides an entity service (unlock_specific_door).
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
