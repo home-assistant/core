@@ -5039,6 +5039,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[jpry3yxd77xu5woibdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'jpry3yxd77xu5woibdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Three Phase Energy Meter',
+    'model_id': 'iow5ux77dxy3yrpj',
+    'name': '三相电能表 2',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[jzpap0inhkykqtlwgklc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5603,6 +5633,36 @@
     'model': 'WIFI Dual Meter',
     'model_id': 'z95s7p3z54xbsjnl',
     'name': 'WIFI Dual Meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[m2gpwqz5xb4chzqubdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'm2gpwqz5xb4chzqubdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '多路计量有线demo26082501',
+    'model_id': 'uqzhc4bx5zqwpg2m',
+    'name': '多路计量有线demo26082501',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,

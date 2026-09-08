@@ -3,8 +3,7 @@
     "abort": {
       "all_profiles_configured": "All NextDNS profiles are already configured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

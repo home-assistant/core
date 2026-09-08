@@ -57,6 +57,23 @@
       "message": "No price data available for {date}."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "electricity_price_interval": "Electricity price interval"
+        }
+      }
+    }
+  },
+  "selector": {
+    "electricity_price_interval": {
+      "options": {
+        "hourly": "Hourly",
+        "quarter_hourly": "Quarter-hourly"
+      }
+    }
+  },
   "services": {
     "get_energy_prices": {
       "description": "Requests energy prices from EnergyZero.",

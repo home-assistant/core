@@ -208,6 +208,9 @@
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
     },
+    "monitoring_start_failed": {
+      "message": "Connected to the alarm panel, but the panel did not confirm the request to start sending status updates."
+    },
     "panel_busy": {
       "message": "[%key:component::satel_integra::config::error::panel_busy%]"
     }

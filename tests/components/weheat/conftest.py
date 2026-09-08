@@ -1,6 +1,7 @@
 """Fixtures for Weheat tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -136,6 +137,26 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.compressor_rpm = 4500
     mock_heat_pump_instance.compressor_percentage = 100
     mock_heat_pump_instance.dhw_flow_volume = 1.12
+    mock_heat_pump_instance.cooling_pause_reason_code = 4
+    mock_heat_pump_instance.cooling_stop_reason_code = 0
+    mock_heat_pump_instance.last_cooling_time = datetime(
+        2025, 6, 21, 14, 30, tzinfo=UTC
+    )
+    # The heat pump only reports a cooling state during a cooling cycle, so a
+    # heating one derives its cooling activity from the latched reasons instead.
+    mock_heat_pump_instance.cooling_state = None
+    mock_heat_pump_instance.cooling_activity = HeatPump.CoolingActivity.WAITING
+    mock_heat_pump_instance.cooling_pause_reason = (
+        HeatPump.CoolingPauseReason.WATER_TEMPERATURE_BELOW_SETPOINT
+    )
+    mock_heat_pump_instance.cooling_stop_reason = HeatPump.CoolingStopReason.NONE
+    mock_heat_pump_instance.cooling_backoff = 60
+    mock_heat_pump_instance.cooling_available_from = datetime(
+        2025, 6, 21, 15, 30, tzinfo=UTC
+    )
+    mock_heat_pump_instance.cooling_start_conditions = {
+        name: name != "demand" for name in HeatPump.COOLING_START_CONDITION_BITS
+    }
     mock_heat_pump_instance.dhw_target_temperature = 55
     mock_heat_pump_instance.dhw_control_method = HeatPump.DhwControlMethod.FIXED
     mock_heat_pump_instance.dhw_control_method_code = 1
