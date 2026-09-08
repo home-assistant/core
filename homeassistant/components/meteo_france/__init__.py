@@ -9,7 +9,7 @@ from requests import RequestException
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEPARTMENTS_WITH_ALERT, PLATFORMS
+from .const import METEO_FRANCE_DATA, PLATFORMS
 from .coordinator import (
     MeteoFranceAlertUpdateCoordinator,
     MeteoFranceConfigEntry,
@@ -23,7 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> bool:
     """Set up a Meteo-France account from a config entry."""
-    departments_with_alert = hass.data.setdefault(DEPARTMENTS_WITH_ALERT, set())
+    if (departments_with_alert := hass.data.get(METEO_FRANCE_DATA)) is None:
+        departments_with_alert = hass.data[METEO_FRANCE_DATA] = set()
 
     client = MeteoFranceClient()
 
@@ -107,7 +108,7 @@ async def async_unload_entry(
     """Unload a config entry."""
     if entry.runtime_data.alert_coordinator:
         department = entry.runtime_data.forecast_coordinator.data.position.get("dept")
-        hass.data[DEPARTMENTS_WITH_ALERT].discard(department)
+        hass.data[METEO_FRANCE_DATA].discard(department)
         _LOGGER.debug(
             (
                 "Weather alert for depatment %s unloaded and released. It can be added"
@@ -118,8 +119,8 @@ async def async_unload_entry(
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        if not hass.data[DEPARTMENTS_WITH_ALERT]:
-            hass.data.pop(DEPARTMENTS_WITH_ALERT)
+        if not hass.data[METEO_FRANCE_DATA]:
+            hass.data.pop(METEO_FRANCE_DATA)
 
     return unload_ok
 

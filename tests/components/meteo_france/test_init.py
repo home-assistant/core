@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.components.meteo_france.const import (
     CONF_CITY,
-    DEPARTMENTS_WITH_ALERT,
     DOMAIN,
+    METEO_FRANCE_DATA,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -68,13 +68,13 @@ async def test_unload_releases_the_department(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.data[DEPARTMENTS_WITH_ALERT]
+    assert hass.data[METEO_FRANCE_DATA]
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # The last entry is gone, so the shared registry is cleaned up entirely.
-    assert DEPARTMENTS_WITH_ALERT not in hass.data
+    assert METEO_FRANCE_DATA not in hass.data
 
     second_entry = _second_city(hass)
     await hass.config_entries.async_setup(second_entry.entry_id)

@@ -26,7 +26,7 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 # Departments that already have a city providing weather alerts. Only one city
 # per department may do so, so this is shared between config entries rather than
 # owned by any one of them.
-DEPARTMENTS_WITH_ALERT: HassKey[set[str]] = HassKey(f"{DOMAIN}_departments_with_alert")
+METEO_FRANCE_DATA: HassKey[set[str]] = HassKey(DOMAIN)
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"
