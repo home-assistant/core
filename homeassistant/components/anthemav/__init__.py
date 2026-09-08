@@ -57,11 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         # Wait for the zones to be initialised based on the model
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
     except TimeoutError as err:
-        # Only our own asyncio.timeout() above can raise this — the TCP
-        # connection itself never completed. wait_for_device_initialised()
-        # converts its own internal timeout into DeviceError instead, so by
-        # the time that call is reached the connection has already
-        # succeeded and this branch can't be it.
+        # Raised only by the asyncio.timeout() above; the connection never completed.
         raise ConfigEntryNotReady(
             f"Timed out connecting to Anthem AVR at "
             f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
