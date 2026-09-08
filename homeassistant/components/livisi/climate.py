@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from livisi.const import CAPABILITY_CONFIG
+from livisi import LivisiDevice
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -16,10 +16,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    HUMIDITY,
     LIVISI_STATE_CHANGE,
     LOGGER,
     MAX_TEMPERATURE,
     MIN_TEMPERATURE,
+    POINT_TEMPERATURE,
+    SETPOINT_TEMPERATURE,
+    TEMPERATURE,
     VRCC_DEVICE_TYPE,
 )
 from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
@@ -37,18 +41,15 @@ async def async_setup_entry(
     @callback
     def handle_coordinator_update() -> None:
         """Add climate device."""
-        shc_devices: list[dict[str, Any]] = coordinator.data
+        shc_devices: list[LivisiDevice] = coordinator.data
         entities: list[ClimateEntity] = []
         for device in shc_devices:
-            if (
-                device["type"] == VRCC_DEVICE_TYPE
-                and device["id"] not in coordinator.devices
-            ):
+            if device.type == VRCC_DEVICE_TYPE and device.id not in coordinator.devices:
                 livisi_climate: ClimateEntity = LivisiClimate(
                     config_entry, coordinator, device
                 )
-                LOGGER.debug("Include device type: %s", device.get("type"))
-                coordinator.devices.add(device["id"])
+                LOGGER.debug("Include device type: %s", device.type)
+                coordinator.devices.add(device.id)
                 entities.append(livisi_climate)
         async_add_entities(entities)
 
@@ -69,7 +70,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self,
         config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        device: dict[str, Any],
+        device: LivisiDevice,
     ) -> None:
         """Initialize the Livisi Climate."""
         super().__init__(
@@ -80,21 +81,25 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._temperature_capability = self.capabilities["RoomTemperature"]
         self._humidity_capability = self.capabilities["RoomHumidity"]
 
-        config = device.get(CAPABILITY_CONFIG, {}).get("RoomSetpoint", {})
+        config = device.capability_config.get("RoomSetpoint", {})
         self._attr_max_temp = config.get("maxTemperature", MAX_TEMPERATURE)
         self._attr_min_temp = config.get("minTemperature", MIN_TEMPERATURE)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        response = await self.aio_livisi.async_vrcc_set_temperature(
-            self._target_temperature_capability,
-            kwargs.get(ATTR_TEMPERATURE),
-            self.coordinator.is_avatar,
+        target_temperature_property = (
+            SETPOINT_TEMPERATURE if self.coordinator.is_avatar else POINT_TEMPERATURE
         )
-        if response is None:
+        success = await self.aio_livisi.async_set_state(
+            self._target_temperature_capability,
+            key=target_temperature_property,
+            value=kwargs.get(ATTR_TEMPERATURE),
+        )
+        if not success:
             self._attr_available = False
-            raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
+            raise HomeAssistantError(f"Failed to set temperature on {self._attr_name}")
+        self._attr_available = True
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -102,15 +107,17 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
 
         await super().async_added_to_hass()
 
+        target_temperature_property = (
+            SETPOINT_TEMPERATURE if self.coordinator.is_avatar else POINT_TEMPERATURE
+        )
         target_temperature = await self.coordinator.async_get_device_state(
-            self._target_temperature_capability,
-            "setpointTemperature" if self.coordinator.is_avatar else "pointTemperature",
+            self._target_temperature_capability, target_temperature_property
         )
         temperature = await self.coordinator.async_get_device_state(
-            self._temperature_capability, "temperature"
+            self._temperature_capability, TEMPERATURE
         )
         humidity = await self.coordinator.async_get_device_state(
-            self._humidity_capability, "humidity"
+            self._humidity_capability, HUMIDITY
         )
         if temperature is None:
             self._attr_current_temperature = None
@@ -122,21 +129,21 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIVISI_STATE_CHANGE}_{self._target_temperature_capability}",
+                f"{LIVISI_STATE_CHANGE}_{self._target_temperature_capability}_{target_temperature_property}",
                 self.update_target_temperature,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIVISI_STATE_CHANGE}_{self._temperature_capability}",
+                f"{LIVISI_STATE_CHANGE}_{self._temperature_capability}_{TEMPERATURE}",
                 self.update_temperature,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIVISI_STATE_CHANGE}_{self._humidity_capability}",
+                f"{LIVISI_STATE_CHANGE}_{self._humidity_capability}_{HUMIDITY}",
                 self.update_humidity,
             )
         )
@@ -148,17 +155,20 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     @callback
     def update_target_temperature(self, target_temperature: float) -> None:
         """Update the target temperature of the climate device."""
+        self._attr_available = True
         self._attr_target_temperature = target_temperature
         self.async_write_ha_state()
 
     @callback
     def update_temperature(self, current_temperature: float) -> None:
         """Update the current temperature of the climate device."""
+        self._attr_available = True
         self._attr_current_temperature = current_temperature
         self.async_write_ha_state()
 
     @callback
     def update_humidity(self, humidity: int) -> None:
         """Update the humidity of the climate device."""
+        self._attr_available = True
         self._attr_current_humidity = humidity
         self.async_write_ha_state()

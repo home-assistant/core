@@ -1,9 +1,8 @@
 """Code to handle a Livisi switches."""
 
-from collections.abc import Mapping
-from typing import Any, override
+from typing import override
 
-from livisi.const import CAPABILITY_MAP
+from livisi import LivisiDevice
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -24,23 +23,20 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
         self,
         config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        device: dict[str, Any],
+        device: LivisiDevice,
         *,
         use_room_as_device_name: bool = False,
     ) -> None:
         """Initialize the common properties of a Livisi device."""
         self.aio_livisi = coordinator.aiolivisi
-        self.capabilities: Mapping[str, Any] = device[CAPABILITY_MAP]
+        self.capabilities = device.capabilities
 
-        name = device["config"]["name"]
-        unique_id = device["id"]
+        name = device.name
+        unique_id = device.id
 
-        room_id: str | None = device.get("location")
-        room_name: str | None = None
-        if room_id is not None:
-            room_name = coordinator.rooms.get(room_id)
+        room_name: str | None = device.room
 
-        self._attr_available = False
+        self._attr_available = not device.unreachable
         self._attr_unique_id = unique_id
 
         device_name = name
@@ -56,8 +52,8 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            manufacturer=device["manufacturer"],
-            model=device["type"],
+            manufacturer=device.manufacturer,
+            model=device.type,
             name=device_name,
             suggested_area=room_name,
             via_device_id=dr.async_get_device_id_by_identifier(
@@ -67,6 +63,12 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
             ),
         )
         super().__init__(coordinator)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the device and coordinator are available."""
+        return self._attr_available and super().available
 
     @override
     async def async_added_to_hass(self) -> None:
