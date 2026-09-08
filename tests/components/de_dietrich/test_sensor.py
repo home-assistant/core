@@ -9,7 +9,7 @@ from modbus_connection.mock import MockModbusConnection
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.dedietrich.const import (
+from homeassistant.components.de_dietrich.const import (
     DEFAULT_UNIT_ID,
     DOMAIN,
     SCAN_INTERVAL,
@@ -42,37 +42,32 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    ("register", "value", "circuit_key", "expect_entity"),
+    ("register", "entity_id"),
     [
         pytest.param(
-            614, 210, "circuit_a_room_temperature", True, id="circuit_a_present"
+            614,
+            "sensor.de_dietrich_circuit_a_room_temperature",
+            id="circuit_a",
         ),
         pytest.param(
-            614, 0xFFFF, "circuit_a_room_temperature", False, id="circuit_a_absent"
-        ),
-        pytest.param(
-            616, 205, "circuit_b_room_temperature", True, id="circuit_b_present"
-        ),
-        pytest.param(
-            616, 0xFFFF, "circuit_b_room_temperature", False, id="circuit_b_absent"
+            616,
+            "sensor.de_dietrich_circuit_b_room_temperature",
+            id="circuit_b",
         ),
     ],
 )
-async def test_circuit_sensor_exists_fn(
+async def test_circuit_sensor_without_room_temperature(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
     register: int,
-    value: int,
-    circuit_key: str,
-    expect_entity: bool,
+    entity_id: str,
 ) -> None:
-    """Test a circuit's room-temperature sensor follows its circuit_*_present."""
-    mock_connection.for_unit(DEFAULT_UNIT_ID).holding[register] = value
+    """Test a circuit sensor is unknown when no room temperature is reported."""
+    mock_connection.for_unit(DEFAULT_UNIT_ID).holding[register] = 0xFFFF
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.dedietrich.async_get_unit",
+        "homeassistant.components.de_dietrich.async_get_unit",
         side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
             unit_id
         ),
@@ -80,10 +75,8 @@ async def test_circuit_sensor_exists_fn(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{mock_config_entry.entry_id}_{circuit_key}"
-    )
-    assert (entity_id is not None) is expect_entity
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -155,63 +148,3 @@ async def test_sensor_partial_update_failure(
 
     assert hass.states.get(circuit_id).state == "22.0"
     assert hass.states.get(outdoor_id).state == "6.0"
-
-
-async def test_circuit_sensor_added_after_recovery(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a circuit missing at setup is added exactly once after recovery."""
-    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
-    unit.fail_read(654, ModbusTimeoutError("circuit unavailable"))
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.dedietrich.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    circuit_id = "sensor.de_dietrich_circuit_a_room_temperature"
-    assert hass.states.get(circuit_id) is None
-    assert (
-        len(
-            er.async_entries_for_config_entry(
-                entity_registry, mock_config_entry.entry_id
-            )
-        )
-        == 10
-    )
-
-    unit.fail_read(654, None)
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(circuit_id).state == "21.0"
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entries) == 11
-    entity_ids = {entry.entity_id for entry in entries}
-
-    unit.holding[614] = 220
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(circuit_id).state == "22.0"
-    assert {
-        entry.entity_id
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-    } == entity_ids
-    assert {
-        state.entity_id for state in hass.states.async_all(SENSOR_DOMAIN)
-    } == entity_ids

@@ -2,7 +2,7 @@
 
 from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.dedietrich.const import (
+from homeassistant.components.de_dietrich.const import (
     CONF_SYSTEM,
     CONF_UNIT_ID,
     DEFAULT_UNIT_ID,

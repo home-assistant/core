@@ -364,14 +364,14 @@ CLAUDE.md @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
+/homeassistant/components/de_dietrich/ @DaanVervacke
+/tests/components/de_dietrich/ @DaanVervacke
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
 /tests/components/deconz/ @Kane610
-/homeassistant/components/dedietrich/ @DaanVervacke
-/tests/components/dedietrich/ @DaanVervacke
 /homeassistant/components/default_config/ @home-assistant/core
 /tests/components/default_config/ @home-assistant/core
 /homeassistant/components/delijn/ @bollewolle @Emilv2

@@ -859,7 +859,7 @@ devolo-home-control-api==0.19.1
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.5.1
 
-# homeassistant.components.dedietrich
+# homeassistant.components.de_dietrich
 diematic-modbus==0.3.0
 
 # homeassistant.components.chacon_dio

@@ -2,7 +2,7 @@
 
 from typing import Final
 
-DOMAIN = "dedietrich"
+DOMAIN = "de_dietrich"
 ATTR_MANUFACTURER = "De Dietrich"
 DEFAULT_NAME = "De Dietrich"
 DEFAULT_PORT = 502

@@ -57,13 +57,15 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
-        identity = self.device.identity
-        # software_version exists only on the iSystem identity, not the base one.
-        sw_version = getattr(identity, "software_version", None)
+        device = self.device
+        sw_version = (
+            device.identity.software_version
+            if isinstance(device, DiematicISystem)
+            else None
+        )
         return dr.DeviceInfo(
             identifiers={(DOMAIN, self.config_entry.entry_id)},
             manufacturer=ATTR_MANUFACTURER,
-            serial_number=None,
             sw_version=str(sw_version) if sw_version is not None else None,
         )
 

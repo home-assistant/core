@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -137,7 +137,6 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        exists_fn=lambda device: device.circuit_a_present,
         value_fn=lambda device: device.circuit_a.room_temp,
     ),
     DeDietrichSensorDescription(
@@ -148,7 +147,6 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        exists_fn=lambda device: device.circuit_b_present,
         value_fn=lambda device: device.circuit_b.room_temp,
     ),
 )
@@ -161,30 +159,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the De Dietrich sensor platform."""
     coordinator = entry.runtime_data
-    added: set[str] = set()
-
-    @callback
-    def _add_entities() -> None:
-        """Add sensors whose component is present, once each.
-
-        A circuit's presence can only be read once it answers a poll, so this
-        re-runs on every coordinator update to pick up circuits that were
-        missing at setup.
-        """
-        new = [
-            description
-            for description in SENSOR_DESCRIPTIONS
-            if description.key not in added
-            and description.exists_fn(coordinator.device)
-        ]
-        if new:
-            added.update(description.key for description in new)
-            async_add_entities(
-                DeDietrichSensor(coordinator, description) for description in new
-            )
-
-    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
-    _add_entities()
+    async_add_entities(
+        DeDietrichSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class DeDietrichSensor(DeDietrichEntity, SensorEntity):

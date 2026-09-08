@@ -113,7 +113,6 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(err)
             else:
-                self._async_abort_entries_match(connection)
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,

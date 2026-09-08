@@ -56,10 +56,10 @@ rules:
   diagnostics: todo
   discovery-update-info:
     status: exempt
-    comment: Modbus TCP gateways have no discovery protocol to update network info from.
+    comment: No discovery event identifies the boiler behind its generic RS485-to-TCP bridge, so a new bridge address cannot be matched to the configured boiler and unit ID.
   discovery:
     status: exempt
-    comment: Modbus TCP gateways are not announced over any discoverable protocol.
+    comment: A DHCP hostname or MAC address identifies only the user-supplied generic RS485-to-TCP bridge, not the attached De Dietrich boiler, its Modbus unit ID, or its register layout.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done

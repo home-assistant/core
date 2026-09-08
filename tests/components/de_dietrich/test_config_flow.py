@@ -9,7 +9,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dedietrich.const import (
+from homeassistant.components.de_dietrich.const import (
     CONF_SYSTEM,
     DOMAIN,
     SYSTEM_DIEMATIC_3,
@@ -35,7 +35,7 @@ def _patch_temporary_unit(connection: MockModbusConnection) -> _patch:
         yield connection.for_unit(unit_id)
 
     return patch(
-        "homeassistant.components.dedietrich.config_flow.async_get_temporary_unit",
+        "homeassistant.components.de_dietrich.config_flow.async_get_temporary_unit",
         side_effect=_get_temporary_unit,
     )
 
@@ -186,7 +186,7 @@ async def test_user_step_already_configured(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dedietrich.config_flow.async_get_temporary_unit",
+        "homeassistant.components.de_dietrich.config_flow.async_get_temporary_unit",
         side_effect=ModbusConnectionError("offline"),
     ) as mock_get_unit:
         result = await hass.config_entries.flow.async_init(
@@ -198,29 +198,3 @@ async def test_user_step_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_get_unit.assert_not_called()
-
-
-async def test_user_step_duplicate_added_during_probe(hass: HomeAssistant) -> None:
-    """Test an entry added during the probe is rejected by the final check."""
-    mock_conn = MockModbusConnection()
-    seed_boiler(mock_conn.for_unit(10))
-
-    @asynccontextmanager
-    async def _get_temporary_unit(
-        hass: HomeAssistant, params: ModbusTcpParams, unit_id: int
-    ) -> AsyncIterator[MockModbusUnit]:
-        MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT).add_to_hass(hass)
-        yield mock_conn.for_unit(unit_id)
-
-    with patch(
-        "homeassistant.components.dedietrich.config_flow.async_get_temporary_unit",
-        side_effect=_get_temporary_unit,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

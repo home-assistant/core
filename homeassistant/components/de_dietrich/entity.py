@@ -1,10 +1,7 @@
 """Base entity for De Dietrich devices."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
-
-from diematic_modbus import Diematic, DiematicISystem
 
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -16,10 +13,7 @@ from .coordinator import DeDietrichDataUpdateCoordinator
 class DeDietrichEntityDescription(EntityDescription):
     """Describe a De Dietrich entity."""
 
-    component: (
-        str  # attribute name on the device, e.g. 'sensors', 'hot_water', 'circuit_a'
-    )
-    exists_fn: Callable[[Diematic | DiematicISystem], bool] = lambda _: True
+    component: str
 
 
 class DeDietrichEntity(CoordinatorEntity[DeDietrichDataUpdateCoordinator]):
@@ -45,6 +39,7 @@ class DeDietrichEntity(CoordinatorEntity[DeDietrichDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Whether this entity's component answered the most recent poll."""
-        if not super().available:
-            return False
-        return self.entity_description.component not in self.coordinator.data.failed
+        return (
+            super().available
+            and self.entity_description.component not in self.coordinator.data.failed
+        )
