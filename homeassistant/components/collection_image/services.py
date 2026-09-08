@@ -19,5 +19,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SHUFFLE,
         entity_domain=IMAGE_DOMAIN,
         schema={},
-        func="get_next_image",
+        func="get_random_image",
     )

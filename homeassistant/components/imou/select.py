@@ -3,23 +3,23 @@
 from typing import override
 
 from pyimouapi.const import (
+    PARAM_COLLECTION_POINT,
     PARAM_CURRENT_OPTION,
     PARAM_DEVICE_VOLUME,
     PARAM_NIGHT_VISION_MODE,
     PARAM_OPTIONS,
 )
-from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, imou_device_identifier
+from .const import imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 0
 
@@ -33,6 +33,10 @@ SELECT_TYPES: tuple[SelectEntityDescription, ...] = (
         key=PARAM_NIGHT_VISION_MODE,
         entity_category=EntityCategory.CONFIG,
         translation_key=PARAM_NIGHT_VISION_MODE,
+    ),
+    SelectEntityDescription(
+        key=PARAM_COLLECTION_POINT,
+        translation_key=PARAM_COLLECTION_POINT,
     ),
 )
 
@@ -87,18 +91,12 @@ class ImouSelect(ImouEntity, SelectEntity):
         return self.device.selects[self._entity_type][PARAM_CURRENT_OPTION]
 
     @override
+    @async_wrap_imou_command("select_option_failed")
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.coordinator.device_manager.async_select_option(
-                self.device,
-                self._entity_type,
-                option,
-            )
-        except ImouException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="select_option_failed",
-                translation_placeholders={"error": e.message},
-            ) from e
+        await self.coordinator.device_manager.async_select_option(
+            self.device,
+            self._entity_type,
+            option,
+        )
         await self.coordinator.async_request_refresh()

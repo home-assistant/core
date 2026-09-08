@@ -134,6 +134,7 @@ def async_create_api_client(
             public_api_session=async_create_clientsession(hass),
             devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
             ignore_unadopted=False,
+            override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         )
 
     return _async_create_full_client(hass, entry)

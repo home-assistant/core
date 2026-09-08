@@ -1,6 +1,7 @@
 """Coordinator for MELCloud Home."""
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -213,14 +214,14 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
         )
         now = utcnow()
 
-        energy: dict[str, float | None] = {}
+        energy_coroutines: dict[str, Coroutine[None, None, float | None]] = {}
         for building in data.buildings:
             for ata_unit in building.air_to_air_units:
                 if (
                     ata_unit.capabilities
                     and ata_unit.capabilities.has_energy_consumed_meter
                 ):
-                    energy[ata_unit.id] = await self._async_get_energy(
+                    energy_coroutines[ata_unit.id] = self._async_get_energy(
                         ata_unit.id, start_of_month, now
                     )
             for atw_unit in building.air_to_water_units:
@@ -228,8 +229,14 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
                     atw_unit.capabilities
                     and atw_unit.capabilities.has_energy_consumed_meter
                 ):
-                    energy[atw_unit.id] = await self._async_get_energy(
+                    energy_coroutines[atw_unit.id] = self._async_get_energy(
                         atw_unit.id, start_of_month, now
                     )
 
-        return energy
+        return dict(
+            zip(
+                energy_coroutines,
+                await asyncio.gather(*energy_coroutines.values()),
+                strict=True,
+            )
+        )

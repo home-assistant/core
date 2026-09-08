@@ -12,13 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CURRENCY_EURO,
-    PERCENTAGE,
-    UnitOfEnergy,
-    UnitOfTime,
-    UnitOfVolume,
-)
+from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -60,7 +54,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     ),
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
-        translation_key="current_hour_price",
+        translation_key="current_price",
         service_type="today_energy",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -69,13 +63,11 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
-        translation_key="next_hour_price",
+        translation_key="next_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=3,
-        value_fn=lambda data: data.energy_today.price_at_time(
-            data.energy_today.utcnow() + timedelta(hours=1)
-        ),
+        value_fn=lambda data: data.next_energy_price,
     ),
     EnergyZeroSensorEntityDescription(
         key="average_price",
@@ -128,7 +120,6 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         key="hours_priced_equal_or_lower",
         translation_key="hours_priced_equal_or_lower",
         service_type="today_energy",
-        native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: data.energy_today.time_ranges_priced_equal_or_lower,
     ),
 )

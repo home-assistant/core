@@ -7,7 +7,6 @@
       "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
       "no_devices": "The authorized user has no LaMetric devices",
       "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

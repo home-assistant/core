@@ -283,7 +283,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_down',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_down',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_down',
     'unit_of_measurement': None,
   })
 # ---
@@ -334,7 +334,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_left',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_left',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -487,7 +487,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_right',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_right',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -640,7 +640,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ptz_stop',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_stop',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_stop',
     'unit_of_measurement': None,
   })
 # ---
@@ -690,7 +690,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_up',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_up',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_up',
     'unit_of_measurement': None,
   })
 # ---
