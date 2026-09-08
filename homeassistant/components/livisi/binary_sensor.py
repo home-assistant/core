@@ -1,6 +1,8 @@
 """Code to handle a Livisi Binary Sensor."""
 
-from typing import Any, override
+from typing import override
+
+from livisi import LivisiDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -10,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LIVISI_STATE_CHANGE, LOGGER, WDS_DEVICE_TYPE
+from .const import IS_OPEN, LIVISI_STATE_CHANGE, LOGGER, WDS_DEVICE_TYPE
 from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
 from .entity import LivisiEntity
 
@@ -27,16 +29,16 @@ async def async_setup_entry(
     @callback
     def handle_coordinator_update() -> None:
         """Add Window Sensor."""
-        shc_devices: list[dict[str, Any]] = coordinator.data
+        shc_devices: list[LivisiDevice] = coordinator.data
         entities: list[BinarySensorEntity] = []
         for device in shc_devices:
-            if device["id"] not in known_devices and device["type"] == WDS_DEVICE_TYPE:
+            if device.id not in known_devices and device.type == WDS_DEVICE_TYPE:
                 livisi_binary: BinarySensorEntity = LivisiWindowDoorSensor(
                     config_entry, coordinator, device
                 )
-                LOGGER.debug("Include device type: %s", device["type"])
-                coordinator.devices.add(device["id"])
-                known_devices.add(device["id"])
+                LOGGER.debug("Include device type: %s", device.type)
+                coordinator.devices.add(device.id)
+                known_devices.add(device.id)
                 entities.append(livisi_binary)
         async_add_entities(entities)
 
@@ -52,7 +54,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
         self,
         config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        device: dict[str, Any],
+        device: LivisiDevice,
         capability_name: str,
     ) -> None:
         """Initialize the Livisi sensor."""
@@ -67,7 +69,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIVISI_STATE_CHANGE}_{self._capability_id}",
+                f"{LIVISI_STATE_CHANGE}_{self._capability_id}_{IS_OPEN}",
                 self.update_states,
             )
         )
@@ -75,6 +77,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
     @callback
     def update_states(self, state: bool) -> None:
         """Update the state of the device."""
+        self._attr_available = True
         self._attr_is_on = state
         self.async_write_ha_state()
 
@@ -86,14 +89,14 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
         self,
         config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        device: dict[str, Any],
+        device: LivisiDevice,
     ) -> None:
         """Initialize the Livisi window/door sensor."""
         super().__init__(config_entry, coordinator, device, "WindowDoorSensor")
 
         self._attr_device_class = (
             BinarySensorDeviceClass.DOOR
-            if (device.get("tags", {}).get("typeCategory") == "TCDoorId")
+            if device.tag_category == "TCDoorId"
             else BinarySensorDeviceClass.WINDOW
         )
 
@@ -102,7 +105,7 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
         """Get current state."""
         await super().async_added_to_hass()
         response = await self.coordinator.async_get_device_state(
-            self._capability_id, "isOpen"
+            self._capability_id, IS_OPEN
         )
         if response is None:
             self._attr_available = False
