@@ -8,16 +8,10 @@ import pytest
 from homeassistant.components.ukraine_alarm.const import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
 REGION_ID = "2.1"
-
-RED_REASON = "Ракетна загроза (червоний рівень)"
-YELLOW_REASON = "Дронова загроза (жовтий рівень)"
-CREATED_AT = "2026-09-08T11:40:15.440927Z"
-EARLIER = "2026-09-08T11:15:58.635824Z"
 
 ALL_KEYS = (
     "UNKNOWN",
@@ -66,10 +60,13 @@ def _state(hass: HomeAssistant, entity_registry: er.EntityRegistry, key: str) ->
     return state
 
 
-def _level(
-    alert_level: str, reason: str = "", created_at: str = CREATED_AT
-) -> dict[str, Any]:
-    return {"alertLevel": alert_level, "reason": reason, "createdAt": created_at}
+def _level(alert_level: str) -> dict[str, Any]:
+    """Build one reported alert level as the API serves it."""
+    return {
+        "alertLevel": alert_level,
+        "reason": "Ракетна загроза (червоний рівень)",
+        "createdAt": "2026-09-08T11:40:15.440927Z",
+    }
 
 
 def _alert(
@@ -125,112 +122,3 @@ async def test_alerts(
     for key in ALL_KEYS:
         state = _state(hass, entity_registry, key)
         assert state.state == ("on" if key in expected_on else "off"), key
-
-
-@pytest.mark.parametrize(
-    ("active_alerts", "key", "expected_reasons", "expected_created_at"),
-    [
-        # No level active: the attributes stay present but empty.
-        ([], "AIR_RED", [], None),
-        (
-            [_alert(levels=[_level("Red", RED_REASON)])],
-            "AIR_RED",
-            [RED_REASON],
-            CREATED_AT,
-        ),
-        # An empty reason carries no information and is dropped.
-        ([_alert(levels=[_level("Red")])], "AIR_RED", [], CREATED_AT),
-        # Each level keeps its own reason.
-        (
-            [
-                _alert(
-                    levels=[
-                        _level("Red", RED_REASON),
-                        _level("Yellow", YELLOW_REASON, EARLIER),
-                    ]
-                )
-            ],
-            "AIR_YELLOW",
-            [YELLOW_REASON],
-            EARLIER,
-        ),
-        # One level can carry several reasons at once.
-        (
-            [
-                _alert(
-                    levels=[
-                        _level("Red", RED_REASON),
-                        _level("Red", "Загроза БпЛА", EARLIER),
-                    ]
-                )
-            ],
-            "AIR_RED",
-            [RED_REASON, "Загроза БпЛА"],
-            EARLIER,
-        ),
-        # Reasons are collected across all air alerts of the region and the
-        # oldest start time wins, since that is when the level was raised.
-        (
-            [
-                _alert(levels=[_level("Red", RED_REASON)]),
-                _alert(levels=[_level("Red", "Загроза БпЛА", EARLIER)]),
-            ],
-            "AIR_RED",
-            [RED_REASON, "Загроза БпЛА"],
-            EARLIER,
-        ),
-        # The same reason reported twice is only listed once.
-        (
-            [
-                _alert(levels=[_level("Red", RED_REASON)]),
-                _alert(levels=[_level("Red", RED_REASON, EARLIER)]),
-            ],
-            "AIR_RED",
-            [RED_REASON],
-            EARLIER,
-        ),
-    ],
-)
-async def test_level_attributes(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    active_alerts: list[dict[str, Any]],
-    key: str,
-    expected_reasons: list[str],
-    expected_created_at: str | None,
-) -> None:
-    """Test the level sensors expose the reasons and the start of the level."""
-    await setup_integration(hass, active_alerts)
-
-    state = _state(hass, entity_registry, key)
-    assert state.attributes["reasons"] == expected_reasons
-    assert state.attributes["created_at"] == (
-        dt_util.parse_datetime(expected_created_at) if expected_created_at else None
-    )
-
-
-async def test_missing_created_at(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test a level without a usable start time does not break the update."""
-    await setup_integration(
-        hass, [_alert(levels=[{"alertLevel": "Red", "reason": RED_REASON}])]
-    )
-
-    state = _state(hass, entity_registry, "AIR_RED")
-    assert state.state == "on"
-    assert state.attributes["reasons"] == [RED_REASON]
-    assert state.attributes["created_at"] is None
-
-
-async def test_only_level_sensors_carry_attributes(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test the level attributes are not added to the other alert sensors."""
-    await setup_integration(hass, [_alert(levels=[_level("Red", RED_REASON)])])
-
-    for key in ALL_KEYS:
-        state = _state(hass, entity_registry, key)
-        has_attributes = key in ("AIR_RED", "AIR_YELLOW")
-        assert ("reasons" in state.attributes) is has_attributes, key
-        assert ("created_at" in state.attributes) is has_attributes, key

@@ -28,8 +28,4 @@ AIR_ALERT_LEVELS = {
     "red": ALERT_TYPE_AIR_RED,
     "yellow": ALERT_TYPE_AIR_YELLOW,
 }
-
-ATTR_REASONS = "reasons"
-ATTR_CREATED_AT = "created_at"
-
 PLATFORMS = [Platform.BINARY_SENSOR]

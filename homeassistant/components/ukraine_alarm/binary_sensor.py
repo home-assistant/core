@@ -1,6 +1,6 @@
 """binary sensors for Ukraine Alarm integration."""
 
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -22,8 +22,6 @@ from .const import (
     ALERT_TYPE_NUCLEAR,
     ALERT_TYPE_UNKNOWN,
     ALERT_TYPE_URBAN_FIGHTS,
-    ATTR_CREATED_AT,
-    ATTR_REASONS,
     ATTRIBUTION,
     DOMAIN,
     MANUFACTURER,
@@ -127,13 +125,4 @@ class UkraineAlarmSensor(
     @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.active[self.entity_description.key]
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return why an air alert level was raised and when it started."""
-        key = self.entity_description.key
-        if (level := self.coordinator.data.levels.get(key)) is None:
-            return None
-        return {ATTR_REASONS: level.reasons, ATTR_CREATED_AT: level.created_at}
+        return self.coordinator.data[self.entity_description.key]
