@@ -98,6 +98,10 @@ EXPECTED_ADD_ITEM = {
         ),
         ({ATTR_DESCRIPTION: ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
         ({ATTR_DESCRIPTION: None}, EXPECTED_ADD_ITEM),
+        (
+            {ATTR_ITEM: "测试主卧清扫"},
+            {**EXPECTED_ADD_ITEM, "summary": "测试主卧清扫"},
+        ),
     ],
 )
 async def test_add_item(
