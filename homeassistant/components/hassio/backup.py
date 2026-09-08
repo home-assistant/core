@@ -12,10 +12,9 @@ from uuid import UUID
 from aiohasupervisor import SupervisorClient
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
-    SupervisorConnectionError,
     SupervisorError,
     SupervisorNotFoundError,
-    SupervisorTimeoutError,
+    SupervisorServiceUnavailableError,
 )
 from aiohasupervisor.models import (
     SupervisorState,
@@ -65,6 +64,7 @@ from .config_entry import async_get_update_options
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT, OPTION_ADD_ON_BACKUP_RETAIN_COPIES
 from .handler import get_supervisor_client
 
+LEGACY_SUPERVISOR_VERSION_ERROR = "Must update supervisor first."
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
 SUPERVISOR_UPDATE_POLL_INTERVAL = 5
@@ -562,13 +562,57 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
-    async def _async_update_supervisor_for_backup(self, backup_id: str) -> None:
-        """Update Supervisor when the backup was made on a newer Supervisor.
+    async def _async_should_retry_restore(self, err: SupervisorError) -> bool:
+        """Decide whether a failed restore should be retried after an update.
 
         Supervisor refuses to restore a backup made on a newer version than
-        itself. A fresh install can run an older Supervisor than the one that
-        made the backup, so update it first instead of failing the restore.
+        itself. Called when a restore fails, this triggers a Supervisor update
+        when possible and returns True if the restore should be retried once
+        Supervisor is back. Returns False if the error is unrelated, or if
+        nothing more can be done about it.
         """
+        if err.error_key == "backup_supervisor_update_in_progress_error":
+            # Supervisor already started the update itself
+            return True
+        if err.error_key == "backup_supervisor_version_error":
+            # Auto update is disabled, Supervisor can't help itself
+            return False
+        if err.error_key is not None or LEGACY_SUPERVISOR_VERSION_ERROR not in str(err):
+            # Older Supervisor versions don't set an error key and use the
+            # message below for this error, checked as a fallback above.
+            return False
+
+        try:
+            info = await self._client.supervisor.info()
+        except SupervisorError as info_err:
+            raise BackupReaderWriterError(
+                f"Error getting Supervisor info: {info_err}"
+            ) from info_err
+        if not info.auto_update:
+            return False
+
+        # Supervisor rejects the update request when it has none available,
+        # which is always the case on development systems.
+        if not info.update_available:
+            return False
+
+        # Supervisor only checks for new versions once a day
+        try:
+            await self._client.reload_updates()
+        except SupervisorError as reload_err:
+            raise BackupReaderWriterError(
+                f"Error reloading Supervisor update information: {reload_err}"
+            ) from reload_err
+        try:
+            await self._client.supervisor.update()
+        except SupervisorError as update_err:
+            raise BackupReaderWriterError(
+                f"Error updating Supervisor: {update_err}"
+            ) from update_err
+        return True
+
+    async def _async_wait_for_supervisor_update(self, backup_id: str) -> None:
+        """Wait for a Supervisor update to finish before retrying a restore."""
         try:
             details = await self._client.backups.backup_info(backup_id)
         except SupervisorNotFoundError as err:
@@ -577,59 +621,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             raise BackupReaderWriterError(
                 f"Error getting backup details: {err}"
             ) from err
-
         backup_version = AwesomeVersion(details.supervisor_version)
-        try:
-            info = await self._client.supervisor.info()
-        except SupervisorError as err:
-            raise BackupReaderWriterError(
-                f"Error getting Supervisor info: {err}"
-            ) from err
-        if backup_version <= AwesomeVersion(info.version):
-            return
-
-        # Supervisor only checks for new versions once a day
-        try:
-            await self._client.reload_updates()
-        except SupervisorError as err:
-            raise BackupReaderWriterError(
-                f"Error reloading Supervisor update information: {err}"
-            ) from err
-
-        # A concurrent update can restart Supervisor before it answers
-        try:
-            info = await self._client.supervisor.info()
-        except SupervisorConnectionError, SupervisorTimeoutError:
-            pass
-        except SupervisorError as err:
-            raise BackupReaderWriterError(
-                f"Error getting Supervisor info: {err}"
-            ) from err
-        else:
-            if AwesomeVersion(info.version) >= backup_version:
-                return
-            if (
-                not info.update_available
-                or info.version_latest is None
-                or AwesomeVersion(info.version_latest) < backup_version
-            ):
-                return
-            _LOGGER.info(
-                "Backup %s was made on Supervisor %s, updating Supervisor %s to %s "
-                "before restoring",
-                backup_id,
-                details.supervisor_version,
-                info.version,
-                info.version_latest,
-            )
-            try:
-                await self._client.supervisor.update()
-            except SupervisorConnectionError, SupervisorTimeoutError:
-                pass
-            except SupervisorError as err:
-                raise BackupReaderWriterError(
-                    f"Error updating Supervisor: {err}"
-                ) from err
 
         try:
             async with asyncio.timeout(SUPERVISOR_UPDATE_RESTART_TIMEOUT):
@@ -641,11 +633,35 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                             root_info.state == SupervisorState.RUNNING
                             and AwesomeVersion(root_info.supervisor) >= backup_version
                         ):
-                            break
+                            return
         except TimeoutError as err:
             raise BackupReaderWriterError(
                 "Timeout waiting for Supervisor to restart after update"
             ) from err
+
+    async def _async_partial_restore(
+        self,
+        backup_id: str,
+        options: supervisor_backups.PartialRestoreOptions,
+        *,
+        allow_retry: bool = True,
+    ) -> supervisor_backups.BackupJob:
+        """Request a partial restore, retrying once after a Supervisor update."""
+        try:
+            return await self._client.backups.partial_restore(backup_id, options)
+        except SupervisorNotFoundError as err:
+            raise BackupNotFound from err
+        except (SupervisorBadRequestError, SupervisorServiceUnavailableError) as err:
+            if allow_retry and await self._async_should_retry_restore(err):
+                await self._async_wait_for_supervisor_update(backup_id)
+                return await self._async_partial_restore(
+                    backup_id, options, allow_retry=False
+                )
+            # Supervisor currently does not transmit machine parsable error types
+            message = err.args[0]
+            if message.startswith("Invalid password for backup"):
+                raise IncorrectPasswordError(message) from err
+            raise HomeAssistantError(message) from err
 
     @override
     async def async_restore_backup(
@@ -697,28 +713,17 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             restore_location = agent.location
 
-        await self._async_update_supervisor_for_backup(backup_id)
-
-        try:
-            job = await self._client.backups.partial_restore(
-                backup_id,
-                supervisor_backups.PartialRestoreOptions(
-                    addons=restore_addons_set,
-                    folders=restore_folders_set,
-                    homeassistant=restore_homeassistant,
-                    password=password,
-                    background=True,
-                    location=restore_location,
-                ),
-            )
-        except SupervisorNotFoundError as err:
-            raise BackupNotFound from err
-        except SupervisorBadRequestError as err:
-            # Supervisor currently does not transmit machine parsable error types
-            message = err.args[0]
-            if message.startswith("Invalid password for backup"):
-                raise IncorrectPasswordError(message) from err
-            raise HomeAssistantError(message) from err
+        job = await self._async_partial_restore(
+            backup_id,
+            supervisor_backups.PartialRestoreOptions(
+                addons=restore_addons_set,
+                folders=restore_folders_set,
+                homeassistant=restore_homeassistant,
+                password=password,
+                background=True,
+                location=restore_location,
+            ),
+        )
 
         restore_complete = asyncio.Event()
         restore_errors: list[dict[str, str]] = []
