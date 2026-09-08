@@ -23,8 +23,9 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import TEST_ENTITY
+from .conftest import TEST_ENTITY, TODO_NAME
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
@@ -877,3 +878,219 @@ async def test_reset_item_via_update(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_description"),
+    [
+        pytest.param(
+            (
+                "BEGIN:VCALENDAR\n"
+                "PRODID:-//homeassistant.io//local_todo 2.0//EN\n"
+                "VERSION:2.0\n"
+                "BEGIN:VTODO\n"
+                "DTSTAMP:20260205T183141Z\n"
+                "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\n"
+                "CREATED:20260205T183141Z\n"
+                "SEQUENCE:0\n"
+                "STATUS:NEEDS-ACTION\n"
+                "SUMMARY:Notizen\n"
+                "DESCRIPTION:Einkaufsliste\n\\nMilch\n\\nBrot\n"
+                "END:VTODO\n"
+                "END:VCALENDAR\n"
+            ),
+            "Einkaufsliste\nMilch\nBrot",
+            id="universal_newlines",
+        ),
+        pytest.param(
+            (
+                "BEGIN:VCALENDAR\r\n"
+                "PRODID:-//homeassistant.io//local_todo 2.0//EN\r\n"
+                "VERSION:2.0\r\n"
+                "BEGIN:VTODO\r\n"
+                "DTSTAMP:20260205T183141Z\r\n"
+                "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\r\n"
+                "CREATED:20260205T183141Z\r\n"
+                "SEQUENCE:0\r\n"
+                "STATUS:NEEDS-ACTION\r\n"
+                "SUMMARY:Notizen\r\n"
+                "DESCRIPTION:Einkaufsliste\r\\nMilch\r\\nBrot\r\n"
+                "END:VTODO\r\n"
+                "END:VCALENDAR\r\n"
+            ),
+            "Einkaufsliste\nMilch\nBrot",
+            id="raw_crlf",
+        ),
+        pytest.param(
+            (
+                "BEGIN:VCALENDAR\n"
+                "PRODID:-//homeassistant.io//local_todo 2.0//EN\n"
+                "VERSION:2.0\n"
+                "BEGIN:VTODO\n"
+                "DTSTAMP:20260205T183141Z\n"
+                "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\n"
+                "CREATED:20260205T183141Z\n"
+                "SEQUENCE:0\n"
+                "STATUS:NEEDS-ACTION\n"
+                "SUMMARY:Notizen\n"
+                "DESCRIPTION:Line 1\n\\n\n\\nLine 2\n"
+                "END:VTODO\n"
+                "END:VCALENDAR\n"
+            ),
+            "Line 1\n\nLine 2",
+            id="consecutive_newlines",
+        ),
+    ],
+)
+async def test_repair_legacy_crlf_on_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    caplog: pytest.LogCaptureFixture,
+    expected_description: str,
+) -> None:
+    """Test repairing malformed ICS content from ical <= 12.1.3 CRLF bug on setup."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        f"Repaired malformed iCalendar file for to-do list {TODO_NAME}" in caplog.text
+    )
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state is not None
+    assert state.state == "1"
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["summary"] == "Notizen"
+    assert items[0]["description"] == expected_description
+
+    # Verify that the file was re-saved cleanly to storage without any invalid lines
+    store = config_entry.runtime_data
+    re_saved = store._mock_path.read_text.return_value
+    assert "\r" not in re_saved
+    assert "\n\\n" not in re_saved
+
+
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        (
+            "BEGIN:VCALENDAR\n"
+            "PRODID:-//homeassistant.io//local_todo 1.0//EN\n"
+            "VERSION:2.0\n"
+            "BEGIN:VTODO\n"
+            "DTSTAMP:20231024T014011\n"
+            "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\n"
+            "CREATED:20231017T010348\n"
+            "SEQUENCE:1\n"
+            "STATUS:NEEDS-ACTION\n"
+            "SUMMARY:Task\n"
+            "DESCRIPTION:Line 1\n\\nLine 2\n"
+            "DUE:20231023\n"
+            "END:VTODO\n"
+            "END:VCALENDAR\n"
+        )
+    ],
+)
+async def test_repair_and_migrate_legacy_due_date(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that repaired legacy 1.0 calendars also undergo due date migration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        f"Repaired malformed iCalendar file for to-do list {TODO_NAME}" in caplog.text
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == "Line 1\nLine 2"
+    assert items[0]["due"] == "2023-10-23"
+
+    store = config_entry.runtime_data
+    re_saved = store._mock_path.read_text.return_value
+    assert "PRODID:-//homeassistant.io//local_todo 2.0//EN" in re_saved
+    assert "DUE;VALUE=DATE:20231024" in re_saved
+
+
+async def test_description_newlines_preserved(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test that newlines in descriptions are preserved through service calls and reload."""
+    description = "Line 1\nLine 2\n\nLine 3"
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {
+            ATTR_ITEM: "Item 1",
+            ATTR_DESCRIPTION: description,
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == description
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ITEM: items[0]["uid"],
+            ATTR_DESCRIPTION: f"Updated\n{description}",
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == f"Updated\n{description}"
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == f"Updated\n{description}"
+
+
+async def test_crlf_description_preserved_on_reload(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that items added with CRLF descriptions are saved cleanly and load on reload."""
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {
+            ATTR_ITEM: "Item CRLF",
+            ATTR_DESCRIPTION: "Line 1\r\nLine 2\r\n\r\nLine 3",
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # After reload from storage, newlines are preserved as LF and no repair warning is logged
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == "Line 1\nLine 2\n\nLine 3"
+    assert "Repaired malformed iCalendar file" not in caplog.text
