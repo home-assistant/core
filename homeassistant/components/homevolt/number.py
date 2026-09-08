@@ -106,5 +106,5 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         key = self.entity_description.key
-        await self.coordinator.client.set_battery_parameters(**{key: int(value)})
+        await self.coordinator.client.set_battery_parameters(**{key: value})
         self.coordinator.async_update_listeners()
