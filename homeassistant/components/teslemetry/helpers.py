@@ -4,10 +4,15 @@ from collections.abc import Awaitable
 from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.exceptions import InsufficientCredits, TeslaFleetError
+from teslemetry_stream.const import CreditsEvent
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .const import CREDITS_URL, DOMAIN, LOGGER
 
@@ -143,15 +148,15 @@ async def handle_vehicle_command(
 
 @callback
 def async_handle_credits(
-    hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: dict[str, Any]
+    hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: CreditsEvent
 ) -> None:
     """Record the latest credit state and clear the issue when credits return."""
-    quota = credits.get("quota")
+    quota = credits.quota
     fraction = quota.get("fraction") if isinstance(quota, dict) else None
     quota_available: bool | None = None
     if isinstance(fraction, (int, float)) and not isinstance(fraction, bool):
         quota_available = fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
-    balance = credits.get("balance")
+    balance = credits.balance
     balance_available: bool | None = None
     if isinstance(balance, (int, float)) and not isinstance(balance, bool):
         balance_available = balance > CREDITS_BALANCE_THRESHOLD
@@ -166,6 +171,25 @@ def async_handle_credits(
     entry.runtime_data.credits_available = available
     if available:
         ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
+
+
+@callback
+def async_remove_stale_vehicle_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    domain: str,
+    vins: set[str],
+    valid_unique_ids: set[str],
+) -> None:
+    """Remove registry entries for vehicle entities that are no longer created."""
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, config_entry_id):
+        if (
+            entity.domain == domain
+            and entity.unique_id not in valid_unique_ids
+            and any(entity.unique_id.startswith(f"{vin}-") for vin in vins)
+        ):
+            entity_registry.async_remove(entity.entity_id)
 
 
 @callback

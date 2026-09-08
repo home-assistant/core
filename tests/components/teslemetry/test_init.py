@@ -25,6 +25,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite
+from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
@@ -203,10 +204,6 @@ async def test_vehicle_stream(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get("binary_sensor.test_user_present")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
     mock_add_listener.send(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
@@ -218,10 +215,6 @@ async def test_vehicle_stream(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
-    assert state is not None
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.test_user_present")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -268,6 +261,7 @@ async def test_vehicle_asleep_polling(
             {
                 "type": "command",
                 "cost": 1,
+                "name": "command",
                 "quota": {
                     "used": 5,
                     "fraction": 0.5,
@@ -282,6 +276,7 @@ async def test_vehicle_asleep_polling(
             {
                 "type": "command",
                 "cost": 1,
+                "name": "command",
                 "quota": {
                     "used": 10,
                     "fraction": 1.0,
@@ -296,7 +291,7 @@ async def test_vehicle_asleep_polling(
             # The listen_Credits filter fires for any event with a top-level
             # credits object, so one lacking a quota/balance snapshot must not
             # clear the repair or raise while parsing the missing shape.
-            {"type": "command", "cost": 1},
+            {"type": "command", "cost": 1, "name": "command", "balance": None},
             False,
             id="malformed_missing_quota_and_balance",
         ),
@@ -1062,6 +1057,97 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
     assert (mock_vehicle_data.call_count > 0) is expected_polled
 
 
+@pytest.mark.parametrize(
+    ("polling", "has_polling_only"),
+    [
+        (True, True),
+        (None, True),
+        (False, False),
+    ],
+    ids=["polling", "unknown_polling", "streaming"],
+)
+async def test_polling_only_entities_require_metadata(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    polling: bool | None,
+    has_polling_only: bool,
+) -> None:
+    """Create a polling-only entity unless the vehicle is explicitly stream-only.
+
+    A null polling flag is unknown, not stream-only, so its entities are kept.
+    """
+    vin = "LRW3F7EK4NC700000"
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][vin]["polling"] = polling
+    mock_metadata.return_value = metadata
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    # is_user_present is a polling-only binary sensor (no streaming source).
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-vehicle_state_is_user_present"
+        )
+        is not None
+    ) is has_polling_only
+    # A feature with a streaming source exists regardless of the polling flags.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, f"{vin}-state"
+        )
+        is not None
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_streaming_vehicle_coordinator_never_polls(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A plain streaming vehicle is never polled."""
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 0
+
+
+async def test_stale_polling_only_entity_removed_on_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Prune a polling-only entity when its vehicle no longer qualifies."""
+    vin = "LRW3F7EK4NC700000"
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Left over from before the vehicle stopped qualifying for polling.
+    stale = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{vin}-vehicle_state_is_user_present",
+        config_entry=entry,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Default metadata is a plain streaming vehicle, which no longer qualifies.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, stale.unique_id
+        )
+        is None
+    )
+
+
 async def test_energy_site_version_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1380,6 +1466,23 @@ async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
     assert not hass.config_entries.flow.async_progress()
 
 
+async def test_stream_rejected_token_starts_reauth(
+    hass: HomeAssistant,
+    mock_stream_listen: AsyncMock,
+) -> None:
+    """Test the stream listener starts reauth when the token is rejected."""
+    mock_stream_listen.side_effect = TeslemetryStreamAuthenticationError
+
+    await setup_platform(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+        for flow in flows
+    )
+
+
 SITE_ID = 123456
 HOST = "192.168.91.1"
 PASSWORD = "abcde"
@@ -1555,6 +1658,65 @@ async def test_local_control_failure_falls_back_to_cloud(
         record.levelname == "WARNING" and str(SITE_ID) in record.message
         for record in caplog.records
     )
+
+
+async def test_local_control_encrypted_key_falls_back_to_cloud(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Fall back to cloud control when RSA key loading reports an encrypted PEM."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
+            side_effect=TypeError(
+                "Password was not given but private key is encrypted"
+            ),
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    energysite = entry.runtime_data.energysites[0]
+    assert isinstance(energysite.api, EnergySite)
+    assert not isinstance(energysite.api, EnergySiteRouter)
+    assert energysite.can_local_control
+    assert "falling back to cloud control" in caplog.text
+
+
+async def test_local_control_unexpected_typeerror_is_not_swallowed(
+    hass: HomeAssistant,
+) -> None:
+    """A TypeError outside the key load is a real bug and must not degrade silently.
+
+    ``_LOCAL_CONTROL_ERRORS`` deliberately excludes TypeError: only the key
+    loader's encrypted-PEM TypeError is converted to ValueError. A TypeError
+    from anywhere else in the resolve path (here, client construction) must
+    fail setup rather than silently falling back to cloud control.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.PowerwallClient",
+            side_effect=TypeError("unexpected argument"),
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None:

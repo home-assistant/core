@@ -48,7 +48,7 @@ class WhirlpoolEntity(Entity):
     @callback
     def _async_attr_callback(self) -> None:
         _LOGGER.debug("Attribute update for entity %s", self.entity_id)
-        self._attr_available = self._appliance.get_online()
+        self._attr_available = self._appliance.get_online() or False
 
         if not self._attr_available:
             if not self._unavailable_logged:

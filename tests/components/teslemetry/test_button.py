@@ -116,6 +116,7 @@ async def test_insufficient_credits_stale_response_ignored(
                 "credits": {
                     "type": "command",
                     "cost": 1,
+                    "name": "command",
                     "quota": {
                         "used": 5,
                         "fraction": 0.5,
@@ -165,6 +166,7 @@ async def test_insufficient_credits_available_then_insufficient(
                 "credits": {
                     "type": "command",
                     "cost": 1,
+                    "name": "command",
                     "quota": {
                         "used": 5,
                         "fraction": 0.5,
@@ -180,6 +182,7 @@ async def test_insufficient_credits_available_then_insufficient(
                 "credits": {
                     "type": "command",
                     "cost": 1,
+                    "name": "command",
                     "quota": {
                         "used": 10,
                         "fraction": 1.0,

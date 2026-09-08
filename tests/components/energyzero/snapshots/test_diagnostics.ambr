@@ -3,17 +3,14 @@
   dict({
     'energy': dict({
       'average_price': 0.14609224895833334,
-      'current_hour_price': 0.17191075,
+      'current_price': 0.17191075,
       'highest_price_time': '2026-04-10T18:00:00+00:00',
       'hours_priced_equal_or_lower': 20,
       'lowest_price_time': '2026-04-11T06:00:00+00:00',
       'max_price': 0.288152425,
       'min_price': 0.077503525,
-      'next_hour_price': 0.1521212,
+      'next_price': 0.1521212,
       'percentage_of_max': 59.66,
-    }),
-    'entry': dict({
-      'title': 'energy',
     }),
     'gas': dict({
       'current_hour_price': None,
@@ -25,17 +22,14 @@
   dict({
     'energy': dict({
       'average_price': 0.14609224895833334,
-      'current_hour_price': 0.17191075,
+      'current_price': 0.17191075,
       'highest_price_time': '2026-04-10T18:00:00+00:00',
       'hours_priced_equal_or_lower': 20,
       'lowest_price_time': '2026-04-11T06:00:00+00:00',
       'max_price': 0.288152425,
       'min_price': 0.077503525,
-      'next_hour_price': 0.1521212,
+      'next_price': 0.1521212,
       'percentage_of_max': 59.66,
-    }),
-    'entry': dict({
-      'title': 'energy',
     }),
     'gas': dict({
       'current_hour_price': None,
