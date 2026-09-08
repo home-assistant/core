@@ -119,6 +119,7 @@ async def test_form(
     assert result["result"].unique_id is None
 
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_mcp_client.return_value.initialize.assert_called_once()
 
 
 @pytest.mark.parametrize(
