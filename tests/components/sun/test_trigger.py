@@ -39,15 +39,15 @@ _SUN_ENTITY_ID = "sun.sun"
 # Next dawn/dusk after _TEST_DATETIME at the default test location (San Diego),
 # precomputed to serve as an independent oracle for the trigger's scheduler.
 _DAWN_DUSK = {
-    ("dawn", "civil"): datetime(2015, 9, 15, 13, 7, 26, 84892, tzinfo=dt_util.UTC),
-    ("dawn", "nautical"): datetime(2015, 9, 15, 12, 38, 34, 55317, tzinfo=dt_util.UTC),
+    ("dawn", "civil"): datetime(2015, 9, 15, 13, 7, 26, 70280, tzinfo=dt_util.UTC),
+    ("dawn", "nautical"): datetime(2015, 9, 15, 12, 38, 34, 47559, tzinfo=dt_util.UTC),
     ("dawn", "astronomical"): datetime(
-        2015, 9, 15, 12, 9, 9, 742065, tzinfo=dt_util.UTC
+        2015, 9, 15, 12, 9, 9, 736437, tzinfo=dt_util.UTC
     ),
-    ("dusk", "civil"): datetime(2015, 9, 15, 2, 21, 39, 56429, tzinfo=dt_util.UTC),
-    ("dusk", "nautical"): datetime(2015, 9, 15, 2, 50, 29, 596023, tzinfo=dt_util.UTC),
+    ("dusk", "civil"): datetime(2015, 9, 15, 2, 21, 39, 26129, tzinfo=dt_util.UTC),
+    ("dusk", "nautical"): datetime(2015, 9, 15, 2, 50, 29, 580392, tzinfo=dt_util.UTC),
     ("dusk", "astronomical"): datetime(
-        2015, 9, 15, 3, 19, 52, 663966, tzinfo=dt_util.UTC
+        2015, 9, 15, 3, 19, 52, 653071, tzinfo=dt_util.UTC
     ),
 }
 
@@ -518,7 +518,7 @@ async def test_two_sunsets_on_one_day_at_kotzebue(
     await hass.config.async_set_time_zone(time_zone)
     await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
 
-    # 2015-08-07 08:03:42 UTC (00:03 local) and 2015-08-08 07:59:25 UTC (23:59 local)
+    # 2015-08-07 08:03:39 UTC (00:03 local) and 2015-08-08 07:59:23 UTC (23:59 local)
     now = datetime(2015, 8, 7, 7, tzinfo=dt_util.UTC)
     with freeze_time(now) as freezer:
         await _arm_automation(hass, {"platform": "sun.sunset"}, {})
@@ -553,7 +553,7 @@ async def test_two_sunrises_on_one_day(
     await hass.config.async_set_time_zone(time_zone)
     await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
 
-    # 2015-03-07 09:02:36 UTC (00:02 local) and 2015-03-08 08:58:43 UTC (23:58 local)
+    # 2015-03-07 09:02:38 UTC (00:02 local) and 2015-03-08 08:58:45 UTC (23:58 local)
     now = datetime(2015, 3, 7, 9, tzinfo=dt_util.UTC)
     with freeze_time(now) as freezer:
         await _arm_automation(hass, {"platform": "sun.sunrise"}, {})
@@ -784,12 +784,12 @@ _POLAR_TRIGGER_CASES = [
     (
         "sun.midnight_sun_started",
         datetime(2015, 4, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 4, 18, 22, 56, 36, tzinfo=dt_util.UTC),
+        datetime(2015, 4, 18, 22, 56, 30, tzinfo=dt_util.UTC),
     ),
     (
         "sun.midnight_sun_ended",
         datetime(2015, 8, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 8, 25, 22, 59, 19, tzinfo=dt_util.UTC),
+        datetime(2015, 8, 25, 22, 59, 11, tzinfo=dt_util.UTC),
     ),
     (
         "sun.polar_night_started",
@@ -860,7 +860,7 @@ async def test_midnight_sun_trigger_offset_catches_pending_crossing(
     # Midnight sun starts at the 2015-04-18 22:56 solar midnight; a 3-day "after"
     # offset pushes the fire time to 2015-04-21. now sits between the two.
     now = datetime(2015, 4, 20, 12, tzinfo=dt_util.UTC)
-    expected = datetime(2015, 4, 21, 22, 56, 36, tzinfo=dt_util.UTC)
+    expected = datetime(2015, 4, 21, 22, 56, 30, tzinfo=dt_util.UTC)
     with freeze_time(now):
         await _arm_automation(
             hass,
@@ -912,8 +912,8 @@ def test_next_polar_transition_large_before_offset() -> None:
     observer = astral.Observer(*_SVALBARD[:2], 0)
     now = datetime(2015, 2, 27, 12, tzinfo=dt_util.UTC)
     # The 2015-04-18 crossing's fire (60 days earlier) is already past, so the
-    # next fire derives from the 2016-04-17 22:56:39 solar-midnight crossing.
-    expected = datetime(2016, 2, 17, 22, 56, 39, tzinfo=dt_util.UTC)
+    # next fire derives from the 2016-04-17 22:56:33 solar-midnight crossing.
+    expected = datetime(2016, 2, 17, 22, 56, 33, tzinfo=dt_util.UTC)
     result = _next_polar_transition(
         observer, "midnight", now, target_above=True, offset=timedelta(days=-60)
     )
