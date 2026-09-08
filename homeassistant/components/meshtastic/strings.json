@@ -3,47 +3,48 @@
     "step": {
       "user": {
         "title": "Connect to a Meshtastic node",
-        "description": "Enter the hostname or IP address of the Meshtastic node that Home Assistant should connect to. The node must have its network API enabled and only accepts one client at a time.",
+        "description": "Home Assistant connects to one Meshtastic node over that node's TCP network API, on port 4403, so the node has to be reachable on your network before you go on. A node offers that API when its firmware has Wi-Fi or Ethernet built in and it has joined your network: every ESP32-family board, a Raspberry Pi Pico W or Pico 2 W, an nRF52840 or RP2040 board fitted with a RAK13800 Ethernet module, and meshtasticd running on a Raspberry Pi or another Linux computer. A plain nRF52840, RP2040 or RP2350 board has no network hardware and offers Bluetooth and USB only, and a node running the colour-touchscreen firmware keeps its single connection for its own screen; neither can be used here.\n\nThere is no separate setting to switch the network API on: joining the node to your network is what starts it. On an ESP32 board, turning Wi-Fi on turns Bluetooth off, so the Meshtastic app has to move to a network connection as well. The node also serves one client at a time, so close the app, the web client and any running `meshtastic` command before you continue.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "download_node_db": "Download the node database on connect"
+          "download_node_db": "Download the list of known nodes when connecting"
         },
         "data_description": {
-          "host": "The hostname or IP address of the node.",
-          "port": "The TCP port of the node's API. The default is 4403.",
-          "download_node_db": "Ask the node for its full list of known nodes when connecting. Leave this off on memory-constrained nodes, which can crash while sending it."
+          "host": "The address the node has on your network: its IP address, such as 192.168.1.42, or a name your network resolves to it. Give the node a fixed address in your router, because Home Assistant keeps reconnecting to whatever you enter here. This is not the node's Meshtastic ID or name.",
+          "port": "The port the node's network API listens on. Leave this at 4403, which every node uses; change it only if you run meshtasticd and gave it a different API port.",
+          "download_node_db": "Ask the node for its whole list of known nodes as soon as Home Assistant connects. Leave this off to begin with. Sending that list takes the node away from its normal work, so it can miss messages while it is busy, and a node with little memory, such as a T-Beam without extra memory, can run out of memory and restart. Home Assistant learns the other nodes anyway, from the traffic this node hears."
         }
       },
       "reconfigure": {
         "title": "Change the address of the Meshtastic node",
-        "description": "Point Home Assistant at a new address for this node. It has to be the same node: to connect to a different one, add another entry instead.",
+        "description": "Enter the address this node has now. It has to be the same node: Home Assistant checks the identity the node reports and refuses an address that answers with a different one. To connect to another node, add a second Meshtastic entry instead.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the node.",
+          "host": "[%key:component::meshtastic::config::step::user::data_description::host%]",
           "port": "[%key:component::meshtastic::config::step::user::data_description::port%]"
         }
       }
     },
     "error": {
-      "already_in_use": "The node closed the connection. It accepts only one client at a time, so disconnect the Meshtastic app or CLI and try again.",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "already_in_use": "The node closed the connection because something else is already talking to it. A Meshtastic node serves one client at a time. Close the Meshtastic app, the web client or any running `meshtastic` command, then try again.",
+      "cannot_connect": "Home Assistant could not reach the node. Check that the address and port are right, that the node is switched on and joined to your network, and that its firmware has Wi-Fi or Ethernet at all.",
+      "invalid_host": "That address could not be looked up. Enter the node's IP address, such as 192.168.1.42, or a name your network resolves to it.",
+      "timeout_connect": "The node did not answer in time. Check that it is switched on and on your network, and try again; a node that has only just started can need a moment.",
+      "unknown": "Something unexpected went wrong. Try again, and look in the Home Assistant log for the details if it keeps failing."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unique_id_mismatch": "That address belongs to a different Meshtastic node. Please reconfigure against the same node."
+      "already_configured": "This node is already set up in Home Assistant. To point it at a new address, use Reconfigure on the entry you already have instead of adding the node again.",
+      "unique_id_mismatch": "The node answering at that address is a different one from the node this entry was set up for. Enter the address of the original node, or add a separate entry for the other one."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Meshtastic options",
+        "description": "Saving these reconnects Home Assistant to the node.",
         "data": {
           "download_node_db": "[%key:component::meshtastic::config::step::user::data::download_node_db%]",
           "include_location": "Include exact coordinates in diagnostics and exports",
@@ -51,123 +52,123 @@
         },
         "data_description": {
           "download_node_db": "[%key:component::meshtastic::config::step::user::data_description::download_node_db%]",
-          "include_location": "Put the coordinates of every node in the diagnostics download, and the coordinates of the connected node in the response of the \"Export configuration\" action, instead of redacting them. Leave this off unless you are about to attach the download to a bug report you have read.",
-          "track_position": "Create a device tracker for every node that reports a position. Turn this off to keep node positions out of the state machine entirely."
+          "include_location": "Coordinates are replaced with placeholder text in the diagnostics download and in the response of the \"Export configuration\" action. Turn this on to put the real coordinates of every node in the diagnostics download, and those of the connected node, when it has a fixed position, in the export. Turn it on only while you collect a download you have read and are about to attach to a bug report, and turn it off again afterwards.",
+          "track_position": "Create a device tracker for every node that reports where it is, which puts those coordinates on your map and in your history. A node is often a person carrying it, so turn this off if you would rather Home Assistant did not follow them: no device tracker is created and the coordinates stay out of the state machine."
         }
       }
     }
   },
   "exceptions": {
     "admin_key_not_authorized": {
-      "message": "{node} does not accept administration from this node's key."
+      "message": "{node} refused the change because it does not list the public key of the node Home Assistant is connected to among the keys it accepts administration from. Add that key to the administrator keys of {node}, or make the change on {node} itself."
     },
     "admin_not_authorized": {
-      "message": "{node} refused the administration request on this channel."
+      "message": "{node} refused the administration request on this channel. Administer {node} over the channel and with the administrator key it is set up to accept, or make the change on the node itself."
     },
     "admin_session_expired": {
-      "message": "The administration session with {node} expired. Try again."
+      "message": "The administration session with {node} has expired. Run the action again: the node hands out a new session on the next request."
     },
     "broadcast_not_supported": {
-      "message": "The {action} action needs a single node; it cannot be sent to the whole mesh."
+      "message": "The {action} action has to be aimed at one node. Name a single node instead of the whole mesh."
     },
     "cannot_connect": {
-      "message": "Could not connect to the Meshtastic node at {host}."
+      "message": "Could not connect to the Meshtastic node at {host}. Check that the node is switched on and on your network, and that nothing else is holding its single client connection."
     },
     "cannot_remove_gateway": {
-      "message": "{node} is the node Home Assistant is connected to and cannot be removed from its own node database."
+      "message": "{node} is the node Home Assistant is connected to, and a node cannot delete itself from its own list of known nodes. Choose one of the other nodes."
     },
     "client_rejected": {
-      "message": "The node rejected the request: {message}"
+      "message": "The node refused the request and reported: {message}. Wait until that no longer applies, then try again."
     },
     "confirmation_required": {
-      "message": "The {action} action changes the node permanently. Set the confirmation field to run it."
+      "message": "The {action} action changes the node permanently, so it only runs when you confirm it. Turn the confirmation field on and call the action again."
     },
     "connection_lost": {
-      "message": "Lost the connection to the Meshtastic node at {host}: {error}"
+      "message": "Lost the connection to the Meshtastic node at {host}: {error}. Home Assistant reconnects on its own; if the connection keeps dropping, check whether another client is taking the node's single connection."
     },
     "delivery_failed": {
-      "message": "Delivery to {node} failed: {reason}"
+      "message": "The mesh could not deliver the message to {node} ({reason}). Check that {node} is switched on and in range, and send again once it has been heard from."
     },
     "duty_cycle_limit": {
-      "message": "The node has used up its regulatory airtime budget and cannot transmit right now."
+      "message": "The node has used up the airtime the rules of your region allow and cannot transmit right now. Wait a few minutes before trying again, and send less often."
     },
     "invalid_channel": {
-      "message": "The selected channel is not usable for {node}."
+      "message": "{node} has no channel with that number. Pick a channel that is set up on the node; the primary channel is number 0."
     },
     "library_aborted": {
-      "message": "The Meshtastic library rejected the request: {error}"
+      "message": "The Meshtastic library could not carry out the request: {error}. Try again, and look in the Home Assistant log if it keeps failing."
     },
     "message_too_long": {
-      "message": "The message is {length} bytes, which is more than the {limit} bytes a Meshtastic packet can carry."
+      "message": "The message is {length} bytes, and the most a Meshtastic packet carries here is {limit} bytes. Shorten it, or split it into several messages."
     },
     "no_config": {
-      "message": "The node has not reported its configuration yet."
+      "message": "The node has not reported its configuration yet. Wait until Home Assistant has finished connecting, then try again."
     },
     "no_node_info": {
-      "message": "The node did not report its own identity."
+      "message": "The node did not report its own identity. Check that the address really belongs to a Meshtastic node and that the node has finished starting up, then try again."
     },
     "no_radio": {
-      "message": "The node has no usable radio interface."
+      "message": "The node has no radio to send on. Check that its LoRa region is set and that its radio hardware is detected, then try again."
     },
     "no_response": {
-      "message": "{node} received the request but did not answer it."
+      "message": "{node} received the request but did not answer it. Try again when the mesh is quieter; some nodes do not answer every kind of request."
     },
     "not_acknowledged": {
-      "message": "{node} did not acknowledge the message."
+      "message": "{node} never confirmed the message, and the mesh has retried as often as it will. Check that {node} is switched on and in range, then send again."
     },
     "not_connected": {
-      "message": "Not connected to the Meshtastic node at {host}."
+      "message": "Not connected to the Meshtastic node at {host}. Wait for the connection to come back, or close whatever else is using the node's single client connection."
     },
     "packet_too_large": {
-      "message": "The packet for {node} was too large for the mesh to carry."
+      "message": "The packet for {node} was too large for the mesh to carry. Send less at once."
     },
     "peer_key_unknown": {
-      "message": "The public key of {node} is not known yet, so the message cannot be encrypted."
+      "message": "The public key of {node} is not known yet, so the message cannot be encrypted for it. Wait until {node} has been heard from again, or send on a channel instead of directly to it."
     },
     "peer_missing_our_key": {
-      "message": "{node} could not decrypt the message because it does not have this node's public key."
+      "message": "{node} could not decrypt the message because it does not have the public key of the node Home Assistant is connected to. Wait for the two nodes to exchange their node information, then send again."
     },
     "pki_failed": {
-      "message": "Encrypting the message for {node} failed."
+      "message": "Encrypting the message for {node} failed. Ask {node} to send its node information again so that both nodes have each other's keys, or send on a channel instead."
     },
     "rate_limited": {
-      "message": "Sending too fast. Wait {seconds} seconds and try again."
+      "message": "Home Assistant is sending faster than the node allows. Wait {seconds} seconds before sending again, and space the messages out in your automation."
     },
     "reboot_in_progress": {
-      "message": "{node} is already rebooting. Wait for it to come back."
+      "message": "{node} is already restarting. Wait for it to come back before asking it for anything else."
     },
     "refresh_too_soon": {
-      "message": "The node database was refreshed less than a minute ago. Wait {seconds} seconds and try again."
+      "message": "The node database was refreshed less than a minute ago. Wait {seconds} seconds and try again; asking more often than that gets in the node's way."
     },
     "rejected_bad_request": {
-      "message": "{node} rejected the request as invalid."
+      "message": "{node} rejected the request as invalid. Check the values you gave the action, and that {node} runs firmware new enough to understand it."
     },
     "sending_too_fast": {
-      "message": "The node refused the packet for {node} because Home Assistant is sending too fast. Try again in a moment."
+      "message": "The node refused the packet for {node} because Home Assistant is sending too fast. Wait a moment before sending again, and space the messages out in your automation."
     },
     "setting_reboots_node": {
-      "message": "Changing {setting} makes the node reboot, so it is not exposed as an entity."
+      "message": "Changing {setting} makes the node restart, so Home Assistant does not offer it as an entity. Change it in the Meshtastic app or with the Meshtastic command line client instead."
     },
     "timeout": {
-      "message": "The Meshtastic node at {host} did not answer in time."
+      "message": "The Meshtastic node at {host} did not answer in time. Check that it is switched on and on your network, then try again."
     },
     "timeout_no_ack": {
-      "message": "No node relayed the message to {node}."
+      "message": "No node relayed the message to {node}. Check that another node is in range to pick it up, then send again."
     },
     "timeout_no_response": {
-      "message": "{node} acknowledged the request but sent no answer."
+      "message": "{node} confirmed the request but sent no answer. Try again; a busy or distant node sometimes drops the reply."
     },
     "timeout_not_acknowledged": {
-      "message": "The message to {node} was relayed but never acknowledged."
+      "message": "The message to {node} was relayed by another node, but {node} never confirmed it. Check that {node} is switched on and in range, then send again."
     },
     "tx_disabled": {
-      "message": "The node did not transmit the message for {node}: its radio is switched off, or its LoRa region is not set."
+      "message": "The node did not transmit the message for {node}: its transmitter is switched off, or no LoRa region is set. Turn the transmitter on, set the region for where you are, and send again."
     },
     "tx_queue_full": {
-      "message": "The node's transmit queue was full, so the message for {node} was dropped. Try again in a moment."
+      "message": "The node's transmit queue was full, so the message for {node} was dropped. Wait a few seconds and send again; the air around the node is busy."
     },
     "unknown_node": {
-      "message": "{node} is not a Meshtastic node identifier."
+      "message": "{node} is not a Meshtastic node identifier. Give a node ID such as !aabbccdd, a node number, or pick one of the Meshtastic devices."
     }
   },
   "entity": {
@@ -419,7 +420,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::meshtastic::issues::circuit_breaker_open::title%]",
-            "description": "Home Assistant was disconnected from {name} at {host} {count} times in a row, so it has paused reconnecting for {seconds} seconds.\n\nA Meshtastic node accepts a single network client at a time. This almost always means something else is holding that slot: the Meshtastic phone app, the web client, or a `meshtastic --host {host}` command left running.\n\nClose the other client, then select **Submit** to reconnect immediately."
+            "description": "Home Assistant was disconnected from {name} at {host} {count} times in a row, so it has paused reconnecting for {seconds} seconds.\n\nA Meshtastic node serves a single network client at a time. This almost always means something else is holding that place: the Meshtastic phone app, the web client, or a `meshtastic --host {host}` command left running.\n\nClose the other client, then select **Submit** to reconnect straight away."
           }
         }
       }
@@ -430,7 +431,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::meshtastic::issues::migrated_from_custom_integration::title%]",
-            "description": "The configuration for {name} at {host} was taken over from the Meshtastic custom integration that was installed through HACS.\n\nThe connection settings were migrated, but the devices and entities of the built-in integration are new ones, so automations, dashboards and history that refer to the old entity IDs need updating. Uninstall the custom integration as well: both would otherwise compete for the node's single client slot.\n\nSelect **Submit** once you have done this."
+            "description": "The configuration for {name} at {host} was taken over from the Meshtastic custom integration that was installed through HACS.\n\nThe connection settings were migrated, but the devices and entities of the built-in integration are new ones, so automations, dashboards and history that refer to the old entity IDs need updating. Uninstall the custom integration as well: both would otherwise compete for the node's single client connection.\n\nSelect **Submit** once you have done this."
           }
         }
       }
@@ -439,7 +440,7 @@
   "services": {
     "export_config": {
       "name": "Export configuration",
-      "description": "Returns the configuration of the connected Meshtastic node, in the shape the Meshtastic command line exports it. Every secret is redacted: the node's private and administration keys, the Wi-Fi password, the MQTT credentials and the Bluetooth PIN. The channel URL is not part of the response, because the keys of all channels are what it carries. The response is stored in the trace of whatever called the action, so only administrators can run it, and the coordinates of the node are only included when \"Include exact coordinates in diagnostics and exports\" is turned on.",
+      "description": "Returns the settings of the node Home Assistant is connected to, in the shape the Meshtastic command line client exports them. Nothing goes out over the radio: the answer is read back from what the node already sent when Home Assistant connected. Secrets are left out, so this is not a backup you can restore from. The node's private key, its administrator keys, the channel keys, the Wi-Fi password, the MQTT user name and password and the Bluetooth pairing PIN are all replaced with placeholder text, and the channel URL is not part of the answer at all, because that one URL carries the key to every channel. The answer is kept in the trace of whatever called the action, so only administrators can run it, and the coordinates of the node are only included when the node has a fixed position and the \"Include exact coordinates in diagnostics and exports\" option is turned on.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
@@ -449,7 +450,7 @@
     },
     "refresh_nodes": {
       "name": "Refresh node database",
-      "description": "Asks the connected node to send its whole list of known nodes. Use this sparingly: while the list streams, the node can drop received mesh packets, and on a memory-constrained node such as a T-Beam without PSRAM the transfer itself can crash it. Home Assistant learns nodes from live traffic without this. Only administrators can run the action, and at most once a minute.",
+      "description": "Asks the node Home Assistant is connected to for its whole list of known nodes. This disturbs the node: while the list streams over, the node stops handling mesh traffic as usual and drops packets it receives, and a node with little memory, such as a T-Beam without extra memory, can run out of memory and restart. Home Assistant learns nodes from the traffic the node hears anyway, so you rarely need this. Only administrators can run the action, and at most once a minute for each node.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
@@ -459,7 +460,7 @@
     },
     "remove_node": {
       "name": "Remove node",
-      "description": "Deletes a node from the node database of the connected Meshtastic node. The node is learned again the next time it is heard.",
+      "description": "Deletes one node from the list of known nodes kept by the node Home Assistant is connected to. Nothing is sent over the radio and the node being removed is not touched: only the list on the connected node changes, and it learns the node again the next time it hears from it. Use it to make room on a node whose list has filled up. Only administrators can run the action.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
@@ -471,13 +472,13 @@
         },
         "confirm": {
           "name": "Confirm",
-          "description": "Must be enabled. The node is deleted from the node database."
+          "description": "Must be turned on. It confirms that the node is to be deleted from the list of known nodes."
         }
       }
     },
     "request_traceroute": {
       "name": "Request traceroute",
-      "description": "Traces the path a message takes to one mesh node and back, and returns both routes with the signal-to-noise ratio of every hop. The node accepts one traceroute every 30 seconds.",
+      "description": "Asks the mesh which way a message travels to one node and back. Every node that passes the request on adds itself to it, so the answer names both routes and the signal quality of each hop. This puts real traffic on the air along the whole path, and every node on it transmits, so use it to look into a route rather than on a schedule. A node accepts one traceroute every 30 seconds.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::meshtastic::services::send_message::fields::config_entry_id::name%]",
@@ -491,7 +492,7 @@
     },
     "send_message": {
       "name": "Send message",
-      "description": "Sends a text message to one mesh node, or broadcasts it on a channel, and returns the packet ID and whether the mesh confirmed delivery.",
+      "description": "Transmits a text message over the radio: to one node when you name one, otherwise to every node listening on the channel you choose. Returns the packet ID and whether the mesh confirmed delivery.",
       "fields": {
         "config_entry_id": {
           "name": "Meshtastic node",
@@ -499,7 +500,7 @@
         },
         "message": {
           "name": "Message",
-          "description": "The text to send. A Meshtastic packet holds 233 bytes, or 200 bytes for a direct message."
+          "description": "The text to send. A message is limited to 233 bytes, or 200 bytes when it goes to a single node, which leaves room for the encryption. Longer text is refused."
         },
         "node": {
           "name": "[%key:component::meshtastic::services::remove_node::fields::node::name%]",
@@ -507,11 +508,11 @@
         },
         "channel": {
           "name": "Channel",
-          "description": "The channel index to broadcast on. Ignored when a node is given."
+          "description": "The channel to broadcast on, by its number on the node; the primary channel is number 0. Ignored when you name a node."
         },
         "want_ack": {
           "name": "Request acknowledgment",
-          "description": "Ask the mesh to confirm delivery. Turning this off saves airtime but the action can then no longer tell whether the message arrived."
+          "description": "Ask the mesh to confirm delivery. Leave this on unless you send very often: each confirmation costs extra airtime, but with it off the action can no longer tell you whether the message arrived."
         }
       }
     }
