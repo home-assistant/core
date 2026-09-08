@@ -89,7 +89,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
     """Set up Nmap Tracker from a config entry."""
-    devices = hass.data.setdefault(NMAP_TRACKER_DATA, NmapTrackedDevices())
+    if (devices := hass.data.get(NMAP_TRACKER_DATA)) is None:
+        devices = hass.data[NMAP_TRACKER_DATA] = NmapTrackedDevices()
     scanner = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
     entry.runtime_data = scanner
