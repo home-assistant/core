@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    CoverDeviceClass,
     CoverState,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -803,3 +804,160 @@ async def test_stop_moving_intent_unsupported_domain(hass: HomeAssistant) -> Non
         await intent.async_handle(
             hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test light"}}
         )
+
+
+@pytest.mark.parametrize(
+    ("intent_type", "domain", "service", "entity_domain", "initial_state"),
+    [
+        pytest.param("HassLock", "lock", SERVICE_LOCK, "lock", "unlocked", id="lock"),
+        pytest.param(
+            "HassUnlock", "lock", SERVICE_UNLOCK, "lock", "locked", id="unlock"
+        ),
+        pytest.param(
+            "HassOpen",
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            "cover",
+            CoverState.CLOSED,
+            id="open_cover",
+        ),
+        pytest.param(
+            "HassClose",
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            "cover",
+            CoverState.OPEN,
+            id="close_cover",
+        ),
+        pytest.param(
+            "HassOpen",
+            VALVE_DOMAIN,
+            SERVICE_OPEN_VALVE,
+            "valve",
+            ValveState.CLOSED,
+            id="open_valve",
+        ),
+        pytest.param(
+            "HassClose",
+            VALVE_DOMAIN,
+            SERVICE_CLOSE_VALVE,
+            "valve",
+            ValveState.OPEN,
+            id="close_valve",
+        ),
+        pytest.param(
+            "HassPress", "button", SERVICE_PRESS, "button", "unknown", id="press"
+        ),
+    ],
+)
+async def test_onoff_alias_intents(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    intent_type: str,
+    domain: str,
+    service: str,
+    entity_domain: str,
+    initial_state: str,
+) -> None:
+    """Test each alias calls the same service its turn on/off pair would."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    entry = entity_registry.async_get_or_create(entity_domain, "test", "alias_uid")
+    hass.states.async_set(entry.entity_id, initial_state)
+    calls = async_mock_service(hass, domain, service)
+
+    await intent.async_handle(
+        hass, "test", intent_type, {"name": {"value": entry.entity_id}}
+    )
+
+    assert len(calls) == 1
+    assert calls[0].domain == domain
+    assert calls[0].service == service
+    assert calls[0].data == {"entity_id": entry.entity_id}
+
+
+@pytest.mark.parametrize(
+    ("intent_type", "entity_domain"),
+    [
+        pytest.param("HassLock", "light", id="lock_a_light"),
+        pytest.param("HassOpen", "lock", id="open_a_lock"),
+        pytest.param("HassPress", "cover", id="press_a_cover"),
+    ],
+)
+async def test_onoff_alias_intents_are_domain_constrained(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    intent_type: str,
+    entity_domain: str,
+) -> None:
+    """Test an alias cannot reach a domain it was not meant for."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    entry = entity_registry.async_get_or_create(entity_domain, "test", "other_uid")
+    hass.states.async_set(entry.entity_id, "off")
+
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass, "test", intent_type, {"name": {"value": entry.entity_id}}
+        )
+
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+
+
+async def test_lock_alias_ignores_stray_device_class(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a device class HassLock never offered does not break matching.
+
+    Locks have no device class, so honouring one would filter out every
+    candidate. Slots allow extras, so a caller can still send one.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    lock = entity_registry.async_get_or_create("lock", "test", "lock_uid")
+    hass.states.async_set(lock.entity_id, "unlocked")
+    lock_calls = async_mock_service(hass, "lock", SERVICE_LOCK)
+
+    await intent.async_handle(
+        hass,
+        "test",
+        "HassLock",
+        {
+            "name": {"value": lock.entity_id},
+            "device_class": {"value": ["door"]},
+        },
+    )
+
+    assert len(lock_calls) == 1
+    assert lock_calls[0].data == {"entity_id": lock.entity_id}
+
+
+async def test_turn_on_still_honours_device_class(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the handlers that do offer device_class are unaffected."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    garage = entity_registry.async_get_or_create(
+        "cover", "test", "garage_uid", original_name="Garage Door"
+    )
+    hass.states.async_set(
+        garage.entity_id,
+        CoverState.CLOSED,
+        {ATTR_DEVICE_CLASS: CoverDeviceClass.GARAGE, ATTR_FRIENDLY_NAME: "Garage Door"},
+    )
+    blind = entity_registry.async_get_or_create(
+        "cover", "test", "blind_uid", original_name="Blind"
+    )
+    hass.states.async_set(
+        blind.entity_id,
+        CoverState.CLOSED,
+        {ATTR_DEVICE_CLASS: CoverDeviceClass.BLIND, ATTR_FRIENDLY_NAME: "Blind"},
+    )
+    calls = async_mock_service(hass, COVER_DOMAIN, SERVICE_OPEN_COVER)
+
+    await intent.async_handle(
+        hass, "test", "HassTurnOn", {"device_class": {"value": ["garage"]}}
+    )
+
+    assert [call.data["entity_id"] for call in calls] == [garage.entity_id]

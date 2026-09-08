@@ -1,6 +1,7 @@
 """The Intent integration."""
 
 from collections.abc import Collection
+from enum import StrEnum
 import logging
 from typing import Any, Protocol, override
 
@@ -144,6 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
+    _async_register_onoff_aliases(hass)
     intent.async_register(
         hass,
         GetStateIntentHandler(),
@@ -276,6 +278,79 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
 
         # Fall back to homeassistant.turn_on/off
         await super().async_call_service(domain, service, intent_obj, state)
+
+
+def _async_register_onoff_aliases(hass: HomeAssistant) -> None:
+    """Register constrained aliases of turn on and turn off.
+
+    HassTurnOn and HassTurnOff already reach locks, covers, valves and buttons,
+    but for those domains on and off are not what the user says, and a caller
+    picking a tool by name can invert the mapping: asked to lock a door, an LLM
+    reaches for HassTurnOff. These aliases name the action instead, and pin the
+    domains they can target so the mapping cannot be inverted.
+
+    device_class is only offered where the constrained domains can carry one.
+    Locks never have a device class, so HassLock and HassUnlock do not accept
+    the slot at all rather than fail matching on a value that cannot apply.
+    """
+    aliases: tuple[tuple[str, str, set[str], set[type[StrEnum]] | None, str], ...] = (
+        (
+            intent.INTENT_LOCK,
+            SERVICE_TURN_ON,
+            {LOCK_DOMAIN},
+            None,
+            "Locks a lock. Use for requests like 'lock the front door'.",
+        ),
+        (
+            intent.INTENT_UNLOCK,
+            SERVICE_TURN_OFF,
+            {LOCK_DOMAIN},
+            None,
+            "Unlocks a lock. Use for requests like 'unlock the back door'.",
+        ),
+        (
+            intent.INTENT_OPEN,
+            SERVICE_TURN_ON,
+            {COVER_DOMAIN, VALVE_DOMAIN},
+            {CoverDeviceClass, ValveDeviceClass},
+            (
+                "Opens a cover or valve, such as a blind, curtain,"
+                " garage door or water valve."
+            ),
+        ),
+        (
+            intent.INTENT_CLOSE,
+            SERVICE_TURN_OFF,
+            {COVER_DOMAIN, VALVE_DOMAIN},
+            {CoverDeviceClass, ValveDeviceClass},
+            (
+                "Closes a cover or valve, such as a blind, curtain,"
+                " garage door or water valve."
+            ),
+        ),
+        (
+            intent.INTENT_PRESS,
+            SERVICE_TURN_ON,
+            {BUTTON_DOMAIN, INPUT_BUTTON_DOMAIN},
+            {ButtonDeviceClass},
+            "Presses a button. Use for requests like 'press the doorbell'.",
+        ),
+    )
+
+    for intent_type, service, domains, device_classes, description in aliases:
+        intent.async_register(
+            hass,
+            OnOffIntentHandler(
+                intent_type,
+                HOMEASSISTANT_DOMAIN,
+                service,
+                description=description,
+                required_domains=domains,
+                # Only offered when one of these domains is exposed.
+                platforms=domains,
+                device_classes=device_classes,
+            ),
+        )
 
 
 class GetStateIntentHandler(intent.IntentHandler):

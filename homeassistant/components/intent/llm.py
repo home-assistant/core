@@ -26,6 +26,13 @@ LLM_INTENTS = (
     intent.INTENT_CANCEL_ALL_TIMERS,
     intent.INTENT_SET_POSITION,
     intent.INTENT_STOP_MOVING,
+    # Named aliases of turn on and turn off, so a model does not have to work
+    # out that locking a door means turning it on.
+    intent.INTENT_LOCK,
+    intent.INTENT_UNLOCK,
+    intent.INTENT_OPEN,
+    intent.INTENT_CLOSE,
+    intent.INTENT_PRESS,
 )
 
 # Timer intents, only exposed for a device that supports timers.
@@ -41,7 +48,6 @@ TIMER_INTENTS = (
 
 DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
     "When controlling Home Assistant always call the intent tools. "
-    "Use intent__HassTurnOn to lock and intent__HassTurnOff to unlock a lock. "
     "When controlling a device, prefer passing just name and domain. "
     "When controlling an area, prefer passing just area name and domain."
 )

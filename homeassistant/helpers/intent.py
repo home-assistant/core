@@ -38,6 +38,16 @@ type _IntentSlotsType = dict[
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
+
+# Constrained aliases of HassTurnOn and HassTurnOff, for the domains where on
+# and off do not read as what the user actually said. They exist so a caller
+# that has to pick a tool by name, such as an LLM, cannot invert the mapping.
+INTENT_LOCK = "HassLock"
+INTENT_UNLOCK = "HassUnlock"
+INTENT_OPEN = "HassOpen"
+INTENT_CLOSE = "HassClose"
+INTENT_PRESS = "HassPress"
+
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
@@ -1036,7 +1046,11 @@ class DynamicServiceIntentHandler(IntentHandler):
         if "domain" in slots:
             domains = set(slots["domain"]["value"])
 
-        if "device_class" in slots:
+        if "device_class" in slots and self.device_classes:
+            # Slots allow extras, so a caller can send a device class to a
+            # handler that never offered the slot. Honouring it would filter on
+            # something the handler's domains cannot carry: a lock has no
+            # device class, so any value at all matches nothing.
             device_classes = set(slots["device_class"]["value"])
 
         match_constraints = MatchTargetsConstraints(
