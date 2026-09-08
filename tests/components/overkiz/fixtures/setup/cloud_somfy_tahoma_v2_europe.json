@@ -9473,6 +9473,495 @@
       "type": 1,
       "oid": "e01dc448-51ec-4b7e-b538-b8fd0e4a8375",
       "uiClass": "DoorLock"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "Balcony Window",
+      "deviceURL": "io://1234-1234-6233/8059108#1",
+      "shortcut": false,
+      "controllableName": "io:SomfyWindowStateSensor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ContactSensor",
+        "states": [
+          {
+            "name": "core:BatteryState"
+          },
+          {
+            "name": "core:SensorDefectState"
+          },
+          {
+            "name": "core:ErrorsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:TiltedState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:LockedUnlockedState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          }
+        ],
+        "widgetName": "IntrusionEventSensor"
+      },
+      "states": [
+        {
+          "value": "good",
+          "type": 3,
+          "name": "core:DiscreteRSSILevelState"
+        },
+        {
+          "value": -48,
+          "type": 1,
+          "name": "core:RSSILevelState"
+        },
+        {
+          "value": "available",
+          "type": 3,
+          "name": "core:StatusState"
+        },
+        {
+          "value": "unlocked",
+          "type": 3,
+          "name": "core:LockedUnlockedState"
+        },
+        {
+          "value": "IntelliTAG air",
+          "type": 3,
+          "name": "core:NameState"
+        },
+        {
+          "value": false,
+          "type": 6,
+          "name": "core:TiltedState"
+        },
+        {
+          "value": "open",
+          "type": 3,
+          "name": "core:OpenClosedState"
+        }
+      ],
+      "attributes": [
+        {
+          "value": [
+            "cde_nb",
+            "customer_production_date",
+            "eom_name",
+            "integrated_sensor_position",
+            "intrusion_detection_level_threshold",
+            "max_detected_temperature",
+            "nb_intrusion_detected_per_threshold_of_vibration",
+            "nb_of_oem_factory_mode_due_to_local_stimuli",
+            "number_of_battery_door_openings",
+            "number_of_buttons_pressed",
+            "number_of_locks",
+            "number_of_tilt_openings",
+            "number_of_turn_openings",
+            "number_of_unknown_positions",
+            "of_nb",
+            "production_date",
+            "window_depth",
+            "window_exposure",
+            "window_exterior_appearance",
+            "window_fitting_range",
+            "window_glazing_range",
+            "window_height",
+            "window_interior_appearance",
+            "window_model_name",
+            "window_number_of_panels",
+            "window_sensed_panel",
+            "window_type",
+            "window_type_of_material",
+            "window_width"
+          ],
+          "type": 10,
+          "name": "core:SupportedReadableManufacturerData"
+        },
+        {
+          "value": "Somfy",
+          "type": 3,
+          "name": "core:Manufacturer"
+        },
+        {
+          "value": [],
+          "type": 10,
+          "name": "core:SupportedManufacturerProcedures"
+        },
+        {
+          "value": "5151415A15",
+          "type": 3,
+          "name": "core:FirmwareRevision"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "IntrusionEventSensor",
+      "type": 2,
+      "oid": "intellitag-0",
+      "uiClass": "ContactSensor"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "Garage Sliding Window",
+      "deviceURL": "io://1234-1234-6233/10538479#1",
+      "shortcut": false,
+      "controllableName": "io:SomfySlidingWindowStateSensor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ContactSensor",
+        "states": [
+          {
+            "name": "core:BatteryState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:ErrorsState"
+          },
+          {
+            "name": "core:LockedUnlockedState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:SensorDefectState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "widgetName": "IntrusionEventSensor"
+      },
+      "states": [
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:LockedUnlockedState",
+          "type": 3,
+          "value": "locked"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "IntelliTAG air"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": -55
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": []
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "cde_nb",
+            "customer_production_date",
+            "eom_name",
+            "integrated_sensor_position",
+            "intrusion_detection_level_threshold",
+            "max_detected_temperature",
+            "nb_intrusion_detected_per_threshold_of_vibration",
+            "nb_of_oem_factory_mode_due_to_local_stimuli",
+            "number_of_buttons_pressed",
+            "number_of_locks",
+            "number_of_sliding_openings",
+            "number_of_unknown_positions",
+            "of_nb",
+            "production_date",
+            "window_depth",
+            "window_exposure",
+            "window_exterior_appearance",
+            "window_fitting_range",
+            "window_glazing_range",
+            "window_height",
+            "window_interior_appearance",
+            "window_model_name",
+            "window_number_of_panels",
+            "window_sensed_panel",
+            "window_type",
+            "window_type_of_material",
+            "window_width"
+          ]
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 1,
+          "value": 65535
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5155011A08"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "IntrusionEventSensor",
+      "type": 2,
+      "oid": "intellitag-1",
+      "uiClass": "ContactSensor"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "Garage Sliding Window",
+      "deviceURL": "io://1234-1234-6233/10538479#2",
+      "shortcut": false,
+      "controllableName": "io:SomfyIDEOIIntrusionSensor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "setVibrationLevelThreshold",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ContactSensor",
+        "states": [
+          {
+            "name": "core:BatteryState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:ErrorsState"
+          },
+          {
+            "name": "core:IntrusionDetectedState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:SensorDefectState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:VibrationLevelThresholdState"
+          }
+        ],
+        "widgetName": "IntrusionSensor"
+      },
+      "states": [
+        {
+          "name": "core:VibrationLevelThresholdState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "core:IntrusionDetectedState",
+          "type": 6,
+          "value": true,
+          "lastUpdateTime": 1778583613000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": -55
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": []
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "cde_nb",
+            "customer_production_date",
+            "eom_name",
+            "integrated_sensor_position",
+            "intrusion_detection_level_threshold",
+            "max_detected_temperature",
+            "nb_intrusion_detected_per_threshold_of_vibration",
+            "nb_of_oem_factory_mode_due_to_local_stimuli",
+            "number_of_buttons_pressed",
+            "number_of_locks",
+            "number_of_sliding_openings",
+            "number_of_unknown_positions",
+            "of_nb",
+            "production_date",
+            "window_depth",
+            "window_exposure",
+            "window_exterior_appearance",
+            "window_fitting_range",
+            "window_glazing_range",
+            "window_height",
+            "window_interior_appearance",
+            "window_model_name",
+            "window_number_of_panels",
+            "window_sensed_panel",
+            "window_type",
+            "window_type_of_material",
+            "window_width"
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 1,
+          "value": 65535
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5155011A08"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "battery"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "IntrusionSensor",
+      "type": 2,
+      "oid": "intellitag-2",
+      "uiClass": "ContactSensor"
     }
   ],
   "zones": [],

@@ -243,6 +243,14 @@ CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
 CONF_CURTAIN_SPEED = "curtain_speed"
 
+# Roller shade motor modes, exposed as cover speeds
+ROLLER_SHADE_SPEED_PERFORMANCE = "performance"
+ROLLER_SHADE_SPEED_QUIET = "quiet"
+ROLLER_SHADE_SPEED_TO_MODE = {
+    ROLLER_SHADE_SPEED_PERFORMANCE: 0,
+    ROLLER_SHADE_SPEED_QUIET: 1,
+}
+
 AIRPURIFIER_BASIC_MODELS = {
     SwitchbotModel.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US,

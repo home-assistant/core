@@ -38,9 +38,9 @@ def mock_meteo_lt_api() -> Generator[AsyncMock]:
         mock_api.places = mock_places
         mock_api.fetch_places.return_value = None
 
-        mock_forecast = Forecast.from_dict(forecast_data)
-
-        mock_api.get_forecast.return_value = mock_forecast
+        mock_api.get_forecast.side_effect = lambda *args, **kwargs: Forecast.from_dict(
+            forecast_data
+        )
 
         # Mock get_nearest_place to return Vilnius
         mock_api.get_nearest_place.return_value = mock_places[0]

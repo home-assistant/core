@@ -61,9 +61,11 @@ def pairing() -> Generator[AsyncMock]:
                 await http.create_session(session), config.get_service(protocol)
             )
             handler.always_fail = mock_pair.always_fail
+            mock_pair.handler = handler
             return handler
 
         mock_pair.always_fail = False
+        mock_pair.handler = None
         mock_pair.side_effect = _pair
         yield mock_pair
 

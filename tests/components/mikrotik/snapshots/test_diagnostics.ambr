@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'firmware': '7.18.2',
+      'last_exception': 'None',
+      'last_update success': True,
+      'model': 'RB5009',
+      'sensors': dict({
+        'health': dict({
+          'temperature': 50.0,
+          'voltage': 24.2,
+        }),
+        'resource': dict({
+          'cpu-load': 15,
+          'disk-usage': 75.0,
+          'memory-usage': 80.0,
+          'uptime': '2025-12-23T08:55:55+00:00',
+        }),
+      }),
+      'support_capman': False,
+      'support_wifi': False,
+      'support_wifiwave2': False,
+      'support_wireless': True,
+      'system': dict({
+        'identity': dict({
+          'name': 'Mikrotik',
+        }),
+        'routerboard': dict({
+          'current-firmware': '7.18.2',
+          'model': 'RB5009',
+          'serial-number': 'ABC123',
+          'upgrade-firmware': '7.19.1',
+        }),
+        'update': dict({
+          'channel': 'stable',
+          'installed-version': '7.18.2',
+          'latest-version': '7.19.1',
+          'status': 'System is already up to date',
+        }),
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '0.0.0.0',
+        'name': 'Mikrotik',
+        'password': '**REDACTED**',
+        'port': 8278,
+        'username': 'user',
+        'verify_ssl': False,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'mikrotik',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

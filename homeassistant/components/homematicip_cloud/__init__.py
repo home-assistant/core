@@ -7,11 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -95,19 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
         EVENT_HOMEASSISTANT_STOP, hap.shutdown
     )
 
-    # Register hap as device in registry.
-    device_registry = dr.async_get(hass)
-
-    home = hap.home
-    hapname = home.label if home.label != entry.unique_id else f"Home-{home.label}"
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, home.id)},
-        manufacturer="eQ-3",
-        # Add the name from config entry.
-        name=hapname,
-    )
     return True
 
 

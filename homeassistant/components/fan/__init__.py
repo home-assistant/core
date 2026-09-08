@@ -5,7 +5,7 @@ from enum import IntFlag
 import functools as ft
 import logging
 import math
-from typing import Any, final, override
+from typing import Any, Final, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -33,7 +33,7 @@ from .const import FanEntityCapabilityAttribute, FanEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "fan"
+DOMAIN: Final = "fan"
 DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA

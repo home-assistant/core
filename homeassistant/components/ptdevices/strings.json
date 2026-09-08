@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "external_power": {
+        "name": "External power"
+      }
+    },
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"

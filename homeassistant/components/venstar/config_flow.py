@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
+from .const import DOMAIN, LOGGER, VENSTAR_TIMEOUT
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
@@ -66,7 +66,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=title, data=user_input)

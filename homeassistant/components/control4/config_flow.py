@@ -64,13 +64,13 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         account_session = aiohttp_client.async_get_clientsession(self.hass)
         account = C4Account(username, password, account_session)
         try:
-            await account.getAccountBearerToken()
+            await account.get_account_bearer_token()
 
-            account_controllers = await account.getAccountControllers()
+            account_controllers = await account.get_account_controllers()
             controller_unique_id = account_controllers["controllerCommonName"]
 
             director_bearer_token = (
-                await account.getDirectorBearerToken(controller_unique_id)
+                await account.get_director_bearer_token(controller_unique_id)
             )["token"]
         except BadCredentials, Unauthorized:
             errors["base"] = "invalid_auth"
@@ -91,7 +91,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         director = C4Director(host, director_bearer_token, director_session)
         try:
-            await director.getAllItemInfo()
+            await director.get_all_item_info()
         except Unauthorized:
             errors["base"] = "director_auth_failed"
             return errors, data, description_placeholders

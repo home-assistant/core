@@ -32,7 +32,7 @@ LLM_INTENTS = (INTENT_LIST_ADD_ITEM, INTENT_LIST_COMPLETE_ITEM, INTENT_LIST_REMO
 class TodoGetItemsTool(Tool):
     """LLM Tool allowing querying a to-do list."""
 
-    name = "todo_get_items"
+    name = "todo__get_items"
     description = (
         "Query a to-do list to find out what items are on it. "
         "Use this to answer questions like "
@@ -76,11 +76,10 @@ class TodoGetItemsTool(Tool):
             return {"success": False, "error": "To-do list not found"}
         entity_id = result.states[0].entity_id
         service_data: dict[str, Any] = {"entity_id": entity_id}
-        if status := data.get("status"):
-            if status == "all":
-                service_data["status"] = ["needs_action", "completed"]
-            else:
-                service_data["status"] = [status]
+        status = data["status"]
+        # "all" means no status filter, which returns every item.
+        if status != "all":
+            service_data["status"] = status
         service_result = await hass.services.async_call(
             DOMAIN,
             TodoServices.GET_ITEMS,
@@ -103,9 +102,6 @@ def async_get_tools(
     if api_id != LLM_API_ASSIST:
         return None
 
-    if not llm_context.assistant:
-        return None
-
     entity_registry = er.async_get(hass)
     names: list[str] = []
     for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name")):
@@ -119,7 +115,7 @@ def async_get_tools(
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(
-        IntentTool(handler.intent_type, handler)
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     )

@@ -38,7 +38,7 @@ from tests.common import (
 
 TEST_DOMAIN = "test"
 
-TEST_COMMAND = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
+TEST_COMMAND = NECCommand(address=0x04FB, command=0xF7, modulation=38000)
 
 
 async def test_get_entities_component_not_loaded(hass: HomeAssistant) -> None:

@@ -9,6 +9,7 @@ from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     AssistantContent,
     ConversationInput,
@@ -17,13 +18,16 @@ from homeassistant.components.conversation import (
 )
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.conversation.models import ConversationResult
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     chat_session,
+    device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
 )
 from homeassistant.setup import async_setup_component
@@ -31,7 +35,12 @@ from homeassistant.util.dt import utcnow
 
 from . import MockAgent
 
-from tests.common import MockUser, async_fire_time_changed, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    async_mock_service,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
@@ -452,6 +461,148 @@ async def test_ws_hass_agent_debug_null_result(
     assert msg["success"]
     assert msg["result"] == snapshot
     assert msg["result"]["results"] == [None]
+
+
+async def test_ws_hass_agent_debug_floor(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that debug targets are restricted to the matched floor."""
+    first_floor = floor_registry.async_create("first floor")
+    floor_registry.async_create("ground floor")
+
+    bedroom_area = area_registry.async_create("bedroom", floor_id=first_floor.floor_id)
+    bedroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "bedroom", original_name="bedroom light"
+    )
+    entity_registry.async_update_entity(
+        bedroom_light.entity_id, area_id=bedroom_area.id
+    )
+    hass.states.async_set(bedroom_light.entity_id, "on")
+
+    # Not assigned to a floor
+    garage_area = area_registry.async_create("garage")
+    garage_light = entity_registry.async_get_or_create(
+        "light", "demo", "garage", original_name="garage light"
+    )
+    entity_registry.async_update_entity(garage_light.entity_id, area_id=garage_area.id)
+    hass.states.async_set(garage_light.entity_id, "on")
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "turn off the lights on the first floor",
+                "turn off the lights on the ground floor",
+            ],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    results = msg["result"]["results"]
+    assert results[0]["match"]
+    assert results[0]["targets"] == {bedroom_light.entity_id: {"matched": True}}
+
+    # No areas are assigned to the ground floor
+    assert results[1]["match"]
+    assert results[1]["targets"] == {}
+
+
+async def test_ws_hass_agent_debug_unexposed_entity(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that debug targets only include entities exposed to Assist."""
+    kitchen_area = area_registry.async_create("kitchen")
+
+    exposed_light = entity_registry.async_get_or_create(
+        "light", "demo", "exposed", original_name="exposed light"
+    )
+    hidden_light = entity_registry.async_get_or_create(
+        "light", "demo", "hidden", original_name="hidden light"
+    )
+    for entity_entry in (exposed_light, hidden_light):
+        entity_registry.async_update_entity(
+            entity_entry.entity_id, area_id=kitchen_area.id
+        )
+        hass.states.async_set(entity_entry.entity_id, "on")
+
+    async_expose_entity(hass, conversation.DOMAIN, hidden_light.entity_id, False)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": ["turn off the lights in the kitchen"],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    results = msg["result"]["results"]
+    assert results[0]["match"]
+    assert results[0]["targets"] == {exposed_light.entity_id: {"matched": True}}
+
+
+async def test_ws_hass_agent_debug_preferred_area(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that debug targets use the requesting device's area to disambiguate."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    bedroom_area = area_registry.async_create("bedroom")
+    office_area = area_registry.async_create("office")
+
+    # Duplicate names in two areas
+    bedroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "bedroom", original_name="overhead light"
+    )
+    entity_registry.async_update_entity(
+        bedroom_light.entity_id, area_id=bedroom_area.id
+    )
+    hass.states.async_set(bedroom_light.entity_id, "on")
+
+    office_light = entity_registry.async_get_or_create(
+        "light", "demo", "office", original_name="overhead light"
+    )
+    entity_registry.async_update_entity(office_light.entity_id, area_id=office_area.id)
+    hass.states.async_set(office_light.entity_id, "on")
+
+    voice_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("demo", "voice-satellite")},
+    )
+    device_registry.async_update_device(voice_device.id, area_id=office_area.id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": ["turn off the overhead light"],
+            "device_id": voice_device.id,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    results = msg["result"]["results"]
+    assert results[0]["match"]
+    assert results[0]["targets"] == {office_light.entity_id: {"matched": True}}
 
 
 async def test_ws_hass_agent_debug_out_of_range(

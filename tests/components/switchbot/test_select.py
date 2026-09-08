@@ -129,8 +129,8 @@ async def test_set_time_format(
 @pytest.mark.parametrize(
     ("device_state", "option", "expected_state"),
     [
-        (NightLightState.OFF.value, "level_1", NightLightState.LEVEL_1),
-        (NightLightState.LEVEL_1.value, "level_2", NightLightState.LEVEL_2),
+        (NightLightState.OFF.value, "bright", NightLightState.LEVEL_1),
+        (NightLightState.LEVEL_1.value, "soft", NightLightState.LEVEL_2),
         (NightLightState.LEVEL_2.value, "off", NightLightState.OFF),
     ],
 )

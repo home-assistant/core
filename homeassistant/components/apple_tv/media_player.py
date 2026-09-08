@@ -204,7 +204,7 @@ class AppleTvMediaPlayer(
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
-            return MediaPlayerState.IDLE  # Bad or unknown state?
+            return MediaPlayerState.IDLE  # type: ignore[unreachable]  # Bad or unknown state?
         return None
 
     @callback

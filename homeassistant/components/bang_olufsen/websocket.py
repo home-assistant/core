@@ -50,7 +50,7 @@ class BeoWebsocket(BeoBase):
         BeoBase.__init__(self, entry, client)
 
         self.hass = hass
-        self._device = get_device(hass, self._unique_id)
+        self._device = get_device(hass, self._unique_id, self.entry.entry_id)
 
         # WebSocket callbacks
         self._client.get_notification_notifications(self.on_notification_notification)
@@ -185,8 +185,8 @@ class BeoWebsocket(BeoBase):
             # Get remote devices connected to the device from Home Assistant
             device_serial_numbers = [
                 device.serial_number
-                for device in device_registry.devices.get_devices_for_config_entry_id(
-                    self.entry.entry_id
+                for device in dr.async_entries_for_config_entry(
+                    device_registry, self.entry.entry_id
                 )
                 if device.serial_number is not None
                 and device.model == BeoModel.BEOREMOTE_ONE

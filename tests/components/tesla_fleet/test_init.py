@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -89,6 +89,7 @@ async def test_load_unload(
 async def test_remove_entry_clears_statistics(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove entry clears external statistics for energy sites only."""
     await setup_platform(hass, normal_config_entry)
@@ -96,7 +97,6 @@ async def test_remove_entry_clears_statistics(
 
     # Only energy sites have all-numeric identifiers, but a wall connector's
     # serial_number can also be all-numeric.
-    device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(
         device_registry, normal_config_entry.entry_id
     )
@@ -143,11 +143,11 @@ async def test_remove_entry_clears_statistics(
 async def test_remove_entry_preserves_statistics_for_shared_site(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing one entry preserves statistics owned by another entry."""
     await setup_platform(hass, normal_config_entry)
 
-    device_registry = dr.async_get(hass)
     site_device = next(
         device
         for device in dr.async_entries_for_config_entry(
@@ -161,21 +161,22 @@ async def test_remove_entry_preserves_statistics_for_shared_site(
         unique_id="shared-account",
     )
     shared_config_entry.add_to_hass(hass)
-    site_device = device_registry.async_get_or_create(
+    shared_site_device = device_registry.async_get_or_create(
         config_entry_id=shared_config_entry.entry_id,
         identifiers=site_device.identifiers,
     )
-    assert site_device.config_entries == {
-        normal_config_entry.entry_id,
-        shared_config_entry.entry_id,
-    }
+    assert site_device.id != shared_site_device.id
 
     with patch(
         "homeassistant.components.tesla_fleet.get_recorder_instance"
     ) as mock_get_recorder:
         await hass.config_entries.async_remove(normal_config_entry.entry_id)
+        mock_get_recorder.assert_not_called()
 
-    mock_get_recorder.assert_not_called()
+        await hass.config_entries.async_remove(shared_config_entry.entry_id)
+        mock_get_recorder.return_value.async_clear_statistics.assert_called_once_with(
+            [f"{DOMAIN}:{ENERGY_SITE_ID}_{key}" for key in ENERGY_HISTORY_FIELDS]
+        )
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
@@ -328,6 +329,26 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
+
+
+async def test_vehicle_device_model_from_library(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the vehicle device model is provided by the library."""
+    with patch(
+        "tesla_fleet_api.tesla.VehicleFleet.model",
+        new_callable=PropertyMock,
+        return_value="Cybercab",
+    ):
+        await setup_platform(hass, normal_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "LRWXF7EK4KC700000"), normal_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "Cybercab"
 
 
 # Vehicle Coordinator

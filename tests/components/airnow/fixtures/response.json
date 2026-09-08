@@ -1,47 +1,47 @@
 [
   {
-    "DateObserved": "2020-12-20",
-    "HourObserved": 15,
-    "LocalTimeZone": "PST",
-    "ReportingArea": "Central LA CO",
-    "StateCode": "CA",
-    "Latitude": 34.0663,
-    "Longitude": -118.2266,
-    "ParameterName": "O3",
-    "AQI": 44,
-    "Category": {
-      "Number": 1,
-      "Name": "Good"
-    }
+    "dateObserved": "2020-12-20",
+    "hourObserved": "15:00",
+    "localTimeZone": "PST",
+    "reportingAreaName": "Central LA CO",
+    "siteID": "060371103",
+    "siteName": "Los Angeles - N. Main Street",
+    "parameterName": "OZONE",
+    "nowcastAQI": 44,
+    "aqiCategoryName": "Good",
+    "reportingAgency": "South Coast AQMD",
+    "lookupBehavior": "Closest Reading By Pollutant",
+    "consideredMonitors": "All",
+    "lookupBoundary": "50 Miles"
   },
   {
-    "DateObserved": "2020-12-20",
-    "HourObserved": 15,
-    "LocalTimeZone": "PST",
-    "ReportingArea": "Central LA CO",
-    "StateCode": "CA",
-    "Latitude": 34.0663,
-    "Longitude": -118.2266,
-    "ParameterName": "PM2.5",
-    "AQI": 37,
-    "Category": {
-      "Number": 1,
-      "Name": "Good"
-    }
+    "dateObserved": "2020-12-20",
+    "hourObserved": "15:00",
+    "localTimeZone": "PST",
+    "reportingAreaName": "Central LA CO",
+    "siteID": "060371103",
+    "siteName": "Los Angeles - N. Main Street",
+    "parameterName": "PM2.5",
+    "nowcastAQI": 37,
+    "aqiCategoryName": "Good",
+    "reportingAgency": "South Coast AQMD",
+    "lookupBehavior": "Closest Reading By Pollutant",
+    "consideredMonitors": "All",
+    "lookupBoundary": "50 Miles"
   },
   {
-    "DateObserved": "2020-12-20",
-    "HourObserved": 15,
-    "LocalTimeZone": "PST",
-    "ReportingArea": "Central LA CO",
-    "StateCode": "CA",
-    "Latitude": 34.0663,
-    "Longitude": -118.2266,
-    "ParameterName": "PM10",
-    "AQI": 11,
-    "Category": {
-      "Number": 1,
-      "Name": "Good"
-    }
+    "dateObserved": "2020-12-20",
+    "hourObserved": "15:00",
+    "localTimeZone": "PST",
+    "reportingAreaName": "Central LA CO",
+    "siteID": "060371103",
+    "siteName": "Los Angeles - N. Main Street",
+    "parameterName": "PM10",
+    "nowcastAQI": 11,
+    "aqiCategoryName": "Good",
+    "reportingAgency": "South Coast AQMD",
+    "lookupBehavior": "Closest Reading By Pollutant",
+    "consideredMonitors": "All",
+    "lookupBoundary": "50 Miles"
   }
 ]

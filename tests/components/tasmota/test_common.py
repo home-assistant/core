@@ -22,7 +22,7 @@ from hatasmota.utils import (
 )
 import pytest
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -117,13 +117,10 @@ async def remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_id: str,
-    config_entry_id: str | None = None,
 ) -> None:
-    """Remove config entry from a device."""
-    if config_entry_id is None:
-        config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    """Remove a device."""
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(device_id, config_entry_id)
+    response = await ws_client.remove_device(device_id)
     assert response["success"]
 
 
@@ -540,8 +537,9 @@ async def help_test_discovery_removal(
         await hass.async_block_till_done()
 
     # Verify device and entity registry entries are created
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{object_id}")
@@ -563,8 +561,9 @@ async def help_test_discovery_removal(
         await hass.async_block_till_done()
 
     # Verify entity registry entries are cleared
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{object_id}")
@@ -654,8 +653,9 @@ async def help_test_discovery_device_remove(
         )
         await hass.async_block_till_done()
 
-    device = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+    device = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device is not None
     assert entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
@@ -663,8 +663,9 @@ async def help_test_discovery_device_remove(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", "")
     await hass.async_block_till_done()
 
-    device = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+    device = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device is None
     assert not entity_reg.async_get_entity_id(domain, "tasmota", unique_id)

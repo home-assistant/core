@@ -1,10 +1,24 @@
 """Constants for the schedule integration."""
 
+from enum import StrEnum
 import logging
 from typing import Final
 
 DOMAIN: Final = "schedule"
 LOGGER = logging.getLogger(__package__)
+
+
+class ScheduleEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for schedule entities."""
+
+    EDITABLE = "editable"
+
+
+class ScheduleEntityStateAttribute(StrEnum):
+    """State attributes for schedule entities."""
+
+    NEXT_EVENT = "next_event"
+
 
 CONF_DATA: Final = "data"
 CONF_FRIDAY: Final = "friday"

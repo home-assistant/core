@@ -235,18 +235,17 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # unauthorized endpoint. Match existing entries by MAC so it
             # aborts without asking for credentials again.
             device_reg = dr.async_get(self.hass)
-            if existing := device_reg.async_get_device(
+            for device in device_reg.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
             ):
-                for entry_id in existing.config_entries:
-                    entry = self.hass.config_entries.async_get_entry(entry_id)
-                    if (
-                        entry is not None
-                        and entry.domain == DOMAIN
-                        and entry.unique_id is not None
-                    ):
-                        device_id = entry.unique_id
-                        break
+                entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
+                if (
+                    entry is not None
+                    and entry.domain == DOMAIN
+                    and entry.unique_id is not None
+                ):
+                    device_id = entry.unique_id
+                    break
 
         # Use the MAC as a placeholder unique_id when nothing matched, so
         # parallel DHCP advertisements don't both reach dhcp_confirm.

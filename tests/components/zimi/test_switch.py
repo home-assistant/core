@@ -5,11 +5,13 @@ from unittest.mock import MagicMock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ENTITY_INFO, mock_api_device, setup_platform
+from .common import DEVICE_INFO, ENTITY_INFO, mock_api_device, setup_platform
+from .conftest import INPUT_MAC
 
 
 async def test_switch_entity(
@@ -53,3 +55,26 @@ async def test_switch_entity(
     )
 
     assert mock_api.outlets[0].turn_off.called
+
+
+async def test_switch_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_api: MagicMock,
+) -> None:
+    """Tests switch device is linked to the controller device via via_device_id."""
+
+    mock_api.outlets = [mock_api_device(entity_type="switch")]
+
+    config_entry = await setup_platform(hass, Platform.SWITCH)
+
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, INPUT_MAC), config_entry.entry_id
+    )
+    assert controller_device is not None
+
+    switch_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_INFO["id"]), config_entry.entry_id
+    )
+    assert switch_device is not None
+    assert switch_device.via_device_id == controller_device.id

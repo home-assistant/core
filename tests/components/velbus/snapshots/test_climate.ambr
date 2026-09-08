@@ -68,7 +68,7 @@
         'comfort',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room_temperature',

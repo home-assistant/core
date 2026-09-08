@@ -223,6 +223,8 @@ class FakePyAvBuffer:
         self.audio_packets = []
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
+        self.mux_side_effects = []
+        self.close_side_effect = None
 
     def add_stream_from_template(self, template, **kwargs):
         """Create an output buffer that captures packets for test to examine."""
@@ -251,6 +253,8 @@ class FakePyAvBuffer:
 
     def mux(self, packet):
         """Capture a packet for tests to examine."""
+        if self.mux_side_effects and (side_effect := self.mux_side_effects.pop(0)):
+            raise side_effect
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
@@ -258,6 +262,8 @@ class FakePyAvBuffer:
 
     def close(self):
         """Close the buffer."""
+        if self.close_side_effect:
+            raise self.close_side_effect
         # Make the final segment data available to the worker
         self.memory_file.write(b"0")
 
@@ -399,6 +405,43 @@ async def test_stream_worker_success(hass: HomeAssistant) -> None:
     assert len(decoded_stream.audio_packets) == 0
 
 
+async def test_stream_worker_first_keyframe_mux_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test an FFmpeg error muxing the first keyframe is handled."""
+    py_av = MockPyAv()
+    # pylint: disable-next=c-extension-no-member
+    py_av.capture_buffer.mux_side_effects = [av.error.ArgumentError(22, "Mux failed")]
+    # pylint: disable-next=c-extension-no-member
+    py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
+
+    with pytest.raises(
+        StreamWorkerError, match="Error muxing first keyframe \\(Mux failed\\)"
+    ):
+        await async_decode_stream(
+            hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
+        )
+    assert py_av.capture_buffer.memory_file.closed
+
+
+async def test_stream_worker_packet_mux_fails(hass: HomeAssistant) -> None:
+    """Test an FFmpeg error muxing a packet is handled."""
+    py_av = MockPyAv()
+    py_av.capture_buffer.mux_side_effects = [
+        None,
+        # pylint: disable-next=c-extension-no-member
+        av.error.ArgumentError(22, "Mux failed"),
+    ]
+    # pylint: disable-next=c-extension-no-member
+    py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
+
+    with pytest.raises(StreamWorkerError, match="Error muxing stream \\(Mux failed\\)"):
+        await async_decode_stream(
+            hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
+        )
+    assert py_av.capture_buffer.memory_file.closed
+
+
 async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     """Skip a single out of order packet."""
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
@@ -516,6 +559,23 @@ async def test_skip_initial_bad_packets(hass: HomeAssistant) -> None:
     assert len(complete_segments) == int(
         (len(decoded_stream.video_packets) - 1) * SEGMENTS_PER_PACKET
     )
+    assert len(decoded_stream.audio_packets) == 0
+
+
+async def test_repair_initial_keyframe_missing_dts(hass: HomeAssistant) -> None:
+    """Test a missing DTS on the initial keyframe is repaired."""
+
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    first_packet = packets[0]
+    assert first_packet.is_keyframe
+    expected_dts = first_packet.dts
+    first_packet.dts = first_packet.pts = None
+
+    decoded_stream = await async_decode_stream(hass, packets)
+
+    assert len(decoded_stream.video_packets) == len(packets)
+    assert decoded_stream.video_packets[0].dts == expected_dts
+    assert decoded_stream.video_packets[0].pts == expected_dts
     assert len(decoded_stream.audio_packets) == 0
 
 

@@ -27,6 +27,7 @@
     "battery_voltage": 5.69,
     "battery_status": "good",
     "battery_status_number": 1,
+    "external_power": 1,
     "volume_level": 2387.837753,
     "volume_level_oz": 80742.4,
     "max_volume": 1269,

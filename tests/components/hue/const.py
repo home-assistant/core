@@ -138,3 +138,52 @@ FAKE_ROTARY = {
     },
     "type": "relative_rotary",
 }
+
+FAKE_BEHAVIOR_SCRIPT = {
+    "configuration_schema": {},
+    "description": "Generic switches script",
+    "id": "fake_behavior_script_id_1",
+    "metadata": {"category": "accessory", "name": "Hue Accessories"},
+    "state_schema": {},
+    "supported_features": [],
+    "trigger_schema": {},
+    "type": "behavior_script",
+    "version": "0.0.1",
+}
+
+FAKE_BEHAVIOR_INSTANCE = {
+    "configuration": {},
+    "dependees": [],  # codespell:ignore dependees
+    "enabled": True,
+    "id": "fake_behavior_instance_id_1",
+    "last_error": "",
+    "metadata": {"name": "Wall switch Hallway"},
+    "script_id": "fake_behavior_script_id_1",
+    "status": "running",
+    "type": "behavior_instance",
+}
+
+FAKE_PRESENCE_MIMICKING_SCRIPT = {
+    "configuration_schema": {},
+    "description": "PM Automation",
+    "id": "fake_behavior_script_id_2",
+    "metadata": {"category": "automation", "name": "PM"},
+    "state_schema": {},
+    "supported_features": [],
+    "trigger_schema": {},
+    "type": "behavior_script",
+    "version": "0.0.1",
+}
+
+FAKE_PRESENCE_MIMICKING_INSTANCE = {
+    "configuration": {},
+    "dependees": [],  # codespell:ignore dependees
+    "enabled": True,
+    "id": "fake_behavior_instance_id_2",
+    "last_error": "",
+    "metadata": {"name": "Mimic presence"},
+    "script_id": "fake_behavior_script_id_2",
+    "state": {"pm_state": "stopped"},
+    "status": "running",
+    "type": "behavior_instance",
+}

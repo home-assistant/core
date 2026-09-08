@@ -68,4 +68,4 @@ async def test_turn_off_switch(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_yardian_client.stop_irrigation.assert_called_once()
+    mock_yardian_client.stop_zone.assert_called_once()

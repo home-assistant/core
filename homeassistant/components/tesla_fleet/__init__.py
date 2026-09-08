@@ -28,13 +28,12 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS, build_statistic_id
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, build_statistic_id
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
@@ -109,27 +108,10 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
 async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Set up TeslaFleet config."""
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
-    except ValueError as e:
-        # Remove invalid implementation from config entry then raise AuthFailed
-        hass.config_entries.async_update_entry(
-            entry, data={"auth_implementation": None}
-        )
-        raise ConfigEntryAuthFailed from e
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     oauth_session = OAuth2Session(hass, entry, implementation)
-    try:
-        await oauth_session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
+    await oauth_session.async_ensure_token_valid()
 
     access_token = oauth_session.token[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
@@ -184,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api_vehicle.model,
                 serial_number=vin,
             )
 
@@ -297,9 +279,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     statistic_ids = [
         build_statistic_id(site_id, key)
         for device in devices
-        if device.config_entries == {entry.entry_id}
         for domain, site_id in device.identifiers
         if domain == DOMAIN and site_id.isdigit()
+        if len(device_registry.async_get_devices(identifiers={(domain, site_id)})) == 1
         for key in ENERGY_HISTORY_FIELDS
     ]
 

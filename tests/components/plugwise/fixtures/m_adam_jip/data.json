@@ -1,13 +1,13 @@
 {
   "06aecb3d00354375924f50c47af36bd2": {
     "active_preset": "no_frost",
-    "available_schedules": [],
+    "available_schedules": ["off"],
     "climate_mode": "off",
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Slaapkamer",
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-    "select_schedule": null,
+    "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
       "temperature": 24.2
@@ -27,14 +27,14 @@
   },
   "13228dab8ce04617af318a2888b3c548": {
     "active_preset": "home",
-    "available_schedules": [],
+    "available_schedules": ["off"],
     "climate_mode": "heat",
     "control_state": "idle",
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Woonkamer",
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-    "select_schedule": null,
+    "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
       "temperature": 27.4
@@ -244,14 +244,14 @@
   },
   "d27aede973b54be484f6842d1b2802ad": {
     "active_preset": "home",
-    "available_schedules": [],
+    "available_schedules": ["off"],
     "climate_mode": "heat",
     "control_state": "idle",
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Kinderkamer",
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-    "select_schedule": null,
+    "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
       "temperature": 30.0
@@ -295,14 +295,14 @@
   },
   "d58fec52899f4f1c92e4f8fad6d8c48c": {
     "active_preset": "home",
-    "available_schedules": [],
+    "available_schedules": ["off"],
     "climate_mode": "heat",
     "control_state": "idle",
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Logeerkamer",
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-    "select_schedule": null,
+    "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
       "temperature": 30.0
@@ -327,20 +327,24 @@
       "flame_state": false,
       "heating_state": false
     },
-    "dev_class": "heater_central",
-    "location": "9e4433a9d69f40b3aefd15e74395eaec",
-    "max_dhw_temperature": {
-      "lower_bound": 40.0,
-      "resolution": 0.01,
-      "setpoint": 60.0,
-      "upper_bound": 60.0
-    },
-    "maximum_boiler_temperature": {
+    "boiler_temperature": {
+      "current": 37.3,
       "lower_bound": 20.0,
       "resolution": 0.01,
       "setpoint": 90.0,
       "upper_bound": 90.0
     },
+    "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": ["comfort", "eco"],
+    "dhw_temperature": {
+      "current": 37.3,
+      "lower_bound": 40.0,
+      "resolution": 0.01,
+      "setpoint": 60.0,
+      "upper_bound": 60.0
+    },
+    "location": "9e4433a9d69f40b3aefd15e74395eaec",
     "model": "Generic heater",
     "model_id": "10.20",
     "name": "OpenTherm",

@@ -31,6 +31,8 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
+type TraccarConfigEntry = ConfigEntry[set[str]]
+
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_ACCURACY = 200
@@ -120,9 +122,9 @@ async def handle_webhook(
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.data.setdefault(DOMAIN, {"devices": set(), "unsub_device_tracker": {}})
+    entry.runtime_data = set()
     webhook.async_register(
         hass, DOMAIN, "Traccar", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
@@ -131,10 +133,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TraccarConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

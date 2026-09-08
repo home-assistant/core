@@ -20,6 +20,7 @@ from . import get_addons_list
 from .const import (
     ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
@@ -31,14 +32,17 @@ from .const import (
     PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
     PLACEHOLDER_KEY_ADDON_INFO,
     PLACEHOLDER_KEY_COMPONENTS,
+    PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REFERENCE,
 )
-from .coordinator import get_issues_info
+from .coordinator import get_issues_info, presentable_issue_suggestions
 from .handler import get_supervisor_client
 from .issues import Issue, Suggestion
 
 SUGGESTION_CONFIRMATION_REQUIRED = {
     "addon_execute_remove",
+    "mount_execute_remove",
+    "mount_move_local_data",
     "system_adopt_data_disk",
     "system_execute_reboot",
 }
@@ -49,6 +53,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
     _data: dict[str, Any] | None = None
     _issue: Issue | None = None
+    _suggestions: list[Suggestion] | None = None
 
     def __init__(self, hass: HomeAssistant, issue_id: str) -> None:
         """Initialize repair flow."""
@@ -92,8 +97,12 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
     async def async_step_init(self, _: None = None) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
-        # Out of sync with supervisor, issue is resolved or not fixable. Remove it
-        if not self.issue or not self.issue.suggestions:
+        # Out of sync with supervisor: issue is resolved, or it is not
+        # fixable — no suggestions, or none this Core can present (the
+        # repair is created as not fixable then). Remove it.
+        if not self.issue or not (
+            suggestions := presentable_issue_suggestions(self.hass, self.issue)
+        ):
             return self.async_create_entry(data={})
 
         # All suggestions have the same logic: Apply them in supervisor,
@@ -106,19 +115,20 @@ class SupervisorIssueRepairFlow(RepairsFlow):
                 MethodType(self._async_step(suggestion), self),
             )
 
-        if len(self.issue.suggestions) > 1:
+        self._suggestions = suggestions
+        if len(self._suggestions) > 1:
             return await self.async_step_fix_menu()
 
         # Always show a form for one suggestion to explain to user what's happening
-        return self._async_form_for_suggestion(self.issue.suggestions[0])
+        return self._async_form_for_suggestion(self._suggestions[0])
 
     async def async_step_fix_menu(self, _: None = None) -> RepairsFlowResult:
         """Show the fix menu."""
-        assert self.issue
+        assert self._suggestions
 
         return self.async_show_menu(
             step_id="fix_menu",
-            menu_options=[suggestion.key for suggestion in self.issue.suggestions],
+            menu_options=[suggestion.key for suggestion in self._suggestions],
             description_placeholders=self.description_placeholders,
         )
 
@@ -231,6 +241,19 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
         return placeholders or None
 
 
+class AppPortConflictRepairFlow(AddonIssueRepairFlow):
+    """Handler for app port conflict issue fixing flows."""
+
+    @property
+    @override
+    def description_placeholders(self) -> dict[str, str] | None:
+        """Get description placeholders for steps."""
+        placeholders: dict[str, str] = super().description_placeholders or {}
+        if self.issue and self.issue.reference_extra:
+            placeholders[PLACEHOLDER_KEY_PORT] = str(self.issue.reference_extra["port"])
+        return placeholders or None
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -245,6 +268,8 @@ async def async_create_fix_flow(
         return DockerConfigIssueRepairFlow(hass, issue_id)
     if issue and issue.key == ISSUE_KEY_ADDON_DEPRECATED:
         return DeprecatedAddonIssueRepairFlow(hass, issue_id)
+    if issue and issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT:
+        return AppPortConflictRepairFlow(hass, issue_id)
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,

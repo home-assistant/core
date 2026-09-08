@@ -58,13 +58,13 @@ def resolve_area_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
             # If entity has an area ID, return that
             if entity.area_id:
                 return entity.area_id
-            # If entity has a device ID, return the area ID for the device
+            # If entity has a device ID, return the effective area of the device
             if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
-                return device.area_id
+                return dr.async_get_effective_area_id(hass, device)
 
     # Check if it's a device ID
     if device := dev_reg.async_get(lookup_value):
-        return device.area_id
+        return dr.async_get_effective_area_id(hass, device)
 
     return None
 

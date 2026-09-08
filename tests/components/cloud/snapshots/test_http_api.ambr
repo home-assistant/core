@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 22
+  Built-in integrations: 23
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -30,7 +30,7 @@
   --- | ---
   ai_task | AI Task
   auth | Auth
-  binary_sensor | Binary Sensor
+  binary_sensor | Binary sensor
   cloud | Home Assistant Cloud
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
@@ -42,7 +42,8 @@
   homeassistant | Home Assistant Core Integration
   http | HTTP
   intent | Intent
-  media_source | Media Source
+  llm | LLM
+  media_source | Media source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
   stt | Speech-to-text (STT)
@@ -156,7 +157,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 22
+  Built-in integrations: 23
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -165,7 +166,7 @@
   --- | ---
   ai_task | AI Task
   auth | Auth
-  binary_sensor | Binary Sensor
+  binary_sensor | Binary sensor
   cloud | Home Assistant Cloud
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
@@ -177,7 +178,8 @@
   homeassistant | Home Assistant Core Integration
   http | HTTP
   intent | Intent
-  media_source | Media Source
+  llm | LLM
+  media_source | Media source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
   stt | Speech-to-text (STT)

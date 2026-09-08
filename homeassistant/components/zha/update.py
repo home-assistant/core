@@ -4,6 +4,9 @@ import functools
 import logging
 from typing import Any, override
 
+from zha.application.platforms.update import (
+    UpdateEntityFeature as ZHAUpdateEntityFeature,
+)
 from zha.exceptions import ZHAException
 from zigpy.application import ControllerApplication
 
@@ -23,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     EntityData,
@@ -99,18 +102,36 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disa
 
 
 class ZHAFirmwareUpdateEntity(
-    ZHAEntity, CoordinatorEntity[ZHAFirmwareUpdateCoordinator], UpdateEntity
+    ZHASupportedFeaturesEntity,
+    CoordinatorEntity[ZHAFirmwareUpdateCoordinator],
+    UpdateEntity,
 ):
     """Representation of a ZHA firmware update entity."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL
-        | UpdateEntityFeature.PROGRESS
-        | UpdateEntityFeature.SPECIFIC_VERSION
-        | UpdateEntityFeature.RELEASE_NOTES
-    )
     _attr_display_precision = 2  # 40 byte chunks with ~200KB files increments by 0.02%
+
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZHAUpdateEntityFeature,
+    ) -> UpdateEntityFeature:
+        """Convert ZHA update features to HA update features."""
+        features = UpdateEntityFeature(0)
+
+        if ZHAUpdateEntityFeature.INSTALL in zha_features:
+            features |= UpdateEntityFeature.INSTALL
+        if ZHAUpdateEntityFeature.SPECIFIC_VERSION in zha_features:
+            features |= UpdateEntityFeature.SPECIFIC_VERSION
+        if ZHAUpdateEntityFeature.PROGRESS in zha_features:
+            features |= UpdateEntityFeature.PROGRESS
+        if ZHAUpdateEntityFeature.BACKUP in zha_features:
+            features |= UpdateEntityFeature.BACKUP
+        if ZHAUpdateEntityFeature.RELEASE_NOTES in zha_features:
+            features |= UpdateEntityFeature.RELEASE_NOTES
+
+        return features
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
@@ -124,7 +145,7 @@ class ZHAFirmwareUpdateEntity(
     @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self.entity_data.entity.installed_version
+        return self._zha_state.installed_version
 
     @property
     @override
@@ -133,7 +154,7 @@ class ZHAFirmwareUpdateEntity(
 
         Should return a boolean (True if in progress, False if not).
         """
-        return self.entity_data.entity.in_progress
+        return self._zha_state.in_progress
 
     @property
     @override
@@ -144,13 +165,13 @@ class ZHAFirmwareUpdateEntity(
 
         Can either return a number to indicate the progress from 0 to 100% or None.
         """
-        return self.entity_data.entity.update_percentage
+        return self._zha_state.update_percentage
 
     @property
     @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.entity_data.entity.latest_version
+        return self._zha_state.latest_version
 
     @property
     @override
@@ -160,7 +181,7 @@ class ZHAFirmwareUpdateEntity(
         This is not suitable for long changelogs, but merely suitable
         for a short excerpt update description of max 255 characters.
         """
-        return self.entity_data.entity.release_summary
+        return self._zha_state.release_summary
 
     @override
     async def async_release_notes(self) -> str | None:
@@ -179,13 +200,13 @@ class ZHAFirmwareUpdateEntity(
                 "</ha-alert>"
             )
 
-        return f"{header}\n\n{self.entity_data.entity.release_notes or ''}"
+        return f"{header}\n\n{self._zha_state.release_notes or ''}"
 
     @property
     @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        return self.entity_data.entity.release_url
+        return self._zha_state.release_url
 
     # We explicitly convert ZHA exceptions to HA exceptions here so there is no need to
     # use the `@convert_zha_error_to_ha_error()` decorator.

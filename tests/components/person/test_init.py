@@ -153,16 +153,19 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    # A legacy tracker reporting home (no coordinates) is placed at the home zone.
+    # A legacy tracker reporting home (no in_zones) is placed in the home zone
+    # and given the home zone's coordinates.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
     }
 
-    # Test home with coordinates
+    # Test home with coordinates: a legacy tracker reporting "home" is placed in
+    # the home zone while keeping its own coordinates.
     hass.states.async_set(
         DEVICE_TRACKER,
         "home",
@@ -174,6 +177,7 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
         ATTR_GPS_ACCURACY: 10,
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 10.123456,
         ATTR_LONGITUDE: 11.123456,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -295,10 +299,12 @@ async def test_setup_two_trackers(
     hass.states.async_set(DEVICE_TRACKER_2, "zone2", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()
 
-    # Legacy router reporting home (no in_zones) is placed at the home zone.
+    # Legacy router reporting home (no in_zones) is placed in the home zone and
+    # given the home zone's coordinates.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -499,12 +505,13 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             id="scanner_beats_gps",
         ),
         # A legacy "home" tracker (no in_zones) likewise outranks GPS; it is
-        # placed at the home zone.
+        # placed in the home zone.
         pytest.param(
             _LEGACY_HOME,
             _GPS_NOT_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -614,12 +621,13 @@ async def test_state_priority_overrides_recency(
             id="not_home_newer",
         ),
         # A pair of legacy "home" trackers (no in_zones) likewise picks the
-        # most recent; it is placed at the home zone.
+        # most recent; it is placed in the home zone.
         pytest.param(
             _LEGACY_HOME,
             _LEGACY_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER_2,
@@ -706,12 +714,13 @@ async def test_scanner_associated_with_other_zone(
 @pytest.mark.parametrize(
     ("tracker", "expected_state", "expected_extra"),
     [
-        # A legacy "home" tracker has no coordinates of its own, so it is
-        # placed at the home zone.
+        # A legacy "home" tracker has no in_zones or coordinates of its own, so
+        # it is placed in the home zone with the home zone's coordinates.
         pytest.param(
             _LEGACY_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -973,6 +982,7 @@ async def test_restore_home_state(
     assert await async_setup_component(hass, DOMAIN, config)
 
     # When restoring state the entity_id of the person will be used as source.
+    # A restored "home" state without in_zones is placed in the home zone.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == {
@@ -981,7 +991,7 @@ async def test_restore_home_state(
         ATTR_ENTITY_PICTURE: "/bla",
         ATTR_FRIENDLY_NAME: "tracked person",
         ATTR_ID: "1234",
-        ATTR_IN_ZONES: [],
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 10.12346,
         ATTR_LONGITUDE: 11.12346,
         ATTR_SOURCE: "person.tracked_person",
@@ -1042,10 +1052,12 @@ async def test_load_person_storage(
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
-    # A legacy tracker reporting home (no coordinates) is placed at the home zone.
+    # A legacy tracker reporting home (no in_zones) is placed in the home zone
+    # and given the home zone's coordinates.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,

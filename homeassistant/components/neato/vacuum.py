@@ -63,8 +63,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
     _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.PAUSE
+        VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.START
@@ -171,8 +170,6 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         elif self._state["state"] == 4:
             self._attr_activity = VacuumActivity.ERROR
             self._status_state = ERRORS.get(self._state["error"])
-
-        self._attr_battery_level = self._state["details"]["charge"]
 
         if self._mapdata is None or not self._mapdata.get(self._robot_serial, {}).get(
             "maps", []

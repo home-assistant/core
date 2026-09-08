@@ -37,8 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     finally:
         await discord_bot.close()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
-
     hass.async_create_task(
         discovery.async_load_platform(
             hass, Platform.NOTIFY, DOMAIN, dict(entry.data), hass.data[DATA_HASS_CONFIG]

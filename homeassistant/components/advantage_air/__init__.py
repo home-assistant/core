@@ -4,7 +4,7 @@ from advantage_air import advantage_air
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,6 +49,18 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register the system device so child devices can resolve it as their
+    # via_device parent regardless of platform setup order.
+    system = coordinator.data["system"]
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, system["rid"])},
+        manufacturer="Advantage Air",
+        model=system["sysType"],
+        name=system["name"],
+        sw_version=system["myAppRev"],
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -11,6 +11,7 @@ from unifi_discovery import AIOUnifiScanner, UnifiDevice
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.hass_dict import HassKey
 
@@ -21,6 +22,34 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
 DATA_DISCOVERY_STARTED: HassKey[bool] = HassKey(DOMAIN)
+
+
+def _announced_ips(device: UnifiDevice) -> list[str]:
+    """Return the IPs a device announced as its own.
+
+    A console answers discovery on every VLAN interface it has and lists them
+    in ``ip_info`` as ``"mac;ip"``, alongside ``primary_addr``. Only one of
+    those answers survives the scanner's per-MAC collapse, so consumers cannot
+    rely on ``source_ip`` being the address an entry was configured with.
+
+    ``ip_info`` also carries addresses that are not the device's own: the
+    upstream WAN, neighbouring hosts and all-zero placeholders. A device's
+    interface MACs share the first five octets with ``hw_addr``, which is what
+    separates them. Matching on the OUI alone would pull in every other
+    Ubiquiti device on the network.
+    """
+    if not device.hw_addr:
+        return []
+    prefix = format_mac(device.hw_addr)[:14]
+    announced = [*(device.ip_info or ())]
+    if device.primary_addr:
+        announced.append(device.primary_addr)
+    ips: list[str] = []
+    for address in announced:
+        mac_address, _, ip_address = address.rpartition(";")
+        if ip_address and format_mac(mac_address).startswith(prefix):
+            ips.append(ip_address)
+    return list(dict.fromkeys(ips))
 
 
 def _device_to_dict(device: UnifiDevice) -> dict[str, Any]:
@@ -38,6 +67,7 @@ def _device_to_dict(device: UnifiDevice) -> dict[str, Any]:
         if isinstance(value, Mapping):
             value = dict(value)
         data[f.name] = value
+    data["announced_ips"] = _announced_ips(device)
     return data
 
 

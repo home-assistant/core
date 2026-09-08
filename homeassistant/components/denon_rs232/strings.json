@@ -74,6 +74,14 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_tuner_channel": {
+      "message": "{media_id} is not a valid tuner preset (A1-G8) or FM frequency in hundredths of MHz (8750-10800; for example, 9930 for 99.30 MHz)."
+    },
+    "unsupported_media_type": {
+      "message": "Cannot play media of type {media_type}. Only tuner channels are supported."
+    }
+  },
   "selector": {
     "model": {
       "options": {

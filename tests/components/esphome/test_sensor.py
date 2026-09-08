@@ -129,7 +129,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
@@ -168,7 +168,7 @@ async def test_generic_numeric_sensor_state_class_measurement(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is None
 
 
@@ -205,7 +205,7 @@ async def test_generic_numeric_sensor_state_class_measurement_angle(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is None
 
 

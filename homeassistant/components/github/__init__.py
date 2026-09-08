@@ -95,12 +95,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> 
                 unique_id=repository,
             )
             hass.config_entries.async_add_subentry(entry, subentry)
-            if device := dev_reg.async_get_device({(DOMAIN, repository)}):
+            if device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, repository), entry.entry_id
+            ):
                 dev_reg.async_update_device(
                     device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    add_config_subentry_id=subentry.subentry_id,
-                    add_config_entry_id=entry.entry_id,
+                    new_config_entry_id=entry.entry_id,
+                    new_config_subentry_id=subentry.subentry_id,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=2)
     return True

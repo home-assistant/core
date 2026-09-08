@@ -29,10 +29,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bo
         # Migrate device registry identifiers from homeassistant domain to ping domain
         registry = dr.async_get(hass)
         if (
-            device := registry.async_get_device(
-                identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
+            device := registry.async_get_device_by_identifier(
+                (HOMEASSISTANT_DOMAIN, entry.entry_id), entry.entry_id
             )
-        ) is not None and entry.entry_id in device.config_entries:
+        ) is not None:
             registry.async_update_device(
                 device_id=device.id,
                 new_identifiers={(DOMAIN, entry.entry_id)},

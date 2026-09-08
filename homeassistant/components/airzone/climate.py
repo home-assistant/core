@@ -25,6 +25,7 @@ from aioairzone.const import (
     AZD_TEMP_MAX,
     AZD_TEMP_MIN,
     AZD_TEMP_SET,
+    AZD_TEMP_STEP,
     AZD_TEMP_UNIT,
     AZD_ZONES,
 )
@@ -48,7 +49,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_TEMPERATURE_STEP, TEMP_UNIT_LIB_TO_HASS
+from .const import TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
@@ -150,7 +151,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        self._attr_target_temperature_step = API_TEMPERATURE_STEP
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]

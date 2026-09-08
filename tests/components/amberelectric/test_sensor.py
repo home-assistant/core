@@ -16,11 +16,11 @@ async def test_general_price_sensor(
     assert len(hass.states.async_all()) == 6
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
-    assert price.state == "0.09"
+    assert price.state == "0.088"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == 0.09
+    assert attributes["per_kwh"] == 8.8 / 100
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
     assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
@@ -44,8 +44,8 @@ async def test_general_price_sensor_with_range(
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     attributes = price.attributes
-    assert attributes.get("range_min") == 0.07
-    assert attributes.get("range_max") == 0.09
+    assert attributes.get("range_min") == 6.7 / 100
+    assert attributes.get("range_max") == 9.1 / 100
 
 
 @pytest.mark.usefixtures("mock_amber_client_general_and_controlled_load")
@@ -58,11 +58,11 @@ async def test_general_and_controlled_load_price_sensor(
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
-    assert price.state == "0.04"
+    assert price.state == "0.044"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == 0.04
+    assert attributes["per_kwh"] == 4.4 / 100
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
     assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
@@ -83,11 +83,11 @@ async def test_general_and_feed_in_price_sensor(
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
-    assert price.state == "-0.01"
+    assert price.state == "-0.011"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == -0.01
+    assert attributes["per_kwh"] == -1.1 / 100
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
     assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
@@ -108,7 +108,7 @@ async def test_general_forecast_sensor(
     assert len(hass.states.async_all()) == 6
     price = hass.states.get("sensor.mock_title_general_forecast")
     assert price
-    assert price.state == "0.09"
+    assert price.state == "0.088"
     attributes = price.attributes
     assert attributes["channel_type"] == "general"
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -116,9 +116,9 @@ async def test_general_forecast_sensor(
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == 0.09
+    assert first_forecast["per_kwh"] == 8.8 / 100
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first_forecast["spot_per_kwh"] == 0.01
+    assert first_forecast["spot_per_kwh"] == 1.1 / 100
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
@@ -140,8 +140,8 @@ async def test_general_forecast_sensor_with_range(
     assert price
     attributes = price.attributes
     first_forecast = attributes["forecasts"][0]
-    assert first_forecast.get("range_min") == 0.07
-    assert first_forecast.get("range_max") == 0.09
+    assert first_forecast.get("range_min") == 6.7 / 100
+    assert first_forecast.get("range_max") == 9.1 / 100
 
 
 @pytest.mark.usefixtures("mock_amber_client_general_and_controlled_load")
@@ -154,7 +154,7 @@ async def test_controlled_load_forecast_sensor(
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_controlled_load_forecast")
     assert price
-    assert price.state == "0.04"
+    assert price.state == "0.044"
     attributes = price.attributes
     assert attributes["channel_type"] == "controlledLoad"
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -162,9 +162,9 @@ async def test_controlled_load_forecast_sensor(
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == 0.04
+    assert first_forecast["per_kwh"] == 4.4 / 100
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first_forecast["spot_per_kwh"] == 0.01
+    assert first_forecast["spot_per_kwh"] == 1.1 / 100
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
@@ -181,7 +181,7 @@ async def test_feed_in_forecast_sensor(
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_feed_in_forecast")
     assert price
-    assert price.state == "-0.01"
+    assert price.state == "-0.011"
     attributes = price.attributes
     assert attributes["channel_type"] == "feedIn"
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -189,9 +189,9 @@ async def test_feed_in_forecast_sensor(
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == -0.01
+    assert first_forecast["per_kwh"] == -1.1 / 100
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first_forecast["spot_per_kwh"] == 0.01
+    assert first_forecast["spot_per_kwh"] == 1.1 / 100
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
