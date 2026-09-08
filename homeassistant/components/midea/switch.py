@@ -125,7 +125,9 @@ async def async_setup_entry(
         and description.key in device.attributes
         and (
             description.key != "pump"
-            or getattr(device, "capabilities", {}).get("pump", False)
+            or (getattr(device, "capabilities", None) or {}).get(
+                description.key, False
+            )
         )
     )
 
