@@ -10,6 +10,7 @@ from skoda_public_api.api_layer.exceptions import (
     OpenApiForbiddenError,
     OpenApiRateLimitError,
     OpenApiServerError,
+    OpenApiTimeoutError,
     OpenApiVehicleNotFoundError,
 )
 from skoda_public_api.api_layer.open_api_client import OpenAPIClient
@@ -51,7 +52,7 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate credentials, returning (response, None) or (None, error_code)."""
         try:
             return await self._test_credentials(vin, api_key), None
-        except TimeoutError:
+        except OpenApiTimeoutError:
             return None, "timeout_connect"
         except OpenApiAuthenticationError:
             return None, "invalid_auth"

@@ -10,6 +10,7 @@ from skoda_public_api.api_layer.exceptions import (
     OpenApiForbiddenError,
     OpenApiRateLimitError,
     OpenApiServerError,
+    OpenApiTimeoutError,
     OpenApiVehicleNotFoundError,
 )
 from skoda_public_api.models.vehicle import VehicleResponse
@@ -51,14 +52,17 @@ async def _configure_flow(
     )
 
 
-def _patch_get_vehicle(*, side_effect=None, return_value=None) -> AsyncMock:
-    """Mock OpenAPIClient.get_vehicle."""
+def _patch_get_vehicle(
+    request: pytest.FixtureRequest, *, side_effect=None, return_value=None
+) -> AsyncMock:
+    """Mock OpenAPIClient.get_vehicle, unpatched automatically after the test."""
     mock = AsyncMock(side_effect=side_effect, return_value=return_value)
     patcher = patch(
         "homeassistant.components.skoda.config_flow.OpenAPIClient.get_vehicle",
         mock,
     )
     patcher.start()
+    request.addfinalizer(patcher.stop)
     return mock
 
 
@@ -70,9 +74,11 @@ async def test_form_shown(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, request: pytest.FixtureRequest
+) -> None:
     """Test successful flow with a vehicle that reports its name."""
-    _patch_get_vehicle(return_value=VEHICLE_WITH_NAME)
+    _patch_get_vehicle(request, return_value=VEHICLE_WITH_NAME)
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -87,10 +93,12 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
 
 
 async def test_success_without_vehicle_name(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test successful flow falls back to the VIN when the name is missing."""
-    _patch_get_vehicle(return_value=VEHICLE_WITHOUT_NAME)
+    _patch_get_vehicle(request, return_value=VEHICLE_WITHOUT_NAME)
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -112,10 +120,10 @@ async def test_invalid_vin_length(hass: HomeAssistant) -> None:
 
 
 async def test_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, request: pytest.FixtureRequest
 ) -> None:
     """Test that the same VIN cannot be configured twice."""
-    _patch_get_vehicle(return_value=VEHICLE_WITH_NAME)
+    _patch_get_vehicle(request, return_value=VEHICLE_WITH_NAME)
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -131,7 +139,7 @@ async def test_duplicate_entry(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        pytest.param(TimeoutError(), "timeout_connect", id="timeout"),
+        pytest.param(OpenApiTimeoutError(), "timeout_connect", id="timeout"),
         pytest.param(OpenApiAuthenticationError(), "invalid_auth", id="invalid_auth"),
         pytest.param(
             OpenApiForbiddenError(), "access_forbidden", id="access_forbidden"
@@ -156,9 +164,10 @@ async def test_api_errors(
     exception: Exception,
     expected_error: str,
     mock_setup_entry: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test API failures surface the correct error on the form."""
-    mock = _patch_get_vehicle(side_effect=exception)
+    mock = _patch_get_vehicle(request, side_effect=exception)
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -168,10 +177,12 @@ async def test_api_errors(
     assert result["errors"] == {"base": expected_error}
 
 
-async def test_error_recovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_error_recovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, request: pytest.FixtureRequest
+) -> None:
     """Test the flow recovers after a failed attempt and completes on retry."""
     mock = _patch_get_vehicle(
-        side_effect=[OpenApiAuthenticationError(), VEHICLE_WITH_NAME]
+        request, side_effect=[OpenApiAuthenticationError(), VEHICLE_WITH_NAME]
     )
 
     result = await _init_flow(hass)
@@ -192,10 +203,11 @@ async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vehicle_response: VehicleResponse,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test a successful reauth updates the stored API key and reloads the entry."""
     mock_config_entry.add_to_hass(hass)
-    _patch_get_vehicle(return_value=mock_vehicle_response)
+    _patch_get_vehicle(request, return_value=mock_vehicle_response)
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -212,11 +224,13 @@ async def test_reauth_success(
 
 
 async def test_reauth_invalid_auth_shows_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test an invalid API key during reauth keeps the form with an error."""
     mock_config_entry.add_to_hass(hass)
-    _patch_get_vehicle(side_effect=OpenApiAuthenticationError())
+    _patch_get_vehicle(request, side_effect=OpenApiAuthenticationError())
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(

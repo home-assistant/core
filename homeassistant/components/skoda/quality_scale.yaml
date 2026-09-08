@@ -4,10 +4,10 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands: done
-  # NOTE: home-assistant/brands#11080 (icon/logo) was still open at the time
-  # this was written. Assumed merged by the time this PR is submitted -
-  # verify before opening the PR, revert to `todo` if it isn't merged yet.
+  brands:
+    status: todo
+    comment: |
+      Waiting on home-assistant/brands#11080 to be merged.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

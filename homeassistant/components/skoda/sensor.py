@@ -1,15 +1,17 @@
 """Support for Škoda sensors."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any, override
 
+from skoda_public_api.models.common import VehicleError
 from skoda_public_api.models.enums import (
     AirConditioningState,
     ChargeType,
     ChargingState,
+    TemperatureUnit,
 )
 
 from homeassistant.components.sensor import (
@@ -62,32 +64,61 @@ class Capability(StrEnum):
     SUNROOF = "sunroof"
 
 
-def extract_vehicle_capabilities(data: dict[str, Any]) -> set[Capability]:
+# Capabilities whose top-level API field can report a transient
+# "<FEATURE>_UNAVAILABLE" error (as opposed to a permanent "_UNSUPPORTED" or
+# "_DISABLED" one) in VehicleResponse.errors. These must still be treated as
+# supported when their field is empty for that reason, otherwise a temporary
+# hiccup in the first response would hide the entity for the entry's lifetime
+# (entities are only created once, at setup).
+_TRANSIENT_ERROR_PREFIXES: dict[Capability, str] = {
+    Capability.STATUS: "VEHICLE_STATUS",
+    Capability.ODOMETER: "ODOMETER",
+    Capability.POSITION: "PARKING_POSITION",
+    Capability.CHARGING: "CHARGING",
+    Capability.AIR_CONDITIONING: "AIR_CONDITIONING",
+    Capability.VENTILATION: "ACTIVE_VENTILATION",
+    Capability.AUXILIARY_HEATING: "AUXILIARY_HEATING",
+    Capability.FUEL_STATUS: "FUEL_STATUS",
+}
+
+
+def extract_vehicle_capabilities(
+    data: dict[str, Any], errors: Sequence[VehicleError] = ()
+) -> set[Capability]:
     """Extract the set of supported capabilities from a vehicle data dump."""
     caps: set[Capability] = set()
+    unavailable = {
+        error.type.rsplit("_", 1)[0]
+        for error in errors
+        if error.type.endswith("_UNAVAILABLE")
+    }
+
+    def supported(capability: Capability, present: bool) -> bool:
+        prefix = _TRANSIENT_ERROR_PREFIXES.get(capability)
+        return present or (prefix is not None and prefix in unavailable)
 
     # Basic objects
     status = data.get("status")
-    if status:
+    if supported(Capability.STATUS, bool(status)):
         caps.add(Capability.STATUS)
-        detail = status.get("detail")
+        detail = (status or {}).get("detail")
         if detail and detail.get("sunroof"):
             caps.add(Capability.SUNROOF)
-    if data.get("odometer"):
+    if supported(Capability.ODOMETER, bool(data.get("odometer"))):
         caps.add(Capability.ODOMETER)
-    if data.get("parking_position"):
+    if supported(Capability.POSITION, bool(data.get("parking_position"))):
         caps.add(Capability.POSITION)
-    if data.get("charging"):
+    if supported(Capability.CHARGING, bool(data.get("charging"))):
         caps.add(Capability.CHARGING)
     if data.get("charging_profiles"):
         caps.add(Capability.CHARGING_PROFILES)
-    if data.get("air_conditioning"):
+    if supported(Capability.AIR_CONDITIONING, bool(data.get("air_conditioning"))):
         caps.add(Capability.AIR_CONDITIONING)
-    if data.get("auxiliary_heating"):
+    if supported(Capability.AUXILIARY_HEATING, bool(data.get("auxiliary_heating"))):
         caps.add(Capability.AUXILIARY_HEATING)
-    if data.get("active_ventilation"):
+    if supported(Capability.VENTILATION, bool(data.get("active_ventilation"))):
         caps.add(Capability.VENTILATION)
-    if data.get("fuel_status"):
+    if supported(Capability.FUEL_STATUS, bool(data.get("fuel_status"))):
         caps.add(Capability.FUEL_STATUS)
     if data.get("ad_blue_range"):
         caps.add(Capability.ADBLUE)
@@ -138,7 +169,12 @@ def extract_vehicle_capabilities(data: dict[str, Any]) -> set[Capability]:
 class CapabilitySelector:
     """Class to select which entities will be added to Home Assistant based on vehicle capabilities."""
 
-    def __init__(self, hass: HomeAssistant, vehicle_data: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        vehicle_data: Any,
+        errors: Sequence[VehicleError] = (),
+    ) -> None:
         """Extract the vehicle capabilities from the provided data."""
         self.hass = hass
 
@@ -152,9 +188,10 @@ class CapabilitySelector:
             raw_data = {}
 
         vin = getattr(vehicle_data, "vin", None)
-        _LOGGER.debug("[%s] Vehicle DATA: %s", vin, vehicle_data)
 
-        self.car_capabilities: set[Capability] = extract_vehicle_capabilities(raw_data)
+        self.car_capabilities: set[Capability] = extract_vehicle_capabilities(
+            raw_data, errors
+        )
         _LOGGER.debug("[%s] CAPABILITIES: %s", vin, self.car_capabilities)
         self.entities: list[Entity] = []
 
@@ -227,10 +264,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.coordinator
     if coordinator.data and coordinator.data.vehicle_response:
         vehicle_data = coordinator.data.vehicle_response.vehicle
+        errors = coordinator.data.vehicle_response.errors
     else:
         vehicle_data = None
+        errors = ()
 
-    selector = CapabilitySelector(hass, vehicle_data)
+    selector = CapabilitySelector(hass, vehicle_data, errors)
 
     selector.add_entity(MileAge, coordinator)
     selector.add_entity(LastSynchronization, coordinator)
@@ -330,7 +369,10 @@ class FuelLevel(SkodaSensor):
         if driving_range is not None:
             # Display primary engine range
             primary_engine = driving_range.primary_engine_range
-            if primary_engine is not None:
+            if (
+                primary_engine is not None
+                and primary_engine.current_fuel_level_in_percent is not None
+            ):
                 return primary_engine.current_fuel_level_in_percent
 
             # Display secondary engine range
@@ -341,9 +383,23 @@ class FuelLevel(SkodaSensor):
         return None
 
     @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.FUEL_STATUS]
+    def capabilities() -> list[Any]:
+        """Return the capabilities required for this entity.
+
+        Requires a combustion-capable car type in addition to FUEL_STATUS,
+        since an electric vehicle also reports FUEL_STATUS but never a fuel
+        level, which would otherwise create a permanently unknown entity.
+        """
+        return [
+            Capability.FUEL_STATUS,
+            [
+                Capability.CT_GASOLINE,
+                Capability.CT_DIESEL,
+                Capability.CT_HYBRID,
+                Capability.CT_CNG,
+                Capability.CT_LPG,
+            ],
+        ]
 
 
 class BatteryPercentage(SkodaSensor):
@@ -668,16 +724,27 @@ class PresetTemperatureValue(SkodaSensor):
     entity_description = SensorEntityDescription(
         key="preset_temperature_value",
         translation_key="preset_temperature_value",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
     )
 
     @property
     @override
+    def native_unit_of_measurement(self) -> str:
+        ac = self.open_api_air_conditioning
+        if (
+            ac
+            and ac.target_temperature
+            and ac.target_temperature.unit == TemperatureUnit.FAHRENHEIT
+        ):
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
+
+    @property
+    @override
     def native_value(self) -> float | None:
         ac = self.open_api_air_conditioning
-        if not ac:
+        if not ac or ac.target_temperature is None:
             return None
 
         return ac.target_temperature.value

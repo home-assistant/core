@@ -615,58 +615,6 @@
     'state': '513.0',
   })
 # ---
-# name: test_sensors[sensor.enyaq_coupe_fuel_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.enyaq_coupe_fuel_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Fuel level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:gas-station',
-    'original_name': 'Fuel level',
-    'platform': 'skoda',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'fuel_level',
-    'unique_id': 'TMBJM7NP2M1TMP511_fuel_level',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_fuel_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Fuel level',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:gas-station',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_fuel_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensors[sensor.enyaq_coupe_last_synchronization-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -827,7 +775,7 @@
     'state': '2024-01-10T12:05:00+00:00',
   })
 # ---
-# name: test_sensors[sensor.enyaq_coupe_registation_plate-entry]
+# name: test_sensors[sensor.enyaq_coupe_registration_plate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -841,7 +789,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.enyaq_coupe_registation_plate',
+    'entity_id': 'sensor.enyaq_coupe_registration_plate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -849,12 +797,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Registation plate',
+    'object_id_base': 'Registration plate',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:alpha-r-box-outline',
-    'original_name': 'Registation plate',
+    'original_name': 'Registration plate',
     'platform': 'skoda',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -864,14 +812,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.enyaq_coupe_registation_plate-state]
+# name: test_sensors[sensor.enyaq_coupe_registration_plate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Registation plate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Registration plate',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:alpha-r-box-outline',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_registation_plate',
+    'entity_id': 'sensor.enyaq_coupe_registration_plate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
