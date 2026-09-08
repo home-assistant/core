@@ -190,6 +190,9 @@
       "battery_backup_reserve": {
         "name": "Battery backup reserve"
       },
+      "charging_current": {
+        "name": "Charging current"
+      },
       "cloud_recipe": {
         "name": "Cloud recipe"
       },
@@ -336,6 +339,15 @@
       },
       "brightness": {
         "name": "Brightness"
+      },
+      "charger_work_mode": {
+        "name": "Charging mode",
+        "state": {
+          "charge_energy": "Charge by energy",
+          "charge_now": "Charge now",
+          "charge_pct": "Charge to percentage",
+          "charge_schedule": "Scheduled"
+        }
       },
       "concentration": {
         "name": "Concentration"
