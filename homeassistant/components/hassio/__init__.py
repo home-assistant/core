@@ -390,7 +390,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="supervisor_not_connected",
         ) from err
 
-    # During onboarding, Supervisor may be out of date. Attempt an update now
+    # During onboarding, Supervisor may be out of date. Refresh its version
+    # information, since it only does so once a day, and attempt an update now
     # so that core loads against an up-to-date Supervisor. A
     # SupervisorBadRequestError means there is no update available, proceed
     # normally. No exception means an update was triggered and we must wait for
@@ -398,6 +399,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # wrong and we cannot proceed right now.
     if not async_is_onboarded(hass):
         try:
+            await supervisor_client.reload_updates()
             await supervisor_client.supervisor.update()
         except SupervisorBadRequestError:
             pass  # No update available, proceed normally.
