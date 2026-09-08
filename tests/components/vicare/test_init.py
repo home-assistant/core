@@ -34,12 +34,14 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.util import dt as dt_util
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+# From a real rate limit response: 2026-09-09T00:00:04.144Z.
+QUOTA_RESET_MS = 1788912004144
 
 # 16-character zigbee IEEE address shared by the FHT fixtures.
 ZIGBEE_IEEE = "#" * 16
@@ -318,6 +320,7 @@ async def test_coordinator_backs_off_until_the_quota_resets(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a rate limited refresh defers the next one to the reset time."""
+    freezer.move_to("2026-09-08 20:00:04+00:00")
     fixtures: list[Fixture] = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
     mock_vicare = MockPyViCare(fixtures)
     service = mock_vicare.devices[0].service
@@ -341,8 +344,7 @@ async def test_coordinator_backs_off_until_the_quota_resets(
             "extendedPayload": {
                 "name": "development portal",
                 "requestCountLimit": 1450,
-                "limitReset": (dt_util.utcnow() + timedelta(hours=4)).timestamp()
-                * 1000,
+                "limitReset": QUOTA_RESET_MS,
             }
         }
     )
@@ -367,8 +369,10 @@ async def test_coordinator_backs_off_until_the_quota_resets(
 async def test_coordinator_backs_off_when_the_reset_has_passed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a reset time in the past still defers, instead of retrying at once."""
+    freezer.move_to("2026-09-09 01:00:04+00:00")
     fixtures: list[Fixture] = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
     mock_vicare = MockPyViCare(fixtures)
     service = mock_vicare.devices[0].service
@@ -392,8 +396,7 @@ async def test_coordinator_backs_off_when_the_reset_has_passed(
             "extendedPayload": {
                 "name": "development portal",
                 "requestCountLimit": 1450,
-                "limitReset": (dt_util.utcnow() - timedelta(hours=1)).timestamp()
-                * 1000,
+                "limitReset": QUOTA_RESET_MS,
             }
         }
     )
