@@ -1,5 +1,6 @@
 """Test the Litter-Robot camera entity."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylitterbot.camera import CameraSession
@@ -9,6 +10,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.litterrobot.camera import _build_ice_servers
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .conftest import setup_integration
 
@@ -127,10 +129,10 @@ async def test_webrtc_candidate_for_unknown_session_is_ignored(
     await entity.async_on_webrtc_candidate("never-opened", candidate)
 
 
-async def test_camera_image_returns_none(
+async def test_camera_image_returns_placeholder(
     hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
 ) -> None:
-    """The device has no snapshot endpoint, so no still is offered."""
+    """No snapshot endpoint exists, so a placeholder still is served."""
     mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
     mock_client.generate_session = AsyncMock(
         return_value=CameraSession.from_response(MOCK_SESSION_DATA)
@@ -138,7 +140,13 @@ async def test_camera_image_returns_none(
     await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
 
     entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
-    assert await entity.async_camera_image() is None
+    image = await entity.async_camera_image()
+    # returning None here would make every thumbnail request raise
+    # "Unable to get image"
+    assert image is not None
+    assert image.startswith(b"\x89PNG\r\n\x1a\n")
+    # the placeholder is a png; the base class would otherwise claim jpeg
+    assert entity.content_type == "image/png"
 
 
 def _session(*creds: dict) -> CameraSession:
@@ -266,3 +274,62 @@ async def test_expired_session_offers_no_ice_servers(
 
     await hass.async_block_till_done()
     assert entity._cached_session is not None
+
+
+async def test_session_refreshed_before_expiry(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """A session close to expiry is still served while it is topped up."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    soon = dt_util.utcnow() + timedelta(minutes=1)
+    entity._cached_session = CameraSession.from_response(
+        {
+            **MOCK_SESSION_DATA,
+            "sessionExpiration": soon.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+        }
+    )
+
+    before = mock_client.generate_session.call_count
+    config = entity._async_get_webrtc_client_configuration()
+    # not expired yet, so the credentials are still handed out ...
+    assert config.configuration.ice_servers != []
+    # ... and a replacement is fetched ahead of expiry
+    assert mock_client.generate_session.call_count == before + 1
+
+    await hass.async_block_till_done()
+
+
+async def test_removal_awaits_relay_teardown(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """Relays are closed before the entity goes away, not left to a task."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    relay = MagicMock()
+    relay.start = AsyncMock()
+    relay.close = AsyncMock()
+
+    with patch(
+        "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+        return_value=relay,
+    ):
+        await entity.async_handle_async_webrtc_offer(
+            "v=0\r\n", "session-teardown", MagicMock()
+        )
+
+    await entity.async_will_remove_from_hass()
+    # closed by the time removal returns, without needing the event loop to
+    # run a scheduled task afterwards
+    assert relay.close.called
+    assert entity._relays == {}

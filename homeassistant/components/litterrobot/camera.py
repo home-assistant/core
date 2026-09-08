@@ -1,6 +1,9 @@
 """Support for Litter-Robot cameras."""
 
+from datetime import timedelta
+import functools
 import logging
+from pathlib import Path
 from typing import Any, override
 
 from pylitterbot import LitterRobot5
@@ -28,6 +31,11 @@ from .entity import LitterRobotEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+PLACEHOLDER = Path(__file__).parent / "placeholder.png"
+
+# refresh this far ahead of expiry so a stream never starts without TURN
+SESSION_REFRESH_MARGIN = timedelta(minutes=5)
 
 
 async def async_setup_entry(
@@ -98,19 +106,28 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         Camera.__init__(self)
         self._relays: dict[str, CameraSignalingRelay] = {}
         self._cached_session: CameraSession | None = None
+        self._refreshing = False
+        # the placeholder returned by async_camera_image is a PNG, not the
+        # jpeg the base class assumes
+        self.content_type = "image/png"
 
     @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """Return no still image.
+        """Return a placeholder image.
 
-        The device exposes WebRTC streaming and recorded clips only -- there is
-        no snapshot endpoint to call. Returning None reports that honestly;
-        the inherited implementation would raise NotImplementedError at any
-        caller asking for a thumbnail.
+        The device streams over WebRTC and has no snapshot endpoint. Returning
+        None would make every thumbnail request raise "Unable to get image",
+        so a placeholder is served instead, as other WebRTC-only cameras do.
         """
-        return None
+        return await self.hass.async_add_executor_job(self.placeholder_image)
+
+    @classmethod
+    @functools.cache
+    def placeholder_image(cls) -> bytes:
+        """Return the placeholder image used when no still is available."""
+        return PLACEHOLDER.read_bytes()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -120,6 +137,9 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
 
     async def _refresh_cached_session(self) -> None:
         """Fetch a fresh camera session to keep TURN credentials current."""
+        if self._refreshing:
+            return
+        self._refreshing = True
         try:
             client = self.robot.get_camera_client()
             # Use auto_start=False — we only need TURN credentials here,
@@ -131,6 +151,8 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
             )
         except Exception:
             _LOGGER.debug("Failed to refresh camera session", exc_info=True)
+        finally:
+            self._refreshing = False
 
     @callback
     @override
@@ -138,12 +160,15 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         """Return the WebRTC client configuration with TURN servers."""
         session = self._cached_session
         if session and session.session_expiration:
-            if session.session_expiration <= dt_util.utcnow():
-                _LOGGER.debug("Camera session expired, will refresh in background")
-                session = None
-                # drop it before scheduling: otherwise every configuration
-                # request while expired queues another refresh task
-                self._cached_session = None
+            remaining = session.session_expiration - dt_util.utcnow()
+            if remaining <= SESSION_REFRESH_MARGIN:
+                if remaining <= timedelta(0):
+                    # expired: withhold rather than hand out stale credentials
+                    _LOGGER.debug("Camera session expired, will refresh in background")
+                    session = None
+                    self._cached_session = None
+                # still valid but close to expiry: keep serving it and top up
+                # in the background, so a stream never starts without TURN
                 self.hass.async_create_task(self._refresh_cached_session())
         ice_servers = _build_ice_servers(session) if session else []
         return WebRTCClientConfiguration(
@@ -227,9 +252,18 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
             self.hass.async_create_task(relay.close())
         super().close_webrtc_session(session_id)
 
+    async def async_close_webrtc_session(self, session_id: str) -> None:
+        """Close a WebRTC session, awaiting the relay teardown."""
+        if relay := self._relays.pop(session_id, None):
+            _LOGGER.debug("Closing WebRTC session %s", session_id)
+            await relay.close()
+        super().close_webrtc_session(session_id)
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Close all active relays when the entity is removed."""
         for session_id in list(self._relays):
-            self.close_webrtc_session(session_id)
+            # awaited, not fire-and-forget: the entity is going away and a
+            # scheduled task may never run
+            await self.async_close_webrtc_session(session_id)
         await super().async_will_remove_from_hass()
