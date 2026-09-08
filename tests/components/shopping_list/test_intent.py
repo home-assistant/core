@@ -58,7 +58,7 @@ async def test_add_item_intent_keeps_existing_active_match(
     assert not events
 
 
-async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
+async def test_complete_item_intent(hass: HomeAssistant, sl_setup: None) -> None:
     """Test complete item."""
     shopping_data = _get_shopping_data(hass)
     await shopping_data.async_add("soda")
