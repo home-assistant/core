@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the ViCare integration."""
 
-from datetime import timedelta
+from datetime import UTC, timedelta
 import logging
 from typing import override
 
@@ -19,11 +19,15 @@ import requests
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_CACHE_DURATION, DOMAIN
 from .types import ViCareConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+# The quota window is a day, so a reset further out than that is not credible.
+MAX_RATE_LIMIT_BACKOFF = 86400
 
 
 class ViCareCoordinator(DataUpdateCoordinator[None]):
@@ -73,11 +77,21 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             )
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
+        except PyViCareRateLimitError as err:
+            # limitResetDate is naive UTC. Clamped because a stale or skewed reset
+            # time would otherwise retry at once against a quota that is still spent.
+            reset = err.limitResetDate.replace(tzinfo=UTC)
+            delay = (reset - dt_util.utcnow()).total_seconds()
+            raise UpdateFailed(
+                str(err),
+                retry_after=min(
+                    max(delay, DEFAULT_CACHE_DURATION), MAX_RATE_LIMIT_BACKOFF
+                ),
+            ) from err
         except (
             PyViCareDeviceCommunicationError,
             PyViCareInternalServerError,
             PyViCareInvalidDataError,
-            PyViCareRateLimitError,
             requests.RequestException,
         ) as err:
             raise UpdateFailed(str(err)) from err

@@ -12,6 +12,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
+    PyViCareRateLimitError,
 )
 
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
@@ -33,6 +34,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.util import dt as dt_util
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
@@ -308,6 +310,98 @@ async def test_setup_entry_transient_error(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_backs_off_until_the_quota_resets(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rate limited refresh defers the next one to the reset time."""
+    fixtures: list[Fixture] = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.devices[0].coordinator
+    assert coordinator is not None
+
+    service.fetch_all_features.side_effect = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "development portal",
+                "requestCountLimit": 1450,
+                "limitReset": (dt_util.utcnow() + timedelta(hours=4)).timestamp()
+                * 1000,
+            }
+        }
+    )
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False
+    assert coordinator.last_exception.retry_after == pytest.approx(4 * 3600, abs=5)
+
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # Asserting on retry_after alone would pass even if scheduling ignored it.
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert service.fetch_all_features.call_count > calls
+
+
+async def test_coordinator_backs_off_when_the_reset_has_passed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a reset time in the past still defers, instead of retrying at once."""
+    fixtures: list[Fixture] = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.devices[0].coordinator
+    assert coordinator is not None
+
+    service.fetch_all_features.side_effect = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "development portal",
+                "requestCountLimit": 1450,
+                "limitReset": (dt_util.utcnow() - timedelta(hours=1)).timestamp()
+                * 1000,
+            }
+        }
+    )
+    await coordinator.async_refresh()
+
+    # A zero delay would make the coordinator reschedule immediately and hammer
+    # a quota that is still spent.
+    assert coordinator.last_exception.retry_after >= DEFAULT_CACHE_DURATION
 
 
 async def test_setup_entry_invalid_credentials(
