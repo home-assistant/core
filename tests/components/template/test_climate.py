@@ -899,7 +899,7 @@ async def test_bad_min_max_options(
 )
 @pytest.mark.usefixtures("setup_climate")
 async def test_target_temperature_step(
-    hass: HomeAssistant, set_attribute: str, expected: Any
+    hass: HomeAssistant, set_attribute: str, expected: float
 ) -> None:
     """Test target temperature step."""
     await async_trigger(
@@ -936,7 +936,7 @@ async def test_target_temperature_step(
 )
 @pytest.mark.usefixtures("setup_climate")
 async def test_target_humidity_step(
-    hass: HomeAssistant, set_attribute: str, expected: Any
+    hass: HomeAssistant, set_attribute: int, expected: int
 ) -> None:
     """Test target humidity step."""
     await async_trigger(
@@ -1042,7 +1042,7 @@ async def test_bad_precision_option(
     [UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS, UnitOfTemperature.KELVIN],
 )
 async def test_temperature_unit(
-    hass: HomeAssistant, style: ConfigurationStyle, value: float
+    hass: HomeAssistant, style: ConfigurationStyle, value: str
 ) -> None:
     """Test temperature_unit option."""
     platform = TEST_CLIMATE
