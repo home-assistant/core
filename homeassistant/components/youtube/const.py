@@ -13,6 +13,9 @@ CONF_UPLOAD_PLAYLIST = "upload_playlist_id"
 
 SUBENTRY_TYPE_CHANNEL = "channel"
 
+# The YouTube channels.list API accepts at most 50 ids per request
+MAX_CHANNEL_IDS_PER_REQUEST = 50
+
 LOGGER = logging.getLogger(__package__)
 
 ATTR_TITLE = "title"

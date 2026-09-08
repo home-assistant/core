@@ -1,10 +1,12 @@
 """Tests for YouTube."""
 
+from collections.abc import AsyncGenerator
 import http
 import time
 from unittest.mock import patch
 
 import pytest
+from youtubeaio.models import YouTubeChannel
 
 from homeassistant.components.youtube.const import (
     CONF_CHANNEL_ID,
@@ -376,6 +378,59 @@ async def test_missing_channel_does_not_affect_other_channels(
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
     assert diagnostics[CHANNEL_ID]["title"] == "Google for Developers"
     assert LINUS_CHANNEL_ID not in diagnostics
+
+
+async def test_more_channels_than_the_api_limit_are_chunked(
+    hass: HomeAssistant,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test channel ids are fetched in chunks of at most 50."""
+    channel_ids = [f"UC_channel_{i}" for i in range(51)]
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=CHANNEL_ID,
+        version=2,
+        data=mock_entry_data(expires_at, scopes),
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_CHANNEL_ID: channel_id},
+                subentry_id=f"channel_{i}",
+                subentry_type=SUBENTRY_TYPE_CHANNEL,
+                title=f"Channel {i}",
+                unique_id=channel_id,
+            )
+            for i, channel_id in enumerate(channel_ids)
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    mock = MockYouTube(hass)
+    requested_id_chunks: list[list[str]] = []
+    mock_get_channels = mock.get_channels
+
+    async def get_channels(channel_ids: list[str]) -> AsyncGenerator[YouTubeChannel]:
+        requested_id_chunks.append(list(channel_ids))
+        async for channel in mock_get_channels(channel_ids):
+            yield channel
+
+    mock.get_channels = get_channels
+
+    # None of the channels is known to the API
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=mock,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert requested_id_chunks == [channel_ids[:50], channel_ids[50:]]
+    assert entry.runtime_data.data == {}
+    state = hass.states.get("sensor.channel_0_subscribers")
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_migration_channel_missing_from_api(
