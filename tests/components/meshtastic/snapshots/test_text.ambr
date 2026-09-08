@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_all_entities[text.ha_gateway_time_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <TextEntityCapabilityAttribute.MAX: 'max'>: 64,
+      <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
+      <TextEntityCapabilityAttribute.PATTERN: 'pattern'>: None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.ha_gateway_time_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time zone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Time zone',
+    'platform': 'meshtastic',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_tzdef',
+    'unique_id': '!2e9545b8_device_tzdef',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[text.ha_gateway_time_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Gateway Time zone',
+      <TextEntityCapabilityAttribute.MAX: 'max'>: 64,
+      <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
+      <TextEntityCapabilityAttribute.PATTERN: 'pattern'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.ha_gateway_time_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'CET-1CEST,M3.5.0,M10.5.0/3',
+  })
+# ---

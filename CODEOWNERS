@@ -1144,6 +1144,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator
 /tests/components/melnor/ @vanstinator
+/homeassistant/components/meshtastic/ @shain
+/tests/components/meshtastic/ @shain
 /homeassistant/components/met/ @danielhiversen
 /tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore

@@ -1,0 +1,81 @@
+{
+  "!2e9545b8": {
+    "num": 781534648,
+    "user": {
+      "id": "!2e9545b8",
+      "longName": "HA Gateway",
+      "shortName": "HAGW",
+      "hwModel": "TBEAM",
+      "role": "CLIENT",
+      "publicKey": "ERERERERERERERERERERERERERERERERERERERERERE="
+    },
+    "position": {
+      "latitudeI": 521234567,
+      "longitudeI": 131234567,
+      "altitude": 38,
+      "time": 1757300100,
+      "locationSource": "LOC_MANUAL",
+      "latitude": 52.1234567,
+      "longitude": 13.1234567
+    },
+    "lastHeard": 1757300700,
+    "deviceMetrics": {
+      "batteryLevel": 101,
+      "voltage": 4.19,
+      "channelUtilization": 9.5,
+      "airUtilTx": 0.8,
+      "uptimeSeconds": 431
+    },
+    "isFavorite": true
+  },
+  "!aabbccdd": {
+    "num": 2864434397,
+    "user": {
+      "id": "!aabbccdd",
+      "longName": "Remote One",
+      "shortName": "RM1",
+      "hwModel": "HELTEC_V3",
+      "role": "ROUTER",
+      "publicKey": "IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI="
+    },
+    "position": {
+      "latitudeI": 521111111,
+      "longitudeI": 131111111,
+      "altitude": 42,
+      "time": 1757300299,
+      "precisionBits": 16,
+      "latitude": 52.1111111,
+      "longitude": 13.1111111
+    },
+    "snr": 5.5,
+    "lastHeard": 1757300480,
+    "deviceMetrics": {
+      "batteryLevel": 55,
+      "voltage": 3.81,
+      "channelUtilization": 12.5,
+      "airUtilTx": 1.2,
+      "uptimeSeconds": 99912
+    },
+    "hopsAway": 1,
+    "channel": 0
+  },
+  "!deadbeef": {
+    "num": 3735928559,
+    "user": {
+      "id": "!deadbeef",
+      "longName": "Weather Shed",
+      "shortName": "WSHD",
+      "hwModel": "RAK4631",
+      "role": "SENSOR"
+    },
+    "snr": -2.5,
+    "lastHeard": 1757300420,
+    "environmentMetrics": {
+      "temperature": 21.5,
+      "relativeHumidity": 48.2,
+      "barometricPressure": 1013.25
+    },
+    "hopsAway": 2,
+    "viaMqtt": true
+  }
+}

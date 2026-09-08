@@ -1,0 +1,191 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "has_public_key": {
+        "default": "mdi:key-chain-variant"
+      },
+      "key_manually_verified": {
+        "default": "mdi:key-star"
+      },
+      "licensed": {
+        "default": "mdi:card-account-details"
+      },
+      "via_mqtt": {
+        "default": "mdi:transit-connection-variant"
+      }
+    },
+    "button": {
+      "request_node_info": {
+        "default": "mdi:card-account-details"
+      },
+      "request_position": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "request_telemetry": {
+        "default": "mdi:chart-line"
+      }
+    },
+    "device_tracker": {
+      "position": {
+        "default": "mdi:map-marker-radius"
+      }
+    },
+    "event": {
+      "message": {
+        "default": "mdi:message-text"
+      }
+    },
+    "notify": {
+      "channel": {
+        "default": "mdi:bullhorn"
+      },
+      "direct_message": {
+        "default": "mdi:message-arrow-right"
+      }
+    },
+    "number": {
+      "device_node_info_broadcast_secs": {
+        "default": "mdi:timer-outline"
+      },
+      "lora_hop_limit": {
+        "default": "mdi:transit-connection-variant"
+      }
+    },
+    "select": {
+      "device_buzzer_mode": {
+        "default": "mdi:bullhorn-outline"
+      }
+    },
+    "sensor": {
+      "air_util_tx": {
+        "default": "mdi:radio-tower"
+      },
+      "channel_utilization": {
+        "default": "mdi:signal"
+      },
+      "connection_state": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "circuit_open": "mdi:lan-disconnect",
+          "connecting": "mdi:lan-pending",
+          "disconnected": "mdi:lan-disconnect",
+          "reconnecting": "mdi:lan-pending"
+        }
+      },
+      "gas_resistance": {
+        "default": "mdi:gas-cylinder"
+      },
+      "hops_away": {
+        "default": "mdi:transit-connection-variant"
+      },
+      "last_heard": {
+        "default": "mdi:clock-outline"
+      },
+      "last_packet_received": {
+        "default": "mdi:clock-outline"
+      },
+      "node_count": {
+        "default": "mdi:sitemap"
+      },
+      "nodedb_count": {
+        "default": "mdi:database"
+      },
+      "num_online_nodes": {
+        "default": "mdi:lan-connect"
+      },
+      "num_packets_rx": {
+        "default": "mdi:package-down"
+      },
+      "num_packets_rx_bad": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "num_packets_tx": {
+        "default": "mdi:package-up"
+      },
+      "num_rx_dupe": {
+        "default": "mdi:content-duplicate"
+      },
+      "num_total_nodes": {
+        "default": "mdi:lan"
+      },
+      "num_tx_dropped": {
+        "default": "mdi:tray-remove"
+      },
+      "num_tx_relay": {
+        "default": "mdi:share-variant"
+      },
+      "num_tx_relay_canceled": {
+        "default": "mdi:share-off"
+      },
+      "pm_nox_idx": {
+        "default": "mdi:molecule"
+      },
+      "pm_voc_idx": {
+        "default": "mdi:molecule"
+      },
+      "radiation": {
+        "default": "mdi:radioactive"
+      }
+    },
+    "switch": {
+      "device_led_heartbeat_disabled": {
+        "default": "mdi:led-off"
+      },
+      "favorite": {
+        "default": "mdi:star"
+      },
+      "ignored": {
+        "default": "mdi:account-cancel"
+      },
+      "lora_config_ok_to_mqtt": {
+        "default": "mdi:cog-transfer"
+      },
+      "lora_ignore_mqtt": {
+        "default": "mdi:transit-transfer"
+      },
+      "lora_override_duty_cycle": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "lora_tx_enabled": {
+        "default": "mdi:radio-tower"
+      }
+    },
+    "text": {
+      "device_tzdef": {
+        "default": "mdi:map-clock-outline"
+      }
+    }
+  },
+  "services": {
+    "export_config": {
+      "service": "mdi:file-export"
+    },
+    "reboot": {
+      "service": "mdi:restart"
+    },
+    "refresh_nodes": {
+      "service": "mdi:database-refresh"
+    },
+    "remove_node": {
+      "service": "mdi:database-remove"
+    },
+    "request_position": {
+      "service": "mdi:crosshairs-gps"
+    },
+    "request_telemetry": {
+      "service": "mdi:chart-line"
+    },
+    "request_traceroute": {
+      "service": "mdi:transit-connection-variant"
+    },
+    "send_message": {
+      "service": "mdi:message-arrow-right"
+    },
+    "set_favorite": {
+      "service": "mdi:star"
+    },
+    "set_ignored": {
+      "service": "mdi:account-cancel"
+    }
+  }
+}

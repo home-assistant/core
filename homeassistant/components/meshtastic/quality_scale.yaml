@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      The integration does not poll. The node pushes packets over its TCP API
+      and the coordinator republishes them.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities subscribe to the coordinator through CoordinatorEntity, which
+      handles subscription and teardown. The only subscriptions to the library
+      are owned by the client and torn down when the entry unloads.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      The node's TCP API has no authentication; there is nothing to
+      re-authenticate.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      Every exception this integration raises carries a translation key, and a
+      parametrized test walks all of them. The two administrator-only actions
+      also raise Home Assistant's own Unauthorized, from
+      async_register_admin_service, which has no translation key; the rule's
+      test helper counts that against the integration, so the rule cannot be
+      claimed while those actions are tested for it.
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: done
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: |
+      The meshtastic library is synchronous and thread based by design. Every
+      call into it is wrapped in async_add_executor_job, and its callbacks are
+      marshalled back onto the event loop with call_soon_threadsafe.
+  inject-websession:
+    status: exempt
+    comment: |
+      The integration talks to the node over a raw TCP socket owned by the
+      library; there is no HTTP session to inject.
+  strict-typing: todo

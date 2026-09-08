@@ -1,0 +1,155 @@
+export_config:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+
+reboot:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    delay:
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 300
+          mode: box
+          unit_of_measurement: seconds
+    confirm:
+      required: true
+      selector:
+        boolean:
+
+refresh_nodes:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+
+remove_node:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+    confirm:
+      required: true
+      selector:
+        boolean:
+
+request_position:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+
+request_telemetry:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+    telemetry_type:
+      default: device
+      selector:
+        select:
+          translation_key: telemetry_type
+          options:
+            - device
+            - environment
+            - power
+            - air_quality
+            - local_stats
+
+request_traceroute:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+
+send_message:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    message:
+      required: true
+      example: The shed door is open
+      selector:
+        text:
+          multiline: true
+    node:
+      example: "!aabbccdd"
+      selector:
+        text:
+    channel:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 7
+          mode: box
+    want_ack:
+      default: true
+      selector:
+        boolean:
+
+set_favorite:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+    enabled:
+      default: true
+      selector:
+        boolean:
+
+set_ignored:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+    enabled:
+      default: true
+      selector:
+        boolean:

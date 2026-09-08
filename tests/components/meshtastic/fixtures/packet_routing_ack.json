@@ -1,0 +1,17 @@
+{
+  "from": 2864434397,
+  "to": 781534648,
+  "fromId": "!aabbccdd",
+  "toId": "!2e9545b8",
+  "channel": 0,
+  "id": 987654321,
+  "rxTime": 1757300500,
+  "priority": "ACK",
+  "decoded": {
+    "portnum": "ROUTING_APP",
+    "requestId": 111222333,
+    "routing": {
+      "errorReason": "NONE"
+    }
+  }
+}

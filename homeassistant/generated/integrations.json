@@ -4332,6 +4332,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "meshtastic": {
+      "name": "Meshtastic",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",
