@@ -1,5 +1,6 @@
 """Test Home Assistant exposed entities helper."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,6 +13,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     LEGACY_ENTITY_PURGE_INTERVAL,
     LEGACY_ENTITY_SWEEP_CHUNK_SIZE,
     LEGACY_ENTITY_SWEEP_INTERVAL,
+    STORAGE_VERSION_MINOR,
     ExposedEntities,
     ExposedEntity,
     async_expose_entity,
@@ -737,6 +739,33 @@ async def test_legacy_orphaned_since_persists_across_restart(
         exposed_entities2.entities["sensor.long_gone"].orphaned_since
         == exposed_entities.entities["sensor.long_gone"].orphaned_since
     )
+
+
+async def test_orphaned_since_stored_outside_records(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Orphan timestamps are stored in a top-level map, not on the records.
+
+    Cores from before orphan tracking build records via
+    ExposedEntity(**preferences) and would fail setup on an unknown per-record
+    key after a downgrade; a sibling key they never read is ignored, so a
+    downgrade only loses the orphan tracking itself.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    await exposed_entities._async_purge_stale_legacy_entities(dt_util.utcnow())
+    await flush_store(exposed_entities._store)
+
+    stored = hass_storage["homeassistant.exposed_entities"]
+    assert stored["minor_version"] == STORAGE_VERSION_MINOR
+    assert stored["data"]["exposed_entities"]["sensor.long_gone"] == {
+        "assistants": {"test1": {"should_expose": True}}
+    }
+    assert stored["data"]["orphaned"] == {
+        "sensor.long_gone": exposed_entities.entities["sensor.long_gone"].orphaned_since
+    }
 
 
 async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:

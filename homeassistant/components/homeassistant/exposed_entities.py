@@ -6,7 +6,7 @@ import dataclasses
 from datetime import datetime, timedelta
 from itertools import chain
 import time
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import voluptuous as vol
 
@@ -46,6 +46,10 @@ KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
+# Minor 2 adds the top-level "orphaned" map. Minor-only bumps load in both
+# directions: an older core falls back to reading the data as-is and never
+# looks at the extra key.
+STORAGE_VERSION_MINOR = 2
 
 SAVE_DELAY = 10
 
@@ -119,19 +123,18 @@ class ExposedEntity:
 
     assistants: dict[str, dict[str, Any]]
     # time.time() when this entity's state was first observed missing, or
-    # None if it currently has a state. Tracked per-record (rather than in a
-    # separate entity_id -> timestamp map) so a store full of orphaned
-    # legacy records doesn't need a second, equally large index alongside it.
+    # None if it currently has a state. Kept on the record in memory so a
+    # store full of orphaned legacy records doesn't need a second, equally
+    # large index alongside it; see to_json for why storage differs.
     orphaned_since: float | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
-        data: dict[str, Any] = {"assistants": self.assistants}
-        # Omitted when None so untouched records serialize exactly as they
-        # did before orphan tracking existed.
-        if self.orphaned_since is not None:
-            data["orphaned_since"] = self.orphaned_since
-        return data
+        # orphaned_since deliberately stays off the record: loaders from
+        # before orphan tracking build records via ExposedEntity(**prefs) and
+        # a downgrade after a sweep would fail setup on an unknown key. It is
+        # persisted in a top-level "orphaned" map those loaders never read.
+        return {"assistants": self.assistants}
 
 
 class SerializedExposedEntities(TypedDict):
@@ -139,6 +142,7 @@ class SerializedExposedEntities(TypedDict):
 
     assistants: dict[str, dict[str, Any]]
     exposed_entities: dict[str, dict[str, Any]]
+    orphaned: NotRequired[dict[str, float]]
 
 
 class ExposedEntities:
@@ -156,7 +160,11 @@ class ExposedEntities:
         self._hass = hass
         self._listeners: dict[str, list[Callable[[], None]]] = {}
         self._store: Store[SerializedExposedEntities] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY, serialize_in_event_loop=False
+            hass,
+            STORAGE_VERSION,
+            STORAGE_KEY,
+            minor_version=STORAGE_VERSION_MINOR,
+            serialize_in_event_loop=False,
         )
 
     async def async_initialize(self) -> None:
@@ -520,8 +528,11 @@ class ExposedEntities:
                 assistants[domain] = AssistantPreferences(**preferences)
 
         if data and "exposed_entities" in data:
+            orphaned = data.get("orphaned") or {}
             for entity_id, preferences in data["exposed_entities"].items():
-                exposed_entities[entity_id] = ExposedEntity(**preferences)
+                exposed_entities[entity_id] = ExposedEntity(
+                    **preferences, orphaned_since=orphaned.get(entity_id)
+                )
 
         self._assistants = assistants
         self.entities = exposed_entities
@@ -541,7 +552,7 @@ class ExposedEntities:
         # _assistants being mutated on the event loop mid-iteration.
         assistants = list(self._assistants.items())
         entities = list(self.entities.items())
-        return {
+        data: SerializedExposedEntities = {
             "assistants": {
                 domain: preferences.to_json() for domain, preferences in assistants
             },
@@ -549,6 +560,13 @@ class ExposedEntities:
                 entity_id: entity.to_json() for entity_id, entity in entities
             },
         }
+        if orphaned := {
+            entity_id: entity.orphaned_since
+            for entity_id, entity in entities
+            if entity.orphaned_since is not None
+        }:
+            data["orphaned"] = orphaned
+        return data
 
 
 @callback
