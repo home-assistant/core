@@ -53,10 +53,9 @@ async def async_setup_entry(
         for dali_line_broadcast in dali_line_broadcasts
     ]
     entities.extend(
-        [
-            LunatoneLight(coordinator_devices, device_id, config_entry.unique_id)
-            for device_id in coordinator_devices.data
-        ]
+        LunatoneLight(coordinator_devices, line_id, device_id, config_entry.unique_id)
+        for line_id, devices in coordinator_devices.data.items()
+        for device_id in devices
     )
 
     async_add_entities(entities)
@@ -80,14 +79,17 @@ class LunatoneLight(
     def __init__(
         self,
         coordinator: LunatoneDevicesDataUpdateCoordinator,
+        line_id: int,
         device_id: int,
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone light."""
         super().__init__(coordinator)
+        self._line_id = line_id
         self._device_id = device_id
         self._config_entry_unique_id = config_entry_unique_id
-        self._device = self.coordinator.data[device_id]
+        self._device = self.coordinator.data[line_id][device_id]
+
         self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
 
     @property
@@ -183,7 +185,7 @@ class LunatoneLight(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data[self._device_id]
+        self._device = self.coordinator.data[self._line_id][self._device_id]
         self.async_write_ha_state()
 
     @override
@@ -302,9 +304,13 @@ class LunatoneLineBroadcastLight(
     @override
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return any(
-            device.data.line == self._broadcast.line and device.is_on
-            for device in self.coordinator.data.values()
+        return (
+            any(
+                device.is_on
+                for device in self.coordinator.data[self._broadcast.line].values()
+            )
+            if self._broadcast.line is not None
+            else False
         )
 
     @override
