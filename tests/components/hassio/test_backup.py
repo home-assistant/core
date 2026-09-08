@@ -2955,10 +2955,12 @@ async def test_reader_writer_restore_supervisor_up_to_date(
 
 
 @pytest.mark.parametrize(
-    "version_latest",
+    ("version_latest", "update_available"),
     [
-        pytest.param(None, id="unknown"),
-        pytest.param("2026.07.5", id="older_than_backup"),
+        pytest.param(None, False, id="unknown"),
+        pytest.param("2026.07.5", False, id="older_than_backup"),
+        # Development systems never report an update
+        pytest.param("2026.08.0", False, id="dev_system"),
     ],
 )
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
@@ -2968,6 +2970,7 @@ async def test_reader_writer_restore_no_supervisor_update(
     supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
     version_latest: str | None,
+    update_available: bool,
 ) -> None:
     """Test restoring a backup made on a newer Supervisor without a new enough update."""
     client = await hass_supervisor_ws_client()
@@ -2978,7 +2981,10 @@ async def test_reader_writer_restore_no_supervisor_update(
     )
     supervisor_client.jobs.get_job.return_value = TEST_JOB_DONE
     supervisor_info.return_value = replace(
-        supervisor_info.return_value, version="2026.07.5", version_latest=version_latest
+        supervisor_info.return_value,
+        version="2026.07.5",
+        version_latest=version_latest,
+        update_available=update_available,
     )
     supervisor_info.reset_mock()
 
@@ -3072,7 +3078,10 @@ async def test_reader_writer_restore_supervisor_update_error(
     )
     supervisor_client.supervisor.update.side_effect = update_error
     outdated = replace(
-        supervisor_info.return_value, version="2026.07.5", version_latest="2026.08.0"
+        supervisor_info.return_value,
+        version="2026.07.5",
+        version_latest="2026.08.0",
+        update_available=True,
     )
     supervisor_info.reset_mock()
     supervisor_info.side_effect = [outdated, info_error or outdated]

@@ -609,7 +609,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             if AwesomeVersion(info.version) >= backup_version:
                 return
             if (
-                info.version_latest is None
+                not info.update_available
+                or info.version_latest is None
                 or AwesomeVersion(info.version_latest) < backup_version
             ):
                 return
