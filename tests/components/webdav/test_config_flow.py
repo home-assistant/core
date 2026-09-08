@@ -57,9 +57,15 @@ async def test_form_fail(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
     """Test to handle exceptions."""
     webdav_client.check.return_value = False
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_URL: "https://webdav.demo",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "supersecretpassword",
@@ -104,9 +110,15 @@ async def test_form_unauthorized(
     """Test to handle unauthorized."""
     webdav_client.check.side_effect = exception
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_URL: "https://webdav.demo",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "supersecretpassword",
@@ -142,9 +154,15 @@ async def test_duplicate_entry(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_URL: "https://webdav.demo",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "supersecretpassword",

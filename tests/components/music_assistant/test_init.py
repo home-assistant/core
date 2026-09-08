@@ -49,13 +49,13 @@ async def test_remove_config_entry_device(
     music_assistant_client.config.remove_player_config = AsyncMock(
         side_effect=ActionUnavailable
     )
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 1
     assert response["success"] is False
 
     # test if the removal should be allowed if the device is not in use
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"] is True
     await hass.async_block_till_done()
     assert not device_registry.async_get(device_entry.id)
@@ -73,7 +73,7 @@ async def test_remove_config_entry_device(
     assert entity_registry.async_get(entity_id)
     assert hass.states.get(entity_id)
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 0
     assert response["success"] is True
 
@@ -165,6 +165,7 @@ async def test_player_config_expose_to_ha_toggle(
 
 async def test_authentication_required_triggers_reauth(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
     """Test that AuthenticationRequired exception triggers reauth flow."""
@@ -185,13 +186,13 @@ async def test_authentication_required_triggers_reauth(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
-    assert issue_reg.async_get_issue("homeassistant", issue_id)
+    assert issue_registry.async_get_issue("homeassistant", issue_id)
 
 
 async def test_authentication_required_addon_no_reauth(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
     """Test that AuthenticationRequired exception does not trigger reauth for addon."""
@@ -214,6 +215,5 @@ async def test_authentication_required_addon_no_reauth(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
-    assert issue_reg.async_get_issue("homeassistant", issue_id) is None
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is None

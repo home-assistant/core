@@ -1694,14 +1694,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     statistics_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Statistics",
-            "entity_id": "sensor.test_source",
+            "entity_id": "sensor.mock_title",
             "state_characteristic": "mean",
             "keep_last_sample": False,
             "percentile": 50.0,
@@ -1715,7 +1715,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(statistics_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    statistics_entity = entity_registry.async_get("sensor.statistics")
+    statistics_entity = entity_registry.async_get("sensor.mock_title_statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
 

@@ -201,6 +201,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "Mistral-Nemo-Instruct-2407",
         CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: [],
     }
 
 
@@ -499,5 +500,11 @@ async def test_reconfigure_conversation_agent_clears_llm_api(
 
     subentry = mock_config_entry.subentries[subentry_id]
     assert subentry.data[CONF_PROMPT] == "updated prompt"
-    assert CONF_LLM_HASS_API not in subentry.data
+    assert subentry.data[CONF_LLM_HASS_API] == []
     assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.default() == []

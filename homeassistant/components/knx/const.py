@@ -124,6 +124,7 @@ SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
 
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+REPAIR_ISSUE_ENTITY_VALIDATION_ERROR: Final = "entity_validation_error"
 REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 
@@ -209,10 +210,12 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.WEATHER,
 }
 
 # Map KNX controller modes to HA modes. This list might not be complete.
@@ -283,3 +286,16 @@ class SceneConf:
     """Common config keys for scene."""
 
     SCENE_NUMBER: Final = "scene_number"
+
+
+class SelectConf:
+    """Config keys for select."""
+
+    # shared between YAML and UI
+    OPTIONS: Final = "options"
+    OPTION: Final = "option"
+    # UI only
+    OPTIONS_SOURCE: Final = "options_source"
+    GA_ENUM: Final = "ga_enum"
+    GA_CUSTOM: Final = "ga_custom"
+    CUSTOM_OPTIONS: Final = "custom_options"

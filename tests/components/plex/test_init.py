@@ -210,8 +210,11 @@ async def test_setup_when_certificate_changed(
         """Mock the exception showing a mismatched hostname."""
 
         def __init__(self) -> None:  # pylint: disable=super-init-not-called
+            # Shaped the way it is really raised: OSError args of (errno, message)
             self.__context__ = ssl.SSLCertVerificationError(
-                f"hostname '{old_domain}' doesn't match"
+                1,
+                "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:"
+                f" Hostname mismatch, certificate is not valid for '{old_domain}'.",
             )
 
     old_domain = "1-2-3-4.1111111111ffffff1111111111ffffff.plex.direct"

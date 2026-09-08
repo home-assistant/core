@@ -1,6 +1,7 @@
 """Provide common notify constants."""
 
 import logging
+from typing import Final
 
 import voluptuous as vol
 
@@ -20,7 +21,7 @@ ATTR_RECIPIENTS = "recipients"
 # Title of notification
 ATTR_TITLE = "title"
 
-DOMAIN = "notify"
+DOMAIN: Final = "notify"
 
 LOGGER = logging.getLogger(__package__)
 

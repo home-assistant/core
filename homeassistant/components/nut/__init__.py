@@ -168,7 +168,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove NUT config entry from a device."""
     return not any(

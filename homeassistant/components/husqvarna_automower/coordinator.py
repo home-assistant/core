@@ -218,8 +218,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         registered_devices: set[str] = {
             str(mower_id)
-            for device in device_registry.devices.get_devices_for_config_entry_id(
-                self.config_entry.entry_id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
             )
             for domain, mower_id in device.identifiers
             if domain == DOMAIN

@@ -1,13 +1,13 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator, Iterator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 from uiprotect import ProtectApiClient
@@ -22,17 +22,27 @@ from uiprotect.data import (
     Light,
     Liveview,
     ModelType,
+    NvrArmMode,
+    NvrArmModeStatus,
     ProtectModelWithId,
+    PublicBootstrap,
     Sensor,
     SmartDetectObjectType,
     StateType,
+    Version,
     VideoMode,
     Viewer,
     WSSubscriptionMessage,
 )
+from uiprotect.data.public_devices import PublicNVR
+from uiprotect.exceptions import BadRequest, PublicOnlyModeError
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
 from homeassistant.const import (
     CONF_API_KEY,
@@ -51,6 +61,10 @@ from .utils import MockUFPFixture, make_public_camera, public_rtsps_for
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
+UNIFI_MAC = _async_unifi_mac_from_hass(MAC_ADDR)
+
+# The public-only NVR mock is named "Test NVR" (see ``ufp_public_only_client``)
+PUBLIC_ONLY_ALARM_ENTITY_ID = "alarm_control_panel.test_nvr_alarm_manager"
 
 # Common test data constants
 DEFAULT_HOST = "1.1.1.1"
@@ -169,28 +183,54 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.has_public_bootstrap = True
     client.is_public_only = False
 
+    # Only consulted on the public-only setup path (tests that flip
+    # ``is_public_only`` on this client); a valid version and NVR mac let
+    # that path complete instead of requiring per-test setup.
+    meta = Mock()
+    meta.version = Version("7.2.105")
+    client.get_meta_info = AsyncMock(return_value=meta)
+
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
     # them in ``update_public()``; the integration reads them synchronously. Start
     # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
     # primes the cameras from the private bootstrap.
-    client.public_bootstrap = Mock()
+    client.public_bootstrap = Mock(spec=PublicBootstrap)
     client.public_bootstrap.cameras = {}
+    client.public_bootstrap.lights = {}
     client.public_bootstrap.relays = {}
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
+    client.public_bootstrap.nvr = Mock()
+    client.public_bootstrap.nvr.mac = nvr.mac
+    client.public_bootstrap.nvr.name = nvr.name
+    client.public_bootstrap.nvr.display_name = nvr.name
+    client.public_bootstrap.nvr.device_type = None
+    client.public_bootstrap.nvr.type = None
 
-    # Cameras resolve to their primed public model (see ``update_public`` in
-    # ``mock_entry``); other device types opt in via the ``setup_public_*``
-    # helpers, so they default to no paired public object.
+    # Cameras and lights resolve to their primed public model (see
+    # ``update_public`` in ``mock_entry`` / ``setup_public_light``); other
+    # device types opt in via the ``setup_public_*`` helpers, so they default
+    # to no paired public object.
     def _public_bootstrap_get(
         model: ModelType, obj_id: str
     ) -> ProtectModelWithId | None:
         if model is ModelType.CAMERA:
             return client.public_bootstrap.cameras.get(obj_id)
+        if model is ModelType.LIGHT:
+            return client.public_bootstrap.lights.get(obj_id)
         return None
 
     client.public_bootstrap.get = Mock(side_effect=_public_bootstrap_get)
+
+    def _public_all_devices() -> Iterator[Mock]:
+        pb = client.public_bootstrap
+        yield from pb.cameras.values()
+        yield from pb.lights.values()
+        yield from pb.relays.values()
+        yield from pb.sirens.values()
+
+    client.public_bootstrap.all_devices = _public_all_devices
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any
@@ -552,6 +592,147 @@ def mock_ufp_reauth_entry_alt():
         },
         unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
+
+
+@pytest.fixture(name="ufp_public_only_entry")
+def mock_ufp_public_only_entry():
+    """Mock a public-API-only (API key, no local user) config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: DEFAULT_API_KEY,
+            "id": "UnifiProtect",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+        },
+        version=2,
+        unique_id=UNIFI_MAC,
+    )
+
+
+@pytest.fixture(name="ufp_public_only_client")
+def mock_ufp_public_only_client() -> Mock:
+    """Mock an API-key-only ProtectApiClient for setup."""
+    client = Mock()
+    # Reading ``bootstrap`` on an API-key-only client raises in the library;
+    # mirroring that makes every accidental private-bootstrap read in a
+    # public-only code path fail loudly. A property needs the instance type,
+    # which mock gives each Mock of its own.
+    type(client).bootstrap = PropertyMock(
+        side_effect=BadRequest("Client not initialized, run `update` first")
+    )
+    client.is_public_only = True
+    client.has_public_bootstrap = True
+
+    meta = Mock()
+    meta.version = Version("7.2.105")
+    client.get_meta_info = AsyncMock(return_value=meta)
+    client.update_public = AsyncMock()
+    client.update = AsyncMock(side_effect=PublicOnlyModeError("public-only"))
+    client.get_bootstrap = AsyncMock(side_effect=PublicOnlyModeError("public-only"))
+    client.async_disconnect_ws = AsyncMock()
+
+    arm_mode = Mock(spec=NvrArmMode)
+    arm_mode.status = NvrArmModeStatus.DISABLED
+    nvr = Mock(spec=PublicNVR)
+    # The library backfills the mac during update_public(); it is present here.
+    nvr.mac = UNIFI_MAC
+    nvr.name = "Test NVR"
+    nvr.display_name = "Test NVR"
+    nvr.device_type = "UNVR4"  # present on firmware newer than 7.1
+    nvr.type = "UNVR4"
+    nvr.id = "nvr-id"
+    nvr.model = ModelType.NVR
+    pb = Mock(spec=PublicBootstrap)
+    pb.nvr = nvr
+    pb.arm_mode = arm_mode
+    # One map per device family forwarded in public-only mode; tests replace
+    # them, so both helpers below read the attribute at call time.
+    pb.cameras = {}
+    pb.lights = {}
+    device_maps = {ModelType.CAMERA: "cameras", ModelType.LIGHT: "lights"}
+
+    def _all_devices(*, include_nvr: bool = False) -> Iterator[Mock]:
+        if include_nvr and pb.nvr is not None:
+            yield pb.nvr
+        for attr in device_maps.values():
+            yield from getattr(pb, attr).values()
+
+    def _get(model: ModelType, obj_id: str) -> Mock | None:
+        if (attr := device_maps.get(model)) is None:
+            return None
+        return getattr(pb, attr).get(obj_id)
+
+    pb.all_devices = _all_devices
+    pb.get = Mock(side_effect=_get)
+    client.public_bootstrap = pb
+    return client
+
+
+@pytest.fixture(name="ufp_public_only")
+def mock_ufp_public_only(
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+) -> MockUFPFixture:
+    """Bundle the API-key-only entry and client, like ``ufp`` does for hybrid."""
+    ufp = MockUFPFixture(ufp_public_only_entry, ufp_public_only_client)
+
+    def subscribe_devices_websocket(
+        ws_callback: Callable[[WSSubscriptionMessage], None],
+    ) -> Any:
+        ufp.devices_ws_subscription = ws_callback
+        return Mock()
+
+    def subscribe_devices_websocket_state(
+        ws_state_subscription: Callable[[WebsocketState], None],
+    ) -> Any:
+        ufp.devices_ws_state_subscription = ws_state_subscription
+        return Mock()
+
+    def subscribe_events(events_callback: Callable[..., None]) -> Any:
+        ufp.events_subscription = events_callback
+        return Mock()
+
+    def subscribe_events_websocket_state(
+        ws_state_subscription: Callable[[WebsocketState], None],
+    ) -> Any:
+        ufp.events_ws_state_subscription = ws_state_subscription
+        return Mock()
+
+    ufp_public_only_client.subscribe_devices_websocket = subscribe_devices_websocket
+    ufp_public_only_client.subscribe_devices_websocket_state = (
+        subscribe_devices_websocket_state
+    )
+    ufp_public_only_client.subscribe_events = subscribe_events
+    ufp_public_only_client.subscribe_events_websocket_state = (
+        subscribe_events_websocket_state
+    )
+    return ufp
+
+
+@pytest.fixture(name="setup_public_only")
+def setup_public_only_fixture(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Return a callable setting up the API-key-only entry with its mock client.
+
+    Deferred rather than an auto-setup fixture because several tests mutate the
+    client (or the entry) first. The entry is added here so those tests can.
+    """
+    ufp_public_only.entry.add_to_hass(hass)
+
+    async def _setup() -> None:
+        with patch(
+            "homeassistant.components.unifiprotect.async_create_api_client",
+            return_value=ufp_public_only.api,
+        ):
+            await hass.config_entries.async_setup(ufp_public_only.entry.entry_id)
+            await hass.async_block_till_done()
+
+    return _setup
 
 
 @pytest.fixture(name="mock_setup")

@@ -98,7 +98,9 @@ async def test_get_actions(
     # Add alternate identifiers, to make sure we can handle future formats
     identifiers: list[str] = list(*device_entry.identifiers)
     device_registry.async_update_device(
-        device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
+        device_entry.id,
+        new_identifiers=device_entry.identifiers
+        | {(identifiers[0], "_".join(identifiers[1:]))},
     )
     device_entry = device_registry.async_get_device_by_identifier(
         device.device_identifier, mock_entry.entry_id
