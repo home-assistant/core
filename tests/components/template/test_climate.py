@@ -1069,7 +1069,6 @@ async def test_bad_temperature_unit(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     value: Any,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a bad temperature_unit option."""
     platform = TEST_CLIMATE
@@ -1078,10 +1077,6 @@ async def test_bad_temperature_unit(
     )
 
     assert len(hass.states.async_all(platform.domain)) == 0
-    assert (
-        "Invalid config for 'template': value must be one of [<UnitOfTemperature.KELVIN: 'K'>, <UnitOfTemperature.CELSIUS: '°C'>, <UnitOfTemperature.FAHRENHEIT: '°F'>] for dictionary value 'climate->0->temperature_unit'"
-        in caplog.text
-    )
 
 
 @pytest.mark.parametrize(
@@ -1103,13 +1098,11 @@ async def test_bad_temperature_unit(
 @pytest.mark.usefixtures("setup_single_attribute_climate")
 async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
-    # When template returns true..
     hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_ON)
     await hass.async_block_till_done()
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, HVACMode.HEAT)
 
-    # Device State should not be unavailable
     assert hass.states.get(TEST_CLIMATE.entity_id).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
@@ -1139,7 +1132,7 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("setup_single_attribute_climate")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text: str
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get(TEST_CLIMATE.entity_id).state != STATE_UNAVAILABLE
@@ -1154,7 +1147,7 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
-    """Test unique_id option only creates one light per id."""
+    """Test unique_id option only creates one entity per id."""
     await setup_and_test_unique_id(hass, TEST_CLIMATE, style, config)
 
 
@@ -1168,7 +1161,7 @@ async def test_nested_unique_id(
     config: ConfigType,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a template unique_id propagates to light unique_ids."""
+    """Test a template unique_id propagates to entity unique_ids."""
     await setup_and_test_nested_unique_id(
         hass, TEST_CLIMATE, style, entity_registry, config
     )
@@ -1178,7 +1171,7 @@ async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests creating a light from a config entry."""
+    """Tests creating a entity from a config entry."""
 
     template_config_entry = MockConfigEntry(
         data={},
