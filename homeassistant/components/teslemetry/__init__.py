@@ -18,7 +18,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry
-from teslemetry_stream import TeslemetryStream
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
 from teslemetry_stream.const import SseTopic
 
 from homeassistant.components.application_credentials import (
@@ -333,9 +333,13 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     pem: bytes | None = hass.data.get(RSA_PARENT_KEY)
     if pem is None:
         path = hass.config.path(POWERWALL_KEY_FILE)
-        await Teslemetry(
-            session=async_get_clientsession(hass), access_token=""
-        ).get_rsa_private_key(path)
+        try:
+            await Teslemetry(
+                session=async_get_clientsession(hass), access_token=""
+            ).get_rsa_private_key(path)
+        except TypeError as err:
+            # An encrypted PEM surfaces as TypeError from the cryptography loader.
+            raise ValueError("RSA private key file is encrypted") from err
         pem = await hass.async_add_executor_job(Path(path).read_bytes)
         hass.data[RSA_PARENT_KEY] = pem
     return pem
@@ -677,7 +681,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     create_handle_energy_stream_connection(energysites)
                 )
             )
-        entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
+
+        async def listen() -> None:
+            """Listen to the stream, prompting reauth if the token is rejected."""
+            try:
+                await stream.listen()
+            except TeslemetryStreamAuthenticationError:
+                entry.async_start_reauth(hass)
+
+        entry.async_create_background_task(hass, listen(), "Teslemetry Stream")
 
     return True
 
@@ -897,11 +909,6 @@ async def async_setup_stream(
 ) -> None:
     """Set up the stream for a vehicle."""
     await vehicle.stream_vehicle.get_config()
-    entry.async_create_background_task(
-        hass,
-        vehicle.stream_vehicle.prefer_typed(True),
-        f"Prefer typed for {vehicle.vin}",
-    )
 
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(

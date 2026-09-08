@@ -225,7 +225,7 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("make_msgid", "smtp")
+@pytest.mark.usefixtures("make_msgid", "smtp", "version")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_notify_send_message(
     hass: HomeAssistant,
@@ -338,7 +338,7 @@ async def test_legacy_notify_exception(
     assert smtp.sendmail.call_count == 2
 
 
-@pytest.mark.usefixtures("make_msgid", "smtp", "randrange")
+@pytest.mark.usefixtures("make_msgid", "smtp", "randrange", "version")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_smtp_send_message(
     hass: HomeAssistant,
@@ -378,7 +378,7 @@ async def test_smtp_send_message(
     assert msg.as_string() == snapshot
 
 
-@pytest.mark.usefixtures("make_msgid", "smtp", "randrange")
+@pytest.mark.usefixtures("make_msgid", "smtp", "randrange", "version")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_smtp_send_message_local_media_source(
     hass: HomeAssistant,
@@ -419,7 +419,7 @@ async def test_smtp_send_message_local_media_source(
     assert msg.as_string() == snapshot
 
 
-@pytest.mark.usefixtures("make_msgid", "smtp", "randrange")
+@pytest.mark.usefixtures("make_msgid", "smtp", "randrange", "version")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_smtp_send_message_camera_source(
     hass: HomeAssistant,
@@ -465,7 +465,7 @@ async def test_smtp_send_message_camera_source(
     assert msg.as_string() == snapshot
 
 
-@pytest.mark.usefixtures("make_msgid", "smtp", "randrange")
+@pytest.mark.usefixtures("make_msgid", "smtp", "randrange", "version")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_smtp_send_message_image_source(
     hass: HomeAssistant,
@@ -516,7 +516,7 @@ async def test_smtp_send_message_image_source(
     assert msg.as_string() == snapshot
 
 
-@pytest.mark.usefixtures("make_msgid", "smtp", "randrange")
+@pytest.mark.usefixtures("make_msgid", "smtp", "randrange", "version")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_smtp_send_message_tts_source(
     hass: HomeAssistant,

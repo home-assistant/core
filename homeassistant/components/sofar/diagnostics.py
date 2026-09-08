@@ -30,6 +30,7 @@ async def async_get_config_entry_diagnostics(
             "readings_components": device.readings_components,
             "settings_components": device.settings_components,
             "active_faults": sorted(fault.key for fault in device.state.active_faults),
+            "address_masks": await device.async_read_masks(),
             "raw": raw,
         },
         TO_REDACT,

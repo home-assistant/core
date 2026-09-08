@@ -28,7 +28,6 @@ async def async_get_config_entry_diagnostics(
 
     def get_appliance_diagnostics(appliance: Appliance) -> dict[str, Any]:
         return {
-            "data_model": appliance.appliance_info.data_model,
             "category": appliance.appliance_info.category,
             "model_number": appliance.appliance_info.model_number,
         }
