@@ -1,5 +1,6 @@
 """Tests for the Duco binary sensor platform."""
 
+import logging
 from unittest.mock import AsyncMock
 
 from duco_connectivity import (
@@ -268,3 +269,31 @@ async def test_initial_diagnostics_failure_is_isolated_and_recovers(
     await _async_refresh(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
+
+
+async def test_diagnostics_availability_transitions_logged(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test diagnostics availability transitions are logged once."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.duco.coordinator")
+    mock_duco_client.async_get_diagnostics_info.side_effect = DucoError("error")
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
+    await _async_refresh(hass, freezer)
+
+    mock_duco_client.async_get_diagnostics_info.side_effect = None
+    await _async_refresh(hass, freezer)
+    await _async_refresh(hass, freezer)
+
+    assert [
+        record.message
+        for record in caplog.records
+        if record.name == "homeassistant.components.duco.coordinator"
+    ] == [
+        "Duco diagnostics are unavailable: error",
+        "Duco diagnostics are available again",
+    ]

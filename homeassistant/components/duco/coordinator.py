@@ -232,13 +232,17 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         # Diagnostics only back optional binary sensors. Preserve known components
         # but mark their data unavailable without failing the shared coordinator.
+        diagnostics_were_available = (
+            self.data is None or self.data.diagnostics_available
+        )
         diagnostics_available = True
+        diagnostics_error: DucoError | None = None
         diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
         try:
             diagnostic_info = await self.client.async_get_diagnostics_info()
         except DucoError as err:
             diagnostics_available = False
-            _LOGGER.debug("Could not fetch Duco diagnostics", exc_info=err)
+            diagnostics_error = err
         else:
             diagnostic_subsystems = {
                 diagnostic.component: diagnostic.status
@@ -278,6 +282,11 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
+
+        if diagnostics_available and not diagnostics_were_available:
+            _LOGGER.info("Duco diagnostics are available again")
+        elif not diagnostics_available and diagnostics_were_available:
+            _LOGGER.info("Duco diagnostics are unavailable: %s", diagnostics_error)
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
