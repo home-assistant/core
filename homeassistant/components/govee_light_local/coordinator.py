@@ -38,6 +38,9 @@ def log_bound_addresses(controller: GoveeController) -> None:
         ),
     )
 
+    for address, error in controller.bind_failures:
+        _LOGGER.warning("Not listening on %s: %s", address, error.strerror or error)
+
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
@@ -72,7 +75,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     async def start(self) -> None:
         """Start the Govee coordinator."""
 
-        await self._controller.start()
+        # Home Assistant enumerates adapters once at startup, so an address can
+        # be stale by the time we bind it. Keep the adapters that do bind.
+        await self._controller.start(require_all=False)
         self._controller.send_update_message()
         log_bound_addresses(self._controller)
 

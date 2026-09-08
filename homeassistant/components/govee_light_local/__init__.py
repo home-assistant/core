@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
 
     if not listening_addresses:
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="no_devices_found"
+            translation_domain=DOMAIN, translation_key="no_listening_addresses"
         )
 
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
@@ -45,14 +45,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     try:
         await coordinator.start()
     except OSError as ex:
-        if ex.errno != EADDRINUSE:
-            _LOGGER.error("Start failed, errno: %d", ex.errno)
-            return False
-        _LOGGER.error("Port %s already in use", LISTENING_PORT)
+        # Every address failed to bind. Both causes are transient -- the port
+        # frees up, or the adapter comes back -- so let HA retry either way.
+        if ex.errno == EADDRINUSE:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="port_in_use",
+                translation_placeholders={"port": LISTENING_PORT},
+            ) from ex
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="port_in_use",
-            translation_placeholders={"port": LISTENING_PORT},
+            translation_key="bind_failed",
+            translation_placeholders={"error": ex.strerror or str(ex)},
         ) from ex
 
     await coordinator.async_config_entry_first_refresh()

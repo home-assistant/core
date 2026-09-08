@@ -44,7 +44,8 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     try:
         _LOGGER.debug("Starting discovery on %s", listening_addresses)
-        await controller.start()
+        # Probe through whichever adapters bind; only a total failure aborts.
+        await controller.start(require_all=False)
     except OSError as ex:
         _LOGGER.error("Start failed, errno: %d", ex.errno)
         return False
