@@ -141,7 +141,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle entities becoming available.
-        
+
         This is required so that when the config entry is reloaded,
         we start listening on the newly created classes.
         """
