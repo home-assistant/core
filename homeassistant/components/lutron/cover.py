@@ -56,6 +56,7 @@ class LutronCover(LutronDevice, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
     _lutron_device: Shade
@@ -64,12 +65,17 @@ class LutronCover(LutronDevice, CoverEntity):
     @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self._lutron_device.level = 0
+        self._lutron_device.start_lower()
 
     @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._lutron_device.level = 100
+        self._lutron_device.start_raise()
+
+    @override
+    def stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        self._lutron_device.stop()
 
     @override
     def set_cover_position(self, **kwargs: Any) -> None:

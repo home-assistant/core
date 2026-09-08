@@ -74,7 +74,7 @@ async def test_cover_services(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert cover.level == 100
+    cover.start_raise.assert_called_once()
 
     # Close cover
     await hass.services.async_call(
@@ -83,7 +83,16 @@ async def test_cover_services(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert cover.level == 0
+    cover.start_lower.assert_called_once()
+
+    # Stop cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    cover.stop.assert_called_once()
 
     # Set cover position
     await hass.services.async_call(
@@ -165,6 +174,7 @@ async def test_sivoia_qed_cover_services(
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
     # and it is NOT a light any more
@@ -173,7 +183,7 @@ async def test_sivoia_qed_cover_services(
     await hass.services.async_call(
         COVER_DOMAIN, CoverService.OPEN, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
-    assert qed.level == 100
+    qed.start_raise.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
         CoverService.SET_POSITION,
@@ -184,7 +194,11 @@ async def test_sivoia_qed_cover_services(
     await hass.services.async_call(
         COVER_DOMAIN, CoverService.CLOSE, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
-    assert qed.level == 0
+    qed.start_lower.assert_called_once()
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    qed.stop.assert_called_once()
 
 
 async def test_motor_cover_services(
