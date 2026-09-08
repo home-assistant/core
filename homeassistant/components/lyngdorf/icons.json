@@ -1,5 +1,33 @@
 {
   "entity": {
+    "number": {
+      "trim_bass": {
+        "default": "mdi:music-clef-bass"
+      },
+      "trim_centre": {
+        "default": "mdi:speaker"
+      },
+      "trim_height": {
+        "default": "mdi:arrow-expand-up"
+      },
+      "trim_lfe": {
+        "default": "mdi:sine-wave"
+      },
+      "trim_surround": {
+        "default": "mdi:surround-sound"
+      },
+      "trim_treble": {
+        "default": "mdi:music-clef-treble"
+      }
+    },
+    "select": {
+      "room_perfect_position": {
+        "default": "mdi:home-sound-out"
+      },
+      "voicing": {
+        "default": "mdi:equalizer"
+      }
+    },
     "sensor": {
       "audio_information": {
         "default": "mdi:surround-sound"

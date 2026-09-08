@@ -429,8 +429,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Run a pipeline with STT input and TTS output."""
         _LOGGER.debug("Starting pipeline")
 
-        self.async_set_context(Context(user_id=self.config_entry.data["user"]))
-
         async def stt_stream():
             retry: bool = True
             while True:
@@ -455,6 +453,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         try:
             await self.async_accept_pipeline_from_satellite(
                 audio_stream=stt_stream(),
+                context=Context(user_id=self.config_entry.data["user"]),
             )
 
             if self._pipeline_had_error:

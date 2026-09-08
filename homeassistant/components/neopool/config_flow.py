@@ -20,6 +20,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
+    CONF_MODBUS_FRAMER,
+    CONF_UNIT_ID,
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
     DEFAULT_PORT,
@@ -35,8 +42,8 @@ async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | No
         serial = await async_probe_serial(
             user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            unit_id=user_input["unit_id"],
-            framer=user_input["modbus_framer"],
+            unit_id=user_input[CONF_UNIT_ID],
+            framer=user_input[CONF_MODBUS_FRAMER],
         )
     except NeoPoolConnectionError, NeoPoolTimeoutError:
         return None, "cannot_connect"
@@ -68,9 +75,9 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-                vol.Optional("unit_id", default=DEFAULT_UNIT_ID): vol.Coerce(int),
+                vol.Optional(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.Coerce(int),
                 vol.Optional(
-                    "modbus_framer",
+                    CONF_MODBUS_FRAMER,
                     default=DEFAULT_MODBUS_FRAMER,
                 ): vol.In(("tcp", "rtu")),
             }
@@ -95,6 +102,49 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        entry = self._get_reconfigure_entry()
+        current = entry.data
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=current[CONF_HOST]): str,
+                vol.Optional(
+                    CONF_PORT, default=current.get(CONF_PORT, DEFAULT_PORT)
+                ): vol.Coerce(int),
+                vol.Optional(
+                    CONF_UNIT_ID,
+                    default=current.get(CONF_UNIT_ID, DEFAULT_UNIT_ID),
+                ): vol.Coerce(int),
+                vol.Optional(
+                    CONF_MODBUS_FRAMER,
+                    default=current.get(CONF_MODBUS_FRAMER, DEFAULT_MODBUS_FRAMER),
+                ): vol.In(("tcp", "rtu")),
+            }
+        )
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            merged = {**current, **user_input}
+            serial, error_key = await _async_probe(merged)
+            if error_key:
+                errors[CONF_HOST] = error_key
+            else:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch(reason="serial_mismatch")
+                return self.async_update_reload_and_abort(entry, data=merged)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema, user_input or current
+            ),
+            errors=errors,
+        )
+
 
 class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
     """Handle options flow for NeoPool integration."""
@@ -112,6 +162,26 @@ class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
                 vol.Optional(
                     CONF_USE_LIGHT,
                     default=options.get(CONF_USE_LIGHT, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_COVER_SENSOR,
+                    default=options.get(CONF_USE_COVER_SENSOR, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX1,
+                    default=options.get(CONF_USE_AUX1, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX2,
+                    default=options.get(CONF_USE_AUX2, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX3,
+                    default=options.get(CONF_USE_AUX3, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX4,
+                    default=options.get(CONF_USE_AUX4, False),
                 ): bool,
             }
         )

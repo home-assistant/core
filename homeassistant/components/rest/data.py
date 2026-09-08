@@ -5,7 +5,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import hdrs
-from multidict import CIMultiDictProxy
+from multidict import CIMultiDict, CIMultiDictProxy
 import xmltodict
 
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,7 @@ class RestData:
         method: str,
         resource: str,
         encoding: str,
-        auth: aiohttp.DigestAuthMiddleware | aiohttp.BasicAuth | tuple[str, str] | None,
+        auth: aiohttp.DigestAuthMiddleware | tuple[str, str] | None,
         headers: dict[str, str] | None,
         params: dict[str, str] | None,
         data: str | None,
@@ -45,13 +45,13 @@ class RestData:
         self._encoding = encoding
         self._force_use_set_encoding = False
 
-        # Convert auth tuple to aiohttp.BasicAuth if needed
+        # Convert an auth tuple to a basic Authorization header if needed
+        self._basic_auth: str | None = None
+        self._digest_auth: aiohttp.DigestAuthMiddleware | None = None
         if isinstance(auth, tuple) and len(auth) == 2:
-            self._auth: aiohttp.BasicAuth | aiohttp.DigestAuthMiddleware | None = (
-                aiohttp.BasicAuth(auth[0], auth[1], encoding="utf-8")
-            )
-        else:
-            self._auth = auth
+            self._basic_auth = aiohttp.encode_basic_auth(auth[0], auth[1])
+        elif isinstance(auth, aiohttp.DigestAuthMiddleware):
+            self._digest_auth = auth
 
         self._headers = headers
         self._params = params
@@ -137,11 +137,14 @@ class RestData:
             "timeout": self._timeout,
         }
 
-        # Handle authentication
-        if isinstance(self._auth, aiohttp.BasicAuth):
-            request_kwargs["auth"] = self._auth
-        elif isinstance(self._auth, aiohttp.DigestAuthMiddleware):
-            request_kwargs["middlewares"] = (self._auth,)
+        # Handle authentication. A configured Authorization header wins,
+        # whatever its casing, so setdefault runs on a CIMultiDict.
+        if self._basic_auth is not None:
+            headers = CIMultiDict(rendered_headers or {})
+            headers.setdefault(hdrs.AUTHORIZATION, self._basic_auth)
+            request_kwargs["headers"] = headers
+        elif self._digest_auth is not None:
+            request_kwargs["middlewares"] = (self._digest_auth,)
 
         # Handle data/content
         if self._request_data:

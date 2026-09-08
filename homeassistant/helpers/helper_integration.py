@@ -172,7 +172,7 @@ def async_remove_helper_devices(
         if source_device_id is not None
         else None
     )
-    if source_device is None:
+    if source_device_id is None or source_device is None:
         # No source device (gone, or none selected). In remove-all mode the helper's devices
         # are still removed, leaving its entities without a device; targeted mode has no
         # duplicate to match.
@@ -190,8 +190,8 @@ def async_remove_helper_devices(
     # synthesized composite) or a concrete device - a main device or a child device. A main
     # device's splits, if any, share this id as their composite_device_id.
     source_is_concrete = (
-        source_device_id in device_registry.devices
-        or source_device_id in device_registry.child_devices
+        device_registry.async_get(source_device_id, include_composite_devices=False)
+        is not None
     )
     composite_device_id = (
         (

@@ -69,7 +69,7 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
 
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = {
-        DOMAIN: DomainSpec(value_source=WaterHeaterStateAttribute.TEMPERATURE)
+        DOMAIN: DomainSpec(value_source=WaterHeaterStateAttribute.TARGET_TEMPERATURE)
     }
     _unit_converter = TemperatureConverter
 
@@ -78,7 +78,8 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
         """Skip water heater entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE) is not None
+            and state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+            is not None
         )
 
     @override

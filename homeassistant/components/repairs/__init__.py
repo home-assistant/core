@@ -5,13 +5,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, websocket_api
-from .const import DOMAIN
+from .const import DOMAIN, FlowType
 from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
 from .models import RepairsFlow, RepairsFlowResult
 
 __all__ = [
     "DOMAIN",
     "ConfirmRepairFlow",
+    "FlowType",
     "RepairsFlow",
     "RepairsFlowManager",
     "RepairsFlowResult",

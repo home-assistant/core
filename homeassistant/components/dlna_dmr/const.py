@@ -2,15 +2,23 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from async_upnp_client.profiles.dlna import PlayMode as _PlayMode
 
 from homeassistant.components.media_player import MediaType, RepeatMode
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .data import DlnaDmrData
 
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "dlna_dmr"
+
+# One DlnaDmrData owns the shared UPnP requester and event notifiers used by
+# every config entry, so it is not per-entry state.
+DOMAIN_DATA: HassKey[DlnaDmrData] = HassKey(DOMAIN)
 
 CONF_LISTEN_PORT: Final = "listen_port"
 CONF_CALLBACK_URL_OVERRIDE: Final = "callback_url_override"

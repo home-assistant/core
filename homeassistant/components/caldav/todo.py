@@ -73,8 +73,8 @@ def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
 def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
     if (
-        not hasattr(resource.instance, "vtodo")
-        or not (todo := resource.instance.vtodo)
+        not hasattr(resource.vobject_instance, "vtodo")
+        or not (todo := resource.vobject_instance.vtodo)
         or (uid := get_attr_value(todo, "uid")) is None
         or (summary := get_attr_value(todo, "summary")) is None
     ):

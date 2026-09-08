@@ -74,7 +74,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair issues needed.
@@ -84,7 +84,5 @@ rules:
 
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: exempt
-    comment: Integration uses local TCP, not HTTP.
+  inject-websession: done
   strict-typing: todo

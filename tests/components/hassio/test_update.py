@@ -1,7 +1,7 @@
 """The tests for the hassio update entities."""
 
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -276,7 +276,7 @@ async def test_addon_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 child_jobs=[],
                 extra={"total": 1234567890},
             )
@@ -853,7 +853,7 @@ async def test_core_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 child_jobs=[],
                 extra={"total": 1234567890},
             )

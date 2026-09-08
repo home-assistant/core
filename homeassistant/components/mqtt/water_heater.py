@@ -81,7 +81,7 @@ MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
         WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
         WaterHeaterCapabilityAttribute.MAX_TEMP,
         WaterHeaterCapabilityAttribute.MIN_TEMP,
-        WaterHeaterStateAttribute.TEMPERATURE,
+        WaterHeaterStateAttribute.TARGET_TEMPERATURE,
         WaterHeaterCapabilityAttribute.OPERATION_LIST,
         WaterHeaterStateAttribute.OPERATION_MODE,
     }

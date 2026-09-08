@@ -1,6 +1,6 @@
 """Tests for the Lunatone integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock
 
 import aiohttp
 
@@ -10,7 +10,15 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import BASE_URL, PRODUCT_NAME, SERIAL_NUMBER, UUID, VERSION, setup_integration
+from . import (
+    BASE_URL,
+    INFO_DATA,
+    PRODUCT_NAME,
+    SERIAL_NUMBER,
+    UUID,
+    VERSION,
+    setup_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -173,6 +181,23 @@ async def test_config_entry_not_ready_no_info_data(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_setup_error_no_info_data(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Lunatone config entry setup error due to missing info data."""
+    type(mock_lunatone_info).data = PropertyMock(
+        side_effect=[INFO_DATA, INFO_DATA, None]
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_info.async_update.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_config_entry_not_ready_no_devices_data(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
@@ -227,21 +252,6 @@ async def test_config_entry_not_ready_no_dali_scan_data(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_entry_not_ready_no_serial_number(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test config entry not ready due to missing serial number."""
-    mock_lunatone_info.serial_number = None
-
-    await setup_integration(hass, mock_config_entry)
-
-    mock_lunatone_info.async_update.assert_called_once()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_config_entry_unique_id_update(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
@@ -261,7 +271,7 @@ async def test_config_entry_unique_id_update(
     )
 
     expected_unique_id = str(SERIAL_NUMBER)
-    mock_lunatone_info.uid = None
+    mock_lunatone_info.data.uid = None
 
     await setup_integration(hass, config_entry)
 
@@ -278,7 +288,7 @@ async def test_config_entry_unique_id_update(
         assert entity.unique_id.startswith(expected_unique_id)
 
     expected_unique_id = UUID.replace("-", "")
-    mock_lunatone_info.uid = UUID
+    mock_lunatone_info.data.uid = UUID
 
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()

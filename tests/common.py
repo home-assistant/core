@@ -746,6 +746,7 @@ def mock_area_registry(
 def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, dr.DeviceEntry] | None = None,
+    mock_child_entries: dict[str, dr.ChildDeviceEntry] | None = None,
 ) -> dr.DeviceRegistry:
     """Mock the Device Registry.
 
@@ -759,15 +760,21 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.ActiveDeviceRegistryItems()
-    registry._device_data = registry.devices.data
-    registry.child_devices = dr.ChildDeviceRegistryItems()
-    registry._child_device_data = registry.child_devices.data
+    registry._devices = dr.ActiveDeviceRegistryItems()
+    registry.devices = registry._devices.values()
+    registry._device_data = registry._devices.data
+    registry._child_devices = dr.ChildDeviceRegistryItems()
+    registry.child_devices = registry._child_devices.values()
+    registry._child_device_data = registry._child_devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
-        registry.devices[key] = entry
-    registry.deleted_devices = dr.DeletedDeviceRegistryItems()
+        registry._devices[key] = entry
+    if mock_child_entries is None:
+        mock_child_entries = {}
+    for key, child_entry in mock_child_entries.items():
+        registry._child_devices[key] = child_entry
+    registry._deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
     return registry

@@ -1,4 +1,6 @@
 """Provides the constants needed for the component."""
 
-DOMAIN = "button"
+from typing import Final
+
+DOMAIN: Final = "button"
 SERVICE_PRESS = "press"

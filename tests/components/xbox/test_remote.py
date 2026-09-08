@@ -144,10 +144,13 @@ async def test_send_command(
     call.assert_called_once_with("HIJKLMN")
 
 
+@pytest.mark.parametrize(("text", "expected"), [("Hello", "Hello"), ("text:A", "A")])
 async def test_send_text(
     hass: HomeAssistant,
     xbox_live_client: AsyncMock,
     config_entry: MockConfigEntry,
+    text: str,
+    expected: str,
 ) -> None:
     """Test remote send text."""
 
@@ -160,12 +163,12 @@ async def test_send_text(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {ATTR_COMMAND: "Hello", ATTR_DELAY_SECS: 0},
+        {ATTR_COMMAND: text, ATTR_DELAY_SECS: 0},
         target={ATTR_ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
-    xbox_live_client.smartglass.insert_text.assert_called_once_with("HIJKLMN", "Hello")
+    xbox_live_client.smartglass.insert_text.assert_called_once_with("HIJKLMN", expected)
 
 
 async def test_turn_on(

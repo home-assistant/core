@@ -1,6 +1,7 @@
 """Device functions for Home Assistant templates."""
 
 from collections.abc import Iterable
+from itertools import chain
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -84,9 +85,8 @@ class DeviceExtension(BaseTemplateExtension):
         dev_reg = dr.async_get(self.hass)
         return next(
             (
-                device_id
-                for container in (dev_reg.devices, dev_reg.child_devices)
-                for device_id, device in container.items()
+                device.id
+                for device in chain(dev_reg.devices, dev_reg.child_devices)
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
             ),

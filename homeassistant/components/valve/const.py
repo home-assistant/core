@@ -1,8 +1,9 @@
 """Constants for the Valve entity platform."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
-DOMAIN = "valve"
+DOMAIN: Final = "valve"
 
 
 class ValveEntityStateAttribute(StrEnum):

@@ -146,7 +146,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
             if self._is_new:
                 return self.async_create_entry(
