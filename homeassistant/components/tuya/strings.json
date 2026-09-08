@@ -190,6 +190,9 @@
       "battery_backup_reserve": {
         "name": "Battery backup reserve"
       },
+      "charging_current": {
+        "name": "Charging current"
+      },
       "cloud_recipe": {
         "name": "Cloud recipe"
       },
