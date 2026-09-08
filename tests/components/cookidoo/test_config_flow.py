@@ -1,8 +1,10 @@
 """Test the Cookidoo config flow."""
 
 from dataclasses import asdict
+from typing import Any
 from unittest.mock import AsyncMock
 
+from cookidoo_api import CookidooAuthData
 from cookidoo_api.exceptions import (
     CookidooAuthException,
     CookidooException,
@@ -72,6 +74,39 @@ async def test_flow_user_success(
         CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_user_stores_token_rotated_during_validation(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+) -> None:
+    """Test the tokens are snapshotted after the last validation request."""
+    rotated = CookidooAuthData(
+        access_token="rotated-access-token",
+        refresh_token="rotated-refresh-token",
+        expires_at=1763000000.0,
+    )
+
+    async def _rotate(*args: Any, **kwargs: Any) -> list:
+        # A request can transparently refresh and rotate the refresh token
+        mock_cookidoo_client.auth_data = rotated
+        return []
+
+    mock_cookidoo_client.get_additional_items.side_effect = _rotate
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_TOKEN] == asdict(rotated)
 
 
 @pytest.mark.parametrize(

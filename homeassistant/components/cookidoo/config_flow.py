@@ -241,9 +241,11 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
             self.user_uuid = user_info.id
-            self.token = asdict(cookidoo.auth_data) if cookidoo.auth_data else {}
             if language_input:
                 await cookidoo.get_additional_items()
+            # Snapshot the tokens after the last request, as any of them can
+            # refresh the access token and rotate the refresh token with it
+            self.token = asdict(cookidoo.auth_data) if cookidoo.auth_data else {}
         except CookidooRequestException:
             errors["base"] = "cannot_connect"
         except CookidooAuthException:
