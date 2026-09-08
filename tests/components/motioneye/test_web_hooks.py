@@ -399,9 +399,6 @@ async def test_event_media_data(
 
     events = async_capture_events(hass, f"{DOMAIN}.{EVENT_FILE_STORED}")
 
-    client.get_movie_url = Mock(return_value="http://movie-url")
-    client.get_image_url = Mock(return_value="http://image-url")
-
     # Test: Movie storage.
     client.is_file_type_image = Mock(return_value=False)
     resp = await hass_client.post(
@@ -415,13 +412,14 @@ async def test_event_media_data(
     )
     assert resp.status == HTTPStatus.OK
     assert len(events) == 1
-    assert events[-1].data["file_url"] == "http://movie-url"
+    assert events[-1].data["file_url"].startswith(
+        f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/movies/0/"
+    )
+    assert "?authSig=" in events[-1].data["file_url"]
     assert (
         events[-1].data["media_content_id"]
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/one"
     )
-    assert client.get_movie_url.call_args == call(TEST_CAMERA_ID, "/dir/one")
-
     # Test: Image storage.
     client.is_file_type_image = Mock(return_value=True)
     resp = await hass_client.post(
@@ -435,12 +433,14 @@ async def test_event_media_data(
     )
     assert resp.status == HTTPStatus.OK
     assert len(events) == 2
-    assert events[-1].data["file_url"] == "http://image-url"
+    assert events[-1].data["file_url"].startswith(
+        f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/images/0/"
+    )
+    assert "?authSig=" in events[-1].data["file_url"]
     assert (
         events[-1].data["media_content_id"]
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/dir/two"
     )
-    assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/dir/two")
 
     # Test: Invalid file type.
     resp = await hass_client.post(
