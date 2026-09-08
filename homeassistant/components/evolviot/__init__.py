@@ -2,11 +2,7 @@
 
 from typing import Any
 
-from pyevolviot import (
-    EvolvIOTApi,
-    EvolvIOTApiError,
-    EvolvIOTAuthError,
-)
+from pyevolviot import EvolvIOTApi, EvolvIOTApiError, EvolvIOTAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

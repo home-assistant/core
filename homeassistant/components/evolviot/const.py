@@ -1,6 +1,6 @@
 """Constants for the EvolvIOT integration."""
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL, Platform
+from homeassistant.const import Platform
 
 DOMAIN = "evolviot"
 NAME = "EvolvIOT"
