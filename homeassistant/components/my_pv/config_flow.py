@@ -198,14 +198,15 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                     await device.disconnect()
 
                 if not errors:
+                    await self.async_set_unique_id(device.serial_number)
                     if self._reauth_entry:
+                        self._abort_if_unique_id_mismatch()
                         data = {
                             CONF_PASSWORD: password,
                         }
                         return self.async_update_reload_and_abort(
                             self._reauth_entry, data_updates=data
                         )
-                    await self.async_set_unique_id(device.serial_number)
                     self._abort_if_unique_id_configured()
 
                     title = f"my-PV {device.model} {device.serial_number[6:]}"
