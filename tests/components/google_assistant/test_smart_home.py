@@ -277,7 +277,10 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     ],
 )
 async def test_sync_in_area(
-    area_on_device: bool, expected_name: str, hass: HomeAssistant, registries
+    area_on_device: bool,
+    expected_name: str,
+    hass: HomeAssistant,
+    registries: SimpleNamespace,
 ) -> None:
     """Test a sync message where room hint comes from area."""
     entry = MockConfigEntry()
