@@ -15,11 +15,16 @@ type DiscogsConfigEntry = ConfigEntry[discogs_client.Client]
 
 async def async_setup_entry(hass: HomeAssistant, entry: DiscogsConfigEntry) -> bool:
     """Set up Discogs from a config entry."""
-    try:
-        client = await hass.async_add_executor_job(
-            discogs_client.Client, SERVER_SOFTWARE, None, entry.data[CONF_TOKEN]
+
+    def _setup_client() -> discogs_client.Client:
+        client = discogs_client.Client(
+            SERVER_SOFTWARE, user_token=entry.data[CONF_TOKEN]
         )
-        await hass.async_add_executor_job(client.identity)
+        client.identity()
+        return client
+
+    try:
+        client = await hass.async_add_executor_job(_setup_client)
     except discogs_client.exceptions.HTTPError as err:
         raise ConfigEntryNotReady(f"Error communicating with Discogs: {err}") from err
 
