@@ -104,7 +104,11 @@ async def _assert_service_call(
             id="c3",
         ),
         pytest.param(
-            DummyDevice(DeviceType.A1, attributes={A1Attributes.pump: False}),
+            DummyDevice(
+                DeviceType.A1,
+                attributes={A1Attributes.pump: False},
+                capabilities={"pump": True},
+            ),
             id="a1",
         ),
         pytest.param(
