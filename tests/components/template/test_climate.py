@@ -17,13 +17,15 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.template.climate import DEFAULT_NAME
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
@@ -31,6 +33,7 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
     assert_attributes_template,
     assert_extra_template_attributes,
     assert_invalid_config_entry_actions_do_not_create_entities,
@@ -118,6 +121,32 @@ MINIMUM_REQUIREMENTS = {
 }
 
 
+async def _call_and_assert_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    service: str,
+    service_data: ConfigType | None = None,
+    expected_data: ConfigType | None = None,
+    expected_action: str | None = None,
+) -> None:
+    """Call a service and validate that it was called properly.
+
+    The service is validated when expected_action is omitted.
+    """
+    if expected_action is None:
+        expected_action = service
+    current = len(calls)
+    await hass.services.async_call(
+        climate.DOMAIN,
+        service,
+        {**(service_data or {}), ATTR_ENTITY_ID: TEST_CLIMATE.entity_id},
+        blocking=True,
+    )
+    assert_action(
+        TEST_CLIMATE, calls, current + 1, expected_action, **(expected_data or {})
+    )
+
+
 @pytest.fixture
 async def setup_base_climate(
     hass: HomeAssistant,
@@ -191,6 +220,86 @@ async def test_humidity_template(hass: HomeAssistant, expected: Any) -> None:
 
     state = hass.states.get(TEST_CLIMATE.entity_id)
     assert state.attributes.get("current_humidity") == expected
+
+
+@pytest.mark.parametrize(
+    ("config", "extra_config"),
+    [(MINIMUM_REQUIREMENTS, {"target_humidity": "{{ 65 }}", **SET_HUMIDITY_ACTION})],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_set_humidity_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test set_humidity action."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        "set_humidity",
+        {"humidity": 45},
+        {"humidity": 45},
+        "set_humidity",
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes["humidity"] == 65
+
+
+@pytest.mark.parametrize(
+    ("config", "extra_config"), [(MINIMUM_REQUIREMENTS, SET_HUMIDITY_ACTION)]
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_optimistic_set_humidity_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic set_humdity action."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        "set_humidity",
+        {"humidity": 45},
+        {"humidity": 45},
+        "set_humidity",
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes["humidity"] == 45
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        "set_humidity",
+        {"humidity": 65},
+        {"humidity": 65},
+        "set_humidity",
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes["humidity"] == 65
 
 
 @pytest.mark.parametrize(
@@ -659,6 +768,88 @@ async def test_hvac_modes_updates_supported_features(hass: HomeAssistant) -> Non
     assert state.attributes["supported_features"] == ClimateEntityFeature.TURN_ON
 
 
+@pytest.mark.parametrize(("config", "extra_config"), [(MINIMUM_REQUIREMENTS, {})])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_set_hvac_mode_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test setting valid group mode actions with template."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        "set_hvac_mode",
+        {"hvac_mode": "heat"},
+        {"hvac_mode": "heat"},
+        "set_hvac_mode",
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            "set_hvac_mode",
+            {"hvac_mode": "fan_only", ATTR_ENTITY_ID: TEST_CLIMATE.entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(("config", "extra_config"), [(MINIMUM_REQUIREMENTS, {})])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_optimistic_set_hvac_mode_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test setting valid group mode actions with template."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        "set_hvac_mode",
+        {"hvac_mode": "heat"},
+        {"hvac_mode": "heat"},
+        "set_hvac_mode",
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        "set_hvac_mode",
+        {"hvac_mode": "cool"},
+        {"hvac_mode": "cool"},
+        "set_hvac_mode",
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+
+
 @pytest.mark.parametrize(
     ("attribute", "extra_config"),
     [
@@ -839,6 +1030,173 @@ async def test_bad_mode_group_config(
         f"Invalid config for 'template': Some required option(s) are missing from inclusive group '{group}', expected missing options"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    ("action", "attribute", "extra_config"),
+    [
+        (
+            "set_fan_mode",
+            "fan_mode",
+            {
+                "fan_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_FAN_MODE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_swing_mode",
+            "swing_mode",
+            {
+                "swing_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_SWING_MODE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_swing_horizontal_mode",
+            "swing_horizontal_mode",
+            {
+                "swing_horizontal_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_SWING_HORIZONTAL_MODE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+        (
+            "set_preset_mode",
+            "preset_mode",
+            {
+                "preset_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_PRESET_MODE_ACTION,
+                **MINIMUM_REQUIREMENTS,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "mode", "expected"),
+    [
+        ("{{ 'off' }}", "off", "off"),
+        ("{{ 'low' }}", "low", "low"),
+        ("{{ 'medium' }}", "medium", "medium"),
+        ("{{ 'high' }}", "high", "high"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_set_group_actions(
+    hass: HomeAssistant,
+    action: str,
+    attribute: str,
+    mode: str,
+    expected: Any,
+    calls: list[ServiceCall],
+) -> None:
+    """Test setting valid group mode actions with template."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    await _call_and_assert_action(
+        hass, calls, action, {attribute: mode}, {attribute: mode}, action
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes.get(attribute) == expected
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            action,
+            {attribute: "turbo", ATTR_ENTITY_ID: TEST_CLIMATE.entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("action", "attribute", "config"),
+    [
+        (
+            "set_fan_mode",
+            "fan_mode",
+            {
+                "fan_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_FAN_MODE_ACTION,
+            },
+        ),
+        (
+            "set_swing_mode",
+            "swing_mode",
+            {
+                "swing_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_SWING_MODE_ACTION,
+            },
+        ),
+        (
+            "set_swing_horizontal_mode",
+            "swing_horizontal_mode",
+            {
+                "swing_horizontal_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_SWING_HORIZONTAL_MODE_ACTION,
+            },
+        ),
+        (
+            "set_preset_mode",
+            "preset_mode",
+            {
+                "preset_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
+                **SET_PRESET_MODE_ACTION,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "extra_config",
+    [MINIMUM_REQUIREMENTS],
+)
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("off", "off"),
+        ("low", "low"),
+        ("medium", "medium"),
+        ("high", "high"),
+    ],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_group_optimistic_actions(
+    hass: HomeAssistant,
+    action: str,
+    attribute: str,
+    mode: str,
+    expected: Any,
+    calls: list[ServiceCall],
+) -> None:
+    """Test setting valid group mode actions with template."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await _call_and_assert_action(
+        hass, calls, action, {attribute: mode}, {attribute: mode}, action
+    )
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+    assert state.attributes.get(attribute) == expected
 
 
 @pytest.mark.parametrize(
