@@ -2916,6 +2916,7 @@ async def test_download_support_package(
     assert await req.text() == snapshot
 
 
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_custom_components_error(
     hass: HomeAssistant,
@@ -2925,12 +2926,8 @@ async def test_download_support_package_custom_components_error(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test download support package when async_get_custom_components fails."""
-
-    # Exclude setup logs with nondeterministic timestamps in verbose runs.
-    caplog.set_level(logging.INFO, logger="hass_nabucasa.events.bus")
 
     aioclient_mock.get("https://cloud.bla.com/status", text="")
     aioclient_mock.get(
@@ -3039,6 +3036,7 @@ async def test_download_support_package_custom_components_error(
     assert await req.text() == snapshot
 
 
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_integration_load_error(
     hass: HomeAssistant,
@@ -3048,12 +3046,8 @@ async def test_download_support_package_integration_load_error(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test download support package when async_get_loaded_integration fails."""
-
-    # Exclude setup logs with nondeterministic timestamps in verbose runs.
-    caplog.set_level(logging.INFO, logger="hass_nabucasa.events.bus")
 
     aioclient_mock.get("https://cloud.bla.com/status", text="")
     aioclient_mock.get(
