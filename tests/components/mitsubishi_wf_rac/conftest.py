@@ -67,7 +67,7 @@ def mock_config_entry() -> MockConfigEntry:
         data=ENTRY_DATA,
         options=ENTRY_OPTIONS,
         unique_id=AIRCO_ID,
-        version=6,
+        version=7,
     )
 
 

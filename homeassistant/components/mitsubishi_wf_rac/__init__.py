@@ -117,6 +117,16 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, version=6
         )
+    if entry.version == 6:
+        # Entries added by hand never got a unique id: the manual step checked
+        # for a duplicate airco itself instead of registering one. Without it
+        # zeroconf cannot recognise the entry, so a unit that moved was offered
+        # as a new discovery and its address was never refreshed. The module
+        # announces itself as <mac>.local and the airco id is that same MAC, so
+        # this is the identity discovery already matches on.
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_AIRCO_ID], version=7
+        )
 
     return True
 

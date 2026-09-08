@@ -70,7 +70,7 @@
       'options': dict({
         'availability_retry_limit': 3,
       }),
-      'version': 6,
+      'version': 7,
     }),
     'device': dict({
       'account_expires': 1788630278,

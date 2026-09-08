@@ -529,7 +529,7 @@ async def test_options_flow_keeps_a_setting_the_form_does_not_show(
         data=ENTRY_DATA,
         options={**ENTRY_OPTIONS, "external_temperature_source": "sensor.hallway"},
         unique_id=AIRCO_ID,
-        version=6,
+        version=7,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -548,3 +548,28 @@ async def test_options_flow_keeps_a_setting_the_form_does_not_show(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["external_temperature_source"] == "sensor.hallway"
+
+
+async def test_reconfigure_refuses_an_address_that_answers_as_another_airco(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reconfigure changes where an airco is, not which airco the entry is.
+
+    Merging the queried id would keep the entry and re-point it at different
+    hardware. The entities are keyed on that id, so they would be replaced
+    and the ones belonging to the original unit orphaned.
+    """
+    mock_config_entry.add_to_hass(hass)
+    mock_repository.get_airco_id.return_value = "0011223344bb"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NAME: "Living room", CONF_HOST: HOST, CONF_PORT: PORT}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "another_airco"
+    assert mock_config_entry.data[CONF_AIRCO_ID] == AIRCO_ID

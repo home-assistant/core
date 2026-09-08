@@ -110,7 +110,7 @@ async def test_migration_from_version_1(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 6
+    assert entry.version == 7
     assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_HOST] == HOST
     assert CONF_HOST not in entry.options
@@ -135,7 +135,7 @@ async def test_migration_lifts_a_retry_limit_below_the_floor(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 6
+    assert entry.version == 7
     assert entry.options["availability_retry_limit"] == 3
 
 
@@ -161,7 +161,7 @@ async def test_migration_lifts_a_retry_limit_the_old_toggle_left_behind(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 6
+    assert entry.version == 7
     assert entry.options["availability_retry_limit"] == 3
     # The key nothing ever read is gone with the step that wrote it.
     assert "availability_retry" not in entry.options
@@ -206,3 +206,30 @@ async def test_removal_says_so_when_the_slot_is_not_released(
     await hass.async_block_till_done()
 
     assert "Could not delete operator ID" in caplog.text
+
+
+async def test_migration_gives_a_hand_added_entry_the_identity_discovery_uses(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """Entries added by hand never registered one.
+
+    The manual step checked for a duplicate airco itself instead, so zeroconf
+    could not recognise the entry: a unit that moved was offered as a new
+    discovery and its address was never refreshed. The module announces
+    itself as <mac>.local and the airco id is that same MAC.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living room",
+        data=ENTRY_DATA,
+        options=ENTRY_OPTIONS,
+        unique_id=None,
+        version=6,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 7
+    assert entry.unique_id == AIRCO_ID

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -52,7 +52,7 @@ SECTION_SENSOR_OFFSETS = "sensor_offsets"
 class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 6
+    VERSION = 7
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     _discovery_info: dict[str, Any] = {}
     DOMAIN = DOMAIN
@@ -199,14 +199,15 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input, allow_port_fallback=allow_port_fallback
                 )
 
-                # The manual step has no unique id to abort on - a unit reached
-                # at a second address would otherwise become a second entry
-                # whose entities collide with the first one's. The airco id is
-                # the unit's own identity, so match on that.
-                if self._find_entry_matching(
-                    CONF_AIRCO_ID, lambda a: a == info[CONF_AIRCO_ID]
-                ):
-                    return self.async_abort(reason="already_configured")
+                # The airco id is the unit's own identity, and the one
+                # zeroconf keys on: the module announces itself as
+                # <mac>.local and the airco id is that same MAC. Registering
+                # it here is what lets a discovery recognise a manually added
+                # entry later - and it aborts a unit reached at a second
+                # address, which would otherwise become a second entry whose
+                # entities collide with the first one's.
+                await self.async_set_unique_id(info[CONF_AIRCO_ID])
+                self._abort_if_unique_id_configured()
 
                 data_input = user_input.copy()
                 # Form-only: it decides whether a duplicate host is accepted
@@ -232,6 +233,11 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders.update(
                     {k: str(v) for k, v in placeholders.items()}
                 )
+            except AbortFlow:
+                # How the helpers end a step. It is the flow working, not a
+                # fault, and the broad clause below would turn it into an
+                # "unexpected_error" form.
+                raise
             except Exception:  # pylint: disable=broad-except
                 # Intentionally broad: this is the outermost boundary of the config
                 # flow step, so any bug here should show the user a graceful
@@ -358,6 +364,17 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._async_register_airco(
                     self.hass, data, exclude_entry_id=reconfigure_entry.entry_id
                 )
+
+                # Compared against the stored airco id rather than through
+                # _abort_if_unique_id_mismatch(): entries added before the
+                # manual step registered one carry the airco id in data alone
+                # until the migration reaches them, and this check has to hold
+                # for those too. Merging a different unit's id would keep the
+                # entry but re-point it, and the entities - whose unique ids
+                # are built from that id - would be replaced and the old ones
+                # orphaned.
+                if info[CONF_AIRCO_ID] != reconfigure_entry.data[CONF_AIRCO_ID]:
+                    return self.async_abort(reason="another_airco")
 
                 new_data = {**reconfigure_entry.data, **data}
 
