@@ -140,7 +140,11 @@ class ItemChangeListener(TargetEntityChangeTracker):
     def _async_todo_entity_state_changed(
         self, event: Event[EventStateChangedData]
     ) -> None:
-        """Config entry reload recreates the entity without a registry change."""
+        """Handle entities becoming available.
+        
+        This is required so that when the config entry is reloaded,
+        we start listening on the newly created classes.
+        """
         new_state = event.data["new_state"]
         old_state = event.data["old_state"]
         if new_state is None or new_state.state == STATE_UNAVAILABLE:
