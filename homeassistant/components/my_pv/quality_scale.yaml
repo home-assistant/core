@@ -42,7 +42,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold tier rules
@@ -70,7 +70,9 @@ rules:
   icon-translations:
     status: exempt
     comment: There are no entities that require icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: The integration does not have anything to reconfigure that is not covered by the reauthentication flow.
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.

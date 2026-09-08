@@ -36,6 +36,15 @@
         "description": "[%key:component::my_pv::common::discovery_description%]",
         "title": "{name}"
       },
+      "reauth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::my_pv::common::password_description%]"
+        },
+        "title": "{name} password"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -49,7 +58,7 @@
   },
   "exceptions": {
     "auth_error": {
-      "message": "Authentication failed. Remove and add the integration again with the current device password."
+      "message": "Authentication failed, please reauthenticate."
     },
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
