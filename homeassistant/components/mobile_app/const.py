@@ -8,7 +8,7 @@ DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 STORAGE_SAVE_DELAY_SECONDS = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
@@ -22,6 +22,11 @@ DATA_DEVICES = "devices"
 
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
 DATA_LIVE_ACTIVITY_CLEANUP_CANCEL = "live_activity_cleanup_cancel"
+
+# Persisted Remote Now Playing sessions, keyed by the webhook id that registered them.
+DATA_REMOTE_MEDIA_SESSIONS = "remote_media_sessions"
+# The runtime manager holding their state listeners. Never persisted.
+DATA_REMOTE_MEDIA_MANAGER = "remote_media_manager"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
