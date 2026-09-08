@@ -992,9 +992,11 @@ class DPCode(StrEnum):
     WARN_POWER2 = "warn_power2"  # Power warning threshold, channel 2
     WATER = "water"
     WATER_LEVEL = "water_level"
+    WATER_ONCE = "water_once"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATER_TIME = "water_time"  # Water usage duration
+    WATER_TOTAL = "water_total"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
