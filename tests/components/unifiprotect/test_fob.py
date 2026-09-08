@@ -86,9 +86,20 @@ def _make_public_bootstrap(fob: Mock | None) -> Mock:
     pb.sirens = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
+    pb.nvr = Mock()
+    pb.nvr.mac = "aa:bb:cc:dd:ee:ff"
+    pb.nvr.name = "Test NVR"
+    pb.nvr.display_name = "Test NVR"
+    pb.nvr.device_type = None
+    pb.nvr.type = None
+
     # The baseline and reconnect resync enumerate all_devices(); a fob missing
     # from it would be redispatched as new on every reconnect.
-    pb.all_devices = lambda: list(pb.fobs.values())
+    def _all_devices(*, include_nvr: bool = False) -> list[Mock]:
+        devices = list(pb.fobs.values())
+        return [pb.nvr, *devices] if include_nvr else devices
+
+    pb.all_devices = _all_devices
     return pb
 
 

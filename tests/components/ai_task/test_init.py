@@ -224,7 +224,7 @@ async def test_generate_data_service_structure_fields(
                 },
             },
             vol.Invalid,
-            r"extra keys not allowed.*",
+            r"not a valid option.*",
         ),
         (
             {
@@ -237,9 +237,9 @@ async def test_generate_data_service_structure_fields(
             vol.Invalid,
             r"required key not provided.*selector.*",
         ),
-        (12345, vol.Invalid, r"xpected a dictionary.*"),
-        ("name", vol.Invalid, r"xpected a dictionary.*"),
-        (["name"], vol.Invalid, r"xpected a dictionary.*"),
+        (12345, vol.Invalid, r"xpected a mapping.*"),
+        ("name", vol.Invalid, r"xpected a mapping.*"),
+        (["name"], vol.Invalid, r"xpected a mapping.*"),
         (
             {
                 "name": {
@@ -251,7 +251,7 @@ async def test_generate_data_service_structure_fields(
                 },
             },
             vol.Invalid,
-            r"extra keys not allowed .*",
+            r"not a valid option .*",
         ),
         (
             {
@@ -263,7 +263,7 @@ async def test_generate_data_service_structure_fields(
                 },
             },
             vol.Invalid,
-            r"xpected a dictionary for dictionary.",
+            r"xpected a dictionary.*",
         ),
     ],
     ids=(

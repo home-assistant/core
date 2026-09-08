@@ -1,14 +1,15 @@
 """Fixtures for Midea tests."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from midealocal.const import DeviceType
 import pytest
 
-from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_TYPE
+from homeassistant.components.midea.const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN
+from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -18,13 +19,14 @@ from .const import (
     TEST_KEY,
     TEST_MAC_ADDRESS,
     TEST_MODEL,
-    TEST_NAME,
     TEST_SERIAL_NUMBER,
     TEST_SUBTYPE,
     TEST_TOKEN,
 )
 
 from tests.common import MockConfigEntry
+
+type SetDeviceAttribute = Callable[[DummyDevice, str, Any], Coroutine[Any, Any, None]]
 
 
 class DummyDevice:
@@ -39,7 +41,7 @@ class DummyDevice:
         """Initialize fake device."""
         self.device_type = device_type
         self.device_id = TEST_DEVICE_ID
-        self.name = TEST_NAME
+        self.name = MIDEA_DEVICE_NAMES[device_type]
         self.model = TEST_MODEL
         self.subtype = TEST_SUBTYPE
         self.available = False
@@ -47,7 +49,9 @@ class DummyDevice:
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
-        self.fan_modes = ["Low", "Medium", "High", "Auto"]
+        self.raw_hvac_modes = ["off", "auto", "cool", "dry", "heat", "fan_only"]
+        self.raw_fan_modes = ["low", "medium", "high", "auto"]
+        self.raw_fan_mode: str | None = "high"
         self.modes = [
             "Auto",
             "ECO",
@@ -81,19 +85,33 @@ class DummyDevice:
 
     def set_attribute(self, attr: str, value: Any) -> None:
         """Record set attribute call."""
+        self.attributes[attr] = value
+        self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
 
-    def set_target_temperature(self, **kwargs: Any) -> None:
+    def set_raw_target_temperature(self, **kwargs: Any) -> None:
         """Record set target temperature call."""
-        self.calls.append(("set_target_temperature", kwargs))
+        self.calls.append(("set_raw_target_temperature", kwargs))
 
-    def set_swing(self, **kwargs: Any) -> None:
-        """Record set swing call."""
-        self.calls.append(("set_swing", kwargs))
+    def set_raw_swing_mode(self, swing_mode: str) -> None:
+        """Record set swing mode call."""
+        self.calls.append(("set_raw_swing_mode", swing_mode))
 
-    def set_mode(self, zone: int, mode: int) -> None:
-        """Record set mode call."""
-        self.calls.append(("set_mode", zone, mode))
+    def set_raw_fan_mode(self, fan_mode: str) -> None:
+        """Record set fan mode call."""
+        self.calls.append(("set_raw_fan_mode", fan_mode))
+
+    def set_raw_hvac_mode(self, hvac_mode: str, zone: int | None = None) -> None:
+        """Record set hvac mode call."""
+        self.calls.append(("set_raw_hvac_mode", hvac_mode, zone))
+
+    def start_work(self) -> None:
+        """Record start_work call."""
+        self.calls.append(("start_work",))
+
+    def turn_on(self, fan_speed: int | None = None, mode: str | None = None) -> None:
+        """Record turn_on call."""
+        self.calls.append(("turn_on", fan_speed, mode))
 
     def connect(self, check_protocol: bool = False) -> bool:
         """Record connect call and mirror midealocal's availability handling."""
@@ -155,16 +173,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def config_entry(
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> MockConfigEntry:
+    """Return a mock config entry fixture."""
+    return mock_config_entry(default_ac_device())
+
+
+@pytest.fixture
 def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
     """Return a function that creates a mock config entry for a given device."""
 
     def _create(device: DummyDevice) -> MockConfigEntry:
         return MockConfigEntry(
             domain=DOMAIN,
+            minor_version=2,
             data={
                 **BASE_DATA,
                 CONF_TYPE: device.device_type,
-                CONF_NAME: TEST_NAME,
+                CONF_NAME: MIDEA_DEVICE_NAMES[device.device_type],
+                CONF_MAC: TEST_MAC_ADDRESS,
+                CONF_SN: TEST_SERIAL_NUMBER,
                 CONF_TOKEN: TEST_TOKEN,
                 CONF_KEY: TEST_KEY,
                 CONF_SUBTYPE: TEST_SUBTYPE,
@@ -172,3 +201,17 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
         )
 
     return _create
+
+
+@pytest.fixture
+def set_device_attribute(hass: HomeAssistant) -> SetDeviceAttribute:
+    """Return a function that sets an attribute on a device and notifies the integration."""
+
+    async def _set_device_attribute(
+        device: DummyDevice, attribute: str, value: Any
+    ) -> None:
+        device.attributes[attribute] = value
+        device.notify_update({attribute: value})
+        await hass.async_block_till_done()
+
+    return _set_device_attribute

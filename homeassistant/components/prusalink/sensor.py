@@ -48,6 +48,13 @@ class PrusaLinkSensorEntityDescription[
     value_fn: Callable[[T], datetime | StateType]
 
 
+# Both job timestamps are derived from the wall clock, so they only hold while
+# the job is actually progressing. Once it ends the printer keeps reporting the
+# job with a frozen printing time and nothing remaining, which would drift the
+# start forward and pin the finish to "now".
+JOB_IN_PROGRESS_STATES = {PrinterState.PRINTING.value, PrinterState.PAUSED.value}
+
+
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
     "status": (
         PrusaLinkSensorEntityDescription[PrinterStatus](
@@ -195,7 +202,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             ),
             available_fn=lambda data: (
                 data.get("time_printing") is not None
-                and data.get("state") != PrinterState.IDLE.value
+                and data.get("state") in JOB_IN_PROGRESS_STATES
             ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
@@ -212,7 +219,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             ),
             available_fn=lambda data: (
                 data.get("time_remaining") is not None
-                and data.get("state") != PrinterState.IDLE.value
+                and data.get("state") in JOB_IN_PROGRESS_STATES
             ),
         ),
     ),

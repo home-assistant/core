@@ -244,11 +244,10 @@ class DenonDevice(MediaPlayerEntity):
     ) -> None:
         """Initialize the device."""
         self._attr_unique_id = unique_id
-        assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
             hw_version=config_entry.data[CONF_TYPE],
-            identifiers={(DOMAIN, config_entry.unique_id)},
+            identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
             model=config_entry.data[CONF_MODEL],
             name=receiver.name,

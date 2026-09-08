@@ -48,6 +48,7 @@ from aioesphomeapi import (
     build_device_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
+from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant import config_entries
@@ -69,6 +70,18 @@ type EntityInfoKey = tuple[type[EntityInfo], int, int]  # (info_type, device_id,
 type DeviceEntityKey = tuple[int, int]  # (device_id, key)
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
+
+# CameraState (raw image bytes) and Event (momentary) are never persisted.
+STATE_TYPE_TO_COMPONENT_TYPE: Final[dict[type[EntityState], str]] = {
+    state_type: component_type
+    for state_type, info_type in STATE_TYPE_TO_INFO_TYPE.items()
+    if state_type not in (CameraState, Event)
+    and (component_type := INFO_TO_COMPONENT_TYPE.get(info_type)) is not None
+}
+COMPONENT_TYPE_TO_STATE_TYPE: Final[dict[str, type[EntityState]]] = {
+    component_type: state_type
+    for state_type, component_type in STATE_TYPE_TO_COMPONENT_TYPE.items()
+}
 
 _SENTINEL = object()
 SAVE_DELAY = 120
@@ -132,6 +145,8 @@ class StoreData(TypedDict, total=False):
     device_info: dict[str, Any]
     services: list[dict[str, Any]]
     api_version: dict[str, Any]
+    states: dict[str, list[dict[str, Any]]]
+    expected_disconnect: bool
 
 
 class ESPHomeStorage(Store[StoreData]):
@@ -146,7 +161,7 @@ class RuntimeEntryData:
     title: str
     client: APIClient
     store: ESPHomeStorage
-    state: defaultdict[type[EntityState], dict[int, EntityState]] = field(
+    state: defaultdict[type[EntityState], dict[DeviceEntityKey, EntityState]] = field(
         default_factory=lambda: defaultdict(dict)
     )
     # When the disconnect callback is called, we mark all states
@@ -177,6 +192,7 @@ class RuntimeEntryData:
     first_connect_done: asyncio.Event = field(default_factory=asyncio.Event)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
+    _cleaned_up: bool = False
     assist_pipeline_update_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
     assist_pipeline_state: bool = False
     entity_info_callbacks: dict[
@@ -421,14 +437,25 @@ class RuntimeEntryData:
         return _unsubscribe
 
     @callback
+    def async_mark_states_stale(self) -> None:
+        """Mark all cached states stale so the next update is always dispatched."""
+        self.stale_state = {
+            (state_type, device_id, key)
+            for state_type, states in self.state.items()
+            for device_id, key in states
+        }
+
+    @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
         key = state.key
+        device_id = state.device_id
         state_type = type(state)
         stale_state = self.stale_state
         current_state_by_type = self.state[state_type]
-        current_state = current_state_by_type.get(key, _SENTINEL)
-        subscription_key = (state_type, state.device_id, key)
+        state_key = (device_id, key)
+        current_state = current_state_by_type.get(state_key, _SENTINEL)
+        subscription_key = (state_type, device_id, key)
         if (
             current_state == state
             and subscription_key not in stale_state
@@ -436,13 +463,13 @@ class RuntimeEntryData:
             and not (
                 state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))
-                and (entity_info := platform_info.get((state.device_id, state.key)))
+                and (entity_info := platform_info.get(state_key))
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
             return
         stale_state.discard(subscription_key)
-        current_state_by_type[key] = state
+        current_state_by_type[state_key] = state
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
@@ -458,14 +485,27 @@ class RuntimeEntryData:
         for callback_ in self.device_update_subscriptions.copy():
             callback_()
 
-    async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
-        """Load the retained data from store and return de-serialized data."""
+    @property
+    def has_deep_sleep(self) -> bool:
+        """Return if the device is known to use deep sleep."""
+        return bool(self.device_info and self.device_info.has_deep_sleep)
+
+    async def async_load_from_store(
+        self, *, restore_states: bool
+    ) -> tuple[list[EntityInfo], list[UserService]]:
+        """Load the retained data from store and return de-serialized data.
+
+        Deep sleep states are only seeded when restore_states is set, since
+        they are only valid alongside the restored entity infos.
+        """
         if (restored := await self.store.async_load()) is None:
             return [], []
         self._storage_contents = restored.copy()
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
         self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
+        restored_states = restored.pop("states", {})
+        expected_disconnect = restored.pop("expected_disconnect", False)
         infos: list[EntityInfo] = []
         for comp_type, restored_infos in restored.items():
             if TYPE_CHECKING:
@@ -478,10 +518,37 @@ class RuntimeEntryData:
         services = [
             UserService.from_dict(service) for service in restored.pop("services", [])
         ]
+        if restore_states and self.has_deep_sleep:
+            self.expected_disconnect = expected_disconnect
+            # Only states owned by a restored entity are seeded
+            slots = {(type(info), info.device_id, info.key) for info in infos}
+            for comp_type, comp_states in restored_states.items():
+                if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
+                    _LOGGER.debug("Skipping unknown stored state type %s", comp_type)
+                    continue
+                info_type = COMPONENT_TYPE_TO_INFO[comp_type]
+                for state in comp_states:
+                    obj = state_cls.from_dict(state)
+                    if (info_type, obj.device_id, obj.key) in slots:
+                        self.state[state_cls][(obj.device_id, obj.key)] = obj
+            # The device is disconnected until it wakes, same as after a disconnect
+            self.async_mark_states_stale()
         return infos, services
+
+    @callback
+    def async_record_disconnect(self, expected_disconnect: bool) -> None:
+        """Remember how the session ended and persist deep sleep state."""
+        self.expected_disconnect = expected_disconnect
+        self.async_mark_states_stale()
+        if self.has_deep_sleep:
+            # States arrive after the connect-time save, so persist them here
+            self.async_save_to_store()
 
     def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
+        if self._cleaned_up:
+            # A late on_disconnect must not overwrite a reloaded entry's store
+            return
         if TYPE_CHECKING:
             assert self.device_info is not None
         store_data: StoreData = {
@@ -496,6 +563,15 @@ class RuntimeEntryData:
         store_data["services"] = [
             service.to_dict() for service in self.services.values()
         ]
+        if self.has_deep_sleep:
+            store_data["expected_disconnect"] = self.expected_disconnect
+            store_data["states"] = {
+                STATE_TYPE_TO_COMPONENT_TYPE[state_type]: [
+                    state.to_dict() for state in states.values()
+                ]
+                for state_type, states in self.state.items()
+                if states and state_type in STATE_TYPE_TO_COMPONENT_TYPE
+            }
         if store_data == self._storage_contents:
             return
 
@@ -509,6 +585,7 @@ class RuntimeEntryData:
 
     async def async_cleanup(self) -> None:
         """Cleanup the entry data when disconnected or unloading."""
+        self._cleaned_up = True
         if self._pending_storage:
             # Ensure we save the data if we are unloading before the
             # save delay has passed.

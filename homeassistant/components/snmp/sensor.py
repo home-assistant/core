@@ -158,15 +158,6 @@ async def async_setup_platform(
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
-    get_result = await get_cmd(*request_args)
-    errindication, _, _, _ = get_result
-
-    if errindication and not accept_errors:
-        _LOGGER.error(
-            "Please check the details in the configuration file: %s",
-            errindication,
-        )
-        return
 
     name = config.get(CONF_NAME, Template(DEFAULT_NAME, hass))
     trigger_entity_config = {CONF_NAME: name}

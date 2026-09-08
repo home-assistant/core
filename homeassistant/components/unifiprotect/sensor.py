@@ -687,6 +687,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities(
+                ProtectFobSensor(data, device, description)
+                for description in FOB_SENSORS
+            )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobSensor(data, fob, description)
+            for fob in api.public_bootstrap.fobs.values()
+            for description in FOB_SENSORS
+        )
+
+    # Everything below is driven by the private bootstrap, which public-only
+    # entries do not have.
+    if api.is_public_only:
+        return
+
     async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     @callback
@@ -718,28 +746,6 @@ async def async_setup_entry(
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
-
-    @callback
-    def _add_new_public_device(device: PublicDeviceModel) -> None:
-        if isinstance(device, Fob):
-            async_add_entities(
-                ProtectFobSensor(data, device, description)
-                for description in FOB_SENSORS
-            )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
-    )
-
-    # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs to expose.
-    api = data.api
-    if api.has_public_bootstrap:
-        async_add_entities(
-            ProtectFobSensor(data, fob, description)
-            for fob in api.public_bootstrap.fobs.values()
-            for description in FOB_SENSORS
-        )
 
 
 @callback

@@ -1226,7 +1226,7 @@ async def test_component_config_exceptions(
                     "https://example.com",
                 )
             ],
-            "bla @ data['path']",
+            "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
                 "../../configuration.yaml, line 140: bla 'path', "
@@ -1246,7 +1246,7 @@ async def test_component_config_exceptions(
                     "https://alt.example.com",
                 )
             ],
-            "bla @ data['path']",
+            "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
                 "../../configuration.yaml, line 140: bla 'path', "
