@@ -16,18 +16,22 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     restore_state,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .sensor import SENSOR_DESCRIPTIONS
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SELECT,
     Platform.SENSOR,
@@ -35,6 +39,8 @@ PLATFORMS: list[Platform] = [
 ]
 
 _IDENTITY_ATTEMPTS = 3
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
@@ -81,6 +87,12 @@ def _async_seed_high_water_marks(
         getattr(device, description.component).seed_high_water(
             description.key, float(extra.native_value)
         )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sofar integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:

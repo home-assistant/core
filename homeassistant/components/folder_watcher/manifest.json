@@ -1,6 +1,6 @@
 {
   "domain": "folder_watcher",
-  "name": "Folder Watcher",
+  "name": "Folder watcher",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/folder_watcher",
