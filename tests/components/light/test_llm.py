@@ -1,5 +1,7 @@
 """Tests for the light LLM tools platform."""
 
+import dataclasses
+
 import pytest
 
 from homeassistant.components import llm as llm_component
@@ -42,17 +44,27 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
-    """Test the intent tool is offered for an exposed light entity."""
-    assert "light__HassLightSet" in await _tool_names(hass)
+    """Test the intent tools are offered for an exposed light entity."""
+    tool_names = await _tool_names(hass)
+    assert "light__HassLightSet" in tool_names
+    assert "light__HassSetBrightnessRelative" in tool_names
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
-    """Test the intent tool is hidden when no light entity is exposed."""
+    """Test the intent tools are hidden when no light entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    assert "light__HassLightSet" not in await _tool_names(hass)
+    tool_names = await _tool_names(hass)
+    assert "light__HassLightSet" not in tool_names
+    assert "light__HassSetBrightnessRelative" not in tool_names
     assert light_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     """Test the platform returns None for an unsupported API."""
     assert light_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+
+async def test_no_tools_without_assistant(hass: HomeAssistant) -> None:
+    """Test the platform returns None when the request has no assistant."""
+    llm_context = dataclasses.replace(_llm_context(), assistant=None)
+    assert light_llm.async_get_tools(hass, llm_context, "assist") is None

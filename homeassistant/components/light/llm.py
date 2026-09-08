@@ -7,10 +7,10 @@ from homeassistant.helpers import intent
 from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
 from .const import DOMAIN
-from .intent import INTENT_SET
+from .intent import INTENT_SET, INTENT_SET_BRIGHTNESS_RELATIVE
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_SET,)
+LLM_INTENTS = (INTENT_SET, INTENT_SET_BRIGHTNESS_RELATIVE)
 
 
 @callback
