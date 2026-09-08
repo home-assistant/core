@@ -291,25 +291,24 @@ class LunatoneLineBroadcastLight(
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        line_status = self._coordinator_info.data.lines[
-            str(self._broadcast.line)
-        ].line_status
+        info_data = self._coordinator_info.data
+        line_id = self._broadcast.line
         return (
             super().available
             and self._coordinator_info.last_update_success
-            and line_status == LineStatus.OK
+            and line_id is not None
+            and str(line_id) in info_data.lines
+            and info_data.lines[str(line_id)].line_status == LineStatus.OK
         )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return True if light is on."""
+        line_id = self._broadcast.line
         return (
-            any(
-                device.is_on
-                for device in self.coordinator.data[self._broadcast.line].values()
-            )
-            if self._broadcast.line is not None
+            any(device.is_on for device in self.coordinator.data[line_id].values())
+            if line_id is not None and line_id in self.coordinator.data
             else False
         )
 
