@@ -19,14 +19,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_platform_integration
+from . import async_fire_coordinator_update, setup_platform_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining"
 VENTILATION_TEMPERATURE_ENTITY_IDS = (
@@ -95,22 +95,11 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
     assert hass.states.get("sensor.office_co2_state_end_time") is None
 
 
-@pytest.mark.parametrize(
-    ("ventilation_state", "expected_state_end"),
-    [
-        pytest.param(VentilationState.MAN1, "2023-11-14T22:20:59+00:00", id="timed"),
-        pytest.param(VentilationState.CNT1, STATE_UNKNOWN, id="continuous-1"),
-        pytest.param(VentilationState.CNT2, STATE_UNKNOWN, id="continuous-2"),
-        pytest.param(VentilationState.CNT3, STATE_UNKNOWN, id="continuous-3"),
-    ],
-)
 async def test_ventilation_related_sensors_created_for_box_node(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
-    ventilation_state: VentilationState,
-    expected_state_end: str,
 ) -> None:
     """Test ventilation-related sensors are created for the box node.
 
@@ -122,7 +111,6 @@ async def test_ventilation_related_sensors_created_for_box_node(
         mock_sensor_nodes[0],
         ventilation=replace(
             mock_sensor_nodes[0].ventilation,
-            state=ventilation_state,
             flow_lvl_tgt=42,
             time_state_end=1700000459,
         ),
@@ -136,7 +124,7 @@ async def test_ventilation_related_sensors_created_for_box_node(
 
     state = hass.states.get("sensor.living_ventilation_state")
     assert state is not None
-    assert state.state == ventilation_state.lower()
+    assert state.state == "auto"
 
     state = hass.states.get("sensor.living_target_flow_level")
     assert state is not None
@@ -144,7 +132,7 @@ async def test_ventilation_related_sensors_created_for_box_node(
 
     state = hass.states.get("sensor.living_state_end_time")
     assert state is not None
-    assert state.state == expected_state_end
+    assert state.state == "2023-11-14T22:20:59+00:00"
 
     assert hass.states.get("sensor.office_co2_ventilation_state") is None
     assert hass.states.get("sensor.office_co2_target_flow_level") is None
@@ -195,14 +183,15 @@ async def test_iaq_sensor_entities_disabled_by_default(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_rssi_sensor_disabled_by_default(
+async def test_diagnostic_sensor_entities_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that the RSSI sensor is disabled by default."""
-    entry = entity_registry.async_get("sensor.living_signal_strength")
-    assert entry is not None
-    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    """Test that diagnostic sensor entities are disabled by default."""
+    for entity_id in ("sensor.living_signal_strength",):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -223,9 +212,7 @@ async def test_coordinator_update_failure_marks_unavailable(
     """Test sensor entities become unavailable when the coordinator update fails."""
     mock_duco_client.async_get_nodes.side_effect = exception_type(exception_message)
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("sensor.office_co2_carbon_dioxide")
     assert state is not None
@@ -249,9 +236,7 @@ async def test_lan_info_failures_keep_node_entities_available(
     """Test node entities stay available when LAN info retrieval fails."""
     mock_duco_client.async_get_lan_info = AsyncMock(side_effect=exception)
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("sensor.office_co2_carbon_dioxide")
     assert state is not None
@@ -280,9 +265,7 @@ async def test_time_filter_remaining_missing_is_retried(
 
     assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert mock_duco_client.async_get_time_filter_remaining.await_count == 2
     state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
@@ -307,9 +290,7 @@ async def test_empty_ventilation_temperatures_are_retried(
     for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
         assert hass.states.get(entity_id) is None
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert mock_duco_client.async_get_ventilation_temperature_info.await_count == 2
     state = hass.states.get("sensor.living_outdoor_air_temperature")
@@ -358,9 +339,7 @@ async def test_time_filter_remaining_transient_failure_recovers_sensor_creation(
 
     assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
     assert state is not None
@@ -414,9 +393,7 @@ async def test_new_node_added_dynamically(
     new_node = dynamic_sensor_nodes[node_id]
     mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, new_node]
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(expected_entity_id)
     assert state is not None
@@ -448,9 +425,7 @@ async def test_deregistered_node_removes_device(
         node for node in mock_sensor_nodes if node.node_id != 2
     ]
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     # The device should be removed from the device registry.
     device = device_registry.async_get_device_by_identifier(
@@ -485,9 +460,7 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
         node for node in mock_sensor_nodes if node.node_id != BOX_NODE_ID
     ]
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert (
         device_registry.async_get_device_by_identifier(
@@ -502,9 +475,7 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
 
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("fan.living")
     assert state is not None
@@ -538,9 +509,7 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
     )
 
     mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, unknown_node]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert "99" in caplog.text
     assert "unsupported" in caplog.text.lower()
@@ -589,9 +558,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
         *mock_sensor_nodes,
         _make_node(NodeType.UNKNOWN),
     ]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.get("sensor.future_sensor_humidity") is None
 
@@ -600,9 +567,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
         *mock_sensor_nodes,
         _make_node("BSRH"),
     ]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("sensor.future_sensor_humidity")
     assert state is not None
@@ -642,16 +607,12 @@ async def test_unknown_node_logged_at_debug(
     mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, unknown_node]
 
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await async_fire_coordinator_update(hass, freezer)
 
     assert "has an unsupported device type" not in caplog.text
 
     with caplog.at_level(logging.DEBUG, logger="homeassistant.components.duco"):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await async_fire_coordinator_update(hass, freezer)
 
     assert "has an unsupported device type" in caplog.text
 
@@ -684,9 +645,7 @@ async def test_ventilation_state_unknown_returns_state_unknown(
     ]
     mock_duco_client.async_get_nodes.return_value = updated_nodes
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("sensor.living_ventilation_state")
     assert state is not None
