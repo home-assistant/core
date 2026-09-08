@@ -1,5 +1,6 @@
 """Test the Mitsubishi WF-RAC config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -349,27 +350,32 @@ async def test_zeroconf_flow_port_fallback_also_fails(
     assert result["errors"]["base"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_ZEROCONF])
+@pytest.mark.parametrize(
+    ("source", "discovery", "user_input"),
+    [
+        pytest.param(SOURCE_USER, None, USER_INPUT, id="manual"),
+        pytest.param(
+            SOURCE_ZEROCONF,
+            _discovery_info(),
+            {CONF_NAME: "Living room", CONF_PORT: PORT},
+            id="discovered",
+        ),
+    ],
+)
 async def test_unexpected_error_is_shown_not_raised(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     mock_setup_entry: AsyncMock,
     source: str,
+    discovery: ZeroconfServiceInfo | None,
+    user_input: dict[str, Any],
 ) -> None:
     """A bug behind the form must not take the whole flow down."""
     mock_repository.get_airco_id.side_effect = RuntimeError("boom")
 
-    if source == SOURCE_USER:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": source}
-        )
-        user_input = USER_INPUT
-    else:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": source}, data=_discovery_info()
-        )
-        user_input = {CONF_NAME: "Living room", CONF_PORT: PORT}
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=discovery
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )

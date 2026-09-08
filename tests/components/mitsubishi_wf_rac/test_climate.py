@@ -27,6 +27,8 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.mitsubishi_wf_rac.const import (
+    CONF_TARGET_OFFSET,
+    CONF_TARGET_OFFSET_COOL,
     HOME_LEAVE_TEMP_COOL,
     HOME_LEAVE_TEMP_HEAT,
     SWING_3D_AUTO,
@@ -586,3 +588,46 @@ async def test_a_setpoint_is_measured_against_the_mode_being_switched_to(
             },
             blocking=True,
         )
+
+
+async def test_the_setpoint_does_not_move_when_it_is_set_on_a_unit_that_is_off(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A unit that is off keeps its cool/heat mode, and the read-back uses it.
+
+    hvac_mode is OFF at that point, so resolving the offset against it sends
+    the general one while _update_state() reads the per-mode one back. The
+    displayed target then moves by the difference the moment the command
+    lands - the divergence the shared resolver exists to prevent.
+    """
+    hass.config_entries.async_update_entry(
+        init_integration,
+        options={
+            **init_integration.options,
+            CONF_TARGET_OFFSET: 0.0,
+            CONF_TARGET_OFFSET_COOL: 1.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    device = init_integration.runtime_data.device
+    device.airco.Operation = False
+    device.airco.OperationMode = 1
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    device.airco.PresetTemp = _sent_command(mock_repository).PresetTemp
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.0

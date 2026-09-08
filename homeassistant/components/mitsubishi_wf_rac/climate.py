@@ -233,8 +233,17 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         # biased against the room. The target offset compensates that on the
         # wire while the displayed target_temperature stays what was asked
         # for. Resolved against the mode the unit will be in after this
-        # command, since cooling and heating have opposite-sign bias.
-        target_offset = self._resolve_target_offset(target_hvac_mode)
+        # command, since cooling and heating have opposite-sign bias - and
+        # while it is off, against the mode it keeps underneath, because that
+        # is what _update_state() reads back with. Resolving OFF here instead
+        # would move the displayed target by the difference between the two
+        # offsets the moment the command lands.
+        offset_mode = (
+            self._hvac_mode_from_operation
+            if target_hvac_mode == HVACMode.OFF
+            else target_hvac_mode
+        )
+        target_offset = self._resolve_target_offset(offset_mode)
         target_temp = set_temp - target_offset
         target_temp = max(min_temp, min(max_temp, target_temp))
 
@@ -327,8 +336,8 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         The unit has no single "away" command: it enters the mode when it is
         given the away target of the direction it is running in, which is why
         the current hvac_mode decides between them. A unit in auto, dry or
-        fan-only has no such target to send, so the direction has to be named
-        through HomeLeaveModeSelect instead of guessed at here.
+        fan-only has no such target to send, and guessing the direction would
+        be as likely to fight the unit as to help it.
         """
         if preset_mode == PRESET_NONE:
             await self._device.async_queue_command(
@@ -360,7 +369,6 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         """Private update attributes."""
         airco = self._device.airco
 
-        # Apply indoor offset
         indoor_offset = self._device.options.get(CONF_INDOOR_OFFSET, 0.0)
         # Both the displayed hvac_mode and the target_offset resolution need
         # the underlying cool/heat mode, so it's computed once here and shared

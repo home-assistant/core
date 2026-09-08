@@ -1,6 +1,7 @@
 """Test the Mitsubishi WF-RAC coordinator."""
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
@@ -373,3 +374,42 @@ async def test_a_refused_write_falls_back_when_the_deadline_is_unreadable(
     assert WRITE_LOCK_RETRY_DELAY.total_seconds() in [
         call.args[0] for call in sleep.await_args_list
     ]
+
+
+async def test_shutdown_waits_for_a_command_already_on_the_wire(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A flush that has taken its parameters still has to be shut down.
+
+    It lets go of _consolidation_task at that point so a later command opens
+    its own window, which used to leave shutdown with nothing to cancel: the
+    send finished afterwards and published to entities that were gone. The
+    module accepts one connection at a time and an unload is usually followed
+    by a reload, so the orphan collides with the coordinator replacing it.
+    """
+    device = init_integration.runtime_data.device
+    on_the_wire = asyncio.Event()
+
+    async def _never_returns(*args: object, **kwargs: object) -> None:
+        on_the_wire.set()
+        await asyncio.Event().wait()
+
+    with patch.object(device, "set_airco", side_effect=_never_returns):
+        caller = asyncio.create_task(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_FAN_MODE,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+                blocking=True,
+            )
+        )
+        await asyncio.wait_for(on_the_wire.wait(), timeout=5)
+
+        await device.async_shutdown()
+
+    assert not device._running_flushes
+    caller.cancel()
+    with suppress(asyncio.CancelledError):
+        await caller

@@ -156,6 +156,10 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         self._send_lock = asyncio.Lock()
         self._consolidated_params: dict[AirconCommands, Any] = {}
         self._consolidation_task: asyncio.Task[None] | None = None
+        # Every flush still running. _consolidation_task is only the one
+        # still accepting parameters; a flush that has taken its own and
+        # is on the wire has already let go of it.
+        self._running_flushes: set[asyncio.Task[None]] = set()
 
         super().__init__(
             hass,
@@ -186,16 +190,20 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
     async def async_shutdown(self) -> None:
         """Shut the coordinator down.
 
-        The consolidation task is created on hass, not owned by
-        DataUpdateCoordinator, so it has to be cancelled here: otherwise a
-        command queued moments before the entry unloads would still be sent
-        afterwards and publish data to entities that are already gone.
+        Flushes are created on hass, not owned by DataUpdateCoordinator, so
+        they have to be cancelled here: otherwise a command queued moments
+        before the entry unloads would still be sent afterwards and publish
+        data to entities that are already gone. On this module that also
+        collides with the reload behind the unload, which opens its own
+        connection - and the module takes one at a time.
         """
-        if self._consolidation_task is not None:
-            self._consolidation_task.cancel()
+        self._consolidation_task = None
+        flushes = list(self._running_flushes)
+        for flush in flushes:
+            flush.cancel()
+        for flush in flushes:
             with suppress(asyncio.CancelledError):
-                await self._consolidation_task
-            self._consolidation_task = None
+                await flush
         await super().async_shutdown()
 
     async def update(self) -> bool:
@@ -243,7 +251,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         try:
             self._connected_accounts = int(response["numOfAccount"])
             new_airco = self._parser.translate_bytes(response["airconStat"])
-            self._carry_forward_home_leave_mode(new_airco)
             self._airco = new_airco
             # Not part of the airconStat blob, present alongside it in the same
             # response. Tolerate absence (.get()) since it's undocumented and
@@ -398,7 +405,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
                         self._airco_id, command
                     )
                 new_airco = self._parser.translate_bytes(response)
-                self._carry_forward_home_leave_mode(new_airco)
                 self._airco = new_airco
             except (WfRacError, KeyError, TypeError, ValueError) as ex:
                 _LOGGER.warning("Could not send airco data: %s", str(ex))
@@ -423,41 +429,26 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         the same request instead of racing each other.
         """
         self._consolidated_params.update(params)
-        if self._consolidation_task is None:
-            self._consolidation_task = self.hass.async_create_task(
-                self._async_flush_queued_command()
-            )
+        if (flush := self._consolidation_task) is None:
+            flush = self.hass.async_create_task(self._async_flush_queued_command())
+            self._consolidation_task = flush
+            self._running_flushes.add(flush)
+            flush.add_done_callback(self._running_flushes.discard)
         # Every caller awaits the one flush its parameters ended up in, so a
         # refusal by the unit reaches the action that caused it instead of
         # being logged into the void - which is what action-exceptions asks
         # for. Shielded because the task is shared: a caller giving up (a
         # cancelled service call) must not take the other callers' command
         # down with it.
-        await asyncio.shield(self._consolidation_task)
-
-    def _carry_forward_home_leave_mode(self, new_airco: Aircon) -> None:
-        """Carry the HomeLeaveMode segment forward across updates.
-
-        The unit reports the Tag-248 extension segment exactly once per
-        HomeLeaveModeStatusRequest, then stops: the bridge MCU clears
-        its response cache after handing it to the WiFi side, so the segment is
-        present in a short window's worth of status blocks and absent from every
-        later poll. Observed effect: translate_bytes() builds a fresh Aircon()
-        with both fields back at their None default, which made the diagnostic
-        sensors flash the real value for one update cycle and then revert to
-        unknown. Carry the last known reading forward instead so it survives
-        until the next explicit request or a fresh None response (e.g.
-        reconnect).
-        """
-        if new_airco.HomeLeaveModeForCooling is None:
-            new_airco.HomeLeaveModeForCooling = self._airco.HomeLeaveModeForCooling
-        if new_airco.HomeLeaveModeForHeating is None:
-            new_airco.HomeLeaveModeForHeating = self._airco.HomeLeaveModeForHeating
+        await asyncio.shield(flush)
 
     async def _async_flush_queued_command(self) -> None:
         await asyncio.sleep(UPDATE_CONSOLIDATION_PERIOD.total_seconds())
         params = self._consolidated_params.copy()
         self._consolidated_params.clear()
+        # The parameters are taken, so anything queued from here needs a
+        # window of its own. This task stays in _running_flushes until the
+        # send is done, which is what shutdown waits on.
         self._consolidation_task = None
         try:
             await self.set_airco(params)
