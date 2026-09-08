@@ -360,3 +360,14 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     callback_fn(
                         mower_id, cutting_height_enabled, cutting_height_disabled
                     )
+
+        current_state_keys = {
+            (mower_id, area_id)
+            for mower_id, area_ids in current_areas.items()
+            for area_id in area_ids
+        }
+        stale_state_keys = (
+            self._work_area_cutting_height_states.keys() - current_state_keys
+        )
+        for state_key in stale_state_keys:
+            self._work_area_cutting_height_states.pop(state_key)
