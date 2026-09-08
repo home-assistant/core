@@ -190,6 +190,12 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.QCCDZ: (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="charger_work_mode",
+        ),
+    ),
     DeviceCategory.QN: (
         SelectEntityDescription(
             key=DPCode.LEVEL,
@@ -349,6 +355,18 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.WORK_MODE,
             translation_key="inverter_work_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.ZNJDQ: (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="relay_status",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            translation_key="light_mode",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

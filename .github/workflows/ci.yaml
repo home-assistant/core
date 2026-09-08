@@ -373,7 +373,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }} and build venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
@@ -417,13 +417,13 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: libturbojpeg
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -454,7 +454,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -484,7 +484,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: ./.github/actions/setup-uv-python
+        uses: $/.github/actions/setup-uv-python
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -510,7 +510,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: ./.github/actions/setup-uv-python
+        uses: $/.github/actions/setup-uv-python
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -565,7 +565,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
@@ -610,7 +610,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -657,7 +657,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -708,7 +708,7 @@ jobs:
           echo "key=mypy-${MYPY_CACHE_VERSION}-${mypy_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -763,7 +763,7 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -773,7 +773,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
@@ -858,7 +858,7 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -869,7 +869,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
@@ -991,7 +991,7 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1003,7 +1003,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
@@ -1132,7 +1132,7 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1145,13 +1145,13 @@ jobs:
         run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
       - name: Cache PostgreSQL development headers
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: postgresql-server-dev-14
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
@@ -1266,7 +1266,7 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1277,7 +1277,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
@@ -1409,7 +1409,7 @@ jobs:
           persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
+        uses: $/.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1420,7 +1420,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
