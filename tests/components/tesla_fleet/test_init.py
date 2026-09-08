@@ -378,9 +378,8 @@ async def test_vehicle_refresh_ratelimited(
 
     await setup_platform(hass, normal_config_entry)
 
-    mock_vehicle_data.side_effect = RateLimited(
-        {"after": VEHICLE_INTERVAL_SECONDS + 10}
-    )
+    after_seconds = VEHICLE_INTERVAL_SECONDS + 10
+    mock_vehicle_data.side_effect = RateLimited({"after": after_seconds})
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -393,13 +392,14 @@ async def test_vehicle_refresh_ratelimited(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should not call for another 10 seconds
+    # Not yet past the after hint, must not call
     assert mock_vehicle_data.call_count == 2
 
-    freezer.tick(VEHICLE_INTERVAL)
+    freezer.tick(timedelta(seconds=after_seconds - VEHICLE_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Exactly past the after hint, must call
     assert mock_vehicle_data.call_count == 3
 
 
