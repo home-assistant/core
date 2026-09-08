@@ -57,6 +57,13 @@ def deny_meter_energy(unit: MockModbusUnit) -> None:
     unit.holding[0x0683] = 0x00FF
 
 
+def serve_meter_energy(unit: MockModbusUnit) -> None:
+    """Seed a 0x0680 mask that declares the whole meter block valid."""
+    unit.holding[0x0683] = 0xFFFF  # 0x0680-0x068F
+    unit.holding[0x0682] = 0x000F  # 0x0690-0x0693
+    unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
+
+
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
