@@ -254,9 +254,15 @@ async def test_expired_session_offers_no_ice_servers(
         {**MOCK_SESSION_DATA, "sessionExpiration": "2020-01-01T00:00:00.000000Z"}
     )
 
+    before = mock_client.generate_session.call_count
     config = entity._async_get_webrtc_client_configuration()
+    # stale TURN credentials are withheld rather than served
     assert config.configuration.ice_servers == []
-    # dropped immediately so repeated requests do not queue a refresh each time
-    assert entity._cached_session is None
+    # exactly one replacement is fetched, not one per request. the session is
+    # cleared before scheduling, but hass.async_create_task starts eagerly, so
+    # the refresh has already filled it back in by the time this returns --
+    # the None is never observable from here.
+    assert mock_client.generate_session.call_count == before + 1
 
     await hass.async_block_till_done()
+    assert entity._cached_session is not None
