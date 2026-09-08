@@ -79,6 +79,7 @@ from .const import (
     VEHICLE_ISSUE_LEARN_MORE,
 )
 from .coordinator import (
+    VEHICLE_FIRST_REFRESH_TIMEOUT,
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
@@ -581,6 +582,23 @@ async def _async_rediscover_gateway(
     return stale_client
 
 
+async def _async_vehicle_first_refresh(vehicle: TeslemetryVehicleData) -> None:
+    """Refresh a polling vehicle, bounding a sleeping car's slow response.
+
+    A sleeping vehicle can hold vehicle_data open for minutes; bound it so setup
+    retries instead of stalling HA's bootstrap. The stream stays unbounded.
+    """
+    try:
+        async with asyncio.timeout(VEHICLE_FIRST_REFRESH_TIMEOUT):
+            await vehicle.coordinator.async_config_entry_first_refresh()
+    except TimeoutError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="vehicle_first_refresh_timeout",
+            translation_placeholders={"vin": vehicle.vin},
+        ) from err
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -813,7 +831,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             if not vehicle.poll
         ),
         *(
-            vehicle.coordinator.async_config_entry_first_refresh()
+            _async_vehicle_first_refresh(vehicle)
             for vehicle in vehicles
             if vehicle.poll
         ),
