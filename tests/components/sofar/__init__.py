@@ -50,6 +50,13 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
     unit.holding[0x0685] = 1000  # solar_generation_today low word -> 10.0 kWh
 
 
+def deny_meter_energy(unit: MockModbusUnit) -> None:
+    """Seed a 0x0680 mask that denies the meter block from 0x0688 on."""
+    # Bit n of the four mask registers is address 0x0680 + n; a model is
+    # only believed when it declares its own mask registers, bits 0-3.
+    unit.holding[0x0683] = 0x00FF
+
+
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
