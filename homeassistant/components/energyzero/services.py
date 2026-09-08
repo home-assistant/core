@@ -27,6 +27,10 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
+ATTR_PRICE_TYPE: Final = "price_type"
+ATTR_INTERVAL: Final = "interval"
+
+ENERGY_INTERVALS = {"hour": Interval.HOUR, "quarter": Interval.QUARTER}
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_SERVICE_NAME: Final = "get_energy_prices"
@@ -40,6 +44,13 @@ SERVICE_SCHEMA: Final = vol.Schema(
         vol.Required(ATTR_INCL_VAT): bool,
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
+    }
+)
+
+ENERGY_SERVICE_SCHEMA: Final = SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_PRICE_TYPE, default="market"): vol.In(("market", "all_in")),
+        vol.Optional(ATTR_INTERVAL, default="hour"): vol.In(ENERGY_INTERVALS),
     }
 )
 
@@ -132,6 +143,11 @@ async def __get_prices(
         PriceType.MARKET_WITH_VAT if call.data[ATTR_INCL_VAT] else PriceType.MARKET
     )
 
+    if price_type is ServicePriceType.ENERGY and call.data[ATTR_PRICE_TYPE] == "all_in":
+        selected_price_type = (
+            PriceType.ALL_IN if call.data[ATTR_INCL_VAT] else PriceType.ALL_IN_EXCL_VAT
+        )
+
     price_data: list[EnergyPrices] = []
     for day_offset in range((end_date - start_date).days + 1):
         request_date = start_date + timedelta(days=day_offset)
@@ -146,7 +162,7 @@ async def __get_prices(
             prices = coordinator.energyzero.get_electricity_prices(
                 start_date=request_date,
                 end_date=request_date,
-                interval=Interval.HOUR,
+                interval=ENERGY_INTERVALS[call.data[ATTR_INTERVAL]],
                 price_type=selected_price_type,
                 local_tz=local_tz,
             )
@@ -180,6 +196,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         ENERGY_SERVICE_NAME,
         partial(__get_prices, price_type=ServicePriceType.ENERGY),
-        schema=SERVICE_SCHEMA,
+        schema=ENERGY_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

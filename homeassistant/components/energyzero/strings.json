@@ -87,6 +87,18 @@
         "hourly": "Hourly",
         "quarter_hourly": "Quarter-hourly"
       }
+    },
+    "interval": {
+      "options": {
+        "hour": "Hourly",
+        "quarter": "Quarter-hourly"
+      }
+    },
+    "price_type": {
+      "options": {
+        "all_in": "All-in",
+        "market": "Market"
+      }
     }
   },
   "services": {
@@ -104,6 +116,14 @@
         "incl_vat": {
           "description": "[%key:component::energyzero::services::get_gas_prices::fields::incl_vat::description%]",
           "name": "[%key:component::energyzero::services::get_gas_prices::fields::incl_vat::name%]"
+        },
+        "interval": {
+          "description": "The interval of electricity prices to retrieve. Defaults to hourly, independently of the electricity price interval configured for entities.",
+          "name": "Interval"
+        },
+        "price_type": {
+          "description": "The type of electricity prices to retrieve. Defaults to market prices.",
+          "name": "Price type"
         },
         "start": {
           "description": "[%key:component::energyzero::services::get_gas_prices::fields::start::description%]",
