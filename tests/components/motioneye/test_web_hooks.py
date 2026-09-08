@@ -412,8 +412,12 @@ async def test_event_media_data(
     )
     assert resp.status == HTTPStatus.OK
     assert len(events) == 1
-    assert events[-1].data["file_url"].startswith(
-        f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/movies/0/"
+    assert (
+        events[-1]
+        .data["file_url"]
+        .startswith(
+            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/movies/0/"
+        )
     )
     assert "?authSig=" in events[-1].data["file_url"]
     assert (
@@ -433,8 +437,12 @@ async def test_event_media_data(
     )
     assert resp.status == HTTPStatus.OK
     assert len(events) == 2
-    assert events[-1].data["file_url"].startswith(
-        f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/images/0/"
+    assert (
+        events[-1]
+        .data["file_url"]
+        .startswith(
+            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/images/0/"
+        )
     )
     assert "?authSig=" in events[-1].data["file_url"]
     assert (
