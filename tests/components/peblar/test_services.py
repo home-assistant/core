@@ -8,14 +8,20 @@ from peblar import (
     PeblarConnectionError,
     PeblarError,
     PeblarRfidToken,
+    PeblarVehicleToken,
 )
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.components.peblar.services import (
     SERVICE_ADD_RFID_TOKEN,
+    SERVICE_ADD_VEHICLE_TOKEN,
+    SERVICE_AUTHORIZE_CHARGE_SESSION,
     SERVICE_DELETE_RFID_TOKEN,
+    SERVICE_DELETE_VEHICLE_TOKEN,
     SERVICE_LIST_RFID_TOKENS,
+    SERVICE_LIST_VEHICLE_TOKENS,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -277,3 +283,222 @@ async def test_charger_without_rfid_reader(
 
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "no_rfid_hardware"
+
+
+async def test_list_vehicle_tokens(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test list_vehicle_tokens returns the vehicles on the charger."""
+    mock_peblar.vehicle_tokens.return_value = [
+        PeblarVehicleToken(evcc_id="EVCC-1234", alias="The blue one"),
+        PeblarVehicleToken(evcc_id="EVCC-5678", alias="The other one"),
+    ]
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIST_VEHICLE_TOKENS,
+        {"config_entry_id": init_integration.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "vehicles": [
+            {"evcc_id": "EVCC-1234", "alias": "The blue one"},
+            {"evcc_id": "EVCC-5678", "alias": "The other one"},
+        ]
+    }
+    mock_peblar.vehicle_tokens.assert_called_once_with()
+
+
+async def test_add_vehicle_token(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test add_vehicle_token calls the library with the right arguments."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_VEHICLE_TOKEN,
+        {
+            "config_entry_id": init_integration.entry_id,
+            "evcc_id": "EVCC-1234",
+            "alias": "The blue one",
+        },
+        blocking=True,
+    )
+
+    mock_peblar.add_vehicle_token.assert_called_once_with(
+        evcc_id="EVCC-1234",
+        alias="The blue one",
+    )
+
+
+async def test_delete_vehicle_token(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test delete_vehicle_token calls the library with the right arguments."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DELETE_VEHICLE_TOKEN,
+        {
+            "config_entry_id": init_integration.entry_id,
+            "evcc_id": "EVCC-1234",
+        },
+        blocking=True,
+    )
+
+    mock_peblar.delete_vehicle_token.assert_called_once_with(evcc_id="EVCC-1234")
+
+
+AUTOCHARGE_CALLS: list[tuple[str, dict[str, Any]]] = [
+    (SERVICE_LIST_VEHICLE_TOKENS, {}),
+    (SERVICE_ADD_VEHICLE_TOKEN, {"evcc_id": "EVCC-1234", "alias": "The blue one"}),
+    (SERVICE_DELETE_VEHICLE_TOKEN, {"evcc_id": "EVCC-1234"}),
+]
+
+
+@pytest.mark.parametrize("mock_peblar", [{"HwHasRfid": False}], indirect=True)
+@pytest.mark.parametrize(("service", "service_data"), AUTOCHARGE_CALLS)
+@pytest.mark.usefixtures("mock_peblar")
+async def test_autocharge_does_not_need_an_rfid_reader(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test the autocharge list is a separate one from the RFID list.
+
+    Autocharge identifies a car by what its own controller presents, so it
+    has nothing to do with the reader.
+    """
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {"config_entry_id": init_integration.entry_id, **service_data},
+        blocking=True,
+        return_response=service == SERVICE_LIST_VEHICLE_TOKENS,
+    )
+
+
+@pytest.mark.parametrize("mock_peblar", [{"HwHasPlc": False}], indirect=True)
+@pytest.mark.parametrize(("service", "service_data"), AUTOCHARGE_CALLS)
+@pytest.mark.usefixtures("mock_peblar")
+async def test_autocharge_needs_power_line_communication(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a charger that cannot do autocharge is turned away.
+
+    Checked against a charger without the hardware: it answers 200 with
+    null on the list, and 403 on adding and deleting. Letting that come
+    back as a failed request tells the user nothing.
+    """
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"config_entry_id": init_integration.entry_id, **service_data},
+            blocking=True,
+            return_response=service == SERVICE_LIST_VEHICLE_TOKENS,
+        )
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "no_autocharge_hardware"
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected"),
+    [
+        ({"uid": "0123456789ABCD"}, {"token": "0123456789ABCD", "name": None}),
+        ({"description": "My card"}, {"token": None, "name": "My card"}),
+    ],
+    ids=["by uid", "by description"],
+)
+async def test_authorize_charge_session(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+    service_data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    """Test the token can be presented by either of the two names for it."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_AUTHORIZE_CHARGE_SESSION,
+        {"config_entry_id": init_integration.entry_id, **service_data},
+        blocking=True,
+    )
+
+    mock_peblar.rest_api.return_value.authorize_charge_session.assert_called_once_with(
+        **expected
+    )
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {},
+        {"uid": "0123456789ABCD", "description": "My card"},
+    ],
+    ids=["neither", "both"],
+)
+async def test_authorize_charge_session_needs_exactly_one_token(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+    service_data: dict[str, Any],
+) -> None:
+    """Test the charger is told which token to present, and only one."""
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_AUTHORIZE_CHARGE_SESSION,
+            {"config_entry_id": init_integration.entry_id, **service_data},
+            blocking=True,
+        )
+
+    mock_peblar.rest_api.return_value.authorize_charge_session.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("mock_peblar", "translation_key"),
+    [
+        ({"HwHasRfid": False}, "no_rfid_hardware"),
+        ({"SeccOcppActive": True}, "managed_by_backoffice"),
+        ({"SessionManagerChargeWithoutAuth": True}, "authorization_not_required"),
+    ],
+    ids=["no reader", "managed over OCPP", "no authorization needed"],
+    indirect=["mock_peblar"],
+)
+async def test_authorize_charge_session_is_refused(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+    translation_key: str,
+) -> None:
+    """Test a charger that cannot or need not authorize is turned away.
+
+    The API refuses this outright on a charger managed over OCPP, and a
+    charger that charges without authorization has nothing to authorize.
+    """
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_AUTHORIZE_CHARGE_SESSION,
+            {
+                "config_entry_id": init_integration.entry_id,
+                "uid": "0123456789ABCD",
+            },
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == translation_key
+    mock_peblar.rest_api.return_value.authorize_charge_session.assert_not_called()

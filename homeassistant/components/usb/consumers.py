@@ -1,6 +1,6 @@
 """Attribution of serial ports to the integrations and apps using them."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 import os
 import re
 from typing import Any
@@ -156,14 +156,29 @@ async def _async_get_config_entry_consumers(
     return consumers
 
 
+def _iter_option_device_paths(value: Any) -> Iterator[str]:
+    """Yield device paths configured anywhere in the options of an app."""
+    if isinstance(value, str):
+        if value.startswith("/dev/"):
+            yield value
+    elif isinstance(value, Mapping):
+        for item in value.values():
+            yield from _iter_option_device_paths(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _iter_option_device_paths(item)
+
+
 @callback
 def _async_get_app_consumers(
     hass: HomeAssistant,
 ) -> dict[str, list[SerialPortConsumer]]:
-    """Return devices mapped into apps, either statically or through options.
+    """Return devices configured in the options of apps.
 
-    Supervisor resolves `device(subsystem=tty)` options into real devices, so device
-    paths that no longer exist are missing and non-serial devices are included.
+    The `devices` field of an app also lists the static devices of its manifest,
+    which are mapped into the container whether the app uses them or not, so only
+    options are evidence of a device being used. Options can refer to devices
+    that no longer exist or are not serial ports.
     """
     if not is_hassio(hass):
         return {}
@@ -179,7 +194,7 @@ def _async_get_app_consumers(
         if info is None:
             continue
 
-        for device in info["devices"]:
+        for device in _iter_option_device_paths(info["options"]):
             consumers.setdefault(device, []).append(
                 SerialPortConsumer(
                     kind="app",
@@ -224,7 +239,7 @@ async def async_get_serial_port_consumers(
         consumers.setdefault(device, []).extend(path_consumers)
 
     for path, path_consumers in app_consumers.items():
-        # Apps also map non-serial devices, only scanned ports are of interest
+        # Options can name non-serial devices, only scanned ports are of interest
         resolved_path = resolved[path]
 
         if resolved_path not in aliases:

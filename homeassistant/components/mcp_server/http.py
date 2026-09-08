@@ -8,8 +8,8 @@ The Streamable HTTP protocol uses these HTTP endpoints:
 - /api/mcp: The Streamable HTTP endpoint currently implements the
   stateless protocol for simplicity. This receives client requests and
   sends them to the MCP server, then waits for a response to send back to
-  the client. This serves the configured LLM APIs and does not require
-  admin access.
+  the client. This serves the configured LLM APIs and requires admin access
+  when the config entry is configured to require it.
 - /api/mcp/<API ID>: The same Streamable HTTP endpoint, but exposing a
   specific LLM API selected by its ID. These endpoints require admin access,
   except for the Assist API.
@@ -50,7 +50,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
 
-from .const import DOMAIN
+from .const import CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
@@ -91,6 +91,12 @@ def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
     if len(config_entries) > 1:
         raise HTTPNotFound(text="Found multiple Model Context Protocol configurations")
     return config_entries[0]
+
+
+def _validate_admin(request: web.Request, entry: MCPServerConfigEntry) -> None:
+    """Verify the user may use the endpoints serving the configured LLM APIs."""
+    if entry.data[CONF_REQUIRE_ADMIN] and not request["hass_user"].is_admin:
+        raise Unauthorized
 
 
 @dataclass
@@ -173,6 +179,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         """
         hass = request.app[KEY_HASS]
         entry = async_get_config_entry(hass)
+        _validate_admin(request, entry)
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(
@@ -225,6 +232,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         """
         hass = request.app[KEY_HASS]
         config_entry = async_get_config_entry(hass)
+        _validate_admin(request, config_entry)
 
         session_manager = config_entry.runtime_data
         if (session := session_manager.get(session_id)) is None:
@@ -297,7 +305,8 @@ async def _async_handle_streamable_message(
 class ModelContextProtocolStreamableView(HomeAssistantView):
     """Model Context Protocol Streamable HTTP endpoint.
 
-    This serves the configured LLM APIs and does not require admin access.
+    This serves the configured LLM APIs and requires admin access when the
+    config entry is configured to require it.
     """
 
     name = f"{DOMAIN}:streamable"
@@ -307,6 +316,7 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
         """Process JSON-RPC messages for the configured LLM APIs."""
         hass = request.app[KEY_HASS]
         entry = async_get_config_entry(hass)
+        _validate_admin(request, entry)
         return await _async_handle_streamable_message(
             request, self.context(request), entry.data[CONF_LLM_HASS_API]
         )

@@ -1,17 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: This integration does not register any service actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: This integration does not register any service actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not provide any conditions.
@@ -32,9 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not register any service actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -49,7 +43,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Modbus TCP gateways have no discovery protocol to update network info from.
@@ -70,7 +64,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 
@@ -79,4 +73,4 @@ rules:
   inject-websession:
     status: exempt
     comment: This integration communicates over Modbus TCP, not HTTP.
-  strict-typing: todo
+  strict-typing: done

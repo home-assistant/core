@@ -29,6 +29,20 @@ HOST = "1.2.3.4"
 PORT = 1502
 UNIT_ID = 1
 SERIAL_NUMBER = "7E123ABC"
+METER_SERIAL_NUMBER = "7E4A11C2"
+BATTERY_SERIAL_NUMBERS = ("7E7C33E4", "7E8D44F5")
+
+# Where a meter's block starts, how far the next one sits, and where in it the
+# serial number lives, as SunSpec lays them out.
+METER_BASE = 40121
+METER_STRIDE = 174
+METER_SERIAL_BASE = 40171
+
+# The same for the batteries, whose blocks sit at fixed offsets rather than a
+# stride, with the rated-energy register the probe counts them by.
+BATTERY_SERIAL_BASE = 57648
+BATTERY_RATED_ENERGY = 57666
+BATTERY_OFFSETS = (0, 256, 768)
 
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
@@ -49,7 +63,8 @@ async def async_seed_unit(
     The capture predates several of the points this integration reads, so those
     registers carry hand-picked values instead: distinct per point, and
     consistent with what the device did report (phase values sum to the
-    recorded totals, apparent power exceeds real power). Pass
+    recorded totals, apparent power exceeds real power). The meter's identity
+    block is hand-picked the same way, since the capture skips it. Pass
     ``serial_registers`` to override the inverter serial number ("7E123ABC" as
     captured).
     """
@@ -62,6 +77,30 @@ async def async_seed_unit(
         unit.holding.update(
             dict(zip(range(40052, 40056), serial_registers, strict=True))
         )
+
+
+def add_second_meter(unit: MockModbusUnit, serial_number: str) -> None:
+    """Wire a second meter onto a seeded unit.
+
+    Every address of a meter shifts by the SunSpec stride per meter, so the
+    first meter's block, copied one stride up, is a second meter that reports
+    the same measurements under its own serial number.
+    """
+    block = {
+        address + METER_STRIDE: value
+        for address, value in unit.holding.items()
+        if METER_BASE <= address < METER_BASE + METER_STRIDE
+    }
+    padded = serial_number.ljust(32, "\0").encode()
+    block.update(
+        {
+            METER_SERIAL_BASE + METER_STRIDE + index: (
+                (padded[index * 2] << 8) | padded[index * 2 + 1]
+            )
+            for index in range(16)
+        }
+    )
+    unit.holding.update(block)
 
 
 @pytest.fixture

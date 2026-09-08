@@ -1,12 +1,15 @@
 """Test Home Assistant remote methods and classes."""
 
+from collections.abc import Callable
 import datetime
 from functools import partial
+import gc
 import json
 import math
 import os
 from pathlib import Path
 import time
+import tracemalloc
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
@@ -16,7 +19,10 @@ from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder as DefaultHASSJSONEncoder,
+    cached_json_bytes,
+    cached_json_fragment,
     find_paths_unserializable_data,
+    json_bytes,
     json_bytes_sorted,
     json_bytes_strip_null,
     json_dumps,
@@ -206,6 +212,70 @@ def test_json_fragments() -> None:
         json_dumps([Fragment1(), Fragment2()])
         == '[{"inner":"fragment1"},{"inner":"fragment2"}]'
     )
+
+
+def test_cached_json_fragment() -> None:
+    """Test cached_json_fragment serializes identically to a plain fragment."""
+    data = {"a": 1, "b": [1, 2, 3], "c": {"nested": True}, "d": None}
+
+    fragment = cached_json_fragment(data)
+    assert isinstance(fragment, json_fragment)
+    assert json_dumps([fragment]) == json_dumps([json_fragment(json_bytes(data))])
+    assert (
+        json_dumps([fragment]) == '[{"a":1,"b":[1,2,3],"c":{"nested":true},"d":null}]'
+    )
+
+
+def test_cached_json_bytes() -> None:
+    """Test cached_json_bytes serializes identically to json_bytes."""
+    data = {"a": 1, "b": [1, 2, 3], "c": {"nested": True}, "d": None}
+
+    assert cached_json_bytes(data) == json_bytes(data)
+    assert (
+        cached_json_bytes(data) == b'{"a":1,"b":[1,2,3],"c":{"nested":true},"d":null}'
+    )
+
+
+@pytest.mark.parametrize(
+    "cached_serializer",
+    [cached_json_bytes, cached_json_fragment],
+    ids=["cached_json_bytes", "cached_json_fragment"],
+)
+def test_cached_json_helpers_trim_buffer(
+    cached_serializer: Callable[[Any], object],
+) -> None:
+    """Test the cached_json_* helpers cache right-sized bytes, not orjson's slack.
+
+    orjson.dumps returns bytes whose backing buffer is rounded up to a power of
+    two and not shrunk; the helpers copy them to a right-sized buffer. Without
+    that copy the cached value would retain the full over-allocated buffer
+    (several KiB even for a small payload), which is the memory regression this
+    guards against.
+
+    The waste is invisible to normal object inspection: sys.getsizeof() reports
+    the logical length, not the backing buffer, and orjson.Fragment exposes no way
+    to reach the bytes it wraps, so the retained allocation can only be observed
+    via tracemalloc.
+    """
+    data = {f"key_{index}": "value" * 5 for index in range(40)}
+    serialized_size = len(json_bytes(data))
+
+    tracemalloc.start()
+    try:
+        # clear_traces resets the baseline to zero so pre-existing garbage from
+        # the test session is not counted; the transient over-allocated buffer is
+        # freed by refcounting before get_traced_memory, leaving only `cached`.
+        gc.collect()
+        tracemalloc.clear_traces()
+        cached = cached_serializer(data)
+        retained, _ = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+
+    assert cached is not None  # keep alive until measured
+    # The cache holds ~the serialized size; without the copy it would hold
+    # orjson's oversized power-of-two buffer, which is far larger.
+    assert retained < serialized_size * 1.5
 
 
 def test_json_bytes_strip_null() -> None:

@@ -59,6 +59,7 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -70,11 +71,13 @@
   '''
   MIME-Version: 1.0
   Subject: Home Assistant
+  X-Priority: 1 (Highest)
   Content-Type: multipart/alternative;
    boundary="===============0000000000000000001=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -89,7 +92,7 @@
   Content-Transfer-Encoding: 7bit
   MIME-Version: 1.0
   
-  <html><body><img src="cid:avatar.png"></body></html>
+  <html><body><img src="https://example.com/avatar.png"></body></html>
   
   --===============0000000000000000001==--
   
@@ -104,6 +107,7 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -147,6 +151,7 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -204,6 +209,7 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -233,6 +239,7 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
