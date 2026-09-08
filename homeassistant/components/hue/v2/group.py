@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge, HueConfigEntry
-from ..const import DOMAIN
+from ..const import DOMAIN, FALLBACK_MAX_MIREDS, FALLBACK_MIN_MIREDS
 from .entity import HueBaseEntity
 from .helpers import (
     normalize_hue_brightness,
@@ -266,12 +266,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 )
                 self._attr_min_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek_schema.mirek_maximum
+                        color_temp.mirek_schema.mirek_maximum or FALLBACK_MAX_MIREDS
                     )
                 )
                 self._attr_max_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek_schema.mirek_minimum
+                        color_temp.mirek_schema.mirek_minimum or FALLBACK_MIN_MIREDS
                     )
                 )
                 # counters for color mode vote and average temp
