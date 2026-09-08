@@ -1372,6 +1372,57 @@ async def test_thermostat_fan_empty(
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
+async def test_thermostat_fan_becomes_supported_after_update(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+) -> None:
+    """Test that supported_features is recomputed once the fan trait reports a mode.
+
+    The fan trait can be present at startup without a timer_mode value yet
+    populated (e.g. before the initial full state has propagated). Regression
+    test for supported_features being frozen at entity setup rather than
+    reflecting the live device state.
+    """
+    create_device.create(
+        {
+            "sdm.devices.traits.Fan": {},
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "OFF",
+            },
+        }
+    )
+    await setup_platform()
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert ATTR_FAN_MODE not in thermostat.attributes
+    assert ATTR_FAN_MODES not in thermostat.attributes
+    assert not (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        & ClimateEntityFeature.FAN_MODE
+    )
+
+    # The fan trait later reports a real timer_mode value
+    await create_event(
+        {
+            "sdm.devices.traits.Fan": {"timerMode": "OFF"},
+        }
+    )
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        & ClimateEntityFeature.FAN_MODE
+    )
+    assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
+    assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+
+
 async def test_thermostat_invalid_fan_mode(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
