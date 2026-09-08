@@ -118,8 +118,15 @@ async def validate_input(
     except vol.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(hass, url, token_manager=token_manager) as session:
-            response = await session.initialize()
+        async with mcp_client(hass, url, token_manager=token_manager) as (
+            _session,
+            response,
+        ):
+            if not response.capabilities.tools:
+                raise MissingCapabilities(
+                    f"MCP Server {url} does not support 'Tools' capability"
+                )
+            return {"title": response.serverInfo.name}
     except httpx.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
@@ -132,13 +139,6 @@ async def validate_input(
     except httpx.HTTPError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
-
-    if not response.capabilities.tools:
-        raise MissingCapabilities(
-            f"MCP Server {url} does not support 'Tools' capability"
-        )
-
-    return {"title": response.serverInfo.name}
 
 
 class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):

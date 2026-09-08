@@ -7,20 +7,38 @@ from zoneinfo import ZoneInfo
 from energyzero import EnergyZeroConnectionError, Interval, PriceType
 import pytest
 
+from homeassistant.components.energyzero.const import CONF_ELECTRICITY_PRICE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("options", "interval"),
+    [
+        pytest.param({}, Interval.HOUR, id="existing"),
+        pytest.param(
+            {CONF_ELECTRICITY_PRICE_INTERVAL: "hourly"}, Interval.HOUR, id="hourly"
+        ),
+        pytest.param(
+            {CONF_ELECTRICITY_PRICE_INTERVAL: "quarter_hourly"},
+            Interval.QUARTER,
+            id="quarter_hourly",
+        ),
+    ],
+)
 @pytest.mark.freeze_time("2026-04-10 20:32:59")
 async def test_coordinator_requests_market_prices_with_vat(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energyzero: MagicMock,
+    options: dict[str, str],
+    interval: Interval,
 ) -> None:
     """Test the coordinator requests the backwards-compatible price stream."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=options)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -32,14 +50,14 @@ async def test_coordinator_requests_market_prices_with_vat(
             call(
                 start_date=today,
                 end_date=today,
-                interval=Interval.HOUR,
+                interval=interval,
                 price_type=PriceType.MARKET_WITH_VAT,
                 local_tz=local_tz,
             ),
             call(
                 start_date=tomorrow,
                 end_date=tomorrow,
-                interval=Interval.HOUR,
+                interval=interval,
                 price_type=PriceType.MARKET_WITH_VAT,
                 local_tz=local_tz,
             ),
