@@ -7,14 +7,13 @@ from datetime import datetime
 from typing import Any, Concatenate, override
 
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
@@ -28,7 +27,6 @@ from .const import (
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
-    DEFAULT_ZONE_RUN,
 )
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .services import async_update_programs_and_zones
@@ -180,17 +178,7 @@ async def async_setup_entry(
 
     services: tuple[tuple[str, VolDictType | None, str], ...] = (
         ("start_program", None, "async_start_program"),
-        (
-            "start_zone",
-            {
-                vol.Optional(
-                    CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
-                ): cv.positive_int
-            },
-            "async_start_zone",
-        ),
         ("stop_program", None, "async_stop_program"),
-        ("stop_zone", None, "async_stop_zone"),
     )
     for service_name, schema, method in services:
         platform.async_register_entity_service(service_name, schema, method)
