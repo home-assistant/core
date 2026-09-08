@@ -5,7 +5,13 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
-from boschshcpy import BatteryLevelService, SHCBatteryDevice
+from boschshcpy import (
+    BatteryLevelService,
+    SHCBatteryDevice,
+    SHCMicromoduleBlinds,
+    SHCShutterControl,
+    ShutterControlService,
+)
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -43,9 +49,12 @@ def mock_config_entry() -> MockConfigEntry:
 _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
     bucket: []
     for bucket in (
+        "micromodule_blinds",
+        "micromodule_shutter_controls",
         "motion_detectors",
         "shutter_contacts",
         "shutter_contacts2",
+        "shutter_controls",
         "smoke_detectors",
         "thermostats",
         "twinguards",
@@ -111,4 +120,51 @@ def battery_only_device(
     device.device_model = "MD"
     device.status = "AVAILABLE"
     device.deleted = False
+    return device
+
+
+def shutter_control_device(
+    device_id: str = "hdm:ZigBee:shutter1",
+    name: str = "Shutter",
+    device_model: str = "BBL",
+    level: float = 1.0,
+    operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+) -> SHCShutterControl:
+    """Build a minimal device double for the shutter_controls/micromodule_shutter_controls buckets."""
+    device = create_autospec(SHCShutterControl, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = device_model
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.level = level
+    device.operation_state = operation_state
+    return device
+
+
+def micromodule_blinds_device(
+    device_id: str = "hdm:ZigBee:blinds1",
+    name: str = "Blinds",
+    level: float = 1.0,
+    current_angle: float = 0.0,
+    operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+) -> SHCMicromoduleBlinds:
+    """Build a minimal device double for the micromodule_blinds bucket."""
+    device = create_autospec(SHCMicromoduleBlinds, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_BLINDS"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.level = level
+    device.current_angle = current_angle
+    device.operation_state = operation_state
     return device

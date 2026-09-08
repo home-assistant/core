@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
     SHCLightSwitchBSM,
+    SHCMicromoduleShutterControl,
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCThermostat,
@@ -47,7 +48,7 @@ class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
     attributes_fn: Callable[[_DeviceT], dict[str, Any]] | None = None
 
 
-_PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM
+_PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterControl
 
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
@@ -263,6 +264,8 @@ async def async_setup_entry(
     power_meter_devices: list[_PowerMeterDevice] = [
         *session.device_helper.smart_plugs,
         *session.device_helper.light_switches_bsm,
+        *session.device_helper.micromodule_shutter_controls,
+        *session.device_helper.micromodule_blinds,
     ]
     entities.extend(
         SHCSensor(
