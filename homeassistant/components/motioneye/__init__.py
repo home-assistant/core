@@ -1,7 +1,8 @@
 """The motionEye integration."""
 
+from base64 import urlsafe_b64encode
 from collections.abc import Callable
-import contextlib
+from datetime import timedelta
 from http import HTTPStatus
 import json
 import logging
@@ -14,7 +15,6 @@ from motioneye_client.client import (
     MotionEyeClient,
     MotionEyeClientError,
     MotionEyeClientInvalidAuthError,
-    MotionEyeClientPathError,
 )
 from motioneye_client.const import (
     KEY_CAMERAS,
@@ -34,6 +34,7 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_source import URI_SCHEME
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -475,23 +476,15 @@ def _get_media_event_data(
             f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
         ),
     }
-    url = get_media_url(
-        client,
-        camera_id,
-        file_path,
-        kind == "images",
+    encoded_path = urlsafe_b64encode(file_path.encode("utf-8")).decode("ascii")
+    proxy_path = (
+        f"/api/motioneye/media/{config_entry_id}/{camera_id}/"
+        f"{kind}/0/{encoded_path}"
     )
-    if url:
-        output[EVENT_FILE_URL] = url
+    output[EVENT_FILE_URL] = async_sign_path(
+        hass,
+        proxy_path,
+        timedelta(minutes=5),
+        use_content_user=True,
+    )
     return output
-
-
-def get_media_url(
-    client: MotionEyeClient, camera_id: int, path: str, image: bool
-) -> str | None:
-    """Get the URL for a motionEye media item."""
-    with contextlib.suppress(MotionEyeClientPathError):
-        if image:
-            return client.get_image_url(camera_id, path)
-        return client.get_movie_url(camera_id, path)
-    return None
