@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import override
 
 from deebot_client.capabilities import CapabilityEvent
-from deebot_client.events import Event
+from deebot_client.events import ErrorEvent, Event
 from deebot_client.events.water_info import MopAttachedEvent
 from sucks import VacBot
 
@@ -44,6 +44,20 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
         key="water_mop_attached",
         translation_key="water_mop_attached",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    EcovacsBinarySensorEntityDescription[ErrorEvent](
+        capability_fn=lambda caps: caps.error,
+        value_fn=lambda e: e.code == 322,
+        key="clean_water_tank",
+        translation_key="clean_water_tank",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    EcovacsBinarySensorEntityDescription[ErrorEvent](
+        capability_fn=lambda caps: caps.error,
+        value_fn=lambda e: e.code == 323,
+        key="dirty_water_tank",
+        translation_key="dirty_water_tank",
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
 
