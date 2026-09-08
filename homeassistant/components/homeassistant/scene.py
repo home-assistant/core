@@ -163,6 +163,20 @@ def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(cast(HomeAssistantScene, entity).scene_config.states)
 
 
+@callback
+def scene_target_states(hass: HomeAssistant, entity_id: str) -> dict[str, State]:
+    """Return the target state per entity in a scene."""
+    if DATA_PLATFORM not in hass.data:
+        return {}
+
+    platform: EntityPlatform = hass.data[DATA_PLATFORM]
+
+    if (entity := platform.entities.get(entity_id)) is None:
+        return {}
+
+    return dict(cast(HomeAssistantScene, entity).scene_config.states)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,

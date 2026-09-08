@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 import yaml
 
@@ -385,6 +386,67 @@ async def test_entities_in_scene(hass: HomeAssistant) -> None:
         ("scene.scene_3", ["light.kitchen", "light.living_room"]),
     ):
         assert ha_scene.entities_in_scene(hass, scene_id) == entities
+
+
+@pytest.mark.parametrize(
+    "scene_id",
+    [
+        pytest.param("scene.scene_1", id="one_entity"),
+        pytest.param("scene.scene_3", id="two_entities"),
+    ],
+)
+async def test_scene_target_states(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, scene_id: str
+) -> None:
+    """Test reading the target states of a scene."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {"name": "scene_1", "entities": {"light.kitchen": "on"}},
+                {"name": "scene_2", "entities": {"light.living_room": "off"}},
+                {
+                    "name": "scene_3",
+                    "entities": {
+                        "light.kitchen": {"state": "on", "brightness": 100},
+                        "light.living_room": "off",
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert ha_scene.scene_target_states(hass, scene_id) == snapshot
+
+
+async def test_scene_target_states_missing(hass: HomeAssistant) -> None:
+    """Test an unloaded platform and an unknown scene return no states."""
+    assert ha_scene.scene_target_states(hass, "scene.scene_1") == {}
+
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": [{"name": "scene_1", "entities": {"light.kitchen": "on"}}]},
+    )
+    await hass.async_block_till_done()
+
+    assert ha_scene.scene_target_states(hass, "scene.unknown") == {}
+
+
+async def test_scene_target_states_returns_copy(hass: HomeAssistant) -> None:
+    """Test that changing the returned dict does not change the scene."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": [{"name": "scene_1", "entities": {"light.kitchen": "on"}}]},
+    )
+    await hass.async_block_till_done()
+
+    ha_scene.scene_target_states(hass, "scene.scene_1").clear()
+
+    assert ha_scene.entities_in_scene(hass, "scene.scene_1") == ["light.kitchen"]
 
 
 async def test_config(hass: HomeAssistant) -> None:

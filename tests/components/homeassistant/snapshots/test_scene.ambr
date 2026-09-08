@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_scene_target_states[one_entity]
+  dict({
+    'light.kitchen': StateSnapshot({
+      'attributes': ReadOnlyDict({
+      }),
+      'context': <ANY>,
+      'entity_id': 'light.kitchen',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  })
+# ---
+# name: test_scene_target_states[two_entities]
+  dict({
+    'light.kitchen': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'brightness': 100,
+      }),
+      'context': <ANY>,
+      'entity_id': 'light.kitchen',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'light.living_room': StateSnapshot({
+      'attributes': ReadOnlyDict({
+      }),
+      'context': <ANY>,
+      'entity_id': 'light.living_room',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  })
+# ---
