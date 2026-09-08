@@ -20,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
+    CONF_CAPABILITIES,
     CONF_MODBUS_FRAMER,
     CONF_UNIT_ID,
     CONF_USE_AUX1,
@@ -154,6 +155,13 @@ class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Handle the initial step of the options flow."""
         if user_input is not None:
+            # Preserve the internal capability snapshot the coordinator persists
+            # in options; the form only carries the user-selected toggles, so it
+            # would otherwise drop and break offline setup while winter mode is on.
+            if CONF_CAPABILITIES in self.config_entry.options:
+                user_input[CONF_CAPABILITIES] = self.config_entry.options[
+                    CONF_CAPABILITIES
+                ]
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
