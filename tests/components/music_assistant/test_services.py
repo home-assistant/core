@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, call
 
-from music_assistant_models.enums import MediaType
+from music_assistant_models.config_entries import ProviderConfig, ProviderError
+from music_assistant_models.enums import MediaType, ProviderStatus, ProviderType
 from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
 import pytest
@@ -11,12 +12,14 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.music_assistant.const import (
     ATTR_FAVORITE,
     ATTR_MEDIA_TYPE,
+    ATTR_PROVIDER_TYPE,
     ATTR_SEARCH_NAME,
     ATTR_USERNAME,
     DOMAIN,
 )
 from homeassistant.components.music_assistant.services import (
     SERVICE_GET_LIBRARY,
+    SERVICE_GET_PROVIDERS,
     SERVICE_SEARCH,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -214,3 +217,104 @@ async def test_get_library_action_with_unknown_username(
         )
     assert err.value.translation_key == "invalid_username"
     assert err.value.translation_placeholders == {"username": "nobody"}
+
+
+async def test_get_providers_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test music assistant get_providers action."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    music_assistant_client.config.get_provider_configs = AsyncMock(
+        return_value=[
+            ProviderConfig(
+                values={},
+                type=ProviderType.MUSIC,
+                domain="spotify",
+                instance_id="spotify-1234",
+                enabled=True,
+                name=None,
+                default_name="Spotify",
+                status=ProviderStatus.LOADED,
+            ),
+            ProviderConfig(
+                values={},
+                type=ProviderType.PLAYER,
+                domain="squeezelite",
+                instance_id="squeezelite-5678",
+                enabled=True,
+                name="Living room",
+                default_name="Squeezelite",
+                status=ProviderStatus.LOADED,
+            ),
+        ]
+    )
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PROVIDERS,
+        {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+async def test_get_providers_action_with_type_filter(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_providers action forwards the provider type filter."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.config.get_provider_configs = AsyncMock(return_value=[])
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PROVIDERS,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_PROVIDER_TYPE: "music",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert music_assistant_client.config.get_provider_configs.call_args == call(
+        provider_type=ProviderType.MUSIC,
+    )
+
+
+async def test_get_providers_action_with_error(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test get_providers action surfaces a provider load error."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    music_assistant_client.config.get_provider_configs = AsyncMock(
+        return_value=[
+            ProviderConfig(
+                values={},
+                type=ProviderType.MUSIC,
+                domain="ytmusic",
+                instance_id="ytmusic-9012",
+                enabled=True,
+                name=None,
+                default_name="YouTube Music",
+                status=ProviderStatus.AUTH_REQUIRED,
+                last_error=ProviderError(
+                    error_code=11,
+                    message="Authentication required",
+                ),
+            ),
+        ]
+    )
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PROVIDERS,
+        {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
