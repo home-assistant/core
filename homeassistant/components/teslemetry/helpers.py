@@ -151,8 +151,7 @@ def async_handle_credits(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: CreditsEvent
 ) -> None:
     """Record the latest credit state and clear the issue when credits return."""
-    quota = credits.quota
-    fraction = quota.get("fraction") if isinstance(quota, dict) else None
+    fraction = credits.quota.get("fraction")
     quota_available: bool | None = None
     if isinstance(fraction, (int, float)) and not isinstance(fraction, bool):
         quota_available = fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
