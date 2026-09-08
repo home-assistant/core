@@ -248,8 +248,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
     conf: ConfigType | None = config.get(DOMAIN)
 
-    ios_config = await hass.async_add_executor_job(
-        load_json_object, hass.config.path(CONFIGURATION_FILE)
+    ios_config = cast(
+        dict[str, dict[str, Any]],
+        await hass.async_add_executor_job(
+            load_json_object, hass.config.path(CONFIGURATION_FILE)
+        ),
     )
 
     if ios_config == {}:
@@ -260,7 +263,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     ios_config[CONF_USER] = conf_user
 
-    hass.data[IOS_DATA] = cast(dict[str, dict[str, Any]], ios_config)
+    hass.data[IOS_DATA] = ios_config
 
     # No entry support for notify component yet
     discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
