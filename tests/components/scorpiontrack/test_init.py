@@ -100,7 +100,7 @@ async def test_vehicle_added_after_setup(
     device_registry: dr.DeviceRegistry,
     entity_id: str,
 ) -> None:
-    """Test discovery, repeat updates, and a vehicle returning to the share."""
+    """Test discovery, repeat updates, returning vehicles, and reload."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(entity_id) is None
     initial_entities = len(
@@ -131,7 +131,8 @@ async def test_vehicle_added_after_setup(
     assert hass.states.get(heading.entity_id) is None
     assert mock_scorpiontrack_client.async_get_share.await_count == 2
 
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert (
         len(
@@ -143,12 +144,14 @@ async def test_vehicle_added_after_setup(
     )
 
     mock_scorpiontrack_client.async_get_share.return_value = mock_share
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     mock_scorpiontrack_client.async_get_share.return_value = updated_share
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == state.state
     assert entity_registry.async_get(entity_id).id == registry_entry.id
@@ -161,11 +164,18 @@ async def test_vehicle_added_after_setup(
         == initial_entities * 2
     )
 
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == state.state
+    assert entity_registry.async_get(entity_id).id == registry_entry.id
+
 
 async def test_discovery_stops_on_unload(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_share: ScorpionTrackShare,
+    mock_scorpiontrack_client: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test unloading removes the discovery listeners."""
@@ -173,58 +183,17 @@ async def test_discovery_stops_on_unload(
     initial_entities = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
-    coordinator = mock_config_entry.runtime_data
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     added_vehicle = replace(mock_share.vehicles[0], id=2, registration="XY34 ABC")
-    coordinator.vehicles_by_id[added_vehicle.id] = added_vehicle
-    coordinator.async_set_updated_data(
-        replace(mock_share, vehicles=(*mock_share.vehicles, added_vehicle))
-    )
-    await hass.async_block_till_done()
-    assert (
-        len(
-            er.async_entries_for_config_entry(
-                entity_registry, mock_config_entry.entry_id
-            )
-        )
-        == initial_entities
-    )
-
-
-async def test_deleted_vehicle_can_return(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_share: ScorpionTrackShare,
-    mock_scorpiontrack_client: AsyncMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test discovery recreates a previously deleted vehicle device."""
-    await setup_integration(hass, mock_config_entry)
-    initial_entities = len(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
-    )
-    device = device_registry.async_get_device_by_identifier(
-        ("scorpiontrack", "101_1"), mock_config_entry.entry_id
-    )
-    assert device is not None
-
     mock_scorpiontrack_client.async_get_share.return_value = replace(
-        mock_share, vehicles=()
+        mock_share, vehicles=(*mock_share.vehicles, added_vehicle)
     )
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    device_registry.async_remove_device(device.id)
-    await hass.async_block_till_done()
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    mock_scorpiontrack_client.async_get_share.return_value = mock_share
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    mock_scorpiontrack_client.async_get_share.assert_awaited_once_with()
     assert (
         len(
             er.async_entries_for_config_entry(
@@ -233,4 +202,3 @@ async def test_deleted_vehicle_can_return(
         )
         == initial_entities
     )
-    assert hass.states.get("device_tracker.ab12_cde").state != STATE_UNAVAILABLE

@@ -15,11 +15,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import DEGREE, EntityCategory, UnitOfSpeed
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import ScorpionTrackConfigEntry, ScorpionTrackCoordinator
 from .entity import ScorpionTrackEntity
 
@@ -76,25 +74,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up ScorpionTrack sensors."""
     coordinator = entry.runtime_data
-    entity_registry = er.async_get(hass)
     known_vehicles: set[int] = set()
 
     @callback
     def async_add_new_vehicles() -> None:
         """Add sensors for vehicles newly included in the share."""
-        new_vehicles = {
-            vehicle_id
-            for vehicle_id in coordinator.vehicles_by_id
-            if vehicle_id not in known_vehicles
-            or not any(
-                entity_registry.async_get_entity_id(
-                    "sensor",
-                    DOMAIN,
-                    f"{coordinator.data.id}_{vehicle_id}_{description.key}",
-                )
-                for description in SENSORS
-            )
-        }
+        new_vehicles = coordinator.vehicles_by_id.keys() - known_vehicles
         if not new_vehicles:
             return
         known_vehicles.update(new_vehicles)

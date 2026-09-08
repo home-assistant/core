@@ -6,10 +6,8 @@ from pyscorpiontrack import ScorpionTrackVehicle
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import ScorpionTrackConfigEntry, ScorpionTrackCoordinator
 from .entity import ScorpionTrackEntity
 
@@ -23,21 +21,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up ScorpionTrack tracker entities."""
     coordinator = entry.runtime_data
-    entity_registry = er.async_get(hass)
     known_vehicles: set[int] = set()
 
     @callback
     def async_add_new_vehicles() -> None:
         """Add trackers for vehicles newly included in the share."""
-        new_vehicles = {
-            vehicle_id
-            for vehicle_id in coordinator.vehicles_by_id
-            if vehicle_id not in known_vehicles
-            or entity_registry.async_get_entity_id(
-                "device_tracker", DOMAIN, f"{coordinator.data.id}_{vehicle_id}"
-            )
-            is None
-        }
+        new_vehicles = coordinator.vehicles_by_id.keys() - known_vehicles
         if not new_vehicles:
             return
         known_vehicles.update(new_vehicles)
