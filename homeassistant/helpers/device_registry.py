@@ -3060,19 +3060,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
+        # Intentional lazy set operations to determine if the device will have
+        # identifiers, actual merge happens later.
         if new_identifiers is not UNDEFINED:
-            resulting_identifiers = new_identifiers
+            has_identifiers = new_identifiers
         elif merge_identifiers is not UNDEFINED:
-            resulting_identifiers = old.identifiers | merge_identifiers
+            has_identifiers = old.identifiers or merge_identifiers
         else:
-            resulting_identifiers = old.identifiers
+            has_identifiers = old.identifiers
         if new_connections is not UNDEFINED:
-            resulting_connections = new_connections
+            has_connections = new_connections
         elif merge_connections is not UNDEFINED:
-            resulting_connections = old.connections | merge_connections
+            has_connections = old.connections or merge_connections
         else:
-            resulting_connections = old.connections
-        if not resulting_identifiers and not resulting_connections:
+            has_connections = old.connections
+        if not has_identifiers and not has_connections:
             raise HomeAssistantError(
                 "A device must have at least one of identifiers or connections"
             )
