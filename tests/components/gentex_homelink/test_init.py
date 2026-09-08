@@ -3,7 +3,7 @@
 import http
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientConnectionError, RequestInfo
+from aiohttp import RequestInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,6 +11,7 @@ from homeassistant.components.gentex_homelink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -146,7 +147,7 @@ async def test_setup_entry_token_connection_error(
     """Test setup entry retries when token validation has a connection error."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientConnectionError(),
+        side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
     ):
         await setup_integration(hass, mock_config_entry)
 
