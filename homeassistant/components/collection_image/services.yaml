@@ -2,3 +2,27 @@ shuffle:
   target:
     entity:
       integration: collection_image
+select_first:
+  target:
+    entity:
+      integration: collection_image
+select_last:
+  target:
+    entity:
+      integration: collection_image
+select_next:
+  target:
+    entity:
+      integration: collection_image
+  fields:
+    wrap:
+      selector:
+        boolean:
+select_previous:
+  target:
+    entity:
+      integration: collection_image
+  fields:
+    wrap:
+      selector:
+        boolean:

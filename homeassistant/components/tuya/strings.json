@@ -705,6 +705,19 @@
       "cat_weight": {
         "name": "Cat weight"
       },
+      "charger_status": {
+        "name": "Status",
+        "state": {
+          "charger_charging": "[%key:common::state::charging%]",
+          "charger_end": "Finished",
+          "charger_fault": "[%key:common::state::fault%]",
+          "charger_free": "[%key:common::state::idle%]",
+          "charger_free_fault": "Fault while idle",
+          "charger_insert": "Plugged in",
+          "charger_pause": "[%key:common::state::paused%]",
+          "charger_wait": "Waiting"
+        }
+      },
       "cleaning_area": {
         "name": "Cleaning area"
       },
@@ -934,6 +947,9 @@
       },
       "rolling_brush_life": {
         "name": "Rolling brush lifetime"
+      },
+      "session_energy": {
+        "name": "Session energy"
       },
       "side_brush_life": {
         "name": "Side brush lifetime"

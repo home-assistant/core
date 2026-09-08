@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.14
+actron-neo-api==0.5.16
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -438,7 +438,7 @@ aioskybell==23.12.0
 aioslimproto==3.0.0
 
 # homeassistant.components.smtp
-aiosmtplib==5.1.2
+aiosmtplib==5.1.3
 
 # homeassistant.components.solaredge
 aiosolaredge==1.0.2
@@ -480,7 +480,7 @@ aiovodafone==3.3.2
 aiowaqi==3.1.0
 
 # homeassistant.components.watttime
-aiowatttime==0.1.1
+aiowatttime==2024.6.0
 
 # homeassistant.components.webdav
 aiowebdav2==0.6.2
@@ -2561,7 +2561,7 @@ pyrail==0.4.1
 pyrainbird==6.5.0
 
 # homeassistant.components.playstation_network
-pyrate-limiter==4.4.0
+pyrate-limiter==4.5.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2594,7 +2594,7 @@ pysaunum==0.7.0
 pyschlage==2026.7.0
 
 # homeassistant.components.scorpiontrack
-pyscorpiontrack==0.1.1
+pyscorpiontrack==0.1.2
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
@@ -2900,6 +2900,9 @@ pywemo==1.4.0
 
 # homeassistant.components.wilight
 pywilight==0.0.74
+
+# homeassistant.components.willow
+pywillow==0.1.2
 
 # homeassistant.components.wiz
 pywizlight==0.6.3
@@ -3293,7 +3296,7 @@ toonapi==0.3.0
 total-connect-client==2026.7
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.9
+tplink-omada-client==1.5.10
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
