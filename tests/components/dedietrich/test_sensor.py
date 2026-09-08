@@ -123,3 +123,95 @@ async def test_sensor_unavailable_on_update_failure(
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state != "unavailable"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_partial_update_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a failed circuit becomes unavailable while other readings update."""
+    circuit_id = "sensor.de_dietrich_circuit_a_room_temperature"
+    outdoor_id = "sensor.de_dietrich_outdoor_temperature"
+    assert hass.states.get(circuit_id).state == "21.0"
+    assert hass.states.get(outdoor_id).state == "5.0"
+
+    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    unit.fail_read(654, ModbusTimeoutError("circuit unavailable"))
+    unit.holding[601] = 60
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(circuit_id).state == "unavailable"
+    assert hass.states.get(outdoor_id).state == "6.0"
+
+    unit.fail_read(654, None)
+    unit.holding[614] = 220
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(circuit_id).state == "22.0"
+    assert hass.states.get(outdoor_id).state == "6.0"
+
+
+async def test_circuit_sensor_added_after_recovery(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a circuit missing at setup is added exactly once after recovery."""
+    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    unit.fail_read(654, ModbusTimeoutError("circuit unavailable"))
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dedietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    circuit_id = "sensor.de_dietrich_circuit_a_room_temperature"
+    assert hass.states.get(circuit_id) is None
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 10
+    )
+
+    unit.fail_read(654, None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(circuit_id).state == "21.0"
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 11
+    entity_ids = {entry.entity_id for entry in entries}
+
+    unit.holding[614] = 220
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(circuit_id).state == "22.0"
+    assert {
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    } == entity_ids
+    assert {
+        state.entity_id for state in hass.states.async_all(SENSOR_DOMAIN)
+    } == entity_ids
