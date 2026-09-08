@@ -1,6 +1,7 @@
 """Test the Sofar Inverter Modbus integration setup and unload."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -130,7 +131,7 @@ async def test_setup_skips_seeding_an_unusable_restored_total(
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    extra_data: dict[str, str] | None,
+    extra_data: dict[str, Any] | None,
     restored_state: str,
 ) -> None:
     """Test a restored total without a usable number seeds no high-water mark."""
