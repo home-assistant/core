@@ -80,7 +80,7 @@ async def async_setup_devices(bridge: HueBridge):
             )
         zigbee = dev_controller.get_zigbee_connectivity(hue_resource.id)
         if zigbee and zigbee.mac_address:
-            params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}
+            params[ATTR_CONNECTIONS] = {(dr.CONNECTION_ZIGBEE, zigbee.mac_address)}
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
