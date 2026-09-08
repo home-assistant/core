@@ -1,18 +1,13 @@
 """Shared base entity for all WF-RAC platform entities."""
 
 import logging
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_TARGET_OFFSET,
-    CONF_TARGET_OFFSET_COOL,
-    CONF_TARGET_OFFSET_HEAT,
-    HVAC_TRANSLATION,
-)
+from .const import HVAC_TRANSLATION
 from .coordinator import Device
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,16 +16,16 @@ _LOGGER = logging.getLogger(__name__)
 class WfRacEntity(CoordinatorEntity[Device]):
     """Wires an entity to the shared Device coordinator.
 
-    Subclasses keep their existing _update_state() (called once at the end of
-    their own __init__ for the initial state, as before); this base class
+    Subclasses implement _update_state() and call _apply_state() once at the
+    end of their own __init__ for the initial state; this base class
     re-invokes it whenever the coordinator notifies listeners - either from
     its own poll or from Device.async_set_updated_data() right after a
     command completes.
     """
 
-    def __init__(self, device: Device, context: Any | None = None) -> None:
+    def __init__(self, device: Device) -> None:
         """Wire the entity to the shared coordinator."""
-        super().__init__(device, context=context)
+        super().__init__(device)
         self._device = device
         self._attr_device_info = device.device_info
         self._state_unreadable = False
@@ -39,30 +34,11 @@ class WfRacEntity(CoordinatorEntity[Device]):
     def _hvac_mode_from_operation(self) -> HVACMode:
         """The unit's underlying cool/heat mode.
 
-        airco.OperationMode keeps reporting it while the unit is off, which is
-        what the offset resolution below needs - the climate entity's own
+        airco.OperationMode keeps reporting it while the unit is off, so this
+        is what the displayed mode falls back to - the climate entity's own
         hvac_mode is forced to OFF in that case.
         """
         return list(HVAC_TRANSLATION.keys())[self._device.airco.OperationMode]
-
-    def _resolve_target_offset(self, hvac_mode: HVACMode) -> float:
-        """Resolve the effective target_offset for a given hvac_mode.
-
-        COOL/DRY take CONF_TARGET_OFFSET_COOL, HEAT takes
-        CONF_TARGET_OFFSET_HEAT, and an unset per-mode option falls back to
-        the global CONF_TARGET_OFFSET like every other mode. Shared here so
-        the write path and the read-back can never resolve a different offset
-        for the same mode: they would then correct each other forever.
-        """
-        options = self._device.options
-        base_offset = options.get(CONF_TARGET_OFFSET, 0.0)
-        if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
-            per_mode = options.get(CONF_TARGET_OFFSET_COOL)
-        elif hvac_mode == HVACMode.HEAT:
-            per_mode = options.get(CONF_TARGET_OFFSET_HEAT)
-        else:
-            per_mode = None
-        return float(base_offset if per_mode is None else per_mode)
 
     @override
     @property
@@ -93,9 +69,17 @@ class WfRacEntity(CoordinatorEntity[Device]):
         """
         raise NotImplementedError
 
-    @override
-    @callback
-    def _handle_coordinator_update(self) -> None:
+    def _apply_state(self) -> None:
+        """Read the current frame into this entity, or mark it unknown.
+
+        Every read goes through here, the very first one included. A frame
+        can decode cleanly and still carry a value this entity cannot
+        translate, and letting that escape a constructor is not the same
+        failure as letting it escape a poll: the platform never finishes
+        setting up, so the config entry loads with no entity at all and only
+        a traceback to say why. The same value arriving one frame later
+        merely makes the state unknown.
+        """
         try:
             self._update_state()
         except IndexError, KeyError, AttributeError, ValueError:
@@ -103,9 +87,20 @@ class WfRacEntity(CoordinatorEntity[Device]):
             # diagnosis, and the condition holds until the unit sends
             # something else - a line per poll would say nothing more.
             if not self._state_unreadable:
-                _LOGGER.warning("Could not update %s", self.entity_id, exc_info=True)
+                # entity_id is only assigned once the entity is added, so on
+                # the first read the unique id is all there is to name it by.
+                _LOGGER.warning(
+                    "Could not update %s",
+                    self.entity_id or self._attr_unique_id,
+                    exc_info=True,
+                )
             self._state_unreadable = True
             self._mark_state_unknown()
         else:
             self._state_unreadable = False
+
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._apply_state()
         self.async_write_ha_state()

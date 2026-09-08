@@ -16,37 +16,23 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_FORCE_UPDATE,
     CONF_HOST,
-    CONF_NAME,
     CONF_PORT,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, section
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import MitsubishiWfRacConfigEntry
 from .const import (
     AC_CERT_FILENAME,
     CONF_AIRCO_ID,
-    CONF_AVAILABILITY_RETRY_LIMIT,
-    CONF_INDOOR_OFFSET,
     CONF_OPERATOR_ID,
-    CONF_OUTDOOR_OFFSET,
-    CONF_TARGET_OFFSET,
-    CONF_TARGET_OFFSET_COOL,
-    CONF_TARGET_OFFSET_HEAT,
     DEFAULT_PORT,
     DOMAIN,
 )
-from .coordinator import AVAILABILITY_FAILURE_LIMIT_MIN
 
 _LOGGER = logging.getLogger(__name__)
-
-# Form-only keys: sections group the fields in the dialog, they are not
-# options themselves and never reach entry.options - see async_step_init.
-SECTION_SETPOINT_OFFSETS = "setpoint_offsets"
-SECTION_SENSOR_OFFSETS = "sensor_offsets"
 
 
 class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -84,36 +70,23 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         hass: HomeAssistant,
         data: dict[str, Any],
-        exclude_entry_id: str | None = None,
         allow_port_fallback: bool = False,
-        expect_airco_id: str | None = None,
     ) -> dict[str, Any]:
         """Validate the user input allows us to connect, and register with the airco device.
 
         allow_port_fallback belongs to discovery only: a port the module
-        announced may be wrong (#290), a port a person typed is their decision.
-
-        expect_airco_id ends the flow before registering when the address
-        answers as a different unit. Registration is what takes one of the
-        module's four account slots, and it never frees one by itself - so
-        checking afterwards would leave a slot spent on a unit the user did
-        not mean to touch.
+        announced may be wrong, a port a person typed is their decision.
         """
         if len(data[CONF_HOST]) < 3:
             raise InvalidHost
 
-        if len(data[CONF_NAME]) < 3:
-            raise InvalidName
-
         if not data.get(CONF_FORCE_UPDATE):
-            # Is this hostname or IP address already configured on a *different*
-            # entry? During reconfigure, the entry being edited already owns
-            # this host, so it must not flag itself.
+            # Is this hostname or IP address already configured?
             existing_entry = self._find_entry_matching(
                 CONF_HOST, lambda h: h == data[CONF_HOST]
             )
-            if existing_entry and existing_entry.entry_id != exclude_entry_id:
-                raise HostAlreadyConfigured(error_name=existing_entry.data[CONF_NAME])
+            if existing_entry:
+                raise HostAlreadyConfigured(error_name=existing_entry.title)
 
         repository = Repository(
             async_get_clientsession(hass),
@@ -128,7 +101,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             airco_id = await repository.get_airco_id()
         except (WfRacError, KeyError, TypeError) as query_failed:
             # A discovery announcement has been seen carrying a port the module
-            # does not serve (#290). The port is fixed in the firmware and not
+            # does not serve. The port is fixed in the firmware and not
             # user-settable, so rather than failing on a value the device
             # cannot have meant, try the one it always listens on. Only the
             # announced value is second-guessed - a port the user typed is
@@ -160,9 +133,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data[CONF_AIRCO_ID] = airco_id
         if not airco_id:
             raise CannotConnect(reason="unknown reason")
-
-        if expect_airco_id is not None and airco_id != expect_airco_id:
-            raise AbortFlow("another_airco")
 
         _LOGGER.debug("Registering with airco [%s]", data[CONF_AIRCO_ID])
         try:
@@ -236,21 +206,23 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # entry later - and it aborts a unit reached at a second
                 # address, which would otherwise become a second entry whose
                 # entities collide with the first one's.
-                await self.async_set_unique_id(info[CONF_AIRCO_ID])
+                await self.async_set_unique_id(info[CONF_AIRCO_ID].lower())
                 self._abort_if_unique_id_configured()
 
                 data_input = user_input.copy()
                 # Form-only: it decides whether a duplicate host is accepted
                 # while adding, and means nothing to a stored entry.
                 data_input.pop(CONF_FORCE_UPDATE, None)
-                options_input = {
-                    CONF_AVAILABILITY_RETRY_LIMIT: AVAILABILITY_FAILURE_LIMIT_MIN,
-                }
 
+                # Named after the unit rather than asked for: config flows do
+                # not collect entry names, and renaming is Home Assistant's
+                # own. The last four characters of the airco id are enough to
+                # tell two units apart and to match one against the label on
+                # the module, while the whole id stays out of the device name
+                # and the entity id that people paste into issue reports.
                 return self.async_create_entry(
-                    title=info[CONF_NAME],
+                    title=f"WF-RAC {info[CONF_AIRCO_ID][-4:]}",
                     data=data_input,
-                    options=options_input,
                 )
             except KnownError as error:
                 # Expected outcomes of user input, not faults: the user sees
@@ -309,7 +281,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle adding device discovered by zeroconf."""
 
         description_placeholders = {
-            "id": self._discovery_info[CONF_NAME],
+            "id": self._discovery_info[CONF_AIRCO_ID],
             "host": self._discovery_info[CONF_HOST],
             "port": self._discovery_info[CONF_PORT],
         }
@@ -321,9 +293,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         field = partial(self._field, user_input)
         data_schema = vol.Schema(
             {
-                field(
-                    CONF_NAME, vol.Required, f"Airco {self._discovery_info[CONF_NAME]}"
-                ): str,
                 field(
                     CONF_PORT, vol.Optional, self._discovery_info[CONF_PORT]
                 ): cv.port,
@@ -339,15 +308,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @override
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: MitsubishiWfRacConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return WfRacOptionsFlowHandler()
-
-    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -356,7 +316,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         field = partial(self._field, user_input)
         data_schema = vol.Schema(
             {
-                field(CONF_NAME, vol.Required, "Airco unknown"): cv.string,
                 field(CONF_HOST, vol.Required): cv.string,
                 field(CONF_PORT, vol.Optional, DEFAULT_PORT): cv.port,
                 field(CONF_FORCE_UPDATE, vol.Optional, False): cv.boolean,
@@ -365,80 +324,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_common(
             step_id="user", data_schema=data_schema, user_input=user_input
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle changing an existing entry's connection details (host/port/name)."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        current = {
-            CONF_NAME: reconfigure_entry.data[CONF_NAME],
-            CONF_HOST: reconfigure_entry.data[CONF_HOST],
-            CONF_PORT: reconfigure_entry.data[CONF_PORT],
-        }
-
-        field = partial(self._field, user_input or current)
-        data_schema = vol.Schema(
-            {
-                field(CONF_NAME, vol.Required): cv.string,
-                field(CONF_HOST, vol.Required): cv.string,
-                field(CONF_PORT, vol.Optional, DEFAULT_PORT): cv.port,
-            }
-        )
-
-        errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
-
-        if user_input:
-            try:
-                data = dict(user_input)
-                data[CONF_OPERATOR_ID] = reconfigure_entry.data[CONF_OPERATOR_ID]
-                data[CONF_DEVICE_ID] = reconfigure_entry.data[CONF_DEVICE_ID]
-
-                # Checked against the stored airco id rather than through
-                # _abort_if_unique_id_mismatch(): entries added before the
-                # manual step registered a unique id carry the airco id in
-                # data alone until the migration reaches them, and this has to
-                # hold for those too. Merging a different unit's id would keep
-                # the entry but re-point it, and the entities - whose unique
-                # ids are built from that id - would be replaced and the
-                # originals orphaned.
-                info = await self._async_register_airco(
-                    self.hass,
-                    data,
-                    exclude_entry_id=reconfigure_entry.entry_id,
-                    expect_airco_id=reconfigure_entry.data[CONF_AIRCO_ID],
-                )
-
-                new_data = {**reconfigure_entry.data, **data}
-
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    title=info[CONF_NAME],
-                    data=new_data,
-                )
-            except KnownError as error:
-                errors, placeholders = error.get_errors_and_placeholders(
-                    data_schema.schema
-                )
-                description_placeholders.update(
-                    {k: str(v) for k, v in placeholders.items()}
-                )
-            except AbortFlow:
-                # The flow working, not a fault - see _async_create_common.
-                raise
-            except Exception:  # pylint: disable=broad-except
-                # Same outermost boundary as _async_create_common: a bug here
-                # should surface as "unexpected_error", not crash the flow.
-                _LOGGER.exception("Unexpected exception")
-                errors[CONF_BASE] = "unexpected_error"
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=data_schema,
-            errors=errors,
-            description_placeholders=description_placeholders,
         )
 
     @override
@@ -459,7 +344,11 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.port,
         )
 
-        await self.async_set_unique_id(node_name)
+        # Lower case on both sides: this id comes from the announced hostname
+        # while every other path takes it from the airconId the unit reports,
+        # and a difference in case would leave discovery unable to recognise
+        # an entry it had matched on before.
+        await self.async_set_unique_id(node_name.lower())
         # The address only. A module that moved gets followed; its port is
         # what setup was configured with, and modules have been seen
         # announcing 5353 - the mDNS port itself - in the SRV record where the
@@ -473,129 +362,10 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("already configured!")
             return self.async_abort(reason="already_configured")
 
-        info[CONF_NAME] = node_name
+        info[CONF_AIRCO_ID] = node_name
         self._discovery_info = info
 
         return await self.async_step_discovery_confirm()
-
-
-class WfRacOptionsFlowHandler(config_entries.OptionsFlowWithReload):
-    """Base class for options handling.
-
-    OptionsFlowWithReload rather than OptionsFlow: every option here is read
-    once while the device is built (see create_device_from_entry), so a change
-    only takes effect after a reload. Letting the flow do that itself is what
-    replaced the entry update listener - HA deprecated combining a listener
-    with the config flow's own reloading methods (async_update_reload_and_abort
-    and _abort_if_unique_id_configured), which this flow uses, because the two
-    reload the entry twice and race each other.
-    """
-
-    def _rendered_option_keys(self) -> set[str]:
-        """The option keys this form shows for the current configuration.
-
-        Deliberately derived from the saved options - the same input the
-        schema is built from - rather than recorded while building it: the
-        save path needs to know what the form could not have collected, and
-        answering that from state carried between the two halves is one
-        forgotten assignment away from silently dropping settings.
-        """
-        return {
-            CONF_AVAILABILITY_RETRY_LIMIT,
-            CONF_TARGET_OFFSET,
-            CONF_TARGET_OFFSET_COOL,
-            CONF_TARGET_OFFSET_HEAT,
-            CONF_INDOOR_OFFSET,
-            CONF_OUTDOOR_OFFSET,
-        }
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            # Sections hand their fields back nested under the section key,
-            # while everything that reads an option reads it flat off
-            # entry.options - so the shape is flattened straight back out and
-            # the stored options stay exactly what they have always been.
-            data: dict[str, Any] = {}
-            for key, value in user_input.items():
-                if isinstance(value, dict):
-                    data.update(value)
-                else:
-                    data[key] = value
-            # A field the form did not show cannot be collected from it, and
-            # async_create_entry replaces the options wholesale rather than
-            # merging - so an unrendered value has to be carried over by hand
-            # or it is dropped. A field that was shown and left empty is
-            # meant to be empty and is not carried over.
-            for key, value in self.config_entry.options.items():
-                if key not in self._rendered_option_keys():
-                    data.setdefault(key, value)
-            return self.async_create_entry(title="", data=data)
-
-        options = self.config_entry.options
-        offset_range_validator = vol.All(
-            vol.Coerce(float), vol.Range(min=-5.0, max=5.0)
-        )
-        setpoint_fields: dict[Any, Any] = {
-            vol.Optional(
-                CONF_TARGET_OFFSET,
-                default=options.get(CONF_TARGET_OFFSET, 0.0),
-            ): offset_range_validator,
-        }
-        # target_offset_cool/heat are optional per-mode overrides that must
-        # stay "unset" (None) unless the user explicitly fills them in - a
-        # default= here would coerce a blank field to 0.0 and defeat the
-        # fallback-to-target_offset resolution in climate.py. suggested_value
-        # (not default=) pre-fills the displayed value without forcing one
-        # when absent.
-        setpoint_fields.update(
-            {
-                vol.Optional(
-                    key,
-                    description={"suggested_value": options.get(key)},
-                ): vol.Any(None, offset_range_validator)
-                for key in (CONF_TARGET_OFFSET_COOL, CONF_TARGET_OFFSET_HEAT)
-            }
-        )
-
-        sensor_fields: dict[Any, Any] = {
-            vol.Optional(
-                key,
-                default=options.get(key, 0.0),
-            ): vol.All(vol.Coerce(float), vol.Range(min=-15.0, max=15.0))
-            for key in (CONF_INDOOR_OFFSET, CONF_OUTDOOR_OFFSET)
-        }
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    # Floor, not a free number: values below the minimum were
-                    # the reason this option kept needing correcting in
-                    # migrations. Raising it stays available for weak links.
-                    vol.Required(
-                        CONF_AVAILABILITY_RETRY_LIMIT,
-                        default=options.get(
-                            CONF_AVAILABILITY_RETRY_LIMIT,
-                            AVAILABILITY_FAILURE_LIMIT_MIN,
-                        ),
-                    ): vol.All(
-                        vol.Coerce(int), vol.Range(min=AVAILABILITY_FAILURE_LIMIT_MIN)
-                    ),
-                    vol.Required(SECTION_SETPOINT_OFFSETS): section(
-                        vol.Schema(setpoint_fields), {"collapsed": False}
-                    ),
-                    vol.Required(SECTION_SENSOR_OFFSETS): section(
-                        vol.Schema(sensor_fields), {"collapsed": True}
-                    ),
-                },
-            ),
-        )
-
-
-# pylint: disable=too-few-public-methods
 
 
 class KnownError(Exception):
@@ -652,13 +422,6 @@ class HostAlreadyConfigured(KnownError):
 
     error_name = "host_already_configured"
     applies_to_field = CONF_HOST
-
-
-class InvalidName(KnownError):
-    """Error to indicate the name is too short."""
-
-    error_name = "name_invalid"
-    applies_to_field = CONF_NAME
 
 
 class TooManyDevicesRegistered(KnownError):

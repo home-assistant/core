@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from pywfrac import Aircon, AirconCommands
+from pywfrac import AIRFLOW_UNKNOWN, Aircon, AirconCommands
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MitsubishiWfRacConfigEntry
 from .const import (
-    CONF_INDOOR_OFFSET,
     DOMAIN,
     FAN_MODE_TRANSLATION,
     HOME_LEAVE_TEMP_COOL,
@@ -80,12 +79,9 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     _attr_swing_modes: list[str] | None = SUPPORT_SWING_MODES
     _attr_swing_horizontal_mode: str | None = SWING_HORIZONTAL_AUTO
     _attr_swing_horizontal_modes: list[str] | None = SUPPORT_SWING_HORIZONTAL_MODES
-    # 0.5 K is what the wire format carries: the setpoint byte is
-    # int(PresetTemp / 0.5), which truncates. Without declaring the step, HA
-    # offers 0.1 K and the unit silently drops the remainder - 21.4 arrives as
-    # 21.0. A target_offset that isn't a multiple of 0.5 still shifts the
-    # displayed target off the grid; that is the offset's job, and it stays
-    # visible rather than the UI promising a resolution the device lacks.
+    # The setpoint byte is int(PresetTemp / 0.5), which truncates. Without
+    # declaring the step, HA offers 0.1 K and the unit drops the remainder -
+    # 21.4 arrives as 21.0.
     _attr_target_temperature_step: float = 0.5
     # Only filled in when the model reports VacantProperty (see __init__);
     # ClimateEntity has no class-level default for either of these.
@@ -113,13 +109,13 @@ class AircoClimate(WfRacEntity, ClimateEntity):
                 SUPPORT_FLAGS | ClimateEntityFeature.PRESET_MODE
             )
             self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
-        self._update_state()
+        self._apply_state()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register with the coordinator and publish the first state."""
         await super().async_added_to_hass()
-        self._update_state()
+        self._apply_state()
 
     def _min_temp_for_mode(self, hvac_mode: HVACMode) -> float:
         """Minimum setpoint depends on hvac_mode.
@@ -166,7 +162,7 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         the value applies to whichever regulating mode is turned on next, often
         in the very next step of the same automation. Holding it to the default
         18C floor there rejects a cooling setpoint the unit takes happily once
-        it is cooling, which is what it did until #317.
+        it is cooling.
         """
         if hvac_mode in REGULATING_HVAC_MODES:
             return (
@@ -207,7 +203,7 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         # an automation that sets a setpoint before switching mode gets
         # measured against the mode it is leaving. Saying so - and that
         # hvac_mode belongs in the same call - is the difference between a
-        # rejection and a fix (#317).
+        # rejection and a fix.
         if set_temp < min_temp:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -230,25 +226,7 @@ class AircoClimate(WfRacEntity, ClimateEntity):
                 },
             )
 
-        # The unit regulates against its own return-air reading, which is
-        # biased against the room. The target offset compensates that on the
-        # wire while the displayed target_temperature stays what was asked
-        # for. Resolved against the mode the unit will be in after this
-        # command, since cooling and heating have opposite-sign bias - and
-        # while it is off, against the mode it keeps underneath, because that
-        # is what _update_state() reads back with. Resolving OFF here instead
-        # would move the displayed target by the difference between the two
-        # offsets the moment the command lands.
-        offset_mode = (
-            self._hvac_mode_from_operation
-            if target_hvac_mode == HVACMode.OFF
-            else target_hvac_mode
-        )
-        target_offset = self._resolve_target_offset(offset_mode)
-        target_temp = set_temp - target_offset
-        target_temp = max(min_temp, min(max_temp, target_temp))
-
-        opts: dict[AirconCommands, Any] = {AirconCommands.PresetTemp: target_temp}
+        opts: dict[AirconCommands, Any] = {AirconCommands.PresetTemp: set_temp}
 
         if "hvac_mode" in kwargs:
             opts.update(
@@ -374,19 +352,18 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         """Private update attributes."""
         airco = self._device.airco
 
-        indoor_offset = self._device.options.get(CONF_INDOOR_OFFSET, 0.0)
-        # Both the displayed hvac_mode and the target_offset resolution need
-        # the underlying cool/heat mode, so it's computed once here and shared
-        # between them.
+        # OperationMode keeps reporting the underlying cool/heat mode while the
+        # unit is off, which is what the displayed hvac_mode is derived from.
         mode_from_operation = self._hvac_mode_from_operation
-        # Mirror the subtraction in async_set_temperature() so the displayed
-        # target_temperature agrees with what the user set - PresetTemp itself
-        # holds the offset-lowered value that was actually sent to the device.
-        target_offset = self._resolve_target_offset(mode_from_operation)
 
-        self._attr_target_temperature = airco.PresetTemp + target_offset
-        # The unit's own reading, plus the calibration offset that corrects it.
-        self._attr_current_temperature = airco.IndoorTemp + indoor_offset
+        self._attr_target_temperature = airco.PresetTemp
+        self._attr_current_temperature = airco.IndoorTemp
+        # Named rather than left to index past the end of the list: the
+        # library says so itself when it could not read the unit's fan step,
+        # and a sixth fan mode here would otherwise turn that marker into a
+        # real one and lose the unknown state without a sound.
+        if airco.AirFlow == AIRFLOW_UNKNOWN:
+            raise IndexError("the unit reported a fan step pywfrac cannot read")
         self._attr_fan_mode = list(FAN_MODE_TRANSLATION.keys())[airco.AirFlow]
         self._attr_swing_mode = (
             SWING_3D_AUTO

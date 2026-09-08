@@ -1,56 +1,35 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "another_airco": "That address belongs to a different airco. Add it as its own device instead.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "Could not connect with the Airco: {reason}",
       "host_already_configured": "Airco IP already configured as [{error_name}]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "name_invalid": "Name must be at least 3 characters long",
       "too_many_devices_registered": "There are too many devices registered for this airco. Please delete a device (in the app) or do a factory reset of the module.",
       "unexpected_error": "An unexpected error occurred. Please check the log for details."
     },
     "step": {
       "discovery_confirm": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "name": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::name%]",
           "port": "The port the module announced. It is normally 51443 - correct it here if the value above looks different."
         },
-        "description": "The airco with id: {id}, IP: {host} and port: {port} was discovered. The port is normally 51443 — correct it below if it looks different. Please give it a name.",
+        "description": "The airco with id: {id}, IP: {host} and port: {port} was discovered. The port is normally 51443 — correct it below if it looks different.",
         "title": "Discovered WF-RAC airco"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::host%]",
-          "name": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::name%]",
-          "port": "[%key:component::mitsubishi_wf_rac::config::step::user::data_description::port%]"
-        },
-        "description": "Update the connection details for this Airco.",
-        "title": "Reconfigure WF-RAC AC connection"
       },
       "user": {
         "data": {
           "force_update": "Ignore duplicate IP address",
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "force_update": "Add this airco even though another entry already uses this IP address. Meant for re-adding a unit whose old entry went missing: the module accepts one connection at a time, so two entries polling it will produce errors in the log.",
           "host": "The local IP address of the airco's wireless module. A changed address is picked up when the module announces itself again; give the module a fixed address in your router, or correct it here if it does not.",
-          "name": "The name for this airco in Home Assistant. It names the device and prefixes the entities belonging to it.",
           "port": "The port the module's local API listens on. Leave this at 51443 unless your module announces a different one."
         },
         "description": "Please fill in the correct information to add the Airco Manually",
@@ -122,48 +101,6 @@
     "too_many_devices": {
       "description": "This unit has room for four registered accounts and all four are taken, so Home Assistant cannot register itself. The module never frees a slot by itself: registrations do not expire, and a new one is refused rather than replacing an older one. In the Smart M-Air app, remove this unit from a phone that no longer needs it - each account can only remove itself, and several phones sharing one Smart M-Air account take up a single slot between them. Then reload this integration. If nobody can free a slot - a phone that is long gone still holds one - the module has to be set up again from scratch.",
       "title": "Too many accounts registered on {device_name}"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "availability_retry_limit": "Retry limit"
-        },
-        "data_description": {
-          "availability_retry_limit": "Consecutive failed polls before the airco is marked unavailable. The minimum of three is about three minutes at the 60-second poll interval - enough to ride through the module's hourly WiFi reassociation. Raise it on a weak link."
-        },
-        "description": "Below are the options you can change for this airco.",
-        "sections": {
-          "sensor_offsets": {
-            "data": {
-              "indoor_offset": "Indoor Temp. Sensor Offset",
-              "outdoor_offset": "Outdoor Temp. Sensor Offset"
-            },
-            "data_description": {
-              "indoor_offset": "Added to the unit's own indoor reading before it is shown. Display only - it does not change what the unit does.",
-              "outdoor_offset": "The same, for the outdoor temperature the unit reports."
-            },
-            "description": "Correct the readings shown in Home Assistant. Display only - neither changes what the unit does.",
-            "name": "Sensor offsets"
-          },
-          "setpoint_offsets": {
-            "data": {
-              "target_offset": "Target Temp. Offset",
-              "target_offset_cool": "Target Temp. Offset (Cooling)",
-              "target_offset_heat": "Target Temp. Offset (Heating)"
-            },
-            "data_description": {
-              "target_offset": "Positive lowers the setting sent to the unit, negative raises it - the card keeps showing yours either way. Most units round a half degree up to the next whole one, so 0.5 here often acts as 1.",
-              "target_offset_cool": "Leave empty to use the general target temperature offset.",
-              "target_offset_heat": "Leave empty to use the general target temperature offset."
-            },
-            "description": "Change the setting sent to the unit while the card keeps showing yours.",
-            "name": "Setpoint offsets"
-          }
-        },
-        "title": "WF-RAC options"
-      }
     }
   }
 }

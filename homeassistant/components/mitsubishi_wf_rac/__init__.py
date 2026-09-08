@@ -2,13 +2,7 @@
 
 import logging
 
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
@@ -94,11 +88,11 @@ async def async_migrate_entry(
     if entry.version == 5:
         # Move the host back into entry.data, where connection-critical data
         # belongs. It lived in options since v2 so it could be edited there,
-        # which the reconfigure flow now does instead - and options was the
-        # wrong home for a second reason: the discovery helper that refreshes
-        # a changed address (_abort_if_unique_id_configured(updates=...))
-        # only ever merges into entry.data, so the refresh wrote a key setup
-        # never read and the address silently stayed stale.
+        # and that was the wrong home for a second reason: the discovery
+        # helper that refreshes a changed address
+        # (_abort_if_unique_id_configured(updates=...)) only ever merges into
+        # entry.data, so the refresh wrote a key setup never read and the
+        # address silently stayed stale.
         new_data = dict(entry.data)
         new_options = dict(entry.options)
         if CONF_HOST in new_options:
@@ -115,7 +109,7 @@ async def async_migrate_entry(
         # announces itself as <mac>.local and the airco id is that same MAC, so
         # this is the identity discovery already matches on.
         hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data[CONF_AIRCO_ID], version=7
+            entry, unique_id=entry.data[CONF_AIRCO_ID].lower(), version=7
         )
 
     return True
@@ -142,8 +136,8 @@ async def async_setup_entry(
 
     # Persist the discovered connection method (http/https) so we can skip
     # protocol discovery (and its potential extra round-trip) after the next
-    # restart. Writing entry.data here is safe on its own: nothing listens for
-    # entry updates any more, the options flow reloads itself instead.
+    # restart. Nothing listens for entry updates, so this does not reload the
+    # entry that is still setting up.
     method = _device.connection_method
     if method and entry.data.get(CONF_CONNECTION_METHOD) != method:
         hass.config_entries.async_update_entry(
@@ -164,13 +158,15 @@ async def create_device_from_entry(
 ) -> Device:
     """Build the coordinator for a config entry."""
     device: str = entry.data[CONF_HOST]
-    name: str = entry.data[CONF_NAME]
+    name: str = entry.title
     device_id: str = entry.data[CONF_DEVICE_ID]
     operator_id: str = entry.data[CONF_OPERATOR_ID]
     port: int = entry.data[CONF_PORT]
     airco_id: str = entry.data[CONF_AIRCO_ID]
-    # Floored in Device itself, so an entry that predates the v4 -> v5
-    # migration can't run with less tolerance than the module needs.
+    # Only entries carried over from the custom component that used to own
+    # this domain can name a limit; nothing offers to set one here. Floored in
+    # Device itself, so one that predates the v4 -> v5 migration cannot run
+    # with less tolerance than the module needs.
     availability_failure_limit: int = entry.options.get(
         CONF_AVAILABILITY_RETRY_LIMIT, AVAILABILITY_FAILURE_LIMIT_MIN
     )
@@ -194,7 +190,6 @@ async def async_unload_entry(
 ) -> bool:
     """Handle unload of entry."""
 
-    # Unload entities for this entry/device.
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Only tear the coordinator down once the entities are really gone: if
@@ -206,9 +201,9 @@ async def async_unload_entry(
         await data.device.async_shutdown()
 
     if unload_ok:
-        _LOGGER.info("Unloaded entry for device [%s]", entry.data[CONF_NAME])
+        _LOGGER.info("Unloaded entry for device [%s]", entry.title)
     else:
-        _LOGGER.warning("Failed to unload entry for device [%s]", entry.data[CONF_NAME])
+        _LOGGER.warning("Failed to unload entry for device [%s]", entry.title)
 
     return unload_ok
 

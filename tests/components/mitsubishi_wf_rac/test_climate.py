@@ -2,15 +2,17 @@
 
 import asyncio
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from pywfrac import Aircon, RacParser, WfRacError
+from pywfrac import AIRFLOW_UNKNOWN, Aircon, RacParser, WfRacError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
@@ -27,8 +29,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.mitsubishi_wf_rac.const import (
-    CONF_TARGET_OFFSET,
-    CONF_TARGET_OFFSET_COOL,
     HOME_LEAVE_TEMP_COOL,
     HOME_LEAVE_TEMP_HEAT,
     SWING_3D_AUTO,
@@ -406,7 +406,7 @@ async def test_setting_temperature_and_mode_together(
     """A setpoint measured against the mode the call switches to.
 
     The range depends on the mode, and an automation that sets both at once
-    must not be judged against the mode the unit is leaving (#317).
+    must not be judged against the mode the unit is leaving.
     """
     mock_repository.send_airco_command.reset_mock()
 
@@ -577,7 +577,7 @@ async def test_a_setpoint_is_measured_against_the_mode_being_switched_to(
     While the unit is off the range spans every regulating mode, so these
     values pass the entity's own min_temp/max_temp - and would arrive at a
     unit that does not take them. Naming the mode in the refusal is the point:
-    the same value is fine in the mode the automation was leaving (#317).
+    the same value is fine in the mode the automation was leaving.
     """
     device = init_integration.runtime_data.device
     device.airco.Capabilities = replace(
@@ -599,44 +599,60 @@ async def test_a_setpoint_is_measured_against_the_mode_being_switched_to(
         )
 
 
-async def test_the_setpoint_does_not_move_when_it_is_set_on_a_unit_that_is_off(
+async def test_a_frame_the_entity_cannot_read_still_produces_an_entity(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aircon_stat: dict,
+) -> None:
+    """An unreadable first frame makes the state unknown, not the entity absent.
+
+    The first read happens in the constructor, so an exception there does not
+    just make one entity unavailable - it aborts the platform setup and leaves
+    the config entry loaded with no entities at all, and nothing but a
+    traceback to say why. A fan value the library could not translate is the
+    one such value a real frame can carry.
+    """
+    airco = RacParser().translate_bytes(aircon_stat["airconStat"])
+    airco.AirFlow = AIRFLOW_UNKNOWN
+    with patch.object(RacParser, "translate_bytes", return_value=airco):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_a_setpoint_sent_in_fan_only_is_held_to_every_modes_range(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """A unit that is off keeps its cool/heat mode, and the read-back uses it.
+    """Fan-only has no setpoint range of its own, so the union applies.
 
-    hvac_mode is OFF at that point, so resolving the offset against it sends
-    the general one while _update_state() reads the per-mode one back. The
-    displayed target then moves by the difference the moment the command
-    lands - the divergence the shared resolver exists to prevent.
+    The value is stored for whichever regulating mode is turned on next, and
+    holding it to the default floor would refuse a cooling setpoint the unit
+    takes happily once it is cooling.
     """
-    hass.config_entries.async_update_entry(
-        init_integration,
-        options={
-            **init_integration.options,
-            CONF_TARGET_OFFSET: 0.0,
-            CONF_TARGET_OFFSET_COOL: 1.0,
-        },
-    )
-    await hass.async_block_till_done()
-
     device = init_integration.runtime_data.device
-    device.airco.Operation = False
-    device.airco.OperationMode = 1
+    device.airco.Operation = True
+    device.airco.OperationMode = 3
     device.async_set_updated_data(device.airco)
     await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.FAN_ONLY
+    assert state.attributes[ATTR_MIN_TEMP] == 16.0
+    assert state.attributes[ATTR_MAX_TEMP] == 30.0
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 16.0},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    device.airco.PresetTemp = _sent_command(mock_repository).PresetTemp
-    device.async_set_updated_data(device.airco)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.0
+    assert _sent_command(mock_repository).PresetTemp == 16.0

@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pywfrac"],
-  "quality_scale": "platinum",
-  "requirements": ["pywfrac==0.1.0"],
+  "quality_scale": "bronze",
+  "requirements": ["pywfrac==0.1.3"],
   "zeroconf": ["_beaver._tcp.local."]
 }

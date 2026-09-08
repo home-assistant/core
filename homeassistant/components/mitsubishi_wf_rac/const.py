@@ -32,14 +32,6 @@ CONF_AVAILABILITY_RETRY_LIMIT = "availability_retry_limit"
 CONF_CONNECTION_METHOD = "connection_method"
 
 
-# New offset constants
-CONF_INDOOR_OFFSET = "indoor_offset"
-CONF_OUTDOOR_OFFSET = "outdoor_offset"
-CONF_TARGET_OFFSET = "target_offset"
-CONF_TARGET_OFFSET_COOL = "target_offset_cool"
-CONF_TARGET_OFFSET_HEAT = "target_offset_heat"
-
-
 # Heating uses the unit's own Heating TempSetting (10.0°C), which matches
 # HOME_LEAVE_TEMP_HEAT exactly. Cooling does not: the unit's Cooling
 # TempSetting reads 33.0°C, but the temperature actually applied while the

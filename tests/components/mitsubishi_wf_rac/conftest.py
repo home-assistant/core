@@ -43,7 +43,6 @@ def mock_repository(aircon_stat: dict) -> Generator[AsyncMock]:
     repository.get_aircon_stats.return_value = aircon_stat
     repository.send_airco_command.return_value = aircon_stat["airconStat"]
     repository.method = "https"
-    repository.result_codes = {}
 
     with (
         patch(

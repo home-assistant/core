@@ -206,8 +206,8 @@ async def test_removal_says_so_when_the_slot_is_not_released(
     await hass.async_block_till_done()
 
     assert "Could not release the controller slot" in caplog.text
-    # It is redacted in diagnostics for the same reason: a log this ends up in
-    # is usually attached to an issue report.
+    # Kept out of the message on purpose: a log this ends up in is usually
+    # attached to an issue report.
     assert ENTRY_DATA[CONF_OPERATOR_ID] not in caplog.text
 
 

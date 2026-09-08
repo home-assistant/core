@@ -1,7 +1,6 @@
 """Device module."""
 
 import asyncio
-from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -109,12 +108,12 @@ class MitsubishiWfRacData:
 type MitsubishiWfRacConfigEntry = ConfigEntry[MitsubishiWfRacData]
 
 
-class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instance-attributes
+class Device(DataUpdateCoordinator[Aircon]):
     """Device Class."""
 
     config_entry: MitsubishiWfRacConfigEntry
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         hass: HomeAssistant,
         config_entry: MitsubishiWfRacConfigEntry,
@@ -140,21 +139,14 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         self._parser = RacParser()
         self._hass = hass
 
-        # Protected state
         self._airco = Aircon()
         self._operator_id = operator_id
         self._device_id = device_id
         self._host = hostname
-        self._port = port
         self._airco_id = airco_id
         self._available = False
         self._name = name
         self._firmware = ""
-        self._connected_accounts = -1
-        self._updated_by: str | None = None
-        self._account_expires: int | None = None
-        self._led_status: int | None = None
-        self._auto_heating: int | None = None
         self._consecutive_failures = 0
         # Clamped rather than validated: an entry can carry a lower value from
         # an older version, and refusing to set up over it would be worse than
@@ -184,11 +176,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             name=name,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
-
-    @property
-    def options(self) -> Mapping[str, Any]:
-        """Options of the config entry that owns this device."""
-        return self.config_entry.options
 
     @property
     def entry_id(self) -> str:
@@ -264,16 +251,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             return False
 
         try:
-            self._connected_accounts = int(response["numOfAccount"])
-            new_airco = self._parser.translate_bytes(response["airconStat"])
-            self._airco = new_airco
-            # Not part of the airconStat blob, present alongside it in the same
-            # response. Tolerate absence (.get()) since it's undocumented and
-            # could be missing on older firmware.
-            self._updated_by = response.get("updatedBy")
-            self._account_expires = response.get("expires")
-            self._led_status = response.get("ledStat")
-            self._auto_heating = response.get("autoHeating")
+            self._airco = self._parser.translate_bytes(response["airconStat"])
             became_available = self._set_availability(True)
             if became_available:
                 _LOGGER.info("Airco [%s] is available again", self.device_name)
@@ -281,9 +259,9 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
             self._record_failed_poll(ex)
             return False
 
-        # Cosmetic (diagnostic sensor only). Some firmware revisions omit the
-        # "mcu"/"wireless" sub-keys entirely, so their versions are optional
-        # and fall back to "unknown" instead of failing the update.
+        # Some firmware revisions omit the "mcu"/"wireless" sub-keys entirely,
+        # so their versions fall back to "unknown" rather than failing the
+        # update over a string that only ends up in the device registry.
         firm_type = response.get("firmType", "unknown")
         mcu_ver = (response.get("mcu") or {}).get("firmVer", "unknown")
         wireless_ver = (response.get("wireless") or {}).get("firmVer", "unknown")
@@ -411,7 +389,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
                     )
                 except WfRacWriteRefusedError:
                     # Most likely another client's 60-second write lock - the
-                    # Smart M-Air app was used moments ago (#294). Waiting it
+                    # Smart M-Air app was used moments ago. Waiting it
                     # out is the only thing that helps: our registration is
                     # fine, so re-registering would just cost a request. One
                     # retry, placed where the lock lapses rather than at a
@@ -551,8 +529,7 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         No "model": the only model field the protocol offers is ModelNr, a
         capability grouping (0/1/2/3/64...), not a type name - it would put a
         bare digit where users expect "SRK35ZS-WF". It goes into model_id
-        instead, which is what a machine-readable model identifier is for, and
-        stays available as its own diagnostic sensor.
+        instead, which is what a machine-readable model identifier is for.
         """
         info: DeviceInfo = {
             "sw_version": self._firmware,
@@ -570,36 +547,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         if model_nr is not None:
             info["model_id"] = str(model_nr)
         return info
-
-    @property
-    def num_accounts(self) -> int:
-        """Return Accounts connected."""
-        return self._connected_accounts
-
-    @property
-    def updated_by(self) -> str | None:
-        """Return what last updated the airco's state ('local' or a foreign account)."""
-        return self._updated_by
-
-    @property
-    def account_expires(self) -> int | None:
-        """Return the raw 'expires' timestamp reported alongside our account registration."""
-        return self._account_expires
-
-    @property
-    def led_status(self) -> int | None:
-        """Return the airco's front panel LED status."""
-        return self._led_status
-
-    @property
-    def auto_heating(self) -> int | None:
-        """Return the airco's auto-heating flag."""
-        return self._auto_heating
-
-    @property
-    def port(self) -> int:
-        """Get Port."""
-        return self._port
 
     @property
     def device_name(self) -> str:
@@ -625,16 +572,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
     def connection_method(self) -> str | None:
         """Return the discovered/persisted communication method (http/https), if known."""
         return self._api.method
-
-    @property
-    def result_codes(self) -> dict[str, dict[str, int]]:
-        """How often the unit refused each command, per `result` code.
-
-        Refusals themselves are a debug-level event: the common ones clear on
-        the next request and there is nothing for a user to do. Surfacing the
-        tally here keeps them available to whoever is actually investigating.
-        """
-        return self._api.result_codes
 
     @override
     async def _async_update_data(self) -> Aircon:

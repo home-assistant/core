@@ -19,19 +19,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import AIRCO_ID, ENTRY_DATA, ENTRY_OPTIONS, HOST, PORT
+from . import AIRCO_ID, HOST, PORT
 
 from tests.common import MockConfigEntry
 
-USER_INPUT = {CONF_NAME: "Living room", CONF_HOST: HOST, CONF_PORT: PORT}
+USER_INPUT = {CONF_HOST: HOST, CONF_PORT: PORT}
 
 
-def _discovery_info(port: int = PORT, host: str = HOST) -> ZeroconfServiceInfo:
+def _discovery_info(
+    port: int = PORT, host: str = HOST, airco_id: str = AIRCO_ID
+) -> ZeroconfServiceInfo:
     return ZeroconfServiceInfo(
         ip_address=host,
         ip_addresses=[host],
-        hostname=f"{AIRCO_ID}.local.",
-        name=f"{AIRCO_ID}._beaver._tcp.local.",
+        hostname=f"{airco_id}.local.",
+        name=f"{airco_id}._beaver._tcp.local.",
         port=port,
         type="_beaver._tcp.local.",
         properties={},
@@ -54,7 +56,13 @@ async def test_user_flow(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Living room"
+    # Named after the unit, not by the user: the flow does not ask for a name,
+    # and nothing it stores carries one. Four characters of the airco id are
+    # enough to tell two units apart without putting the whole one in the
+    # device name and every entity id built from it.
+    assert result["title"] == f"WF-RAC {AIRCO_ID[-4:]}"
+    assert AIRCO_ID not in result["title"]
+    assert CONF_NAME not in result["data"]
     assert result["data"][CONF_AIRCO_ID] == AIRCO_ID
     assert result["data"][CONF_HOST] == HOST
     mock_repository.update_account_info.assert_awaited_once()
@@ -166,34 +174,24 @@ async def test_user_flow_registration_refused(
     assert result["errors"]["base"] == "cannot_connect"
 
 
-@pytest.mark.parametrize(
-    ("field", "value", "error"),
-    [
-        (CONF_HOST, "ab", "invalid_host"),
-        (CONF_NAME, "ab", "name_invalid"),
-    ],
-)
 async def test_user_flow_input_validation(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     mock_setup_entry: AsyncMock,
-    field: str,
-    value: str,
-    error: str,
 ) -> None:
-    """Host and name are checked before the airco is contacted.
+    """The host is checked before the airco is contacted.
 
-    Both errors land on their own field rather than on the form as a whole.
+    The error lands on its own field rather than on the form as a whole.
     """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**USER_INPUT, field: value}
+        result["flow_id"], {**USER_INPUT, CONF_HOST: "ab"}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"][field] == error
+    assert result["errors"][CONF_HOST] == "invalid_host"
 
 
 async def test_user_flow_duplicate_host(
@@ -227,7 +225,7 @@ async def test_zeroconf_flow(
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: "Living room", CONF_PORT: PORT}
+        result["flow_id"], {CONF_PORT: PORT}
     )
     await hass.async_block_till_done()
 
@@ -249,7 +247,7 @@ async def test_zeroconf_flow_port_fallback(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info(port=5353)
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: "Living room", CONF_PORT: 5353}
+        result["flow_id"], {CONF_PORT: 5353}
     )
     await hass.async_block_till_done()
 
@@ -266,7 +264,7 @@ async def test_zeroconf_flow_already_configured(
     """A rediscovered airco aborts and refreshes the stored address.
 
     The address only: an announcement carrying 5353 - the mDNS port itself,
-    in the SRV record where the API port belongs (#290) - would otherwise be
+    in the SRV record where the API port belongs - would otherwise be
     written into a working entry and take it offline. The port a configured
     entry has is the one setup established.
     """
@@ -283,55 +281,29 @@ async def test_zeroconf_flow_already_configured(
     assert mock_config_entry.data[CONF_PORT] == PORT
 
 
-async def test_reconfigure_flow(
+async def test_a_shouted_hostname_still_matches_the_entry(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Reconfigure validates the new address against the airco."""
+    """The unique id is one case, whoever supplied it.
+
+    Discovery takes it from the announced hostname and every other path from
+    the airconId the unit reports. Compared as they arrive, a difference in
+    case would offer a configured unit as a new discovery and never refresh
+    its address.
+    """
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_NAME: "Living room", CONF_HOST: "192.168.1.9", CONF_PORT: PORT},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery_info(host="192.168.1.9", airco_id=AIRCO_ID.upper()),
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.9"
-
-
-async def test_options_flow(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Offsets round-trip, and options the form did not show survive."""
-    result = await hass.config_entries.options.async_init(init_integration.entry_id)
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "availability_retry_limit": 5,
-            "setpoint_offsets": {"target_offset": 1.0},
-            "sensor_offsets": {"indoor_offset": -0.5, "outdoor_offset": 0.0},
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    options = init_integration.options
-    assert options["availability_retry_limit"] == 5
-    assert options["target_offset"] == 1.0
-    assert options["indoor_offset"] == -0.5
-    # The host is connection data now, so saving options must not touch it.
-    assert init_integration.data[CONF_HOST] == HOST
-    assert CONF_HOST not in options
 
 
 async def test_zeroconf_flow_port_fallback_also_fails(
@@ -344,7 +316,7 @@ async def test_zeroconf_flow_port_fallback_also_fails(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info(port=5353)
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: "Living room", CONF_PORT: 5353}
+        result["flow_id"], {CONF_PORT: 5353}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -358,7 +330,7 @@ async def test_zeroconf_flow_port_fallback_also_fails(
         pytest.param(
             SOURCE_ZEROCONF,
             _discovery_info(),
-            {CONF_NAME: "Living room", CONF_PORT: PORT},
+            {CONF_PORT: PORT},
             id="discovered",
         ),
     ],
@@ -383,46 +355,6 @@ async def test_unexpected_error_is_shown_not_raised(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unexpected_error"
-
-
-async def test_reconfigure_unexpected_error(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Same for the reconfigure step, which has its own boundary."""
-    mock_config_entry.add_to_hass(hass)
-    mock_repository.get_airco_id.side_effect = RuntimeError("boom")
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_NAME: "Living room", CONF_HOST: "192.168.1.9", CONF_PORT: PORT},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unexpected_error"
-
-
-async def test_reconfigure_known_error(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A reachable-but-refusing airco keeps the reconfigure form open."""
-    mock_config_entry.add_to_hass(hass)
-    mock_repository.update_account_info.return_value = {"result": 2}
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_NAME: "Living room", CONF_HOST: "192.168.1.9", CONF_PORT: PORT},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "too_many_devices_registered"
 
 
 async def test_two_discovery_flows_for_one_airco_match(
@@ -515,70 +447,6 @@ async def test_user_flow_refuses_a_unit_that_is_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow_keeps_a_setting_the_form_does_not_show(
-    hass: HomeAssistant, mock_repository: AsyncMock
-) -> None:
-    """A stored option this form cannot render has to survive a save.
-
-    Entries arrive from the custom component that shares this domain carrying
-    its options, and async_create_entry replaces the options wholesale - so
-    anything the form did not collect is dropped unless it is carried over.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Living room",
-        data=ENTRY_DATA,
-        options={**ENTRY_OPTIONS, "external_temperature_source": "sensor.hallway"},
-        unique_id=AIRCO_ID,
-        version=7,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "availability_retry_limit": 3,
-            "setpoint_offsets": {"target_offset": 0.0},
-            "sensor_offsets": {"indoor_offset": 0.0, "outdoor_offset": 0.0},
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["external_temperature_source"] == "sensor.hallway"
-
-
-async def test_reconfigure_refuses_an_address_that_answers_as_another_airco(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Reconfigure changes where an airco is, not which airco the entry is.
-
-    Merging the queried id would keep the entry and re-point it at different
-    hardware. The entities are keyed on that id, so they would be replaced
-    and the ones belonging to the original unit orphaned.
-    """
-    mock_config_entry.add_to_hass(hass)
-    mock_repository.get_airco_id.return_value = "0011223344bb"
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: "Living room", CONF_HOST: HOST, CONF_PORT: PORT}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "another_airco"
-    assert mock_config_entry.data[CONF_AIRCO_ID] == AIRCO_ID
-    # Registration is what takes one of the other unit's four account slots,
-    # and it never frees one by itself - so the flow has to stop before it.
-    mock_repository.update_account_info.assert_not_awaited()
-
-
 async def test_the_port_can_be_cleared_and_falls_back_to_the_fixed_one(
     hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
@@ -592,7 +460,7 @@ async def test_the_port_can_be_cleared_and_falls_back_to_the_fixed_one(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: "Living room", CONF_HOST: HOST}
+        result["flow_id"], {CONF_HOST: HOST}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
