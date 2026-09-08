@@ -96,6 +96,8 @@ class LutronLight(LutronDevice, LightEntity):
             if ATTR_TRANSITION in kwargs:
                 args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
             self._lutron_device.set_level(**args)
+            # Publish now rather than waiting for the controller to report back.
+            self._publish_level()
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -104,6 +106,18 @@ class LutronLight(LutronDevice, LightEntity):
         if ATTR_TRANSITION in kwargs:
             args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
         self._lutron_device.set_level(**args)
+        self._publish_level()
+
+    def _publish_level(self) -> None:
+        """Publish the device's current level without waiting for a report.
+
+        Reads `last_level()` like `_update_callback` does, so a report that
+        lands around the same time cannot be overwritten by a separately held
+        assumed value -- whichever reached the library last is what gets
+        published.
+        """
+        self._update_attrs()
+        self.schedule_update_ha_state()
 
     @property
     @override

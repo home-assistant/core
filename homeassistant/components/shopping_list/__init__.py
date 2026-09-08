@@ -22,7 +22,7 @@ from .common import (
     _get_shopping_data,
 )
 from .const import DOMAIN
-from .services import async_register_services
+from .services import async_setup_services
 
 PLATFORMS = [Platform.TODO]
 
@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
-    async_register_services(hass)
+    async_setup_services(hass)
 
     if DOMAIN not in config:
         return True
@@ -58,7 +58,7 @@ async def _async_setup(hass: HomeAssistant) -> None:
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Shopping List",
+            "integration_title": "Shopping list",
         },
     )
 

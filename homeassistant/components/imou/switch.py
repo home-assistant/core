@@ -3,7 +3,6 @@
 from typing import Any, override
 
 from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
-from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.switch import (
@@ -12,11 +11,9 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
     PARAM_AB_ALARM_SOUND,
     PARAM_AUDIO_ENCODE_CONTROL,
     PARAM_CLOSE_CAMERA,
@@ -28,6 +25,7 @@ from .const import (
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 0
 
@@ -122,18 +120,12 @@ class ImouSwitch(ImouEntity, SwitchEntity):
         """Turn the switch off."""
         await self._async_switch_operation(False)
 
+    @async_wrap_imou_command("switch_operation_failed")
     async def _async_switch_operation(self, enable: bool) -> None:
         """Call the vendor library to change switch state."""
-        try:
-            await self.coordinator.device_manager.async_switch_operation(
-                self.device,
-                self._entity_type,
-                enable,
-            )
-        except ImouException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="switch_operation_failed",
-                translation_placeholders={"error": e.message},
-            ) from e
+        await self.coordinator.device_manager.async_switch_operation(
+            self.device,
+            self._entity_type,
+            enable,
+        )
         await self.coordinator.async_request_refresh()

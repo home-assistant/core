@@ -23,7 +23,7 @@ from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType
 from music_assistant_models.player_queue import PlayerQueue
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
     BrowseMedia,
@@ -38,7 +38,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
+from homeassistant.const import ATTR_NAME, STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -563,12 +563,32 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @catch_musicassistant_error
     async def _async_handle_play_announcement(
         self,
-        url: str,
+        url: str | None = None,
+        message: str | None = None,
+        tts_entity_id: str | None = None,
         use_pre_announce: bool | None = None,
         pre_announce_url: str | None = None,
         announce_volume: int | None = None,
     ) -> None:
         """Send the play_announcement command to the media player."""
+        if url is None:
+            if TYPE_CHECKING:
+                assert message is not None
+                assert tts_entity_id is not None
+            # a gone or unavailable entity would otherwise yield a url that plays nothing
+            tts_state = self.hass.states.get(tts_entity_id)
+            if tts_state is None or tts_state.state == STATE_UNAVAILABLE:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="tts_entity_not_available",
+                    translation_placeholders={"entity_id": tts_entity_id},
+                )
+            sourced_media = await media_source.async_resolve_media(
+                self.hass,
+                tts.generate_media_source_id(self.hass, message, engine=tts_entity_id),
+                self.entity_id,
+            )
+            url = async_process_play_media_url(self.hass, sourced_media.url)
         await self.mass.players.play_announcement(
             self.player_id,
             url,
