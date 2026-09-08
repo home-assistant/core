@@ -406,7 +406,11 @@ async def test_service_set_client_name_empty_name_rejected(
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",
-            {"device_id": device_id, "name": ""},
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "device_id": device_id,
+                "name": "",
+            },
             blocking=True,
         )
 
