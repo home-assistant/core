@@ -14,12 +14,8 @@ from pyevolviot import (
 )
 import pytest
 
-from homeassistant.components.evolviot.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN,
-    CONF_VERIFY_SSL,
-    DOMAIN,
-)
+from homeassistant.components.evolviot.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

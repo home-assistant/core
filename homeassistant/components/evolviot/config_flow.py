@@ -14,16 +14,10 @@ from pyevolviot import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN,
-    CONF_VERIFY_SSL,
-    DEFAULT_API_BASE_URL,
-    DOMAIN,
-    NAME,
-)
+from .const import CONF_REFRESH_TOKEN, DEFAULT_API_BASE_URL, DOMAIN, NAME
 
 
 def _pair_schema() -> vol.Schema:

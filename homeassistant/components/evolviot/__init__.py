@@ -5,17 +5,12 @@ from typing import Any
 from pyevolviot import EvolvIOTApi, EvolvIOTApiError, EvolvIOTAuthError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN,
-    CONF_VERIFY_SSL,
-    DEFAULT_API_BASE_URL,
-    PLATFORMS,
-)
+from .const import CONF_REFRESH_TOKEN, DEFAULT_API_BASE_URL, PLATFORMS
 from .coordinator import EvolvIOTDataUpdateCoordinator
 
 type EvolvIOTConfigEntry = ConfigEntry[EvolvIOTDataUpdateCoordinator]

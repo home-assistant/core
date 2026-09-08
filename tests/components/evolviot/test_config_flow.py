@@ -14,13 +14,8 @@ from pyevolviot import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.evolviot.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN,
-    CONF_VERIFY_SSL,
-    DOMAIN,
-    NAME,
-)
+from homeassistant.components.evolviot.const import CONF_REFRESH_TOKEN, DOMAIN, NAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
