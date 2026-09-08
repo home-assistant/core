@@ -200,10 +200,7 @@
     "phase_a": {
       "electricCurrent": 599.552,
       "power": 6.912,
-      "voltage": 52.7,
-      "reactivePower": 0.5,
-      "apparentPower": 0.9,
-      "powerFactor": 0.98
+      "voltage": 52.7
     },
     "power_total": 1500,
     "fault": 0,
