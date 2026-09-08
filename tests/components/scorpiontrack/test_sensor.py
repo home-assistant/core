@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
     UnitOfSpeed,
 )
@@ -25,6 +26,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "sensor.ab12_cde_speed"
+LAST_REPORTED_ENTITY_ID = "sensor.ab12_cde_last_reported"
 
 
 async def test_speed_sensor_state(
@@ -44,13 +46,14 @@ async def test_speed_sensor_state(
     mock_scorpiontrack_client.async_get_share.assert_awaited_once_with()
 
 
-async def test_speed_sensor_snapshot(
+@pytest.mark.freeze_time("2026-08-11 12:00:00+00:00")
+async def test_sensor_snapshot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the speed sensor entity and state attributes."""
+    """Test the sensor entities and state attributes."""
     with patch("homeassistant.components.scorpiontrack.PLATFORMS", (Platform.SENSOR,)):
         await setup_integration(hass, mock_config_entry)
 
@@ -110,14 +113,22 @@ async def test_speed_sensor_availability(
     assert state.state == expected_state
 
 
-async def test_removed_vehicle_makes_speed_sensor_unavailable(
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(ENTITY_ID, id="speed"),
+        pytest.param(LAST_REPORTED_ENTITY_ID, id="last-reported"),
+    ],
+)
+async def test_removed_vehicle_makes_sensor_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
+    entity_id: str,
 ) -> None:
-    """Test a speed sensor becomes unavailable if its vehicle leaves the share."""
+    """Test a sensor becomes unavailable if its vehicle leaves the share."""
     await setup_integration(hass, mock_config_entry)
 
     mock_scorpiontrack_client.async_get_share.return_value = replace(
@@ -127,7 +138,7 @@ async def test_removed_vehicle_makes_speed_sensor_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -151,3 +162,34 @@ async def test_speed_sensor_uses_existing_vehicle_device(
     device = device_registry.async_get(speed_entry.device_id)
     assert device is not None
     assert device.identifiers == {("scorpiontrack", "101_1")}
+
+
+async def test_last_reported_sensor_without_timestamp(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_share: ScorpionTrackShare,
+    mock_scorpiontrack_client: AsyncMock,
+) -> None:
+    """Test a missing timestamp is unknown without affecting the tracker."""
+    vehicle = mock_share.vehicles[0]
+    mock_scorpiontrack_client.async_get_share.return_value = replace(
+        mock_share,
+        vehicles=(
+            replace(
+                vehicle,
+                position=replace(vehicle.position, timestamp=None),
+            ),
+        ),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(LAST_REPORTED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    tracker_state = hass.states.get("device_tracker.ab12_cde")
+    assert tracker_state is not None
+    assert tracker_state.state != STATE_UNAVAILABLE
+    assert tracker_state.attributes[ATTR_LATITUDE] == vehicle.position.latitude
+    assert tracker_state.attributes[ATTR_LONGITUDE] == vehicle.position.longitude

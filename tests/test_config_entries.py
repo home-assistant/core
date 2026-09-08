@@ -7308,7 +7308,11 @@ def test_raise_trying_to_add_same_config_entry_twice(
 @pytest.mark.parametrize(
     ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful", None),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
         (
             config_entries.SOURCE_RECONFIGURE,
             "reconfigure_successful",
@@ -7455,7 +7459,11 @@ async def test_update_entry_and_reload_with_listener_logs(
 @pytest.mark.parametrize(
     ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful", None),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
         (
             config_entries.SOURCE_RECONFIGURE,
             "reconfigure_successful",
