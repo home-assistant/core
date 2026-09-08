@@ -66,7 +66,11 @@ from .helpers.event import (
     async_call_later,
 )
 from .helpers.frame import ReportBehavior, report_usage
-from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
+from .helpers.json import (
+    cached_json_fragment,
+    cached_json_fragment_sorted,
+    json_fragment,
+)
 from .helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -682,7 +686,7 @@ class ConfigEntry[_DataT = Any]:
             ),
             "num_subentries": len(self.subentries),
         }
-        return json_fragment(json_bytes(json_repr))
+        return cached_json_fragment(json_repr)
 
     def clear_storage_cache(self) -> None:
         """Clear cached properties that are included in as_storage_fragment."""
@@ -691,7 +695,7 @@ class ConfigEntry[_DataT = Any]:
     @cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a storage fragment for this entry."""
-        return json_fragment(json_bytes_sorted(self.as_dict()))
+        return cached_json_fragment_sorted(self.as_dict())
 
     async def async_setup(
         self,
