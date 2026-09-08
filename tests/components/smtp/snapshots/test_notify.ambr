@@ -60,6 +60,7 @@
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -78,6 +79,7 @@
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -108,6 +110,7 @@
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -152,6 +155,7 @@
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -210,6 +214,7 @@
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -240,6 +245,7 @@
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   

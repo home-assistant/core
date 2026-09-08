@@ -26,6 +26,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
 from homeassistant.const import (
+    APPLICATION_NAME,
     CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
@@ -35,6 +36,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -311,6 +313,7 @@ class MailNotifyEntity(NotifyEntity):
             )
 
         msg.add_header("X-Mailer", "Home Assistant")
+        msg.add_header("User-Agent", f"{APPLICATION_NAME}/{__version__}")
         msg.add_header("Date", email.utils.format_datetime(dt_util.now()))
         msg.add_header("Message-Id", email.utils.make_msgid())
 

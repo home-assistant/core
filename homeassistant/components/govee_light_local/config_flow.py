@@ -25,7 +25,7 @@ async def _async_discover(hass: HomeAssistant, adapter_ip: str) -> bool:
     controller: GoveeController = GoveeController(
         loop=hass.loop,
         logger=_LOGGER,
-        listening_address=adapter_ip,
+        listening_addresses=adapter_ip,
         broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
         broadcast_port=CONF_TARGET_PORT_DEFAULT,
         listening_port=CONF_LISTENING_PORT_DEFAULT,

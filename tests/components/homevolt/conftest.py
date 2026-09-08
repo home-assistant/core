@@ -81,6 +81,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
 
         # Load schedule data from fixture
         client.current_schedule = load_json_object_fixture("schedule.json", DOMAIN)
+        client.schedule = {"mode": client.current_schedule["schedule"][0]["type"]}
 
         # Switch (local mode) support
         client.local_mode_enabled = False

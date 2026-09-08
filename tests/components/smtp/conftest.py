@@ -96,6 +96,17 @@ def mock_randrange() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="version")
+def mock_version() -> Generator[None]:
+    """Mock Home Assistant version."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.__version__",
+        "2026.10.0",
+    ):
+        yield
+
+
 @pytest.fixture(name="client_context")
 def mock_client_context() -> Generator[None]:
     """Mock client_context."""
