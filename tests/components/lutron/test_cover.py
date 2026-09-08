@@ -233,7 +233,7 @@ async def test_motor_cover_services(
         COVER_DOMAIN, CoverService.STOP, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     motor.stop.assert_called_once()
-    # the repeater ignores "set level" on motors and pylutron>=0.4.2 raises on it
+    # the repeater ignores "set level" on motors and pylutron raises on it
     motor.set_level.assert_not_called()
 
 
