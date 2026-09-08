@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "authorization_error": "[%key:common::config_flow::error::invalid_auth%]",

@@ -574,6 +574,8 @@ class DeviceCategory(StrEnum):
     """Tank Level Sensor (undocumented)"""
     ZNNBQ = "znnbq"
     """VESKA-micro inverter (undocumented)"""
+    ZNJDQ = "znjdq"
+    """Circuit breaker (undocumented)"""
     ZWJCY = "zwjcy"
     """Soil sensor - plant monitor (undocumented)"""
     ZNJXS = "znjxs"
