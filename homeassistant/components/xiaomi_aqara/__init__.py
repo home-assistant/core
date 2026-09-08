@@ -147,7 +147,8 @@ XIAOMI_AQARA_DATA: HassKey[XiaomiAqaraData] = HassKey(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
-    data = hass.data.setdefault(XIAOMI_AQARA_DATA, XiaomiAqaraData())
+    if (data := hass.data.get(XIAOMI_AQARA_DATA)) is None:
+        data = hass.data[XIAOMI_AQARA_DATA] = XiaomiAqaraData()
 
     # Connect to Xiaomi Aqara Gateway
     xiaomi_gateway = await hass.async_add_executor_job(
