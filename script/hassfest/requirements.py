@@ -262,10 +262,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
         "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
         "azure-kusto-ingest": {"azure-kusto-data"},
     },
-    "caldav": {
-        # caldav > niquests > urllib3-future - urllib3_future.pth
-        "niquests": {"urllib3-future"}
-    },
     # https://github.com/coinbase/coinbase-advanced-py
     "cmus": {
         # Setuptools - distutils-precedence.pth

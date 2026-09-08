@@ -755,7 +755,7 @@ buienradar==1.0.9
 cached-ipaddress==1.1.2
 
 # homeassistant.components.caldav
-caldav==3.3.0
+caldav==3.3.0a1
 
 # homeassistant.components.chef_iq
 chefiq-ble==1.0.1
