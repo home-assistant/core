@@ -1162,10 +1162,14 @@
       "name": "Z-Wave JS event received"
     },
     "node_status": {
-      "description": "Triggers when the status of one or more Z-Wave JS nodes changes. Target nodes by device, area, floor, or label, or select their node status sensors directly.",
+      "description": "Triggers when the status of one or more Z-Wave JS nodes changes.",
       "fields": {
         "behavior": {
           "name": "[%key:component::zwave_js::common::trigger_behavior_name%]"
+        },
+        "device_id": {
+          "description": "The Z-Wave JS devices whose node status to watch.",
+          "name": "Devices"
         },
         "for": {
           "name": "[%key:component::zwave_js::common::trigger_for_name%]"

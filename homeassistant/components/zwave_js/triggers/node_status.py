@@ -1,16 +1,20 @@
 """Offer Z-Wave JS node status automation trigger."""
 
+from dataclasses import replace
 from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_OPTIONS
+from homeassistant.const import ATTR_DEVICE_ID, CONF_FOR, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
+    ATTR_BEHAVIOR,
+    BEHAVIOR_ALL,
+    BEHAVIOR_EACH,
+    BEHAVIOR_FIRST,
     EntityTriggerBase,
     NotTriggeredReasonReporter,
     TriggerConfig,
@@ -30,11 +34,16 @@ CONF_TO = "to"
 _STATUS_LIST = vol.All(cv.ensure_list, [vol.In(NODE_STATUSES)])
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
+    vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.In(
+        [BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]
+    ),
+    vol.Optional(CONF_FOR): cv.positive_time_period,
     vol.Optional(CONF_FROM): _STATUS_LIST,
     vol.Optional(CONF_TO): _STATUS_LIST,
 }
 
-_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
+_TRIGGER_SCHEMA = vol.Schema(
     {vol.Required(CONF_OPTIONS, default={}): _OPTIONS_SCHEMA_DICT}
 )
 
@@ -48,7 +57,12 @@ class NodeStatusTrigger(EntityTriggerBase):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
-        super().__init__(hass, config)
+        options = config.options or {}
+        # A node is picked as a device; the base class tracks the node status
+        # sensor each one expands to.
+        super().__init__(
+            hass, replace(config, target={ATTR_DEVICE_ID: options[ATTR_DEVICE_ID]})
+        )
         self._from_states = set(self._options.get(CONF_FROM, []))
         self._to_states = set(self._options.get(CONF_TO, []))
 

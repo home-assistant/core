@@ -33,12 +33,7 @@ from homeassistant.components.zwave_js.triggers.value_updated import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    trigger,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er, trigger
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1684,7 +1679,9 @@ def _node_event(node: Node, event: str) -> None:
 
 
 async def _setup_node_status_automation(
-    hass: HomeAssistant, target: dict[str, Any], options: dict[str, Any] | None = None
+    hass: HomeAssistant,
+    device_id: str | list[str],
+    options: dict[str, Any] | None = None,
 ) -> None:
     """Set up one automation on the node status trigger."""
     assert await async_setup_component(
@@ -1694,8 +1691,7 @@ async def _setup_node_status_automation(
             automation.DOMAIN: {
                 "trigger": {
                     "trigger": f"{DOMAIN}.node_status",
-                    "target": target,
-                    **({"options": options} if options is not None else {}),
+                    "options": {"device_id": device_id, **(options or {})},
                 },
                 "action": {
                     "service": "test.automation",
@@ -1710,7 +1706,6 @@ async def _setup_node_status_automation(
     )
 
 
-@pytest.mark.parametrize("target_kind", ["device", "area", "entity"])
 async def test_node_status_trigger_fires(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1718,27 +1713,18 @@ async def test_node_status_trigger_fires(
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    area_registry: ar.AreaRegistry,
     service_calls: list[ServiceCall],
-    target_kind: str,
 ) -> None:
-    """Test the trigger fires on a status change for device, area, and entity targets."""
+    """Test the trigger fires on a status change of a targeted device's node."""
     device = device_registry.async_get_device_by_identifier(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
-    area = area_registry.async_create("Hall")
-    device_registry.async_update_device(device.id, area_id=area.id)
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, entity_registry, device_registry
     )
     assert entity_id
-    targets = {
-        "device": {"device_id": device.id},
-        "area": {"area_id": area.id},
-        "entity": {"entity_id": entity_id},
-    }
-    await _setup_node_status_automation(hass, targets[target_kind], {})
+    await _setup_node_status_automation(hass, device.id, {})
 
     _node_event(lock_schlage_be469, "dead")
     await hass.async_block_till_done()
@@ -1784,7 +1770,7 @@ async def test_node_status_trigger_filters(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
-    await _setup_node_status_automation(hass, {"device_id": device.id}, options)
+    await _setup_node_status_automation(hass, device.id, options)
 
     for event in events:
         _node_event(lock_schlage_be469, event)
@@ -1809,7 +1795,7 @@ async def test_node_status_trigger_for(
     # The firmware update entities poll once the fake clock passes their delay.
     client.async_send_command.return_value = {"updates": []}
     await _setup_node_status_automation(
-        hass, {"device_id": device.id}, {"to": ["dead"], "for": {"minutes": 1}}
+        hass, device.id, {"to": ["dead"], "for": {"minutes": 1}}
     )
 
     _node_event(lock_schlage_be469, "dead")
@@ -1856,7 +1842,7 @@ async def test_node_status_trigger_behavior(
         for node in (lock_schlage_be469, multisensor_6)
     ]
     await _setup_node_status_automation(
-        hass, {"device_id": device_ids}, {"behavior": behavior, "to": ["dead"]}
+        hass, device_ids, {"behavior": behavior, "to": ["dead"]}
     )
 
     _node_event(lock_schlage_be469, "dead")
@@ -1895,7 +1881,7 @@ async def test_node_status_trigger_from_only_for(
     # The firmware update entities poll once the fake clock passes their delay.
     client.async_send_command.return_value = {"updates": []}
     await _setup_node_status_automation(
-        hass, {"device_id": device.id}, {"from": ["alive"], "for": {"minutes": 1}}
+        hass, device.id, {"from": ["alive"], "for": {"minutes": 1}}
     )
 
     _node_event(lock_schlage_be469, "dead")
@@ -1910,16 +1896,22 @@ async def test_node_status_trigger_from_only_for(
 
 async def test_node_status_trigger_ignores_other_entities(
     hass: HomeAssistant,
+    client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
 ) -> None:
-    """Test targeting a non node status entity of a node never fires."""
+    """Test a device's entities other than its node status sensor never fire."""
     assert integration.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
     assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
-    await _setup_node_status_automation(hass, {"entity_id": SCHLAGE_BE469_LOCK_ENTITY})
+    await _setup_node_status_automation(hass, device.id)
 
-    _node_event(lock_schlage_be469, "dead")
+    hass.states.async_set(SCHLAGE_BE469_LOCK_ENTITY, "unlocked")
     await hass.async_block_till_done()
 
     assert len(service_calls) == 0
@@ -1943,8 +1935,7 @@ async def test_node_status_trigger_invalid_status(
             [
                 {
                     "platform": f"{DOMAIN}.node_status",
-                    "target": {"device_id": device.id},
-                    "options": {"to": ["sleeping"]},
+                    "options": {"device_id": device.id, "to": ["sleeping"]},
                 }
             ],
         )
@@ -1955,10 +1946,12 @@ async def test_node_status_trigger_description(hass: HomeAssistant) -> None:
     """Test the described node status fields match the schema and statuses."""
     descriptions = await trigger.async_get_all_descriptions(hass)
     description = descriptions[f"{DOMAIN}.node_status"]
-    assert description["target"]["primary_entities_only"] is False
+    # Nodes are picked with a device selector field, not a target selector
+    assert "target" not in description
     fields = description["fields"]
-    assert set(fields) == {"behavior", "for"} | {
-        str(key) for key in NODE_STATUS_OPTIONS_SCHEMA_DICT
-    }
+    assert set(fields) == {str(key) for key in NODE_STATUS_OPTIONS_SCHEMA_DICT}
+    selector = fields["device_id"]["selector"]["device"]
+    assert selector["filter"] == [{"integration": DOMAIN}]
+    assert selector["multiple"] is True
     for name in ("from", "to"):
         assert set(fields[name]["selector"]["select"]["options"]) == set(NODE_STATUSES)

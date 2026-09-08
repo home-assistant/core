@@ -64,14 +64,15 @@ event:
         boolean:
 
 node_status:
-  target:
-    entity:
-      - integration: zwave_js
-        domain: sensor
-    device:
-      - integration: zwave_js
-    primary_entities_only: false
   fields:
+    device_id:
+      required: true
+      example: 8f4219cfa57e23f6f669c4616c2205e2
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
     behavior:
       required: true
       default: each
