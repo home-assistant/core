@@ -255,9 +255,32 @@ async def test_action_error_is_raised(
     mocked = getattr(mock_device, method.__name__)
     mocked.side_effect = OpenhomeConnectionError("no route to host")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             domain, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
         )
 
+    # The message is keyed on the service name, so each action reports its own.
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == service
     mocked.assert_awaited()
+
+
+async def test_invoke_pin_without_pin_support(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test invoking a pin on a device without pin support raises."""
+    mock_device.pins_enabled = False
+    await setup_platform(hass, mock_device, "Playlist")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INVOKE_PIN,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PIN_INDEX: 1},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "pins_not_supported"
+    mock_device.invoke_pin.assert_not_awaited()
