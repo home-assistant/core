@@ -1,5 +1,6 @@
 """Test the Teslemetry Diagnostics."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -13,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
+from .const import METADATA, METADATA_LEGACY, PRODUCTS
 
 from tests.common import async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -60,21 +62,69 @@ async def test_diagnostics_streaming_entities(
     assert set(entities.values()) == {"streaming"}
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_diagnostics_streaming_and_polling_entities(
+async def test_diagnostics_streaming_and_polling_vehicles(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
-    """Test diagnostics reports both sources when a streaming vehicle also polls."""
+    """Test diagnostics attributes each vehicle's entities to its own source.
+
+    A vehicle either streams or polls, never both, so the two sources only
+    appear together across different vehicles. This sets up one polling and
+    one streaming vehicle and asserts diagnostics reports the polling
+    vehicle's data entities as "polling" and the streaming vehicle's entities
+    as "streaming", without cross-attributing one vehicle's source to the
+    other.
+    """
+    poll_vin = "LRW3F7EK4NC700000"
+    stream_vin = "LRW3F7EK4NC700001"
+
+    products = deepcopy(PRODUCTS)
+    poll_product = next(p for p in products["response"] if p.get("vin") == poll_vin)
+    poll_product["display_name"] = "Poll"
+    stream_product = deepcopy(poll_product)
+    stream_product["vin"] = stream_vin
+    stream_product["display_name"] = "Stream"
+    products["response"].append(stream_product)
+    mock_products.return_value = products
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"] = {
+        poll_vin: deepcopy(METADATA_LEGACY["vehicles"][poll_vin]),
+        stream_vin: deepcopy(METADATA["vehicles"][poll_vin]),
+    }
+    mock_metadata.return_value = metadata
 
     entry = await setup_platform(hass)
 
+    vehicles = {vehicle.vin: vehicle for vehicle in entry.runtime_data.vehicles}
+    assert vehicles[poll_vin].poll is True
+    assert vehicles[stream_vin].poll is False
+
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    entities = diag["vehicles"][0]["entities"]
-    assert "streaming" in entities.values()
-    assert "polling" in entities.values()
-    assert set(entities.values()) <= {"streaming", "polling"}
+    def sources_for(object_id_prefix: str) -> set[str]:
+        """Return the sources of the vehicle whose entity_ids use the prefix."""
+        return next(
+            set(vehicle["entities"].values())
+            for vehicle in diag["vehicles"]
+            if all(
+                entity_id.split(".", 1)[1].startswith(object_id_prefix)
+                for entity_id in vehicle["entities"]
+            )
+        )
+
+    poll_sources = sources_for("poll_")
+    stream_sources = sources_for("stream_")
+
+    # The polling vehicle's data entities keep its coordinator polling...
+    assert "polling" in poll_sources
+    # ...while the streaming vehicle reports only "streaming", so neither
+    # vehicle's source leaks into the other's diagnostics.
+    assert stream_sources == {"streaming"}
+    # No entity falls back to "enabled": every one maps to a live source.
+    assert poll_sources <= {"polling", "streaming"}
 
 
 @pytest.mark.usefixtures("mock_legacy")
