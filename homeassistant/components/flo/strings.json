@@ -40,8 +40,17 @@
       "daily_consumption": {
         "name": "Today's water usage"
       },
+      "last_event_duration": {
+        "name": "Last water event duration"
+      },
+      "last_event_end": {
+        "name": "Last water event end"
+      },
       "last_event_fixture": {
         "name": "Last water event fixture"
+      },
+      "last_event_start": {
+        "name": "Last water event start"
       },
       "last_event_usage": {
         "name": "Last water event"

@@ -6,8 +6,12 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -24,7 +28,7 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # we should have 7 entities for the valve
+    # we should have 10 entities for the valve
     assert (
         hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
         == "home"
@@ -44,16 +48,35 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert last_event is not None
     assert last_event.state == "2.4"
     assert last_event.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert last_event.attributes["fixture_type"] == "Faucet"
-    assert last_event.attributes["duration_seconds"] == 158
-    assert last_event.attributes["start_time"] == "2026-07-12T10:12:03-04:00"
-    assert last_event.attributes["end_time"] == "2026-07-12T10:14:41-04:00"
-    assert last_event.attributes["event_id"] == "evt-001"
 
     assert (
         hass.states.get("sensor.smart_water_shutoff_last_water_event_fixture").state
         == "Faucet"
     )
+
+    last_event_duration = hass.states.get(
+        "sensor.smart_water_shutoff_last_water_event_duration"
+    )
+    assert last_event_duration is not None
+    assert last_event_duration.state == "158"
+    assert (
+        last_event_duration.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DURATION
+    )
+    assert (
+        last_event_duration.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    )
+
+    last_event_start = hass.states.get(
+        "sensor.smart_water_shutoff_last_water_event_start"
+    )
+    assert last_event_start is not None
+    assert last_event_start.state == "2026-07-12T14:12:03+00:00"
+    assert last_event_start.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+
+    last_event_end = hass.states.get("sensor.smart_water_shutoff_last_water_event_end")
+    assert last_event_end is not None
+    assert last_event_end.state == "2026-07-12T14:14:41+00:00"
+    assert last_event_end.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     assert hass.states.get("sensor.smart_water_shutoff_water_flow_rate").state == "0"
     assert (
