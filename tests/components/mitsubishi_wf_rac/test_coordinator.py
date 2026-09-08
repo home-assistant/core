@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pywfrac import (
+    Aircon,
     WfRacConnectionError,
     WfRacError,
     WfRacRegistrationError,
@@ -413,3 +414,51 @@ async def test_shutdown_waits_for_a_command_already_on_the_wire(
     caller.cancel()
     with suppress(asyncio.CancelledError):
         await caller
+
+
+async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The poll delivering a bad frame is itself a success.
+
+    So it resets the device's missed-poll counter before the entities read
+    the frame. An entity that counted its own decoding failure into that
+    counter could never reach the threshold, and would stay available with
+    stale state however long the condition lasted.
+    """
+    device = init_integration.runtime_data.device
+    decode = device._parser.translate_bytes
+
+    def _unreadable(raw: str) -> Aircon:
+        airco = decode(raw)
+        airco.OperationMode = 99
+        return airco
+
+    with patch.object(device._parser, "translate_bytes", side_effect=_unreadable):
+        await _advance(hass, freezer, 3)
+
+    assert device.available
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_an_unexpected_poll_failure_takes_the_entities_with_it(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A missed poll is ridden out; a fault is not.
+
+    Only the expected failures leave the coordinator successful, so an
+    entity that reads Device.available alone would keep showing stale state
+    as current after an UpdateFailed.
+    """
+    mock_repository.get_aircon_stats.side_effect = RuntimeError("boom")
+
+    await _advance(hass, freezer, 1)
+
+    assert not init_integration.runtime_data.device.last_update_success
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

@@ -1,7 +1,8 @@
 """Test the Mitsubishi WF-RAC config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 import pytest
 from pywfrac import WfRacConnectionError
@@ -573,3 +574,76 @@ async def test_reconfigure_refuses_an_address_that_answers_as_another_airco(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "another_airco"
     assert mock_config_entry.data[CONF_AIRCO_ID] == AIRCO_ID
+
+
+async def test_the_port_can_be_cleared_and_falls_back_to_the_fixed_one(
+    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """A pre-filled value is a suggestion, and a form field can be emptied.
+
+    The port is read with [] during registration, so without a schema default
+    an empty field ended the flow in "unexpected_error" rather than using the
+    port every firmware branch serves.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NAME: "Living room", CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
+
+
+async def test_a_retried_submission_keeps_the_identifiers_it_generated(
+    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """The module has four account slots and never frees one by itself.
+
+    A registration whose answer was lost has still taken one. Generating a
+    fresh operator id per submission would take another on every retry, and
+    enough retries would leave no slot to set up with.
+    """
+    mock_repository.get_airco_id.side_effect = [WfRacConnectionError("lost"), AIRCO_ID]
+
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.config_flow.uuid4", wraps=uuid4
+    ) as generate:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # One operator id and one device id for the whole flow, not a fresh pair
+    # for every submission.
+    assert generate.call_count == 2
+
+
+async def test_a_registration_that_cannot_be_reached_says_so(
+    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Registration is a second request, and the unit can go away between them.
+
+    That is the same connection problem as the query before it, and has to
+    read as one instead of as a bug in the flow.
+    """
+    mock_repository.update_account_info.side_effect = WfRacConnectionError("gone")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"

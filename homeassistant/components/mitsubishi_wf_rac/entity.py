@@ -33,6 +33,7 @@ class WfRacEntity(CoordinatorEntity[Device]):
         super().__init__(device, context=context)
         self._device = device
         self._attr_device_info = device.device_info
+        self._state_unreadable = False
 
     @property
     def _hvac_mode_from_operation(self) -> HVACMode:
@@ -47,14 +48,11 @@ class WfRacEntity(CoordinatorEntity[Device]):
     def _resolve_target_offset(self, hvac_mode: HVACMode) -> float:
         """Resolve the effective target_offset for a given hvac_mode.
 
-        COOL/DRY fall back to CONF_TARGET_OFFSET_COOL, HEAT to
-        CONF_TARGET_OFFSET_HEAT, everything else always uses the global
-        CONF_TARGET_OFFSET - and so does COOL/HEAT when its per-mode option
-        is unset (None), which is what keeps single-target_offset installs
-        unchanged. Lives on the base entity so the climate write path, the
-        climate read-back path and the target temperature sensor can never
-        resolve a different offset for the same mode (see beta2: that
-        divergence is what caused the target_temperature re-send loop).
+        COOL/DRY take CONF_TARGET_OFFSET_COOL, HEAT takes
+        CONF_TARGET_OFFSET_HEAT, and an unset per-mode option falls back to
+        the global CONF_TARGET_OFFSET like every other mode. Shared here so
+        the write path and the read-back can never resolve a different offset
+        for the same mode: they would then correct each other forever.
         """
         options = self._device.options
         base_offset = options.get(CONF_TARGET_OFFSET, 0.0)
@@ -69,13 +67,15 @@ class WfRacEntity(CoordinatorEntity[Device]):
     @override
     @property
     def available(self) -> bool:
-        """Return whether the airco is currently reachable."""
+        """Return whether the airco is currently reachable and readable."""
         # Device tracks its own retry-tolerant availability (see
-        # Device._set_availability()), and entities follow that rather than the
-        # coordinator's last_update_success: an expected missed poll leaves the
-        # coordinator successful on purpose, so this is the only thing that
-        # decides whether entities go unavailable.
-        return self._device.available
+        # Device._set_availability()): an expected missed poll leaves the
+        # coordinator successful on purpose, so last_update_success alone
+        # would not hold the entity up. It still has to be honoured, though -
+        # an unexpected failure raises UpdateFailed and only shows there.
+        return (
+            super().available and self._device.available and not self._state_unreadable
+        )
 
     def _update_state(self) -> None:
         """Refresh entity state from the coordinator.
@@ -94,5 +94,12 @@ class WfRacEntity(CoordinatorEntity[Device]):
             # With the traceback: which field of the device state was missing
             # is the whole diagnosis.
             _LOGGER.warning("Could not update %s", self.entity_id, exc_info=True)
-            self._device.set_available(False)
+            # Held on the entity, not counted into the device's missed-poll
+            # tolerance: the unit answered, this entity just cannot read what
+            # it said. Feeding it into that counter would never reach the
+            # threshold either, since the successful poll carrying the frame
+            # resets it first.
+            self._state_unreadable = True
+        else:
+            self._state_unreadable = False
         self.async_write_ha_state()

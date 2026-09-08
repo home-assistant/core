@@ -511,10 +511,6 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         else:
             _LOGGER.debug("Could not reach the airco [%s]: %s", self.device_name, error)
 
-    def set_available(self, available: bool) -> None:
-        """Set available status."""
-        self._set_availability(available)
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry.

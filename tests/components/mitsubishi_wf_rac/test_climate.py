@@ -542,11 +542,18 @@ async def test_a_frame_the_entity_cannot_read_marks_it_unavailable(
     """
     device = init_integration.runtime_data.device
     device.airco.OperationMode = 99
-    for _ in range(3):
-        device.async_set_updated_data(device.airco)
-        await hass.async_block_till_done()
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # And back, without waiting out anything: the next frame it can read is
+    # all it needs. The unit answered throughout.
+    device.airco.OperationMode = 1
+    device.async_set_updated_data(device.airco)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

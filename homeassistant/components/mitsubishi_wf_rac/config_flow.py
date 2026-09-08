@@ -57,6 +57,11 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _discovery_info: dict[str, Any] = {}
     DOMAIN = DOMAIN
 
+    def __init__(self) -> None:
+        """Start a flow with no identifiers generated yet."""
+        self._generated_operator_id: str | None = None
+        self._generated_device_id: str | None = None
+
     @override
     def is_matching(self, other_flow: WfRacConfigFlow) -> bool:
         """Return True if two flows are attempting to configure the same device."""
@@ -150,7 +155,14 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise CannotConnect(reason="unknown reason")
 
         _LOGGER.debug("Registering with airco [%s]", data[CONF_AIRCO_ID])
-        result = await repository.update_account_info(airco_id, hass.config.time_zone)
+        try:
+            result = await repository.update_account_info(
+                airco_id, hass.config.time_zone
+            )
+        except (WfRacError, KeyError, TypeError) as registration_failed:
+            raise CannotConnect(
+                reason=str(registration_failed)
+            ) from registration_failed
         if not result:
             raise CannotConnect(reason="no answer to the registration request")
         # The answer comes from the module, so a missing key is a connection
@@ -168,14 +180,22 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry = self._find_entry_matching(CONF_OPERATOR_ID, bool)
         if entry:
             return str(entry.data[CONF_OPERATOR_ID])
-        return f"hassio-{str(uuid4())[7:]}"
+        # Generated once per flow, not once per submission: the module keeps
+        # four account slots, and a registration whose answer was lost has
+        # still taken one. Retrying the form with a fresh id would take
+        # another, and enough retries would leave no slot to set up with.
+        if self._generated_operator_id is None:
+            self._generated_operator_id = f"hassio-{str(uuid4())[7:]}"
+        return self._generated_operator_id
 
     async def _async_fetch_device_id(self) -> str:
         """Fetch unique device id if exists otherwise create it."""
         entry = self._find_entry_matching(CONF_DEVICE_ID, bool)
         if entry:
             return str(entry.data[CONF_DEVICE_ID])
-        return f"homeassistant-device-{uuid4().hex[21:]}"
+        if self._generated_device_id is None:
+            self._generated_device_id = f"homeassistant-device-{uuid4().hex[21:]}"
+        return self._generated_device_id
 
     async def _async_create_common(
         self,
@@ -266,7 +286,12 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description = None
         if value is not None:
             description = {"suggested_value": value}
-        return which(name, description=description)
+        if default is None:
+            return which(name, description=description)
+        # A suggestion only pre-fills the form. Without a schema default the
+        # key is simply absent when the field is cleared, and the port is read
+        # with [] - so clearing it ended the flow in "unexpected_error".
+        return which(name, description=description, default=default)
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
