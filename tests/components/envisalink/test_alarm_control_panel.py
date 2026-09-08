@@ -1,6 +1,5 @@
 """Tests for the Envisalink alarm control panel."""
 
-from copy import deepcopy
 from unittest.mock import MagicMock
 
 import pytest
@@ -20,7 +19,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import ALARM_ENTITY, DOMAIN, MOCK_CODE, MOCK_CONFIG, setup_envisalink
+from .conftest import (
+    ALARM_ENTITY,
+    DOMAIN,
+    MOCK_CODE,
+    MOCK_DATA,
+    MOCK_SUBENTRIES_DATA,
+    setup_envisalink,
+)
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -116,9 +124,13 @@ async def test_code_format_without_configured_code(
     hass: HomeAssistant, mock_controller: MagicMock
 ) -> None:
     """Test the numeric keypad shows when no code is configured."""
-    config = deepcopy(MOCK_CONFIG)
-    del config[DOMAIN]["code"]
-    assert await setup_envisalink(hass, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_DATA,
+        options={},
+        subentries_data=MOCK_SUBENTRIES_DATA,
+    )
+    assert await setup_envisalink(hass, entry)
 
     assert hass.states.get(ALARM_ENTITY).attributes["code_format"] == CodeFormat.NUMBER
 

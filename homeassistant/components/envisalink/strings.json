@@ -1,4 +1,188 @@
 {
+  "config": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_partition_number": "Partition {number} is not valid for this panel; partition numbers must be between 1 and {max}.",
+      "invalid_zone_number": "Zone {number} is not valid for this panel; zone numbers must be between 1 and {max}.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "code": {
+        "data": {
+          "code": "Alarm code",
+          "panic_type": "Panic alarm type"
+        },
+        "data_description": {
+          "code": "The default code to use when arming or disarming the alarm. Leave empty to be prompted for a code each time.",
+          "panic_type": "The type of panic alarm to trigger when the alarm's trigger action is used."
+        },
+        "title": "Alarm settings"
+      },
+      "user": {
+        "data": {
+          "evl_version": "Envisalink version",
+          "host": "[%key:common::config_flow::data::host%]",
+          "panel_type": "Panel type",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "user_name": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "evl_version": "The hardware version of your Envisalink module.",
+          "host": "The hostname or IP address of your Envisalink module.",
+          "panel_type": "The type of alarm panel connected to your Envisalink module.",
+          "password": "The password configured for your Envisalink module's web interface.",
+          "port": "The TCP port used to connect to your Envisalink module.",
+          "user_name": "The username configured for your Envisalink module's web interface."
+        },
+        "title": "Connect to your Envisalink"
+      }
+    }
+  },
+  "config_subentries": {
+    "partition": {
+      "entry_type": "Partition",
+      "error": {
+        "already_configured": "A partition with this number is already configured"
+      },
+      "initiate_flow": {
+        "user": "Add partition"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "title": "Reconfigure partition {partition_number}"
+        },
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "partition_number": "Partition number"
+          },
+          "data_description": {
+            "partition_number": "The partition number as configured on your alarm panel."
+          },
+          "title": "Add partition"
+        }
+      }
+    },
+    "zone": {
+      "entry_type": "Zone",
+      "error": {
+        "already_configured": "A zone with this number is already configured"
+      },
+      "initiate_flow": {
+        "user": "Add zone"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "type": "[%key:component::envisalink::config_subentries::zone::step::user::data::type%]"
+          },
+          "data_description": {
+            "type": "[%key:component::envisalink::config_subentries::zone::step::user::data_description::type%]"
+          },
+          "title": "Reconfigure zone {zone_number}"
+        },
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "type": "Zone type",
+            "zone_number": "Zone number"
+          },
+          "data_description": {
+            "type": "The type of sensor connected to this zone.",
+            "zone_number": "The zone number as configured on your alarm panel."
+          },
+          "title": "Add zone"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "No Envisalink integration is currently set up."
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your YAML configuration, a connection to the Envisalink module could not be established. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your YAML configuration, the Envisalink module rejected the configured credentials. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_partition_number": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your YAML configuration, partition {number} was found configured, but partition numbers must be between 1 and {max}. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_zone_number": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your YAML configuration, zone {number} was found configured, but zone numbers must be between 1 and {max}. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your YAML configuration, an unknown error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "[%key:component::envisalink::config::step::code::data::code%]",
+          "panic_type": "[%key:component::envisalink::config::step::code::data::panic_type%]"
+        },
+        "data_description": {
+          "code": "[%key:component::envisalink::config::step::code::data_description::code%]",
+          "panic_type": "[%key:component::envisalink::config::step::code::data_description::panic_type%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "binary_sensor_device_class": {
+      "options": {
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    }
+  },
   "services": {
     "alarm_keypress": {
       "description": "Sends custom keypresses to the alarm.",

@@ -1,4 +1,9 @@
-"""Support for Envisalink zone bypass switches."""
+"""Support for Envisalink zone bypass switches.
+
+Not currently loaded as a platform (Platform.SWITCH is not in PLATFORMS) due to
+an issue with some panels; kept for a future re-enablement after further
+refactoring of the integration.
+"""
 
 import logging
 from typing import Any, override
@@ -8,47 +13,40 @@ from pyenvisalink import EnvisalinkAlarmPanel
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
+from . import EnvisalinkConfigEntry
+from .const import (
+    CONF_ZONE_NUMBER,
     CONF_ZONENAME,
-    CONF_ZONES,
-    DATA_EVL,
     SIGNAL_ZONE_BYPASS_UPDATE,
-    ZONE_SCHEMA,
+    SUBENTRY_TYPE_ZONE,
 )
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EnvisalinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Envisalink switch entities."""
-    if not discovery_info:
-        return
-    configured_zones: dict[int, dict[str, Any]] = discovery_info[CONF_ZONES]
+    """Set up the Envisalink zone bypass switch entities from a config entry."""
+    controller = entry.runtime_data
 
-    entities = []
-    for zone_num, zone_data in configured_zones.items():
-        entity_config_data = ZONE_SCHEMA(zone_data)
-        zone_name = f"{entity_config_data[CONF_ZONENAME]}_bypass"
-        _LOGGER.debug("Setting up zone_bypass switch: %s", zone_name)
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
+        zone_number = subentry.data[CONF_ZONE_NUMBER]
+        zone_name = subentry.data[CONF_ZONENAME]
+        _LOGGER.debug("Setting up zone_bypass switch for zone: %s", zone_name)
 
         entity = EnvisalinkSwitch(
-            zone_num,
+            zone_number,
             zone_name,
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            controller.alarm_state["zone"][zone_number],
+            controller,
         )
-        entities.append(entity)
-
-    async_add_entities(entities)
+        async_add_entities([entity], config_subentry_id=subentry.subentry_id)
 
 
 class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
@@ -64,7 +62,7 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
         """Initialize the switch."""
         self._zone_number = zone_number
 
-        super().__init__(zone_name, info, controller)
+        super().__init__(f"{zone_name} Bypass", info, controller)
 
     @override
     async def async_added_to_hass(self) -> None:

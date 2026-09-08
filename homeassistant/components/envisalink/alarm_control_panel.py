@@ -12,83 +12,56 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_CODE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_CODE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
+from . import EnvisalinkConfigEntry
+from .const import (
+    ATTR_KEYPRESS,
     CONF_PANIC,
+    CONF_PARTITION_NUMBER,
     CONF_PARTITIONNAME,
-    CONF_PARTITIONS,
-    DATA_EVL,
-    DOMAIN,
-    PARTITION_SCHEMA,
+    DEFAULT_PANIC,
+    SERVICE_ALARM_KEYPRESS,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
+    SUBENTRY_TYPE_PARTITION,
 )
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_ALARM_KEYPRESS = "alarm_keypress"
-ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_KEYPRESS): cv.string,
-    }
-)
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EnvisalinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Perform the setup for Envisalink alarm panels."""
-    if not discovery_info:
-        return
-    configured_partitions: dict[int, dict[str, Any]] = discovery_info[CONF_PARTITIONS]
-    code: str | None = discovery_info[CONF_CODE]
-    panic_type: str = discovery_info[CONF_PANIC]
+    """Set up Envisalink alarm control panels from a config entry."""
+    controller = entry.runtime_data
+    code = entry.options.get(CONF_CODE)
+    panic_type = entry.options.get(CONF_PANIC, DEFAULT_PANIC)
 
-    entities = []
-    for part_num, part_config in configured_partitions.items():
-        entity_config_data = PARTITION_SCHEMA(part_config)
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION):
+        partition_number = subentry.data[CONF_PARTITION_NUMBER]
         entity = EnvisalinkAlarm(
-            part_num,
-            entity_config_data[CONF_PARTITIONNAME],
+            partition_number,
+            subentry.data[CONF_PARTITIONNAME],
             code,
             panic_type,
-            hass.data[DATA_EVL].alarm_state["partition"][part_num],
-            hass.data[DATA_EVL],
+            controller.alarm_state["partition"][partition_number],
+            controller,
         )
-        entities.append(entity)
+        async_add_entities([entity], config_subentry_id=subentry.subentry_id)
 
-    async_add_entities(entities)
-
-    @callback
-    def async_alarm_keypress_handler(service: ServiceCall) -> None:
-        """Map services to methods on Alarm."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-        keypress = service.data[ATTR_KEYPRESS]
-
-        target_entities = [
-            entity for entity in entities if entity.entity_id in entity_ids
-        ]
-
-        for entity in target_entities:
-            entity.async_alarm_keypress(keypress)
-
-    hass.services.async_register(
-        DOMAIN,
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
         SERVICE_ALARM_KEYPRESS,
-        async_alarm_keypress_handler,
-        schema=ALARM_KEYPRESS_SCHEMA,
+        {vol.Required(ATTR_KEYPRESS): cv.string},
+        "async_alarm_keypress",
     )
 
 
@@ -116,6 +89,7 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
         self._panic_type = panic_type
         self._alarm_control_panel_option_default_code = code
         self._attr_code_format = CodeFormat.NUMBER if not code else None
+        self._attr_code_arm_required = not code
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
@@ -165,32 +139,28 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
     @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self.hass.data[DATA_EVL].disarm_partition(code, self._partition_number)
+        self._controller.disarm_partition(code, self._partition_number)
 
     @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self.hass.data[DATA_EVL].arm_stay_partition(code, self._partition_number)
+        self._controller.arm_stay_partition(code, self._partition_number)
 
     @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self.hass.data[DATA_EVL].arm_away_partition(code, self._partition_number)
+        self._controller.arm_away_partition(code, self._partition_number)
 
     @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
-        self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
+        self._controller.panic_alarm(self._panic_type)
 
     @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self.hass.data[DATA_EVL].arm_night_partition(code, self._partition_number)
+        self._controller.arm_night_partition(code, self._partition_number)
 
-    @callback
-    def async_alarm_keypress(self, keypress=None):
+    async def async_alarm_keypress(self, keypress: str) -> None:
         """Send custom keypress."""
-        if keypress:
-            self.hass.data[DATA_EVL].keypresses_to_partition(
-                self._partition_number, keypress
-            )
+        self._controller.keypresses_to_partition(self._partition_number, keypress)
