@@ -480,7 +480,7 @@ aiovodafone==3.3.2
 aiowaqi==3.1.0
 
 # homeassistant.components.watttime
-aiowatttime==0.1.1
+aiowatttime==2024.6.0
 
 # homeassistant.components.webdav
 aiowebdav2==0.6.2
